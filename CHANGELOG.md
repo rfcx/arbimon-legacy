@@ -5,6 +5,7 @@
 New features:
 
 - CE-1225 The URL Column is added to the export record sheet
+- CE-1267 The URL Column is added to the Pattern Matching Export CSV sheet
 
 Resolved issues:
 
@@ -13,6 +14,7 @@ Resolved issues:
 - CE-1251 Minor homepage updates in the Summary section
 - CE-1321 Users is able to delete sites in Arbimon
 - CE-1312 Fixed filters for hours section on the Recordings page
+- CE-1267 The recording name is fixed in the Pattern Matching Export CSV sheet
 
 ## v3.0.35 - August 25, 2021
 

@@ -20,7 +20,7 @@ var dbpool       = require('../utils/dbpool');
 var Recordings   = require('./recordings');
 var Projects     = require('./projects');
 var Templates     = require('./templates');
-
+const rfcxConfig = config('rfcx');
 // local variables
 var s3;
 var lambda = new AWS.Lambda();
@@ -246,6 +246,7 @@ var PatternMatchings = {
             patternMatchingId: joi.boolean(),
             names: joi.boolean(),
             datetime: joi.boolean(),
+            url: joi.boolean()
         }),
         limit:  joi.number(),
         offset: joi.number(),
@@ -281,6 +282,13 @@ var PatternMatchings = {
                 builder.addProjection('R.`datetime`');
             }
 
+            if (show.url) {
+                builder.addProjection('R.`recording_id` as recording_id');
+            }
+            if (!show.url) {
+                builder.addProjection('PMR.`uri`');
+            }
+
             if(!show.names){
                 builder.addProjection(
                     'PMR.`recording_id`',
@@ -291,7 +299,6 @@ var PatternMatchings = {
 
             builder.addProjection(
                 'PMR.`x1`, PMR.`y1`, PMR.`x2`, PMR.`y2`',
-                'PMR.`uri`',
                 'PMR.`score`',
             );
 
@@ -595,11 +602,15 @@ var PatternMatchings = {
         return pmrs
     },
 
-    exportDataFormatted (pmr) {
+    exportDataFormatted (pmr, projectUrl) {
         const namePartials = pmr.recording.split('/');
         pmr.recording = namePartials[namePartials.length - 1];
         PatternMatchings.combineDatetime(pmr);
         delete pmr.datetime;
+        if (pmr.recording_id) {
+            pmr.url = `${rfcxConfig.apiBaseUrl}/api/project/${projectUrl}/recordings/download/${pmr.recording_id}`;
+            delete pmr.recording_id;
+        }
         if (pmr.meta && pmr.recording) {
             try {
                 const parsedMeta = JSON.parse(data.meta);
@@ -683,7 +694,7 @@ var PatternMatchings = {
             expertCSValidations: options.expertCSValidations,
             countCSValidations: options.countCSValidations,
             perUserCSValidations: options.perUserCSValidations,
-            show: { names: true },
+            show: { names: true, url: true },
         }).then(
             builder => dbpool.streamQuery({
                 sql: builder.getSQL(),

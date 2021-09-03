@@ -125,8 +125,8 @@ router.get('/:patternMatching/:jobName?', function(req, res, next) {
     model.patternMatchings.exportRois(req.params.patternMatching, filters).then(function(results) {
         var datastream = results[0];
         var fields = results[1].map(function(f){return f.name});
-        ['year', 'month', 'day', 'hour', 'minute'].forEach(item=> { fields.push(item) });
-        ['datetime', 'meta'].forEach(item=> {
+        ['year', 'month', 'day', 'hour', 'minute', 'url'].forEach(item=> { fields.push(item) });
+        ['datetime', 'meta', 'recording_id'].forEach(item=> {
             let index = fields.findIndex(i => i === item);
             fields.splice(index, 1);
         });
@@ -161,7 +161,7 @@ router.get('/:patternMatching/:jobName?', function(req, res, next) {
 
         datastream
             .on('data', (data) => {
-                model.patternMatchings.exportDataFormatted(data);
+                model.patternMatchings.exportDataFormatted(data, req.project.url);
             })
             .pipe(csv_stringify({header:true, columns:fields}))
             .pipe(res);
