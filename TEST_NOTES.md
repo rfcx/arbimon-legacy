@@ -7,6 +7,8 @@ Test Notes are used to list what pages / components / features / user flows are 
   - Pattern Matching details page: Export CSV: The user can see different columns in the report, like a year, month, day, hour, minute
 - CE-1225 The URL Column is added to the export record sheet
   - Recordings page: Export: Select url as parameter in the recording data: The user can downloads any recording from the export record sheet
+- CE-1309 Download the recording with the original frequency from the Visualizer page
+  - Visualizer page: The downloaded recording should be with the original frequency.
 
 ## v3.0.35
 

@@ -584,7 +584,7 @@ var Recordings = {
                 if(err) return callback(err);
 
                 var transcode_args = {
-                    sample_rate: 44100,
+                    sample_rate: recording.sample_rate? recording.sample_rate :44100,
                     format: 'mp3',
                     channels: 1
                 };
