@@ -2,6 +2,8 @@
 
 ## v3.0.36 - August XX, 2021
 
+- CE-1219 Users can reset validation on the spectrogram boxes
+
 Resolved issues:
 
 - CE-1266 Fixed the date and time columns issues in the Pattern Matching Export CSV sheet
