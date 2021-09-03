@@ -187,12 +187,6 @@ angular.module('a2.srv.project', [
                         callback(data);
                     });
             },
-            unvalidateRecording: function(rec_id, obj, callback){
-                $http.post('/api/project/'+url+'/recordings/unvalidate/'+rec_id, obj)
-                    .success(function(data) {
-                        callback(data);
-                    });
-            },
             recExists: function(site_id, filename, callback) {
                 $http.get('/api/project/'+url+'/recordings/exists/site/'+ site_id +'/file/' + filename)
                     .success(function(data) {

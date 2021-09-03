@@ -8,8 +8,11 @@
                 height:layout.dhz2height(roi.y2, roi.y1) + 'px',
                 display: roi.display || ''
             }">
-            <button class="close" ng-click="layer.species_presence.togglePopup(roi)" style="position: absolute; right: -4px; top:-6px; color:black; font-size: 12px; opacity: 1;">
-                <i class="fa fa-times"></i>
+            <button class="close" ng-click="layer.species_presence.togglePopup(roi)" style="position: absolute; right: -4px; top:-6px; font-size: 12px; opacity: 1;">
+                <img src="/images/ic-cross.svg"
+                    onmouseover="this.src='/images/ic-cross-hover.svg'"
+                    onmouseout="this.src='/images/ic-cross.svg'"
+                />
             </button>
             <div class="popover top" style="display: block; transform: translate(-43%, -100%); min-width: 20em; z-index: 103;" ng-if="roi.isPopupOpened">
                 <div class="arrow" style="bottom: -8%"></div>
