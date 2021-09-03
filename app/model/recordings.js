@@ -1357,7 +1357,7 @@ var Recordings = {
         },
         exportProjections: {
             recording:arrayOrSingle(joi.string().valid(
-                'filename', 'site', 'day', 'hour'
+                'filename', 'site', 'day', 'hour', 'url'
             )),
             species: arrayOrSingle(joi.number()),
             validation:  arrayOrSingle(joi.number()),
@@ -1588,6 +1588,7 @@ var Recordings = {
                             'year' : 'DATE_FORMAT(r.datetime, "%y") as `year`',
                             'hour' : 'DATE_FORMAT(r.datetime, "%T") as hour',
                             'date' : 'DATE_FORMAT(r.datetime, "%Y/%m/%d") as `date`',
+                            'url' : 'r.recording_id as url'
                         };
                         summaryBuilders[c].addProjection.apply(summaryBuilders[c], projection_parameters.recording.map(function(recParam){
                             console.log("recParam", recParam, recParamMap[recParam]);

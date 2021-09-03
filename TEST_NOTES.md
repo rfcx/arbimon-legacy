@@ -3,8 +3,10 @@ Test Notes are used to list what pages / components / features / user flows are 
 
 ## v3.0.36
 
- - CE-1266 Fixed the date and time columns issues in the Pattern Matching Export CSV sheet
- - Pattern Matching details page: Export CSV: The user can see different columns in the report, like a year, month, day, hour, minute
+- CE-1266 Fixed the date and time columns issues in the Pattern Matching Export CSV sheet
+  - Pattern Matching details page: Export CSV: The user can see different columns in the report, like a year, month, day, hour, minute
+- CE-1225 The URL Column is added to the export record sheet
+  - Recordings page: Export: Select url as parameter in the recording data: The user can downloads any recording from the export record sheet
 
 ## v3.0.35
 
@@ -29,7 +31,7 @@ Test Notes are used to list what pages / components / features / user flows are 
 - CE-834 Fixed issue with the cluster audio frequency filter
   - Analysis tab: Clustering tab: Clustering job page: The user asks for events between 1 and 9 kHz. The filter is returning events with requirement frequency. The user selects the dots and navigates to the Visualizer page. The user sees all selected boxes with the right frequency.
 - CE-1231 Check the logic to add a new species/song to the project_classes table when the user validate PM box from the PM page
-  - Select Pattern Matching and it should not have the species/song on visualizer page 
+  - Select Pattern Matching and it should not have the species/song on visualizer page
   (Ex. In PM page is the "Contopus virens, Common Song" but it should not have "Contopus virens, Common Song" in species list on visualizer page)
   - Validate "Present" on PM box from the PM page
   - Open visualizer page, it will see the species/song (Contopus virens, Common Song) in species list

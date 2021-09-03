@@ -32,7 +32,8 @@ angular.module('a2.audiodata.recordings.data-export-parameters', [
                 {value:'filename'  , caption:'Filename'  , tooltip:'The recording filename'  },
                 {value:'site'      , caption:'Site'      , tooltip:'The recording site'      },
                 {value:'day'       , caption:'Day'       , tooltip:'The recording day'       },
-                {value:'hour'      , caption:'Hour'      , tooltip:'The recording hour'      }
+                {value:'hour'      , caption:'Hour'      , tooltip:'The recording hour'      },
+                {value:'url'       , caption:'Url'       , tooltip:'The recording URl'       }
             ],
             preselected:['filename', 'site', 'day']
         },
