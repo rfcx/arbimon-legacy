@@ -6,6 +6,7 @@ New features:
 
 - CE-1225 The URL Column is added to the export record sheet
 - CE-1267 The URL Column is added to the Pattern Matching Export CSV sheet
+- CE-1219 Users can reset validation on the spectrogram boxes
 
 Resolved issues:
 
@@ -15,6 +16,7 @@ Resolved issues:
 - CE-1321 Users is able to delete sites in Arbimon
 - CE-1312 Fixed filters for hours section on the Recordings page
 - CE-1267 The recording name is fixed in the Pattern Matching Export CSV sheet
+- CE-1309 Download the recording with the original frequency from the Visualizer page
 
 ## v3.0.35 - August 25, 2021
 
