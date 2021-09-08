@@ -8,6 +8,12 @@ Test Notes are used to list what pages / components / features / user flows are 
  - CE-1219 Users can reset validation on the spectrogram boxes
   - Visualizer page: The user hovers on the blue box. The user will see the deleting icon. The user can click on the icon. The user will see the popup window with the suggestion to remove the species on the spectrogram. The user can confirm or reject the suggestion.
   - The user validates any box on the Pattern Matching details page. The user navigates to the Visualizer page. The user will see the validated box on the spectrogram. The user can click on the icon. The user will see the popup window with the suggestion to remove the species on the spectrogram. The user confirms the suggestion. The box is hidden. The original Pattern Matching box is not validated on the Pettern Matching details page.
+- CE-1266 Fixed the date and time columns issues in the Pattern Matching Export CSV sheet
+  - Pattern Matching details page: Export CSV: The user can see different columns in the report, like a year, month, day, hour, minute
+- CE-1225 The URL Column is added to the export record sheet
+  - Recordings page: Export: Select url as parameter in the recording data: The user can downloads any recording from the export record sheet
+- CE-1309 Download the recording with the original frequency from the Visualizer page
+  - Visualizer page: The downloaded recording should be with the original frequency.
 
 ## v3.0.35
 

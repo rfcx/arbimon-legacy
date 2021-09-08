@@ -584,7 +584,7 @@ var Recordings = {
                 if(err) return callback(err);
 
                 var transcode_args = {
-                    sample_rate: 44100,
+                    sample_rate: recording.sample_rate? recording.sample_rate :44100,
                     format: 'mp3',
                     channels: 1
                 };
@@ -1357,7 +1357,7 @@ var Recordings = {
         },
         exportProjections: {
             recording:arrayOrSingle(joi.string().valid(
-                'filename', 'site', 'day', 'hour'
+                'filename', 'site', 'day', 'hour', 'url'
             )),
             species: arrayOrSingle(joi.number()),
             validation:  arrayOrSingle(joi.number()),
@@ -1588,6 +1588,7 @@ var Recordings = {
                             'year' : 'DATE_FORMAT(r.datetime, "%y") as `year`',
                             'hour' : 'DATE_FORMAT(r.datetime, "%T") as hour',
                             'date' : 'DATE_FORMAT(r.datetime, "%Y/%m/%d") as `date`',
+                            'url' : 'r.recording_id as url'
                         };
                         summaryBuilders[c].addProjection.apply(summaryBuilders[c], projection_parameters.recording.map(function(recParam){
                             console.log("recParam", recParam, recParamMap[recParam]);
@@ -1656,15 +1657,12 @@ var Recordings = {
             })
     },
 
-    countProjectSpecies: function(filters){
-        var q = "SELECT species_id as species \n" +
-        "FROM recording_validations\n"+
-        "WHERE project_id = " + dbpool.escape(filters.project_id) + " AND present = 1";
-        return dbpool.query(q);
+    countProjectSpecies: function(filters) {
+        return dbpool.query(`SELECT COUNT(DISTINCT species_id) AS count FROM recording_validations WHERE project_id = ${dbpool.escape(filters.project_id)} AND (present = 1 OR present_review > 0)`);
     },
 
     countAllSpecies: function() {
-        return dbpool.query('SELECT COUNT(DISTINCT species_id) AS count FROM recording_validations WHERE present != 0');
+        return dbpool.query('SELECT COUNT(DISTINCT species_id) AS count FROM recording_validations WHERE present = 1 OR present_review > 0');
     },
 
     countAllRecordings: function() {

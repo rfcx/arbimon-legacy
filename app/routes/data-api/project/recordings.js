@@ -7,11 +7,32 @@ var model = require('../../../model');
 const stream = require('stream');
 const moment = require('moment');
 const dayInMs = 24 * 60 * 60 * 1000;
-
+var config = require('../../../config');
+const rfcxConfig = config('rfcx');
+let s3, s3RFCx;
 let cachedData = {
     counts: { },
     species: { }
 };
+
+function defineS3Clients() {
+    if (!s3) {
+        s3 = new AWS.S3(getS3ClientConfig('aws'))
+    }
+    if (!s3RFCx) {
+        s3RFCx = new AWS.S3(getS3ClientConfig('aws-rfcx'))
+    }
+}
+
+function getS3ClientConfig(type) {
+    return {
+        accessKeyId: config(type).accessKeyId,
+        secretAccessKey: config(type).secretAccessKey,
+        region: config(type).region
+    }
+}
+
+defineS3Clients();
 
 router.get('/exists/site/:siteid/file/:filename', function(req, res, next) {
     res.type('json');
@@ -64,19 +85,12 @@ router.get('/species-count', function(req, res, next) {
         return res.json({count: cachedData.species[params.project_id].count});
     }
     else {
-        model.recordings.countProjectSpecies(params).then((rows) => {
-            var species = []
-            const result = Object.values(JSON.parse(JSON.stringify(rows)))
-            result.map(s => {
-                if(!species.includes(s.species)) {
-                    species.push(s.species)
-                }
-            })
+        model.recordings.countProjectSpecies(params).then((data) => {
             cachedData.species[params.project_id] = {
-                count: species.length,
+                count: data[0].count,
                 time: Date.now()
             };
-            res.json({count: species.length});
+            res.json({count: data[0].count});
         }).catch(next);
     }
 });
@@ -270,6 +284,9 @@ processFiltersData = async function(req, res, next) {
                         } catch (e) {}
                         delete row.meta;
                     }
+                    if (row.url) {
+                        row.url = `${rfcxConfig.apiBaseUrl}/api/project/${req.project.url}/recordings/download/${row.url}`;
+                    }
                     callback();
                 }
             }))
@@ -277,6 +294,33 @@ processFiltersData = async function(req, res, next) {
             .pipe(csv_stringify({header:true, columns:fields}))
             .pipe(res);
     }).catch(next);
+}
+
+router.get('/download/:recordingId', function(req, res, next) {
+    res.type('json');
+    downloadRecordingById(req, res, next);
+});
+
+function getRecordingFromS3(bucket, key, res) {
+    if (!s3) {
+        s3 = new AWS.S3();
+    }
+    return s3
+        .getObject({ Bucket: bucket, Key: key })
+        .createReadStream()
+        .pipe(res)
+}
+
+async function downloadRecordingById(req, res, next) {
+    let recordingId = req.params.recordingId;
+    let recording = await model.recordings.findByIdAsync(recordingId);
+    const namePartials = recording[0].uri.split('/');
+    recording[0].name = namePartials[namePartials.length - 1];
+    let legacy = recording[0].uri.startsWith('project_');
+    res.set({
+        'Content-Disposition' : 'attachment; filename="'+recording[0].name
+    });
+    await getRecordingFromS3(config(legacy? 'aws' : 'aws-rfcx').bucketName, recording[0].uri, res);
 }
 
 
