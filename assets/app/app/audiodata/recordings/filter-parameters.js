@@ -236,7 +236,7 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
                 });
 
                 var sort = function(a, b) {
-                    return a.value > b.value;
+                    return a.value > b.value ? 1 : -1;
                 };
 
                 options.sites.sort(sort);

@@ -104,7 +104,8 @@ angular.module('a2.audiodata.templates', [
                 source_project_id: template.project
             }).then((function(template){
                 console.log('new template', template);
-                if (template.id === 0) notify.error('The template already exists in the project templates.')
+                if (template.id === 0) notify.error('The template already exists in the project templates.');
+                else if (template.error) notify.error('You do not have permission to manage templates');
                 else notify.log('The template is added to the project.');
             })).catch((function(err){
                 console.log('err', err);
