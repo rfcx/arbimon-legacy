@@ -13,6 +13,7 @@ Resolved issues:
 - CE-1251 Minor homepage updates in the Summary section
 - CE-1321 Users is able to delete sites in Arbimon
 - CE-1312 Fixed filters for hours section on the Recordings page
+- CE-1309 Download the recording with the original frequency from the Visualizer page
 
 ## v3.0.35 - August 25, 2021
 
