@@ -506,7 +506,7 @@ router.get('/:get/:oneRecUrl?', function(req, res, next) {
 router.post('/validate/:oneRecUrl?', function(req, res, next) {
     res.type('json');
     if(!req.haveAccess(req.project.project_id, "validate species")) {
-        return res.json({ error: "you dont have permission to validate species" });
+        return res.json({ error: "You do not have permission to validate species" });
     }
 
     model.recordings.validate(req.recording, req.session.user.id, req.project.project_id, req.body, function(err, validations) {

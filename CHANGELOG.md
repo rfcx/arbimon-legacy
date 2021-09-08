@@ -5,6 +5,7 @@
 New features:
 
 - CE-1225 The URL Column is added to the export record sheet
+- CE-1219 Users can reset validation on the spectrogram boxes
 
 Resolved issues:
 
