@@ -301,11 +301,12 @@ router.get('/download/:recordingId', function(req, res, next) {
     downloadRecordingById(req, res, next);
 });
 
-function getRecordingFromS3(bucket, key, res) {
-    if (!s3) {
-        s3 = new AWS.S3();
+function getRecordingFromS3(bucket, legacy, key, res) {
+    if(!s3 || !s3RFCx){
+        defineS3Clients()
     }
-    return s3
+    let s3Client = legacy? s3 : s3RFCx;
+    return s3Client
         .getObject({ Bucket: bucket, Key: key })
         .createReadStream()
         .pipe(res)
@@ -320,7 +321,7 @@ async function downloadRecordingById(req, res, next) {
     res.set({
         'Content-Disposition' : 'attachment; filename="'+recording[0].name
     });
-    await getRecordingFromS3(config(legacy? 'aws' : 'aws-rfcx').bucketName, recording[0].uri, res);
+    await getRecordingFromS3(config(legacy? 'aws' : 'aws-rfcx').bucketName, legacy, recording[0].uri, res);
 }
 
 
