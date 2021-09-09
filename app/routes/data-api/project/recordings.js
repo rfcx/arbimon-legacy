@@ -8,7 +8,7 @@ const stream = require('stream');
 const moment = require('moment');
 const dayInMs = 24 * 60 * 60 * 1000;
 var config = require('../../../config');
-const rfcxConfig = config('rfcx');
+
 let s3, s3RFCx;
 let cachedData = {
     counts: { },
@@ -285,7 +285,7 @@ processFiltersData = async function(req, res, next) {
                         delete row.meta;
                     }
                     if (row.url) {
-                        row.url = `${rfcxConfig.apiBaseUrl}/api/project/${req.project.url}/recordings/download/${row.url}`;
+                        row.url = `${config('hosts').publicUrl}/api/project/${req.project.url}/recordings/download/${row.url}`;
                     }
                     callback();
                 }

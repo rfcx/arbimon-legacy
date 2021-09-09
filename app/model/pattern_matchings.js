@@ -20,7 +20,7 @@ var dbpool       = require('../utils/dbpool');
 var Recordings   = require('./recordings');
 var Projects     = require('./projects');
 var Templates     = require('./templates');
-const rfcxConfig = config('rfcx');
+
 // local variables
 var s3;
 var lambda = new AWS.Lambda();
@@ -608,7 +608,7 @@ var PatternMatchings = {
         PatternMatchings.combineDatetime(pmr);
         delete pmr.datetime;
         if (pmr.recording_id) {
-            pmr.url = `${rfcxConfig.apiBaseUrl}/api/project/${projectUrl}/recordings/download/${pmr.recording_id}`;
+            pmr.url = `${config('hosts').publicUrl}/api/project/${projectUrl}/recordings/download/${pmr.recording_id}`;
             delete pmr.recording_id;
         }
         if (pmr.meta && pmr.recording) {
