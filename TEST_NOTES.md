@@ -1,6 +1,11 @@
 # Arbimon Test Notes
 Test Notes are used to list what pages / components / features / user flows are affected by each update.
 
+## v3.0.37
+
+- CE-1370 Present validations using PM results are visible in the Training Sets
+ - the test cases here: https://jira.rfcx.org/secure/Tests.jspa#/testCase/WB-T257
+
 ## v3.0.36
 
  - CE-1266 Fixed the date and time columns issues in the Pattern Matching Export CSV sheet

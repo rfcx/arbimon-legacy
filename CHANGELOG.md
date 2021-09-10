@@ -1,6 +1,12 @@
 # Arbimon Release Notes
 
-## v3.0.36 - August XX, 2021
+## v3.0.37 - September XX, 2021
+
+Resolved issues:
+
+- CE-1370 Present validations using PM results are visible in the Training Sets
+
+## v3.0.36 - September XX, 2021
 
 New features:
 
