@@ -1,6 +1,20 @@
 # Arbimon Test Notes
 Test Notes are used to list what pages / components / features / user flows are affected by each update.
 
+## v3.0.36
+
+ - CE-1266 Fixed the date and time columns issues in the Pattern Matching Export CSV sheet
+ - Pattern Matching details page: Export CSV: The user can see different columns in the report, like a year, month, day, hour, minute
+ - CE-1219 Users can reset validation on the spectrogram boxes
+  - Visualizer page: The user hovers on the blue box. The user will see the deleting icon. The user can click on the icon. The user will see the popup window with the suggestion to remove the species on the spectrogram. The user can confirm or reject the suggestion.
+  - The user validates any box on the Pattern Matching details page. The user navigates to the Visualizer page. The user will see the validated box on the spectrogram. The user can click on the icon. The user will see the popup window with the suggestion to remove the species on the spectrogram. The user confirms the suggestion. The box is hidden. The original Pattern Matching box is not validated on the Pettern Matching details page.
+- CE-1266 Fixed the date and time columns issues in the Pattern Matching Export CSV sheet
+  - Pattern Matching details page: Export CSV: The user can see different columns in the report, like a year, month, day, hour, minute
+- CE-1225 The URL Column is added to the export record sheet
+  - Recordings page: Export: Select url as parameter in the recording data: The user can downloads any recording from the export record sheet
+- CE-1309 Download the recording with the original frequency from the Visualizer page
+  - Visualizer page: The downloaded recording should be with the original frequency.
+
 ## v3.0.35
 
 - CE-1183 Fixed filter in the recordings page. The user is able to select the month of January
@@ -24,7 +38,7 @@ Test Notes are used to list what pages / components / features / user flows are 
 - CE-834 Fixed issue with the cluster audio frequency filter
   - Analysis tab: Clustering tab: Clustering job page: The user asks for events between 1 and 9 kHz. The filter is returning events with requirement frequency. The user selects the dots and navigates to the Visualizer page. The user sees all selected boxes with the right frequency.
 - CE-1231 Check the logic to add a new species/song to the project_classes table when the user validate PM box from the PM page
-  - Select Pattern Matching and it should not have the species/song on visualizer page 
+  - Select Pattern Matching and it should not have the species/song on visualizer page
   (Ex. In PM page is the "Contopus virens, Common Song" but it should not have "Contopus virens, Common Song" in species list on visualizer page)
   - Validate "Present" on PM box from the PM page
   - Open visualizer page, it will see the species/song (Contopus virens, Common Song) in species list

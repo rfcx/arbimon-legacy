@@ -107,7 +107,7 @@ router.get('/:patternMatching/site-index', function(req, res, next) {
         }).catch(next);
 });
 
-router.get('/:patternMatching/rois.csv', function(req, res, next) {
+router.get('/:patternMatching/:jobName?', function(req, res, next) {
     if(req.query.out=="text"){
         res.type('text/plain');
     } else {
@@ -124,7 +124,13 @@ router.get('/:patternMatching/rois.csv', function(req, res, next) {
 
     model.patternMatchings.exportRois(req.params.patternMatching, filters).then(function(results) {
         var datastream = results[0];
-        var fields = results[1].map(function(f){return f.name;});
+        var fields = results[1].map(function(f){return f.name});
+        ['year', 'month', 'day', 'hour', 'minute', 'url'].forEach(item=> { fields.push(item) });
+        ['datetime', 'meta', 'recording_id'].forEach(item=> {
+            let index = fields.findIndex(i => i === item);
+            fields.splice(index, 1);
+        });
+
         var colOrder={
             id: -16,
             recording: -15,
@@ -133,7 +139,7 @@ router.get('/:patternMatching/rois.csv', function(req, res, next) {
             month: -12,
             day: -11,
             hour: -10,
-            min: -9,
+            minute: -9,
             species: -8,
             songtype: -7,
             x1: -6,
@@ -154,6 +160,9 @@ router.get('/:patternMatching/rois.csv', function(req, res, next) {
         });
 
         datastream
+            .on('data', (data) => {
+                model.patternMatchings.exportDataFormatted(data, req.project.url);
+            })
             .pipe(csv_stringify({header:true, columns:fields}))
             .pipe(res);
     }).catch(next);

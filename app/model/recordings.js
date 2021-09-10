@@ -584,7 +584,7 @@ var Recordings = {
                 if(err) return callback(err);
 
                 var transcode_args = {
-                    sample_rate: 44100,
+                    sample_rate: recording.sample_rate? recording.sample_rate :44100,
                     format: 'mp3',
                     channels: 1
                 };
@@ -1146,7 +1146,7 @@ var Recordings = {
             }
 
             if(parameters.range) {
-                constraints.push('r.datetime BETWEEN ? AND ?');
+                constraints.push('r.datetime BETWEEN ? AND ? AND r.datetime IS NOT NULL');
                 data.push(getUTC(parameters.range.from), getUTC(parameters.range.to));
             }
 
@@ -1174,7 +1174,7 @@ var Recordings = {
                 data.push(parameters.days);
             }
 
-            if(parameters.hours) {
+            if(parameters.hours !== undefined) {
                 constraints.push('HOUR(r.datetime) IN (?)');
                 data.push(parameters.hours);
             }
@@ -1357,7 +1357,7 @@ var Recordings = {
         },
         exportProjections: {
             recording:arrayOrSingle(joi.string().valid(
-                'filename', 'site', 'day', 'hour'
+                'filename', 'site', 'day', 'hour', 'url'
             )),
             species: arrayOrSingle(joi.number()),
             validation:  arrayOrSingle(joi.number()),
@@ -1588,6 +1588,7 @@ var Recordings = {
                             'year' : 'DATE_FORMAT(r.datetime, "%y") as `year`',
                             'hour' : 'DATE_FORMAT(r.datetime, "%T") as hour',
                             'date' : 'DATE_FORMAT(r.datetime, "%Y/%m/%d") as `date`',
+                            'url' : 'r.recording_id as url'
                         };
                         summaryBuilders[c].addProjection.apply(summaryBuilders[c], projection_parameters.recording.map(function(recParam){
                             console.log("recParam", recParam, recParamMap[recParam]);
