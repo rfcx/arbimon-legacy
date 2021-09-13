@@ -1,6 +1,9 @@
 # Arbimon Test Notes
 Test Notes are used to list what pages / components / features / user flows are affected by each update.
 
+- CE-1378 Save recordings with validated species to the playlist
+ - the test cases here: https://jira.rfcx.org/secure/Tests.jspa#/project/10700/testCase?folderId=76
+
 ## v3.0.36
 
  - CE-1266 Fixed the date and time columns issues in the Pattern Matching Export CSV sheet

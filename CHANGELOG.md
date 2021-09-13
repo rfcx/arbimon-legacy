@@ -1,6 +1,12 @@
 # Arbimon Release Notes
 
-## v3.0.36 - August XX, 2021
+## v3.0.37 - September XX, 2021
+
+Resolved issues:
+
+- CE-1378 Save recordings with validated species to the playlist
+
+## v3.0.36 - September 10, 2021
 
 New features:
 
