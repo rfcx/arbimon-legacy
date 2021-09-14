@@ -5,8 +5,10 @@
 Resolved issues:
 
 - CE-1370 Present validations using PM results are visible in the Training Sets
+- CE-1378 Save recordings with validated species to the playlist
+- CE-1375 Cases of auto-generated filename are removed
 
-## v3.0.36 - September XX, 2021
+## v3.0.36 - September 10, 2021
 
 New features:
 
