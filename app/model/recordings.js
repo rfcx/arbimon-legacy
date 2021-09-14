@@ -378,7 +378,7 @@ var Recordings = {
                         d.legacy = Recordings.isLegacy(d);
                         d.meta = d.meta ? Recordings.__parse_meta_data(d.meta) : null;
                         d.file = d.meta && d.meta.filename? d.meta.filename : d.file;
-                        d.explorerUrl = d.legacy ? null : `${rfcxConfig.explorerBaseUrl}/explorer/${d.external_id}?t=${moment(d.datetime_utc).format('YYYYMMDDTHHmmssSSS')}Z`;
+                        d.explorerUrl = d.legacy ? null : `${rfcxConfig.explorerBaseUrl}/explorer/${d.external_id}` + (d.datetime_utc ? `?t=${moment(d.datetime_utc).format('YYYYMMDDTHHmmssSSS')}Z` : '');
                     })
                     return data;
                 }
@@ -1304,11 +1304,8 @@ var Recordings = {
                                 _1.recorder = "AudioMoth";
                             }
                             _1.meta = _1.meta ? Recordings.__parse_meta_data(_1.meta) : null;
-                            _1.filename = _1.meta? (_1.meta.filename? _1.meta.filename : 'Unknown') : null;
+                            _1.filename = _1.meta && _1.meta.filename? _1.meta.filename : 'Unknown';
                             Recordings.__compute_thumbnail_path_async(_1);
-                            if (!_1.legacy) {
-                                _1.file = `${moment.utc(_1.datetime).format('YYYYMMDD_HHmmss')}${path.extname(_1.file)}`;
-                            }
                         }
                     } else {
                         r = r[0];
