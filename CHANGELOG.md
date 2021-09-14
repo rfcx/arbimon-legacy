@@ -1,5 +1,7 @@
 # Arbimon Release Notes
 
+- CE-1375 Cases of auto-generated filename are removed
+
 ## v3.0.36 - August XX, 2021
 
 New features:
