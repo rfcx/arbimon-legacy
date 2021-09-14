@@ -3,6 +3,8 @@ Test Notes are used to list what pages / components / features / user flows are 
 
 ## v3.0.37
 
+- CE-1370 Present validations using PM results are visible in the Training Sets
+ - the test cases here: https://jira.rfcx.org/secure/Tests.jspa#/testCase/WB-T257
 - CE-1378 Save recordings with validated species to the playlist
  - the test cases here: https://jira.rfcx.org/secure/Tests.jspa#/project/10700/testCase?folderId=76
 - CE-1375 Cases of auto-generated filename are removed
