@@ -8,6 +8,7 @@ const stream = require('stream');
 const moment = require('moment');
 const dayInMs = 24 * 60 * 60 * 1000;
 var config = require('../../../config');
+var mime = require('mime');
 
 let s3, s3RFCx;
 let cachedData = {
@@ -133,7 +134,7 @@ processFiltersData = async function(req, res, next) {
     filters.project_id = req.project.project_id | 0;
 
     console.log(JSON.stringify(filters));
-
+    res.set({'Content-Disposition' : `attachment; filename=${req.path.substring(1)}`});
     var projection = req.query.show;
     // Combine Occupancy models report.
     if (projectionFilter && projectionFilter.species) {
@@ -297,7 +298,6 @@ processFiltersData = async function(req, res, next) {
 }
 
 router.get('/download/:recordingId', function(req, res, next) {
-    res.type('json');
     downloadRecordingById(req, res, next);
 });
 
@@ -318,9 +318,9 @@ async function downloadRecordingById(req, res, next) {
     const namePartials = recording[0].uri.split('/');
     recording[0].name = namePartials[namePartials.length - 1];
     let legacy = recording[0].uri.startsWith('project_');
-    res.set({
-        'Content-Disposition' : 'attachment; filename="'+recording[0].name
-    });
+    res.set({'Content-Disposition' : `attachment; filename=${recording[0].name}`});
+    let mimetype = mime.lookup(recording[0].name);
+    res.setHeader('Content-type', mimetype);
     await getRecordingFromS3(config(legacy? 'aws' : 'aws-rfcx').bucketName, legacy, recording[0].uri, res);
 }
 

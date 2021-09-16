@@ -104,6 +104,10 @@ angular.module('a2.audiodata.recordings', [
             listParams.tags = listParams.tags.flat()
         }
 
+        if (listParams.presence && listParams.presence.length) {
+            listParams.presence = listParams.presence[0]
+        }
+
         var modalInstance = $modal.open({
             controller: 'SavePlaylistModalInstanceCtrl',
             templateUrl: '/app/audiodata/create-playlist.html',
