@@ -319,7 +319,7 @@ async function downloadRecordingById(req, res, next) {
     recording[0].name = namePartials[namePartials.length - 1];
     let legacy = recording[0].uri.startsWith('project_');
     res.set({'Content-Disposition' : `attachment; filename=${recording[0].name}`});
-    let mimetype = mime.lookup(recording[0].name);
+    let mimetype = mime.getType(recording[0].name);
     res.setHeader('Content-type', mimetype);
     await getRecordingFromS3(config(legacy? 'aws' : 'aws-rfcx').bucketName, legacy, recording[0].uri, res);
 }
