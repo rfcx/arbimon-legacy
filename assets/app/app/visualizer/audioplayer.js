@@ -248,6 +248,9 @@ angular.module('a2.visualizer.audio-player', [])
                 //     this.setup_ctx_connections();
                 // }
             }).bind(this));
+            this.audio.addEventListener('error', (function(err) {
+                console.log(err)
+            }).bind(this));
         }).bind(this), (function(error) {
             this.error = true;
             console.warn(error);

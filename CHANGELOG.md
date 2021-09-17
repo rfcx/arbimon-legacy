@@ -1,6 +1,10 @@
 # Arbimon Release Notes
 
-## v3.0.37 - September XX, 2021
+## v3.0.38 - September 16, 2021
+
+- CE-1398 The inability to hear recordings is fixed in the Visualizer page via Safari browser
+
+## v3.0.37 - September 16, 2021
 
 Resolved issues:
 
