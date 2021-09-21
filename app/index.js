@@ -8,7 +8,6 @@ var path = require('path');
 var express = require('express');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
-var bodyParser = require('body-parser');
 var session = require('express-session');
 var SessionStore = require('express-mysql-session')(session);
 var busboy = require('connect-busboy');
