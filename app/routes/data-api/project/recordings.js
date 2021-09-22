@@ -422,7 +422,7 @@ router.get('/available/:recUrl?', function(req, res, next) {
     );
 });
 
-// get info about a selected recording
+// Visualizer page | get info about one selected recording
 router.param('oneRecUrl', function(req, res, next, recording_url){
     model.recordings.findByUrlMatch(recording_url, req.project.project_id, {limit:1}, function(err, recordings) {
         if(err){
@@ -431,6 +431,8 @@ router.param('oneRecUrl', function(req, res, next, recording_url){
         if(!recordings.length){
             return res.status(404).json({ error: "recording not found"});
         }
+        let recExt = path.extname(recordings[0].uri);
+        recordings[0].ext = recExt;
         req.recording = recordings[0];
         return next();
     });
@@ -475,7 +477,7 @@ router.get('/:get/:oneRecUrl?', function(req, res, next) {
     switch(get){
         case 'info'  :
             var url_comps = /(.*)\/([^/]+)\/([^/]+)/.exec(req.originalUrl);
-            recording.audioUrl = url_comps[1] + "/audio/" + recording.id;
+            recording.audioUrl = url_comps[1] + "/audio/" + recording.id + recording.ext;
             recording.imageUrl = url_comps[1] + "/image/" + recording.id;
             model.recordings.fetchValidations(recording, function(err, validations){
                 if(err) return next(err);
