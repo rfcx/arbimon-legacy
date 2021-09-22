@@ -1,5 +1,9 @@
 # Arbimon Release Notes
 
+New feature:
+
+- CE-1380 Support open project with RFCx project id
+
 ## v3.0.37 - September XX, 2021
 
 Resolved issues:
