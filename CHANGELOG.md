@@ -1,5 +1,7 @@
 # Arbimon Release Notes
 
+- CE-1342 ROI template issue is fixed
+
 ## v3.0.37 - September XX, 2021
 
 Resolved issues:
