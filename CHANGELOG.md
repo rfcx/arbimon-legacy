@@ -2,6 +2,12 @@
 
 ## v3.0.38 - September XX, 2021
 
+New feature:
+
+- CE-1380 Support open project with RFCx project id
+
+Resolved issues:
+
 - CE-1398 The inability to hear recordings is fixed in the Visualizer page via Safari browser
 - The label is wrapping to the next strings for the final box on the spectrogram
 - Fixed the issue with changing the position of a recording
