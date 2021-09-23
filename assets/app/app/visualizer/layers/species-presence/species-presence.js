@@ -26,6 +26,9 @@ angular.module('a2.visualizer.layers.species-presence', [
     var self = this;
     self.speciesPresence = null;
     self.isRemoving = false;
+    self.checkSpectroWidth = function(leftBox, widthBox, widthSpectro) {
+        return leftBox + widthBox + 50 < widthSpectro;
+    };
     self.togglePopup = function(roi) {
         roi.isPopupOpened = !roi.isPopupOpened;
     };

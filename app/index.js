@@ -8,7 +8,6 @@ var path = require('path');
 var express = require('express');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
-var bodyParser = require('body-parser');
 var session = require('express-session');
 var SessionStore = require('express-mysql-session')(session);
 var busboy = require('connect-busboy');
@@ -92,8 +91,12 @@ app.use(busboy({
     }
 }));
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(express.json({limit: '50mb'}));
+app.use(express.urlencoded({
+    extended: false,
+    limit: '50mb'
+}));
+
 app.use(express.static(www_root_path));
 if(app.get('env') === 'development') {
     app.use('/docs', express.static(path.join(__dirname, 'docs')));
