@@ -8,6 +8,7 @@ var path = require('path');
 var express = require('express');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
+var bodyParser = require('body-parser');
 var session = require('express-session');
 var SessionStore = require('express-mysql-session')(session);
 var busboy = require('connect-busboy');
@@ -91,8 +92,8 @@ app.use(busboy({
     }
 }));
 
-app.use(express.json({limit: '50mb'}));
-app.use(express.urlencoded({
+app.use(bodyParser.json({limit: '50mb'}));
+app.use(bodyParser.urlencoded({
     extended: false,
     limit: '50mb'
 }));
