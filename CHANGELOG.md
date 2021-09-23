@@ -1,5 +1,7 @@
 # Arbimon Release Notes
 
+- CE-1414 The issue with updating projects is fixed
+
 ## v3.0.38 - September XX, 2021
 
 New feature:
