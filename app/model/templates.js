@@ -278,7 +278,7 @@ var Templates = {
 
             var left = Math.floor(template.x1/px2sec);
             var top = spectrogram.bitmap.height-Math.floor(template.y2/px2hz);
-            var right = Math.ceil(template.x2/px2sec);
+            var right = Math.floor(template.x2/px2sec);
             var bottom = spectrogram.bitmap.height-Math.floor(template.y1/px2hz);
 
             var roi = spectrogram.clone().crop(left, top, right - left, bottom - top);

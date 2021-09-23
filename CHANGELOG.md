@@ -12,6 +12,7 @@ Resolved issues:
 - The label is wrapping to the next strings for the final box on the spectrogram
 - Fixed the issue with changing the position of a recording
 - CE-1371 The migration popup is deleted
+- CE-1342 ROI template issue is fixed
 
 ## v3.0.37 - September 16, 2021
 
