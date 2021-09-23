@@ -1,8 +1,20 @@
 # Arbimon Release Notes
 
+## v3.0.38 - September XX, 2021
+
+New feature:
+
+- CE-1380 Support open project with RFCx project id
+
+Resolved issues:
+
+- CE-1398 The inability to hear recordings is fixed in the Visualizer page via Safari browser
+- The label is wrapping to the next strings for the final box on the spectrogram
+- Fixed the issue with changing the position of a recording
+- CE-1371 The migration popup is deleted
 - CE-1342 ROI template issue is fixed
 
-## v3.0.37 - September XX, 2021
+## v3.0.37 - September 16, 2021
 
 Resolved issues:
 
