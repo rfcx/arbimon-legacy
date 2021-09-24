@@ -235,7 +235,7 @@ angular.module('a2.audiodata.sites', [
 
         // do not include equal location metadata to update endpoint
         if (action === 'update') {
-            var locationArray = ['lat', 'lon', 'alt', 'updated_at'];
+            var locationArray = ['alt', 'updated_at'];
             for (var i = 0; i < locationArray.length; i++) {
                 var key = locationArray[i];
                 if ($scope.temp[key] === $scope.selected[key]) {
