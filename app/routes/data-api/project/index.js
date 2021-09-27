@@ -191,7 +191,7 @@ router.post('/:projectUrl/info/update', function(req, res, next) {
                 project_id: joi.number().required(),
                 name: joi.string(),
                 url: joi.string(),
-                description: joi.string().optional().empty(''),
+                description: joi.string().allow(null, '').optional(),
                 is_private: joi.number(),
             };
 

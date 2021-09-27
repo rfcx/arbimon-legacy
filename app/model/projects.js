@@ -337,7 +337,7 @@ var Projects = {
             project_id: joi.number().required(),
             name: joi.string(),
             url: joi.string(),
-            description: joi.string().optional(),
+            description: joi.string().allow(null, '').optional(),
             project_type_id: joi.number(),
             is_private: [joi.number().valid(0,1), joi.boolean()],
             is_enabled: [joi.number().valid(0,1), joi.boolean()],
