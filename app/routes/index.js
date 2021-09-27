@@ -46,14 +46,7 @@ router.get('/classifiers', function(req, res) {
 });
 
 router.get('/connect-with-rfcx', function(req, res) {
-    const query = req.query || {}
-    res.type('html');
-    res.render('connect-with-rfcx', {
-        user: req.session.user,
-        auth0UniversalLoginUrl: auth0Service.universalLoginUrl,
-        error: query.error || null,
-        state: ''
-    });
+    res.redirect('/');
 });
 
 
