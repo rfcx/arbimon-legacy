@@ -15,6 +15,7 @@ Resolved issues:
 - Fixed the issue with changing the position of a recording
 - CE-1371 The migration popup is deleted
 - CE-1342 ROI template issue is fixed
+- The Longitude issue is fixed
 
 ## v3.0.37 - September 16, 2021
 
