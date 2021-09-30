@@ -771,7 +771,6 @@ var Sites = {
             try {
                 const body = JSON.parse(response.body);
                 if (body && body.error) {
-                    console.log('\n\nerr', body)
                     throw new Error('Failed to update site');
                 }
             } catch (e) {
@@ -817,7 +816,6 @@ var Sites = {
             try {
                 const body = JSON.parse(response.body);
                 if (body && body.error) {
-                    console.log('\n\nerr', body)
                     throw new Error('Failed to delete site');
                 }
             } catch (e) {
