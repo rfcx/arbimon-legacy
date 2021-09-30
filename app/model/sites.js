@@ -720,7 +720,7 @@ var Sites = {
         })
     },
 
-    updateSite: async function(site, user, idToken) {
+    updateSite: async function(site, idToken) {
         let db;
         return dbpool.getConnection()
             .then(async (connection) => {
@@ -746,7 +746,7 @@ var Sites = {
                     await db.rollback();
                     await db.release();
                 }
-                throw new APIError('Failed to update site');
+                throw new Error('Failed to update site');
             })
     },
 
@@ -771,9 +771,12 @@ var Sites = {
             try {
                 const body = JSON.parse(response.body);
                 if (body && body.error) {
-                    throw new APIError('Failed to update site');
+                    console.log('\n\nerr', body)
+                    throw new Error('Failed to update site');
                 }
-            } catch (e) { }
+            } catch (e) {
+                throw new Error('Failed to update site');
+            }
         })
     },
 
@@ -796,7 +799,7 @@ var Sites = {
                     await db.rollback();
                     await db.release();
                 }
-                throw new APIError('Failed to delete site');
+                throw new Error('Failed to delete site');
             })
     },
 
@@ -811,14 +814,15 @@ var Sites = {
             }
           }
         return rp(options).then((response) => {
-            console.log('response', response)
             try {
                 const body = JSON.parse(response.body);
-                console.log('body', body)
                 if (body && body.error) {
-                    throw new APIError('Failed to delete site');
+                    console.log('\n\nerr', body)
+                    throw new Error('Failed to delete site');
                 }
-            } catch (e) { }
+            } catch (e) {
+                throw new Error('Failed to delete site');
+             }
         })
     },
 
