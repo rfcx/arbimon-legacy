@@ -13,11 +13,6 @@
     <div class="content-wrap">
         <% include fragments/home-nav %>
         <div class="container homepage">
-            <div>
-                <%if (!user.rfcx_id && user.username !== 'guest') { %>
-                    <% include connect-with-rfcx-alert %>
-                <% } %>
-            </div>
             <div class="row">
                 <div class="col-md-12">
                     <% if (state === 'home' || (user && user.isAnonymousGuest)) { %>

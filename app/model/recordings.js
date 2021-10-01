@@ -87,7 +87,7 @@ var Recordings = {
                 patternFound = true;
                 deferred.resolve(recording_url);
             // match recording ids
-            } else if((rec_match = /^(\d+)$/.exec(recording_url))){
+            } else if((rec_match = /^(\d+)?(\.(wav|flac|opus))?/.exec(recording_url))){
                 patternFound = true;
                 deferred.resolve({
                     id    : rec_match[ 1] | 0

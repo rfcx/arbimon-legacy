@@ -92,8 +92,12 @@ app.use(busboy({
     }
 }));
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json({limit: '50mb'}));
+app.use(bodyParser.urlencoded({
+    extended: false,
+    limit: '50mb'
+}));
+
 app.use(express.static(www_root_path));
 if(app.get('env') === 'development') {
     app.use('/docs', express.static(path.join(__dirname, 'docs')));

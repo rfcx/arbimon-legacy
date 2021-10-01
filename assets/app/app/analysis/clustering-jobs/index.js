@@ -420,7 +420,6 @@ angular.module('a2.analysis.clustering-jobs', [
         }
         // find related records
         if ($scope.selectedClusters && $scope.selectedClusters.aed && $scope.selectedClusters.aed.length) {
-            // TO DO: filter recordings from clusters object.
             return a2AudioEventDetectionsClustering.searchClusteredDetections($scope.selectedClusters.aed.length === 1 ?
                 {aed_id: $scope.selectedClusters.aed} : {aed_id_in: $scope.selectedClusters.aed})
                 .then(function(data) {
