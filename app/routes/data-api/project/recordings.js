@@ -319,8 +319,6 @@ async function downloadRecordingById(req, res, next) {
     recording[0].name = namePartials[namePartials.length - 1];
     let legacy = recording[0].uri.startsWith('project_');
     res.set({'Content-Disposition' : `attachment; filename=${recording[0].name}`});
-    let mimetype = mime.getType(recording[0].name);
-    res.setHeader('Content-type', mimetype);
     await getRecordingFromS3(config(legacy? 'aws' : 'aws-rfcx').bucketName, legacy, recording[0].uri, res);
 }
 
@@ -431,8 +429,6 @@ router.param('oneRecUrl', function(req, res, next, recording_url){
         if(!recordings.length){
             return res.status(404).json({ error: "recording not found"});
         }
-        let recExt = path.extname(recordings[0].uri);
-        recordings[0].ext = recExt;
         req.recording = recordings[0];
         return next();
     });
@@ -477,7 +473,7 @@ router.get('/:get/:oneRecUrl?', function(req, res, next) {
     switch(get){
         case 'info'  :
             var url_comps = /(.*)\/([^/]+)\/([^/]+)/.exec(req.originalUrl);
-            recording.audioUrl = url_comps[1] + "/audio/" + recording.id + recording.ext;
+            recording.audioUrl = url_comps[1] + "/audio/" + recording.id;
             recording.imageUrl = url_comps[1] + "/image/" + recording.id;
             model.recordings.fetchValidations(recording, function(err, validations){
                 if(err) return next(err);
