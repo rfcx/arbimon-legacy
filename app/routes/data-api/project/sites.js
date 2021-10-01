@@ -76,7 +76,7 @@ router.post('/update', function(req, res, next) {
 
     site.project_id = site.project? site.project.project_id : project.project_id;
 
-    model.sites.updateSite(site, { ...req.session.user, user_id: req.session.user.id }, req.session.idToken).then(function() {
+    model.sites.updateSite(site, req.session.idToken).then(function() {
         res.json({ message: 'Site updated' });
     }).catch(next);
 });
