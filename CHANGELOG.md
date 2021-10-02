@@ -1,8 +1,12 @@
 # Arbimon Release Notes
 
-- CE-1414 The issue with updating projects is fixed
+## v3.0.39 - October XX, 2021
 
-## v3.0.38 - September XX, 2021
+Resolved issues:
+
+- CE-1398 Regex logic is updated for audio path
+
+## v3.0.38 - October 01, 2021
 
 New feature:
 
@@ -16,6 +20,7 @@ Resolved issues:
 - CE-1371 The migration popup is deleted
 - CE-1342 ROI template issue is fixed
 - The Longitude issue is fixed
+- CE-1414 The issue with updating projects is fixed
 
 ## v3.0.37 - September 16, 2021
 
