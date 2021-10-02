@@ -86,6 +86,12 @@ var Recordings = {
             if(typeof recording_url == "object"){
                 patternFound = true;
                 deferred.resolve(recording_url);
+            // match recording id for the audio file, like: 3311710.flac
+            } else if((rec_match = /^(\d+)?(\.(wav|flac|opus))/.exec(recording_url))){
+                patternFound = true;
+                deferred.resolve({
+                    id    : rec_match[ 1] | 0
+                });
             // match recording ids
             } else if((rec_match = /^(\d+)$/.exec(recording_url))){
                 patternFound = true;
