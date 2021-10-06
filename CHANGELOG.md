@@ -1,9 +1,10 @@
 # Arbimon Release Notes
 
-## v3.0.39 - October XX, 2021
+## v3.0.39 - October 07, 2021
 
 Resolved issues:
 
+- The issue with getting all species grouped detections is fixed
 - CE-1398 Regex logic is updated for audio path
 - CE-1398 The inability to hear recordings is fixed in the Visualizer page via Safari browser
 

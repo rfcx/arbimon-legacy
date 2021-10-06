@@ -1,6 +1,9 @@
 # Arbimon Test Notes
 Test Notes are used to list what pages / components / features / user flows are affected by each update.
 
+## v3.0.39
+- The issue with getting all species grouped detections is fixed
+  - Recordings page: check all types of exports in the Export reports filter
 - CE-1398 The inability to hear recordings is fixed in the Visualizer page via Safari browser
   - Visualizer page: the user can select any site and date in the calendar in the Safari/Chrome
   - Visualizer page: the user is able to hear the sound in the Safari/Chrome

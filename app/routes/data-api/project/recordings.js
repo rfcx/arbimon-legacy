@@ -218,7 +218,11 @@ processFiltersData = async function(req, res, next) {
     }
     // Combine grouped detections report.
     if (projectionFilter && projectionFilter.grouped && projectionFilter.validation && !projectionFilter.species) {
-        return model.recordings.exportRecordingData(projectionFilter, filters).then(async function(results) {
+        let sites
+        model.projects.getProjectSites(filters.project_id).then(function(rows) {
+            sites = rows.map(s=>s.name)
+        })
+        return model.recordings.groupedDetections(projectionFilter, filters).then(async function(results) {
             let gKey = projectionFilter.grouped;
             let fields = [];
             results.forEach(result => {
@@ -238,6 +242,18 @@ processFiltersData = async function(req, res, next) {
                     data[s][f] += r[f] === '---' || r[f] === undefined ? 0 : +r[f];
                 })
             });
+            let addSites = sites.filter(s => !Object.keys(data).includes(s))
+            if (addSites && addSites.length && gKey === 'site') {
+                addSites.forEach(s => {
+                    if (!data[s]) {
+                        data[s] = {};
+                        data[s][gKey] = s;
+                    };
+                    fields.forEach((f) => {
+                        if (data[s][f] === undefined) { data[s][f] = 0 };
+                    })
+                })
+            }
             fields.unshift(gKey);
             let datastream = new stream.Readable({objectMode: true});
                 let streamArray = Object.values(data);
