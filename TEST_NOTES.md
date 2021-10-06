@@ -1,6 +1,16 @@
 # Arbimon Test Notes
 Test Notes are used to list what pages / components / features / user flows are affected by each update.
 
+- CE-1398 The inability to hear recordings is fixed in the Visualizer page via Safari browser
+  - Visualizer page: the user can select any site and date in the calendar in the Safari/Chrome
+  - Visualizer page: the user is able to hear the sound in the Safari/Chrome
+  - Visualizer page: the user is able to move on the recording in the Safari/Chrome
+  - Visualizer page: the user can select any playlist in the Safari/Chrome
+  - Visualizer page: the user is able to hear the recording sound in the playlist in Safari/Chrome
+  - Visualizer page: the user is able to move on the recording in the playlist in the Safari/Chrome
+  - Recording page: the user can navigates to the Visualizer page in the Safari/Chrome
+  - Pattern Matching page: the user can navigates to the Visualizer page in the Safari/Chrome
+
 ## v3.0.37
 
 - CE-1370 Present validations using PM results are visible in the Training Sets
