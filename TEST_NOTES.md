@@ -1,6 +1,10 @@
 # Arbimon Test Notes
 Test Notes are used to list what pages / components / features / user flows are affected by each update.
 
+## v3.0.39
+- The issue with getting all species grouped detections is fixed
+  - Recordings page: check all types of exports in the Export reports filter
+
 ## v3.0.37
 
 - CE-1370 Present validations using PM results are visible in the Training Sets
