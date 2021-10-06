@@ -211,7 +211,8 @@ angular.module('a2.visualizer.audio-player', [])
         var audio = new $window.Audio();
 
         url = url.replace('|', '/');
-        audio.addEventListener('error', function() {
+        audio.addEventListener('error', function(err) {
+            console.log('err', err)
             deferred.reject();
         });
 
@@ -222,6 +223,7 @@ angular.module('a2.visualizer.audio-player', [])
         // bugfix for chrome...
         $window.setTimeout(function() {
             audio.src = url;
+            console.log('audio', audio)
         }, 1);
 
         return deferred.promise;
@@ -238,7 +240,9 @@ angular.module('a2.visualizer.audio-player', [])
 
         this.load_promise = loadAudio(url).then((function(nativeAudio) {
             this.audio = nativeAudio;
+            console.log('nativeAudio', this.audio)
             this.audio.addEventListener('canplay', (function() {
+                console.log('canplay', this.audio.src, this.audio.duration)
                 // if(!this.ctx_source){
                 //     this.ctx_source = this.context.createMediaElementSource(this.audio);
                     this.duration = this.audio.duration;
