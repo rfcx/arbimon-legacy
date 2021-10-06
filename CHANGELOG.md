@@ -1,12 +1,14 @@
 # Arbimon Release Notes
 
-## v3.0.39 - October XX, 2021
+## v3.0.39 - October 07, 2021
 
 Resolved issues:
 
 - The issue with getting all species grouped detections is fixed
+- CE-1398 Regex logic is updated for audio path
+- CE-1398 The inability to hear recordings is fixed in the Visualizer page via Safari browser
 
-## v3.0.38 - September XX, 2021
+## v3.0.38 - October 01, 2021
 
 New feature:
 
@@ -14,7 +16,6 @@ New feature:
 
 Resolved issues:
 
-- CE-1398 The inability to hear recordings is fixed in the Visualizer page via Safari browser
 - The label is wrapping to the next strings for the final box on the spectrogram
 - Fixed the issue with changing the position of a recording
 - CE-1371 The migration popup is deleted
