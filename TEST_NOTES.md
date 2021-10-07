@@ -4,12 +4,12 @@ Test Notes are used to list what pages / components / features / user flows are 
 ## v3.0.39
 
 - CE-1425 Do not update project_id for site if the value is not changed
-  - Site page in the own project: Edit any data except the project
-  - Site page in the own project: Edit the project
-  - Site page in the own project: Edit all rows
-  - Site page in any project with the Amin role: Edit any data except the project
-  - Site page in any project with the Amin role: Edit the project
-  - Site page in any project with the Amin role: Edit all rows
+  - Site page in the own project: Edit any data except the project. Check a new data in the Companion/Uploader/Ranger apps
+  - Site page in the own project: Edit the project. Check a new data in the Companion/Uploader/Ranger apps
+  - Site page in the own project: Edit all rows. Check a new data in the Companion/Uploader/Ranger apps
+  - Site page in any project with the Amin role: Edit any data except the project. Check a new data in the Companion/Uploader/Ranger apps
+  - Site page in any project with the Amin role: Edit the project. Check a new data in the Companion/Uploader/Ranger apps
+  - Site page in any project with the Amin role: Edit all rows. Check a new data in the Companion/Uploader/Ranger apps
 
 
 ## v3.0.39
