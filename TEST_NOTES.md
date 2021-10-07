@@ -10,6 +10,7 @@ Test Notes are used to list what pages / components / features / user flows are 
   - Site page in any project with the Amin role: Edit any data except the project. Check a new data in the Companion/Uploader/Ranger apps
   - Site page in any project with the Amin role: Edit the project. Check a new data in the Companion/Uploader/Ranger apps
   - Site page in any project with the Amin role: Edit all rows. Check a new data in the Companion/Uploader/Ranger apps
+  - Known issues: The project owner can't change imported site's data
 
 
 ## v3.0.39
