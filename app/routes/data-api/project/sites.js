@@ -73,8 +73,10 @@ router.post('/update', function(req, res, next) {
     if(!req.haveAccess(project.project_id, "manage project sites")) {
         return res.json({ error: "you dont have permission to 'manage project sites'" });
     }
-
-    site.project_id = site.project? site.project.project_id : project.project_id;
+    // Do not update project_id if the value is not changed
+    if (site.project && site.project.project_id !== project.project_id) {
+        site.project_id = site.project.project_id;
+    }
 
     model.sites.updateSite(site, req.session.idToken).then(function() {
         res.json({ message: 'Site updated' });
