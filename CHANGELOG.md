@@ -1,5 +1,11 @@
 # Arbimon Release Notes
 
+## v3.0.40 - October XX, 2021
+
+Resolved issues:
+
+- CE-1468 Fix issue with deleting a site
+
 ## v3.0.39 - October 07, 2021
 
 Resolved issues:
