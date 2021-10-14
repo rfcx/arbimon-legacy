@@ -128,4 +128,25 @@ router.delete('/sites/:externalId', verifyToken(), hasRole(['appUser', 'rfcxUser
   }
 })
 
+router.post('/users', verifyToken(), hasRole(['systemUser']), async function(req, res) {
+    const converter = new Converter(req.body, {})
+    converter.convert('firstname').optional()
+    converter.convert('lastname').optional()
+    converter.convert('guid').default('')
+    converter.convert('email').default('')
+    converter.convert('picture').optional()
+    converter.convert('user_id').optional()
+    return converter.validate()
+      .then(async (params) => {
+        await model.users.ensureUserExistFromAuth0({
+          given_name: params.firstname,
+          family_name: params.lastname,
+          sub: params.user_id,
+          email: params.email,
+        });
+        res.sendStatus(200)
+      })
+      .catch(httpErrorHandler(req, res, 'Failed creating a user'))
+})
+
 module.exports = router;
