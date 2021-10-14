@@ -4,7 +4,12 @@
 
 Resolved issues:
 
+- CE-1425 Do not update project_id for site if the value is not changed
 - CE-1468 Fix issue with deleting a site
+
+Known issues:
+
+- The project owner can't change imported site's data
 
 ## v3.0.39 - October 07, 2021
 
