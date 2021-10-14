@@ -2,6 +2,18 @@
 Test Notes are used to list what pages / components / features / user flows are affected by each update.
 
 ## v3.0.39
+
+- CE-1425 Do not update project_id for site if the value is not changed
+  - Site page in the own project: Edit any data except the project. Check a new data in the Companion/Uploader/Ranger apps
+  - Site page in the own project: Edit the project. Check a new data in the Companion/Uploader/Ranger apps
+  - Site page in the own project: Edit all rows. Check a new data in the Companion/Uploader/Ranger apps
+  - Site page in any project with the Amin role: Edit any data except the project. Check a new data in the Companion/Uploader/Ranger apps
+  - Site page in any project with the Amin role: Edit the project. Check a new data in the Companion/Uploader/Ranger apps
+  - Site page in any project with the Amin role: Edit all rows. Check a new data in the Companion/Uploader/Ranger apps
+  - Known issues: The project owner can't change imported site's data
+
+
+## v3.0.39
 - The issue with getting all species grouped detections is fixed
   - Recordings page: check all types of exports in the Export reports filter
 - CE-1398 The inability to hear recordings is fixed in the Visualizer page via Safari browser
