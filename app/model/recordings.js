@@ -86,6 +86,12 @@ var Recordings = {
             if(typeof recording_url == "object"){
                 patternFound = true;
                 deferred.resolve(recording_url);
+            // match recording id for the audio file, like: 3311710.flac
+            } else if((rec_match = /^(\d+)?(\.(wav|flac|opus))/.exec(recording_url))){
+                patternFound = true;
+                deferred.resolve({
+                    id    : rec_match[ 1] | 0
+                });
             // match recording ids
             } else if((rec_match = /^(\d+)$/.exec(recording_url))){
                 patternFound = true;
@@ -1508,6 +1514,89 @@ var Recordings = {
             typeCast: sqlutil.parseUtcDatetime,
         })
         return queryResult;
+    },
+
+    groupedDetections: async function(projection, filters){
+        let summaryBuilders = [];
+        return Q.ninvoke(joi, 'validate', projection, Recordings.SCHEMAS.exportProjections)
+            .then(async (all) => {
+                var projection_parameters = all;
+                var promises=[];
+                if (projection_parameters.validation) {
+                    let classPromise = await models.projects.getProjectClasses(null,null,{noProject:true, ids:projection_parameters.validation}).then(async (classes) => {
+                        if (classes && classes.length) {
+                            let classesArray = classes.reduce((resultArray, item, index) => {
+                                const chunkIndex = Math.floor(index/1);
+                                if (!resultArray[chunkIndex]) {
+                                    resultArray[chunkIndex] = [];
+                                }
+                                resultArray[chunkIndex].push(item);
+                                return resultArray;
+                            }, []);
+                            let index = 0;
+                            for (let c in classesArray) {
+                                let builder = new SQLBuilder();
+                                builder.setOrderBy(filters.sortBy || 'site', !filters.sortRev);
+                                summaryBuilders.push(builder);
+                                classesArray[c].forEach(function(cls, idx){
+                                    index++;
+                                    let clsid = "p_PVAL_" + index;
+                                    summaryBuilders[c].addTable("recording_validations", clsid);
+                                    summaryBuilders[c].addTable("JOIN recordings", "r", "r.recording_id = " + clsid + ".recording_id ")
+                                    summaryBuilders[c].addTable("JOIN sites", "s", "s.site_id = r.site_id");
+                                    summaryBuilders[c].addTable("LEFT JOIN project_imported_sites", "pis", "s.site_id = pis.site_id AND pis.project_id = ?", filters.project_id);
+                                    summaryBuilders[c].addConstraint("(s.project_id = ? OR pis.project_id = ?)",[
+                                        filters.project_id,
+                                        filters.project_id
+                                    ]);
+                                    summaryBuilders[c].addConstraint(clsid + ".songtype_id = ? " +
+                                        "AND " + clsid + ".species_id = ? " +
+                                        "AND " + clsid + ".project_id = ? ", [
+                                        cls.songtype,
+                                        cls.species,
+                                        cls.project,
+                                    ]);
+                                    summaryBuilders[c].addProjection(`(CASE WHEN ${clsid}.present_review > 0 THEN ${clsid}.present_review ELSE ${clsid}.present END)` + " AS " + dbpool.escapeId("val<" + cls.species_name + "/" + cls.songtype_name + ">"));
+                                })
+                            }
+                        }
+                    })
+                    promises.push(classPromise)
+                }
+                if (!summaryBuilders.length) {
+                    let builder = await this.buildSearchQuery(filters)
+                    summaryBuilders.push(builder);
+                }
+                for (let c in summaryBuilders) {
+                    // Get rows for the detections grouped by site.
+                    if (projection.grouped && projection.grouped === 'site') {
+                        summaryBuilders[c].addProjection('s.name as site');
+                        // summaryBuilders[c].addConstraint('s.site_id=22489');
+                    }
+                    // Get rows for the detections grouped by date.
+                    if (projection.grouped && projection.grouped === 'date') {
+                        summaryBuilders[c].addProjection('DATE_FORMAT(r.datetime, "%Y/%m/%d") as date');
+                        summaryBuilders[c].setOrderBy('r.datetime');
+                    }
+                    // Get rows for the detections grouped by hour.
+                    if (projection.grouped && projection.grouped === 'hour') {
+                        summaryBuilders[c].addProjection('DATE_FORMAT(r.datetime, "%H") as hour');
+                        summaryBuilders[c].setOrderBy('r.datetime');
+                    }
+                }
+                return Q.all(promises);
+            }).then(async function() {
+                let results = [];
+                for (let builder in summaryBuilders) {
+                    let queryResult = await (projection.grouped ? dbpool.query : dbpool.streamQuery)({
+                        sql: summaryBuilders[builder].getSQL(),
+                        typeCast: sqlutil.parseUtcDatetime,
+                    })
+                    results = results.concat([...new Set(queryResult)]);
+                }
+                return results
+            })
+
     },
 
     exportRecordingData: function(projection, filters){
