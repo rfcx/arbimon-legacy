@@ -5,6 +5,7 @@
 Resolved issues:
 
 - CE-1425 Do not update project_id for site if the value is not changed
+- CE-1468 Fix issue with deleting a site
 
 Known issues:
 
