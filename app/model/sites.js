@@ -813,14 +813,9 @@ var Sites = {
             }
           }
         return rp(options).then((response) => {
-            try {
-                const body = JSON.parse(response.body);
-                if (body && body.error) {
-                    throw new Error('Failed to delete site');
-                }
-            } catch (e) {
+            if (response.statusCode !== 204) {
                 throw new Error('Failed to delete site');
-             }
+            }
         })
     },
 
