@@ -40,7 +40,7 @@ var getUTC = function (date) {
     return d;
 };
 
-var fileExtPattern = /\.(wav|flac|opus)$/;
+var fileExtPattern = /\.(wav|flac|opus)$/i;
 var freqFilterPrecision = 100;
 
 function defineS3Clients () {
@@ -87,7 +87,7 @@ var Recordings = {
                 patternFound = true;
                 deferred.resolve(recording_url);
             // match recording id for the audio file, like: 3311710.flac
-            } else if((rec_match = /^(\d+)?(\.(wav|flac|opus))/.exec(recording_url))){
+            } else if((rec_match = /^(\d+)?(\.(wav|flac|opus))/i.exec(recording_url))){
                 patternFound = true;
                 deferred.resolve({
                     id    : rec_match[ 1] | 0
@@ -101,7 +101,7 @@ var Recordings = {
             //                site     year     month    day       hour     minute
             //                1        2 3      4 5      6 7       8 9     10 11    10987654321
             //                1       01 2     12 3     23 4      34 5     45 6     54 3 2 1
-            } else if((rec_match = /^([^-]*)(-([^-]*)(-([^-]*)(-([^-_]*)([_-]([^-]*)(-([^-]*))?)?)?)?)?(\.(wav|flac))?/.exec(recording_url))){
+            } else if((rec_match = /^([^-]*)(-([^-]*)(-([^-]*)(-([^-_]*)([_-]([^-]*)(-([^-]*))?)?)?)?)?(\.(wav|flac))?/i.exec(recording_url))){
                 patternFound = true;
                 deferred.resolve({
                     site   : rec_match[ 1],
