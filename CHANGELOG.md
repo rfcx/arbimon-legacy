@@ -1,9 +1,15 @@
 # Arbimon Release Notes
 
-## v3.0.41 - October XX, 2021
+## v3.0.41 - November XX, 2021
+
+Resolved issues:
 
 - CE-1455 Fixed issue with moving of the navigation bar when there is a long project name
 - CE-1488 Fixed recordings' names in the pattern matchings export file
+
+Other:
+
+- CE-1502 Display 10 items per page in the pagination of Visualizer playlists
 
 ## v3.0.40 - October 19, 2021
 
