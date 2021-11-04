@@ -3,6 +3,7 @@
 ## v3.0.41 - October XX, 2021
 
 - CE-1455 Fixed issue with moving of the navigation bar when there is a long project name
+- CE-1488 Fixed recordings' names in the pattern matchings export file
 
 ## v3.0.40 - October 19, 2021
 
