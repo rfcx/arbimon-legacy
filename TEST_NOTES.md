@@ -1,6 +1,11 @@
 # Arbimon Test Notes
 Test Notes are used to list what pages / components / features / user flows are affected by each update.
 
+## v3.0.42
+
+- CE-1510 Fixed total validations RFM
+  - Analysis tab: RFM page: Create a new model: The user selects Classifier, Training Set and enters a new model name. The user sees the total value as the present and absent together.
+
 ## v3.0.41
 
 - CE-1502 Display 10 items per page in the pagination of Visualizer playlists
