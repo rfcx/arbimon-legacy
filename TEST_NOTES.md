@@ -1,7 +1,14 @@
 # Arbimon Test Notes
 Test Notes are used to list what pages / components / features / user flows are affected by each update.
 
-## v3.0.39
+## v3.0.41
+
+- CE-1502 Display 10 items per page in the pagination of Visualizer playlists
+  - Visualizer page: Open any recordings playlist. Check that list show 10 items in the playlist. Move to different pagination pages. Select any recording in the playlist. Reload the page. Check the pagination state.
+  - Visualizer page: Open any soundscapes playlist. Click on the soundscape box/ or create any test box. Click on the view button to navigate to the related recordings playlist. Check that list show 10 items in the playlist. Move to different pagination pages. Select any recording in the playlist. Reload the page. Check the pagination state.
+  -
+
+## v3.0.40
 
 - CE-1425 Do not update project_id for site if the value is not changed
   - Site page in the own project: Edit any data except the project. Check a new data in the Companion/Uploader/Ranger apps

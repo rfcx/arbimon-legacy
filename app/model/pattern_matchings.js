@@ -603,23 +603,16 @@ var PatternMatchings = {
     },
 
     exportDataFormatted (pmr, projectUrl) {
-        const namePartials = pmr.recording.split('/');
-        pmr.recording = namePartials[namePartials.length - 1];
         PatternMatchings.combineDatetime(pmr);
         delete pmr.datetime;
         if (pmr.recording_id) {
             pmr.url = `${config('hosts').publicUrl}/api/project/${projectUrl}/recordings/download/${pmr.recording_id}`;
             delete pmr.recording_id;
         }
-        if (pmr.meta && pmr.recording) {
-            try {
-                const parsedMeta = JSON.parse(data.meta);
-                pmr.recording = parsedMeta && parsedMeta.filename? parsedMeta.filename :  pmr.recording;
-            } catch (e) {
-                pmr.recording = pmr.recording;
-            }
-            delete pmr.meta;
-        }
+        pmr.meta = pmr.meta ? PatternMatchings.__parse_meta_data(pmr.meta) : null;
+        const namePartials = pmr.recording.split('/');
+        pmr.recording = pmr.meta && pmr.meta.filename? pmr.meta.filename : namePartials[namePartials.length - 1];
+        delete pmr.meta;
     },
 
     getTopRoisByScoresPerSite (opts) {

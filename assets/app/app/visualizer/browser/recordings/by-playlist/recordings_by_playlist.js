@@ -16,7 +16,7 @@ angular.module('a2.browser_recordings_by_playlist', [
 .service('a2PlaylistLOVO', function($q, makeClass, a2Playlists, a2Pager, $state, $localStorage){
     return makeClass({
         static: {
-            PageSize : 100,
+            PageSize : 10,
             BlockSize: 7
         },
         constructor : function(playlist){

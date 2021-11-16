@@ -147,7 +147,7 @@ router.get('/:patternMatching/:jobName?', function(req, res, next) {
             y1: -4,
             y2: -3,
             validated: -2,
-            uri: -1
+            url: -1
         };
         fields.sort(function(a, b){
             var ca = colOrder[a] || 0, cb = colOrder[b] || 0;
