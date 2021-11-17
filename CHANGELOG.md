@@ -1,5 +1,11 @@
 # Arbimon Release Notes
 
+## v3.0.42 - November XX, 2021
+
+Resolved issues:
+
+- CE-1510 Fixed total validations RFM
+
 ## v3.0.41 - November XX, 2021
 
 Resolved issues:
