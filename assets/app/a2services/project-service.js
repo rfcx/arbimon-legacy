@@ -109,7 +109,6 @@ angular.module('a2.srv.project', [
                 });
 
                 var serializedParams = $httpParamSerializer(params);
-                console.log('projection', projection);
                 return '/api/project/'+url+'/recordings/'+ (
                     projection && projection.species ? 'occupancy-models-export/'+projection.species_name+'.csv' :
                     (projection && projection.grouped ? 'grouped-detections-export.csv' : 'recordings-export.csv'))
