@@ -3,6 +3,7 @@
 ## v3.0.43 - November XX, 2021
 
 - CE-1454 Species and Song type are added in the Pattern Matching export report
+- CE-1343 Frequency is added in the Pattern Matching export report
 
 ## v3.0.42 - November XX, 2021
 
