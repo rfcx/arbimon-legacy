@@ -8,6 +8,8 @@ Test Notes are used to list what pages / components / features / user flows are 
   - Pattern Matchings details page: Click on the View in Vizualizer button. Navigates to the Visualizer page. Check a correct site and a date in the calendar. The spectrogram display the recording. Select another date. Check that all recordings in the list have the same date.
   - Visualizer page: Select any site and date. Open any recording. Check a correct site and a date in the calendar. The spectrogram display the recording. Select another date. Check that all recordings in the list have the same date.
   - Check all places with View in Vizualizer button. Select another date. Check that all recordings in the list have the same date.
+- CE-1510 Fixed total validations RFM
+  - Analysis tab: RFM page: Create a new model: The user selects Classifier, Training Set and enters a new model name. The user sees the total value as the present and absent together.
 
 ## v3.0.41
 
