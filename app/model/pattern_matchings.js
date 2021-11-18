@@ -246,7 +246,8 @@ var PatternMatchings = {
             patternMatchingId: joi.boolean(),
             names: joi.boolean(),
             datetime: joi.boolean(),
-            url: joi.boolean()
+            url: joi.boolean(),
+            showSpecies: joi.boolean(),
         }),
         limit:  joi.number(),
         offset: joi.number(),
@@ -284,6 +285,11 @@ var PatternMatchings = {
 
             if (show.url) {
                 builder.addProjection('R.`recording_id` as recording_id');
+            }
+            if (show.showSpecies) {
+                builder.addTable('JOIN species Sp ON PMR.species_id = Sp.species_id');
+                builder.addTable('JOIN songtypes St ON PMR.songtype_id = St.songtype_id');
+                builder.addProjection('Sp.scientific_name as species, St.songtype as songtype');
             }
             if (!show.url) {
                 builder.addProjection('PMR.`uri`');
@@ -687,7 +693,7 @@ var PatternMatchings = {
             expertCSValidations: options.expertCSValidations,
             countCSValidations: options.countCSValidations,
             perUserCSValidations: options.perUserCSValidations,
-            show: { names: true, url: true },
+            show: { names: true, url: true, showSpecies: true },
         }).then(
             builder => dbpool.streamQuery({
                 sql: builder.getSQL(),

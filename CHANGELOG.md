@@ -1,12 +1,16 @@
 # Arbimon Release Notes
 
+## v3.0.43 - November XX, 2021
+
+- CE-1454 Species and Song type are added in the Pattern Matching export report
+
 ## v3.0.42 - November XX, 2021
 
 Resolved issues:
 
 - CE-1510 Fixed total validations RFM
 
-## v3.0.41 - November XX, 2021
+## v3.0.41 - November 17, 2021
 
 Resolved issues:
 
