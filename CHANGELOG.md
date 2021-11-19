@@ -5,11 +5,14 @@
 - CE-1454 Species and Song type are added in the Pattern Matching export report
 - CE-1343 Frequency is added in the Pattern Matching export report
 
-## v3.0.42 - November XX, 2021
+## v3.0.42 - November 22, 2021
 
 Resolved issues:
 
 - CE-1510 Fixed total validations RFM
+- CE-1521 The logic is updated for the grouping species report by including all existing dates/hours
+- CE-1534 Fixed location of controls buttons in the player on the visualizer page
+- CE-1495 The issue with showing up correct recordings is fixed when the user changes the date in the calendar on the Visualizer page
 
 ## v3.0.41 - November 17, 2021
 

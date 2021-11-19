@@ -3,6 +3,11 @@ Test Notes are used to list what pages / components / features / user flows are 
 
 ## v3.0.42
 
+- CE-1495 The issue with showing up correct recordings is fixed when the user changes the date in the calendar on the Visualizer page
+  - Recordings page: Click on the View in Vizualizer button. Navigates to the Visualizer page. Check a correct site and a date in the calendar. The spectrogram display the recording. Select another date. Check that all recordings in the list have the same date.
+  - Pattern Matchings details page: Click on the View in Vizualizer button. Navigates to the Visualizer page. Check a correct site and a date in the calendar. The spectrogram display the recording. Select another date. Check that all recordings in the list have the same date.
+  - Visualizer page: Select any site and date. Open any recording. Check a correct site and a date in the calendar. The spectrogram display the recording. Select another date. Check that all recordings in the list have the same date.
+  - Check all places with View in Vizualizer button. Select another date. Check that all recordings in the list have the same date.
 - CE-1510 Fixed total validations RFM
   - Analysis tab: RFM page: Create a new model: The user selects Classifier, Training Set and enters a new model name. The user sees the total value as the present and absent together.
 
