@@ -3,6 +3,11 @@ Test Notes are used to list what pages / components / features / user flows are 
 
 ## v3.0.42
 
+- CE-1487 The issue with a count of recordings validations is fixed in the CSV export report
+  - Recordings page: Click on the Export button. Select any validations. Click on the Export Data button. The count of total validations data should be equal the data in the Export form.
+
+## v3.0.42
+
 - CE-1495 The issue with showing up correct recordings is fixed when the user changes the date in the calendar on the Visualizer page
   - Recordings page: Click on the View in Vizualizer button. Navigates to the Visualizer page. Check a correct site and a date in the calendar. The spectrogram display the recording. Select another date. Check that all recordings in the list have the same date.
   - Pattern Matchings details page: Click on the View in Vizualizer button. Navigates to the Visualizer page. Check a correct site and a date in the calendar. The spectrogram display the recording. Select another date. Check that all recordings in the list have the same date.

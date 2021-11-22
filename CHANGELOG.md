@@ -2,10 +2,17 @@
 
 ## v3.0.43 - November XX, 2021
 
+Resolved issues:
+
+- CE-1487 The issue with a count of recordings validations is fixed in the CSV export report
+- CE-1487 Do not show the label `Select all species` in the empty validations list of the Export recording form
+
+## v3.0.42 - November 23, 2021
+
+New features:
+
 - CE-1454 Species and Song type are added in the Pattern Matching export report
 - CE-1343 Frequency is added in the Pattern Matching export report
-
-## v3.0.42 - November 22, 2021
 
 Resolved issues:
 
