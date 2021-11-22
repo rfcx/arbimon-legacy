@@ -99,7 +99,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="btn-group ml-1" ng-class="{ 'mt-1': visobject.explorerUrl}" ng-show="visobject.explorerUrl">
+                    <div class="btn-group ml-1" ng-class="{ 'mt-1': visobject.explorerUrl && audio_player.clustersData }" ng-show="visobject.explorerUrl">
                         <a class="btn btn-default btn-sm"
                             ng-href="{{layer.controller.explorerUrl()}}"
                             tooltip="Navigate to Explorer">
