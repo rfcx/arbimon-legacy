@@ -304,6 +304,7 @@ angular.module('a2.visualizer', [
                 $scope.loading_visobject = visobject_loader.getCaptionFor(visobject);
                 return visobject_loader.load(visobject, $scope).then((function (visobject){
                     console.log('VisObject loaded : ', visobject);
+                    $scope.$parent.$broadcast('clear-recording-data', true);
                     // check clusters playlist in local storage else clear local storage
                     if ($localStorage.getItem('analysis.clusters.playlist') === $state.params.idA) {
                         var clustersData = JSON.parse($localStorage.getItem('analysis.clusters'));

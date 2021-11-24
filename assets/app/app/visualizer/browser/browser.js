@@ -55,6 +55,7 @@ angular.module('a2.visobjectsbrowser', [
             scope.$on('set-browser-location', browser.setBrowserLocation.bind(browser));
             // Catch the navigation URL query from visualizer view
             scope.$on('set-browser-annotations', browser.setBrowserAnnotations.bind(browser));
+            scope.$on('clear-recording-data', browser.clearRecordingData.bind(browser));
             scope.$on('visobj-updated', browser.notifyVisobjUpdated.bind(browser));
 
             browser.activate(scope.location).catch(console.error.bind(console));
@@ -73,7 +74,7 @@ angular.module('a2.visobjectsbrowser', [
  *
  */
 .controller('a2VisObjectBrowserController', function(
-    $scope, $controller, $q,
+    $scope, $state, $controller, $q,
     serializePromisedFn,
     BrowserLOVOs,
     BrowserVisObjects,
@@ -81,7 +82,6 @@ angular.module('a2.visobjectsbrowser', [
     Project,
     EventlistManager
 ){
-    // var self = $scope.browser = this;
     var self = this;
     var project = Project;
 
@@ -144,7 +144,7 @@ angular.module('a2.visobjectsbrowser', [
         }).bind(this));
     };
 
-    this.setLOVO = function(lovo, location){
+    this.setLOVO = function(lovo, location) {
         var defer = $q.defer();
         var old_lovo = self.lovo;
         self.lovo = lovo;
@@ -170,21 +170,19 @@ angular.module('a2.visobjectsbrowser', [
                         });
                     }
                 }).then(function(){
-                    return lovo;
+                    return $q.resolve(lovo);
                 });
             }
         });
     };
 
     this.set_location = function(location){
-// console.log("this.set_location = function(location){", location);
         this.location = location;
         this.events.send({event:'location-changed', context:this}, location);
     };
 
 
     this.setBrowserType = serializePromisedFn(function(type){
-// console.log("this.setBrowserType :: ", type && type.name);
         var new_$type, old_$type = self.$type;
         if(type && type.controller){
             if(!type.$controller){
@@ -213,7 +211,6 @@ angular.module('a2.visobjectsbrowser', [
     });
 
     this.setVisObj = function(newValue){
-// console.log("this.setVisObj :: ", newValue && newValue.id);
         this.visobj = newValue;
         var location = newValue && self.$type.get_location(newValue);
         this.cachedLocation = location;
@@ -257,23 +254,21 @@ console.log("this.selectNextVisObject = function(){");
         this.annotations = query;
         this.currentRecording = recording;
     }
+    this.clearRecordingData = function(evt, data) {
+        this.currentRecording = null;
+    }
     this.setBrowserLocation = function(evt, location){
-console.log("this.setBrowserLocation :: ", location, this.cachedLocation);
         var m = /([\w-+]+)(\/(.+))?/.exec(location);
-        // console.log(" same loc :: ", this.cachedLocation && location && this.cachedLocation[0] == location[0]);
         if(this.cachedLocation == location){
             return $q.resolve();
         }
         this.cachedLocation = location;
-
-
         if(m && BrowserLOVOs[m[1]]){
             var loc = m[3];
             var lovos_def = BrowserLOVOs[m[1]];
             this.setBrowserType(lovos_def).then(function(){
                     return lovos_def.$controller.resolve_location(loc);
             }).then(function(visobject){
-                console.log("resolve_location(loc) :: ", loc, visobject);
                 if(visobject){
                     return self.selectVisObject(visobject);
                 }
@@ -281,28 +276,9 @@ console.log("this.setBrowserLocation :: ", location, this.cachedLocation);
         }
     };
     this.notifyVisobjUpdated = function(evt, visobject){
-// console.log("this.notifyVisobjUpdated = function(evt, visobject){", evt, visobject);
         if(self.lovo && self.lovo.update){
             self.lovo.update(visobject);
         }
     };
 
-    this.onLovoScroll = function(event){
-// console.log("this.onLovoScroll = function(event){", event);
-        var $el = $(event.target);
-        var $lovoels = $el.children('.visobj-list-item[data-index]');
-        var midh = $el.height() * 0.5;
-        var hit_pt = $el.scrollTop() + midh;
-        var $pointed_el = $lovoels.filter(function(i,el){
-            var $el =$(el), t=$el.position().top, h2=$el.height()*0.5;
-            return Math.abs(hit_pt - t - h2) <= h2;
-        });
-        // console.log("onLovoScroll = ", $pointed_el);
-    };
-
-})
-
-;
-
-
-//
+});
