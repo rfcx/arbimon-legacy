@@ -216,6 +216,18 @@ var Projects = {
         });
     },
 
+    getProjectDates: function(project_id, format){
+        return dbpool.query({ sql:
+            `SELECT COALESCE(DATE_FORMAT(r.datetime, "${format}")) as date
+            FROM recordings AS r
+            JOIN sites as s ON s.site_id = r.site_id AND s.project_id = ?
+            LEFT JOIN project_imported_sites as pis ON s.site_id = pis.site_id AND pis.project_id = ?
+            WHERE s.project_id = ? OR pis.project_id = ?
+            GROUP BY YEAR(r.datetime), MONTH(r.datetime), DAY(r.datetime) ORDER BY r.datetime ASC`,  typeCast: sqlutil.parseUtcDatetime },
+            [project_id, project_id, project_id, project_id]
+        )
+    },
+
     /** Returns wether the given site is from the given project.
      * @param {Integer} project_id - the id of the project.
      * @param {Integer} site_id - the id of the site.
@@ -870,7 +882,7 @@ var Projects = {
     validationsStats: function(projectUrl, speciesId, songtypeId, callback) {
         var q = "SELECT coalesce(SUM(CASE WHEN present_review > 0 THEN 1 ELSE present END), 0) AS present, \n"+
                 "coalesce(SUM(CASE WHEN present = 0 AND present_review = 0 THEN 1 ELSE 0 END), 0) AS absent, \n"+
-                "COUNT( present ) AS total \n"+
+                "COUNT(*) AS total \n"+
                 "FROM `recording_validations` rv, `projects` p \n"+
                 "WHERE rv.`project_id` = p.`project_id` \n"+
                 "AND p.`url` = ? \n"+

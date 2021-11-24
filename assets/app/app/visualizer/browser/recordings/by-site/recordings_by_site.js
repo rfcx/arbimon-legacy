@@ -374,5 +374,4 @@ angular.module('a2.browser_recordings_by_site', [
         }
 
     };
-
 });

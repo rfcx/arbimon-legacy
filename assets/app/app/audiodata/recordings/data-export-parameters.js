@@ -130,7 +130,7 @@ angular.module('a2.audiodata.recordings.data-export-parameters', [
 
         $q.all(this.parameter_set_list.map(getList)).then((function(allLists){
             this.lists = allLists;
-            if (this.lists[1]) {
+            if (this.lists[1] && this.lists[1].length) {
                 this.lists[1].splice(0,0,{value: -1, caption: 'Select all species'});
             }
             this.selected = this.parameter_set_list.map(function(parameter_set, idx){

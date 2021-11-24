@@ -218,10 +218,23 @@ processFiltersData = async function(req, res, next) {
     }
     // Combine grouped detections report.
     if (projectionFilter && projectionFilter.grouped && projectionFilter.validation && !projectionFilter.species) {
-        let sites
-        model.projects.getProjectSites(filters.project_id).then(function(rows) {
-            sites = rows.map(s=>s.name)
-        })
+        let allData
+        // Get all sites, data, hours for selected project.
+        if (projectionFilter.grouped === 'site') {
+            model.projects.getProjectSites(filters.project_id).then(function(rows) {
+                allData = rows.map(s=>s.name)
+            })
+        }
+        if (projectionFilter.grouped === 'date') {
+            await model.projects.getProjectDates(filters.project_id, "%Y/%m/%d").then(function(rows) {
+                allData = rows.map(r=>r.date)
+            })
+        }
+        if (projectionFilter.grouped === 'hour') {
+            await model.projects.getProjectDates(filters.project_id, "%H").then(function(rows) {
+                allData = rows.map(r=>r.date)
+            })
+        }
         return model.recordings.groupedDetections(projectionFilter, filters).then(async function(results) {
             let gKey = projectionFilter.grouped;
             let fields = [];
@@ -242,26 +255,26 @@ processFiltersData = async function(req, res, next) {
                     data[s][f] += r[f] === '---' || r[f] === undefined ? 0 : +r[f];
                 })
             });
-            let addSites = sites.filter(s => !Object.keys(data).includes(s))
-            if (addSites && addSites.length && gKey === 'site') {
-                addSites.forEach(s => {
-                    if (!data[s]) {
-                        data[s] = {};
-                        data[s][gKey] = s;
-                    };
-                    fields.forEach((f) => {
-                        if (data[s][f] === undefined) { data[s][f] = 0 };
-                    })
+            // Include all sites, data, hours without validations to the report.
+            let extendedRows = allData.filter(i => !Object.keys(data).includes(i));
+            extendedRows.forEach(s => {
+                if (!data[s]) {
+                    data[s] = {};
+                    data[s][gKey] = s;
+                };
+                fields.forEach((f) => {
+                    if (data[s][f] === undefined) { data[s][f] = 'NA' };
                 })
-            }
+            })
             fields.unshift(gKey);
             let datastream = new stream.Readable({objectMode: true});
                 let streamArray = Object.values(data);
-                if (gKey === 'hour') {
-                    streamArray.sort(function(a, b) {
-                        return a.hour - b.hour;
-                    });
-                };
+                streamArray.sort(function(a, b) {
+                    if (gKey === 'date') {
+                        return new Date(a[gKey]) - new Date(b[gKey]);
+                    }
+                    else return a[gKey] - b[gKey];
+                });
                 for (let row of streamArray) {
                     datastream.push(row);
                 };
@@ -272,7 +285,7 @@ processFiltersData = async function(req, res, next) {
                     .pipe(res);
         }).catch(next);
     }
-
+    // Get a report with all recordings in the project.
     model.recordings.exportRecordingData(projection, filters).then(function(results) {
         var datastream = results[0];
         var fields = results[1].map(function(f){return f.name;});
@@ -304,6 +317,12 @@ processFiltersData = async function(req, res, next) {
                     if (row.url) {
                         row.url = `${config('hosts').publicUrl}/api/project/${req.project.url}/recordings/download/${row.url}`;
                     }
+                    // Fill a specific label for each cell without validations data.
+                    fields.forEach(f => {
+                        if (row[f] === undefined || row[f] === null) {
+                            row[f] = '---'}
+                        }
+                    )
                     callback();
                 }
             }))
