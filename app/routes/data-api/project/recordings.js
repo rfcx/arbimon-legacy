@@ -285,7 +285,7 @@ processFiltersData = async function(req, res, next) {
                     .pipe(res);
         }).catch(next);
     }
-
+    // Get a report with all recordings in the project.
     model.recordings.exportRecordingData(projection, filters).then(function(results) {
         var datastream = results[0];
         var fields = results[1].map(function(f){return f.name;});
@@ -317,6 +317,12 @@ processFiltersData = async function(req, res, next) {
                     if (row.url) {
                         row.url = `${config('hosts').publicUrl}/api/project/${req.project.url}/recordings/download/${row.url}`;
                     }
+                    // Fill a specific label for each cell without validations data.
+                    fields.forEach(f => {
+                        if (row[f] === undefined || row[f] === null) {
+                            row[f] = '---'}
+                        }
+                    )
                     callback();
                 }
             }))
