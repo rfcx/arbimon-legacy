@@ -53,7 +53,7 @@
             <field title="Site" key="site">{{ row.site }}</field>
             <field title="Recorded Time" key="datetime" >{{ (row.datetime | momentUtc : 'YYYY-MM-DD HH:mm:ss') }}</field>
             <field title="Filename" key="file">{{ row.filename? row.filename : row.file }}</field>
-            <field title="Uploaded Time" key="upload_time" >{{ (row.upload_time | momentUtc : 'YYYY-MM-DD HH:mm:ss') }}</field>
+            <field title="Uploaded Time" key="upload_time" >{{ (row.upload_time | momentTz : 'YYYY-MM-DD HH:mm:ss' : row.timezone) }}</field>
             <field title="Recorder" key="recorder">{{ row.recorder }}</field>
             <field title="Comments" key="comments" className="comments hidelongtext seconds-div-center">
                 <div ng-if="row.recorder === 'AudioMoth' && row.comments">{{row.comments}}</div>
