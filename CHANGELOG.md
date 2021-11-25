@@ -2,12 +2,8 @@
 
 ## v3.0.43 - November XX, 2021
 
-Resolved issues:
 
-- CE-1487 The issue with a count of recordings validations is fixed in the CSV export report
-- CE-1487 Do not show the label `Select all species` in the empty validations list of the Export recording form
-
-## v3.0.42 - November 23, 2021
+## v3.0.42 - November 26, 2021
 
 New features:
 
@@ -16,6 +12,9 @@ New features:
 
 Resolved issues:
 
+- Display recordings uploaded time with timezone offset
+- CE-1487 The issue with a count of recordings validations is fixed in the CSV export report
+- CE-1487 Do not show the label `Select all species` in the empty validations list of the Export recording form
 - CE-1510 Fixed total validations RFM
 - CE-1521 The logic is updated for the grouping species report by including all existing dates/hours
 - CE-1534 Fixed location of controls buttons in the player on the visualizer page
