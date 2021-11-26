@@ -1,6 +1,14 @@
 # Arbimon Test Notes
 Test Notes are used to list what pages / components / features / user flows are affected by each update.
 
+## v3.0.43
+
+- #798 Use WebGL for clustering tool rendering
+  - User can see the chart with dots and shapes
+  - User can zoom in / out using mouse wheel, zoom in / out buttons
+  - User can select set of dots using either box selection tool or lasso tool
+  - User can open Grid view or Context view with selected set of dots
+
 ## v3.0.42
 
 - CE-1487 The issue with a count of recordings validations is fixed in the CSV export report
