@@ -2,6 +2,10 @@
 
 ## v3.0.43 - November XX, 2021
 
+Performance improvements:
+
+- #798 Use WebGL for clustering tool rendering
+
 
 ## v3.0.42 - November 26, 2021
 
