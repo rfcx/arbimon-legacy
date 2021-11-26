@@ -65,6 +65,21 @@
             </div>
         </div>
     </div>
+    <div ng-if="paginationSettings.totalJobs && (paginationSettings.totalJobs > paginationSettings.limit)" class="row">
+        <div class="col-sm-12">
+            <pagination total-items="paginationSettings.totalJobs"
+                ng-model="paginationSettings.page"
+                ng-change="setCurrentPage()"
+                class="pagination-sm"
+                boundary-links="true"
+                max-size="10"
+                rotate="false"
+                num-pages="paginationSettings.totalPages"
+                ng-disabled="loading.rows"
+                items-per-page="paginationSettings.limit">
+            </pagination>
+        </div>
+    </div>
     <div class="col-sm-12 col-lg-11 padded-view-div" ng-if="selectedPatternMatchingId">
         <a2-pattern-matching-details pattern-matching-id="selectedPatternMatchingId" on-go-back="selectItem()" />
     </div>

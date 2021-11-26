@@ -25,6 +25,10 @@ angular.module('a2.srv.patternmatching', [
             if (opts && opts.validated) {
                 config.params.validated = opts.validated;
             }
+            if (opts && opts.limit) {
+                config.params.limit = opts.limit;
+                config.params.offset = opts.offset;
+            }
             return $http.get('/api/project/'+Project.getUrl()+'/pattern-matchings', config).then(function(response){
                 return response.data;
             }).catch(notify.serverError);
