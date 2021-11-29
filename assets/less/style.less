@@ -1388,8 +1388,15 @@ a.ui-select-choices-row-inner {
   //border-radius: 6px;
 }
 
-.js-plotly-plot .plotly .modebar-btn path {
-  fill: @text-color !important;
+.js-plotly-plot .plotly .modebar-btn {
+  path {
+    fill: @gray-light !important;
+  }
+  &.active {
+    path {
+      fill: @text-color !important;
+    }
+  }
 }
 
 /* END: Override plotly-plot chart style */

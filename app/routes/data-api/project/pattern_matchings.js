@@ -125,27 +125,28 @@ router.get('/:patternMatching/:jobName?', function(req, res, next) {
     model.patternMatchings.exportRois(req.params.patternMatching, filters).then(function(results) {
         var datastream = results[0];
         var fields = results[1].map(function(f){return f.name});
-        ['year', 'month', 'day', 'hour', 'minute', 'url'].forEach(item=> { fields.push(item) });
-        ['datetime', 'meta', 'recording_id'].forEach(item=> {
+        ['year', 'month', 'day', 'hour', 'minute', 'url', 'frequency'].forEach(item=> { fields.push(item) });
+        ['datetime', 'meta', 'recording_id', 'sample_rate'].forEach(item=> {
             let index = fields.findIndex(i => i === item);
             fields.splice(index, 1);
         });
 
         var colOrder={
-            id: -16,
-            recording: -15,
-            site: -14,
-            year: -13,
-            month: -12,
-            day: -11,
-            hour: -10,
-            minute: -9,
-            species: -8,
-            songtype: -7,
-            x1: -6,
-            x2: -5,
-            y1: -4,
-            y2: -3,
+            id: -17,
+            recording: -16,
+            site: -15,
+            year: -14,
+            month: -13,
+            day: -12,
+            hour: -11,
+            minute: -10,
+            species: -9,
+            songtype: -8,
+            x1: -7,
+            x2: -6,
+            y1: -5,
+            y2: -4,
+            frequency: -3,
             validated: -2,
             url: -1
         };

@@ -287,7 +287,7 @@ angular.module('a2.browser_recordings_by_site', [
         return 'rec/' + recording.id;
     };
 
-    var make_lovo = function(){
+    var make_lovo = function() {
         var site = self.site;
         var date = self.date;
         if(site && date){
@@ -366,24 +366,12 @@ angular.module('a2.browser_recordings_by_site', [
                 a2Browser.setLOVO(self.lovo);
             }
             else {
-                a2Browser.setLOVO(make_lovo());
+                a2Browser.setLOVO(make_lovo()).then(function(){
+                    $scope.browser.currentRecording = null;
+                    $scope.browser.annotations = null;
+                })
             }
         }
 
     };
-    $scope.compareValues = function(value, oldValue) {
-        if (value && oldValue && (value === oldValue || value !== oldValue)) {
-            $scope.browser.currentRecording = null;
-            $scope.browser.annotations = null;
-        }
-    };
-    $scope.$watch('siteInfo.site', function(value, oldValue) {
-        console.log('watch siteInfo.site', value, oldValue);
-        $scope.compareValues(value, oldValue);
-    });
-    $scope.$watch('siteInfo.date', function(value, oldValue) {
-        console.log('watch siteInfo.date', value, oldValue);
-        $scope.compareValues(value, oldValue);
-    });
-
 });

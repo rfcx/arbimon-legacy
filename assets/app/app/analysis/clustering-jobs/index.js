@@ -107,6 +107,7 @@ angular.module('a2.analysis.clustering-jobs', [
     $localStorage,
     $modal
 ) {
+    var d3 = $window.d3
     $scope.loading = true;
     $scope.toggleMenu = false;
     $scope.infopanedata = '';
@@ -229,7 +230,6 @@ angular.module('a2.analysis.clustering-jobs', [
     };
     var drawClusteringPoints = function(clusters) {
         var el = document.getElementById('plotly');
-        var d3 = Plotly.d3;
         var data = [];
         var shapes = [];
         $scope.originalData = [];
@@ -238,6 +238,7 @@ angular.module('a2.analysis.clustering-jobs', [
             data.push({
                 x: clusters[c].x,
                 y: clusters[c].y,
+                type: 'scattergl',
                 mode: 'markers',
                 hoverinfo: 'none',
                 name: c

@@ -1,6 +1,6 @@
 ## ✅ DoD
 
-- [x] Resolves [CE-XXXX](https://jira.rfcx.org/browse/CE-XXXX)
+- [x] Resolves #XXX
 - [ ] Release notes updated
 - [ ] Test notes notes updated
 - [ ] Deployment notes updated / na
