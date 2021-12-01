@@ -207,9 +207,12 @@ var PatternMatchings = {
     },
 
     findWithPagination: async function (options) {
-        const list =  await PatternMatchings.find(options);
         const count = await PatternMatchings.totalPatternMatchings(options.project);
-        return { list: list, count: count[0].count }
+        if (count) {
+            const list =  await PatternMatchings.find(options);
+            return { list: list, count: count }
+        }
+        else return { list: [], count: 0 }
     },
 
     findOne: function (query, options, callback) {
@@ -223,7 +226,7 @@ var PatternMatchings = {
                 "FROM pattern_matchings as PM \n"+
                 "JOIN jobs J ON PM.job_id = J.job_id \n"+
                 "WHERE J.state = 'completed' AND PM.deleted = 0 AND PM.project_id = " + dbpool.escape(project_id);
-        return dbpool.query(q);
+        return dbpool.query(q).get(0).get('count');
     },
 
     SEARCH_ROIS_SCHEMA : {
