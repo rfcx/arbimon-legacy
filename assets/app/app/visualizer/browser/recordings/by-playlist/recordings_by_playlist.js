@@ -20,6 +20,7 @@ angular.module('a2.browser_recordings_by_playlist', [
             BlockSize: 7
         },
         constructor : function(playlist){
+            this.loading = false;
             this.playlist = playlist;
             this.object_type = "recording";
             this.offset = 0;
@@ -74,6 +75,7 @@ angular.module('a2.browser_recordings_by_playlist', [
                     opts.recordings = clustersData.playlist.recordings;
                 }
             };
+            self.loading = true;
             a2Playlists.getData(self.playlist.id, opts, function(recordings){
                 self.list = recordings;
                 recordings.forEach(function(recording){
@@ -87,6 +89,7 @@ angular.module('a2.browser_recordings_by_playlist', [
                     self.append_extras(recording);
                 });
                 self.count  = recordings.length;
+                self.loading = false;
                 d.resolve(recordings);
             });
             return d.promise;

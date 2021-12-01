@@ -2,9 +2,15 @@
 
 ## v3.0.43 - November XX, 2021
 
+Resolved issues:
+
+- The issue with displaying audio events boxes after one cluster selection is fixed
+- Spinner is added to the recordings list in the playlist state
+- Fixed the issue with getting a new playlist id on the Clustering: Grid View page
+
 Performance improvements:
 
-- #798 Use WebGL for clustering tool rendering
+- Requests types are changed from get to post to support getting a big data for the clustering jobs
 
 
 ## v3.0.42 - November 26, 2021
@@ -23,6 +29,10 @@ Resolved issues:
 - CE-1521 The logic is updated for the grouping species report by including all existing dates/hours
 - CE-1534 Fixed location of controls buttons in the player on the visualizer page
 - CE-1495 The issue with showing up correct recordings is fixed when the user changes the date in the calendar on the Visualizer page
+
+Performance improvements:
+
+- #798 Use WebGL for clustering tool rendering
 
 ## v3.0.41 - November 17, 2021
 

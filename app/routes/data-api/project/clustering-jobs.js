@@ -41,15 +41,15 @@ router.get('/:job_id/job-details', function (req, res, next) {
     }).catch(next);
 });
 
-router.get('/:job_id/rois-details', function(req, res, next) {
+router.post('/:job_id/rois-details', function(req, res, next) {
     res.type('json');
     var params = {
-        aed: req.query.aed,
-        rec_id: req.query.rec_id
+        aed: req.body.aed,
+        rec_id: req.body.rec_id
     };
-    if (req.query.perSite) params.perSite = req.query.perSite;
-    if (req.query.perDate) params.perDate = req.query.perDate;
-    else params.all = req.query.all;
+    if (req.body.perSite) params.perSite = req.body.perSite;
+    if (req.body.perDate) params.perDate = req.body.perDate;
+    else params.all = req.body.all;
     return model.ClusteringJobs.findRois(params)
         .then(function(data){
             res.json(data);

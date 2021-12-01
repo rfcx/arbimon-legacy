@@ -81,12 +81,8 @@ angular.module('a2.srv.playlists', [
             });
         },
 
-        getData: function(playlist, query, callback) {
-            $http({
-                method : 'GET',
-                url    : '/api/project/'+projectName+'/playlists/'+playlist,
-                params : query
-            }).success(function(data) {
+        getData: function(playlist, params, callback) {
+            $http.post('/api/project/'+projectName+'/playlists/'+playlist, params).success(function(data) {
                 callback(data);
             });
         },
