@@ -1,5 +1,9 @@
 # Arbimon Deployment Notes
 
+## v3.0.43
+
+- Run `bower install` to update `plotly.js` version
+
 ## v3.0.39
 
 - Install `mime` library (^2.5.2)
