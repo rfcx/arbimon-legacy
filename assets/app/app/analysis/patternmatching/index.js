@@ -26,6 +26,13 @@ angular.module('a2.analysis.patternmatching', [
 .controller('PatternMatchingCtrl' , function($scope, $modal, $filter, Project, JobsData, a2Playlists, $location, notify, $q, a2PatternMatching, a2UserPermit, $state, $stateParams) {
     $scope.selectedPatternMatchingId = $stateParams.patternMatchingId;
     $scope.loading = {rows: false};
+    $scope.paginationSettings = {
+        page: 1,
+        limit: 10,
+        offset: 0,
+        totalJobs: 0,
+        totalPages: 0
+    }
 
     $scope.getTemplateVisualizerUrl = function(template){
         var box = ['box', template.x1, template.y1, template.x2, template.y2].join(',');
@@ -43,20 +50,30 @@ angular.module('a2.analysis.patternmatching', [
         }
     }
 
+    $scope.setCurrentPage = function() {
+        this.paginationSettings.offset = $scope.paginationSettings.page - 1;
+        $scope.loadPatternMatchings();
+    };
 
     $scope.loadPatternMatchings = function() {
         $scope.loading.rows = true;
         $scope.showInfo = true;
         $scope.splitAllSites = false;
 
-        return a2PatternMatching.list({completed: true}).then(function(data) {
-            $scope.patternmatchingsOriginal = data;
-            $scope.patternmatchingsData = data;
+        return a2PatternMatching.list({
+            completed: true,
+            limit: $scope.paginationSettings.limit,
+            offset: $scope.paginationSettings.offset * $scope.paginationSettings.limit
+        }).then(function(data) {
+            $scope.patternmatchingsOriginal = data.list;
+            $scope.patternmatchingsData = data.list;
+            $scope.paginationSettings.totalJobs = data.count;
+            $scope.paginationSettings.totalPages = Math.ceil($scope.paginationSettings.totalJobs / $scope.paginationSettings.limit);
             $scope.showInfo = false;
             $scope.loading.rows = false;
             $scope.infopanedata = "";
 
-            if(data && !data.length) {
+            if(data.list && !data.list.length) {
                 $scope.infopanedata = "No pattern matchings found.";
             }
         });

@@ -1,6 +1,10 @@
 # Arbimon Release Notes
 
-## v3.0.43 - November XX, 2021
+## v3.0.43 - December XX, 2021
+
+New features:
+
+* **feature:** Pagination component is added to the PM list page [802]
 
 Resolved issues:
 
@@ -11,7 +15,6 @@ Resolved issues:
 Performance improvements:
 
 - Requests types are changed from get to post to support getting a big data for the clustering jobs
-
 
 ## v3.0.42 - November 26, 2021
 

@@ -26,8 +26,10 @@ router.use(function(req, res, next) {
 /** Return a list of all the pattern matchings in a project.
  */
 router.get('/', function(req, res, next) {
-    res.type('json');
+    getPatternMatchings(req, res, next)
+});
 
+async function getPatternMatchings(req, res, next) {
     if (req.query.rec_id) {
         return model.patternMatchings.getPatternMatchingRois({
             rec_id: req.query.rec_id,
@@ -38,17 +40,29 @@ router.get('/', function(req, res, next) {
         }).catch(next);
     }
 
-    model.patternMatchings.find({
+    let opts = {
         project:req.project.project_id,
         deleted:0,
         showUser:true,
         showTemplate: true,
         showPlaylistName: true,
-        ...!!req.query.completed && { completed: req.query.completed }
-    }).then(function(count) {
-        res.json(count);
-    }).catch(next);
-});
+        ...!!req.query.completed && { completed: req.query.completed },
+        limit: req.query.limit,
+        offset: req.query.offset
+    };
+
+    if (req.query.limit) {
+        model.patternMatchings.findWithPagination(opts)
+            .then(data => {
+                res.json(data);
+            }).catch(next);
+    }
+    else {
+        model.patternMatchings.find(opts).then(function(count) {
+            res.json(count);
+        }).catch(next);
+    }
+}
 
 /** Return a pattern matching's data.
  */
