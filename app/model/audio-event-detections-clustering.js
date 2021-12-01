@@ -58,7 +58,7 @@ var AudioEventDetectionsClustering = {
 
         if (options.playlist) {
             select.push('A.aed_id, A.`recording_id` as `rec_id`, JP.job_id, JP.name');
-            constraints.push('JP.playlist_id = ' + dbpool.escape(options.playlist));
+            constraints.push('JP.playlist_id = ' + dbpool.escape(Number(options.playlist)));
         }
 
         postprocess.push((rows) => {

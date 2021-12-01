@@ -143,7 +143,6 @@ angular.module('a2.analysis.clustering-jobs', [
                     shape.line.color = shape.fillcolor;
                     shape.line['stroke-width'] = 1;
                 });
-                $scope.points = [];
                 $scope.layout.shapes.forEach((shape, i) => {
                     if (i === $scope.selectedCluster - 1) {
                         $scope.layout.shapes[i].line.color = '#ffffff';
@@ -151,8 +150,12 @@ angular.module('a2.analysis.clustering-jobs', [
                             '$scope.layout.shapes[i].line.color': '#ff0000',
                             '$scope.layout.shapes[i].line.stroke-width': 4
                         });
-                        // Collect all selected clusters' points indexes in the points array.
-                        $scope.points.push($scope.clusters[i].aed.map((_,i) => {return i}));
+                        // Collect all selected clusters' points with the same logic as for plotly_click event
+                        $scope.points = {
+                            x: Object.values($scope.clusters)[i].x[0],
+                            y: Object.values($scope.clusters)[i].y[0],
+                            name: Object.keys($scope.clusters)[i]
+                        };
                         $scope.toggleMenu = true;
                         $scope.$apply();
                     }
@@ -375,7 +378,7 @@ angular.module('a2.analysis.clustering-jobs', [
             });
         }
     };
-
+    // Navigates to the Grid View page.
     $scope.onGridViewSelected = function () {
         $scope.toggleMenu = false;
         $scope.selectedCluster = null;
@@ -401,6 +404,7 @@ angular.module('a2.analysis.clustering-jobs', [
             gridContext: $scope.gridContext
         });
     };
+    // Navigates to the Visualizer page.
     $scope.showClustersInVisualizer = function () {
         if ($scope.points.length) {
             $scope.selectedClusters = {
@@ -638,7 +642,8 @@ angular.module('a2.analysis.clustering-jobs', [
         id: []
     };
     if ($scope.gridContext && $scope.gridContext.aed) {
-        $scope.gridData = $scope.gridContext
+        $scope.gridData = []
+        $scope.gridData.push($scope.gridContext)
         $scope.aedData.count = 1;
         $scope.gridContext.aed.forEach(i => $scope.aedData.id.push(i));
     }
@@ -736,7 +741,7 @@ angular.module('a2.analysis.clustering-jobs', [
                 })
             } else {
                 $scope.ids[0] = {
-                    cluster: $scope.gridData.cluster,
+                    cluster: $scope.gridData[0].cluster,
                     rois: data
                 }
             }

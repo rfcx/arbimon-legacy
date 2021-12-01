@@ -21,7 +21,7 @@ router.get('/', function(req, res, next) {
 
 router.param('playlist', function(req, res, next, playlist){
     res.type('json');
-    if (!!req.query && !!req.query.recordings) {
+    if (!!req.body && !!req.body.recordings) {
         return next();
     }
     model.playlists.find({
@@ -42,11 +42,11 @@ router.param('playlist', function(req, res, next, playlist){
 });
 
 
-/** Return a playlist's data.
+/** Return a playlist's data on the Visualizer page.
  */
-router.get('/:playlist', function(req, res, next) {
+router.post('/:playlist', function(req, res, next) {
     res.type('json');
-    model.playlists.fetchData(req.playlist, req.query, function(err, data) {
+    model.playlists.fetchData(req.playlist, req.body, function(err, data) {
         if(err) return next(err);
 
         res.json(data);
@@ -130,7 +130,7 @@ router.post('/create', function(req, res, next) {
             debug("playlist added", plist);
             res.json({
                 success: true,
-                playlist_id: plist.id
+                playlist_id: plist
             });
         }).catch(next);
     });

@@ -6,6 +6,16 @@ New features:
 
 * **feature:** Pagination component is added to the PM list page [802]
 
+Resolved issues:
+
+- The issue with displaying audio events boxes after one cluster selection is fixed
+- Spinner is added to the recordings list in the playlist state
+- Fixed the issue with getting a new playlist id on the Clustering: Grid View page
+
+Performance improvements:
+
+- Requests types are changed from get to post to support getting a big data for the clustering jobs
+
 ## v3.0.42 - November 26, 2021
 
 New features:
