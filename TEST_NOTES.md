@@ -1,6 +1,15 @@
 # Arbimon Test Notes
 Test Notes are used to list what pages / components / features / user flows are affected by each update.
 
+## v3.0.44
+
+- Use a pagination for a temporary clustering playlist selected with the Context View menu
+  - Clustering page: The user selects any clustering job. The user selects an one any big cluster/shape on the scatter plot. The user sees a selected shape. The user sees the toggle menu with two buttons on the right side. The user clicks on the Context View button. The user navigates to the Visualizer page. The user sees a temporary playlist in the playlist name area. The user sees the pagination component under the playlist name. The user can click on the pages and the list will be updated.
+- Do not include unnecessary attributes to query to get audio events boxes for playlist view on the Visualizer page
+  - The audio events endpoint gets the response without a user data and parameters in the details.
+- Clear recordings data when the user selects the next playlist after a temporary clustering playlist
+  - The request for a playlist data does not include the recordings from the clustering playlist.
+
 ## v3.0.43
 
 - The issue with displaying audio events boxes after one cluster selection is fixed

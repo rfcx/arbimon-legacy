@@ -1,5 +1,16 @@
 # Arbimon Release Notes
 
+## v3.0.44 - December XX, 2021
+
+Resolved issues:
+
+- Use a pagination for a temporary clustering playlist selected with the Context View menu
+- Clear recordings data when the user selects the next playlist after a temporary clustering playlist
+
+Performance improvements:
+
+- Do not include unnecessary attributes to query to get audio events boxes for playlist view on the Visualizer page
+
 ## v3.0.43 - December XX, 2021
 
 New features:

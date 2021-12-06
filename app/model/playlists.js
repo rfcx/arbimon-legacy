@@ -158,11 +158,6 @@ var Playlists = {
         constraints.push('PLR.playlist_id = ?');
         data.push(playlist.id);
 
-        // if (query.id) {
-        // } else if (query.project) {
-        //     constraints.push('PL.project_id = ' + dbpool.escape(query.project));
-        // }
-
         var limit_clause = '';
         if(query.limit){
             var qlimit = query.limit;
@@ -194,11 +189,6 @@ var Playlists = {
             if(!data.length){
                 return [];
             }
-            // var ids = data.map(function(row){
-            //     return row.recording_id;
-            // });
-            // model.recordings.findByUrlMatch({id:ids}, null, {compute:query && query.show}, callback);
-            // this is necessary to ensure playlist order
             return q.all(data.map(function(row){
                 var id = row.recording_id;
                 return model.recordings.findByUrlMatch({id:id}, null, {compute:query && query.show}).get(0);
