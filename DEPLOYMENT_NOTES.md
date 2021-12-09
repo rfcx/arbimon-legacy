@@ -2,10 +2,9 @@
 
 ## v3.0.44
 
-- When it have to deploy you have to add this configuration into the environment variable:
-
-BIO_ANALYTICS_URL=https://staging-ba.rfcx.org <- For staging
-BIO_ANALYTICS_URL=https://ba.rfcx.org <- For production
+- hen it have to deploy you have to add `biodiversityAnalyticsBaseUrl` in `config/rfcx.local.json` file:
+    - For staging: https://staging-ba.rfcx.org
+    - For production: https://ba.rfcx.org
 
 ## v3.0.43
 
