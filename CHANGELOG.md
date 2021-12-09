@@ -1,10 +1,20 @@
 # Arbimon Release Notes
 
-## v.3.0.44 - MMM DD, YYYY
+
+## v3.0.44 - December XX, 2021
 
 New features:
 
 * **feature:** Add biodiversity analytics link to nav bar menu [825]
+
+Resolved issues:
+
+- Use a pagination for a temporary clustering playlist selected with the Context View menu
+- Clear recordings data when the user selects the next playlist after a temporary clustering playlist
+
+Performance improvements:
+
+- Do not include unnecessary attributes to query to get audio events boxes for playlist view on the Visualizer page
 
 ## v3.0.43 - December XX, 2021
 
