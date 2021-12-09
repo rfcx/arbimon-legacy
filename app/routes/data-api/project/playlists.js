@@ -21,7 +21,7 @@ router.get('/', function(req, res, next) {
 
 router.param('playlist', function(req, res, next, playlist){
     res.type('json');
-    if (!!req.body && !!req.body.recordings) {
+    if (!!req.body && (!!req.body.recordings || !Number(playlist))) {
         return next();
     }
     model.playlists.find({
@@ -40,21 +40,6 @@ router.param('playlist', function(req, res, next, playlist){
         return next();
     });
 });
-
-
-/** Return a playlist's data on the Visualizer page.
- */
-router.post('/:playlist', function(req, res, next) {
-    res.type('json');
-    model.playlists.fetchData(req.playlist, req.body, function(err, data) {
-        if(err) return next(err);
-
-        res.json(data);
-        return null;
-    });
-});
-
-
 
 /** Return a playlist's extra info.
 */
@@ -218,8 +203,16 @@ router.post('/:playlist/aed', function(req, res, next) {
     });
 });
 
+/** Return a playlist's data on the Visualizer page.
+ */
+ router.post('/:playlist', function(req, res, next) {
+    res.type('json');
+    model.playlists.fetchData(req.playlist, req.body, function(err, data) {
+        if(err) return next(err);
 
-
-
+        res.json(data);
+        return null;
+    });
+});
 
 module.exports = router;
