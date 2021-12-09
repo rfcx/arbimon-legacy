@@ -79,8 +79,13 @@ var a2 = angular.module('a2.app', [
 .controller('MainCtrl', function($scope, $state, Project, a2UserPermit, $window){
     $scope.$state = $state;
     $scope.getUrlFor = function(page){
+        const projectUrl = Project.getUrl()
         if(page == 'citizen-scientist'){
-            return '/citizen-scientist/' + Project.getUrl() + '/';
+            return '/citizen-scientist/' + projectUrl + '/';
+        } else if (page == 'reports') {
+            // TODO: Update the env for biodiversity analytics url
+            // return process.env.BIO_ANALYTICS_URL + '/' + projectUrl
+            return 'https://staging-ba.rfcx.org' + '/' + projectUrl
         }
     }
     $scope.citizenScientistUser = a2UserPermit.all && a2UserPermit.all.length === 1 && a2UserPermit.all.includes('use citizen scientist interface') && !a2UserPermit.can('delete project') && !a2UserPermit.isSuper();

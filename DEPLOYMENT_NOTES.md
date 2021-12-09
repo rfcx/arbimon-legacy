@@ -2,6 +2,13 @@
 
 ## v3.0.43
 
+- When it have to deploy you have to add this configuration into the environment variable:
+
+BIO_ANALYTICS_URL=https://staging-ba.rfcx.org <- For staging
+BIO_ANALYTICS_URL=https://ba.rfcx.org <- For production
+
+## v3.0.43
+
 - Run `bower install` to update `plotly.js` version
 
 ## v3.0.39
