@@ -2,7 +2,7 @@
 
 ## v3.0.44
 
-- hen it have to deploy you have to add `biodiversityAnalyticsBaseUrl` in `config/rfcx.local.json` file:
+- You have to add `bioAnalyticsBaseUrl` in `config/rfcx.local.json` file:
     - For staging: https://staging-ba.rfcx.org
     - For production: https://ba.rfcx.org
 

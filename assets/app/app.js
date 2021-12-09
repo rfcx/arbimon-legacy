@@ -78,18 +78,20 @@ var a2 = angular.module('a2.app', [
 })
 .controller('MainCtrl', function($scope, $state, Project, a2UserPermit, $window){
     $scope.$state = $state;
+    Project.getInfo(function(data) {
+        $scope.bioAnalyticsBaseUrl = data.bioAnalyticsBaseUrl
+        // TODO: Remove `isPuertoRicoProject` if it is allow to other projects
+        $scope.isPuertoRicoProject = data.external_id === 'n9nrlg45vyf0'
+        $scope.cnnEnable = data.cnn_enabled === 1
+    })
     $scope.getUrlFor = function(page){
         const projectUrl = Project.getUrl()
         if(page == 'citizen-scientist'){
             return '/citizen-scientist/' + projectUrl + '/';
         } else if (page == 'reports') {
-            // TODO: Update the env for biodiversity analytics url
-            return process.env.BIO_ANALYTICS_URL + '/' + projectUrl
+            return $scope.bioAnalyticsBaseUrl + '/' + projectUrl
         }
     }
-    Project.getInfo(function(data) {
-        $scope.cnnEnable = data?.cnn_enabled;
-    })
     $scope.citizenScientistUser = a2UserPermit.all && a2UserPermit.all.length === 1 && a2UserPermit.all.includes('use citizen scientist interface') && !a2UserPermit.can('delete project') && !a2UserPermit.isSuper();
     $scope.isAppPage = $window.location.pathname.startsWith('/project/');
 });

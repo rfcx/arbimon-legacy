@@ -108,8 +108,7 @@
                                 <ul class="navbar-hide-collapsed dropdown-menu" a2-sidenav-bar-anchor="settings"></ul>
                             </li>
                         </ul>
-                        <!-- TODO: Edit ng-if for cnn_enable only -->
-                        <ul class="nav navbar-nav hide-tooltip-lg" ng-if="cnnEnable">
+                        <ul class="nav navbar-nav hide-tooltip-lg" ng-if="cnnEnable && isPuertoRicoProject">
                             <li>
                                 <a ng-href="{{getUrlFor('reports')}}" tooltip="Reports" tooltip-placement="bottom">
                                     <i class="fa fa-bar-chart"></i>
