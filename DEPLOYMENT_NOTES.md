@@ -1,6 +1,6 @@
 # Arbimon Deployment Notes
 
-## v3.0.43
+## v3.0.44
 
 - When it have to deploy you have to add this configuration into the environment variable:
 
