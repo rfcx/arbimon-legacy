@@ -741,7 +741,7 @@ angular.module('a2.analysis.clustering-jobs', [
                 })
             } else {
                 $scope.ids[0] = {
-                    cluster: $scope.gridData[0].cluster,
+                    cluster: $scope.gridData[0].cluster || $scope.gridData[0].name,
                     rois: data
                 }
             }
@@ -784,12 +784,12 @@ angular.module('a2.analysis.clustering-jobs', [
 
     $scope.togglePopup = function() {
         $scope.isPopupOpened = !$scope.isPopupOpened;
-        // collect seleted aed
+        // The greyed-out boxes should be the ones left out of the playlist.
         if ($scope.rows && $scope.rows.length) {
             $scope.selectedRois = {};
             $scope.rows.forEach(row => {
                 row.rois.forEach(roi => {
-                    if (roi.selected) {
+                    if (!roi.selected) {
                         if (!$scope.selectedRois[roi.recording_id]) {
                             $scope.selectedRois[roi.recording_id] = {
                                 aed: [roi.aed_id]

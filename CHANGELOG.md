@@ -6,6 +6,8 @@ Resolved issues:
 
 - Use a pagination for a temporary clustering playlist selected with the Context View menu
 - Clear recordings data when the user selects the next playlist after a temporary clustering playlist
+- Display the cluster name for the one selected cluster
+- The greyed-out boxes should be the ones left out of the clustering playlist
 
 Performance improvements:
 
