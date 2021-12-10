@@ -80,9 +80,7 @@ var a2 = angular.module('a2.app', [
     $scope.$state = $state;
     Project.getInfo(function(data) {
         $scope.bioAnalyticsBaseUrl = data.bioAnalyticsBaseUrl
-        // TODO: Remove `isPuertoRicoProject` if it is allow to other projects
-        $scope.isPuertoRicoProject = data.external_id === 'n9nrlg45vyf0'
-        $scope.cnnEnable = data.cnn_enabled === 1
+        $scope.reportsEnabled = data.reports_enabled
     })
     $scope.getUrlFor = function(page){
         const projectUrl = Project.getUrl()
