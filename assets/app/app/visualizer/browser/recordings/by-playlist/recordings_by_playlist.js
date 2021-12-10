@@ -314,7 +314,7 @@ angular.module('a2.browser_recordings_by_playlist', [
         if(!self.active){
             return;
         }
-        if (self.lovo.playlist.id != playlist.id) {
+        if (self.lovo && self.lovo.playlist.id != playlist.id) {
             $scope.removeFromLocalStorage();
         }
         if(playlist && (self.lovo ? self.lovo.playlist != playlist : true)){
