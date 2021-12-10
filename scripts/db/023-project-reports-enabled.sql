@@ -1,0 +1,2 @@
+ALTER TABLE projects
+ADD reports_enabled BOOLEAN NOT NULL DEFAULT 0

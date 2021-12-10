@@ -6,6 +6,8 @@
     - For staging: https://staging-ba.rfcx.org
     - For production: https://ba.rfcx.org
 
+- Run 023-project-reports-enabled.sql on the production side
+
 ## v3.0.43
 
 - Run `bower install` to update `plotly.js` version
