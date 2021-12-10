@@ -841,7 +841,7 @@ a2-draw-peak-threshold {
 }
 
 // hides tooltips on large screens
-@media (min-width: 1200px) {
+@media (min-width: 1231px) {
   .hide-tooltip-lg .tooltip,
   .hide-tooltip-lg.tooltip {
     display: none !important;
@@ -1707,11 +1707,19 @@ search-bar {
 }
 
 .navbar-link {
-  @media (min-width: 767px) and (max-width: 1345px) {
+  @media (min-width: 767px) and (max-width: 780px) {
+    padding: 15px 5px !important;
+    max-width: 114px !important;
+  }
+  @media (min-width: 780px) and (max-width: 1230px) {
+    padding: 15px 5px !important;
+    max-width: 125px !important;
+  }
+  @media (min-width: 1231px) and (max-width: 1372px) {
     padding: 15px 5px !important;
     max-width: 118px !important;
   }
-  @media (min-width: 1345px) and (max-width: 1353px) {
+  @media (min-width: 1373px) and (max-width: 1353px) {
     max-width: 280px;
   }
 }

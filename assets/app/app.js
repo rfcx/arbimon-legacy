@@ -78,9 +78,16 @@ var a2 = angular.module('a2.app', [
 })
 .controller('MainCtrl', function($scope, $state, Project, a2UserPermit, $window){
     $scope.$state = $state;
+    Project.getInfo(function(data) {
+        $scope.bioAnalyticsBaseUrl = data.bioAnalyticsBaseUrl
+        $scope.reportsEnabled = data.reports_enabled
+    })
     $scope.getUrlFor = function(page){
+        const projectUrl = Project.getUrl()
         if(page == 'citizen-scientist'){
-            return '/citizen-scientist/' + Project.getUrl() + '/';
+            return '/citizen-scientist/' + projectUrl + '/';
+        } else if (page == 'reports') {
+            return $scope.bioAnalyticsBaseUrl + '/' + projectUrl
         }
     }
     $scope.citizenScientistUser = a2UserPermit.all && a2UserPermit.all.length === 1 && a2UserPermit.all.includes('use citizen scientist interface') && !a2UserPermit.can('delete project') && !a2UserPermit.isSuper();

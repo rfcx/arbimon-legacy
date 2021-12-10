@@ -108,6 +108,14 @@
                                 <ul class="navbar-hide-collapsed dropdown-menu" a2-sidenav-bar-anchor="settings"></ul>
                             </li>
                         </ul>
+                        <ul class="nav navbar-nav hide-tooltip-lg" ng-if="reportsEnabled">
+                            <li>
+                                <a ng-href="{{getUrlFor('reports')}}" tooltip="Reports" tooltip-placement="bottom">
+                                    <i class="fa fa-bar-chart"></i>
+                                    <span class="visible-lg-inline visible-xs-inline">Reports</span>
+                                </a>
+                            </li>
+                        </ul>
                         <ul class="nav navbar-nav navbar-right">
                             <li class="search-input">
                                 <search-bar></search-bar>

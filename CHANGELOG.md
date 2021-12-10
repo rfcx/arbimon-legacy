@@ -1,6 +1,11 @@
 # Arbimon Release Notes
 
+
 ## v3.0.44 - December XX, 2021
+
+New features:
+
+* **feature:** Add biodiversity analytics link to nav bar menu [825]
 
 Resolved issues:
 

@@ -3,5 +3,6 @@
   "apiBaseUrl": "https://staging-api.rfcx.org",
   "mediaBaseUrl": "https://staging-api.rfcx.org",
   "deviceBaseUrl": "https://staging-device-api.rfcx.org",
-  "explorerBaseUrl": "https://staging-explorer.rfcx.org"
+  "explorerBaseUrl": "https://staging-explorer.rfcx.org",
+  "bioAnalyticsBaseUrl": "https://staging-ba.rfcx.org"
 }
