@@ -13,6 +13,7 @@ Resolved issues:
 - Clear recordings data when the user selects the next playlist after a temporary clustering playlist
 - Display the cluster name for the one selected cluster
 - The greyed-out boxes should be the ones left out of the clustering playlist
+- When creating a site send project's "private" attribute as stream visibility type
 
 Performance improvements:
 
