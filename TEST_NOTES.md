@@ -1,7 +1,24 @@
 # Arbimon Test Notes
 Test Notes are used to list what pages / components / features / user flows are affected by each update.
 
+## v3.0.44
+
+- Use a pagination for a temporary clustering playlist selected with the Context View menu
+  - Clustering page: The user selects any clustering job. The user selects an one any big cluster/shape on the scatter plot. The user sees a selected shape. The user sees the toggle menu with two buttons on the right side. The user clicks on the Context View button. The user navigates to the Visualizer page. The user sees a temporary playlist in the playlist name area. The user sees the pagination component under the playlist name. The user can click on the pages and the list will be updated.
+- Do not include unnecessary attributes to query to get audio events boxes for playlist view on the Visualizer page
+  - The audio events endpoint gets the response without a user data and parameters in the details.
+- Clear recordings data when the user selects the next playlist after a temporary clustering playlist
+  - The request for a playlist data does not include the recordings from the clustering playlist.
+
 ## v3.0.43
+
+- The issue with displaying audio events boxes after one cluster selection is fixed
+  - Clustering page: The user selects any clustering job. The user selects an one any cluster on the scatter plot. The user sees a selected shape. The user sees the toggle menu with two buttons on the right side. The user clicks on the Grid View button. The user navigates to the Grid View page. The user sees the audio events boxes and the name of the cluster under the boxes.
+  - Clustering page: The user selects any clustering job. The user selects an one any cluster on the clusters selection form. The user sees a selected shape. The user sees that selected cluster has color and name on the legend side. The user sees the toggle menu with two buttons on the right side. The user clicks on the Grid View button. The user navigates to the Grid View page. The user sees the audio events boxes and the name of the cluster under the boxes. The name is the same as user sees on the legend side.
+  - #3 Clustering page: The user selects any clustering job. The user selects an one any cluster on the scatter plot. The user sees a selected shape. The user sees the toggle menu with two buttons on the right side. The user clicks on the Grid View button. The user navigates to the Grid View page. The user sees the audio events boxes and the name of the cluster under the boxes. The user can exclude some boxes by clicking on them. The user can create a new playlist with selected boxes. The user goes to the Visualizer page and selects the playlist. The user enables the clusters playlist in the Audio Events area on the left bar. The user will see the boxes which were selected before on the Grid View page.
+  - #4 Clustering page: The user selects any clustering job. The user selects an one any cluster on the scatter plot. The user sees a selected shape. The user sees the toggle menu with two buttons on the right side. The user clicks on the Grid Context button. The user navigates to the Visualizer page. The user sees the temporary playlist in the name of playlists. The user sees the audio events boxes on the spectrogram. The user clicks on any recording in the temporary playlist and sees the boxes. Also, the user sees the Audio Events menu on the left bar and can enable different clustering boxes if they exist. The user can create a new playlist by clicking on '+' button. The user navigates to the Playlists page. The user sees the new playlist in the list. The user navigates to the Visualizer page, reloads the page and selects the playlist. The user enables the Cluster playlist. The user sees the boxes.
+  - Clustering page: The user selects any clustering job. The user selects a big one cluster on the scatter plot. The user sees a selected big shape. The user sees the toggle menu with two buttons on the right side. The user clicks on the Context View button. The user navigates to the Visualizer page. The user sees temporary playlist name. The user sees the spinner. It takes some time to get the recording. The user clicks om the recording. The user sees the audio events box/boxes.
+  - Check any places where the user navigates to the Visualizer playlist.
 
 - #798 Use WebGL for clustering tool rendering
   - User can see the chart with dots and shapes

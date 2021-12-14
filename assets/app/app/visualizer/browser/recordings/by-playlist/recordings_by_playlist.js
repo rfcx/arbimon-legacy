@@ -20,6 +20,7 @@ angular.module('a2.browser_recordings_by_playlist', [
             BlockSize: 7
         },
         constructor : function(playlist){
+            this.loading = false;
             this.playlist = playlist;
             this.object_type = "recording";
             this.offset = 0;
@@ -71,9 +72,13 @@ angular.module('a2.browser_recordings_by_playlist', [
             if ($state.params.clusters) {
                 var clustersData = JSON.parse($localStorage.getItem('analysis.clusters'));
                 if (clustersData && clustersData.playlist && clustersData.playlist.recordings) {
-                    opts.recordings = clustersData.playlist.recordings;
+                    opts.recordings = clustersData.playlist.recordings.filter((id, i, a) => {
+                        return (i >= opts.offset) && (i < opts.offset + opts.limit)
+                    })
+                    self.count  = clustersData.playlist.recordings.length;
                 }
             };
+            self.loading = true;
             a2Playlists.getData(self.playlist.id, opts, function(recordings){
                 self.list = recordings;
                 recordings.forEach(function(recording){
@@ -86,7 +91,7 @@ angular.module('a2.browser_recordings_by_playlist', [
                     };
                     self.append_extras(recording);
                 });
-                self.count  = recordings.length;
+                self.loading = false;
                 d.resolve(recordings);
             });
             return d.promise;
@@ -233,7 +238,7 @@ angular.module('a2.browser_recordings_by_playlist', [
         }
     });
 })
-.controller('a2BrowserRecordingsByPlaylistController', function(itemSelection, a2Browser, rbDateAvailabilityCache, a2Playlists, $timeout, $q, a2PlaylistLOVO, $state, $localStorage){
+.controller('a2BrowserRecordingsByPlaylistController', function($scope, a2Browser, a2Playlists, $q, a2PlaylistLOVO, $state, $localStorage){
     var self = this;
     this.playlists = [];
     this.active=false;
@@ -309,10 +314,18 @@ angular.module('a2.browser_recordings_by_playlist', [
         if(!self.active){
             return;
         }
+        if (self.lovo && self.lovo.playlist.id != playlist.id) {
+            $scope.removeFromLocalStorage();
+        }
         if(playlist && (self.lovo ? self.lovo.playlist != playlist : true)){
             self.lovo = new a2PlaylistLOVO(playlist);
         }
         a2Browser.setLOVO(self.lovo, self.lovo ? "playlist/"+self.lovo.playlist.id : '');
     };
 
+    $scope.removeFromLocalStorage = function () {
+        $localStorage.setItem('analysis.clusters', null);
+        $localStorage.setItem('analysis.clusters.playlist', null);
+        $state.params.clusters = '';
+    }
 });

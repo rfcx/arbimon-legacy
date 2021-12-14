@@ -27,12 +27,16 @@ var AudioEventDetectionsClustering = {
             constraints.push('JP.project_id = ' + dbpool.escape(options.project_id));
         }
 
-        if (!options.playlist) {
-            select.push("JP.job_id, JP.name, JP.parameters");
+        select.push("JP.job_id, JP.name");
+
+        if (!options.playlist && options.dataExtended) {
+            select.push("JP.parameters");
             select.push("JP.`date_created` as `timestamp`");
             select.push("P.playlist_id, P.`name` as `playlist_name`");
             tables.push("JOIN playlists P ON JP.playlist_id = P.playlist_id");
+        }
 
+        if (options.user) {
             select.push(
                 "JP.user_id",
                 "CONCAT(CONCAT(UCASE(LEFT( U.`firstname` , 1)), SUBSTRING( U.`firstname` , 2)),' ',CONCAT(UCASE(LEFT( U.`lastname` , 1)), SUBSTRING( U.`lastname` , 2))) AS user"
@@ -57,21 +61,23 @@ var AudioEventDetectionsClustering = {
         }
 
         if (options.playlist) {
-            select.push('A.aed_id, A.`recording_id` as `rec_id`, JP.job_id, JP.name');
-            constraints.push('JP.playlist_id = ' + dbpool.escape(options.playlist));
+            select.push('A.aed_id, A.`recording_id` as `rec_id`');
+            constraints.push('JP.playlist_id = ' + dbpool.escape(Number(options.playlist)));
         }
 
-        postprocess.push((rows) => {
-            rows.forEach(row => {
-                try {
-                    row.parameters = JSON.parse(row.parameters);
-                } catch(e) {
-                    row.parameters = {error: row.parameters};
-                }
-            })
+        if (options.dataExtended) {
+            postprocess.push((rows) => {
+                rows.forEach(row => {
+                    try {
+                        row.parameters = JSON.parse(row.parameters);
+                    } catch(e) {
+                        row.parameters = {error: row.parameters};
+                    }
+                })
 
-            return rows;
-        });
+                return rows;
+            });
+        }
 
         return postprocess.reduce((_, fn) => {
             return _.then(fn);

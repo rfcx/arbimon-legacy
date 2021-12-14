@@ -104,7 +104,7 @@ router.use('/:projectUrl/sites', sites);
 
 router.get('/:projectUrl/info', function(req, res, next) {
     res.type('json');
-    res.json(req.project);
+    res.json({ ...req.project, bioAnalyticsBaseUrl: rfcxConfig.bioAnalyticsBaseUrl });
 });
 
 router.get('/:projectUrl/info/source-project', function(req, res, next) {

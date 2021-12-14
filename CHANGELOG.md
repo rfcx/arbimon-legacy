@@ -1,11 +1,38 @@
 # Arbimon Release Notes
 
-## v3.0.43 - November XX, 2021
+
+## v3.0.44 - December XX, 2021
+
+New features:
+
+* **feature:** Add biodiversity analytics link to nav bar menu [825]
+
+Resolved issues:
+
+- Use a pagination for a temporary clustering playlist selected with the Context View menu
+- Clear recordings data when the user selects the next playlist after a temporary clustering playlist
+- Display the cluster name for the one selected cluster
+- The greyed-out boxes should be the ones left out of the clustering playlist
 
 Performance improvements:
 
-- #798 Use WebGL for clustering tool rendering
+- Do not include unnecessary attributes to query to get audio events boxes for playlist view on the Visualizer page
 
+## v3.0.43 - December XX, 2021
+
+New features:
+
+* **feature:** Pagination component is added to the PM list page [802]
+
+Resolved issues:
+
+- The issue with displaying audio events boxes after one cluster selection is fixed
+- Spinner is added to the recordings list in the playlist state
+- Fixed the issue with getting a new playlist id on the Clustering: Grid View page
+
+Performance improvements:
+
+- Requests types are changed from get to post to support getting a big data for the clustering jobs
 
 ## v3.0.42 - November 26, 2021
 
@@ -23,6 +50,10 @@ Resolved issues:
 - CE-1521 The logic is updated for the grouping species report by including all existing dates/hours
 - CE-1534 Fixed location of controls buttons in the player on the visualizer page
 - CE-1495 The issue with showing up correct recordings is fixed when the user changes the date in the calendar on the Visualizer page
+
+Performance improvements:
+
+- #798 Use WebGL for clustering tool rendering
 
 ## v3.0.41 - November 17, 2021
 

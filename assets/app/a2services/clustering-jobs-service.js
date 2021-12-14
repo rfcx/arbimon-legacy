@@ -36,26 +36,24 @@ angular.module('a2.srv.clustering-jobs', [
             });
         },
         getRoisDetails: function(opts) {
-            var config = {
-                params: {}
-            };
+            var params = {};
             if (opts.aed) {
-                config.params.aed = opts.aed;
+                params.aed = opts.aed;
             }
             if (opts.rec_id) {
-                config.params.rec_id = opts.rec_id;
+                params.rec_id = opts.rec_id;
             }
             if (opts.search && opts.search == 'per_site')  {
-                config.params.perSite = true;
+                params.perSite = true;
             }
             else if (opts.search && opts.search == 'per_date') {
-                config.params.perDate = true;
+                params.perDate = true;
             }
-            else config.params.all = true;
+            else params.all = true;
 
-            return $http.get('/api/project/' + Project.getUrl() + '/clustering-jobs/' + opts.jobId + '/rois-details', config).then(function(response){
+            return $http.post('/api/project/' + Project.getUrl() + '/clustering-jobs/' + opts.jobId + '/rois-details', params).then(function(response){
                 return response.data;
-            });
+            }).catch(notify.serverError);
         },
         getAudioUrlFor: function(recId, aedId) {
             return '/api/project/' + Project.getUrl() + '/clustering-jobs/' + recId + '/audio/' + aedId;
