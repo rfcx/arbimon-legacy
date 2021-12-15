@@ -615,15 +615,18 @@ angular.module('a2.analysis.clustering-jobs', [
         templateUrl: '/app/analysis/clustering-jobs/grid-view.html'
     };
 })
-.controller('GridViewCtrl' , function($scope, a2ClusteringJobs, a2AudioBarService, Project, a2Playlists, notify) {
+.controller('GridViewCtrl' , function($scope, $localStorage, a2ClusteringJobs, a2AudioBarService, Project, a2Playlists, notify) {
     $scope.loading = true;
     $scope.infopanedata = '';
     $scope.projectUrl = Project.getUrl();
     $scope.allRois = []
-    $scope.total = { rois: 0, pages: 0 }
-    $scope.limit = 100
-    $scope.offset = 0
-    $scope.selected = { page: 0 }
+    $scope.paginationSettings = {
+        page: 1,
+        limit: 5,
+        offset: 0,
+        totalItems: 0,
+        totalPages: 0
+    }
 
     $scope.lists = {
         search: [
@@ -637,10 +640,12 @@ angular.module('a2.analysis.clustering-jobs', [
     $scope.selectedFilterData = $scope.lists.search[1];
 
     $scope.playlistData = {};
+
     $scope.aedData = {
         count: 0,
         id: []
     };
+
     if ($scope.gridContext && $scope.gridContext.aed) {
         $scope.gridData = []
         $scope.gridData.push($scope.gridContext)
@@ -666,12 +671,23 @@ angular.module('a2.analysis.clustering-jobs', [
         $scope.getRoisDetails();
     }
 
+    $scope.setCurrentPage = function() {
+        this.paginationSettings.offset = $scope.paginationSettings.page - 1;
+        $scope.getRoisDetails();
+    };
+
     $scope.getRoisDetails = function() {
+        if (!$scope.aedData.id.length) {
+            return $scope.getStatusForEmptyData();
+        }
         $scope.rows = [];
         $scope.isRoisLoading = true;
+        $scope.paginationSettings.totalItems = $scope.aedData.id.length;
         return a2ClusteringJobs.getRoisDetails({
             jobId: $scope.clusteringJobId,
-            aed: $scope.aedData.id,
+            aed: $scope.aedData.id.filter((id, i, a) => {
+                return (i >= ($scope.paginationSettings.offset * $scope.paginationSettings.limit)) && (i < ($scope.paginationSettings.page * $scope.paginationSettings.limit))
+            }),
             search: $scope.selectedFilterData.value
         }).then(function(data) {
             const groupedData = []
@@ -687,32 +703,27 @@ angular.module('a2.analysis.clustering-jobs', [
                     }
                 })
             })
-
+            $scope.paginationSettings.totalPages = Math.ceil($scope.paginationSettings.totalItems / $scope.paginationSettings.limit);
             $scope.loading = false;
             $scope.allRois = groupedData
-            $scope.total.rois = data.length
-            $scope.total.pages = Math.ceil(data.length / $scope.limit)
             $scope.isRoisLoading = false;
-            $scope.getRoisDetailsSegment($scope.limit, $scope.offset)
+            $scope.getRoisDetailsSegment()
         }).catch(err => {
             console.log(err);
-            $scope.loading = false;
-            $scope.isRoisLoading = false;
-            $scope.infopanedata = 'No data for clustering job found.';
+            $scope.getStatusForEmptyData();
         });
     }
 
     $scope.getRoisDetails();
 
-    $scope.onPageChanged = function(value) {
-        $scope.selected.page = value
-        $scope.offset = $scope.limit * value
-        $scope.getRoisDetailsSegment($scope.limit, $scope.offset)
+    $scope.getStatusForEmptyData = function() {
+        $scope.loading = false;
+        $scope.isRoisLoading = false;
+        $scope.infopanedata = 'No data for clustering job found.';
     }
 
-    $scope.getRoisDetailsSegment = function(limit, offset) {
-        const end = (offset + limit) > $scope.total.rois ? $scope.total.rois : (offset + limit)
-        const data = $scope.allRois.slice(offset, end)
+    $scope.getRoisDetailsSegment = function() {
+        const data = $scope.allRois
         if (data && $scope.selectedFilterData.value === 'per_site') {
             var sites = {};
             data.forEach((item) => {
@@ -757,15 +768,6 @@ angular.module('a2.analysis.clustering-jobs', [
                 rois: data
             });
         }
-    }
-
-    // ------------ Pagination ------------
-    $scope.next = function() {
-        $scope.onPageChanged($scope.selected.page + 1)
-    }
-
-    $scope.prev = function() {
-        $scope.onPageChanged($scope.selected.page - 1)
     }
 
     $scope.playRoiAudio = function(recId, aedId, $event) {
