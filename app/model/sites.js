@@ -654,7 +654,7 @@ var Sites = {
         callback);
     },
 
-    createSiteInArbimonAndCoreAPI: async function(site, projectExternalId, token) {
+    createSiteInArbimonAndCoreAPI: async function(site, project, token) {
         var connection;
         return dbpool.getConnection()
             .then(async (con) => {
@@ -667,10 +667,11 @@ var Sites = {
                         name: site.name,
                         lat: site.lat,
                         lon: site.lon,
-                        alt: site.alt
+                        alt: site.alt,
+                        is_public: !project.is_private
                     }
-                    if (projectExternalId) {
-                        coreSite.project_id = projectExternalId;
+                    if (project.external_id) {
+                        coreSite.project_id = project.external_id;
                     }
                     let siteExternalId = await this.createInCoreAPI(coreSite, token);
                     await this.setExternalId(result.insertId, siteExternalId, connection);
@@ -695,7 +696,8 @@ var Sites = {
             longitude: site.lon,
             altitude: site.alt,
             project_id: site.project_id,
-            external_id: site.site_id
+            external_id: site.site_id,
+            is_public: !!site.is_public
         }
         const options = {
             method: 'POST',
