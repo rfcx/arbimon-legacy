@@ -5,7 +5,9 @@
 
 Resolved issues:
 
-- Fixed the issue with a long pattern matching name which broke UI
+- #829 Fixed a style issue with a long job's name which broke UI
+- #829 Fixed a style issue with an indent on the Jobs page
+- #829 Display the title for the name cell into tables on the Analysis, Data, Jobs, Citizen Scientist tabs
 
 ## v3.0.43 - December XX, 2021
 
