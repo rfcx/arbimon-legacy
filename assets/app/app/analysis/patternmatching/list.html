@@ -18,8 +18,8 @@
 
         <div ng-hide="loading.rows">
             <a2-table rows="patternmatchingsData" no-checkbox="true" on-select="selectItem(row.id) | trackEvent:'Analysis-Pattern-Matching-List':' show pattern matching details'">
-                <field title="Name" class="hidelongtext widthtd" key="name" filter>
-                    <div class="roi-thumbnail" >
+                <field title="Name" className="name hidelongtext widthtd" key="name" filter>
+                    <div class="roi-thumbnail mr-1">
                         <img ng-src="{{row.template.uri}}" class="roi-img is-small"/>
                         <a class="roi-btn-br" ng-href="{{getTemplateVisualizerUrl(row.template)}}">
                             <i tooltip-placement="left"
@@ -31,22 +31,22 @@
                     </div>
                     {{row.name}}
                 </field>
-                <field title="Timestamp" key="timestamp" class="is-v-middle">
+                <field title="Timestamp" key="timestamp" className="is-v-middle">
                     {{ row.timestamp | moment : 'lll' }}
                 </field>
-                <field title="Playlist" key="playlist_name" filter class="no-wrap-table-cell is-v-middle">
+                <field title="Playlist" key="playlist_name" filter className="no-wrap-table-cell is-v-middle">
                     {{row.playlist_name}}
                 </field>
-                <field title="Template" key="template.name" filter class="no-wrap-table-cell is-v-middle">
+                <field title="Template" key="template.name" filter className="no-wrap-table-cell is-v-middle">
                     {{row.template.name}}
                 </field>
-                <field title="Parameters" key="parameters" filter="parameters.$" class="no-wrap-table-cell is-v-middle">
+                <field title="Parameters" key="parameters" filter="parameters.$" className="no-wrap-table-cell is-v-middle">
                     {{row.parameters | asCSV }}
                 </field>
-                <field title="User" key="user" filter class="is-v-middle">
+                <field title="User" key="user" filter className="is-v-middle">
                     {{ row.user }}
                 </field>
-                <field class="is-v-middle">
+                <field className="is-v-middle">
                     <button class="btn btn-default btn-xs"
                         ng-click="selectItem(row.id) | trackEvent:'Analysis-Pattern-Matching-List':' show pattern matching details'"
                     >
