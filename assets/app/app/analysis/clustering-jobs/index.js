@@ -619,10 +619,11 @@ angular.module('a2.analysis.clustering-jobs', [
     $scope.loading = true;
     $scope.infopanedata = '';
     $scope.projectUrl = Project.getUrl();
-    $scope.allRois = []
+    $scope.allRois = [];
+    $scope.missedRois = [];
     $scope.paginationSettings = {
         page: 1,
-        limit: 5,
+        limit: 100,
         offset: 0,
         totalItems: 0,
         totalPages: 0
@@ -784,30 +785,27 @@ angular.module('a2.analysis.clustering-jobs', [
         return roi ? '/project/' + projecturl + '/#/visualizer/rec/' + roi.recording_id + '?a=' + box : '';
     };
 
+    // Collect rois data which should be left out of the playlist through all pagination pages.
+    $scope.collectMissedRois = function(roi) {
+        if (!roi.selected) return;
+        if ($scope.missedRois.includes(roi.aed_id)) return;
+        $scope.missedRois.push(roi.aed_id);
+    }
+
     $scope.togglePopup = function() {
         $scope.isPopupOpened = !$scope.isPopupOpened;
         // The greyed-out boxes should be the ones left out of the playlist.
         if ($scope.rows && $scope.rows.length) {
-            $scope.selectedRois = {};
-            $scope.rows.forEach(row => {
-                row.rois.forEach(roi => {
-                    if (!roi.selected) {
-                        if (!$scope.selectedRois[roi.recording_id]) {
-                            $scope.selectedRois[roi.recording_id] = {
-                                aed: [roi.aed_id]
-                            }
-                        }
-                        else {
-                            $scope.selectedRois[roi.recording_id].aed.push(roi.aed_id);
-                        }
-                    }
-                })
+            $scope.selectedRois = [];
+            $scope.aedData.id.forEach(aedId => {
+                if ($scope.missedRois.includes(aedId)) return
+                else $scope.selectedRois.push(aedId)
             })
         }
     }
 
     $scope.isPlaylistDataValid = function() {
-        return $scope.selectedRois && Object.keys($scope.selectedRois).length && $scope.playlistData.playlistName && $scope.playlistData.playlistName.trim().length > 0;
+        return $scope.selectedRois && $scope.selectedRois.length && $scope.playlistData.playlistName && $scope.playlistData.playlistName.trim().length > 0;
     }
 
     $scope.closePopup = function() {
@@ -815,16 +813,12 @@ angular.module('a2.analysis.clustering-jobs', [
     }
 
     $scope.savePlaylist = function() {
-        if (Object.keys($scope.selectedRois).length) {
+        if ($scope.selectedRois.length) {
             $scope.isSavingPlaylist = true;
-            var aeds = [];
-            Object.values($scope.selectedRois).forEach(obj => {
-                obj.aed.forEach(el=>{ aeds.push(el) })
-            })
             // create playlist
             a2Playlists.create({
                 playlist_name: $scope.playlistData.playlistName,
-                params: Object.keys($scope.selectedRois),
+                params: $scope.selectedRois,
                 recIdsIncluded: true
             },
             function(data) {
@@ -835,11 +829,11 @@ angular.module('a2.analysis.clustering-jobs', [
                 if (data && data.playlist_id) {
                     a2Playlists.attachAedToPlaylist({
                         playlist_id: data.playlist_id,
-                        aed: aeds
+                        aed: $scope.selectedRois
                     },
                     function(data) {
                         $scope.playlistData = {};
-                        notify.log('Audio event detections are saved in the playlist.');
+                        notify.log('Audio event detections are saved in the playlist. <br> Navigates to the Visualizer page to see Audio Event boxes on the spectrograms.');
                     });
                 }
             });

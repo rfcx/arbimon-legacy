@@ -5,7 +5,15 @@
 
 New features:
 
-* **feature:** Add biodiversity analytics link to nav bar menu [825]
+- Pagination component is added to the Grid View page
+
+
+## v3.0.43 - December 14, 2021
+
+New features:
+
+- Pagination component is added to the PM list page
+- Add biodiversity analytics link to nav bar menu
 
 Resolved issues:
 
@@ -13,19 +21,6 @@ Resolved issues:
 - Clear recordings data when the user selects the next playlist after a temporary clustering playlist
 - Display the cluster name for the one selected cluster
 - The greyed-out boxes should be the ones left out of the clustering playlist
-
-Performance improvements:
-
-- Do not include unnecessary attributes to query to get audio events boxes for playlist view on the Visualizer page
-
-## v3.0.43 - December XX, 2021
-
-New features:
-
-* **feature:** Pagination component is added to the PM list page [802]
-
-Resolved issues:
-
 - The issue with displaying audio events boxes after one cluster selection is fixed
 - Spinner is added to the recordings list in the playlist state
 - Fixed the issue with getting a new playlist id on the Clustering: Grid View page
@@ -33,6 +28,7 @@ Resolved issues:
 Performance improvements:
 
 - Requests types are changed from get to post to support getting a big data for the clustering jobs
+- Do not include unnecessary attributes to query to get audio events boxes for playlist view on the Visualizer page
 
 ## v3.0.42 - November 26, 2021
 

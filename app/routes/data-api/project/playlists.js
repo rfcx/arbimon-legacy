@@ -109,7 +109,8 @@ router.post('/create', function(req, res, next) {
             project_id: req.project.project_id,
             name:    req.body.playlist_name,
             params:  req.body.params,
-            recIdsIncluded: req.body.recIdsIncluded === true
+            recIdsIncluded: req.body.recIdsIncluded === true,
+            aedIdsIncluded: req.body.aedIdsIncluded === true
         };
         model.playlists.create(opts).then(function(plist) {
             debug("playlist added", plist);
