@@ -1,113 +1,118 @@
-<div>
-    <div ng-if="loading">
-        Loading... <loader></loader>
-    </div>
-    <div class="jumbotron seconds-div-center" ng-if="infopanedata">
-          <h3>{{ infopanedata }}</h3>
-    </div>
-    <div ng-if="!loading && !infopanedata" class="panel-body a2-page-header clearfix">
-        <div class="row row-flex flex-align-top">
-            <div class="col-sm-6 flex-self-align-top">
-                <div class="row row-flex flex-align-top">
-                    Job Name: {{ job_details.name }}
-                    <br>User: {{ job_details.user }}
-                    <br>Date: {{ job_details.timestamp | moment : 'lll' }}
-                    <br>Number of audio event detected: {{ aedData.id.length || 'no data' }}
-                    <br>Number of clusters detected: {{ aedData.count || 'no data' }}
-                </div>
-            </div>
-            <div class="col-sm-6 flex-self-align-bottom">
-                <div class="pull-right">
-                    <div class="btn-group">
-                        <a class="btn btn-default" ng-disabled="offset <= 0" ng-click="prev()">Previous</a>
-                        <ui-select ng-model="selected.page" class="btn-group-item border-left-radius" theme="bootstrap" ng-change="onPageChanged($select.selected)">
-                            <ui-select-match>
-                                {{ selected.page | a2PageNumberToTitle }} of {{ total.pages }}
-                            </ui-select-match>
-                            <ui-select-choices repeat="$item in total.pages | a2Range | filter:($select.search | a2PageTitleToNumber)">
-                                <div class="item-description">{{ $item | a2PageNumberToTitle }}</div>
-                            </ui-select-choices>
-                        </ui-select>
-                        <a class="btn btn-default" ng-disabled="(offset + limit) > total.rois" ng-click="next()">Next</a>
+<div class="row">
+    <div class="col-sm-12 col-lg-11 padded-view-div">
+        <div ng-if="loading">
+            Loading... <loader></loader>
+        </div>
+        <div class="jumbotron seconds-div-center" ng-if="infopanedata">
+            <h3>{{ infopanedata }}</h3>
+        </div>
+        <div ng-if="!loading && !infopanedata" class="panel-body a2-page-header clearfix">
+            <div class="row row-flex flex-align-top">
+                <div class="col-sm-6 flex-self-align-top">
+                    <div class="row row-flex flex-align-top">
+                        Job Name: {{ job_details.name }}
+                        <br>User: {{ job_details.user }}
+                        <br>Date: {{ job_details.timestamp | moment : 'lll' }}
+                        <br>Number of audio event detected: {{ aedData.id.length || 'no data' }}
+                        <br>Number of clusters detected: {{ aedData.count || 'no data' }}
                     </div>
-                    <div class="inline-block" style="position: relative;">
-                        <button class="btn btn-default" type="button" tooltip="Save to playlist" ng-click="togglePopup()">
-                            <i class="fa fa-plus"></i>
-                        </button>
-                        <div class="popover right create-template" style="display: block;" ng-if="isPopupOpened">
-                            <div class="arrow"></div>
-                            <h3 class="popover-title">
-                                Create Playlist
-                            </h3>
-                            <div class="popover-content">
-                                <div class="mb-2">
-                                    <label for="name">Name</label>
-                                    <input to="name" type="text" class="form-control" ng-model="playlistData.playlistName" placeholder="Playlist name"/>
-                                </div>
-                                <button id="submit-btn" class="btn btn-sm btn-default"
-                                    ng-click="savePlaylist()" ng-disabled="!!isSavingPlaylist || !isPlaylistDataValid()">
-                                    <i class="fa text-success" ng-class="{'fa-plus' : !isSavingPlaylist , 'fa-spinner fa-spin': isSavingPlaylist }"></i>
+                </div>
+                <div class="col-sm-6 flex-self-align-bottom">
+                    <div class="pull-right">
+                        <div class="inline-block" style="position: relative;">
+                            <button class="btn btn-default" type="button" tooltip="Save to playlist" ng-click="togglePopup()">
+                                <i class="fa fa-plus"></i>
+                            </button>
+                            <div class="popover right create-template" style="display: block;" ng-if="isPopupOpened">
+                                <div class="arrow"></div>
+                                <h3 class="popover-title">
                                     Create Playlist
-                                </button>
-                                <button class="btn btn-sm btn-default"
-                                    ng-click="closePopup()">
-                                    <i class="fa fa-ban text-danger"></i>
-                                    Cancel
-                                </button>
+                                </h3>
+                                <div class="popover-content">
+                                    <div class="mb-2">
+                                        <label for="name">Name</label>
+                                        <input to="name" type="text" class="form-control" ng-model="playlistData.playlistName" placeholder="Playlist name"/>
+                                    </div>
+                                    <button id="submit-btn" class="btn btn-sm btn-default"
+                                        ng-click="savePlaylist()" ng-disabled="!!isSavingPlaylist || !isPlaylistDataValid()">
+                                        <i class="fa text-success" ng-class="{'fa-plus' : !isSavingPlaylist , 'fa-spinner fa-spin': isSavingPlaylist }"></i>
+                                        Create Playlist
+                                    </button>
+                                    <button class="btn btn-sm btn-default"
+                                        ng-click="closePopup()">
+                                        <i class="fa fa-ban text-danger"></i>
+                                        Cancel
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="btn-group">
-                        <button class="btn btn-default not-active" ><i class="fa fa-search"></i></button>
-                        <ui-select ng-model="selectedFilterData" theme="bootstrap" class="btn-group-item border-left-radius" on-select="onSearchChanged($select.selected)">
-                            <ui-select-match class="right-corners">
-                                <i ng-class="$select.selected.class"></i>{{$select.selected.text}}
-                            </ui-select-match>
-                            <ui-select-choices repeat="$item in lists.search | filter:$select.search">
-                                <i ng-class="$item.class"></i> {{$item.text}}
-                                <div class="item-description">{{$item.description}}</div>
-                            </ui-select-choices>
-                        </ui-select>
+                        <div class="btn-group">
+                            <button class="btn btn-default not-active" ><i class="fa fa-search"></i></button>
+                            <ui-select ng-model="selectedFilterData" theme="bootstrap" class="btn-group-item border-left-radius" on-select="onSearchChanged($select.selected)">
+                                <ui-select-match class="right-corners">
+                                    <i ng-class="$select.selected.class"></i>{{$select.selected.text}}
+                                </ui-select-match>
+                                <ui-select-choices repeat="$item in lists.search | filter:$select.search">
+                                    <i ng-class="$item.class"></i> {{$item.text}}
+                                    <div class="item-description">{{$item.description}}</div>
+                                </ui-select-choices>
+                            </ui-select>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-    <div ng-if="!loading && isRoisLoading" class="row ng-cloak text-center" style="padding: 50px 0;" >
-        <i class="fa fa-spinner fa-spin" style="font-size: 32px;"></i>
-    </div>
-    <div ng-if="!loading && !infopanedata && rows && rows.length">
-        <span ng-repeat="row in rows">
-            <div ng-if="row.site" class="h3" id="site-{row.id}}"><i class="fa fa-map-marker"></i> {{row.site}}</div>
-            <div ng-if="row.cluster && row.rois.length" class="h3" id="cluster-{row.id}}">Cluster {{row.cluster}}</div>
-            <span ng-repeat="roi in row.rois"
-                class="btn btn-default roi-thumbnail {{roi.selected ? 'active' : ''}}"
-                ng-click="roi.selected = !roi.selected"
-                popover-html="'Frequency Max (Hz): {{(roi.frequency_max) || '(Missing)'}} <br>
-                                Frequency Min (Hz): {{(roi.frequency_min) || '(Missing)'}} <br>
-                                Duration (s): {{(roi.time_max - roi.time_min).toFixed(2)}}'"
+        <div ng-if="!loading && isRoisLoading" class="row ng-cloak text-center" style="padding: 50px 0;" >
+            <i class="fa fa-spinner fa-spin" style="font-size: 32px;"></i>
+        </div>
+        <div ng-if="!loading && !infopanedata && rows && rows.length" class="row panel-body">
+            <span ng-repeat="row in rows">
+                <div ng-if="row.site" class="h3" id="site-{row.id}}"><i class="fa fa-map-marker"></i> {{row.site}}</div>
+                <div ng-if="row.cluster && row.rois.length" class="h3" id="cluster-{row.id}}">Cluster {{row.cluster}}</div>
+                <span ng-repeat="roi in row.rois"
+                    class="btn btn-default roi-thumbnail {{roi.selected ? 'active' : ''}}"
+                    ng-click="roi.selected = !roi.selected; collectMissedRois(roi)"
+                    popover-html="'Frequency Max (Hz): {{(roi.frequency_max) || '(Missing)'}} <br>
+                                    Frequency Min (Hz): {{(roi.frequency_min) || '(Missing)'}} <br>
+                                    Duration (s): {{(roi.time_max - roi.time_min).toFixed(2)}}'"
+                        popover-trigger="mouseenter"
+                        popover-append-to-body="true"
                     popover-trigger="mouseenter"
                     popover-append-to-body="true"
-                popover-trigger="mouseenter"
-                popover-append-to-body="true"
-            >
-                <div class="roi-btn-tl" ng-if="roi.selected"><i class="fa val-0"></i></div>
-                <a class="roi-btn-bl" ng-href="{{getRoiVisualizerUrl(roi)}}" ng-click="$event.stopPropagation();">
-                    <i tooltip-placement="left"
-                        tooltip-append-to-body="true"
-                        tooltip="View in Visualizer"
-                        class="fa fa-cubes">
-                    </i>
-                </a>
-                <a class="roi-btn-br" ng-click="playRoiAudio(roi.recording_id, roi.aed_id, $event)">
-                    <i tooltip-placement="left"
-                        tooltip-append-to-body="true"
-                        tooltip="Play Audio"
-                        class="fa fa-play">
-                    </i>
-                </a>
-                <img ng-src="/api/project/{{projectUrl}}/clustering-jobs/asset?path={{roi.uri}}" class="roi-img"/>
+                >
+                    <div class="roi-btn-tl" ng-if="roi.selected || missedRois.includes(roi.aed_id)"><i class="fa val-0"></i></div>
+                    <a class="roi-btn-bl" ng-href="{{getRoiVisualizerUrl(roi)}}" ng-click="$event.stopPropagation();">
+                        <i tooltip-placement="left"
+                            tooltip-append-to-body="true"
+                            tooltip="View in Visualizer"
+                            class="fa fa-cubes">
+                        </i>
+                    </a>
+                    <a class="roi-btn-br" ng-click="playRoiAudio(roi.recording_id, roi.aed_id, $event)">
+                        <i tooltip-placement="left"
+                            tooltip-append-to-body="true"
+                            tooltip="Play Audio"
+                            class="fa fa-play">
+                        </i>
+                    </a>
+                    <img ng-src="/api/project/{{projectUrl}}/clustering-jobs/asset?path={{roi.uri}}" class="roi-img"/>
+                </span>
             </span>
-        </span>
+        </div>
+    </div>
+    <div ng-if="paginationSettings.totalItems && (paginationSettings.totalItems > paginationSettings.limit)" class="row">
+        <div class="col-sm-12 text-center">
+            <pagination total-items="paginationSettings.totalItems"
+                ng-model="paginationSettings.page"
+                ng-change="setCurrentPage()"
+                class="pagination-sm"
+                boundary-links="true"
+                max-size="10"
+                rotate="false"
+                num-pages="paginationSettings.totalPages"
+                ng-disabled="loading.rows"
+                items-per-page="paginationSettings.limit">
+            </pagination>
+        </div>
     </div>
 </div>

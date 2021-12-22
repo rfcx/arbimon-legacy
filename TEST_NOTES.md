@@ -3,15 +3,19 @@ Test Notes are used to list what pages / components / features / user flows are 
 
 ## v3.0.44
 
+- Pagination component is added to the Grid View page
+  - Clustering page: The user selects less than 100 dots on the Clustering details page. The user navigates to the Grid View page. The user can't see the pagination component on the bottom of the page.
+  - Clustering page: The user selects more than 100 dots on the Clustering details page. The user navigates to the Grid View page. The user sees the pagination component on the bottom of the page. The user can exclude some of the boxes from the page. The user navigates to the next page. When the user returns to the first page the user still sees selected boxes.
+  - Clustering page: The user selects more than 100 dots on the Clustering details page. The user navigates to the Grid View page. The user sees the pagination component on the bottom of the page. The user can exclude some of the boxes from the page. The user navigates to the next page. The user excludes any boxes from the second page (It takes to exclude most of the boxes to facilitate calculation of the boxes on the Visualizer page. The count of not selected boxes should be equal to the count of all boxes in the future playlist on the Visualizer page). The user creates a new playlist with all non selected boxes through all pagination pages. the user navigates to the Visualizer page. The user sees all boxes, which are not selected on the Grid View page.
+
+## v3.0.43
+
 - Use a pagination for a temporary clustering playlist selected with the Context View menu
   - Clustering page: The user selects any clustering job. The user selects an one any big cluster/shape on the scatter plot. The user sees a selected shape. The user sees the toggle menu with two buttons on the right side. The user clicks on the Context View button. The user navigates to the Visualizer page. The user sees a temporary playlist in the playlist name area. The user sees the pagination component under the playlist name. The user can click on the pages and the list will be updated.
 - Do not include unnecessary attributes to query to get audio events boxes for playlist view on the Visualizer page
   - The audio events endpoint gets the response without a user data and parameters in the details.
 - Clear recordings data when the user selects the next playlist after a temporary clustering playlist
   - The request for a playlist data does not include the recordings from the clustering playlist.
-
-## v3.0.43
-
 - The issue with displaying audio events boxes after one cluster selection is fixed
   - Clustering page: The user selects any clustering job. The user selects an one any cluster on the scatter plot. The user sees a selected shape. The user sees the toggle menu with two buttons on the right side. The user clicks on the Grid View button. The user navigates to the Grid View page. The user sees the audio events boxes and the name of the cluster under the boxes.
   - Clustering page: The user selects any clustering job. The user selects an one any cluster on the clusters selection form. The user sees a selected shape. The user sees that selected cluster has color and name on the legend side. The user sees the toggle menu with two buttons on the right side. The user clicks on the Grid View button. The user navigates to the Grid View page. The user sees the audio events boxes and the name of the cluster under the boxes. The name is the same as user sees on the legend side.

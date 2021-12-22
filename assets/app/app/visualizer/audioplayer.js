@@ -93,7 +93,7 @@ angular.module('a2.visualizer.audio-player', [])
                 a2Playlists.create({
                     playlist_name: this.playlistData.playlistName,
                     params: this.clustersData.playlist.recordings,
-                    recIdsIncluded: true
+                    aedIdsIncluded: true
                 },
                 function(data) {
                     self.isSavingPlaylist = false;

@@ -3,6 +3,10 @@
 
 ## v3.0.44 - December XX, 2021
 
+New features:
+
+- Pagination component is added to the Grid View page
+
 Resolved issues:
 
 - #829 Fixed a style issue with a long job's name which broke UI
@@ -18,6 +22,10 @@ New features:
 
 Resolved issues:
 
+- Use a pagination for a temporary clustering playlist selected with the Context View menu
+- Clear recordings data when the user selects the next playlist after a temporary clustering playlist
+- Display the cluster name for the one selected cluster
+- The greyed-out boxes should be the ones left out of the clustering playlist
 - The issue with displaying audio events boxes after one cluster selection is fixed
 - Spinner is added to the recordings list in the playlist state
 - Fixed the issue with getting a new playlist id on the Clustering: Grid View page

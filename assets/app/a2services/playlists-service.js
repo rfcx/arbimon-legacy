@@ -9,7 +9,6 @@ angular.module('a2.srv.playlists', [
             if(options){
                 options={params:options};
             }
-            console.log("options", options);
             return $http.get('/api/project/'+projectName+'/playlists/', options).then(function(response) {
                 return response.data;
             });

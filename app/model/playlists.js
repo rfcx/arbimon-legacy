@@ -288,8 +288,15 @@ var Playlists = {
                 await db.beginTransaction()
                 const query = util.promisify(db.query).bind(db);
                 const playlistId = (await query(`INSERT INTO playlists(project_id, name, playlist_type_id) VALUES (?, ?, ?)`, [data.project_id, data.name, 1])).insertId
-                if (data.recIdsIncluded) {
-                    await this.addRecs(query, playlistId, data.params)
+                if (data.recIdsIncluded || data.aedIdsIncluded) {
+                    if (data.aedIdsIncluded) {
+                        await this.addRecs(query, playlistId, data.params);
+                    }
+                    else {
+                        const aedData = await model.ClusteringJobs.findRois({ aed: data.params });
+                        const recIds = aedData.map(aed => { return aed.recording_id });
+                        await this.addRecs(query, playlistId, recIds);
+                    }
                 } else {
                     data.params.project_id = data.project_id;
                     data.params.sortBy = 'site_id, datetime'
