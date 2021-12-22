@@ -1,44 +1,44 @@
 <div class="row">
     <div class="col-sm-12 col-lg-11 padded-view-div"  >
         <h3>
-            Classifications 
-            <a class="btn btn-sm btn-default"  
-                tooltip="Create New Classification" 
-                tooltip-placement="right"  
+            Classifications
+            <a class="btn btn-sm btn-default"
+                tooltip="Create New Classification"
+                tooltip-placement="right"
                 ng-click="createNewClassification() | trackEvent:'Analysis-Classification-List':'Create new classification'" >
                 <i class="fa fa-plus" ></i>
             </a>
-        </h3> 
+        </h3>
         <loader ng-show="loading"></loader>
         <button class="btn btn-default pull-right"
             tooltip="Refresh list"
             ng-click="loadClassifications()">
                 <i class="fa fa-refresh"></i>
         </button>
-        
+
         <div ng-hide="loading">
             <a2-table rows="classificationsData" no-checkbox="true">
-                <field title="Name" class="hidelongtext widthtd" key="cname" filter>
+                <field title="Name" tdclass="hidelongtext widthtd" key="cname" filter>
                     {{row.cname}}
                 </field>
-                <field title="Date" key="date" class="is-v-middle">
+                <field title="Date" key="date" tdclass="is-v-middle">
                     {{ row.date | moment : 'lll' }}
                 </field>
-                <field title="Model" key="modname" filter class="no-wrap-table-cell">
+                <field title="Model" key="modname" filter tdclass="no-wrap-table-cell">
                     {{row.modname}}
                 </field>
-                <field title="Playlist" key="playlist_name" filter class="no-wrap-table-cell">
+                <field title="Playlist" key="playlist_name" filter tdclass="no-wrap-table-cell">
                     {{row.playlist_name}}
                 </field>
-                <field title="User" key="muser" filter class="no-wrap-table-cell">
+                <field title="User" key="muser" filter tdclass="no-wrap-table-cell">
                     {{ row.muser }}
                 </field>
                 <field>
-                    <button class="btn btn-default btn-xs" 
+                    <button class="btn btn-default btn-xs"
                         ng-click="showClassificationDetails(row) | trackEvent:'Analysis-Classification-List':' show classification details'">
                             Show details
                     </button>
-                    <button class="btn btn-default btn-xs" 
+                    <button class="btn btn-default btn-xs"
                         ng-click="deleteClassification(row.job_id,row.cname) | trackEvent:'Analysis-Classification list':'delete classification'">
                             Delete
                     </button>
@@ -47,7 +47,7 @@
         </div>
         <div class="jumbotron" ng-show="(!classificationsOriginal || !classificationsOriginal.length > 0) && !loading">
             <h3>
-                {{ infopanedata }}  
+                {{ infopanedata }}
                 <a ng-click="createNewClassification() | trackEvent:'Analysis-Classification-List':'Create new classification'">
                     Classify recordings
                 </a>

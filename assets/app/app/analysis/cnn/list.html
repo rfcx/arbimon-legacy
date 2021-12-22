@@ -1,7 +1,7 @@
 <div class="row">
     <div class="col-sm-12 col-lg-11 padded-view-div" ng-if="!selectedCNNId">
         <h3>
-            Convolutional Neural Networks 
+            Convolutional Neural Networks
             <span class="beta-badge">BETA</span>
             <a class="btn btn-sm btn-default ml-2"
                 tooltip="Create CNN"
@@ -21,28 +21,28 @@
 
         <div ng-hide="loading">
             <a2-table rows="cnnsData" no-checkbox="true">
-                <field title="Name" class="hidelongtext widthtd" key="name" filter>
-                    {{row.name}}
+                <field title="Name" tdclass="is-v-middle hidelongtext widthtd" key="name" filter>
+                    <span title="{{ row.name }}">{{ row.name }}</span>
                 </field>
-                <field title="ID" key="job_id" class="no-wrap-table-cell is-v-middle" filter>
+                <field title="ID" key="job_id" tdclass="no-wrap-table-cell is-v-middle" filter>
                     {{ row.job_id }}
                 </field>
-                <field title="Timestamp" key="timestamp" class="no-wrap-table-cell is-v-middle">
+                <field title="Timestamp" key="timestamp" tdclass="no-wrap-table-cell is-v-middle">
                     {{ row.timestamp | moment : 'lll' }}
                 </field>
-                <field title="CNN Model" key="cnn_model_name" filter class="no-wrap-table-cell is-v-middle">
+                <field title="CNN Model" key="cnn_model_name" filter tdclass="no-wrap-table-cell is-v-middle">
                     {{row.cnn_model_name}}
                 </field>
-                <field title="Playlist" key="playlist_name" filter class="no-wrap-table-cell is-v-middle">
+                <field title="Playlist" key="playlist_name" filter tdclass="no-wrap-table-cell is-v-middle">
                     {{row.playlist_name}}
                 </field>
-                <field title="Recordings" key="playlist_count" filter class="no-wrap-table-cell is-v-middle">
+                <field title="Recordings" key="playlist_count" filter tdclass="no-wrap-table-cell is-v-middle">
                     {{row.playlist_count}}
                 </field>
-                <field title="User" key="user" filter class="no-wrap-table-cell is-v-middle">
+                <field title="User" key="user" filter tdclass="no-wrap-table-cell is-v-middle">
                     {{ row.user }}
                 </field>
-                <field class="is-v-middle">
+                <field tdclass="is-v-middle">
                     <button class="btn btn-default"
                     ng-click="selectItem(row.job_id) | trackEvent:'Analysis-CNN-List':' show cnn details'"
                     >
