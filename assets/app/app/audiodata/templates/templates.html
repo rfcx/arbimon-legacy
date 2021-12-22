@@ -17,7 +17,7 @@
             <div class="col-md-12">
                 <loader ng-if="controller.loading"></loader>
                 <a2-table ng-if="!controller.loading" search="search" rows="controller.templates" no-checkbox>
-                    <field tdclass="is-v-middle" className ="spectrogram-img">
+                    <field tdclass="is-v-middle" tdclass="spectrogram-img">
                         <div class="roi-thumbnail" >
                             <img ng-src="{{row.uri}}" class="roi-img is-small"/>
                             <a class="roi-btn-bl cs-pointer" ng-click="controller.playTemplateAudio(row, $event)">
@@ -36,9 +36,9 @@
                             </a>
                         </div>
                     </field>
-                    <field title="Name" key="name" filter tdclass="is-v-middle" className="name">
+                    <field title="Name" key="name" filter tdclass="is-v-middle name">
                         <div>
-                            <p class="m-0 is-v-middle no-wrap hidelongtext">{{ row.name }}</p>
+                            <p class="m-0 is-v-middle no-wrap hidelongtext" title="{{ row.name }}">{{ row.name }}</p>
                             <a class="is-v-middle"
                                 ng-if="controller.currentTab === 'showOwner' && row.project !== row.source_project_id && row.source_project_id !== null"
                                 ng-click="controller.goToSourceProject(row.source_project_id)">
@@ -49,23 +49,27 @@
                     <field title="Species" key="species_name" filter tdclass="is-v-middle no-wrap hidelongtext">
                         {{ row.species_name }}
                     </field>
-                    <field title="Song type" key="songtype_name" tdclass="is-v-middle no-wrap hidelongtext" className="no-wrap">
+                    <field title="Song type" key="songtype_name" tdclass="is-v-middle no-wrap hidelongtext">
                         {{ row.songtype_name }}
                     </field>
                     <field title="Author" key="author" filter tdclass="is-v-middle no-wrap hidelongtext" show="controller.currentTab === 'allAccessibleProjects'">
-                        {{ row.author }}
+                        <span title="{{ row.author }}">
+                            {{ row.author }}
+                        </span>
                     </field>
                     <field title="Project" key="project_name" filter tdclass="is-v-middle no-wrap hidelongtext" show="controller.currentTab === 'allAccessibleProjects'">
                         {{ row.project_name }}
                     </field>
-                    <field title="Sampling" key="sampling_rate" tdclass="is-v-middle" className="no-wrap" show="controller.currentTab === 'allAccessibleProjects'">
+                    <field title="Sampling" key="sampling_rate" tdclass="is-v-middle no-wrap" show="controller.currentTab === 'allAccessibleProjects'">
                         {{ row.sample_rate }}
                     </field>
-                    <field title="Date created" key="date_created" tdclass="is-v-middle" className="no-wrap">
+                    <field title="Date created" key="date_created" tdclass="is-v-middle no-wrap">
                         {{ row.date_created | moment: 'll' }}
                     </field>
-                    <field title="Source" key="source_project_name" filter tdclass="is-v-middle no-wrap hidelongtext" show="controller.currentTab === 'showOwner'" className="source">
-                        {{ row.project !== row.source_project_id && row.source_project_id !== null ? row.author + ' / ' + row.source_project_name : '-' }}
+                    <field title="Source" key="source_project_name" filter tdclass="is-v-middle no-wrap hidelongtext" show="controller.currentTab === 'showOwner'" tdclass="source">
+                        <span title="{{ row.name }}">
+                            {{ row.project !== row.source_project_id && row.source_project_id !== null ? row.author + ' / ' + row.source_project_name : '-' }}
+                        </span>
                     </field>
                     <field tdclass="is-v-middle">
                         <button class="btn btn-default"

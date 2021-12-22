@@ -12,7 +12,7 @@
 
         <div ng-hide="loading">
             <a2-table rows="patternmatchingsData" no-checkbox="true"  on-select="selectItem(row.id) | trackEvent:'Analysis-Pattern-Matching-List':' show pattern matching details'">
-                <field title="Name" class="hidelongtext widthtd" key="name" filter>
+                <field title="Name" tdclass="hidelongtext widthtd" key="name" filter>
                     <div class="roi-thumbnail" >
                         <img ng-src="{{row.template.uri}}" class="roi-img is-small"/>
                         <a class="roi-btn-br" ng-href="{{getTemplateVisualizerUrl(row.template)}}" ng-click="$event.stopPropagation();">
@@ -25,8 +25,8 @@
                     </div>
                     {{row.name}}
                 </field>
-                <field title="Species" key="species_name" class="is-v-middle"  filter >{{row.species_name}}</field>
-                <field title="Songtype" key="songtype_name" class="is-v-middle"  filter >{{row.songtype_name}}</field>
+                <field title="Species" key="species_name" tdclass="is-v-middle"  filter >{{row.species_name}}</field>
+                <field title="Songtype" key="songtype_name" tdclass="is-v-middle"  filter >{{row.songtype_name}}</field>
                 <field title="Progress" class="is-v-middle" width="25%">
                     <a2-percentage-bars data="[row.validated, 0, row.total - row.validated]"
                             popover-html="'<span class=\'swatch val-1\'></span> Validated: {{row.validated}} ({{row.validated * 100 / row.total | number:0}}%)'"
@@ -34,10 +34,10 @@
                             popover-append-to-body="true"
                     />
                 </field>
-                <field title="Count" key="total" class="is-v-middle" filter>
+                <field title="Count" key="total" tdclass="is-v-middle" filter>
                     {{row.total}}
                 </field>
-                <field class="is-v-middle">
+                <field tdclass="is-v-middle">
                     <button class="btn btn-default btn-small"
                         ng-click="selectItem(row.id) | trackEvent:'Analysis-Pattern-Matching-List':' show pattern matching details'"
                         tooltip="Show Details"

@@ -18,17 +18,17 @@
 
         <div ng-hide="loading">
             <a2-table rows="soundscapesData" no-checkbox="true">
-                <field title="Date" key="date" class="no-wrap-table-cell">
+                <field title="Date" key="date" tdclass="no-wrap-table-cell">
                     {{ row.date | moment : 'lll' }}
                 </field>
-                <field title="Name" class="no-wrap-table-cell hidelongtext widthtd" key="name" filter>
+                <field title="Name" tdclass="no-wrap-table-cell hidelongtext widthtd" key="name" filter>
                     {{row.name}}
                 </field>
-                <field title="User" key="user" filter class="no-wrap-table-cell">
+                <field title="User" key="user" filter tdclass="no-wrap-table-cell">
                     {{ row.user }}
                 </field>
 
-                <field title="Playlist" key="playlist" filter class="no-wrap-table-cell hidelongtext is-v-middle">
+                <field title="Playlist" key="playlist" filter tdclass="no-wrap-table-cell hidelongtext is-v-middle">
                     {{row.playlist}}
                 </field>
                 <field>
