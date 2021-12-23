@@ -787,7 +787,11 @@ angular.module('a2.analysis.clustering-jobs', [
 
     // Collect rois data which should be left out of the playlist through all pagination pages.
     $scope.collectMissedRois = function(roi) {
-        if (!roi.selected) return;
+        if (!roi.selected) {
+            const index = $scope.missedRois.findIndex(item => item === roi.aed_id);
+            $scope.missedRois.splice(index, 1);
+            return;
+        }
         if ($scope.missedRois.includes(roi.aed_id)) return;
         $scope.missedRois.push(roi.aed_id);
     }
