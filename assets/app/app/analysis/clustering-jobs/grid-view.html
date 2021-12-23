@@ -71,7 +71,7 @@
                 <div ng-if="row.cluster && row.rois.length" class="h3" id="cluster-{row.id}}">Cluster {{row.cluster}}</div>
                 <span ng-repeat="roi in row.rois"
                     class="btn btn-default roi-thumbnail {{roi.selected ? 'active' : ''}}"
-                    ng-click="roi.selected = !roi.selected; collectMissedRois(roi)"
+                    ng-click="roi.selected = !roi.selected; getExcludedRois(roi)"
                     popover-html="'Frequency Max (Hz): {{(roi.frequency_max) || '(Missing)'}} <br>
                                     Frequency Min (Hz): {{(roi.frequency_min) || '(Missing)'}} <br>
                                     Duration (s): {{(roi.time_max - roi.time_min).toFixed(2)}}'"
@@ -80,7 +80,7 @@
                     popover-trigger="mouseenter"
                     popover-append-to-body="true"
                 >
-                    <div class="roi-btn-tl" ng-if="roi.selected || missedRois.includes(roi.aed_id)"><i class="fa val-0"></i></div>
+                    <div class="roi-btn-tl" ng-if="roi.selected || excludedRois.includes(roi.aed_id)"><i class="fa val-0"></i></div>
                     <a class="roi-btn-bl" ng-href="{{getRoiVisualizerUrl(roi)}}" ng-click="$event.stopPropagation();">
                         <i tooltip-placement="left"
                             tooltip-append-to-body="true"
