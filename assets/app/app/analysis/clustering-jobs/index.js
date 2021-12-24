@@ -620,7 +620,7 @@ angular.module('a2.analysis.clustering-jobs', [
     $scope.infopanedata = '';
     $scope.projectUrl = Project.getUrl();
     $scope.allRois = [];
-    $scope.missedRois = [];
+    $scope.excludedRois = [];
     $scope.paginationSettings = {
         page: 1,
         limit: 100,
@@ -786,10 +786,14 @@ angular.module('a2.analysis.clustering-jobs', [
     };
 
     // Collect rois data which should be left out of the playlist through all pagination pages.
-    $scope.collectMissedRois = function(roi) {
-        if (!roi.selected) return;
-        if ($scope.missedRois.includes(roi.aed_id)) return;
-        $scope.missedRois.push(roi.aed_id);
+    $scope.getExcludedRois = function(roi) {
+        if (!roi.selected) {
+            const index = $scope.excludedRois.findIndex(item => item === roi.aed_id);
+            $scope.excludedRois.splice(index, 1);
+            return;
+        }
+        if ($scope.excludedRois.includes(roi.aed_id)) return;
+        $scope.excludedRois.push(roi.aed_id);
     }
 
     $scope.togglePopup = function() {
@@ -798,7 +802,7 @@ angular.module('a2.analysis.clustering-jobs', [
         if ($scope.rows && $scope.rows.length) {
             $scope.selectedRois = [];
             $scope.aedData.id.forEach(aedId => {
-                if ($scope.missedRois.includes(aedId)) return
+                if ($scope.excludedRois.includes(aedId)) return
                 else $scope.selectedRois.push(aedId)
             })
         }
