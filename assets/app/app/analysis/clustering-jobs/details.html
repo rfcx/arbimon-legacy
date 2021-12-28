@@ -16,7 +16,7 @@
             </div>
             <div class="col-sm-6 flex-self-align-bottom panel-body">
                 <div class="pull-right">
-                    <div class="input-group btn-group-margin">
+                    <div class="input-group btn-group-margin" title="Select one cluster">
                         <button class="btn btn-default btn-sm col-sm-2" style="border-top-right-radius: 0; border-bottom-right-radius: 0;" type="button" ng-click="decrementClusters()">
                             <i class="fa fa-minus"></i>
                         </button>
@@ -30,12 +30,13 @@
                 </div>
                 <div class="pull-right">
                     <div class="btn-group btn-group-margin">
-                        <button class="btn btn-sm btn-default" ng-class="audio_player.freq_filter ? 'active' : ''" ng-click="openFreqFilterModal()" ng-disabled="!clusters.frequency && !clusters.frequency.freq_high && !clusters.frequency.freq_high.length">
+                        <button class="btn btn-sm btn-default" ng-class="audio_player.freq_filter ? 'active' : ''" ng-click="openFreqFilterModal()" ng-disabled="!clusters.frequency && !clusters.frequency.freq_high && !clusters.frequency.freq_high.length"
+                            title="Cluster audio frequency filter">
                             <i class="fa fa-filter" ></i>
                             <span class="fa fa-ellipsis-h fa-concat-sub"></span>
                         </button>
                     </div>
-                    <div class="btn-group btn-group-margin">
+                    <div class="btn-group btn-group-margin" title="Clustering visualization type">
                         <ui-select ng-model="selectedType" theme="bootstrap" class="btn-group-item border-left-radius" on-select="onTypeSelect($select.selected)">
                             <ui-select-match class="right-corners">
                                 <i></i>{{$select.selected.text}}
