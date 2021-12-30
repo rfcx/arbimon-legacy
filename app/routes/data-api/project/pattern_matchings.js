@@ -89,10 +89,10 @@ router.get('/count', function(req, res, next) {
     else {
         model.patternMatchings.totalPatternMatchings(p).then((count) => {
             cachedData.counts[req.project.project_id] = {
-                count: count[0],
+                count: count,
                 time: Date.now()
             };
-            res.json(count[0]);
+            res.json(count);
         }).catch(next);
     }
 });
