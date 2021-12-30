@@ -6,6 +6,8 @@
 New features:
 
 - Pagination component is added to the Grid View page
+- Provide more details for each parameters in the new AED form
+- Definitions are added for main buttons/function in the cluster details page
 
 Resolved issues:
 
