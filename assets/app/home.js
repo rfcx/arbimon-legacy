@@ -129,7 +129,7 @@ angular.module('a2.home', [
                 this.highlightedProjects.forEach(project => {
                     project.isLoading = true;
                     $http.get('/api/project/' + project.url + '/pattern-matchings/count', {params: {cache: true}}).success(function(data) {
-                        project.patternMatchingsTotal = data.count || 0;
+                        project.patternMatchingsTotal = data || 0;
                         project.isLoading = false;
                     });
                     $http.get('/api/project/' + project.url + '/recordings/count', {params: {cache: true}}).success(function(data) {
