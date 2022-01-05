@@ -46,8 +46,8 @@
 <div class="row sites">
     <div ng-class="editing || creating ? 'visible-md-block visible-lg-block' : '' ">
         <a2-table rows="sites" on-select="sel(row)" data-checked="checked" search="search" no-checkbox>
-            <field title="Name" key="name" className="name hidelongtext">
-                {{ row.name }}
+            <field title="Name" key="name" tdclass="name hidelongtext">
+                <span title="{{ row.name }}">{{ row.name }}</span>
                 <span class="a2-badge" title="ARBIMON ONLY" ng-if="!row.external_id">ARBIMON ONLY</span>
             </field>
             <ng-container ng-if="!row.imported && (row.has_logs || row.token_created_on)">
@@ -68,7 +68,7 @@
             <field title="Altitude" key="alt">
                 {{ row.alt | number:2 }}
             </field>
-            <field title="Last updated" key="date" className="date hidelongtext">
+            <field title="Last updated" key="date" tdclass="date hidelongtext">
                 {{ row.updated_at | moment : 'lll' : row.timezone }}
             </field>
         </a2-table>

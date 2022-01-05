@@ -38,7 +38,7 @@ router.post('/create', function(req, res, next) {
         site.project_id = project.project_id;
 
         try {
-            await model.sites.createSiteInArbimonAndCoreAPI(site, project.external_id, req.session.idToken);
+            await model.sites.createSiteInArbimonAndCoreAPI(site, project, req.session.idToken);
             res.json({ message: "New site created" });
         }
         catch(e) {

@@ -615,15 +615,19 @@ angular.module('a2.analysis.clustering-jobs', [
         templateUrl: '/app/analysis/clustering-jobs/grid-view.html'
     };
 })
-.controller('GridViewCtrl' , function($scope, a2ClusteringJobs, a2AudioBarService, Project, a2Playlists, notify) {
+.controller('GridViewCtrl' , function($scope, $localStorage, a2ClusteringJobs, a2AudioBarService, Project, a2Playlists, notify) {
     $scope.loading = true;
     $scope.infopanedata = '';
     $scope.projectUrl = Project.getUrl();
-    $scope.allRois = []
-    $scope.total = { rois: 0, pages: 0 }
-    $scope.limit = 100
-    $scope.offset = 0
-    $scope.selected = { page: 0 }
+    $scope.allRois = [];
+    $scope.excludedRois = [];
+    $scope.paginationSettings = {
+        page: 1,
+        limit: 100,
+        offset: 0,
+        totalItems: 0,
+        totalPages: 0
+    }
 
     $scope.lists = {
         search: [
@@ -637,10 +641,12 @@ angular.module('a2.analysis.clustering-jobs', [
     $scope.selectedFilterData = $scope.lists.search[1];
 
     $scope.playlistData = {};
+
     $scope.aedData = {
         count: 0,
         id: []
     };
+
     if ($scope.gridContext && $scope.gridContext.aed) {
         $scope.gridData = []
         $scope.gridData.push($scope.gridContext)
@@ -666,12 +672,23 @@ angular.module('a2.analysis.clustering-jobs', [
         $scope.getRoisDetails();
     }
 
+    $scope.setCurrentPage = function() {
+        this.paginationSettings.offset = $scope.paginationSettings.page - 1;
+        $scope.getRoisDetails();
+    };
+
     $scope.getRoisDetails = function() {
+        if (!$scope.aedData.id.length) {
+            return $scope.getStatusForEmptyData();
+        }
         $scope.rows = [];
         $scope.isRoisLoading = true;
+        $scope.paginationSettings.totalItems = $scope.aedData.id.length;
         return a2ClusteringJobs.getRoisDetails({
             jobId: $scope.clusteringJobId,
-            aed: $scope.aedData.id,
+            aed: $scope.aedData.id.filter((id, i, a) => {
+                return (i >= ($scope.paginationSettings.offset * $scope.paginationSettings.limit)) && (i < ($scope.paginationSettings.page * $scope.paginationSettings.limit))
+            }),
             search: $scope.selectedFilterData.value
         }).then(function(data) {
             const groupedData = []
@@ -687,32 +704,27 @@ angular.module('a2.analysis.clustering-jobs', [
                     }
                 })
             })
-
+            $scope.paginationSettings.totalPages = Math.ceil($scope.paginationSettings.totalItems / $scope.paginationSettings.limit);
             $scope.loading = false;
             $scope.allRois = groupedData
-            $scope.total.rois = data.length
-            $scope.total.pages = Math.ceil(data.length / $scope.limit)
             $scope.isRoisLoading = false;
-            $scope.getRoisDetailsSegment($scope.limit, $scope.offset)
+            $scope.getRoisDetailsSegment()
         }).catch(err => {
             console.log(err);
-            $scope.loading = false;
-            $scope.isRoisLoading = false;
-            $scope.infopanedata = 'No data for clustering job found.';
+            $scope.getStatusForEmptyData();
         });
     }
 
     $scope.getRoisDetails();
 
-    $scope.onPageChanged = function(value) {
-        $scope.selected.page = value
-        $scope.offset = $scope.limit * value
-        $scope.getRoisDetailsSegment($scope.limit, $scope.offset)
+    $scope.getStatusForEmptyData = function() {
+        $scope.loading = false;
+        $scope.isRoisLoading = false;
+        $scope.infopanedata = 'No data for clustering job found.';
     }
 
-    $scope.getRoisDetailsSegment = function(limit, offset) {
-        const end = (offset + limit) > $scope.total.rois ? $scope.total.rois : (offset + limit)
-        const data = $scope.allRois.slice(offset, end)
+    $scope.getRoisDetailsSegment = function() {
+        const data = $scope.allRois
         if (data && $scope.selectedFilterData.value === 'per_site') {
             var sites = {};
             data.forEach((item) => {
@@ -759,15 +771,6 @@ angular.module('a2.analysis.clustering-jobs', [
         }
     }
 
-    // ------------ Pagination ------------
-    $scope.next = function() {
-        $scope.onPageChanged($scope.selected.page + 1)
-    }
-
-    $scope.prev = function() {
-        $scope.onPageChanged($scope.selected.page - 1)
-    }
-
     $scope.playRoiAudio = function(recId, aedId, $event) {
         if ($event) {
             $event.preventDefault();
@@ -782,30 +785,31 @@ angular.module('a2.analysis.clustering-jobs', [
         return roi ? '/project/' + projecturl + '/#/visualizer/rec/' + roi.recording_id + '?a=' + box : '';
     };
 
+    // Collect rois data which should be left out of the playlist through all pagination pages.
+    $scope.getExcludedRois = function(roi) {
+        if (!roi.selected) {
+            const index = $scope.excludedRois.findIndex(item => item === roi.aed_id);
+            $scope.excludedRois.splice(index, 1);
+            return;
+        }
+        if ($scope.excludedRois.includes(roi.aed_id)) return;
+        $scope.excludedRois.push(roi.aed_id);
+    }
+
     $scope.togglePopup = function() {
         $scope.isPopupOpened = !$scope.isPopupOpened;
         // The greyed-out boxes should be the ones left out of the playlist.
         if ($scope.rows && $scope.rows.length) {
-            $scope.selectedRois = {};
-            $scope.rows.forEach(row => {
-                row.rois.forEach(roi => {
-                    if (!roi.selected) {
-                        if (!$scope.selectedRois[roi.recording_id]) {
-                            $scope.selectedRois[roi.recording_id] = {
-                                aed: [roi.aed_id]
-                            }
-                        }
-                        else {
-                            $scope.selectedRois[roi.recording_id].aed.push(roi.aed_id);
-                        }
-                    }
-                })
+            $scope.selectedRois = [];
+            $scope.aedData.id.forEach(aedId => {
+                if ($scope.excludedRois.includes(aedId)) return
+                else $scope.selectedRois.push(aedId)
             })
         }
     }
 
     $scope.isPlaylistDataValid = function() {
-        return $scope.selectedRois && Object.keys($scope.selectedRois).length && $scope.playlistData.playlistName && $scope.playlistData.playlistName.trim().length > 0;
+        return $scope.selectedRois && $scope.selectedRois.length && $scope.playlistData.playlistName && $scope.playlistData.playlistName.trim().length > 0;
     }
 
     $scope.closePopup = function() {
@@ -813,16 +817,12 @@ angular.module('a2.analysis.clustering-jobs', [
     }
 
     $scope.savePlaylist = function() {
-        if (Object.keys($scope.selectedRois).length) {
+        if ($scope.selectedRois.length) {
             $scope.isSavingPlaylist = true;
-            var aeds = [];
-            Object.values($scope.selectedRois).forEach(obj => {
-                obj.aed.forEach(el=>{ aeds.push(el) })
-            })
             // create playlist
             a2Playlists.create({
                 playlist_name: $scope.playlistData.playlistName,
-                params: Object.keys($scope.selectedRois),
+                params: $scope.selectedRois,
                 recIdsIncluded: true
             },
             function(data) {
@@ -833,11 +833,11 @@ angular.module('a2.analysis.clustering-jobs', [
                 if (data && data.playlist_id) {
                     a2Playlists.attachAedToPlaylist({
                         playlist_id: data.playlist_id,
-                        aed: aeds
+                        aed: $scope.selectedRois
                     },
                     function(data) {
                         $scope.playlistData = {};
-                        notify.log('Audio event detections are saved in the playlist.');
+                        notify.log('Audio event detections are saved in the playlist. <br> Navigates to the Visualizer page to see Audio Event boxes on the spectrograms.');
                     });
                 }
             });

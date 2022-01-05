@@ -18,22 +18,22 @@
         </button>
         <div ng-if="!loading">
             <a2-table rows="clusteringJobsData" no-checkbox="true" on-select="selectItem(row.id) | trackEvent:'Analysis-Clustering-Data-List':' show clustering job details'">
-                <field title="Name" key="name" class="is-v-middle">
-                    {{row.name}}
+                <field title="Name" key="name" tdclass="hidelongtext widthtd is-v-middle">
+                    <span title="{{ row.name }}">{{ row.name }}</span>
                 </field>
-                <field title="Timestamp" key="timestamp" class="is-v-middle">
+                <field title="Timestamp" key="timestamp" tdclass="is-v-middle">
                     {{ row.timestamp | moment : 'lll' }}
                 </field>
-                <field title="Audio Event Detection Job" key="aed_job" filter class="no-wrap-table-cell is-v-middle">
+                <field title="Audio Event Detection Job" key="aed_job" filter tdclass="no-wrap-table-cell is-v-middle">
                     {{row.name_aed}}
                 </field>
-                <field title="Parameters" key="parameters" filter="parameters.$" class="no-wrap-table-cell is-v-middle">
+                <field title="Parameters" key="parameters" filter="parameters.$" tdclass="no-wrap-table-cell is-v-middle">
                     {{row.parameters | asCSV }}
                 </field>
-                <field title="User" key="user" filter class="is-v-middle">
+                <field title="User" key="user" filter tdclass="is-v-middle">
                     {{ row.user }}
                 </field>
-                <field class="is-v-middle">
+                <field tdclass="is-v-middle">
                     <button class="btn btn-default btn-xs" tooltip="Show Clustering Job's details"
                         ng-click="selectItem(row) | trackEvent:'Analysis-Clustering-Data-List':' show clustering job details'"
                     >

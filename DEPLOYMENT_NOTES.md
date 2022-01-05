@@ -1,5 +1,11 @@
 # Arbimon Deployment Notes
 
+## v3.0.45
+
+- You have to update `bioAnalyticsBaseUrl` in `config/rfcx.local.json` file:
+    - For staging: https://staging-bio.rfcx.org
+    - For production: https://bio.rfcx.org
+
 ## v3.0.44
 
 - You have to add `bioAnalyticsBaseUrl` in `config/rfcx.local.json` file:

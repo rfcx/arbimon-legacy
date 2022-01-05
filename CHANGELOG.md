@@ -1,11 +1,33 @@
 # Arbimon Release Notes
 
+## v3.0.45 - January XX, 2022
+
+Resolved issues:
+
+- [418](https://github.com/rfcx/biodiversity-analytics/issues/418) Update Arbimon link to point to bio.rfcx.org instead of ba.rfcx.org
+
 
 ## v3.0.44 - December XX, 2021
 
 New features:
 
-* **feature:** Add biodiversity analytics link to nav bar menu [825]
+- Pagination component is added to the Grid View page
+- Provide more details for each parameters in the new AED form
+- Definitions are added for main buttons/function in the cluster details page
+
+Resolved issues:
+
+- #829 Fixed a style issue with a long job's name which broke UI
+- #829 Fixed a style issue with an indent on the Jobs page
+- #829 Display the title for the name cell into tables on the Analysis, Data, Jobs, Citizen Scientist tabs
+- Hotfix total pattern matchings count
+
+## v3.0.43 - December XX, 2021
+
+New features:
+
+- Add biodiversity analytics link to nav bar menu
+- Pagination component is added to the PM list page
 
 Resolved issues:
 
@@ -13,26 +35,19 @@ Resolved issues:
 - Clear recordings data when the user selects the next playlist after a temporary clustering playlist
 - Display the cluster name for the one selected cluster
 - The greyed-out boxes should be the ones left out of the clustering playlist
-
-Performance improvements:
-
-- Do not include unnecessary attributes to query to get audio events boxes for playlist view on the Visualizer page
-
-## v3.0.43 - December XX, 2021
-
-New features:
-
-* **feature:** Pagination component is added to the PM list page [802]
-
-Resolved issues:
-
 - The issue with displaying audio events boxes after one cluster selection is fixed
 - Spinner is added to the recordings list in the playlist state
 - Fixed the issue with getting a new playlist id on the Clustering: Grid View page
+- Use a pagination for a temporary clustering playlist selected with the Context View menu
+- Clear recordings data when the user selects the next playlist after a temporary clustering playlist
+- Display the cluster name for the one selected cluster
+- The greyed-out boxes should be the ones left out of the clustering playlist
+- When creating a site send project's "private" attribute as stream visibility type
 
 Performance improvements:
 
 - Requests types are changed from get to post to support getting a big data for the clustering jobs
+- Do not include unnecessary attributes to query to get audio events boxes for playlist view on the Visualizer page
 
 ## v3.0.42 - November 26, 2021
 

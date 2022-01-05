@@ -41,7 +41,7 @@ angular.module('a2.srv.patternmatching', [
         getPatternMatchingsTotal: function(callback) {
             $http.get('/api/project/' + Project.getUrl() + '/pattern-matchings/count')
             .success(function(data) {
-                callback(data.count);
+                callback(data);
             });
         },
         getRoisFor: function(patternMatchingId, limit, offset, options) {
