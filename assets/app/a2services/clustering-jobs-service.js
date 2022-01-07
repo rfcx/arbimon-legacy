@@ -26,11 +26,11 @@ angular.module('a2.srv.clustering-jobs', [
         },
         getClusteringDetails: function(opts) {
             var config = {
-                params: {}
+                params: {
+                    type: opts.type,
+                    aed_info: opts.aed_info
+                }
             };
-            if (opts.type) {
-                config.params.type = opts.type;
-            }
             return $http.get('/api/project/' + Project.getUrl() + '/clustering-jobs/' + opts.job_id + '/clustering-details', config).then(function(response){
                 return response.data;
             });
