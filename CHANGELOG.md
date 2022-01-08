@@ -2,6 +2,10 @@
 
 ## v3.0.45 - January XX, 2022
 
+New features:
+
+- Detections boxes have different colors on the spectrogram
+
 Resolved issues:
 
 - [418](https://github.com/rfcx/biodiversity-analytics/issues/418) Update Arbimon link to point to bio.rfcx.org instead of ba.rfcx.org
