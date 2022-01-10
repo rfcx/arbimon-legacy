@@ -6,6 +6,10 @@ Resolved issues:
 
 - [418](https://github.com/rfcx/biodiversity-analytics/issues/418) Update Arbimon link to point to bio.rfcx.org instead of ba.rfcx.org
 
+New features:
+
+- 852 The species form is added to add a new species to the Grid View page
+
 
 ## v3.0.44 - December XX, 2021
 
