@@ -5,6 +5,7 @@
 Resolved issues:
 
 - [418](https://github.com/rfcx/biodiversity-analytics/issues/418) Update Arbimon link to point to bio.rfcx.org instead of ba.rfcx.org
+- Display all project tags in the new tag dropdown for the initial state
 
 
 ## v3.0.44 - December XX, 2021
