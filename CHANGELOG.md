@@ -2,15 +2,19 @@
 
 ## v3.0.45 - January XX, 2022
 
+New features:
+
+- Detections boxes have different colors on the spectrogram
+
+Resolved issues:
+
+- #850 Fixed the issue with selection of filtered clusters by top right selector
+
 Perfomance updates:
 
 - #850 Fixed the issue with a long time uploading of the playlist audio events detections on the Visualizer page
 - #850 Get audio events detections frequency data from storage s3 side for the Clustering detail page
 - #850 Duration Threshold and Bandwidth Threshold parameters are added to the new audio event detection job form
-
-Resolved issues:
-
-- #850 Fixed the issue with selection of filtered clusters by top right selector
 
 ## v3.0.44 - January 05, 2022
 
