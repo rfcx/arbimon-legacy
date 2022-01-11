@@ -2,10 +2,7 @@
     <div ng-if="loading">
         Loading... <loader></loader>
     </div>
-    <div class="jumbotron seconds-div-center" ng-if="infopanedata">
-        <h3>{{ infopanedata }}</h3>
-    </div>
-    <div ng-if="job_details && showDetailsPage()" class="panel-body a2-page-header clearfix">
+    <div ng-if="job_details" class="panel-body a2-page-header clearfix">
         <div class="row row-flex flex-align-top">
             <div class="col-sm-6 flex-self-align-top">
                 Job Name: {{ job_details.name }}
@@ -14,23 +11,10 @@
                 <br>Number of audio event detected: {{ countAudioEventDetected || 'no data' }}
                 <br>Number of clusters detected: {{ countClustersDetected || 'no data' }}
             </div>
-            <div class="col-sm-6 flex-self-align-bottom panel-body">
-                <div class="pull-right">
-                    <div class="input-group btn-group-margin" title="Select one cluster">
-                        <button class="btn btn-default btn-sm col-sm-2" style="border-top-right-radius: 0; border-bottom-right-radius: 0;" type="button" ng-click="decrementClusters()">
-                            <i class="fa fa-minus"></i>
-                        </button>
-                        <div style="padding:0;" class="col-sm-4">
-                            <input type="number" class="form-control col-sm-3 hide-input-arrow" style="text-align:center;" ng-change="selectClusters()" ng-model="selectedCluster" min="1" max="layout.shapes.length">
-                        </div>
-                        <button class="btn btn-default btn-sm col-sm-2" style="border-top-left-radius: 0; border-bottom-left-radius: 0;" type="button" ng-click="incrementClusters()">
-                            <i class="fa fa-plus"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="pull-right">
+            <div class="col-sm-6 row-flex flex-space-end panel-body pr-0">
+                <div class="flex-self-align-bottom">
                     <div class="btn-group btn-group-margin">
-                        <button class="btn btn-sm btn-default" ng-class="audio_player.freq_filter ? 'active' : ''" ng-click="openFreqFilterModal()" ng-disabled="!clusters.frequency && !clusters.frequency.freq_high && !clusters.frequency.freq_high.length"
+                        <button class="btn btn-sm btn-default" ng-class="audio_player.freq_filter ? 'active' : ''" ng-click="openFreqFilterModal()" ng-disabled="!frequencyFilter && !frequencyFilter.min && !frequencyFilter.max"
                             title="Cluster audio frequency filter">
                             <i class="fa fa-filter" ></i>
                             <span class="fa fa-ellipsis-h fa-concat-sub"></span>
@@ -47,10 +31,24 @@
                         </ui-select>
                     </div>
                 </div>
+                <div class="input-group btn-group-margin row-flex flex-self-align-bottom" title="Select one cluster">
+                    <button class="btn btn-default btn-sm" style="border-top-right-radius: 0; border-bottom-right-radius: 0;" type="button" ng-click="decrementClusters()">
+                        <i class="fa fa-minus"></i>
+                    </button>
+                    <div style="padding:0;">
+                        <input type="number" class="form-control hide-input-arrow" style="text-align:center; width: 80px" ng-change="selectClusters()" ng-model="selectedCluster" min="1" max="layout.shapes.length">
+                    </div>
+                    <button class="btn btn-default btn-sm" style="border-top-left-radius: 0; border-bottom-left-radius: 0;" type="button" ng-click="incrementClusters()">
+                        <i class="fa fa-plus"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
-    <div style="position: relative;">
+    <div class="jumbotron seconds-div-center" ng-if="infopanedata">
+        <h3>{{ infopanedata }}</h3>
+    </div>
+    <div style="position: relative;" ng-class="{'navbar-menu-hide': !infopanedata.length, 'collapse-menu-hide': infopanedata.length}">
         <div id="plotly"></div>
         <div ng-if="toggleMenu" class="popup-chart panel panel-default">
             <ul class="list-group">

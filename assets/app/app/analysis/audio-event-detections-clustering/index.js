@@ -70,7 +70,8 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
                 playlist: null,
                 params: {
                     amplitudeThreshold: 1,
-                    sizeThreshold: 0.2,
+                    durationThreshold: 5,
+                    bandwidthThreshold: 5,
                     filterSize: 10
                 }
             };

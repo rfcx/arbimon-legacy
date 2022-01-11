@@ -25,9 +25,23 @@ angular.module('a2.visualizer.layers.audio-events-layer', [
         (isJobsBoxes? self.audioEvents : self.clusteringEvents).forEach(item => {
             if ((isJobsBoxes? item.job_id : item.playlist_id) === id) {
                 item.opacity = opacity === false ? 0 : 1;
+                if (isJobsBoxes) {
+                    const index = Object.keys(self.audioEventJobs).findIndex(job => Number(job) === item.job_id);
+                    const color = self.colors[index]
+                    item.borderColor = self.hexToRGB(color, 0.6)
+                    item.backgroundColor = self.hexToRGB(color, 0.2)
+                }
             }
         })
     };
+    self.colors = ['#5340ff33', '#008000', '#ffcd00', '#1F57CC', '#5340ff', '#ffae0033', '#53ff40', '#5bc0de', '#5340ff33']
+    self.hexToRGB = function(hex, opacity) {
+        var r = parseInt(hex.slice(1, 3), 16),
+            g = parseInt(hex.slice(3, 5), 16),
+            b = parseInt(hex.slice(5, 7), 16);
+        return 'rgba(' + r + ', ' + g + ', ' + b + ', ' + opacity + ')';
+    }
+
     self.fetchAudioEvents = function() {
         var rec = $scope.visobject && ($scope.visobject_type == 'recording') && $scope.visobject.id;
         if (rec) {
@@ -38,9 +52,7 @@ angular.module('a2.visualizer.layers.audio-events-layer', [
                 self.isAudioEventsPlaylist = !isNaN(self.selectedAudioEventJob);
             } catch (e) {}
             // Get Detections Jobs data.
-            a2AudioEventDetectionsClustering.list(
-                $scope.visobject.extra && $scope.visobject.extra.playlist && $scope.visobject.extra.playlist.id ?
-                {playlist: $scope.visobject.extra.playlist.id, isAudioEventsPlaylist: true} : {rec_id: rec}).then(function(audioEvents) {
+            a2AudioEventDetectionsClustering.list({rec_id: rec}).then(function(audioEvents) {
                 if (audioEvents) {
                     self.audioEventJobs = {};
                     // Collect detections jobs data for audio events layer.
