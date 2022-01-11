@@ -8,6 +8,7 @@ New features:
 
 Resolved issues:
 
+- Display all project tags in the new tag dropdown for the initial state
 - #850 Fixed the issue with selection of filtered clusters by top right selector
 
 Perfomance updates:
