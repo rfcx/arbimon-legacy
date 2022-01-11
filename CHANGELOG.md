@@ -8,10 +8,15 @@ New features:
 
 Resolved issues:
 
-- [418](https://github.com/rfcx/biodiversity-analytics/issues/418) Update Arbimon link to point to bio.rfcx.org instead of ba.rfcx.org
+- #850 Fixed the issue with selection of filtered clusters by top right selector
 
+Perfomance updates:
 
-## v3.0.44 - December XX, 2021
+- #850 Fixed the issue with a long time uploading of the playlist audio events detections on the Visualizer page
+- #850 Get audio events detections frequency data from storage s3 side for the Clustering detail page
+- #850 Duration Threshold and Bandwidth Threshold parameters are added to the new audio event detection job form
+
+## v3.0.44 - January 05, 2022
 
 New features:
 
@@ -25,6 +30,10 @@ Resolved issues:
 - #829 Fixed a style issue with an indent on the Jobs page
 - #829 Display the title for the name cell into tables on the Analysis, Data, Jobs, Citizen Scientist tabs
 - Hotfix total pattern matchings count
+
+Other:
+
+- #418 Arbimon link to point to bio.rfcx.org instead of ba.rfcx.org ia updated
 
 ## v3.0.43 - December XX, 2021
 

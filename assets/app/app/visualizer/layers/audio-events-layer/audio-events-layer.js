@@ -52,9 +52,7 @@ angular.module('a2.visualizer.layers.audio-events-layer', [
                 self.isAudioEventsPlaylist = !isNaN(self.selectedAudioEventJob);
             } catch (e) {}
             // Get Detections Jobs data.
-            a2AudioEventDetectionsClustering.list(
-                $scope.visobject.extra && $scope.visobject.extra.playlist && $scope.visobject.extra.playlist.id ?
-                {playlist: $scope.visobject.extra.playlist.id, isAudioEventsPlaylist: true} : {rec_id: rec}).then(function(audioEvents) {
+            a2AudioEventDetectionsClustering.list({rec_id: rec}).then(function(audioEvents) {
                 if (audioEvents) {
                     self.audioEventJobs = {};
                     // Collect detections jobs data for audio events layer.
