@@ -1,6 +1,12 @@
 # Arbimon Test Notes
 Test Notes are used to list what pages / components / features / user flows are affected by each update.
 
+## v3.0.45
+
+- #845 Fixed the issue with selection of filtered clusters by top right selector
+  - Clustering details page: the user filtered data by frequency filter. The user selects any shape by clustering selector on the top right corner. The user navigates to the Grid View page. The user sees only selected dots, not all dots in the original shape.
+  - Clustering details page: the user returns to the clustering details page. The user selects any shape by clustering selector on the top right corner without filtering the data. The user navigates to the Grid View page. The user sees all dots in the original shape.
+
 ## v3.0.44
 
 - Pagination component is added to the Grid View page

@@ -132,19 +132,21 @@ var AudioEventDetectionsClustering = {
         playlist_id: joi.number().integer(),
         params     : joi.object().keys({
             amplitudeThreshold: joi.number(),
-            sizeThreshold: joi.number(),
+            durationThreshold: joi.number(),
+            bandwidthThreshold: joi.number(),
             filterSize: joi.number(),
         }),
     }),
 
     requestNewAudioEventDetectionClusteringJob: function(data){
-        let payload = JSON.stringify(
+        const payload = JSON.stringify(
             {
                 'name': data.name,
                 'playlist_id': data.playlist_id,
                 'user_id': data.user_id,
                 'Amplitude Threshold': data.params.amplitudeThreshold,
-                'Size Threshold': data.params.sizeThreshold,
+                'Duration Threshold': data.params.durationThreshold,
+                'Bandwidth Threshold': data.params.bandwidthThreshold,
                 'Filter Size': data.params.filterSize
             }
         )
