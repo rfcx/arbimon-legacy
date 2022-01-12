@@ -4,15 +4,13 @@
 
 New features:
 
-- Detections boxes have different colors on the spectrogram
+- #849 Detections boxes have different colors on the spectrogram
+- #852 The species form is added to add a new species to the Grid View page
 
 Resolved issues:
 
-- Display all project tags in the new tag dropdown for the initial state
+- #864 Display all project tags in the new tag dropdown for the initial state
 - #850 Fixed the issue with selection of filtered clusters by top right selector
-
-Perfomance updates:
-
 - #850 Fixed the issue with a long time uploading of the playlist audio events detections on the Visualizer page
 - #850 Get audio events detections frequency data from storage s3 side for the Clustering detail page
 - #850 Duration Threshold and Bandwidth Threshold parameters are added to the new audio event detection job form

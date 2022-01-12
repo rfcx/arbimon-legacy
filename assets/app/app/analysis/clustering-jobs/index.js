@@ -615,7 +615,7 @@ angular.module('a2.analysis.clustering-jobs', [
         templateUrl: '/app/analysis/clustering-jobs/grid-view.html'
     };
 })
-.controller('GridViewCtrl' , function($scope, $localStorage, a2ClusteringJobs, a2AudioBarService, Project, a2Playlists, notify) {
+.controller('GridViewCtrl' , function($scope, $modal, a2UserPermit, a2ClusteringJobs, a2AudioBarService, Project, a2Playlists, notify) {
     $scope.loading = true;
     $scope.infopanedata = '';
     $scope.projectUrl = Project.getUrl();
@@ -842,5 +842,37 @@ angular.module('a2.analysis.clustering-jobs', [
                 }
             });
         }
+    };
+
+    $scope.addSpecies = function() {
+
+        if(!a2UserPermit.can('manage project species')) {
+            return notify.log('You do not have permission to add species');
+        }
+
+        var modalInstance = $modal.open({
+            templateUrl: '/app/audiodata/select-species.html',
+            controller: 'SelectSpeciesCtrl',
+            size: 'lg',
+        });
+
+        modalInstance.result.then(selected => {
+            Project.addClass({
+                species: selected.species.scientific_name,
+                songtype: selected.song.name
+            })
+                .success(result => {
+                    if (result.error) {
+                        notify.log(result.error);
+                    }
+                    else {
+                        notify.log(selected.species.scientific_name + ' ' + selected.song.name + ' added to project');
+                    }
+                })
+                .error(err => {
+                    notify.serverError();
+                });
+
+        });
     };
 })
