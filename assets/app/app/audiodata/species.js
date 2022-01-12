@@ -109,7 +109,7 @@ angular.module('a2.audiodata.species', [
     };
 })
 .controller('SelectSpeciesCtrl', function($scope, Species, Songtypes) {
-    $scope.timeout = null;
+    var timeout;
     Songtypes.get(function(songs) {
         $scope.songtypes = songs;
     });
@@ -118,8 +118,8 @@ angular.module('a2.audiodata.species', [
             $scope.species = [];
             return;
         }
-        clearTimeout($scope.timeout);
-        $scope.timeout = setTimeout(() => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => {
             Species.search($scope.search, function(results){
                 $scope.species = results;
             });
