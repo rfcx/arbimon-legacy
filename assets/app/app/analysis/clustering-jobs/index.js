@@ -402,7 +402,7 @@ angular.module('a2.analysis.clustering-jobs', [
             })
         }
         // Get an one filtered cluster by frequency filter.
-        if (!$scope.points.x && $scope.points.name) {
+        else if (!$scope.points.x && $scope.points.name) {
             $scope.gridContext = $scope.originalData.find(shape => {
                 return shape.cluster === $scope.points.name;
             })
