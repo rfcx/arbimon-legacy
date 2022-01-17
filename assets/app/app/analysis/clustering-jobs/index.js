@@ -798,14 +798,6 @@ angular.module('a2.analysis.clustering-jobs', [
 
     $scope.togglePopup = function() {
         $scope.isPopupOpened = !$scope.isPopupOpened;
-        // The greyed-out boxes should be include to the playlist.
-        if ($scope.rows && $scope.rows.length) {
-            $scope.selectedRois = [];
-            $scope.aedData.id.forEach(aedId => {
-                if ($scope.selectedRois.includes(aedId)) return
-                else $scope.selectedRois.push(aedId)
-            })
-        }
     }
 
     $scope.isPlaylistDataValid = function() {
@@ -837,7 +829,7 @@ angular.module('a2.analysis.clustering-jobs', [
                     },
                     function(data) {
                         $scope.playlistData = {};
-                        notify.log('Audio event detections are saved in the playlist. <br> Navigates to the Visualizer page to see Audio Event boxes on the spectrograms.');
+                        notify.log('Audio event detections are saved in the playlist. <br> Navigates to the Visualizer page to see Audio Event boxes on the spectrogram');
                     });
                 }
             });
@@ -861,8 +853,10 @@ angular.module('a2.analysis.clustering-jobs', [
             a2AudioEventDetectionsClustering.validate({
                 aed: $scope.selectedRois,
                 validation: {
-                    speciesId: $scope.selected.species.scientific_name,
-                    songtypeId: $scope.selected.songtype.name
+                    speciesName: $scope.selected.species.scientific_name,
+                    songtypeName: $scope.selected.songtype.name,
+                    speciesId: $scope.selected.species.id,
+                    songtypeId: $scope.selected.songtype.id
             }}).then(data => {
                 console.log('setValidation result', data)
             }).finally(() => {

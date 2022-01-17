@@ -132,7 +132,7 @@ var AudioEventDetectionsClustering = {
             'SET species_id = ?, songtype_id = ?\n' +
             'WHERE aed_id IN (?)', [
             validation.speciesId,
-            validation.speciesId,
+            validation.songtypeId,
             aed
         ]) : Promise.resolve();
     },

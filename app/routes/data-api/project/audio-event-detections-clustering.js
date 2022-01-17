@@ -56,8 +56,8 @@ router.post('/validate', function(req, res, next) {
             if (!existingClass.length) {
                 const projectClass = {
                     project_id: req.project.project_id,
-                    species: validation.speciesId,
-                    songtype: validation.songtypeId
+                    species: validation.speciesName,
+                    songtype: validation.songtypeName
                 };
                 model.projects.insertClass(projectClass, function(err, result){
                     if(err) return next(err);
