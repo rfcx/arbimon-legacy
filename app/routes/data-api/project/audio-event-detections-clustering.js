@@ -47,6 +47,28 @@ router.post('/new', function(req, res, next) {
     }).catch(next);
 });
 
+router.post('/validate', function(req, res, next) {
+    res.type('json');
+    const validation = req.body.validation
+    return model.AudioEventDetectionsClustering.validateDetections(req.body.aed, validation)
+        .then(async function(result) {
+            let existingClass = await model.projects.getProjectClassesAsync(req.project.project_id, null, { speciesId: validation.speciesId, songtypeId: validation.songtypeId });
+            if (!existingClass.length) {
+                const projectClass = {
+                    project_id: req.project.project_id,
+                    species: validation.speciesId,
+                    songtype: validation.songtypeId
+                };
+                model.projects.insertClass(projectClass, function(err, result){
+                    if(err) return next(err);
+                });
+            };
+            res.json({
+                aed: req.body.aed,
+                validation: req.body.validation,
+            });
+        }).catch(next);
+});
 
 module.exports = router;
 

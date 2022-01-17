@@ -615,12 +615,12 @@ angular.module('a2.analysis.clustering-jobs', [
         templateUrl: '/app/analysis/clustering-jobs/grid-view.html'
     };
 })
-.controller('GridViewCtrl' , function($scope, $modal, a2UserPermit, a2ClusteringJobs, a2AudioBarService, Project, a2Playlists, notify) {
+.controller('GridViewCtrl' , function($scope, $modal, $http, a2UserPermit, a2ClusteringJobs, a2AudioBarService, a2AudioEventDetectionsClustering, Project, Songtypes, a2Playlists, notify) {
     $scope.loading = true;
     $scope.infopanedata = '';
     $scope.projectUrl = Project.getUrl();
     $scope.allRois = [];
-    $scope.excludedRois = [];
+    $scope.selectedRois = [];
     $scope.paginationSettings = {
         page: 1,
         limit: 100,
@@ -785,24 +785,24 @@ angular.module('a2.analysis.clustering-jobs', [
         return roi ? '/project/' + projecturl + '/#/visualizer/rec/' + roi.recording_id + '?a=' + box : '';
     };
 
-    // Collect rois data which should be left out of the playlist through all pagination pages.
-    $scope.getExcludedRois = function(roi) {
+    // Collect rois data which should be validated or include to the playlist through all pagination pages.
+    $scope.getSelectedRois = function(roi) {
         if (!roi.selected) {
-            const index = $scope.excludedRois.findIndex(item => item === roi.aed_id);
-            $scope.excludedRois.splice(index, 1);
+            const index = $scope.selectedRois.findIndex(item => item === roi.aed_id);
+            $scope.selectedRois.splice(index, 1);
             return;
         }
-        if ($scope.excludedRois.includes(roi.aed_id)) return;
-        $scope.excludedRois.push(roi.aed_id);
+        if ($scope.selectedRois.includes(roi.aed_id)) return;
+        $scope.selectedRois.push(roi.aed_id);
     }
 
     $scope.togglePopup = function() {
         $scope.isPopupOpened = !$scope.isPopupOpened;
-        // The greyed-out boxes should be the ones left out of the playlist.
+        // The greyed-out boxes should be include to the playlist.
         if ($scope.rows && $scope.rows.length) {
             $scope.selectedRois = [];
             $scope.aedData.id.forEach(aedId => {
-                if ($scope.excludedRois.includes(aedId)) return
+                if ($scope.selectedRois.includes(aedId)) return
                 else $scope.selectedRois.push(aedId)
             })
         }
@@ -844,35 +844,47 @@ angular.module('a2.analysis.clustering-jobs', [
         }
     };
 
-    $scope.addSpecies = function() {
+    $scope.speciesLoading = false;
+    $scope.selected = { species: null, songtype: null };
+    var timeout;
 
-        if(!a2UserPermit.can('manage project species')) {
-            return notify.log('You do not have permission to add species');
-        }
+    $scope.isValidationAccessible = function() {
+        // TODO: check permissions: a2UserPermit.can('validate species')
+        return true
+    }
 
-        var modalInstance = $modal.open({
-            templateUrl: '/app/audiodata/select-species.html',
-            controller: 'SelectSpeciesCtrl',
-            size: 'lg',
-        });
-
-        modalInstance.result.then(selected => {
-            Project.addClass({
-                species: selected.species.scientific_name,
-                songtype: selected.song.name
+    $scope.setValidation = function() {
+        console.log('setValidation', $scope.selected)
+        $scope.speciesLoading = true;
+        clearTimeout(timeout);
+        timeout = setTimeout(() => {
+            a2AudioEventDetectionsClustering.validate({
+                aed: $scope.selectedRois,
+                validation: {
+                    speciesId: $scope.selected.species.scientific_name,
+                    songtypeId: $scope.selected.songtype.name
+            }}).then(data => {
+                console.log('setValidation result', data)
+            }).finally(() => {
+                $scope.speciesLoading = false;
             })
-                .success(result => {
-                    if (result.error) {
-                        notify.log(result.error);
-                    }
-                    else {
-                        notify.log(selected.species.scientific_name + ' ' + selected.song.name + ' added to project');
-                    }
-                })
-                .error(err => {
-                    notify.serverError();
-                });
+        }, 500)
+    }
+    Songtypes.get(function(songs) {
+        $scope.songtypes = songs;
+    });
 
-        });
+    $scope.searchSpecies = function(search) {
+        $scope.selected.songtype = null;
+        $scope.speciesLoading = true;
+        return $http.get('/api/species/search', {
+            params: {
+                q: search
+            }
+        }).then(function(result) {
+            $scope.speciesLoading = false;
+            return result.data;
+        })
     };
+
 })
