@@ -15,6 +15,7 @@ angular.module('a2.visualizer.layers.audio-events-layer', [
 })
 .controller('a2VisualizerAudioEventsController', function($scope, a2AudioEventDetectionsClustering, a2ClusteringJobs, $localStorage){
     var self = this;
+    const colors = ['#5340ff33', '#008000', '#ffcd00', '#1F57CC', '#53ff40', '#5bc0de', '#5340ff33']
     self.audioEvents = null;
     self.clusteringEvents = null;
     self.isAudioEventsPlaylist = null;
@@ -27,14 +28,13 @@ angular.module('a2.visualizer.layers.audio-events-layer', [
                 item.opacity = opacity === false ? 0 : 1;
                 if (isJobsBoxes) {
                     const index = Object.keys(self.audioEventJobs).findIndex(job => Number(job) === item.job_id);
-                    const color = self.colors[index]
+                    const color = colors[index]
                     item.borderColor = self.hexToRGB(color, 0.6)
                     item.backgroundColor = self.hexToRGB(color, 0.2)
                 }
             }
         })
     };
-    self.colors = ['#5340ff33', '#008000', '#ffcd00', '#1F57CC', '#5340ff', '#ffae0033', '#53ff40', '#5bc0de', '#5340ff33']
     self.hexToRGB = function(hex, opacity) {
         var r = parseInt(hex.slice(1, 3), 16),
             g = parseInt(hex.slice(3, 5), 16),
