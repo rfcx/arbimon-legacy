@@ -44,21 +44,23 @@ angular.module('a2.visualizer.layers.species-presence', [
         var rec = $scope.visobject && ($scope.visobject_type == 'recording') && $scope.visobject.id;
         if (rec) {
             a2PatternMatching.list({rec_id: rec, validated: 1}).then(function(rois) {
-                if (rois && rois.length) {
-                    self.speciesPresence = rois.map(roi => {
-                        return {
-                            rec_id: roi.recording_id,
-                            pattern_matching_id: roi.pattern_matching_id,
-                            pattern_matching_roi_id: roi.pattern_matching_roi_id,
-                            name: roi.species_name + ' ' + roi.songtype_name,
-                            x1: roi.x1,
-                            x2: roi.x2,
-                            y1: roi.y1,
-                            y2: roi.y2,
-                            display: roi.recording_id === rec? "block" : "none",
-                            isPopupOpened: false
-                        }
-                    });
+                self.speciesPresence = rois.map(roi => {
+                    return {
+                        rec_id: roi.recording_id,
+                        pattern_matching_id: roi.pattern_matching_id,
+                        pattern_matching_roi_id: roi.pattern_matching_roi_id,
+                        name: roi.species_name + ' ' + roi.songtype_name,
+                        x1: roi.x1,
+                        x2: roi.x2,
+                        y1: roi.y1,
+                        y2: roi.y2,
+                        display: roi.recording_id === rec? "block" : "none",
+                        isPopupOpened: false
+                    }
+                });
+                // Add validated aed species boxes
+                if ($scope.visobject && $scope.visobject.validations && $scope.visobject.validations.length) {
+                    $scope.visobject.validations.forEach(item => { if (item.aed_id !== undefined) { self.speciesPresence.push(item); }})
                 }
             });
         }

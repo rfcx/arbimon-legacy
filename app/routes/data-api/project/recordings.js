@@ -521,11 +521,14 @@ router.get('/:get/:oneRecUrl?', function(req, res, next) {
             }
             recording.audioUrl = url_comps[1] + "/audio/" + recording.id + (recExt ? recExt : '');
             recording.imageUrl = url_comps[1] + "/image/" + recording.id;
-            model.recordings.fetchValidations(recording, function(err, validations){
+            model.recordings.fetchValidations(recording, async function(err, validations){
                 if(err) return next(err);
-
                 recording.validations = validations;
-
+                // Add validated aed species boxes
+                const aedValidations = await model.recordings.fetchAedValidations(recording.id)
+                recording.validations = recording.validations.concat([...new Set(aedValidations.map(item => {
+                    return { ...item, presentReview: 1, name: `${item.scientific_name} ${item.songtype_name}`, isPopupOpened: false }
+                }))]);
                 model.recordings.fetchInfo(recording, function(err, rec){
                     if(err) return next(err);
 
