@@ -1,5 +1,9 @@
 # Arbimon Release Notes
 
+Resolved issues:
+
+- #867 Dispaly audio event detection boxes in the original size
+
 ## v3.0.45 - January XX, 2022
 
 New features:
