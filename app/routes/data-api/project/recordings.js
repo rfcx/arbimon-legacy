@@ -523,12 +523,25 @@ router.get('/:get/:oneRecUrl?', function(req, res, next) {
             recording.imageUrl = url_comps[1] + "/image/" + recording.id;
             model.recordings.fetchValidations(recording, async function(err, validations){
                 if(err) return next(err);
-                recording.validations = validations;
                 // Add validated aed species boxes
                 const aedValidations = await model.recordings.fetchAedValidations(recording.id)
-                recording.validations = recording.validations.concat([...new Set(aedValidations.map(item => {
-                    return { ...item, presentReview: 1, name: `${item.scientific_name} ${item.songtype_name}`, isPopupOpened: false }
-                }))]);
+                if (aedValidations) {
+                    recording.aedValidations = aedValidations.map(item => {
+                        return { ...item, name: `${item.scientific_name} ${item.songtype_name}`, isPopupOpened: false, presentReview: 1 }
+                    });
+                    recording.validations = aedValidations.reduce((acc, cur) => {
+                        const existing = acc.find(i => i.species === cur.species && i.songtype === cur.songtype)
+                        if (existing) {
+                            existing.presentReview += 1
+                        } else {
+                            cur.presentReview = 1
+                            acc.push(cur)
+                        }
+                        return acc
+                    }, validations)
+                } else {
+                    recording.validations = validations;
+                }
                 model.recordings.fetchInfo(recording, function(err, rec){
                     if(err) return next(err);
 

@@ -59,8 +59,8 @@ angular.module('a2.visualizer.layers.species-presence', [
                     }
                 });
                 // Add validated aed species boxes
-                if ($scope.visobject && $scope.visobject.validations && $scope.visobject.validations.length) {
-                    $scope.visobject.validations.forEach(item => { if (item.aed_id !== undefined) { self.speciesPresence.push(item); }})
+                if ($scope.visobject && $scope.visobject.aedValidations && $scope.visobject.aedValidations.length) {
+                    self.speciesPresence = self.speciesPresence.concat($scope.visobject.aedValidations)
                 }
             });
         }

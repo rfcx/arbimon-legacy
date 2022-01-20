@@ -859,6 +859,7 @@ angular.module('a2.analysis.clustering-jobs', [
                     songtypeId: $scope.selected.songtype.id
             }}).then(data => {
                 console.log('setValidation result', data)
+                notify.log('Audio event detections validated as ' + $scope.selected.species.scientific_name + ' ' + $scope.selected.songtype.name);
             }).finally(() => {
                 $scope.speciesLoading = false;
             })
