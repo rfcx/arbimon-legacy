@@ -62,6 +62,7 @@ angular.module('a2.visualizer.layers.audio-events-layer', [
                                 self.audioEventJobs[event.job_id] = {
                                     job_id: event.job_id,
                                     name: event.name, count: 1,
+                                    parameters: event.parameters,
                                     visible: self.isAudioEventsPlaylist? Number(self.selectedAudioEventJob) === event.job_id : false // Job not visible by default, except selected job from the audio events details page.
                                 };
                             };

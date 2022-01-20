@@ -1,5 +1,7 @@
 # Arbimon Release Notes
 
+- #848 Display audio event jobs parameters on Visualizer page
+
 ## v3.0.45 - January XX, 2022
 
 New features:
