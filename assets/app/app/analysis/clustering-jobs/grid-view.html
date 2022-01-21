@@ -1,5 +1,5 @@
 <div class="row">
-    <div class="col-sm-12 col-lg-11 padded-view-div">
+    <div class="col-sm-12 padded-view-div">
         <div ng-if="loading">
             Loading... <loader></loader>
         </div>
@@ -124,7 +124,7 @@
                             class="fa fa-play">
                         </i>
                     </a>
-                    <img ng-src="/api/project/{{projectUrl}}/clustering-jobs/asset?path={{roi.uri}}" class="roi-img"/>
+                    <img ng-src="/api/project/{{projectUrl}}/clustering-jobs/asset?path={{roi.uri}}" style="width: 100%; height: 100%; max-width: 80vw; min-height: 28px; min-width: 50px"/>
                 </span>
             </span>
         </div>

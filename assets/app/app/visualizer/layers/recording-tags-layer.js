@@ -116,21 +116,12 @@ angular.module('a2.visualizer.layers.recording-tags', ['a2.srv.tags'])
         }).bind(this));
     };
 
-
     /**
      * @ngdoc object
      * @name a2.visualizer.layer.recording-tags.controller:a2VisualizerRecordingTagsLayerController#searchedTags
      * @description Array of tags returned by the last tag search.
      */
     this.searchedTags=[];
-
-    this.getProjectTags = function() {
-        return a2Tags.getForType('recording').then((function(tags){
-            this.searchedTags = tags;
-        }).bind(this));
-    };
-
-    this.getProjectTags();
 
     /**
      * @ngdoc method
@@ -139,7 +130,10 @@ angular.module('a2.visualizer.layers.recording-tags', ['a2.srv.tags'])
      * @param {String} text - text to match in the tags search.
      * @return Promise resolved with the searched tags. Also, searched tags are set in searchedTags.
      */
-    this.searchTags = function(text){
+    this.searchTags = function(text) {
+        if (text === '' || !text) {
+            this.getProjectTags();
+        }
         return lookaheadHelper.search(text).then((function(tags){
             this.searchedTags = tags;
         }).bind(this));
@@ -168,6 +162,14 @@ angular.module('a2.visualizer.layers.recording-tags', ['a2.srv.tags'])
         });
         return this.updateTags(tagUpdate).then;
     });
+
+    this.getProjectTags = function() {
+        return a2Tags.getForType('recording').then((function(tags){
+            this.searchedTags = tags;
+        }).bind(this));
+    };
+
+    this.getProjectTags();
 
     this.determineTagUpdate = function(tags, oldTagsIndex){
         var tagsIndex = makeTagsIndex(tags);

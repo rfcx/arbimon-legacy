@@ -27,10 +27,9 @@ var AudioEventDetectionsClustering = {
             constraints.push('JP.project_id = ' + dbpool.escape(options.project_id));
         }
 
-        select.push("JP.job_id, JP.name");
+        select.push("JP.job_id, JP.name, JP.parameters");
 
         if (!options.playlist && options.dataExtended) {
-            select.push("JP.parameters");
             select.push("JP.`date_created` as `timestamp`");
             select.push("P.playlist_id, P.`name` as `playlist_name`");
             tables.push("JOIN playlists P ON JP.playlist_id = P.playlist_id");
@@ -65,19 +64,17 @@ var AudioEventDetectionsClustering = {
             constraints.push('JP.playlist_id = ' + dbpool.escape(Number(options.playlist)));
         }
 
-        if (options.dataExtended) {
-            postprocess.push((rows) => {
-                rows.forEach(row => {
-                    try {
-                        row.parameters = JSON.parse(row.parameters);
-                    } catch(e) {
-                        row.parameters = {error: row.parameters};
-                    }
-                })
+        postprocess.push((rows) => {
+            rows.forEach(row => {
+                try {
+                    row.parameters = JSON.parse(row.parameters);
+                } catch(e) {
+                    row.parameters = {error: row.parameters};
+                }
+            })
 
-                return rows;
-            });
-        }
+            return rows;
+        });
 
         return postprocess.reduce((_, fn) => {
             return _.then(fn);
