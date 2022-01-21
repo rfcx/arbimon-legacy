@@ -546,7 +546,6 @@ var Projects = {
         }).then(function (all){
             classSpecies = all[0];
             classSong = all[1];
-            console.log("classSpecies", classSpecies, "classSong", classSong);
 
             if(!classSpecies){
                 throw new Error(util.format("species '%s' not in system", value.species));

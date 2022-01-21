@@ -17,11 +17,17 @@
                         <br>Number of clusters detected: {{ aedData.count || 'no data' }}
                     </div>
                 </div>
-                <div class="col-sm-6 flex-self-align-bottom">
+                <div class="col-sm-7 flex-self-align-bottom">
                     <div class="pull-right">
                         <div class="inline-block" style="position: relative;">
-                            <button class="btn btn-default" type="button" tooltip="Save to playlist" ng-click="togglePopup()">
+                            <button class="btn btn-default"
+                                ng-click="addSpecies() | trackEvent:'Grid-View-species':'add species'"
+                                tooltip="Add species sound to the project"
+                                tooltip-trigger="mouseenter">
                                 <i class="fa fa-plus"></i>
+                            </button>
+                            <button class="btn btn-default" type="button" tooltip="Save to playlist" ng-click="togglePopup()">
+                                <i class="fa fa-music"></i>
                             </button>
                             <div class="popover right create-template" style="display: block;" ng-if="isPopupOpened">
                                 <div class="arrow"></div>

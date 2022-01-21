@@ -110,7 +110,6 @@ angular.module('a2.analysis.clustering-jobs', [
     var d3 = $window.d3
     $scope.loading = true;
     $scope.toggleMenu = false;
-    $scope.infopanedata = '';
     $scope.selectedCluster = null;
     var timeout;
     $scope.lists = {
@@ -152,8 +151,8 @@ angular.module('a2.analysis.clustering-jobs', [
                         });
                         // Collect all selected clusters' points with the same logic as for plotly_click event
                         $scope.points = {
-                            x: Object.values($scope.clusters)[i].x[0],
-                            y: Object.values($scope.clusters)[i].y[0],
+                            // x: Object.values($scope.clusters)[i].x[0],
+                            // y: Object.values($scope.clusters)[i].y[0],
                             name: Object.keys($scope.clusters)[i]
                         };
                         $scope.toggleMenu = true;
@@ -164,6 +163,7 @@ angular.module('a2.analysis.clustering-jobs', [
         }, 2000);
     };
     var getClusteringDetails = function(type) {
+        $scope.infopanedata = '';
         a2ClusteringJobs.getJobDetails($scope.clusteringJobId).then(function(data) {
             if (data) $scope.job_details = data;
         }).catch(err => {
@@ -182,7 +182,9 @@ angular.module('a2.analysis.clustering-jobs', [
                             x: [res.x_coord[i]],
                             y: [res.y_coord[i]],
                             aed: [res.aed_id[i]],
-                            records: []
+                            records: [],
+                            freq_low: [],
+                            freq_high: []
                         }
                     }
                     else {
@@ -191,32 +193,35 @@ angular.module('a2.analysis.clustering-jobs', [
                         $scope.clusters[item].aed.push(res.aed_id[i]);
                     }
                 });
-                // Get audio event detections data.
-                a2AudioEventDetectionsClustering.searchClusteredDetections(res.aed_id.length === 1 ?
-                    {aed_id: res.aed_id} : {aed_id_in: res.aed_id})
+                // Get json file with aed_id, recordings, frequency data for the frequency filter.
+                a2ClusteringJobs.getClusteringDetails({job_id: $scope.clusteringJobId, aed_info: true})
                     .then(function(data) {
-                        if (data && data.length) {
-                            $scope.clusters.frequency = {
+                        if (data !== undefined) {
+                            $scope.aedDataInfo = data;
+                            $scope.frequency = {
                                 freq_low: [],
                                 freq_high: []
                             };
-                            // Add aed boxes data to the clusters array.
+                            // Add frequency min, max, recordings data to the clusters array.
                             for (var c in $scope.clusters) {
                                 if ($scope.clusters[c] && $scope.clusters[c].aed && $scope.clusters[c].aed.length) {
                                     $scope.clusters[c].aed.forEach((aed) => {
-                                        var item = data.find(item => {return item.aed_id === aed});
-                                        if (item) {
+                                        const indx = data.aed_id.findIndex(item => item === aed);
+                                        if (indx) {
                                             // Collect frequency min and max values for frequency filter.
-                                            $scope.clusters.frequency.freq_low.push(item.freq_min);
-                                            $scope.clusters.frequency.freq_high.push(item.freq_max);
-                                            $scope.clusters[c].records.push(item);
+                                            $scope.frequency.freq_low.push(data.freq_low[indx]);
+                                            $scope.frequency.freq_high.push(data.freq_high[indx]);
+                                            $scope.clusters[c].freq_low.push(data.freq_low[indx]);
+                                            $scope.clusters[c].freq_high.push(data.freq_high[indx]);
+                                            $scope.clusters[c].records.push(data.recording_id[indx]);
                                         }
                                     });
                                 }
                             }
+                            // Find frequency min and max values for frequency filter.
                             $scope.frequencyFilter = {
-                                min: Math.min.apply(null, $scope.clusters.frequency.freq_low),
-                                max: Math.max.apply(null, $scope.clusters.frequency.freq_high)
+                                min: Math.min.apply(null, $scope.frequency.freq_low),
+                                max: Math.max.apply(null, $scope.frequency.freq_high)
                             };
                         }
                     }).catch(err => {
@@ -272,6 +277,7 @@ angular.module('a2.analysis.clustering-jobs', [
             width: el ? el.offsetWidth : 1390,
             showlegend: true,
             legend: {
+                title: { text: 'Clusters names', side: 'top', font: { size: 12 } },
                 x: 1,
                 xanchor: 'right',
                 y: 1,
@@ -383,6 +389,7 @@ angular.module('a2.analysis.clustering-jobs', [
         $scope.toggleMenu = false;
         $scope.selectedCluster = null;
         $scope.showViewGridPage = true;
+        // Get points in different clusters.
         if ($scope.points.length) {
             $scope.gridContext = {};
             $scope.points.forEach((row, i) => {
@@ -394,7 +401,14 @@ angular.module('a2.analysis.clustering-jobs', [
                 }
             })
         }
+        // Get an one filtered cluster by frequency filter.
+        else if (!$scope.points.x && $scope.points.name) {
+            $scope.gridContext = $scope.originalData.find(shape => {
+                return shape.cluster === $scope.points.name;
+            })
+        }
         else {
+            // Get selected cluster with all points in the shape.
             $scope.gridContext = $scope.originalData.find(shape => {
                 return shape.x.includes($scope.points.x) && shape.y.includes($scope.points.y);
             })
@@ -423,48 +437,35 @@ angular.module('a2.analysis.clustering-jobs', [
                 return shape.x.includes($scope.points.x) && shape.y.includes($scope.points.y);
             });
         }
-        // find related records
+        // Save temporary palylist with selected clusters to the local storage.
         if ($scope.selectedClusters && $scope.selectedClusters.aed && $scope.selectedClusters.aed.length) {
-            return a2AudioEventDetectionsClustering.searchClusteredDetections($scope.selectedClusters.aed.length === 1 ?
-                {aed_id: $scope.selectedClusters.aed} : {aed_id_in: $scope.selectedClusters.aed})
-                .then(function(data) {
-                    console.log('records', data);
-                    if (data && data.length) {
-                        // collect selected points to boxes
-                        $scope.selectedClusters.boxes = {};
-                        data.forEach(rec => {
-                            var box = ['box', rec.time_min, rec.freq_min, rec.time_max, rec.freq_max].join(',');
-                            if (!$scope.selectedClusters.boxes[rec.rec_id]) {
-                                $scope.selectedClusters.boxes[rec.rec_id] = [box];
-                            }
-                            else {
-                                $scope.selectedClusters.boxes[rec.rec_id].push(box);
-                            }
-                        })
-                        // clear local storage
-                        $scope.removeFromLocalStorage();
-                        var tempPlaylistData = {};
-                        tempPlaylistData.aed = $scope.selectedClusters.aed;
-                        tempPlaylistData.boxes = $scope.selectedClusters.boxes;
-                        console.log('boxes', $scope.selectedClusters.boxes);
-                        // add related records to a playlist
-                        var recIds = data
-                            .map(rec => {
-                                return rec.rec_id;
-                            })
-                            .filter((id, i, a) => a.indexOf(id) === i);
-                        tempPlaylistData.playlist = {
-                            id: 0,
-                            name: 'cluster_' + recIds.join("_"),
-                            recordings: recIds.filter((id, i, a) => a.indexOf(id) === i),
-                            count: recIds.filter((id, i, a) => a.indexOf(id) === i).length
-                        };
-                        console.log('tempPlaylistData', tempPlaylistData);
-                        $localStorage.setItem('analysis.clusters',  JSON.stringify(tempPlaylistData));
-                        $window.location.href = '/project/'+Project.getUrl()+'/visualizer/playlist/0?clusters';
+            if ($scope.aedDataInfo !== undefined) {
+                $scope.selectedClusters.boxes = {};
+                var recIds = [];
+                $scope.selectedClusters.aed.forEach(id => {
+                    const indx = $scope.aedDataInfo.aed_id.findIndex(item => item === id);
+                    recIds.push($scope.aedDataInfo.recording_id[indx])
+                    var box = ['box', $scope.aedDataInfo.time_min[indx], $scope.aedDataInfo.freq_low[indx], $scope.aedDataInfo.time_max[indx], $scope.aedDataInfo.freq_high[indx]].join(',');
+                    if (!$scope.selectedClusters.boxes[$scope.aedDataInfo.recording_id[indx]]) {
+                        $scope.selectedClusters.boxes[$scope.aedDataInfo.recording_id[indx]] = [box];
                     }
-                }
-            );
+                    else {
+                        $scope.selectedClusters.boxes[$scope.aedDataInfo.recording_id[indx]].push(box);
+                    }
+                })
+                $scope.removeFromLocalStorage();
+                var tempPlaylistData = {};
+                tempPlaylistData.aed = $scope.selectedClusters.aed;
+                tempPlaylistData.boxes = $scope.selectedClusters.boxes;
+                tempPlaylistData.playlist = {
+                    id: 0,
+                    name: 'cluster_' + recIds.join("_"),
+                    recordings: recIds.filter((id, i, a) => a.indexOf(id) === i),
+                    count: recIds.filter((id, i, a) => a.indexOf(id) === i).length
+                };
+                $localStorage.setItem('analysis.clusters',  JSON.stringify(tempPlaylistData));
+                $window.location.href = '/project/'+Project.getUrl()+'/visualizer/playlist/0?clusters';
+            }
         }
     };
     $scope.removeFromLocalStorage = function () {
@@ -488,14 +489,13 @@ angular.module('a2.analysis.clustering-jobs', [
             size        : 'sm',
             resolve     : {
                 data : function() { return {
-                    recording: Object.values($scope.clusters)[0].records[0].rec_id,
+                    recording: Object.values($scope.clusters)[0].records[0],
                     frequency: $scope.frequencyFilter
                 }; }
             }
         });
 
         modalInstance.result.then(function (result) {
-            console.log('filter', result);
             if (!result) {
                 return
             }
@@ -507,8 +507,8 @@ angular.module('a2.analysis.clustering-jobs', [
                     clusters[c].x = [];
                     clusters[c].aed = [];
                     clusters[c].records = [];
-                    $scope.clusters[c].records.forEach((rec, i) => {
-                        if (rec.freq_min >= result.min && rec.freq_max <= result.max) {
+                    $scope.clusters[c].freq_high.forEach((freq_high, i) => {
+                        if ($scope.clusters[c].freq_low[i] >= result.min && freq_high <= result.max) {
                             clusters[c].y.push($scope.clusters[c].y[i]);
                             clusters[c].x.push($scope.clusters[c].x[i]);
                             clusters[c].aed.push($scope.clusters[c].aed[i]);
@@ -517,13 +517,13 @@ angular.module('a2.analysis.clustering-jobs', [
                     });
                 }
             }
-            console.log('filtered clusters', clusters);
             $scope.countClustersDetected = Object.keys(clusters).length;
             $scope.countAudioEventDetected = Object.values(clusters)
                 .map((cluster => {return cluster.aed.length}))
                 .reduce(function(sum, current) {
                 return sum + current;
             }, 0);
+            // Display filtered points from the frequency filter.
             drawClusteringPoints(clusters);
         });
     };
@@ -615,7 +615,7 @@ angular.module('a2.analysis.clustering-jobs', [
         templateUrl: '/app/analysis/clustering-jobs/grid-view.html'
     };
 })
-.controller('GridViewCtrl' , function($scope, $localStorage, a2ClusteringJobs, a2AudioBarService, Project, a2Playlists, notify) {
+.controller('GridViewCtrl' , function($scope, $modal, a2UserPermit, a2ClusteringJobs, a2AudioBarService, Project, a2Playlists, notify) {
     $scope.loading = true;
     $scope.infopanedata = '';
     $scope.projectUrl = Project.getUrl();
@@ -819,7 +819,7 @@ angular.module('a2.analysis.clustering-jobs', [
     $scope.savePlaylist = function() {
         if ($scope.selectedRois.length) {
             $scope.isSavingPlaylist = true;
-            // create playlist
+            // Create a new playlist with aed boxes.
             a2Playlists.create({
                 playlist_name: $scope.playlistData.playlistName,
                 params: $scope.selectedRois,
@@ -829,7 +829,7 @@ angular.module('a2.analysis.clustering-jobs', [
                 console.log('data', data);
                 $scope.isSavingPlaylist = false;
                 $scope.closePopup();
-                 // attach aed to playlist
+                 // Attach aed to the new playlist.
                 if (data && data.playlist_id) {
                     a2Playlists.attachAedToPlaylist({
                         playlist_id: data.playlist_id,
@@ -842,5 +842,37 @@ angular.module('a2.analysis.clustering-jobs', [
                 }
             });
         }
+    };
+
+    $scope.addSpecies = function() {
+
+        if(!a2UserPermit.can('manage project species')) {
+            return notify.log('You do not have permission to add species');
+        }
+
+        var modalInstance = $modal.open({
+            templateUrl: '/app/audiodata/select-species.html',
+            controller: 'SelectSpeciesCtrl',
+            size: 'lg',
+        });
+
+        modalInstance.result.then(selected => {
+            Project.addClass({
+                species: selected.species.scientific_name,
+                songtype: selected.song.name
+            })
+                .success(result => {
+                    if (result.error) {
+                        notify.log(result.error);
+                    }
+                    else {
+                        notify.log(selected.species.scientific_name + ' ' + selected.song.name + ' added to project');
+                    }
+                })
+                .error(err => {
+                    notify.serverError();
+                });
+
+        });
     };
 })
