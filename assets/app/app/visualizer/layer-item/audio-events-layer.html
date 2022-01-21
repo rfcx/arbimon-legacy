@@ -14,14 +14,17 @@
             <div ng-if="layer.audio_events.audioEvents && layer.audio_events.audioEvents.length">
                 <strong>Detection Jobs</strong>
                 <ul class="ulnodeco px-2">
-                    <li ng-repeat="job in layer.audio_events.audioEventJobs" class="my-3" style="display: flex; flex-direction: row; justify-content: flex-start; align-items: baseline; position: relative; white-space: nowrap;">
-                        <span class="hidelongtext" style="width: 90%;" title="{{ row.name }}">
-                            {{ job.name }}
-                        </span>
-                        <button class="layer-btn" ng-click="job.visible = !job.visible; layer.audio_events.toggleAudioEvents(true, job.job_id, job.visible)" style="border: 0; background: transparent; position: absolute; top: -1; right: -12px;"
-                            ng-class="{'layer-btn_active': job.visible && job.count}">
-                            <i class="fa" ng-class="{'fa-eye': job.visible, 'fa-eye-slash': !job.visible}"></i>
-                        </button>
+                    <li ng-repeat="job in layer.audio_events.audioEventJobs" class="my-3">
+                        <div class="row-flex flex-direction-row no-text-wrap" style="position: relative">
+                            <span class="hidelongtext" style="width: 90%;" title="{{ row.name }}">
+                                {{ job.name }}
+                            </span>
+                            <button class="layer-btn" ng-click="job.visible = !job.visible; layer.audio_events.toggleAudioEvents(true, job.job_id, job.visible)" style="border: 0; background: transparent; position: absolute; top: -1; right: -12px;"
+                                ng-class="{'layer-btn_active': job.visible && job.count}">
+                                <i class="fa" ng-class="{'fa-eye': job.visible, 'fa-eye-slash': !job.visible}"></i>
+                            </button>
+                        </div>
+                        <div class="mt-1 item-description" style="width: 90%;">{{ job.parameters | asCSV }}</div>
                     </li>
                 </ul>
             </div>
