@@ -2,19 +2,21 @@
 
 ## v3.0.45
 
+- Run 024-add-species-id-songtype-id-to-audio-event-detections-clustering.sql on staging/production sides
+
+## v3.0.44
+
 - You have to update `bioAnalyticsBaseUrl` in `config/rfcx.local.json` file:
     - For staging: https://staging-bio.rfcx.org
     - For production: https://bio.rfcx.org
 
-## v3.0.44
+- Run 023-project-reports-enabled.sql on the production side
+
+## v3.0.43
 
 - You have to add `bioAnalyticsBaseUrl` in `config/rfcx.local.json` file:
     - For staging: https://staging-ba.rfcx.org
     - For production: https://ba.rfcx.org
-
-- Run 023-project-reports-enabled.sql on the production side
-
-## v3.0.43
 
 - Run `bower install` to update `plotly.js` version
 

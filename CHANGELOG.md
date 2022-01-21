@@ -1,6 +1,11 @@
 # Arbimon Release Notes
 
-## v3.0.45 - January 21, 2022
+## v3.0.46 - January XX, 2022
+
+New features:
+
+- #852 User can validate audio event detection boxes with all species from Arbimon DB from the Grid View page
+- #852 Changed the selection boxes logic on the Grid View page: selected boxes are saved in a playlist
 
 Resolved issues:
 

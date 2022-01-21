@@ -123,6 +123,17 @@ var AudioEventDetectionsClustering = {
         )
     },
 
+    validateDetections(aed, validation) {
+        return aed.length ? dbpool.query(
+            'UPDATE audio_event_detections_clustering\n' +
+            'SET species_id = ?, songtype_id = ?\n' +
+            'WHERE aed_id IN (?)', [
+            validation.speciesId,
+            validation.songtypeId,
+            aed
+        ]) : Promise.resolve();
+    },
+
     JOB_SCHEMA : joi.object().keys({
         user_id: joi.number().integer(),
         name: joi.string(),
