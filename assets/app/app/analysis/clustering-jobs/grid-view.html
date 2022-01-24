@@ -99,7 +99,7 @@
                 <div ng-if="row.site" class="h3" id="site-{row.id}}"><i class="fa fa-map-marker"></i> {{row.site}}</div>
                 <div ng-if="row.cluster && row.rois.length" class="h3" id="cluster-{row.id}}">Cluster {{row.cluster}}</div>
                 <span ng-repeat="roi in row.rois"
-                    class="btn btn-default roi-thumbnail {{roi.selected ? 'active' : ''}}"
+                    class="btn btn-default roi-thumbnail {{roi.selected ? 'active active-aed' : ''}}"
                     ng-click="roi.selected = !roi.selected; getSelectedRois(roi)"
                     popover-html="'Frequency Max (Hz): {{(roi.frequency_max) || '(Missing)'}} <br>
                                     Frequency Min (Hz): {{(roi.frequency_min) || '(Missing)'}} <br>
