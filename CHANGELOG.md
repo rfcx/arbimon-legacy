@@ -1,5 +1,11 @@
 # Arbimon Release Notes
 
+## v3.0.47 - January XX, 2022
+
+Resolved issues:
+
+- #883 Fixed the issue with the clustering filter
+
 ## v3.0.46 - January XX, 2022
 
 New features:

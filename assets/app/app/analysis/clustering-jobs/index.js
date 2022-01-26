@@ -147,6 +147,7 @@ angular.module('a2.analysis.clustering-jobs', [
                         $scope.layout.shapes[i].line.color = '#ffffff';
                         Plotly.relayout(document.getElementById('plotly'), {
                             '$scope.layout.shapes[i].line.color': '#ff0000',
+                            '$scope.layout.shapes[i].line.opacity': 1,
                             '$scope.layout.shapes[i].line.stroke-width': 4
                         });
                         // Collect all selected clusters' points with the same logic as for plotly_click event
@@ -198,6 +199,7 @@ angular.module('a2.analysis.clustering-jobs', [
                     .then(function(data) {
                         if (data !== undefined) {
                             $scope.aedDataInfo = data;
+                            // Create frequency object to collect min and max values for the frequency filter.
                             $scope.frequency = {
                                 freq_low: [],
                                 freq_high: []
@@ -208,12 +210,11 @@ angular.module('a2.analysis.clustering-jobs', [
                                     $scope.clusters[c].aed.forEach((aed) => {
                                         const indx = data.aed_id.findIndex(item => item === aed);
                                         if (indx) {
-                                            // Collect frequency min and max values for frequency filter.
+                                            // Collect frequency min and max values for the frequency filter.
                                             $scope.frequency.freq_low.push(data.freq_low[indx]);
                                             $scope.frequency.freq_high.push(data.freq_high[indx]);
                                             $scope.clusters[c].freq_low.push(data.freq_low[indx]);
                                             $scope.clusters[c].freq_high.push(data.freq_high[indx]);
-                                            $scope.clusters[c].records.push(data.recording_id[indx]);
                                         }
                                     });
                                 }
@@ -489,7 +490,6 @@ angular.module('a2.analysis.clustering-jobs', [
             size        : 'sm',
             resolve     : {
                 data : function() { return {
-                    recording: Object.values($scope.clusters)[0].records[0],
                     frequency: $scope.frequencyFilter
                 }; }
             }
@@ -501,20 +501,22 @@ angular.module('a2.analysis.clustering-jobs', [
             }
             var clusters = {};
             for (var c in $scope.clusters) {
-                if ($scope.clusters[c].records) {
+                if ($scope.clusters[c].aed.length) {
                     clusters[c] = {};
                     clusters[c].y = [];
                     clusters[c].x = [];
                     clusters[c].aed = [];
-                    clusters[c].records = [];
+                    // Find filtered points in each cluster from the user selection.
                     $scope.clusters[c].freq_high.forEach((freq_high, i) => {
                         if ($scope.clusters[c].freq_low[i] >= result.min && freq_high <= result.max) {
                             clusters[c].y.push($scope.clusters[c].y[i]);
                             clusters[c].x.push($scope.clusters[c].x[i]);
                             clusters[c].aed.push($scope.clusters[c].aed[i]);
-                            clusters[c].records.push($scope.clusters[c].records[i]);
                         }
                     });
+                    if (!clusters[c].aed.length) {
+                        delete clusters[c]
+                    }
                 }
             }
             $scope.countClustersDetected = Object.keys(clusters).length;
@@ -533,7 +535,7 @@ angular.module('a2.analysis.clustering-jobs', [
     console.log('a2ClusterFrequencyFilterModalController', data);
     $scope.filterData = {};
     $scope.filterData.max_freq = data.frequency.max;
-    $scope.filterData.src="/api/project/"+Project.getUrl()+"/recordings/tiles/"+data.recording+"/0/0";
+    $scope.filterData.src="/api/project/"+Project.getUrl()+"/recordings/tiles/3298382/0/0";
 
     $scope.has_previous_filter = true;
     $scope.frequency = data.frequency ? angular.copy(data.frequency) : {min:0, max: $scope.filterData.max_freq};
@@ -818,7 +820,6 @@ angular.module('a2.analysis.clustering-jobs', [
                 recIdsIncluded: true
             },
             function(data) {
-                console.log('data', data);
                 $scope.isSavingPlaylist = false;
                 $scope.closePopup();
                  // Attach aed to the new playlist.
