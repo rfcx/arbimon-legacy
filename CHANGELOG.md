@@ -1,12 +1,6 @@
 # Arbimon Release Notes
 
-## v3.0.47 - January XX, 2022
-
-Resolved issues:
-
-- #883 Fixed the issue with the clustering filter
-
-## v3.0.46 - January XX, 2022
+## v3.0.46 - January 31, 2022
 
 New features:
 
@@ -15,7 +9,8 @@ New features:
 
 Resolved issues:
 
-- #867 Dispaly audio event detection boxes in the original size
+- #867 Display audio event detection boxes in the original size
+- #883 Fixed the issue with the clustering filter
 
 ## v3.0.45 - January 21, 2022
 
