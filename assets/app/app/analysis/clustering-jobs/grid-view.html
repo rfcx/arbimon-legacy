@@ -1,5 +1,5 @@
 <div class="row">
-    <div class="col-sm-12 col-lg-11 padded-view-div">
+    <div class="col-sm-12 padded-view-div">
         <div ng-if="loading">
             Loading... <loader></loader>
         </div>
@@ -8,24 +8,47 @@
         </div>
         <div ng-if="!loading && !infopanedata" class="panel-body a2-page-header clearfix">
             <div class="row row-flex flex-align-top">
-                <div class="col-sm-6 flex-self-align-top">
-                    <div class="row row-flex flex-align-top">
-                        Job Name: {{ job_details.name }}
-                        <br>User: {{ job_details.user }}
-                        <br>Date: {{ job_details.timestamp | moment : 'lll' }}
-                        <br>Number of audio event detected: {{ aedData.id.length || 'no data' }}
-                        <br>Number of clusters detected: {{ aedData.count || 'no data' }}
-                    </div>
+                <div class="col-sm-5 flex-self-align-top pl-0">
+                    Job Name: {{ job_details.name }}
+                    <br>User: {{ job_details.user }}
+                    <br>Date: {{ job_details.timestamp | moment : 'lll' }}
+                    <br>Number of audio event detected: {{ aedData.id.length || 'no data' }}
+                    <br>Number of clusters detected: {{ aedData.count || 'no data' }}
                 </div>
-                <div class="col-sm-7 flex-self-align-bottom">
-                    <div class="pull-right">
-                        <div class="inline-block" style="position: relative;">
-                            <button class="btn btn-default"
-                                ng-click="addSpecies() | trackEvent:'Grid-View-species':'add species'"
-                                tooltip="Add species sound to the project"
-                                tooltip-trigger="mouseenter">
-                                <i class="fa fa-plus"></i>
-                            </button>
+                <div class="col-sm-7 row-flex flex-space-end panel-body pr-0">
+                    <div class="row-flex flex-space-between flex-self-align-bottom mr-1">
+                        <div class="input-group species-typeahead mr-2">
+                            <span class="input-group-addon">Validate as:</span>
+                            <input class="form-control"
+                                type="text"
+                                placeholder="Type Species"
+                                ng-model="selected.species"
+                                ng-disabled="!selectedRois.length || !isValidationAccessible"
+                                typeahead="species as species.scientific_name for species in searchSpecies($viewValue)"
+                                typeahead-editable="false"
+                                typeahead-min-length="3"
+                                typeahead-wait-ms="500"
+                                typeahead-no-results="noResults"
+                                typeahead-loading="speciesLoading"
+                            >
+                            <span class="input-group-btn">
+                                <button class="btn btn-default">
+                                    <i ng-show="speciesLoading" class="fa fa-spinner fa-spin"></i>
+                                    <i ng-show="!speciesLoading" class="fa fa-search"></i>
+                                </button>
+                            </span>
+                        </div>
+                        <ui-select ng-disabled="!selected.species" ng-model="selected.songtype" theme="bootstrap" on-select="setValidation()">
+                            <ui-select-match placeholder="Songtype" style="width: 150px;">
+                                {{selected.songtype.name}}
+                            </ui-select-match>
+                            <ui-select-choices repeat="$item in songtypes | filter:$select.selected.species">
+                                {{$item.name}}
+                            </ui-select-choices>
+                        </ui-select>
+                    </div>
+                    <div class="btn-group btn-group-margin row-flex flex-self-align-bottom mr-1">
+                        <div class="inline-block no-wrap" style="position: relative;">
                             <button class="btn btn-default" type="button" tooltip="Save to playlist" ng-click="togglePopup()">
                                 <i class="fa fa-music"></i>
                             </button>
@@ -52,18 +75,18 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="btn-group">
-                            <button class="btn btn-default not-active" ><i class="fa fa-search"></i></button>
-                            <ui-select ng-model="selectedFilterData" theme="bootstrap" class="btn-group-item border-left-radius" on-select="onSearchChanged($select.selected)">
-                                <ui-select-match class="right-corners">
-                                    <i ng-class="$select.selected.class"></i>{{$select.selected.text}}
-                                </ui-select-match>
-                                <ui-select-choices repeat="$item in lists.search | filter:$select.search">
-                                    <i ng-class="$item.class"></i> {{$item.text}}
-                                    <div class="item-description">{{$item.description}}</div>
-                                </ui-select-choices>
-                            </ui-select>
-                        </div>
+                    </div>
+                    <div class="btn-group btn-group-margin row-flex flex-self-align-bottom">
+                        <button class="btn btn-default not-active" ><i class="fa fa-search"></i></button>
+                        <ui-select ng-model="selectedFilterData" theme="bootstrap" class="btn-group-item border-left-radius" on-select="onSearchChanged($select.selected)">
+                            <ui-select-match class="right-corners">
+                                <i ng-class="$select.selected.class"></i>{{$select.selected.text}}
+                            </ui-select-match>
+                            <ui-select-choices repeat="$item in lists.search | filter:$select.search">
+                                <i ng-class="$item.class"></i> {{$item.text}}
+                                <div class="item-description">{{$item.description}}</div>
+                            </ui-select-choices>
+                        </ui-select>
                     </div>
                 </div>
             </div>
@@ -76,8 +99,8 @@
                 <div ng-if="row.site" class="h3" id="site-{row.id}}"><i class="fa fa-map-marker"></i> {{row.site}}</div>
                 <div ng-if="row.cluster && row.rois.length" class="h3" id="cluster-{row.id}}">Cluster {{row.cluster}}</div>
                 <span ng-repeat="roi in row.rois"
-                    class="btn btn-default roi-thumbnail {{roi.selected ? 'active' : ''}}"
-                    ng-click="roi.selected = !roi.selected; getExcludedRois(roi)"
+                    class="btn btn-default roi-thumbnail {{roi.selected ? 'active active-aed' : ''}}"
+                    ng-click="roi.selected = !roi.selected; getSelectedRois(roi)"
                     popover-html="'Frequency Max (Hz): {{(roi.frequency_max) || '(Missing)'}} <br>
                                     Frequency Min (Hz): {{(roi.frequency_min) || '(Missing)'}} <br>
                                     Duration (s): {{(roi.time_max - roi.time_min).toFixed(2)}}'"
@@ -86,7 +109,7 @@
                     popover-trigger="mouseenter"
                     popover-append-to-body="true"
                 >
-                    <div class="roi-btn-tl" ng-if="roi.selected || excludedRois.includes(roi.aed_id)"><i class="fa val-0"></i></div>
+                    <div class="roi-btn-tl" ng-if="roi.selected || selectedRois.includes(roi.aed_id)"><i class="fa val-1"></i></div>
                     <a class="roi-btn-bl" ng-href="{{getRoiVisualizerUrl(roi)}}" ng-click="$event.stopPropagation();">
                         <i tooltip-placement="left"
                             tooltip-append-to-body="true"
@@ -101,7 +124,7 @@
                             class="fa fa-play">
                         </i>
                     </a>
-                    <img ng-src="/api/project/{{projectUrl}}/clustering-jobs/asset?path={{roi.uri}}" class="roi-img"/>
+                    <img ng-src="/api/project/{{projectUrl}}/clustering-jobs/asset?path={{roi.uri}}" style="width: 100%; height: 100%; max-width: 80vw; min-height: 28px; min-width: 50px"/>
                 </span>
             </span>
         </div>

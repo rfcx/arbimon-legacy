@@ -147,6 +147,7 @@ angular.module('a2.analysis.clustering-jobs', [
                         $scope.layout.shapes[i].line.color = '#ffffff';
                         Plotly.relayout(document.getElementById('plotly'), {
                             '$scope.layout.shapes[i].line.color': '#ff0000',
+                            '$scope.layout.shapes[i].line.opacity': 1,
                             '$scope.layout.shapes[i].line.stroke-width': 4
                         });
                         // Collect all selected clusters' points with the same logic as for plotly_click event
@@ -198,6 +199,7 @@ angular.module('a2.analysis.clustering-jobs', [
                     .then(function(data) {
                         if (data !== undefined) {
                             $scope.aedDataInfo = data;
+                            // Create frequency object to collect min and max values for the frequency filter.
                             $scope.frequency = {
                                 freq_low: [],
                                 freq_high: []
@@ -208,12 +210,11 @@ angular.module('a2.analysis.clustering-jobs', [
                                     $scope.clusters[c].aed.forEach((aed) => {
                                         const indx = data.aed_id.findIndex(item => item === aed);
                                         if (indx) {
-                                            // Collect frequency min and max values for frequency filter.
+                                            // Collect frequency min and max values for the frequency filter.
                                             $scope.frequency.freq_low.push(data.freq_low[indx]);
                                             $scope.frequency.freq_high.push(data.freq_high[indx]);
                                             $scope.clusters[c].freq_low.push(data.freq_low[indx]);
                                             $scope.clusters[c].freq_high.push(data.freq_high[indx]);
-                                            $scope.clusters[c].records.push(data.recording_id[indx]);
                                         }
                                     });
                                 }
@@ -489,7 +490,6 @@ angular.module('a2.analysis.clustering-jobs', [
             size        : 'sm',
             resolve     : {
                 data : function() { return {
-                    recording: Object.values($scope.clusters)[0].records[0],
                     frequency: $scope.frequencyFilter
                 }; }
             }
@@ -501,20 +501,22 @@ angular.module('a2.analysis.clustering-jobs', [
             }
             var clusters = {};
             for (var c in $scope.clusters) {
-                if ($scope.clusters[c].records) {
+                if ($scope.clusters[c].aed.length) {
                     clusters[c] = {};
                     clusters[c].y = [];
                     clusters[c].x = [];
                     clusters[c].aed = [];
-                    clusters[c].records = [];
+                    // Find filtered points in each cluster from the user selection.
                     $scope.clusters[c].freq_high.forEach((freq_high, i) => {
                         if ($scope.clusters[c].freq_low[i] >= result.min && freq_high <= result.max) {
                             clusters[c].y.push($scope.clusters[c].y[i]);
                             clusters[c].x.push($scope.clusters[c].x[i]);
                             clusters[c].aed.push($scope.clusters[c].aed[i]);
-                            clusters[c].records.push($scope.clusters[c].records[i]);
                         }
                     });
+                    if (!clusters[c].aed.length) {
+                        delete clusters[c]
+                    }
                 }
             }
             $scope.countClustersDetected = Object.keys(clusters).length;
@@ -533,7 +535,7 @@ angular.module('a2.analysis.clustering-jobs', [
     console.log('a2ClusterFrequencyFilterModalController', data);
     $scope.filterData = {};
     $scope.filterData.max_freq = data.frequency.max;
-    $scope.filterData.src="/api/project/"+Project.getUrl()+"/recordings/tiles/"+data.recording+"/0/0";
+    $scope.filterData.src="/api/project/"+Project.getUrl()+"/recordings/tiles/3298382/0/0";
 
     $scope.has_previous_filter = true;
     $scope.frequency = data.frequency ? angular.copy(data.frequency) : {min:0, max: $scope.filterData.max_freq};
@@ -615,12 +617,12 @@ angular.module('a2.analysis.clustering-jobs', [
         templateUrl: '/app/analysis/clustering-jobs/grid-view.html'
     };
 })
-.controller('GridViewCtrl' , function($scope, $modal, a2UserPermit, a2ClusteringJobs, a2AudioBarService, Project, a2Playlists, notify) {
+.controller('GridViewCtrl' , function($scope, $modal, $http, a2UserPermit, a2ClusteringJobs, a2AudioBarService, a2AudioEventDetectionsClustering, Project, Songtypes, a2Playlists, notify) {
     $scope.loading = true;
     $scope.infopanedata = '';
     $scope.projectUrl = Project.getUrl();
     $scope.allRois = [];
-    $scope.excludedRois = [];
+    $scope.selectedRois = [];
     $scope.paginationSettings = {
         page: 1,
         limit: 100,
@@ -785,27 +787,19 @@ angular.module('a2.analysis.clustering-jobs', [
         return roi ? '/project/' + projecturl + '/#/visualizer/rec/' + roi.recording_id + '?a=' + box : '';
     };
 
-    // Collect rois data which should be left out of the playlist through all pagination pages.
-    $scope.getExcludedRois = function(roi) {
+    // Collect rois data which should be validated or include to the playlist through all pagination pages.
+    $scope.getSelectedRois = function(roi) {
         if (!roi.selected) {
-            const index = $scope.excludedRois.findIndex(item => item === roi.aed_id);
-            $scope.excludedRois.splice(index, 1);
+            const index = $scope.selectedRois.findIndex(item => item === roi.aed_id);
+            $scope.selectedRois.splice(index, 1);
             return;
         }
-        if ($scope.excludedRois.includes(roi.aed_id)) return;
-        $scope.excludedRois.push(roi.aed_id);
+        if ($scope.selectedRois.includes(roi.aed_id)) return;
+        $scope.selectedRois.push(roi.aed_id);
     }
 
     $scope.togglePopup = function() {
         $scope.isPopupOpened = !$scope.isPopupOpened;
-        // The greyed-out boxes should be the ones left out of the playlist.
-        if ($scope.rows && $scope.rows.length) {
-            $scope.selectedRois = [];
-            $scope.aedData.id.forEach(aedId => {
-                if ($scope.excludedRois.includes(aedId)) return
-                else $scope.selectedRois.push(aedId)
-            })
-        }
     }
 
     $scope.isPlaylistDataValid = function() {
@@ -826,7 +820,6 @@ angular.module('a2.analysis.clustering-jobs', [
                 recIdsIncluded: true
             },
             function(data) {
-                console.log('data', data);
                 $scope.isSavingPlaylist = false;
                 $scope.closePopup();
                  // Attach aed to the new playlist.
@@ -837,42 +830,57 @@ angular.module('a2.analysis.clustering-jobs', [
                     },
                     function(data) {
                         $scope.playlistData = {};
-                        notify.log('Audio event detections are saved in the playlist. <br> Navigates to the Visualizer page to see Audio Event boxes on the spectrograms.');
+                        notify.log('Audio event detections are saved in the playlist. <br> Navigates to the Visualizer page to see Audio Event boxes on the spectrogram');
                     });
                 }
             });
         }
     };
 
-    $scope.addSpecies = function() {
+    $scope.speciesLoading = false;
+    $scope.selected = { species: null, songtype: null };
+    var timeout;
 
-        if(!a2UserPermit.can('manage project species')) {
-            return notify.log('You do not have permission to add species');
-        }
+    $scope.isValidationAccessible = function() {
+        // TODO: check permissions: a2UserPermit.can('validate species')
+        return true
+    }
 
-        var modalInstance = $modal.open({
-            templateUrl: '/app/audiodata/select-species.html',
-            controller: 'SelectSpeciesCtrl',
-            size: 'lg',
-        });
-
-        modalInstance.result.then(selected => {
-            Project.addClass({
-                species: selected.species.scientific_name,
-                songtype: selected.song.name
+    $scope.setValidation = function() {
+        console.log('setValidation', $scope.selected)
+        $scope.speciesLoading = true;
+        clearTimeout(timeout);
+        timeout = setTimeout(() => {
+            a2AudioEventDetectionsClustering.validate({
+                aed: $scope.selectedRois,
+                validation: {
+                    speciesName: $scope.selected.species.scientific_name,
+                    songtypeName: $scope.selected.songtype.name,
+                    speciesId: $scope.selected.species.id,
+                    songtypeId: $scope.selected.songtype.id
+            }}).then(data => {
+                console.log('setValidation result', data)
+                notify.log('Audio event detections validated as ' + $scope.selected.species.scientific_name + ' ' + $scope.selected.songtype.name);
+            }).finally(() => {
+                $scope.speciesLoading = false;
             })
-                .success(result => {
-                    if (result.error) {
-                        notify.log(result.error);
-                    }
-                    else {
-                        notify.log(selected.species.scientific_name + ' ' + selected.song.name + ' added to project');
-                    }
-                })
-                .error(err => {
-                    notify.serverError();
-                });
+        }, 500)
+    }
+    Songtypes.get(function(songs) {
+        $scope.songtypes = songs;
+    });
 
-        });
+    $scope.searchSpecies = function(search) {
+        $scope.selected.songtype = null;
+        $scope.speciesLoading = true;
+        return $http.get('/api/species/search', {
+            params: {
+                q: search
+            }
+        }).then(function(result) {
+            $scope.speciesLoading = false;
+            return result.data;
+        })
     };
+
 })

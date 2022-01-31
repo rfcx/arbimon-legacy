@@ -2,7 +2,7 @@
     <h3 class="modal-title">Filter Audio Frequency</h3>
 </div>
 <div class="modal-body">
-    <a2-visualizer-frequency-filter-range-control v-if="filterData.src"
+    <a2-visualizer-frequency-filter-range-control ng-if="filterData.src"
         img-src="filterData.src" filter-min="frequency.min" filter-max="frequency.max" max-freq="filterData.max_freq"
     ></a2-visualizer-frequency-filter-range-control>
     <button class="btn btn-default" style="position:absolute;top:0;right:0"

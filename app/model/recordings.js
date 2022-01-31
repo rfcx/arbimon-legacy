@@ -482,6 +482,17 @@ var Recordings = {
         return queryHandler(query, callback);
     },
 
+    fetchAedValidations: function (recordingId) {
+        const q =
+            `SELECT AED.aed_id, AED.species_id as species, AED.songtype_id as songtype, AED.recording_id as rec_id, AED.time_min as x1,
+            AED.time_max as x2, AED.frequency_min as y1, AED.frequency_max as y2, Sp.scientific_name, St.songtype as songtype_name
+            FROM audio_event_detections_clustering AED
+            JOIN species Sp ON Sp.species_id = AED.species_id
+            JOIN songtypes St ON St.songtype_id = AED.songtype_id
+            WHERE AED.recording_id = ${dbpool.escape(recordingId)} AND AED.species_id IS NOT NULL`;
+        return dbpool.query(q)
+    },
+
     getSiteModel: async function(recording) {
         if (!recording.site_id) {
             let recs = await this.findByIdAsync(recording.id)

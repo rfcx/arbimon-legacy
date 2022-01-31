@@ -1,13 +1,24 @@
 # Arbimon Release Notes
 
-- #848 Display audio event jobs parameters on Visualizer page
+## v3.0.46 - January 31, 2022
 
-## v3.0.45 - January XX, 2022
+New features:
+
+- #852 User can validate audio event detection boxes with all species from Arbimon DB from the Grid View page
+- #852 Changed the selection boxes logic on the Grid View page: selected boxes are saved in a playlist
+
+Resolved issues:
+
+- #867 Display audio event detection boxes in the original size
+- #883 Fixed the issue with the clustering filter
+
+## v3.0.45 - January 21, 2022
 
 New features:
 
 - #849 Detections boxes have different colors on the spectrogram
 - #852 The species form is added to add a new species to the Grid View page
+- #848 Display audio event jobs parameters on Visualizer page
 
 Resolved issues:
 
