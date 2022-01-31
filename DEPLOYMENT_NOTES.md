@@ -1,8 +1,8 @@
 # Arbimon Deployment Notes
 
-## v3.0.45
+## v3.0.46
 
-- Run 024-add-species-id-songtype-id-to-audio-event-detections-clustering.sql on staging/production sides
+- Run 024-add-species-id-songtype-id-to-audio-event-detections-clustering.sql on the production side
 
 ## v3.0.44
 
