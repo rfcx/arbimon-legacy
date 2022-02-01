@@ -4,6 +4,12 @@
 
 New features:
 
+- #882 Added button to validate species from the Grid View page
+
+## v3.0.46 - January 31, 2022
+
+New features:
+
 - #852 User can validate audio event detection boxes with all species from Arbimon DB from the Grid View page
 - #852 Changed the selection boxes logic on the Grid View page: selected boxes are saved in a playlist
 
