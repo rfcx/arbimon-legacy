@@ -1,5 +1,9 @@
 # Arbimon Release Notes
 
+## v3.0.47 - February XX, 2022
+
+- #868 Users are able view playlist in the public projects
+
 ## v3.0.46 - January 31, 2022
 
 New features:
