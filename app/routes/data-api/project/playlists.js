@@ -75,20 +75,13 @@ router.get('/:playlist/:recid/previous', function(req, res, next) {
     });
 });
 
-
-router.use(function(req, res, next) {
-    if(!req.haveAccess(req.project.project_id, "manage playlists"))
-        return res.json({ error: "you dont have permission to 'manage playlists'" });
-
-    next();
-});
-
-
 /** Add a playlist to a project.
  */
 router.post('/create', function(req, res, next) {
     res.type('json');
-
+    if (!req.haveAccess(req.project.project_id, 'manage playlists')) {
+      return res.json({ error: 'You do not have permission to manage playlists' });
+    }
     if(!req.body.playlist_name || !req.body.params)
         return res.json({ error: "missing parameters"});
 
@@ -123,6 +116,9 @@ router.post('/create', function(req, res, next) {
 });
 
 router.post('/rename', function(req, res, next) {
+    if (!req.haveAccess(req.project.project_id, 'manage playlists')) {
+      return res.json({ error: 'You do not have permission to manage playlists' });
+    }
     model.playlists.rename(req.body, function(err, results) {
         if(err) return next(err);
 
@@ -134,6 +130,9 @@ router.post('/rename', function(req, res, next) {
  */
 router.post('/combine', function(req, res, next) {
     res.type('json');
+    if (!req.haveAccess(req.project.project_id, 'manage playlists')) {
+      return res.json({ error: 'You do not have permission to manage playlists' });
+    }
     if(!req.body.name){
         return res.json({ error: "missing name parameter"});
     }
@@ -166,18 +165,11 @@ router.post('/combine', function(req, res, next) {
     }).catch(next);
 });
 
-// /** Add a data to a playlist.
-//  */
-// router.post('/add-data/:playlist', function(req, res, next) {
-//     Playlists.addData(req.playlist, req.body, function(err, tset_data) {
-//         if(err) return next(err);
-//         return res.json(tset_data);
-//     });
-// });
-
-
 router.post('/delete', function(req, res, next) {
     res.type('json');
+    if (!req.haveAccess(req.project.project_id, 'manage playlists')) {
+      return res.json({ error: 'You do not have permission to manage playlists' });
+    }
     if(!req.body.playlists)
         return res.json({ error: "missing paramenters" });
 
@@ -197,7 +189,9 @@ router.post('/delete', function(req, res, next) {
 
 router.post('/:playlist/aed', function(req, res, next) {
     res.type('json');
-
+    if (!req.haveAccess(req.project.project_id, 'manage playlists')) {
+      return res.json({ error: 'You do not have permission to manage playlists' });
+    }
     model.playlists.attachAedToPlaylist(req.params.playlist, req.body.aed, function(err, data) {
         if(err) return next(err);
         res.json(data);
