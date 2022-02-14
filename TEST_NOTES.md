@@ -1,6 +1,12 @@
 # Arbimon Test Notes
 Test Notes are used to list what pages / components / features / user flows are affected by each update.
 
+## v3.0.47
+
+- Total recordings count for each playlist is calculated and saved on create or combine action
+  - Check that playlist creation still works fine
+  - Check that playlists union still works fine
+
 ## v3.0.45
 
 - #845 Fixed the issue with selection of filtered clusters by top right selector
