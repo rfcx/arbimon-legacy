@@ -2,13 +2,14 @@
 
 ## v3.0.47 - February XX, 2022
 
-- Total recordings count for each playlist is calculated and saved on create or combine action
-
-## v3.0.46 - January 31, 2022
-
 New features:
 
 - #882 Added button to validate species from the Grid View page
+- #868 Users are able view playlist in the public projects
+
+Performance improvements:
+
+- Total recordings count for each playlist is calculated and saved on create or combine action
 
 ## v3.0.46 - January 31, 2022
 
