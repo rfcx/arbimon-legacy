@@ -6,6 +6,7 @@ New features:
 
 - #882 Added button to validate species from the Grid View page
 - #868 Users are able view playlist in the public projects
+- Area Threshold parameter is added to a new audio event detection job
 
 Performance improvements:
 
