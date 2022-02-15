@@ -11,7 +11,7 @@
                 <br>Number of audio event detected: {{ countAudioEventDetected || 'no data' }}
                 <br>Number of clusters detected: {{ countClustersDetected || 'no data' }}
             </div>
-            <div class="col-sm-6 row-flex flex-space-end panel-body pr-0">
+            <div class="col-sm-6 row-flex flex-space-end panel-body pr-0 pb-0">
                 <div class="flex-self-align-bottom">
                     <div class="btn-group btn-group-margin">
                         <button class="btn btn-sm btn-default" ng-class="audio_player.freq_filter ? 'active' : ''" ng-click="openFreqFilterModal()" ng-disabled="!frequencyFilter && !frequencyFilter.min && !frequencyFilter.max"
