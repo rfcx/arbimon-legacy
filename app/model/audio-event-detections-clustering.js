@@ -139,6 +139,7 @@ var AudioEventDetectionsClustering = {
         name: joi.string(),
         playlist_id: joi.number().integer(),
         params     : joi.object().keys({
+            areaThreshold: joi.number(),
             amplitudeThreshold: joi.number(),
             durationThreshold: joi.number(),
             bandwidthThreshold: joi.number(),
@@ -152,6 +153,7 @@ var AudioEventDetectionsClustering = {
                 'name': data.name,
                 'playlist_id': data.playlist_id,
                 'user_id': data.user_id,
+                'Area Threshold': data.params.areaThreshold,
                 'Amplitude Threshold': data.params.amplitudeThreshold,
                 'Duration Threshold': data.params.durationThreshold,
                 'Bandwidth Threshold': data.params.bandwidthThreshold,

@@ -304,6 +304,7 @@ var Playlists = {
                     const sqlParts = await model.recordings.findProjectRecordings(data.params)
                     await query(`INSERT INTO playlist_recordings(recording_id, playlist_id) SELECT DISTINCT r.recording_id, ${playlistId} ${sqlParts[1]} ${sqlParts[2]}`)
                 }
+                await this.refreshTotalRecs(playlistId, query)
                 await db.commit()
                 await db.release()
                 return playlistId
@@ -375,13 +376,15 @@ var Playlists = {
             return dbpool.query(
                 "INSERT INTO playlists(project_id, name, playlist_type_id, metadata) \n"+
                 "VALUES (?, ?, ?, ?)", [
-                data.project, data.name, operation.type, JSON.stringify({
-                    term1:data.term1,
-                    term2:data.term2,
-                })
-            ]).get('insertId').then(function(newPlaylistId){
-                return operation.eval(data.term1, data.term2, newPlaylistId);
-            });
+                    data.project, data.name, operation.type, JSON.stringify({
+                        term1:data.term1,
+                        term2:data.term2,
+                    })
+                ]).get('insertId').then(async function(newPlaylistId){
+                    const result = await operation.eval(data.term1, data.term2, newPlaylistId);
+                    await Playlists.refreshTotalRecs(newPlaylistId)
+                    return result
+                });
         });
     },
 
@@ -469,7 +472,24 @@ var Playlists = {
             q = util.format(q, dbpool.escape(ids));
             queryHandler(q, callback);
         });
-    }
+    },
+
+    getRecordingsCount: async function (playlist_id, query) {
+        const q = 'SELECT COUNT(recording_id) as count FROM playlist_recordings WHERE playlist_recordings.playlist_id = ? GROUP BY playlist_id'
+        const con = query ? query : dbpool.query
+        const pl = (await con(q, [playlist_id]))[0]
+        return pl ? pl.count : null
+    },
+
+    refreshTotalRecs: async function(playlist_id, query) {
+        const total = await this.getRecordingsCount(playlist_id, query)
+        if (total === null) {
+            return
+        }
+        const q = 'UPDATE playlists SET total_recordings = ? WHERE playlist_id = ?'
+        const con = query ? query : dbpool.query
+        return await con(q, [total, playlist_id])
+    },
 };
 
 module.exports = Playlists;

@@ -1483,10 +1483,6 @@ a.ui-select-choices-row-inner {
   }
 }
 
-.active-aed {
-  border-color: @brand-present !important;
-}
-
 img.outlined {
   border: 3px solid @gray-light;
 }
@@ -1919,4 +1915,19 @@ search-bar {
 .species-typeahead .dropdown-menu {
   max-height: 200px;
   overflow: auto;
+}
+
+.clusters-filter {
+  @media (min-width: 320px) and (max-width: 1150px)  {
+    flex-direction: column;
+  }
+}
+
+.clusters-filter-right {
+  @media (min-width: 320px) and (max-width: 1150px)  {
+    width: 100%;
+    justify-content: start;
+    padding-left: 0;
+    flex-wrap: wrap;
+  }
 }
