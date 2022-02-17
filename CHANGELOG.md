@@ -6,6 +6,10 @@ New features:
 
 - #886 The validation bar is pined on the Grid View page
 
+Resolved issues:
+
+- #886 Fixed the issue with removing selected clusters frequency in the filter
+
 ## v3.0.47 - February 17, 2022
 
 New features:

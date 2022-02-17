@@ -499,6 +499,8 @@ angular.module('a2.analysis.clustering-jobs', [
             if (!result) {
                 return
             }
+            $scope.frequencyFilter.currentMin = result.min;
+            $scope.frequencyFilter.currentMax = result.max;
             var clusters = {};
             for (var c in $scope.clusters) {
                 if ($scope.clusters[c].aed.length) {
@@ -538,10 +540,10 @@ angular.module('a2.analysis.clustering-jobs', [
     $scope.filterData.src="/api/project/"+Project.getUrl()+"/recordings/tiles/3298382/0/0";
 
     $scope.has_previous_filter = true;
-    $scope.frequency = data.frequency ? angular.copy(data.frequency) : {min:0, max: $scope.filterData.max_freq};
+    $scope.frequency = data.frequency && data.frequency.currentMax ? { min: angular.copy(data.frequency.currentMin), max: data.frequency.currentMax } : { min: 0, max: $scope.filterData.max_freq };
 
     $scope.remove_filter = function(){
-        $modalInstance.close();
+        $modalInstance.close({ min: data.frequency.min, max: data.frequency.max });
     };
     $scope.apply_filter = function(){
         $modalInstance.close($scope.frequency);
