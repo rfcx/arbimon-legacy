@@ -9,6 +9,7 @@ New features:
 Resolved issues:
 
 - #886 Fixed the issue with removing selected clusters frequency in the filter
+- #886 Fixed the issue with a chronological order of audio event detection jobs
 
 ## v3.0.47 - February 17, 2022
 
