@@ -849,7 +849,6 @@ angular.module('a2.analysis.clustering-jobs', [
     }
 
     $scope.setValidation = function() {
-        console.log('setValidation', $scope.selected)
         $scope.speciesLoading = true;
         clearTimeout(timeout);
         timeout = setTimeout(() => {
@@ -874,10 +873,7 @@ angular.module('a2.analysis.clustering-jobs', [
     }
 
     $scope.markBoxesAsValidated = function() {
-      console.log($scope.rows)
       $scope.rows.forEach(row => {
-        console.log(row.rois)
-        console.log($scope.selectedRois)
         var arr = row.rois.filter(roi => $scope.selectedRois.includes(roi.aed_id))
         if (arr.length) {
           arr.forEach(a => a.validated = 1)
@@ -886,7 +882,6 @@ angular.module('a2.analysis.clustering-jobs', [
     }
 
     $scope.unselectBoxes = function() {
-      console.log($scope.rows)
       $scope.rows.forEach(row => {
         var arr = row.rois.filter(roi => roi.selected)
         if (arr.length) {
