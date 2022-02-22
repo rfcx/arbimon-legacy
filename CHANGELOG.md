@@ -1,6 +1,19 @@
 # Arbimon Release Notes
 
-## v3.0.47 - February XX, 2022
+## v3.0.48 - February XX, 2022
+
+New features:
+
+- #886 The validation bar is pined on the Grid View page
+- #886 Display validation icon after making a validation on the Grid View page
+
+Resolved issues:
+
+- #886 Fixed the issue with removing selected clusters frequency in the filter
+- #886 Fixed the issue with a chronological order of audio event detection jobs
+- #886 Unselect selected boxes after making the validation on the Grid View page
+
+## v3.0.47 - February 17, 2022
 
 New features:
 

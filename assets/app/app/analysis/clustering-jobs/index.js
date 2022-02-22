@@ -499,6 +499,8 @@ angular.module('a2.analysis.clustering-jobs', [
             if (!result) {
                 return
             }
+            $scope.frequencyFilter.currentMin = result.min;
+            $scope.frequencyFilter.currentMax = result.max;
             var clusters = {};
             for (var c in $scope.clusters) {
                 if ($scope.clusters[c].aed.length) {
@@ -538,10 +540,10 @@ angular.module('a2.analysis.clustering-jobs', [
     $scope.filterData.src="/api/project/"+Project.getUrl()+"/recordings/tiles/3298382/0/0";
 
     $scope.has_previous_filter = true;
-    $scope.frequency = data.frequency ? angular.copy(data.frequency) : {min:0, max: $scope.filterData.max_freq};
+    $scope.frequency = data.frequency && data.frequency.currentMax ? { min: angular.copy(data.frequency.currentMin), max: data.frequency.currentMax } : { min: 0, max: $scope.filterData.max_freq };
 
     $scope.remove_filter = function(){
-        $modalInstance.close();
+        $modalInstance.close({ min: data.frequency.min, max: data.frequency.max });
     };
     $scope.apply_filter = function(){
         $modalInstance.close($scope.frequency);
@@ -847,7 +849,6 @@ angular.module('a2.analysis.clustering-jobs', [
     }
 
     $scope.setValidation = function() {
-        console.log('setValidation', $scope.selected)
         $scope.speciesLoading = true;
         clearTimeout(timeout);
         timeout = setTimeout(() => {
@@ -860,12 +861,35 @@ angular.module('a2.analysis.clustering-jobs', [
                     songtypeId: $scope.selected.songtype.id
             }}).then(data => {
                 console.log('setValidation result', data)
+                // Unselect and mark boxes as validated without reloading the page
+                $scope.markBoxesAsValidated()
+                $scope.unselectBoxes()
+                $scope.selectedRois = []
                 notify.log('Audio event detections validated as ' + $scope.selected.species.scientific_name + ' ' + $scope.selected.songtype.name);
             }).finally(() => {
                 $scope.speciesLoading = false;
             })
         }, 500)
     }
+
+    $scope.markBoxesAsValidated = function() {
+      $scope.rows.forEach(row => {
+        var arr = row.rois.filter(roi => $scope.selectedRois.includes(roi.aed_id))
+        if (arr.length) {
+          arr.forEach(a => a.validated = 1)
+        }
+      })
+    }
+
+    $scope.unselectBoxes = function() {
+      $scope.rows.forEach(row => {
+        var arr = row.rois.filter(roi => roi.selected)
+        if (arr.length) {
+          arr.forEach(a => a.selected = false)
+        }
+      })
+    }
+
     Songtypes.get(function(songs) {
         $scope.songtypes = songs;
     });
@@ -882,5 +906,14 @@ angular.module('a2.analysis.clustering-jobs', [
             return result.data;
         })
     };
+
+    $scope.onScroll = function($event, $controller){
+      this.scrollElement = $controller.scrollElement;
+      var scrollPos = $controller.scrollElement.scrollY;
+      var headerTop = $controller.anchors.header.offset().top;
+
+      this.headerTop = headerTop | 0;
+      this.scrolledPastHeader = scrollPos >= headerTop;
+    }
 
 })
