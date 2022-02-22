@@ -862,12 +862,39 @@ angular.module('a2.analysis.clustering-jobs', [
                     songtypeId: $scope.selected.songtype.id
             }}).then(data => {
                 console.log('setValidation result', data)
+                // Unselect and mark boxes as validated without reloading the page
+                $scope.markBoxesAsValidated()
+                $scope.unselectBoxes()
+                $scope.selectedRois = []
                 notify.log('Audio event detections validated as ' + $scope.selected.species.scientific_name + ' ' + $scope.selected.songtype.name);
             }).finally(() => {
                 $scope.speciesLoading = false;
             })
         }, 500)
     }
+
+    $scope.markBoxesAsValidated = function() {
+      console.log($scope.rows)
+      $scope.rows.forEach(row => {
+        console.log(row.rois)
+        console.log($scope.selectedRois)
+        var arr = row.rois.filter(roi => $scope.selectedRois.includes(roi.aed_id))
+        if (arr.length) {
+          arr.forEach(a => a.validated = 1)
+        }
+      })
+    }
+
+    $scope.unselectBoxes = function() {
+      console.log($scope.rows)
+      $scope.rows.forEach(row => {
+        var arr = row.rois.filter(roi => roi.selected)
+        if (arr.length) {
+          arr.forEach(a => a.selected = false)
+        }
+      })
+    }
+
     Songtypes.get(function(songs) {
         $scope.songtypes = songs;
     });

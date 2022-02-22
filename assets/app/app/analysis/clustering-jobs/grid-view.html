@@ -43,7 +43,7 @@
                                     </button>
                                 </span>
                             </div>
-                            <ui-select ng-disabled="!selected.species" ng-model="selected.songtype" theme="bootstrap">
+                            <ui-select ng-disabled="!selected.species" ng-model="selected.songtype" style="width: 150px;" theme="bootstrap">
                                 <ui-select-match placeholder="Songtype" style="width: 150px;">
                                     {{selected.songtype.name}}
                                 </ui-select-match>
@@ -117,7 +117,10 @@
                         popover-trigger="mouseenter"
                         popover-append-to-body="true"
                     >
-                        <div class="roi-btn-tl" ng-if="roi.selected || selectedRois.includes(roi.aed_id)"><i class="fa val-1"></i></div>
+                        <input class="roi-btn-tl" type="checkbox" ng-model="roi.selected" ng-checked="selectedRois.includes(roi.aed_id)" ng-click="$event.stopPropagation()">
+                        <div class="roi-btn-tr navbar-title" ng-if="roi.validated === 1">
+                          <i class="fa val-1"></i>
+                        </div>
                         <a class="roi-btn-bl" ng-href="{{getRoiVisualizerUrl(roi)}}" ng-click="$event.stopPropagation();">
                             <i tooltip-placement="left"
                                 tooltip-append-to-body="true"

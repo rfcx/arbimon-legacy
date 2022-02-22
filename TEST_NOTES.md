@@ -1,6 +1,19 @@
 # Arbimon Test Notes
 Test Notes are used to list what pages / components / features / user flows are affected by each update.
 
+## v3.0.48
+
+- #886 The validation bar is pined on the Grid View page
+  - Grid View page: Pin the validation bar so that when the user is looking at a large grid view page, it would be easy to validate species ( users will not need to scroll all their way back to validate species).
+- #886 Display validation icon after making a validation on the Grid View page
+  - Grid View page: Automatically include a checkmark on validated ROIs.
+- #886 Fixed the issue with removing selected clusters frequency in the filter
+  - Grid View page: The user adds a filter frequency. The user can to remove the filter and see the original plot without refreshing the page.
+- #886 Fixed the issue with a chronological order of audio event detection jobs
+ - AED page: organize AED jobs in chronological order by date and hour.
+- #886 Unselect selected boxes after making the validation on the Grid View page
+  - Grid View page: Automatically deselect ROIs that have been validated.
+
 ## v3.0.47
 
 - Total recordings count for each playlist is calculated and saved on create or combine action
