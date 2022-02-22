@@ -13,6 +13,9 @@ Test Notes are used to list what pages / components / features / user flows are 
  - AED page: organize AED jobs in chronological order by date and hour.
 - #886 Unselect selected boxes after making the validation on the Grid View page
   - Grid View page: Automatically deselect ROIs that have been validated.
+- #892 The user is able to search pattern matchings jobs by name and template
+- #892 Fixed the issue related with searching pattern matchings jobs by name and template
+  - Pattern Matchings page: the user sees the search area above the table. The user is able serch jobs by PM name or templates. The uses sees the searching results or the message: No pattern matchings found. There is the pagination component if the count of results is more than 10 items. The impotant thing: the total pages are different for each serching result.
 
 ## v3.0.47
 

@@ -2,6 +2,10 @@
 
 ## v3.0.46
 
+- Run 026-add-index-for-name-to-pattern-matchings.sql on the production side
+
+## v3.0.46
+
 - Run 024-add-species-id-songtype-id-to-audio-event-detections-clustering.sql on the production side
 
 ## v3.0.44
