@@ -1,26 +1,25 @@
 /* jshint node:true */
 "use strict";
 
-var joi = require('joi');
-var AWS = require('aws-sdk');
-var q = require('q');
-var dbpool = require('../utils/dbpool');
-var Recordings = require('./recordings');
-var APIError = require('../utils/apierror');
+const joi = require('joi');
+const AWS = require('aws-sdk');
+const q = require('q');
+const dbpool = require('../utils/dbpool');
+const Recordings = require('./recordings');
+const APIError = require('../utils/apierror');
 const config = require('../config');
 const k8sConfig = config('k8s');
-var jsonTemplates = require('../utils/json-templates');
+const jsonTemplates = require('../utils/json-templates');
 const { Client } = require('kubernetes-client');
 const k8sClient = new Client({ version: '1.13' });
-var AWS = require('aws-sdk');
-var s3 = new AWS.S3();
+const s3 = new AWS.S3();
 
-var ClusteringJobs = {
+let ClusteringJobs = {
     find: function (options) {
-        var constraints=['1=1'];
-        var postprocess=[];
-        var select = [];
-        var tables = [
+        let constraints=['1=1'];
+        let postprocess=[];
+        let select = [];
+        let tables = [
             "job_params_audio_event_clustering C"
         ];
         if(!options){
@@ -82,12 +81,10 @@ var ClusteringJobs = {
     },
 
     findRois: function (options) {
-        var constraints=['1=1'];
-        var select = [];
-        var groupby = [];
-        var tables = [
-            "audio_event_detections_clustering A"
-        ];
+        let constraints=['1=1'];
+        let select = [];
+        let groupby = [];
+        let tables = ['audio_event_detections_clustering A'];
         if(!options){
             options = {};
         }
@@ -139,7 +136,7 @@ var ClusteringJobs = {
     getRoiAudioFile: function (options) {
         options = options || {};
 
-        var query = "SELECT A.time_min, A.time_max, A.frequency_min, A.frequency_max, R.`uri` as `rec_uri`, R.site_id\n" +
+        let query = "SELECT A.time_min, A.time_max, A.frequency_min, A.frequency_max, R.`uri` as `rec_uri`, R.site_id\n" +
         "FROM audio_event_detections_clustering A\n" +
         "JOIN recordings R ON A.recording_id = R.recording_id\n" +
         "WHERE A.recording_id = ? AND A.aed_id = ?";
@@ -169,11 +166,9 @@ var ClusteringJobs = {
     },
 
     audioEventDetections: function (options) {
-        var constraints=['1=1'];
-        var select = [];
-        var tables = [
-            "job_params_audio_event_detection_clustering JP"
-        ];
+        let constraints=['1=1'];
+        let select = [];
+        let tables = ['job_params_audio_event_detection_clustering JP'];
         if(!options){
             options = {};
         }
@@ -210,7 +205,7 @@ var ClusteringJobs = {
     }),
 
     requestNewClusteringJob: function(data, callback){
-        var payload = JSON.stringify({
+        let payload = JSON.stringify({
             project_id: data.project_id,
             user_id: data.user_id,
             name: data.name,
@@ -219,8 +214,8 @@ var ClusteringJobs = {
             min_points: data.params.minPoints,
             distance_threshold: data.params.distanceThreshold,
         });
-        var job_id;
-        var jobQuery =
+        let job_id;
+        let jobQuery =
             "INSERT INTO jobs (\n" +
             "    `job_type_id`, `date_created`,\n" +
             "    `last_update`, `project_id`,\n" +
@@ -228,7 +223,7 @@ var ClusteringJobs = {
             "    `progress`, `completed`, `progress_steps`, `hidden`, `ncpu`\n" +
             ") SELECT ?, NOW(), NOW(), ?, ?, ?, ?, ?, ?, ?, ?";
 
-        var clusteringQuery =
+        let clusteringQuery =
             "INSERT INTO job_params_audio_event_clustering (\n" +
             "    `name`, `project_id`, `user_id`, \n" +
             "    `job_id`, `audio_event_detection_job_id`,\n" +
@@ -254,7 +249,7 @@ var ClusteringJobs = {
                 )
             ).then(async () => {
                 data.kubernetesJobName = `aed-clustering-${new Date().getTime()}`;
-                var jobParam = jsonTemplates.getTemplate('aed-clustering', 'job', {
+                let jobParam = jsonTemplates.getTemplate('aed-clustering', 'job', {
                     kubernetesJobName: data.kubernetesJobName,
                     imagePath: k8sConfig.imagePath,
                     minPoints: `${data.params.minPoints}`,
