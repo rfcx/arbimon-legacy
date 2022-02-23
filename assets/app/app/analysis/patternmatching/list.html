@@ -9,16 +9,18 @@
                 <i class="fa fa-plus" ></i>
             </a>
         </h3>
-        <loader ng-show="loading.rows"></loader>
-        <button class="btn btn-default pull-right"
-            tooltip="Refresh list"
-            ng-click="loadPatternMatchings()">
-                <i class="fa fa-refresh"></i>
-        </button>
-
+        <div>
+          <input type="text" class="form-control pull-left" ng-model="search.q" style="width: 220px;" placeholder="Search jobs by name, template" ng-change="onFilterChanged()">
+          <button class="btn btn-default pull-right"
+              tooltip="Refresh list"
+              ng-click="loadPatternMatchings()">
+                  <i class="fa fa-refresh"></i>
+          </button>
+        </div>
+        <div class="ml-2"><loader ng-show="loading.rows"></loader></div>
         <div ng-hide="loading.rows">
             <a2-table rows="patternmatchingsData" no-checkbox="true" on-select="selectItem(row.id) | trackEvent:'Analysis-Pattern-Matching-List':' show pattern matching details'">
-                <field title="Name" tdclass="is-v-middle hidelongtext widthtd" key="name" filter>
+                <field title="Name" tdclass="is-v-middle hidelongtext widthtd" key="name">
                     <div class="roi-thumbnail mr-1">
                         <img ng-src="{{row.template.uri}}" class="roi-img is-small"/>
                         <a class="roi-btn-br" ng-href="{{getTemplateVisualizerUrl(row.template)}}">
@@ -34,16 +36,16 @@
                 <field title="Timestamp" key="timestamp" tdclass="is-v-middle">
                     {{ row.timestamp | moment : 'lll' }}
                 </field>
-                <field title="Playlist" key="playlist_name" filter tdclass="no-wrap-table-cell is-v-middle">
+                <field title="Playlist" key="playlist_name" tdclass="no-wrap-table-cell is-v-middle">
                     {{row.playlist_name}}
                 </field>
-                <field title="Template" key="template.name" filter tdclass="no-wrap-table-cell is-v-middle">
+                <field title="Template" key="template.name" tdclass="no-wrap-table-cell is-v-middle">
                     {{row.template.name}}
                 </field>
-                <field title="Parameters" key="parameters" filter="parameters.$" tdclass="no-wrap-table-cell is-v-middle">
+                <field title="Parameters" key="parameters" tdclass="no-wrap-table-cell is-v-middle">
                     {{row.parameters | asCSV }}
                 </field>
-                <field title="User" key="user" filter tdclass="is-v-middle">
+                <field title="User" key="user" tdclass="is-v-middle">
                     {{ row.user }}
                 </field>
                 <field tdclass="is-v-middle">

@@ -33,6 +33,8 @@ angular.module('a2.analysis.patternmatching', [
         totalJobs: 0,
         totalPages: 0
     }
+    $scope.search = { q: '' };
+    var timeout;
 
     $scope.getTemplateVisualizerUrl = function(template){
         var box = ['box', template.x1, template.y1, template.x2, template.y2].join(',');
@@ -62,6 +64,7 @@ angular.module('a2.analysis.patternmatching', [
 
         return a2PatternMatching.list({
             completed: true,
+            q: $scope.search.q,
             limit: $scope.paginationSettings.limit,
             offset: $scope.paginationSettings.offset * $scope.paginationSettings.limit
         }).then(function(data) {
@@ -78,6 +81,22 @@ angular.module('a2.analysis.patternmatching', [
             }
         });
     };
+
+    $scope.onFilterChanged = function () {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => {
+          if ($scope.search.q.trim().length > 0 && $scope.search.q.trim().length < 4) return
+          $scope.resetPagination()
+          $scope.loadPatternMatchings()
+      }, 1000);
+    }
+
+    $scope.resetPagination = function () {
+      $scope.paginationSettings.page = 1
+      $scope.paginationSettings.offset = 0
+      $scope.paginationSettings.totalJobs = 0
+      $scope.paginationSettings.totalPages = 0
+    }
 
     $scope.createNewPatternMatching = function () {
         if(!a2UserPermit.can('manage pattern matchings')) {

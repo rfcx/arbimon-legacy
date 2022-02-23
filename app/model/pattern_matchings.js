@@ -43,10 +43,10 @@ var PatternMatchings = {
      * @return {Promise} resolving to array with the matching playlists.
      */
     find: function (options) {
-        var constraints=[], projection=[];
-        var postprocess=[];
-        var data=[];
-        var select = [
+        let constraints=[], projection=[];
+        let postprocess=[];
+        let data=[];
+        let select = [
             "PM.`pattern_matching_id` as id" ,
             "PM.`name`", "PM.`project_id`" ,
             "PM.`timestamp`", "PM.`species_id`", "PM.`songtype_id`" ,
@@ -55,8 +55,8 @@ var PatternMatchings = {
             "PM.`cs_expert`",
             "PM.`playlist_id`", "PM.`template_id`" ,
         ];
-        var tables = ["pattern_matchings PM"];
-        var groupby = [];
+        let tables = ["pattern_matchings PM"];
+        let groupby = [];
         if(options instanceof Function){
             callback = options;
             options = null;
@@ -72,6 +72,11 @@ var PatternMatchings = {
 
         if (options.completed !== undefined || options.showUser) {
             tables.push("JOIN jobs J ON PM.job_id = J.job_id");
+        }
+
+        if (options.q) {
+            constraints.push("(PM.name LIKE '%" + options.q + "%' OR T.name LIKE '%" + options.q + "%')");
+            tables.push("JOIN templates T ON T.template_id = PM.template_id");
         }
 
         if (options.completed !== undefined) {
@@ -207,7 +212,11 @@ var PatternMatchings = {
     },
 
     findWithPagination: async function (options) {
-        const count = await PatternMatchings.totalPatternMatchings(options.project);
+        const count = options.q ? await PatternMatchings.totalPatternMatchings(
+            options.project,
+            `JOIN templates T ON T.template_id = PM.template_id \n`,
+            ` AND (PM.name LIKE '%${options.q}%' OR T.name LIKE '%${options.q}%')`
+        ) : await PatternMatchings.totalPatternMatchings(options.project);
         if (count) {
             const list =  await PatternMatchings.find(options);
             return { list: list, count: count }
@@ -221,11 +230,11 @@ var PatternMatchings = {
         }).nodeify(callback);
     },
 
-    totalPatternMatchings: async function(project_id) {
-        var q = "SELECT count(*) as count \n" +
-                "FROM pattern_matchings as PM \n"+
-                "JOIN jobs J ON PM.job_id = J.job_id \n"+
-                "WHERE J.state = 'completed' AND PM.deleted = 0 AND PM.project_id = " + dbpool.escape(project_id);
+    totalPatternMatchings: async function(project_id, join, where) {
+        let q = `SELECT count(*) as count
+        FROM pattern_matchings as PM
+        JOIN jobs J ON PM.job_id = J.job_id ${join ? join : ''}
+        WHERE J.state = 'completed' AND PM.deleted = 0 AND PM.project_id = ${dbpool.escape(project_id)} ${where ? where : ''}`;
         return dbpool.query(q).get(0).get('count');
     },
 
