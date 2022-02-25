@@ -6,12 +6,12 @@
         <div class="jumbotron seconds-div-center" ng-if="infopanedata">
             <h3>{{ infopanedata }}</h3>
         </div>
-        <div ng-if="!loading"
+        <div
           a2-scroll="onScroll($event, $controller)"
           a2-scroll-on="window"
         >
             <a2-scroll-anchor name="header" class="a2-page-header-placeholder" ng-class="{ 'is-active': scrolledPastHeader }" />
-            <div ng-if="!infopanedata" class="a2-page-header clearfix" ng-class="{ 'is-fixed': scrolledPastHeader }">
+            <div ng-if="!infopanedata && !loading" class="a2-page-header clearfix" ng-class="{ 'is-fixed': scrolledPastHeader }">
                 <div class="row-flex flex-align-top clusters-filter" ng-class="{ 'panel-body': scrolledPastHeader }">
                     <div class="col-sm-4 flex-self-align-top pl-0">
                         Job Name: {{ job_details.name }}
@@ -22,8 +22,8 @@
                     </div>
                     <div class="col-sm-8 row-flex flex-space-end panel-body pb-0 pr-0 clusters-filter-right">
                         <div class="row-flex flex-space-between flex-self-align-bottom mr-1">
-                            <div class="input-group species-typeahead mr-2">
-                                <span class="input-group-addon">Validate as:</span>
+                            <div class="input-group row-flex species-typeahead mr-2">
+                                <span class="input-group-addon" style="width: 90px; padding: 9px 12px;">Validate as:</span>
                                 <input class="form-control" style="width: 150px;"
                                     type="text"
                                     placeholder="Type Species"
