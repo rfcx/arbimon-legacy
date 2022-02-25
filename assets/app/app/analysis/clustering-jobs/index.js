@@ -913,7 +913,7 @@ angular.module('a2.analysis.clustering-jobs', [
       var headerTop = $controller.anchors.header.offset().top;
 
       this.headerTop = headerTop | 0;
-      this.scrolledPastHeader = scrollPos >= headerTop;
+      this.scrolledPastHeader = scrollPos > headerTop;
     }
 
 })
