@@ -12,17 +12,20 @@
                 <br>Number of clusters detected: {{ countClustersDetected || 'no data' }}
             </div>
             <div class="col-sm-6 row-flex flex-space-end panel-body pr-0 pb-0">
-                <div class="flex-self-align-bottom">
-                    <div class="btn-group btn-group-margin">
+                <div class="flex-self-align-bottom btn-group-margin">
+                    <div class="btn-group">
                         <button class="btn btn-sm btn-default" ng-class="audio_player.freq_filter ? 'active' : ''" ng-click="openFreqFilterModal()" ng-disabled="!frequencyFilter && !frequencyFilter.min && !frequencyFilter.max"
                             title="Cluster audio frequency filter">
                             <i class="fa fa-filter" ></i>
                             <span class="fa fa-ellipsis-h fa-concat-sub"></span>
                         </button>
                     </div>
-                    <div class="btn-group btn-group-margin" title="Clustering visualization type">
-                        <ui-select ng-model="selectedType" theme="bootstrap" class="btn-group-item border-left-radius" on-select="onTypeSelect($select.selected)">
-                            <ui-select-match class="right-corners">
+                    <button class="btn btn-default" ng-click="onGridViewSelected()">
+                        View All Clusters
+                    </button>
+                    <div class="btn-group" title="Clustering visualization type">
+                        <ui-select ng-model="selectedType" theme="bootstrap" class="btn-group-item" style="width:9em;" on-select="onTypeSelect($select.selected)">
+                            <ui-select-match>
                                 <i></i>{{$select.selected.text}}
                             </ui-select-match>
                             <ui-select-choices style="z-index: 10000;" repeat="$item in lists.types | filter:$select.search">
