@@ -390,8 +390,12 @@ angular.module('a2.analysis.clustering-jobs', [
         $scope.toggleMenu = false;
         $scope.selectedCluster = null;
         $scope.showViewGridPage = true;
+        // View All Clusters
+        if (!$scope.points) {
+          $scope.gridContext = $scope.originalData
+        }
         // Get points in different clusters.
-        if ($scope.points.length) {
+        else if ($scope.points.length) {
             $scope.gridContext = {};
             $scope.points.forEach((row, i) => {
                 $scope.gridContext[i] = {

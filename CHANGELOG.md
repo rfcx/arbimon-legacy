@@ -1,5 +1,9 @@
 # Arbimon Release Notes
 
+New features:
+
+- #906 User is able to see all clusters with View All Clusters button on the Clustering detail page
+
 ## v3.0.48 - February XX, 2022
 
 New features:
