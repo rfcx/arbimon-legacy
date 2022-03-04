@@ -1,16 +1,19 @@
 # Arbimon Release Notes
 
+## v3.0.49 - March XX, 2022
+
 New features:
 
-- #906 User is able to see all clusters with View All Clusters button on the Clustering detail page
+- #885 User is able to switch between square and original size images on the Grid View page
 
-## v3.0.48 - February XX, 2022
+## v3.0.48 - March 04, 2022
 
 New features:
 
 - #886 The validation bar is pined on the Grid View page
 - #886 Display validation icon after making a validation on the Grid View page
 - #892 The user is able to search pattern matchings jobs by name and template
+- #906 User is able to see all clusters with View All Clusters button on the Clustering detail page
 
 Resolved issues:
 
