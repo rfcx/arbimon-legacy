@@ -1,6 +1,25 @@
 # Arbimon Release Notes
 
-## v3.0.47 - February XX, 2022
+New features:
+
+- #906 User is able to see all clusters with View All Clusters button on the Clustering detail page
+
+## v3.0.48 - February XX, 2022
+
+New features:
+
+- #886 The validation bar is pined on the Grid View page
+- #886 Display validation icon after making a validation on the Grid View page
+- #892 The user is able to search pattern matchings jobs by name and template
+
+Resolved issues:
+
+- #886 Fixed the issue with removing selected clusters frequency in the filter
+- #886 Fixed the issue with a chronological order of audio event detection jobs
+- #886 Unselect selected boxes after making the validation on the Grid View page
+- #892 Fixed the issue related with searching pattern matchings jobs by name and template
+
+## v3.0.47 - February 17, 2022
 
 New features:
 

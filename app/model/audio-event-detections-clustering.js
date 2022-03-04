@@ -1,23 +1,20 @@
 /* jshint node:true */
 "use strict";
 
-var joi = require('joi');
-var AWS = require('aws-sdk');
-var q = require('q');
-var lambda = new AWS.Lambda();
-var config = require('../config');
-var dbpool       = require('../utils/dbpool');
+const joi = require('joi');
+const AWS = require('aws-sdk');
+const q = require('q');
+const lambda = new AWS.Lambda();
+const config = require('../config');
+const dbpool = require('../utils/dbpool');
 
-var AudioEventDetectionsClustering = {
+let AudioEventDetectionsClustering = {
     find: function (options) {
-        var constraints=['1=1'];
-        var postprocess=[];
-        var groupby = [];
-        var data=[];
-        var select = [];
-        var tables = [
-            "job_params_audio_event_detection_clustering JP"
-        ];
+        let constraints=['1=1'];
+        let postprocess=[];
+        let data=[];
+        let select = [];
+        let tables = ['job_params_audio_event_detection_clustering JP'];
 
         if(!options){
             options = {};
@@ -28,9 +25,9 @@ var AudioEventDetectionsClustering = {
         }
 
         select.push("JP.job_id, JP.name, JP.parameters");
+        select.push("JP.`date_created` as `timestamp`");
 
         if (!options.playlist && options.dataExtended) {
-            select.push("JP.`date_created` as `timestamp`");
             select.push("P.playlist_id, P.`name` as `playlist_name`");
             tables.push("JOIN playlists P ON JP.playlist_id = P.playlist_id");
         }
@@ -55,8 +52,7 @@ var AudioEventDetectionsClustering = {
 
         if (options.rec_id) {
             select.push("A.`recording_id` as `rec_id`");
-            constraints.push('A.recording_id = ?');
-            data.push(options.rec_id);
+            constraints.push('A.recording_id = ' + dbpool.escape(options.rec_id));
         }
 
         if (options.playlist) {
@@ -81,19 +77,15 @@ var AudioEventDetectionsClustering = {
         }, dbpool.query(
             "SELECT " + select.join(",\n    ") + "\n" +
             "FROM " + tables.join("\n") + "\n" +
-            "WHERE " + constraints.join(" \n  AND ") + (
-                groupby.length ? ("\nGROUP BY " + groupby.join(",\n    ")) : "" + "\n" +
-            !!options.playlist ? "" : "ORDER BY timestamp DESC"
-            ), data
+            "WHERE " + constraints.join(" AND ") + "\n" +
+            "ORDER BY date_created DESC"
         ))
     },
 
     findClusteredDetections: function (options) {
-        var constraints=['1=1'];
-        var select = [];
-        var tables = [
-            "audio_event_detections_clustering A"
-        ];
+        let constraints=['1=1'];
+        let select = [];
+        let tables = ['audio_event_detections_clustering A'];
         if(!options){
             options = {};
         }
