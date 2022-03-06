@@ -625,6 +625,7 @@ angular.module('a2.analysis.clustering-jobs', [
 })
 .controller('GridViewCtrl' , function($scope, $modal, $http, a2UserPermit, a2ClusteringJobs, a2AudioBarService, a2AudioEventDetectionsClustering, Project, Songtypes, a2Playlists, notify) {
     $scope.loading = true;
+    $scope.isSquareSize = false
     $scope.infopanedata = '';
     $scope.projectUrl = Project.getUrl();
     $scope.allRois = [];
@@ -806,6 +807,10 @@ angular.module('a2.analysis.clustering-jobs', [
 
     $scope.togglePopup = function() {
         $scope.isPopupOpened = !$scope.isPopupOpened;
+    }
+
+    $scope.toggleBoxSize = function() {
+      $scope.isSquareSize = !$scope.isSquareSize;
     }
 
     $scope.isPlaylistDataValid = function() {
