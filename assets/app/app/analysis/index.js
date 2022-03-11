@@ -12,7 +12,7 @@ angular.module('a2.analysis', [
     'ct.ui.router.extras',
     'a2.srv.api'
 ]).config(function($stateProvider, $urlRouterProvider) {
-    $urlRouterProvider.when("/analysis", "/analysis/patternmatching");
+    $urlRouterProvider.when("/analysis", "/analysis/patternmatching", "/analysis/clustering-jobs");
     $stateProvider.state('analysis', {
         url: '/analysis',
         views: {
