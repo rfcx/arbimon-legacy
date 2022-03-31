@@ -1,5 +1,7 @@
 # Arbimon Release Notes
 
+- #913 Fixed parsing temperature issue from the meta column
+
 ## v3.0.49 - March XX, 2022
 
 New features:
