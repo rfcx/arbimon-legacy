@@ -1035,9 +1035,8 @@ var Recordings = {
             const regState = /state was (.*?) and/.exec(data);
             const regStateFromComment = /state was (.*?).","/.exec(data);
             comment += regState && regState[1] ? ` / ${regState[1]}` : regStateFromComment && regStateFromComment[1] ? ` / ${regStateFromComment[1]}` : '';
-            const regTemp = /temperature was (.*?) Recording cancelled before completion due to low voltage./.exec(data);
-            const regTemperature = /temperature was (.*?)","artist/.exec(data);
-            comment += regTemp ? ` / ${regTemp[1]}` : regTemperature ? ` / ${regTemperature[1]}` : '';
+            const regTemp = /temperature was (.*?)(C|F)/g.exec(data);
+            comment += regTemp ? ` / ${regTemp[1]}` : '';
             return comment;
         } catch (e) {
             return null
