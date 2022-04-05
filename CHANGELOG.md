@@ -1,12 +1,15 @@
 # Arbimon Release Notes
 
-- #913 Fixed parsing temperature issue from the meta column
-
-## v3.0.49 - March XX, 2022
+## v3.0.49 - April XX, 2022
 
 New features:
 
 - #885 User is able to switch between square and original size images on the Grid View page
+
+Resolved issues:
+
+- #918 Display clusters names for View all clusters logic
+- #913 Fixed parsing temperature issue from the meta column
 
 ## v3.0.48 - March 04, 2022
 

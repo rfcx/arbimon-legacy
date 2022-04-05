@@ -794,7 +794,7 @@ angular.module('a2.analysis.clustering-jobs', [
                 $scope.gridData.forEach((row) => { grids.push([row]) })
                 grids.forEach((row, index) => {
                     $scope.ids[index] = {
-                        cluster: row[0].name,
+                        cluster: row[0].cluster || row[0].name,
                         rois: data.filter((a, i) => {return row[0].aed.includes(a.aed_id)})
                     }
                 })
