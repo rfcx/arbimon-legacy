@@ -23,7 +23,7 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags'])
             
             var add_validation = function(validation){
                 var key     = [validation.species, validation.songtype].join('-');
-                var present = Object.values({present: validation.present, presentReview: validation.presentReview});
+                var present = Object.values({present: validation.present, presentReview: validation.presentReview, presentAed: validation.presentAed});
                 $scope.validations[key] = present;
             };
 
@@ -157,8 +157,9 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags'])
                     return;
                 }
                 else {
-                    if (val[0] == 1 || val[1] > 0) {
-                        val_options[1].showDropdown = (val[1] > 0)
+                    console.log($scope.validations, val)
+                    if (val[0] == 1 || val[1] > 0 || val[2] > 0) {
+                        val_options[1].showDropdown = (val[1] > 0 || val[2] > 0)
                         return val_options[1];
                     } else {
                         return val_options[2];
