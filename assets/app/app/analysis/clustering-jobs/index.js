@@ -901,6 +901,7 @@ angular.module('a2.analysis.clustering-jobs', [
         timeout = setTimeout(() => {
             a2AudioEventDetectionsClustering.validate({
                 aed: $scope.selectedRois,
+                recordingId: $scope.getSelectedRecordings(),
                 validation: {
                     speciesName: $scope.selected.species.scientific_name,
                     songtypeName: $scope.selected.songtype.name,
@@ -912,6 +913,7 @@ angular.module('a2.analysis.clustering-jobs', [
                 $scope.unselectBoxes()
                 $scope.selectedRois = []
                 notify.log('Audio event detections validated as ' + $scope.selected.species.scientific_name + ' ' + $scope.selected.songtype.name);
+                $scope.selected = { species: null, songtype: null };
             }).finally(() => {
                 $scope.speciesLoading = false;
             })
@@ -925,6 +927,17 @@ angular.module('a2.analysis.clustering-jobs', [
           arr.forEach(a => a.validated = 1)
         }
       })
+    }
+
+    $scope.getSelectedRecordings = function() {
+      var recArr = [];
+      $scope.rows.forEach(row => {
+        var arr = row.rois.filter(roi => $scope.selectedRois.includes(roi.aed_id))
+        if (arr.length) {
+          recArr = recArr.concat(arr.map(a => {return a.recording_id}))
+        }
+      })
+      return recArr
     }
 
     $scope.unselectBoxes = function() {

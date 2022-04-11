@@ -91,10 +91,16 @@ angular.module('a2.audiodata.recordings.data-export-parameters', [
             placeholder: 'Species...',
             getList: function(Project){
                 return Project.getClasses().then(function(classes){
-                    return classes.map(function(cls){
-                        return {value:cls.species, caption:cls.species_name, name: cls.species_name.split(' ').join('_')};
-                    });
-                });
+                    // Exclude classes with repeating species names
+                    var cl = {};
+                    classes.forEach(cls => {
+                        const id = cls.species_name.split(' ').join('_')
+                        if (!cl[id]) {
+                            cl[id] = {value:cls.species, caption:cls.species_name, name: id}
+                        }
+                    })
+                    return Object.values(cl)
+                })
             },
         },
     ];

@@ -50,9 +50,23 @@ router.post('/new', function(req, res, next) {
 router.post('/validate', function(req, res, next) {
     res.type('json');
     const validation = req.body.validation
+    const recs = req.body.recordingId
     return model.AudioEventDetectionsClustering.validateDetections(req.body.aed, validation)
         .then(async function(result) {
+            let opts = {
+              projectId: req.project.project_id,
+              speciesId: validation.speciesId,
+              songtypeId: validation.songtypeId
+            }
+            for (let rec of recs) {
+              let existingValidation = await model.recordings.getRecordingValidation({ ...opts, recordingId: rec });
+              // Add a new row to the recording validation
+              if (!existingValidation.length) await model.recordings.addRecordingValidation({ ...opts, recordingId: rec, userId: req.session.user.id });
+            }
+            // Update a count of validations in the present_aed column
+            await model.AudioEventDetectionsClustering.updatePresentAedCount({ ...opts, recordingId: req.body.recordingId, validate: true });
             let existingClass = await model.projects.getProjectClassesAsync(req.project.project_id, null, { speciesId: validation.speciesId, songtypeId: validation.songtypeId });
+            // Add a new class to the project
             if (!existingClass.length) {
                 const projectClass = {
                     project_id: req.project.project_id,
