@@ -102,6 +102,7 @@
                     <div class="btn-group ml-1" ng-class="{ 'mt-1': visobject.explorerUrl && audio_player.clustersData }" ng-show="visobject.explorerUrl">
                         <a class="btn btn-default btn-sm"
                             ng-href="{{layer.controller.explorerUrl()}}"
+                            ng-disabled="true"
                             tooltip="Navigate to Explorer">
                             <i class="fa fa-external-link"></i>
                         </a>

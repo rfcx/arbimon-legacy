@@ -3,6 +3,7 @@
 Resolved issues:
 
 - #918 Display clusters names for View all clusters logic
+- Temporarily disable the Explorer button
 
 ## v3.0.49 - March XX, 2022
 
