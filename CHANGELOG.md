@@ -1,13 +1,6 @@
 # Arbimon Release Notes
 
-## v3.0.50 - April XX, 2022
-
-Resolved issues:
-
-- #917 Display validated species from the Grid View page on the Visualizer - Species Presence Validation
-- #917 Display validated species from the Grid View page in the recordings filters on the Recording page
-
-## v3.0.49 - April XX, 2022
+## v3.0.49 - April 12, 2022
 
 New features:
 
@@ -16,6 +9,10 @@ New features:
 Resolved issues:
 
 - #918 Display clusters names for View all clusters logic
+- #918 Display clusters names for View all clusters logic
+- Temporarily disable the Explorer button
+- #917 Display validated species from the Grid View page on the Visualizer - Species Presence Validation
+- #917 Display validated species from the Grid View page in the recordings filters on the Recording page
 
 ## v3.0.48 - March 04, 2022
 
