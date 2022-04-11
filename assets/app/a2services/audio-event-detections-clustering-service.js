@@ -44,12 +44,10 @@ angular.module('a2.srv.audio-event-detections-clustering', [
             });
         },
         validate: function(opts) {
-            return $http.post('/api/project/' + Project.getUrl() + '/audio-event-detections-clustering/validate', {
-                aed: opts.aed,
-                validation: opts.validation
-            }).then(function(response){
-                return response.data;
-            });
+            return $http.post('/api/project/' + Project.getUrl() + '/audio-event-detections-clustering/validate', opts)
+                .then(function(response){
+                    return response.data;
+                });
         },
     };
 })
