@@ -529,19 +529,8 @@ router.get('/:get/:oneRecUrl?', function(req, res, next) {
                     recording.aedValidations = aedValidations.map(item => {
                         return { ...item, name: `${item.scientific_name} ${item.songtype_name}`, isPopupOpened: false, presentReview: 1 }
                     });
-                    recording.validations = aedValidations.reduce((acc, cur) => {
-                        const existing = acc.find(i => i.species === cur.species && i.songtype === cur.songtype)
-                        if (existing) {
-                            existing.presentReview += 1
-                        } else {
-                            cur.presentReview = 1
-                            acc.push(cur)
-                        }
-                        return acc
-                    }, validations)
-                } else {
-                    recording.validations = validations;
-                }
+                } 
+                recording.validations = validations;
                 model.recordings.fetchInfo(recording, function(err, rec){
                     if(err) return next(err);
 

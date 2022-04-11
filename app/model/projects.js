@@ -501,9 +501,10 @@ var Projects = {
             params.push(options.songtypeId);
         }
         if(options && options.countValidations) {
+            // Get count of present/absent values for the Recordings filter.
             select_clause.push(
-                "coalesce(SUM(CASE WHEN rv.present_review > 0 THEN 1 ELSE rv.present END), 0) as vals_present",
-                "coalesce(SUM(CASE WHEN rv.present = 0 AND rv.present_review = 0 THEN 1 ELSE 0 END), 0) as vals_absent"
+                "coalesce(SUM(CASE WHEN rv.present_review > 0 OR rv.present_aed > 0 THEN 1 ELSE rv.present END), 0) as vals_present",
+                "coalesce(SUM(CASE WHEN rv.present = 0 AND rv.present_review = 0 AND rv.present_aed = 0 THEN 1 ELSE 0 END), 0) as vals_absent"
             );
             from_clause.push(
                 "LEFT JOIN recording_validations AS rv ON (\n"+
@@ -879,8 +880,8 @@ var Projects = {
     },
 
     validationsStats: function(projectUrl, speciesId, songtypeId, callback) {
-        var q = "SELECT coalesce(SUM(CASE WHEN present_review > 0 THEN 1 ELSE present END), 0) AS present, \n"+
-                "coalesce(SUM(CASE WHEN present = 0 AND present_review = 0 THEN 1 ELSE 0 END), 0) AS absent, \n"+
+        var q = "SELECT coalesce(SUM(CASE WHEN present_review > 0 OR present_aed > 0 THEN 1 ELSE present END), 0) AS present, \n"+
+                "coalesce(SUM(CASE WHEN present = 0 AND present_review = 0 AND present_aed = 0 THEN 1 ELSE 0 END), 0) AS absent, \n"+
                 "COUNT(*) AS total \n"+
                 "FROM `recording_validations` rv, `projects` p \n"+
                 "WHERE rv.`project_id` = p.`project_id` \n"+
