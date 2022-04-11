@@ -1047,8 +1047,8 @@ var Recordings = {
             const regState = /state was (.*?) and/.exec(data);
             const regStateFromComment = /state was (.*?).","/.exec(data);
             comment += regState && regState[1] ? ` / ${regState[1]}` : regStateFromComment && regStateFromComment[1] ? ` / ${regStateFromComment[1]}` : '';
-            const regTemperature = /temperature was (.*?).","/.exec(data);
-            comment += regTemperature && regTemperature[1] ? ` / ${regTemperature[1]}` : '';
+            const regTemp = /temperature was (.*?)(C|F)/g.exec(data);
+            comment += regTemp ? ` / ${regTemp[1]}` : '';
             return comment;
         } catch (e) {
             return null

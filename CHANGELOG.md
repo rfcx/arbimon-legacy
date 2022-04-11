@@ -9,6 +9,7 @@ New features:
 Resolved issues:
 
 - #918 Display clusters names for View all clusters logic
+- #913 Fixed parsing temperature issue from the meta column
 - #918 Display clusters names for View all clusters logic
 - Temporarily disable the Explorer button
 - #917 Display validated species from the Grid View page on the Visualizer - Species Presence Validation
