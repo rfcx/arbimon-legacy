@@ -4,7 +4,8 @@ Test Notes are used to list what pages / components / features / user flows are 
 ## v3.0.49
 
 - #917 Display validated species from the Grid View page on the Visualizer - Species Presence Validation
-  - Grid View page: the user validates any box. The user goes to the Visualizer page. The user sees the Present value in the Species Presence Validation section. The user check the count of validated species near with Species Presence Validation label. The count is include a new species which the user just validated.
+  - Grid View page: the user validates any box. The user goes to the Visualizer page. The user sees the Present value in the Species Presence Validation section. The user check the count of validated species near with Species Presence Validation label. The count is include a new species which the user just validated. The user clicks on eye icon near with Species Presence Validation label and sees the box on the spectrogram.
+  - Grid View page: the user validates the same box with the same species/songtype like in the previous case. The user goes to the Visualizer page. The user sees the Present value in the Species Presence Validation section. The user check the count of validated species near with Species Presence Validation label. The count is NOT include the species which the user just validated.
 - #917 Display validated species from the Grid View page in the recordings filters on the Recording page
   - Grid View page: the user validates any box. The user goes to the Recordings page and opens filters. The user finds validated species. The user selects that species and gets all related recording/s. The user navigates to the Visualizer page from the Recordings page. The user checks the step above related with Species Presence Validation menu.
 

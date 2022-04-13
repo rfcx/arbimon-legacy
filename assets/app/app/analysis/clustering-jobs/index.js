@@ -901,18 +901,16 @@ angular.module('a2.analysis.clustering-jobs', [
         timeout = setTimeout(() => {
             a2AudioEventDetectionsClustering.validate({
                 aed: $scope.selectedRois,
-                recordingId: $scope.getSelectedRecordings(),
-                validation: {
-                    speciesName: $scope.selected.species.scientific_name,
-                    songtypeName: $scope.selected.songtype.name,
-                    speciesId: $scope.selected.species.id,
-                    songtypeId: $scope.selected.songtype.id
-            }}).then(data => {
+                species_name: $scope.selected.species.scientific_name,
+                songtype_name: $scope.selected.songtype.name,
+                species_id: $scope.selected.species.id,
+                songtype_id: $scope.selected.songtype.id
+            }).then(data => {
                 // Unselect and mark boxes as validated without reloading the page
                 $scope.markBoxesAsValidated()
                 $scope.unselectBoxes()
                 $scope.selectedRois = []
-                notify.log('Audio event detections validated as ' + $scope.selected.species.scientific_name + ' ' + $scope.selected.songtype.name);
+                notify.log('Audio event detections are validated as ' + $scope.selected.species.scientific_name + ' ' + $scope.selected.songtype.name);
                 $scope.selected = { species: null, songtype: null };
             }).finally(() => {
                 $scope.speciesLoading = false;
@@ -927,17 +925,6 @@ angular.module('a2.analysis.clustering-jobs', [
           arr.forEach(a => a.validated = 1)
         }
       })
-    }
-
-    $scope.getSelectedRecordings = function() {
-      var recArr = [];
-      $scope.rows.forEach(row => {
-        var arr = row.rois.filter(roi => $scope.selectedRois.includes(roi.aed_id))
-        if (arr.length) {
-          recArr = recArr.concat(arr.map(a => {return a.recording_id}))
-        }
-      })
-      return recArr
     }
 
     $scope.unselectBoxes = function() {
