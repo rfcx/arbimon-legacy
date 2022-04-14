@@ -1,6 +1,12 @@
 # Arbimon Release Notes
 
-## v3.0.49 - April 12, 2022
+## v3.0.50 - April 12, 2022
+
+New features:
+
+- #920 The pagination is added to the Templates page
+
+## v3.0.49 - April 16, 2022
 
 New features:
 

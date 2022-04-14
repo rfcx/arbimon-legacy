@@ -5,11 +5,11 @@
             <ul class="nav nav-tabs col-md-12">
                 <li class="nav-item" ng-class="{ active: controller.currentTab === 'showOwner' }">
                     <a class="nav-link" href=""
-                        ng-click="controller.importTemplates('showOwner')">Project Templates</a>
+                        ng-click="controller.toggleTab('showOwner')">Project Templates</a>
                 </li>
                 <li class="nav-item" ng-class="{ active: controller.currentTab === 'allAccessibleProjects' }">
                     <a class="nav-link" href=""
-                        ng-click="controller.importTemplates('allAccessibleProjects')">Public Templates</a>
+                        ng-click="controller.toggleTab('allAccessibleProjects')">Public Templates</a>
                 </li>
               </ul>
         </div>
@@ -88,6 +88,21 @@
                         </button>
                     </field>
                 </a2-table>
+                <div ng-if="controller.templates && (controller.paginationSettings.totalItems > controller.paginationSettings.limit)" class="row">
+                  <div class="col-sm-12">
+                      <pagination total-items="controller.paginationSettings.totalItems"
+                          ng-model="controller.paginationSettings.page"
+                          ng-change="controller.setCurrentPage()"
+                          class="pagination-sm"
+                          boundary-links="true"
+                          max-size="10"
+                          rotate="false"
+                          num-pages="controller.paginationSettings.totalPages"
+                          ng-disabled="controller.loading"
+                          items-per-page="controller.paginationSettings.limit">
+                      </pagination>
+                  </div>
+              </div>
                 <div class="jumbotron" ng-show="(!controller.templates || controller.templates.length == 0) && !controller.loading">
                     <h3>
                         No templates found.

@@ -18,9 +18,28 @@ angular.module('a2.srv.templates', ['a2.srv.project'])
             if (opts && opts.allAccessibleProjects) {
                 config.params.allAccessibleProjects = opts.allAccessibleProjects;
             }
+            if (opts && opts.limit) {
+                config.params.limit = opts.limit;
+            }
+            if (opts && opts.offset !== undefined) {
+                config.params.offset = opts.offset;
+            }
             return $http.get('/api/project/'+projectName+'/templates', config).then(function(response) {
                 return response.data;
             });
+        },
+
+        count: function(opts) {
+            var config = {
+                params: {}
+            };
+            if (opts && opts.allAccessibleProjects) {
+                config.params.allAccessibleProjects = opts.allAccessibleProjects;
+            }
+            return $http.get('/api/project/' + Project.getUrl() + '/templates/count', config)
+                .then(function(response){
+                    return response.data;
+                });
         },
 
         add: function(template_data) {
@@ -34,11 +53,6 @@ angular.module('a2.srv.templates', ['a2.srv.project'])
             return '/api/project/' + Project.getUrl() + '/templates/' + template.id + '/audio';
         },
 
-        // edit: function(templateId, template_data) {
-        //     var projectName = Project.getUrl();
-        //     return $http.post('/api/project/'+projectName+'/templates/edit/'+templateId, template_data);
-        // },
-        //
         delete: function(templateId) {
             var projectName = Project.getUrl();
             return $http.post('/api/project/'+projectName+'/templates/' + templateId + '/remove');

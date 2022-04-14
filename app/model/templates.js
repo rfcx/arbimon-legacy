@@ -103,7 +103,7 @@ var Templates = {
         }
 
         if (options.allAccessibleProjects) {
-            // find the first template by date created for all public projects grouped by name.
+            // find the first template by date created for all public projects grouped by name [Templates page]
             tables.push(
                 'INNER JOIN (SELECT name, MIN(date_created) as mindate FROM templates WHERE deleted=0 GROUP BY name) T3 ON T.name = T3.name AND T.date_created = T3.mindate'
             );
@@ -123,7 +123,7 @@ var Templates = {
         }
 
         if (options.firstByDateCreated) {
-            // find the first template by date created grouped by name and project.
+            // find the first template by date created grouped by name and project [Visualizer page]
             tables.push(
                 'INNER JOIN (SELECT project_id, recording_id, name, MIN(date_created) as mindate FROM templates WHERE deleted=0 GROUP BY name, project_id) T2 ON T.project_id = T2.project_id AND T.recording_id = T2.recording_id AND T.name = T2.name AND T.date_created = T2.mindate'
             );
@@ -136,12 +136,28 @@ var Templates = {
             "SELECT " + select.join(",\n") + "\n" +
             "FROM " + tables.join("\n") + "\n" +
             "WHERE " + constraints.join("\nAND ") + "\n" +
-            "ORDER BY date_created DESC"
+            "ORDER BY date_created DESC" +
+            (options.limit ? ("\nLIMIT " + Number(options.limit) + " OFFSET " + Number(options.offset)) : "")
         );
     },
 
     findOne: function(query){
         return find(query).then(data => data[0]);
+    },
+
+    templatesCount: async function(project, allAccessibleProjects) {
+        let q = `SELECT count(*) AS count FROM templates as T
+        JOIN projects P ON T.project_id = P.project_id`
+        // find the first template by date created grouped by name
+        const innerJoin = 'INNER JOIN (SELECT name, MIN(date_created) as mindate FROM templates WHERE deleted=0 GROUP BY name) T3 ON T.name = T3.name AND T.date_created = T3.mindate'
+        const where = 'WHERE T.deleted=0';
+        if (allAccessibleProjects) {
+            q += ` ${innerJoin} ${where} AND P.is_private=0`
+        }
+        else {
+            q += ` ${where} AND T.project_id=${project}`
+        }
+        return dbpool.query(q);
     },
 
     SCHEMA: joi.object().keys({
