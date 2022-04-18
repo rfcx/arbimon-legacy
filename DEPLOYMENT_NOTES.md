@@ -1,5 +1,9 @@
 # Arbimon Deployment Notes
 
+## v3.0.50
+
+- Run 027-add-present-aed-to-recording-validations.sql on the production side
+
 ## v3.0.46
 
 - Run 026-add-index-for-name-to-pattern-matchings.sql on the production side

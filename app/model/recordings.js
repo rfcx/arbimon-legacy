@@ -476,7 +476,7 @@ var Recordings = {
      * @param {Function} callback(err, validations) function called back with the queried results.
      */
     fetchValidations: function (recording, callback) {
-        var query = "SELECT recording_validation_id as id, user_id as user, species_id as species, songtype_id as songtype, present, present_review as presentReview \n" +
+        var query = "SELECT recording_validation_id as id, user_id as user, species_id as species, songtype_id as songtype, present, present_review as presentReview, present_aed as presentAed \n" +
             "FROM recording_validations \n" +
             "WHERE recording_id = " + dbpool.escape(recording.id);
         return queryHandler(query, callback);
@@ -785,7 +785,7 @@ var Recordings = {
             }
 
             if (validation.review) {
-                const q = "SELECT present, present_review FROM recording_validations \n"+
+                const q = "SELECT present, present_review, present_aed FROM recording_validations \n"+
                         "WHERE recording_id = ? AND species_id = ? AND songtype_id = ?";
 
                 queryHandler(dbpool.format(q, [recording.id, valobj.species, valobj.songtype]), function(err, rows) {
@@ -796,7 +796,7 @@ var Recordings = {
                         // Update review from present to clear or absent
                         if (hasValidationRow) {
                             const validationRow = rows[0];
-                            if (validationRow.present_review <= 1 && validationRow.present === null) {
+                            if (validationRow.present_review <= 1 && validationRow.present_aed === 0 && validationRow.present === null) {
                                 // Delete row
                                 queryHandler(
                                     "DELETE FROM `recording_validations` "+
@@ -897,6 +897,18 @@ var Recordings = {
             }
         }, callback);
 
+    },
+
+    getRecordingValidation: async function(opts) {
+        const q = `SELECT present, present_review, present_aed FROM recording_validations
+            WHERE project_id=${opts.projectId} AND recording_id IN (${opts.recordingId}) AND species_id=${opts.speciesId} AND songtype_id=${opts.songtypeId}`;
+        return dbpool.query(q);
+    },
+
+    addRecordingValidation: async function(opts) {
+        const q = `INSERT INTO recording_validations(recording_id, user_id, species_id, songtype_id, project_id)
+            VALUES (${opts.recordingId}, ${opts.userId}, ${opts.speciesId}, ${opts.songtypeId}, ${opts.projectId})`;
+        return dbpool.query(q);
     },
 
     calculateLocalTime: function(site_id, datetime, callback) {
@@ -1035,8 +1047,8 @@ var Recordings = {
             const regState = /state was (.*?) and/.exec(data);
             const regStateFromComment = /state was (.*?).","/.exec(data);
             comment += regState && regState[1] ? ` / ${regState[1]}` : regStateFromComment && regStateFromComment[1] ? ` / ${regStateFromComment[1]}` : '';
-            const regTemperature = /temperature was (.*?).","/.exec(data);
-            comment += regTemperature && regTemperature[1] ? ` / ${regTemperature[1]}` : '';
+            const regTemp = /temperature was (.*?)(C|F)/g.exec(data);
+            comment += regTemp ? ` / ${regTemp[1]}${regTemp[2]}` : '';
             return comment;
         } catch (e) {
             return null
@@ -1203,13 +1215,13 @@ var Recordings = {
                 );
                 constraints.push('pc.project_class_id IN (?)');
                 data.push(parameters.validations);
-
+                // Filter recordings by present/absent validations values from the Recording page.
                 if(parameters.presence){
                     if (parameters.presence === 'present') {
-                        constraints.push('CASE WHEN rv.present_review > 0 THEN 1 ELSE rv.present END');
+                        constraints.push('CASE WHEN rv.present_review > 0 OR rv.present_aed > 0 THEN 1 ELSE rv.present END');
                     }
                     else {
-                        constraints.push('CASE WHEN rv.present = 0 AND rv.present_review = 0 THEN 1 ELSE 0 END');
+                        constraints.push('CASE WHEN rv.present = 0 AND rv.present_review = 0 AND rv.present_aed = 0 THEN 1 ELSE 0 END');
                     }
                 }
                 constraints.push('rv.project_id = ?');
@@ -1500,12 +1512,12 @@ var Recordings = {
     },
 
     exportOccupancyModels: async function(projection, filters){
-        let query = `SELECT S.name as site, DATE_FORMAT(R.datetime, "%Y/%m/%d") as date, SUM(rv.present=1 || rv.present_review>0) as count
+        let query = `SELECT S.name as site, DATE_FORMAT(R.datetime, "%Y/%m/%d") as date, SUM(rv.present=1 OR rv.present_review>0 OR rv.present_aed>0) as count
             FROM recordings R
             JOIN sites S ON S.site_id = R.site_id
             LEFT JOIN project_imported_sites AS pis ON S.site_id = pis.site_id AND pis.project_id = ${filters.project_id}
             LEFT JOIN recording_validations AS rv ON R.recording_id = rv.recording_id
-            WHERE rv.species_id = ${projection.species} AND (S.project_id = ${filters.project_id} OR pis.project_id = ${filters.project_id}) AND (rv.present_review>0 || rv.present is not null)
+            WHERE rv.species_id = ${projection.species} AND (S.project_id = ${filters.project_id} OR pis.project_id = ${filters.project_id}) AND (rv.present_review>0 OR rv.present_aed>0 OR rv.present is not null)
             GROUP BY S.name, YEAR(R.datetime), MONTH(R.datetime), DAY(R.datetime) ORDER BY R.datetime ASC`;
         let queryResult = await dbpool.query({
             sql: query,
@@ -1567,7 +1579,7 @@ var Recordings = {
                                         cls.species,
                                         cls.project,
                                     ]);
-                                    summaryBuilders[c].addProjection(`(CASE WHEN ${clsid}.present_review > 0 THEN ${clsid}.present_review ELSE ${clsid}.present END)` + " AS " + dbpool.escapeId("val<" + cls.species_name + "/" + cls.songtype_name + ">"));
+                                    summaryBuilders[c].addProjection(`(CASE WHEN ${clsid}.present_review > 0 OR ${clsid}.present_aed > 0 THEN ${clsid}.present_review + ${clsid}.present_aed ELSE ${clsid}.present END)` + " AS " + dbpool.escapeId("val<" + cls.species_name + "/" + cls.songtype_name + ">"));
                                 })
                             }
                         }
@@ -1650,7 +1662,7 @@ var Recordings = {
                                         cls.species,
                                         cls.project,
                                     ]);
-                                    summaryBuilders[c].addProjection(`(CASE WHEN ${clsid}.present_review > 0 THEN ${clsid}.present_review ELSE ${clsid}.present END)` + " AS " + dbpool.escapeId("val<" + cls.species_name + "/" + cls.songtype_name + ">"));
+                                    summaryBuilders[c].addProjection(`(CASE WHEN ${clsid}.present_review > 0 OR ${clsid}.present_aed > 0 THEN ${clsid}.present_review + ${clsid}.present_aed ELSE ${clsid}.present END)` + " AS " + dbpool.escapeId("val<" + cls.species_name + "/" + cls.songtype_name + ">"));
                                 })
                             }
                         }
@@ -1755,11 +1767,11 @@ var Recordings = {
     },
 
     countProjectSpecies: function(filters) {
-        return dbpool.query(`SELECT COUNT(DISTINCT species_id) AS count FROM recording_validations WHERE project_id = ${dbpool.escape(filters.project_id)} AND (present = 1 OR present_review > 0)`);
+        return dbpool.query(`SELECT COUNT(DISTINCT species_id) AS count FROM recording_validations WHERE project_id = ${dbpool.escape(filters.project_id)} AND (present = 1 OR present_review > 0 OR present_aed > 0)`);
     },
 
     countAllSpecies: function() {
-        return dbpool.query('SELECT COUNT(DISTINCT species_id) AS count FROM recording_validations WHERE present = 1 OR present_review > 0');
+        return dbpool.query('SELECT COUNT(DISTINCT species_id) AS count FROM recording_validations WHERE present = 1 OR present_review > 0 OR present_aed > 0');
     },
 
     countAllRecordings: function() {
