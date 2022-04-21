@@ -20,7 +20,7 @@ var audiotools = {
      * @param {Function} callback function to call when the sox is done, its arguments are (code, stdout_output, stderr_output).
      */
     sox : function(args, options, callback){
-        debug('running sox with ', args);
+        console.log('running sox with ', args, options);
         if(options instanceof Function) { callback = options; }
         options = options || {};
 
@@ -41,9 +41,11 @@ var audiotools = {
         });
 
         cp.on('close', function(code){
-            debug('sox ended with code : ', code);
-            debug('stdout : \n  >> ', stdout.value.replace(/\n/g, '\n  >> '));
-            debug('stderr : \n  >> ', stderr.value.replace(/\n/g, '\n  >> '));
+            console.log('sox ended with code : ', code);
+            console.log('stdout ', stdout);
+            console.log('stderr ', stderr);
+            console.log('stdout : \n  >> ', stdout.value.replace(/\n/g, '\n  >> '));
+            console.log('stderr : \n  >> ', stderr.value.replace(/\n/g, '\n  >> '));
             callback(code, stdout.value, stderr.value);
         });
     },
