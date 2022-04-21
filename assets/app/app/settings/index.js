@@ -116,6 +116,7 @@ angular.module('a2.settings',[
 })
 .controller('SettingsUsersCtrl', function($scope, $http, Project, $modal, notify) {
     $scope.userToAdd = '';
+    $scope.curQuery = ''
 
     Project.getInfo(function(info) {
         $scope.project = info;
@@ -130,10 +131,12 @@ angular.module('a2.settings',[
     });
 
     $scope.findUser = function(query) {
-        return $http.get('/api/user/search/'+ query)
-            .then(function(response) {
-                return response.data;
-            });
+        $scope.curQuery = query
+        return $http.get('/api/user/search/'+ query).then(function(response) { return response.data; });
+    };
+
+    $scope.inviteUser = function(data) {
+        return $http.post('/api/user/invite', data).then(function(response) { return response.data; });
     };
 
     $scope.add = function() {
@@ -154,12 +157,34 @@ angular.module('a2.settings',[
                 notify.error(result.error);
             }
             else {
+                $scope.curQuery = ''
                 notify.log('User added to project');
             }
 
             Project.getUsers(function(err, users){
                 $scope.users = users;
             });
+        });
+    };
+
+    $scope.invite = function () {
+        $scope.showInvitationPopup($scope.curQuery)
+    }
+
+    $scope.showInvitationPopup = function (email) {
+        var modalInstance = $modal.open({
+            templateUrl: '/app/settings/invitation.html',
+            controller: 'UserInvitationCtrl as controller',
+            resolve: {
+                email: function() { return email },
+                inviteUser: function() { return $scope.inviteUser }
+            }
+        });
+        modalInstance.result.then(function (user) {
+            $scope.noResults = false
+            $scope.userToAdd = user
+            $scope.userToAdd.id = user.user_id
+            $scope.add()
         });
     };
 
@@ -233,4 +258,37 @@ angular.module('a2.settings',[
         });
     };
 })
-;
+.controller('UserInvitationCtrl', function($modalInstance, notify, email, inviteUser) {
+    Object.assign(this, {
+        initialize: function() {
+            this.isLoading = false;
+            this.data = {
+                email: email,
+                firstname: '',
+                lastname: ''
+            };
+        },
+        submit: function () {
+            try {
+                this.isLoading = true;
+                return inviteUser(this.data)
+                    .then(function(user) {
+                        $modalInstance.close(user);
+                    })
+                    .catch(notify.serverError)
+                    .finally(() => {
+                        this.isLoading = false
+                    });
+            } catch(error) {
+                console.error('UserInvitationCtrl.submit error: ', error);
+            }
+        },
+        cancel: function () {
+            $modalInstance.close(null);
+        },
+        isDataValid: function () {
+            return this.data.email.trim().length > 0 && this.data.firstname.trim().length > 0 && this.data.lastname.trim().length > 0;
+        }
+    });
+    this.initialize();
+})
