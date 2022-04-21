@@ -288,7 +288,6 @@ var receiveSiteLogUpload = function(req, res, next) {
     });
 
     req.busboy.on('file', function(fieldname, file, filename, encoding, mimetype) {
-        console.log("req.busboy.on('file', function(fieldname, file, filename, encoding, mimetype) {");
         if(upload_file){
             error = { error: "Only one log file at a time is allowed."};
             return res.status(400).json(error);
