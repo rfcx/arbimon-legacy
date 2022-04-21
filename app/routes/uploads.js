@@ -1,5 +1,5 @@
 var fs = require('fs');
-var debug = require('debug')('arbimon2:route:uploads');
+var console.log = require('console.log')('arbimon2:route:uploads');
 var express = require('express');
 var router = express.Router();
 var async = require('async');
@@ -34,7 +34,7 @@ var authorize = function(authtype){
                 return res.status(400).json({ error: "missing parameters" });
             }
 
-            debug('project_id: %s | site_id: %s |format: %s',
+            console.log('project_id: %s | site_id: %s |format: %s',
                 req.query.project,
                 req.query.site,
                 req.query.nameformat
@@ -126,7 +126,7 @@ var receiveUpload = function(req, res, next) {
     if(!req.busboy) return res.status(400).json({ error: "no data" });
 
     req.busboy.on('field', function(fieldname, val) {
-        debug('field %s = %s', fieldname, val);
+        console.log('field %s = %s', fieldname, val);
 
         if(fieldname === 'info') {
             try {
@@ -149,7 +149,7 @@ var receiveUpload = function(req, res, next) {
     });
 
     req.busboy.on('file', function(fieldname, file, filename, encoding, mimetype) {
-        debug('file fieldname: %s | filename: %s', fieldname, filename);
+        console.log('file fieldname: %s | filename: %s', fieldname, filename);
 
         // FFI -> filename format info
         try {
@@ -177,8 +177,8 @@ var receiveUpload = function(req, res, next) {
             return res.status(400).json({ error: "form data not complete"});
         }
 
-        debug('metadata: ', upload.metadata);
-        debug('filename: ', upload.name);
+        console.log('metadata: ', upload.metadata);
+        console.log('filename: ', upload.name);
 
         async.waterfall([
             function recNotExists(callback) {
@@ -203,7 +203,8 @@ var receiveUpload = function(req, res, next) {
                 audioTools.info(upload.path, function(code, info) {
                     if(code !== 0) {
                         deleteFile(upload.path);
-                        return res.status(500).json({ error: "error getting audio file info" });
+                        console.log('error getting audio file info', code, info)
+                        return res.status(500).json({ error: 'error getting audio file info'});
                     }
 
                     callback(null, info);
@@ -236,7 +237,7 @@ var receiveUpload = function(req, res, next) {
                             uploadPart.name = uploadPart.FFI.filename + uploadPart.FFI.filetype;
                             uploadPart.path = f;
 
-                            debug('upload', uploadPart);
+                            console.log('upload', uploadPart);
                             uploadQueue.enqueue(_.cloneDeep(uploadPart), function(err) {
                                 if(err) return nextUpload(err);
 
@@ -252,7 +253,7 @@ var receiveUpload = function(req, res, next) {
                     });
                 }
                 else {
-                    debug('upload', upload);
+                    console.log('upload', upload);
                     uploadQueue.enqueue(upload, function(err) {
                         if(err) return next(err);
 
@@ -276,7 +277,7 @@ var receiveSiteLogUpload = function(req, res, next) {
     if(!req.busboy) return res.status(400).json({ error: "no data" });
 
     req.busboy.on('field', function(fieldname, val) {
-        debug("req.busboy.on('field', function(fieldname, val) {");
+        console.log("req.busboy.on('field', function(fieldname, val) {");
         if(fieldname === 'info') {
             try {
                 params = JSON.parse(val);
@@ -288,7 +289,7 @@ var receiveSiteLogUpload = function(req, res, next) {
     });
 
     req.busboy.on('file', function(fieldname, file, filename, encoding, mimetype) {
-        debug("req.busboy.on('file', function(fieldname, file, filename, encoding, mimetype) {");
+        console.log("req.busboy.on('file', function(fieldname, file, filename, encoding, mimetype) {");
         if(upload_file){
             error = { error: "Only one log file at a time is allowed."};
             return res.status(400).json(error);
@@ -311,7 +312,7 @@ var receiveSiteLogUpload = function(req, res, next) {
         }
 
         if(error){
-            debug("upload error : ", error);
+            console.log("upload error : ", error);
             return res.status(400).json(error);
         }
 
