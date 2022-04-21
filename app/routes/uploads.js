@@ -1,5 +1,4 @@
 var fs = require('fs');
-var console.log = require('console.log')('arbimon2:route:uploads');
 var express = require('express');
 var router = express.Router();
 var async = require('async');
