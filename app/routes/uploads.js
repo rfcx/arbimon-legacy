@@ -276,7 +276,6 @@ var receiveSiteLogUpload = function(req, res, next) {
     if(!req.busboy) return res.status(400).json({ error: "no data" });
 
     req.busboy.on('field', function(fieldname, val) {
-        console.log("req.busboy.on('field', function(fieldname, val) {");
         if(fieldname === 'info') {
             try {
                 params = JSON.parse(val);
