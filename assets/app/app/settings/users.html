@@ -12,8 +12,12 @@
                         type="text"
                         placeholder="Search: username, email (only migrated user)"
                         ng-model="userToAdd"
+                        ng-model-options="{'debounce': 500}"
                         typeahead="user as (user.firstname + ' ' + user.lastname + ' ' + '(' + user.email + ')') for user in findUser($viewValue)"
-                        typeahead-editable="false">
+                        typeahead-loading="isSearchingUsers"
+                        typeahead-min-length="3"
+                        typeahead-editable="false"
+                        typeahead-no-results="noResults">
                     <span class="input-group-btn">
                         <button class="btn btn-default"
                             ng-click="add() | trackEvent:'Dashboard-users':'add user'"
@@ -22,6 +26,11 @@
                             <i class="fa fa-plus"></i>
                         </button>
                     </span>
+                    <loader style="position: absolute; top: 3px; right: 40px; z-index: 100;" ng-show="isSearchingUsers"></loader>
+                </div>
+                <div class="well well-sm" style="position: absolute; top: 100%; left: 15px; width: calc(100% - 30px); z-index: 100;" ng-show="noResults">
+                    <span style="display: inline-block; vertical-align: middle;">No users found</span>
+                    <button style="display: inline-block; vertical-align: middle; margin-left: 5px;" class="btn btn-primary btn-sm" ng-click="invite() | trackEvent:'Dashboard-users':'invite user'">Invite</button>
                 </div>
             </div>
         </div>
