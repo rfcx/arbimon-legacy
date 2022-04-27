@@ -1,7 +1,4 @@
 <div>
-    <div ng-if="loading">
-        Loading... <loader></loader>
-    </div>
     <div ng-if="job_details" class="panel-body a2-page-header clearfix">
         <div class="row row-flex flex-align-top">
             <div class="col-sm-6 flex-self-align-top pl-0">
@@ -51,6 +48,7 @@
     <div class="jumbotron seconds-div-center" ng-if="infopanedata">
         <h3>{{ infopanedata }}</h3>
     </div>
+    <div ng-if="loading" class="ml-2">Loading...<loader></loader></div>
     <div style="position: relative;" ng-class="{'navbar-menu-hide': !infopanedata.length, 'collapse-menu-hide': infopanedata.length}">
         <div id="plotly"></div>
         <div ng-if="toggleMenu" class="popup-chart panel panel-default">
