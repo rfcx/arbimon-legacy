@@ -134,15 +134,15 @@ angular.module('a2.analysis.clustering-jobs', [
     $scope.decrementClusters = function() {
         if ($scope.selectedCluster === 1) return
         $scope.selectedCluster -= 1;
-        $scope.selectClusters();
+        $scope.selectCluster();
     };
     $scope.incrementClusters = function() {
         if ($scope.selectedCluster === $scope.layout.shapes.length) return
         $scope.selectedCluster += 1;
-        $scope.selectClusters();
+        $scope.selectCluster();
     };
     // Select one cluster
-    $scope.selectClusters = function() {
+    $scope.selectCluster = function() {
         clearTimeout(timeout);
         timeout = setTimeout(() => {
             if ($scope.selectedCluster !== null) {
@@ -158,9 +158,10 @@ angular.module('a2.analysis.clustering-jobs', [
                     'selection.line.opacity': 1,
                     'selection.line.stroke-width': 4
                 });
-                $scope.points = {
-                    name: $scope.getShapePoints()
-                };
+                // Example: 3:[0, 1, 2, 3, 4] , where 3 - index of a cluster, array with the index of detections
+                $scope.points = []
+                $scope.points[$scope.selectedCluster - 1] = []
+                $scope.points[$scope.selectedCluster - 1] = $scope.getShapePoints();
                 $scope.toggleMenu = true;
                 $scope.$apply();
             }
@@ -168,13 +169,13 @@ angular.module('a2.analysis.clustering-jobs', [
     };
 
     $scope.getShapePoints = function() {
-        if ($scope.isFilteredClusters()) {
-            var clusters = $scope.sortFilteredData({min: $location.search().freqMin, max: $location.search().freqMax})
-            return Object.keys(clusters)[$scope.selectedCluster - 1]
+        var arr = []
+        var clusters = $scope.isFilteredClusters() ? $scope.sortFilteredData({min: $location.search().freqMin, max: $location.search().freqMax}) : $scope.clusters
+        var selectedAedList = Object.values(clusters)[$scope.selectedCluster - 1].aed
+        if (selectedAedList && selectedAedList.length) {
+          selectedAedList.forEach((item, ind) => { arr.push(ind) } )
         }
-        else {
-            return Object.keys($scope.clusters)[$scope.selectedCluster - 1]
-        }
+        return arr
     }
 
     var getClusteringDetails = function(type) {
@@ -268,10 +269,11 @@ angular.module('a2.analysis.clustering-jobs', [
             data.push({
                 x: clusters[c].x,
                 y: clusters[c].y,
-                type: 'scattergl',
+                type: 'scatter',
                 mode: 'markers',
                 hoverinfo: 'none',
-                name: c
+                name: c,
+                marker: { size: 6 }
             });
             // Collect data for shapes.
             shapes.push({
@@ -360,6 +362,7 @@ angular.module('a2.analysis.clustering-jobs', [
                 displaylogo: false,
                 hoverdistance: 5
             }
+            // To draw points
             Plotly.newPlot(el, data, $scope.layout, config);
             // Click on a point.
             el.on('plotly_click', function(data) {
@@ -398,6 +401,7 @@ angular.module('a2.analysis.clustering-jobs', [
                         if (!$scope.points[cluster]) {
                             $scope.points[cluster] = [];
                         };
+                        // Example: 3:[0, 1, 2, 3, 4] , where 3 - index of a cluster, array with the index of detections
                         $scope.points[cluster].push(point.pointNumber);
                     });
                     $scope.toggleMenu = true;
@@ -411,11 +415,11 @@ angular.module('a2.analysis.clustering-jobs', [
         $scope.toggleMenu = false;
         $scope.selectedCluster = null;
         $scope.showViewGridPage = true;
-        // View All Clusters
+        // View all clusters
         if (!$scope.points) {
           $scope.gridContext = $scope.originalData
         }
-        // Get points in different clusters.
+        // Get points in different clusters, when the user selects dots by lasso or with the cluster selector
         else if ($scope.points.length) {
             $scope.gridContext = {};
             $scope.points.forEach((row, i) => {
@@ -427,14 +431,8 @@ angular.module('a2.analysis.clustering-jobs', [
                 }
             })
         }
-        // Get an one filtered cluster by frequency filter.
-        else if (!$scope.points.x && $scope.points.name) {
-            $scope.gridContext = $scope.originalData.find(shape => {
-                return shape.cluster === $scope.points.name;
-            })
-        }
+        // Get selected cluster with all points in the shape
         else {
-            // Get selected cluster with all points in the shape.
             $scope.gridContext = $scope.originalData.find(shape => {
                 return shape.x.includes($scope.points.x) && shape.y.includes($scope.points.y);
             })
@@ -459,6 +457,7 @@ angular.module('a2.analysis.clustering-jobs', [
             }
         }
         else {
+            // User selects any point in one shape. It have to process all points in a shape
             $scope.selectedClusters = $scope.originalData.find(shape => {
                 return shape.x.includes($scope.points.x) && shape.y.includes($scope.points.y);
             });
