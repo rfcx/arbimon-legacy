@@ -210,12 +210,11 @@ var Recordings = {
     },
 
     findById: function(recId, callback) {
-        var q = "SELECT * \n"+
+        let sql = "SELECT * \n"+
                 "FROM recordings \n"+
                 "WHERE recording_id = ?";
 
-        q = dbpool.format(q, [recId]);
-        queryHandler(q, callback);
+        queryHandler({sql, typeCast: sqlutil.parseUtcDatetime}, [recId], callback);
     },
 
     findByIdAsync: function(recId) {

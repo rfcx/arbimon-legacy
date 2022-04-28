@@ -217,7 +217,7 @@ var sqlutil = {
     },
 
     parseUtcDatetime: function (field, next) {
-        if (field.type !== 'DATETIME' || field.name === 'datetime_utc') return next(); // 1 = true, 0 = false
+        if (field.type !== 'DATETIME') return next(); // 1 = true, 0 = false
         return new Date(field.string() + ' GMT');
     },
 };

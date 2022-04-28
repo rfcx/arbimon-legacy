@@ -302,7 +302,6 @@ angular.module('a2.analysis.random-forest-models.classification', [
     function ($scope, $modalInstance, a2Classi, a2Models, notify, a2UserPermit, ClassiInfo) {
         var loadClassifiedRec = function() {
             a2Classi.getResultDetails($scope.classiData.id, ($scope.currentPage*$scope.maxPerPage), $scope.maxPerPage, function(dataRec) {
-
                 a2Classi.getRecVector($scope.classiData.id, dataRec[0].recording_id).success(function(data) {
                     var maxVal = Math.max.apply(null, data.vector);
                     if(typeof $scope.th === 'number') {
