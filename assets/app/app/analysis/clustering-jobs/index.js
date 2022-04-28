@@ -134,15 +134,15 @@ angular.module('a2.analysis.clustering-jobs', [
     $scope.decrementClusters = function() {
         if ($scope.selectedCluster === 1) return
         $scope.selectedCluster -= 1;
-        $scope.selectClusters();
+        $scope.selectCluster();
     };
     $scope.incrementClusters = function() {
         if ($scope.selectedCluster === $scope.layout.shapes.length) return
         $scope.selectedCluster += 1;
-        $scope.selectClusters();
+        $scope.selectCluster();
     };
     // Select one cluster
-    $scope.selectClusters = function() {
+    $scope.selectCluster = function() {
         clearTimeout(timeout);
         timeout = setTimeout(() => {
             if ($scope.selectedCluster !== null) {
@@ -171,8 +171,10 @@ angular.module('a2.analysis.clustering-jobs', [
     $scope.getShapePoints = function() {
         var arr = []
         var clusters = $scope.isFilteredClusters() ? $scope.sortFilteredData({min: $location.search().freqMin, max: $location.search().freqMax}) : $scope.clusters
-        var cluster = Object.values(clusters)[$scope.selectedCluster - 1].aed
-        cluster.forEach((item, ind) => { arr.push(ind) } )
+        var selectedAedList = Object.values(clusters)[$scope.selectedCluster - 1].aed
+        if (selectedAedList && selectedAedList.length) {
+          selectedAedList.forEach((item, ind) => { arr.push(ind) } )
+        }
         return arr
     }
 
