@@ -8,14 +8,13 @@
                 height:layout.dhz2height(roi.y2, roi.y1) + 'px',
                 display: roi.display || ''
             }">
-            <button ng-if="!roi.aed_id" class="close" ng-click="layer.species_presence.togglePopup(roi)" style="position: absolute; right: -4px; top:-6px; font-size: 12px; opacity: 1;">
+            <button class="close" ng-click="layer.species_presence.togglePopup(roi)" style="position: absolute; right: -4px; top:-6px; font-size: 12px; opacity: 1;">
                 <img src="/images/ic-cross.svg"
                     onmouseover="this.src='/images/ic-cross-hover.svg'"
                     onmouseout="this.src='/images/ic-cross.svg'"
                 />
             </button>
-            <div class="popover top" style="display: block; transform: translate(-43%, -100%); min-width: 20em;" ng-if="roi.isPopupOpened">
-                <div class="arrow" style="bottom: -8%"></div>
+            <div class="popover" style="display: block; min-width: 30em; position: fixed; top: 45%; left: 50%;" ng-if="roi.isPopupOpened">
                 <h3 class="popover-title">
                     Remove validated species
                 </h3>

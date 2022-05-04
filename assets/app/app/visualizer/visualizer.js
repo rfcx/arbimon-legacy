@@ -409,7 +409,6 @@ angular.module('a2.visualizer', [
         if (!validations) return 0;
         var count = 0
         validations.forEach(function(validation) {
-          console.log(validation, validation.presentReview, validation.presentAed)
             if (validation.presentReview > 0 || validation.presentAed > 0 || validation.present == 1) {
                 count++;
             }
