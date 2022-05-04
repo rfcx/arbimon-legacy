@@ -126,7 +126,7 @@ var Templates = {
             "FROM " + tables.join("\n") + "\n" +
             "WHERE " + constraints.join("\nAND ") + "\n" +
             "ORDER BY date_created DESC" +
-            (options.limit ? ("\nLIMIT " + Number(options.limit) + " OFFSET " + Number(options.offset)) : "")
+            (options.limit ? ("\nLIMIT " + options.limit + " OFFSET " + options.offset) : "")
         );
     },
 
