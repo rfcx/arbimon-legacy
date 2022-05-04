@@ -22,7 +22,7 @@ angular.module('a2.directive.search-bar', [])
             $scope.findProject = function() {
                 var config = {
                     params: {
-                        allAccessibleProjects: true
+                        publicTemplates: true
                     }
                 };
                 if ($scope.q !== '') {

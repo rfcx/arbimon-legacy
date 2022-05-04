@@ -89,7 +89,7 @@ var Templates = {
             select.push('P.url as source_project_uri');
         }
 
-        if (options.showOwner || options.allAccessibleProjects) {
+        if (options.projectTemplates || options.publicTemplates) {
             select.push(
                 "IF (T.user_id IS NULL, CONCAT(CONCAT(UCASE(LEFT( U.`firstname` , 1)), SUBSTRING( U.`firstname` , 2)),' ',CONCAT(UCASE(LEFT( U.`lastname` , 1)), SUBSTRING( U.`lastname` , 2))), CONCAT(CONCAT(UCASE(LEFT( U3.`firstname` , 1)), SUBSTRING( U3.`firstname` , 2)),' ',CONCAT(UCASE(LEFT( U3.`lastname` , 1)), SUBSTRING( U3.`lastname` , 2)))) AS author",
                 "P.`name` as `project_name`, P.`url` as `project_url`",
@@ -102,16 +102,12 @@ var Templates = {
             tables.push('LEFT JOIN users U ON UPR.user_id = U.user_id AND T.user_id IS NULL');
         }
 
-        if (options.allAccessibleProjects) {
-            // find the first template by date created for all public projects grouped by name.
-            tables.push(
-                'INNER JOIN (SELECT name, MIN(date_created) as mindate FROM templates WHERE deleted=0 GROUP BY name) T3 ON T.name = T3.name AND T.date_created = T3.mindate'
-            );
-            constraints.push('P.is_private = 0');
+        if (options.publicTemplates) {
+            constraints.push('P.is_private = 0', 'T.source_project_id IS NULL');
         }
 
-        if (options.showOwner) {
-            // find the original template.
+        if (options.projectTemplates) {
+            // Find project templates plus copied tepmlates
             select.push(
                 "T.`source_project_id` as `source_project_id`, P2.`name` as `source_project_name`",
                 "IF (T.`source_project_id` IS NULL, P.`url`, P2.`url`) as `project_url`",
@@ -122,26 +118,34 @@ var Templates = {
             tables.push('LEFT JOIN users U2 ON UPR2.user_id = U2.user_id');
         }
 
-        if (options.firstByDateCreated) {
-            // find the first template by date created grouped by name and project.
-            tables.push(
-                'INNER JOIN (SELECT project_id, recording_id, name, MIN(date_created) as mindate FROM templates WHERE deleted=0 GROUP BY name, project_id) T2 ON T.project_id = T2.project_id AND T.recording_id = T2.recording_id AND T.name = T2.name AND T.date_created = T2.mindate'
-            );
-        }
-
         if (constraints.length === 0){
             return q.reject(new Error("Templates.find called with invalid query.")).nodeify(callback);
         }
         return dbpool.query(
-            "SELECT " + select.join(",\n") + "\n" +
-            "FROM " + tables.join("\n") + "\n" +
-            "WHERE " + constraints.join("\nAND ") + "\n" +
-            "ORDER BY date_created DESC"
+            `SELECT ${select.join(', ')}
+            FROM ${tables.join(' ')}
+            WHERE ${constraints.join(' AND ')}
+            ORDER BY date_created DESC
+            ${options.limit ? ('LIMIT ' + options.limit + ' OFFSET ' + options.offset) : ''}`
         );
     },
 
     findOne: function(query){
         return find(query).then(data => data[0]);
+    },
+
+    templatesCount: async function(project, publicTemplates) {
+        let q = `SELECT count(*) AS count FROM templates as T
+        JOIN projects P ON T.project_id = P.project_id`
+        // Find an original templates, not copied
+        const where = 'WHERE T.deleted=0';
+        if (publicTemplates) {
+            q += ` ${where} AND T.source_project_id IS NULL AND P.is_private=0`
+        }
+        else {
+            q += ` ${where} AND T.project_id=${project}`
+        }
+        return dbpool.query(q);
     },
 
     SCHEMA: joi.object().keys({

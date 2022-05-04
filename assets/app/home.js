@@ -101,7 +101,7 @@ angular.module('a2.home', [
         var config = {
             params: {
                 include_location: true,
-                allAccessibleProjects: true
+                publicTemplates: true
             }
         };
         if (isFeatured) {
