@@ -23,12 +23,12 @@ router.get('/', function(req, res, next) {
     if (req.query.offset) {
         params.offset = req.query.offset;
     }
-    if (req.query.showOwner === 'true') {
-        params.showOwner = req.query.showOwner;
+    if (req.query.projectTemplates === 'true') {
+        params.projectTemplates = req.query.projectTemplates;
         params.user_id = req.session.user.id;
     }
-    if (req.query.allAccessibleProjects === 'true') {
-        params.allAccessibleProjects = req.query.allAccessibleProjects;
+    if (req.query.publicTemplates === 'true') {
+        params.publicTemplates = req.query.publicTemplates;
         params.user_id = req.session.user.id;
     }
     else {
@@ -45,10 +45,10 @@ router.get('/count', function(req, res, next) {
 
     const project_id = req.project.project_id;
     const converter = new Converter(req.query, {});
-    converter.convert('allAccessibleProjects').optional().toBoolean();
+    converter.convert('publicTemplates').optional().toBoolean();
     return converter.validate()
         .then(async (params) => {
-            const result = await model.templates.templatesCount(project_id, params && params.allAccessibleProjects)
+            const result = await model.templates.templatesCount(project_id, params && params.publicTemplates)
             res.json({ count: result[0].count })
         })
         .catch(httpErrorHandler(req, res, 'Error getting templates count'))

@@ -3,13 +3,13 @@
     <div class="col-sm-12">
         <div class="row panel-body">
             <ul class="nav nav-tabs col-md-12">
-                <li class="nav-item" ng-class="{ active: controller.currentTab === 'showOwner' }">
+                <li class="nav-item" ng-class="{ active: controller.currentTab === 'projectTemplates' }">
                     <a class="nav-link" href=""
-                        ng-click="controller.toggleTab('showOwner')">Project Templates</a>
+                        ng-click="controller.toggleTab('projectTemplates')">Project Templates</a>
                 </li>
-                <li class="nav-item" ng-class="{ active: controller.currentTab === 'allAccessibleProjects' }">
+                <li class="nav-item" ng-class="{ active: controller.currentTab === 'publicTemplates' }">
                     <a class="nav-link" href=""
-                        ng-click="controller.toggleTab('allAccessibleProjects')">Public Templates</a>
+                        ng-click="controller.toggleTab('publicTemplates')">Public Templates</a>
                 </li>
               </ul>
         </div>
@@ -40,7 +40,7 @@
                         <div>
                             <p class="m-0 is-v-middle no-wrap hidelongtext" title="{{ row.name }}">{{ row.name }}</p>
                             <a class="is-v-middle"
-                                ng-if="controller.currentTab === 'showOwner' && row.project !== row.source_project_id && row.source_project_id !== null"
+                                ng-if="controller.currentTab === 'projectTemplates' && row.project !== row.source_project_id && row.source_project_id !== null"
                                 ng-click="controller.goToSourceProject(row.source_project_id)">
                                 <i aria-hidden="true" class="glyphicon glyphicon-link pl-2"></i>linked
                             </a>
@@ -52,35 +52,35 @@
                     <field title="Song type" key="songtype_name" tdclass="is-v-middle no-wrap hidelongtext">
                         {{ row.songtype_name }}
                     </field>
-                    <field title="Author" key="author" filter tdclass="is-v-middle no-wrap hidelongtext" show="controller.currentTab === 'allAccessibleProjects'">
+                    <field title="Author" key="author" filter tdclass="is-v-middle no-wrap hidelongtext" show="controller.currentTab === 'publicTemplates'">
                         <span title="{{ row.author }}">
                             {{ row.author }}
                         </span>
                     </field>
-                    <field title="Project" key="project_name" filter tdclass="is-v-middle no-wrap hidelongtext" show="controller.currentTab === 'allAccessibleProjects'">
+                    <field title="Project" key="project_name" filter tdclass="is-v-middle no-wrap hidelongtext" show="controller.currentTab === 'publicTemplates'">
                         {{ row.project_name }}
                     </field>
-                    <field title="Sampling" key="sampling_rate" tdclass="is-v-middle no-wrap" show="controller.currentTab === 'allAccessibleProjects'">
+                    <field title="Sampling" key="sampling_rate" tdclass="is-v-middle no-wrap" show="controller.currentTab === 'publicTemplates'">
                         {{ row.sample_rate }}
                     </field>
                     <field title="Date created" key="date_created" tdclass="is-v-middle no-wrap">
                         {{ row.date_created | moment: 'll' }}
                     </field>
-                    <field title="Source" key="source_project_name" filter tdclass="is-v-middle no-wrap hidelongtext" show="controller.currentTab === 'showOwner'" tdclass="source">
+                    <field title="Source" key="source_project_name" filter tdclass="is-v-middle no-wrap hidelongtext" show="controller.currentTab === 'projectTemplates'" tdclass="source">
                         <span title="{{ row.name }}">
                             {{ row.project !== row.source_project_id && row.source_project_id !== null ? row.author + ' / ' + row.source_project_name : '-' }}
                         </span>
                     </field>
                     <field tdclass="is-v-middle">
                         <button class="btn btn-default"
-                            ng-if="controller.currentTab === 'showOwner'"
+                            ng-if="controller.currentTab === 'projectTemplates'"
                             ng-click="controller.deleteTemplate(row.id) | trackEvent:'Audiodata-template':'del clicked'"
                             tooltip="Delete Template"
                             tooltip-trigger="mouseenter">
                             <i class="fa fa-trash"></i>
                         </button>
                         <button class="btn btn-default"
-                            ng-if="controller.currentTab === 'allAccessibleProjects'"
+                            ng-if="controller.currentTab === 'publicTemplates'"
                             ng-click="controller.addTemplate(row) | trackEvent:'Audiodata-template':'add clicked'"
                             tooltip="Add Template"
                             tooltip-trigger="mouseenter">

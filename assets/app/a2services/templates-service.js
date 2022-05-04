@@ -9,11 +9,11 @@ angular.module('a2.srv.templates', ['a2.srv.project'])
             if (opts && opts.showRecordingUri) {
                 config.params.showRecordingUri = opts.showRecordingUri;
             }
-            if (opts && opts.showOwner) {
-                config.params.showOwner = opts.showOwner;
+            if (opts && opts.projectTemplates) {
+                config.params.projectTemplates = opts.projectTemplates;
             }
-            if (opts && opts.allAccessibleProjects) {
-                config.params.allAccessibleProjects = opts.allAccessibleProjects;
+            if (opts && opts.publicTemplates) {
+                config.params.publicTemplates = opts.publicTemplates;
             }
             if (opts && opts.limit) {
                 config.params.limit = opts.limit;
@@ -30,8 +30,8 @@ angular.module('a2.srv.templates', ['a2.srv.project'])
             var config = {
                 params: {}
             };
-            if (opts && opts.allAccessibleProjects) {
-                config.params.allAccessibleProjects = opts.allAccessibleProjects;
+            if (opts && opts.publicTemplates) {
+                config.params.publicTemplates = opts.publicTemplates;
             }
             return $http.get('/api/project/' + Project.getUrl() + '/templates/count', config)
                 .then(function(response){

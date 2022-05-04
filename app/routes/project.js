@@ -38,7 +38,7 @@ router.get('/:projecturl?/', function(req, res, next) {
 
     if(project_id && !project_url){
         var project;
-        return model.projects.find({ id: project_id, allAccessibleProjects: true }).get(0).then(function(_project) {
+        return model.projects.find({ id: project_id, publicTemplates: true }).get(0).then(function(_project) {
             project = _project;
             if(project){
                 return model.users.getPermissions(req.session.user.id, project.project_id);
@@ -62,7 +62,7 @@ router.get('/:projecturl?/', function(req, res, next) {
         return;
     }
 
-    model.projects.find({ url: project_url, allAccessibleProjects: true}, function(err, rows) {
+    model.projects.find({ url: project_url, publicTemplates: true}, function(err, rows) {
             if(err) return next(err);
 
             if(!rows.length) return next(); // handled by 404

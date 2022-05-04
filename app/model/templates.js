@@ -89,7 +89,7 @@ var Templates = {
             select.push('P.url as source_project_uri');
         }
 
-        if (options.showOwner || options.allAccessibleProjects) {
+        if (options.projectTemplates || options.publicTemplates) {
             select.push(
                 "IF (T.user_id IS NULL, CONCAT(CONCAT(UCASE(LEFT( U.`firstname` , 1)), SUBSTRING( U.`firstname` , 2)),' ',CONCAT(UCASE(LEFT( U.`lastname` , 1)), SUBSTRING( U.`lastname` , 2))), CONCAT(CONCAT(UCASE(LEFT( U3.`firstname` , 1)), SUBSTRING( U3.`firstname` , 2)),' ',CONCAT(UCASE(LEFT( U3.`lastname` , 1)), SUBSTRING( U3.`lastname` , 2)))) AS author",
                 "P.`name` as `project_name`, P.`url` as `project_url`",
@@ -102,11 +102,11 @@ var Templates = {
             tables.push('LEFT JOIN users U ON UPR.user_id = U.user_id AND T.user_id IS NULL');
         }
 
-        if (options.allAccessibleProjects) {
+        if (options.publicTemplates) {
             constraints.push('P.is_private = 0', 'T.source_project_id IS NULL');
         }
 
-        if (options.showOwner) {
+        if (options.projectTemplates) {
             // Find project templates plus copied tepmlates
             select.push(
                 "T.`source_project_id` as `source_project_id`, P2.`name` as `source_project_name`",
@@ -134,12 +134,12 @@ var Templates = {
         return find(query).then(data => data[0]);
     },
 
-    templatesCount: async function(project, allAccessibleProjects) {
+    templatesCount: async function(project, publicTemplates) {
         let q = `SELECT count(*) AS count FROM templates as T
         JOIN projects P ON T.project_id = P.project_id`
         // Find an original templates, not copied
         const where = 'WHERE T.deleted=0';
-        if (allAccessibleProjects) {
+        if (publicTemplates) {
             q += ` ${where} AND T.source_project_id IS NULL AND P.is_private=0`
         }
         else {

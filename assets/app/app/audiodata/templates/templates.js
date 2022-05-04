@@ -20,7 +20,7 @@ angular.module('a2.audiodata.templates', [
         initialize: function(){
             this.loading = false;
             this.templates = [];
-            this.currentTab = 'showOwner';
+            this.currentTab = 'projectTemplates';
             this.paginationSettings = {
                 page: 1,
                 limit: 100,
@@ -41,7 +41,7 @@ angular.module('a2.audiodata.templates', [
             });
         },
         getTotalCount: function() {
-            return a2Templates.count({ allAccessibleProjects: this.currentTab === 'allAccessibleProjects' }).then((function(data){
+            return a2Templates.count({ publicTemplates: this.currentTab === 'publicTemplates' }).then((function(data){
                 this.paginationSettings.totalItems = data.count
                 this.paginationSettings.totalPages = Math.ceil(this.paginationSettings.totalItems / this.paginationSettings.limit);
             }.bind(this))).catch((function(err){
