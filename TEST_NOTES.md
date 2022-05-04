@@ -1,6 +1,12 @@
 # Arbimon Test Notes
 Test Notes are used to list what pages / components / features / user flows are affected by each update.
 
+## v3.0.50
+- #926 User is able to invite and assign a role a new user who have never been registered in the system
+  - Test that user can still add a role to existing user
+  - Test that user can invite completely new user
+    - This new user has access to a shared project
+
 ## v3.0.49
 
 - #917 Display validated species from the Grid View page on the Visualizer - Species Presence Validation

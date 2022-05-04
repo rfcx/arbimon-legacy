@@ -1,7 +1,4 @@
 <div>
-    <div ng-if="loading">
-        Loading... <loader></loader>
-    </div>
     <div ng-if="job_details" class="panel-body a2-page-header clearfix">
         <div class="row row-flex flex-align-top">
             <div class="col-sm-6 flex-self-align-top pl-0">
@@ -39,7 +36,7 @@
                         <i class="fa fa-minus"></i>
                     </button>
                     <div style="padding:0;">
-                        <input type="number" class="form-control hide-input-arrow" style="text-align:center; width: 80px" ng-change="selectClusters()" ng-model="selectedCluster" min="1" max="layout.shapes.length">
+                        <input type="number" class="form-control hide-input-arrow" style="text-align:center; width: 80px" ng-change="selectCluster()" ng-model="selectedCluster" min="1" max="layout.shapes.length">
                     </div>
                     <button class="btn btn-default btn-sm" style="border-top-left-radius: 0; border-bottom-left-radius: 0;" type="button" ng-click="incrementClusters()">
                         <i class="fa fa-plus"></i>
@@ -51,6 +48,7 @@
     <div class="jumbotron seconds-div-center" ng-if="infopanedata">
         <h3>{{ infopanedata }}</h3>
     </div>
+    <div ng-if="loading" class="ml-2">Loading...<loader></loader></div>
     <div style="position: relative;" ng-class="{'navbar-menu-hide': !infopanedata.length, 'collapse-menu-hide': infopanedata.length}">
         <div id="plotly"></div>
         <div ng-if="toggleMenu" class="popup-chart panel panel-default">

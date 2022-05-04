@@ -1,12 +1,22 @@
 # Arbimon Release Notes
 
-## v3.0.50 - April 12, 2022
+## v3.0.51 - May 06, 2022
 
 New features:
 
 - #920 The pagination is added to the Templates page
 
-## v3.0.49 - April 16, 2022
+Resolved issues:
+
+- #962 Fixed an issue with getting thumbnails images for RFM's recordings uploaded with Uploader App
+
+## v3.0.50 - April 29, 2022
+
+New features:
+
+- #926 User is able to invite and assign a role a new user who have never been registered in the system
+
+## v3.0.49 - April 12, 2022
 
 New features:
 

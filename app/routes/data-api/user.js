@@ -200,4 +200,12 @@ router.put('/address', function(req, res, next) {
     });
 });
 
+router.post('/invite', function(req, res, next){
+    model.users.inviteUser(req.body)
+        .then((user) => {
+            res.json(user);
+        })
+        .catch(next);
+});
+
 module.exports = router;

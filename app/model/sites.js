@@ -16,6 +16,7 @@ const moment = require('moment');
 let APIError = require('../utils/apierror');
 var site_log_processor = require('../utils/site_log_processor');
 const projects = require('./projects')
+const auth0Service = require('../model/auth0');
 
 var Sites = {
 

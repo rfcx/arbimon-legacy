@@ -258,7 +258,6 @@ var Classifications = {
         queryHandler(dbpool.format(q,[cid]), callback);
     },
 
-    // classificationDetailMore: function(project_url, cid, from, total, callback) {
     moreDetails: function(cid, from, total, callback) {
         var q = "SELECT cs.`json_stats`, \n"+
                 "       c.`species_id`, \n"+
@@ -302,6 +301,11 @@ var Classifications = {
                 callback(null, rows);
             }
         });
+    },
+
+    moreDetailsAsync: function(cid, from, total) {
+        let getDetails = util.promisify(this.moreDetails)
+        return getDetails(cid, from, total)
     },
 
     getRecVector: function(c12nId, recId, callback) {

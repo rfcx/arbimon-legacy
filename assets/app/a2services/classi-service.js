@@ -16,7 +16,7 @@ angular.module('a2.srv.classi', [
                 if(callback){
                     callback(response.data);
                 }
-                return response.data;                
+                return response.data;
             }).catch(notify.serverError);
         },
         getDetails: function(classificationId, callback) {
@@ -25,9 +25,13 @@ angular.module('a2.srv.classi', [
                 .error(notify.serverError);
         },
         getResultDetails: function(classificationId, first, limit, callback) {
-            $http.get('/api/project/'+ Project.getUrl() +'/classifications/'+classificationId+'/more/'+ first + '/' + limit)
-                .success(callback)
-                .error(notify.serverError);
+            return $http.get('/api/project/'+ Project.getUrl() +'/classifications/'+classificationId+'/more/'+ first + '/' + limit)
+                .then(function(response) {
+                    if (callback){
+                        callback(response.data);
+                    }
+                    return response.data;
+                }).catch(notify.serverError);
         },
         getRecVector: function(classificationId, recId) {
             return $http.get('/api/project/'+Project.getUrl()+'/classifications/'+classificationId+'/vector/'+recId);
