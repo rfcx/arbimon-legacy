@@ -47,15 +47,15 @@ router.get('/:classiId/more/:from/:total', function(req, res, next) {
             for (let classiInfo of rows) {
                 classiInfo.stats = JSON.parse(classiInfo.json_stats);
                 delete classiInfo.json_stats;
-                const recording = await model.recordings.findByIdAsync(classiInfo.recording_id)
-                const site = await model.sites.findByIdAsync(recording[0].site_id)
-                if (recording[0].uri.startsWith('project_')) {
+                const [recording] = await model.recordings.findByIdAsync(classiInfo.recording_id)
+                const site = await model.sites.findByIdAsync(recording.site_id)
+                if (recording.uri.startsWith('project_')) {
                     const thumbnail = classiInfo.uri.replace('.flac', '.thumbnail.png');
                     recording.thumbnail = 'https://' + config('aws').bucketName + '.s3.' + config('aws').region + '.amazonaws.com/' + thumbnail;
                 }
                 else {
-                    const momentStart = moment.utc(recording[0].datetime_utc ? recording[0].datetime_utc : recording[0].datetime)
-                    const momentEnd = momentStart.clone().add(recording[0].duration, 'seconds')
+                    const momentStart = moment.utc(recording.datetime_utc ? recording.datetime_utc : recording.datetime)
+                    const momentEnd = momentStart.clone().add(recording.duration, 'seconds')
                     const dateFormat = 'YYYYMMDDTHHmmssSSS'
                     const start = momentStart.format(dateFormat)
                     const end = momentEnd.format(dateFormat)
