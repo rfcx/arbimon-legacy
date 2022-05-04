@@ -13,7 +13,6 @@ router.get('/', function(req, res, next) {
     var params = {
         deleted: 0,
         showSpecies: true,
-        ...!!req.query.firstByDateCreated && { firstByDateCreated: req.query.firstByDateCreated }
     };
     if (req.query.showRecordingUri === 'true') {
         params.showRecordingUri = req.query.showRecordingUri;

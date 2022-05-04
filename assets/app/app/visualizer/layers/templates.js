@@ -33,7 +33,7 @@ angular.module('a2.visualizer.layers.templates', [
         self.project_classes = project_classes;
     });
 
-    var getTemplatesPromise = a2Templates.getList({firstByDateCreated: true}).then(function(templates){
+    var getTemplatesPromise = a2Templates.getList({showOwner: true}).then(function(templates){
         self.templates = templates;
         return templates;
     });

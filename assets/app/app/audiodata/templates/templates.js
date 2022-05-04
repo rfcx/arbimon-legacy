@@ -60,9 +60,6 @@ angular.module('a2.audiodata.templates', [
                 offset: this.paginationSettings.offset
             }
             opts[this.currentTab] = true
-            if (this.currentTab === 'allAccessibleProjects') {
-                opts.firstByDateCreated = true
-            }
             return a2Templates.getList(opts).then((function(data){
                 self.loading = false;
                 self.templates = data;

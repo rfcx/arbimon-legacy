@@ -103,15 +103,11 @@ var Templates = {
         }
 
         if (options.allAccessibleProjects) {
-            // find the first template by date created for all public projects grouped by name [Templates page]
-            tables.push(
-                'INNER JOIN (SELECT name, MIN(date_created) as mindate FROM templates WHERE deleted=0 GROUP BY name) T3 ON T.name = T3.name AND T.date_created = T3.mindate'
-            );
-            constraints.push('P.is_private = 0');
+            constraints.push('P.is_private = 0', 'T.source_project_id IS NULL');
         }
 
         if (options.showOwner) {
-            // find the original template.
+            // Find project templates plus copied tepmlates
             select.push(
                 "T.`source_project_id` as `source_project_id`, P2.`name` as `source_project_name`",
                 "IF (T.`source_project_id` IS NULL, P.`url`, P2.`url`) as `project_url`",
@@ -120,13 +116,6 @@ var Templates = {
             tables.push('LEFT JOIN projects P2 ON T.source_project_id = P2.project_id');
             tables.push('LEFT JOIN user_project_role UPR2 ON T.source_project_id = UPR2.project_id AND UPR2.role_id = 4');
             tables.push('LEFT JOIN users U2 ON UPR2.user_id = U2.user_id');
-        }
-
-        if (options.firstByDateCreated) {
-            // find the first template by date created grouped by name and project [Visualizer page]
-            tables.push(
-                'INNER JOIN (SELECT project_id, recording_id, name, MIN(date_created) as mindate FROM templates WHERE deleted=0 GROUP BY name, project_id) T2 ON T.project_id = T2.project_id AND T.recording_id = T2.recording_id AND T.name = T2.name AND T.date_created = T2.mindate'
-            );
         }
 
         if (constraints.length === 0){
@@ -148,11 +137,10 @@ var Templates = {
     templatesCount: async function(project, allAccessibleProjects) {
         let q = `SELECT count(*) AS count FROM templates as T
         JOIN projects P ON T.project_id = P.project_id`
-        // find the first template by date created grouped by name
-        const innerJoin = 'INNER JOIN (SELECT name, MIN(date_created) as mindate FROM templates WHERE deleted=0 GROUP BY name) T3 ON T.name = T3.name AND T.date_created = T3.mindate'
-        const where = 'WHERE T.deleted=0';
+        // Find an original templates, not copied
+        const where = 'WHERE T.deleted=0 AND T.source_project_id IS NULL';
         if (allAccessibleProjects) {
-            q += ` ${innerJoin} ${where} AND P.is_private=0`
+            q += ` ${where} AND P.is_private=0`
         }
         else {
             q += ` ${where} AND T.project_id=${project}`
