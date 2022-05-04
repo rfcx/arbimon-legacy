@@ -138,9 +138,9 @@ var Templates = {
         let q = `SELECT count(*) AS count FROM templates as T
         JOIN projects P ON T.project_id = P.project_id`
         // Find an original templates, not copied
-        const where = 'WHERE T.deleted=0 AND T.source_project_id IS NULL';
+        const where = 'WHERE T.deleted=0';
         if (allAccessibleProjects) {
-            q += ` ${where} AND P.is_private=0`
+            q += ` ${where} AND T.source_project_id IS NULL AND P.is_private=0`
         }
         else {
             q += ` ${where} AND T.project_id=${project}`
