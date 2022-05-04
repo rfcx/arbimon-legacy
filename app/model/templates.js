@@ -122,11 +122,11 @@ var Templates = {
             return q.reject(new Error("Templates.find called with invalid query.")).nodeify(callback);
         }
         return dbpool.query(
-            "SELECT " + select.join(",\n") + "\n" +
-            "FROM " + tables.join("\n") + "\n" +
-            "WHERE " + constraints.join("\nAND ") + "\n" +
-            "ORDER BY date_created DESC" +
-            (options.limit ? ("\nLIMIT " + options.limit + " OFFSET " + options.offset) : "")
+            `SELECT ${select.join(",\n")}
+            FROM ${tables.join("\n")}
+            WHERE ${constraints.join("\nAND ")}
+            ORDER BY date_created DESC
+            ${options.limit ? ('LIMIT ' + options.limit + ' OFFSET ' + options.offset) : ''}`
         );
     },
 
