@@ -1,18 +1,16 @@
 /* jshint node:true */
 "use strict";
 
-var debug = require('debug')('arbimon2:route:project:classifications');
-var express = require('express');
-var async = require('async');
-var AWS = require('aws-sdk');
-
-var config = require('../../../config');
-var model = require('../../../model');
-var pokeDaMonkey = require('../../../utils/monkey');
-
-var router = express.Router();
-var s3 = new AWS.S3();
-
+const express = require('express');
+const async = require('async');
+const AWS = require('aws-sdk');
+const config = require('../../../config');
+const model = require('../../../model');
+const pokeDaMonkey = require('../../../utils/monkey');
+const router = express.Router();
+const s3 = new AWS.S3();
+const moment = require('moment');
+const { httpErrorHandler } = require('@rfcx/http-utils');
 
 router.get('/', function(req, res, next) {
     res.type('json');
@@ -44,22 +42,29 @@ router.get('/:classiId', function(req, res, next) {
 
 router.get('/:classiId/more/:from/:total', function(req, res, next) {
     res.type('json');
-    model.classifications.moreDetails(req.params.classiId, req.params.from, req.params.total, function(err, rows) {
-        if(err) return next(err);
-
-        rows.forEach(function(classiInfo) {
-            console.log(classiInfo);
-            classiInfo.stats = JSON.parse(classiInfo.json_stats);
-            delete classiInfo.json_stats;
-
-            var thumbnail = classiInfo.uri.replace('.flac', '.thumbnail.png');
-            
-            classiInfo.rec_image_url = 'https://' + config('aws').bucketName + '.s3.' + config('aws').region + '.amazonaws.com/' + thumbnail;
-            delete classiInfo.uri;
-        });
-
-        res.json(rows);
-    });
+    model.classifications.moreDetailsAsync(req.params.classiId, req.params.from, req.params.total)
+        .then(async function(rows) {
+            for (let classiInfo of rows) {
+                classiInfo.stats = JSON.parse(classiInfo.json_stats);
+                delete classiInfo.json_stats;
+                const [recording] = await model.recordings.findByIdAsync(classiInfo.recording_id)
+                const site = await model.sites.findByIdAsync(recording.site_id)
+                if (recording.uri.startsWith('project_')) {
+                    const thumbnail = classiInfo.uri.replace('.flac', '.thumbnail.png');
+                    classiInfo.rec_image_url = 'https://' + config('aws').bucketName + '.s3.' + config('aws').region + '.amazonaws.com/' + thumbnail;
+                }
+                else {
+                    const momentStart = moment.utc(recording.datetime_utc ? recording.datetime_utc : recording.datetime)
+                    const momentEnd = momentStart.clone().add(recording.duration, 'seconds')
+                    const dateFormat = 'YYYYMMDDTHHmmssSSS'
+                    const start = momentStart.format(dateFormat)
+                    const end = momentEnd.format(dateFormat)
+                    classiInfo.rec_image_url = `/api/ingest/recordings/${site[0].external_id}_t${start}Z.${end}Z_rfull_g1_fspec_d600.512_wdolph_z120.png`
+                }
+                delete classiInfo.uri;
+            }
+            res.json(rows);
+        }).catch(httpErrorHandler(req, res, 'Failed getting details per recording'))
 });
 
 router.get('/:classiId/delete', function(req, res) {

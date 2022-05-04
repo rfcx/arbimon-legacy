@@ -18,6 +18,7 @@ var dbpool = require('../utils/dbpool');
 var queryHandler = dbpool.queryHandler;
 var sha256 = require('../utils/sha256');
 var generator = require('../utils/generator');
+const auth0Service = require('./auth0');
 
 var models = require('./index');
 
@@ -377,7 +378,7 @@ var Users = {
 
         queryHandler(q, callback);
     },
-    
+
     listUser: function(callback) {
         var q = 'SELECT user_id AS id, \n' +
                 'firstname, \n' +
@@ -617,8 +618,21 @@ var Users = {
         return this.findById(insertData.insertId).get(0)
     },
 
+
     getEmailFromAuth0Profile: function (profile) {
         return profile.email || `${profile.guid}@rfcx.org`;
+    },
+
+    createByInvitation: async function (data) {
+        const attrs = {
+            ...data,
+            login: `invited|${generator.generate(20)}`,
+            password: generator.generate(20),
+            created_on: new Date(),
+            rfcx_id: data.email,
+        }
+        const insertData = await this.insertAsync(attrs)
+        return this.findById(insertData.insertId).get(0)
     },
 
     makeUserObject: function(user, profile, options){
@@ -793,9 +807,31 @@ var Users = {
         ).then(function(permissions){
             return permissions.length > 0;
         });
+    },
+
+    createInCoreAPI: function(body) {
+        return auth0Service.getToken()
+            .then((token) => {
+                const options = {
+                    method: 'POST',
+                    url: `${rfcxConfig.apiBaseUrl}/users`,
+                    headers: {
+                        'content-type': 'application/json',
+                        Authorization: `Bearer ${token}`
+                    },
+                    body,
+                    json: true
+                }
+                return rp(options)
+            })
+    },
+
+    inviteUser: function (user) {
+        return Users.createInCoreAPI(user)
+            .then(() => {
+                return Users.createByInvitation(user)
+            })
     }
-
-
 };
 
 module.exports = Users;
