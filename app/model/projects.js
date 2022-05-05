@@ -101,7 +101,7 @@ var Projects = {
             return q.reject(new Error('no query params'));
         }
 
-        if (query.hasOwnProperty('allAccessibleProjects')) {
+        if (query.hasOwnProperty('publicTemplates')) {
             whereExp.push('p.deleted_at IS NULL');
         }
 

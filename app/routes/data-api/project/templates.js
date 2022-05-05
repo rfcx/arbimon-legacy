@@ -1,11 +1,10 @@
 /* jshint node:true */
 "use strict";
 
-var express = require('express');
-var router = express.Router();
-var model = require('../../../model');
-const { options } = require('joi');
-
+const express = require('express');
+const router = express.Router();
+const model = require('../../../model');
+const { httpErrorHandler, Converter } = require('@rfcx/http-utils');
 
 /** Return a list of all the templates in a project.
  */
@@ -14,17 +13,22 @@ router.get('/', function(req, res, next) {
     var params = {
         deleted: 0,
         showSpecies: true,
-        ...!!req.query.firstByDateCreated && { firstByDateCreated: req.query.firstByDateCreated }
     };
     if (req.query.showRecordingUri === 'true') {
         params.showRecordingUri = req.query.showRecordingUri;
     }
-    if (req.query.showOwner === 'true') {
-        params.showOwner = req.query.showOwner;
+    if (req.query.limit !== undefined) {
+        params.limit = req.query.limit;
+    }
+    if (req.query.offset) {
+        params.offset = req.query.offset;
+    }
+    if (req.query.projectTemplates === 'true') {
+        params.projectTemplates = req.query.projectTemplates;
         params.user_id = req.session.user.id;
     }
-    if (req.query.allAccessibleProjects === 'true') {
-        params.allAccessibleProjects = req.query.allAccessibleProjects;
+    if (req.query.publicTemplates === 'true') {
+        params.publicTemplates = req.query.publicTemplates;
         params.user_id = req.session.user.id;
     }
     else {
@@ -34,6 +38,20 @@ router.get('/', function(req, res, next) {
         res.json(count);
         return null;
     }).catch(next);
+});
+
+router.get('/count', function(req, res, next) {
+    res.type('json');
+
+    const project_id = req.project.project_id;
+    const converter = new Converter(req.query, {});
+    converter.convert('publicTemplates').optional().toBoolean();
+    return converter.validate()
+        .then(async (params) => {
+            const result = await model.templates.templatesCount(project_id, params && params.publicTemplates)
+            res.json({ count: result[0].count })
+        })
+        .catch(httpErrorHandler(req, res, 'Error getting templates count'))
 });
 
 router.get('/:template/image', function(req, res, next) {
@@ -94,44 +112,5 @@ router.post('/:template/remove', function(req, res, next) {
         res.json({ok: true});
     }).catch(next);
 });
-
-
-// /** Edit a template.
-// */
-// router.post('/edit/:template', function(req, res, next) {
-//     res.contentType('application/json');
-//     model.templates.edit(req.template, {
-//         name    : req.body.name,
-//         extras  : req.body
-//     }).then(function(edited_tset) {
-//         model.projects.insertNews({
-//             news_type_id: 12, // template created
-//             user_id: req.session.user.id,
-//             project_id: req.project.project_id,
-//             data: JSON.stringify({ training_set: req.template.name })
-//         });
-//
-//         res.json(edited_tset && edited_tset[0]);
-//         return null;
-//     }, next);
-// });
-//
-// /** Remove a template.
-// */
-// router.post('/remove/:template', function(req, res, next) {
-//     res.type('json');
-//     model.templates.remove(req.template).then(function() {
-//         model.projects.insertNews({
-//             news_type_id: 13, // template created
-//             user_id: req.session.user.id,
-//             project_id: req.project.project_id,
-//             data: JSON.stringify({ training_set: req.template.name })
-//         });
-//
-//         res.json(req.template);
-//         return null;
-//     }, next);
-// });
-
 
 module.exports = router;

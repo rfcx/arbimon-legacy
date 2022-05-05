@@ -204,7 +204,7 @@ var Users = {
             selectExtra += ', featured, image'
             whereExp.push("p.featured = 1 OR p.featured = 2");
         }
-        if (query.hasOwnProperty('allAccessibleProjects')) {
+        if (query.hasOwnProperty('publicTemplates')) {
             whereExp.push('p.deleted_at IS NULL');
         }
 

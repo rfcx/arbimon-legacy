@@ -20,9 +20,17 @@ angular.module('a2.audiodata.templates', [
         initialize: function(){
             this.loading = false;
             this.templates = [];
+            this.currentTab = 'projectTemplates';
+            this.paginationSettings = {
+                page: 1,
+                limit: 100,
+                offset: 0,
+                totalItems: 0,
+                totalPages: 0
+            }
+            this.getTotalCount();
             this.getList();
             this.projecturl = Project.getUrl();
-            this.currentTab = 'showOwner';
         },
         goToSourceProject: function(projectId) {
             if (!projectId) return;
@@ -32,13 +40,32 @@ angular.module('a2.audiodata.templates', [
                 }
             });
         },
+        getTotalCount: function() {
+            return a2Templates.count({ publicTemplates: this.currentTab === 'publicTemplates' }).then((function(data){
+                this.paginationSettings.totalItems = data.count
+                this.paginationSettings.totalPages = Math.ceil(this.paginationSettings.totalItems / this.paginationSettings.limit);
+            }.bind(this))).catch((function(err){
+                notify.serverError(err);
+            }).bind(this));
+        },
+        setCurrentPage: function() {
+            this.paginationSettings.offset = (this.paginationSettings.page - 1) * this.paginationSettings.limit;
+            this.getList();
+        },
         getList: function() {
             self.loading = true;
-            return a2Templates.getList({ showOwner: true, showRecordingUri: true, firstByDateCreated: true }).then((function(data){
+            var opts = { 
+                showRecordingUri: true,
+                limit: this.paginationSettings.limit,
+                offset: this.paginationSettings.offset
+            }
+            opts[this.currentTab] = true
+            return a2Templates.getList(opts).then((function(data){
                 self.loading = false;
                 self.templates = data;
             }.bind(this))).catch((function(err){
                 self.loading = false;
+                self.templates = [];
                 notify.serverError(err);
             }).bind(this));
         },
@@ -73,21 +100,20 @@ angular.module('a2.audiodata.templates', [
             });
 
         },
-        importTemplates: function(access) {
+        toggleTab: function(access) {
             self.currentTab = access;
-            var opts = {
-                showRecordingUri: true,
+            this.resetPagination();
+            this.getTotalCount();
+            this.getList();
+        },
+        resetPagination: function() {
+            this.paginationSettings = {
+                page: 1,
+                limit: 100,
+                offset: 0,
+                totalItems: 0,
+                totalPages: 0
             }
-            opts[access] = true;
-            self.loading = true;
-            a2Templates.getList(opts).then(function(data){
-                self.loading = false;
-                self.templates = data;
-            }).catch((function(err){
-                self.loading = false;
-                self.templates = [];
-                notify.serverError(err);
-            }));
         },
         addTemplate: function(template) {
             a2Templates.add({

@@ -157,7 +157,6 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags'])
                     return;
                 }
                 else {
-                    console.log($scope.validations, val)
                     if (val[0] == 1 || val[1] > 0 || val[2] > 0) {
                         val_options[1].showDropdown = (val[1] > 0 || val[2] > 0)
                         return val_options[1];
