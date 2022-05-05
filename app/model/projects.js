@@ -217,12 +217,12 @@ var Projects = {
     },
 
     exportProjectSites(project_id){
-        const sql = `SELECT s.site_id, s.name, s.lat, s.lon, s.alt, s.timezone, COUNT(recording_id) as rec_count
+        const sql = `SELECT s.site_id as Id, s.name as Name, s.lat as Latitude, s.lon as Longitude, s.alt as Altitude, s.timezone as Timezone, COUNT(recording_id) as Recordings_Count
             FROM sites AS s
             LEFT JOIN project_imported_sites as pis ON s.site_id = pis.site_id AND pis.project_id=${project_id}
             LEFT JOIN recordings as r ON s.site_id = r.site_id
             WHERE (s.project_id=${project_id} OR pis.project_id=${project_id})
-            GROUP BY s.site_id`;
+            GROUP BY s.site_id ORDER by s.name;`;
         return dbpool.streamQuery({ sql })
     },
 
