@@ -15,7 +15,8 @@ var dbpool = {
                 port : config('db').port || 3306,
                 user : config('db').user,
                 password : config('db').password,
-                database : config('db').database
+                database : config('db').database,
+                timezone: config('db').timezone
             });
         }
         return pool;
