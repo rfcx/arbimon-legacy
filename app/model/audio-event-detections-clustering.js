@@ -49,8 +49,8 @@ let AudioEventDetectionsClustering = {
                 'Sp.scientific_name as species_name', 'St.songtype as songtype_name'
             );
             tables.push("JOIN audio_event_detections_clustering A ON JP.job_id = A.job_id");
-            tables.push('JOIN species Sp ON A.species_id = Sp.species_id');
-            tables.push('JOIN songtypes St ON A.songtype_id = St.songtype_id');
+            tables.push('LEFT JOIN species Sp ON A.species_id = Sp.species_id');
+            tables.push('LEFT JOIN songtypes St ON A.songtype_id = St.songtype_id');
         }
 
         if (options.rec_id) {
