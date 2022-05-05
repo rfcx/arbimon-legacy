@@ -12,6 +12,7 @@ var paypal = require('paypal-rest-sdk');
 var uuid = require('node-uuid');
 var config = require('../../../config');
 const rfcxConfig = config('rfcx');
+const csv_stringify = require('csv-stringify');
 const dayInMs = 24 * 60 * 60 * 1000;
 
 let summaryData = {
@@ -360,6 +361,18 @@ router.get('/:projectUrl/users', function(req, res, next) {
 
         res.json(users);
     });
+});
+
+router.get('/:projectUrl/sites-export.csv', function(req, res, next) {
+    res.type('text/csv');
+    const project = req.project.project_id;
+    model.projects.exportProjectSites(project).then(function(results) {
+        const datastream = results[0];
+        const fields = results[1].map(f => { return f.name });
+        datastream
+            .pipe(csv_stringify({ header: true, columns:fields }))
+            .pipe(res);
+    }).catch(next);
 });
 
 router.post('/:projectUrl/user/add', async function(req, res, next) {

@@ -4,6 +4,12 @@
 
 New features:
 
+- #928 An ability to export sites data is added
+
+## v3.0.51 - May 06, 2022
+
+New features:
+
 - #920 The pagination is added to the Templates page
 
 Resolved issues:
