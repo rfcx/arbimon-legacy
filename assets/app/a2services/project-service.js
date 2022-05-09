@@ -114,6 +114,9 @@ angular.module('a2.srv.project', [
                     (projection && projection.grouped ? 'grouped-detections-export.csv' : 'recordings-export.csv'))
                     + (serializedParams.length ? '?'+serializedParams : '');
             },
+            getSitesExportUrl: function() {
+                return '/api/project/' + url + '/sites-export.csv';
+            },
             getRecTotalQty: function(callback) {
                 return a2APIService.get('/recordings/count').then(function(data) {
                     if(callback){

@@ -216,6 +216,16 @@ var Projects = {
         });
     },
 
+    exportProjectSites(project_id){
+        const sql = `SELECT s.site_id as Id, s.name as Name, s.lat as Latitude, s.lon as Longitude, s.alt as Altitude, s.timezone as Timezone, COUNT(recording_id) as Recordings_Count
+            FROM sites AS s
+            LEFT JOIN project_imported_sites as pis ON s.site_id = pis.site_id AND pis.project_id=${project_id}
+            LEFT JOIN recordings as r ON s.site_id = r.site_id
+            WHERE (s.project_id=${project_id} OR pis.project_id=${project_id})
+            GROUP BY s.site_id ORDER by s.name;`;
+        return dbpool.streamQuery({ sql })
+    },
+
     getProjectDates: function(project_id, format){
         return dbpool.query({ sql:
             `SELECT COALESCE(DATE_FORMAT(r.datetime, "${format}")) as date
