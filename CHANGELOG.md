@@ -1,5 +1,11 @@
 # Arbimon Release Notes
 
+## v3.0.52 - May XX, 2022
+
+New features:
+
+- #923 User has an ability to unvalidate audio event detections boxes on the Visualizer Page
+
 ## v3.0.51 - May 06, 2022
 
 New features:

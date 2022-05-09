@@ -36,6 +36,12 @@ angular.module('a2.srv.audio-event-detections-clustering', [
                     return response.data;
                 });
         },
+        unvalidate: function(opts) {
+          return $http.post('/api/project/' + Project.getUrl() + '/audio-event-detections-clustering/unvalidate', opts)
+              .then(function(response){
+                  return response.data;
+              });
+      },
     };
 })
 ;

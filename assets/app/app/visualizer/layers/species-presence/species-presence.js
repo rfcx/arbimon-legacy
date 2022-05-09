@@ -22,23 +22,32 @@ angular.module('a2.visualizer.layers.species-presence', [
         visible: true
     });
 })
-.controller('a2VisualizerSpeciesPresenceController', function($scope, a2PatternMatching, Project){
+.controller('a2VisualizerSpeciesPresenceController', function($scope, a2PatternMatching, a2AudioEventDetectionsClustering) {
     var self = this;
     self.speciesPresence = null;
     self.isRemoving = false;
     self.checkSpectroWidth = function(leftBox, widthBox, widthSpectro) {
-        return leftBox + widthBox + 50 < widthSpectro;
+        return leftBox + widthBox + 200 < widthSpectro;
     };
     self.togglePopup = function(roi) {
         roi.isPopupOpened = !roi.isPopupOpened;
     };
     self.confirmPopup = function(roi) {
         self.isRemoving = true;
-        return a2PatternMatching.validateRois(roi.pattern_matching_id, roi.pattern_matching_roi_id, null).then(function(){
-            self.isRemoving = false;
-            self.isPopupOpened = false;
+        if (roi.aed_id) {
+            return a2AudioEventDetectionsClustering.unvalidate({ aed: [roi.aed_id] }).then(function(){
+                self.closePopup(roi)
+                roi.name = ''
+            })
+        }
+        else return a2PatternMatching.validateRois(roi.pattern_matching_id, roi.pattern_matching_roi_id, null).then(function(){
+            self.closePopup(roi)
             roi.display = "none"
         })
+    };
+    self.closePopup = function(roi) {
+        self.isRemoving = false;
+        roi.isPopupOpened = false;
     };
     self.fetchSpeciesPresence = function() {
         var rec = $scope.visobject && ($scope.visobject_type == 'recording') && $scope.visobject.id;

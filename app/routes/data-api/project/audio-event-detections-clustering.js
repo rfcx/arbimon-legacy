@@ -70,7 +70,7 @@ router.post('/validate', function(req, res, next) {
                         }
                         let oldValidation = await model.recordings.getRecordingValidation(params);
                         if (oldValidation[0].present_aed > 1) {
-                            await model.AudioEventDetectionsClustering.updatePresentAedCount(params)
+                            await model.AudioEventDetectionsClustering.updatePresentAedCount({ ...params, validate: false })
                         }
                         if (oldValidation[0].present_aed === 1 && oldValidation[0].present_review === 0 && oldValidation[0].present === null) {
                             await model.AudioEventDetectionsClustering.deletePresentAedCount(params)
@@ -114,6 +114,38 @@ router.post('/validate', function(req, res, next) {
             res.sendStatus(200)
         })
         .catch(httpErrorHandler(req, res, 'Failed audio event detections validation'))
+});
+
+router.post('/unvalidate', function(req, res, next) {
+    res.type('json');
+    const converter = new Converter(req.body, {});
+    converter.convert('aed').toArray();
+    return converter.validate()
+        .then(async (params) => {
+            for (let d of params.aed) {
+                // Get existing aed row
+                const [aedRow] = await model.AudioEventDetectionsClustering.getDetectionsById([d]);
+                // If aed box is validated decrease or remove the old present_aed count from the recording_validations first
+                if (aedRow.species_id && aedRow.songtype_id) {
+                    const params = {
+                        projectId: req.project.project_id,
+                        speciesId: aedRow.species_id,
+                        songtypeId: aedRow.songtype_id,
+                        recordingId: aedRow.recording_id
+                    }
+                    let [oldValidation] = await model.recordings.getRecordingValidation(params);
+                    if (oldValidation.present_aed > 1) {
+                        await model.AudioEventDetectionsClustering.updatePresentAedCount({ ...params, validate: false })
+                    }
+                    if (oldValidation.present_aed === 1 && oldValidation.present_review === 0 && oldValidation.present === null) {
+                        await model.AudioEventDetectionsClustering.deletePresentAedCount(params)
+                    }
+                    await model.AudioEventDetectionsClustering.validateDetections([d], null, null);
+                }
+            }
+            res.sendStatus(200)
+        })
+        .catch(httpErrorHandler(req, res, 'Error while removing audio event detections validation'))
 });
 
 module.exports = router;

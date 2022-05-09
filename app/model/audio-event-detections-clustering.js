@@ -12,7 +12,6 @@ let AudioEventDetectionsClustering = {
     find: function (options) {
         let constraints=['1=1'];
         let postprocess=[];
-        let data=[];
         let select = [];
         let tables = ['job_params_audio_event_detection_clustering JP'];
 
@@ -45,9 +44,13 @@ let AudioEventDetectionsClustering = {
                 "A.`time_min` as `time_min`",
                 "A.`time_max` as `time_max`",
                 "A.`frequency_min` as `freq_min`",
-                "A.`frequency_max` as `freq_max`"
+                "A.`frequency_max` as `freq_max`",
+                'A.aed_id', 'A.species_id', 'A.songtype_id',
+                'Sp.scientific_name as species_name', 'St.songtype as songtype_name'
             );
             tables.push("JOIN audio_event_detections_clustering A ON JP.job_id = A.job_id");
+            tables.push('LEFT JOIN species Sp ON A.species_id = Sp.species_id');
+            tables.push('LEFT JOIN songtypes St ON A.songtype_id = St.songtype_id');
         }
 
         if (options.rec_id) {
