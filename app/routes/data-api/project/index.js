@@ -368,7 +368,7 @@ router.get('/:projectUrl/sites-export.csv', function(req, res, next) {
     const project = req.project.project_id;
     model.projects.exportProjectSites(project).then((results) => {
         const datastream = results[0];
-        const fields = results[1].map(f => { return f.name });
+        const fields = results[1].map(f => f.name);
         datastream
             .pipe(csv_stringify({ header: true, columns:fields }))
             .pipe(res);
