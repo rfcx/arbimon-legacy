@@ -333,7 +333,11 @@ processFiltersData = async function(req, res, next) {
 }
 
 router.get('/download/:recordingId', function(req, res, next) {
-    downloadRecordingById(req, res, next);
+    downloadRecordingById(req, res, false, next);
+});
+
+router.get('/inline/:recordingId', function(req, res, next) {
+    downloadRecordingById(req, res, true, next);
 });
 
 function getRecordingFromS3(bucket, legacy, key, res) {
@@ -347,16 +351,19 @@ function getRecordingFromS3(bucket, legacy, key, res) {
         .pipe(res)
 }
 
-async function downloadRecordingById(req, res, next) {
-    let recordingId = req.params.recordingId;
-    let recording = await model.recordings.findByIdAsync(recordingId);
-    const namePartials = recording[0].uri.split('/');
-    recording[0].name = namePartials[namePartials.length - 1];
-    let legacy = recording[0].uri.startsWith('project_');
-    res.set({'Content-Disposition' : `attachment; filename=${recording[0].name}`});
-    let mimetype = mime.getType(recording[0].name);
-    res.setHeader('Content-type', mimetype);
-    await getRecordingFromS3(config(legacy? 'aws' : 'aws-rfcx').bucketName, legacy, recording[0].uri, res);
+async function downloadRecordingById(req, res, inline, next) {
+    const recordingFromParams = req.params.recordingId;
+    const match = /^(\d+)?(\.(wav|flac|opus|mp3))/i.exec(recordingFromParams);
+    const recordingId = match ? match[1] : recordingFromParams;
+    const [recording] = await model.recordings.findByIdAsync(recordingId)
+    const recordingUri = recording.uri
+    const recordingName = recordingUri.split('/').pop()
+    const legacy = recordingUri.startsWith('project_')
+    const mimetype = mime.getType(recordingName)
+    const bucketName = config(legacy ? 'aws' : 'aws-rfcx').bucketName
+    res.set({ 'Content-Disposition' : `${ inline ? 'inline' : 'attachment' }; filename=${ recordingName }`})
+    res.setHeader('Content-type', `${ inline ? 'audio/wav' : mimetype }`)
+    await getRecordingFromS3(bucketName, legacy, recordingUri, res)
 }
 
 

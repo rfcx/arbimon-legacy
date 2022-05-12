@@ -22,7 +22,7 @@ angular.module('a2.audiodata.sites', [
       }
     }
   }])
-.controller('SitesCtrl', function($scope, $state, Project, $modal, notify, a2Sites, $window, $controller, $q, a2UserPermit, a2GoogleMapsLoader) {
+.controller('SitesCtrl', function($scope, $state, Project, $modal, notify, a2Sites, $window, $controller, $q, a2UserPermit, a2GoogleMapsLoader, $downloadResource) {
     $scope.loading = true;
     $scope.markers = [];
 
@@ -201,6 +201,10 @@ angular.module('a2.audiodata.sites', [
                 $scope.marker.setTitle($scope.selected && $scope.selected.name);
             });
         }
+    };
+
+    $scope.exportSites = function() {
+      $downloadResource(Project.getSitesExportUrl());
     };
 
     $scope.status_controller = $controller('SiteStatusPlotterController', {'$scope':$scope});
