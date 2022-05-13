@@ -772,7 +772,11 @@ var Projects = {
             },
             body: JSON.stringify(body)
         }
-        return rp(options)
+        const result = await rp(options)
+        if (result.statusCode !== 201) {
+            console.error(result.body)
+            throw new Error(result.body)
+        }
     },
 
     removeUserRoleInCoreAPI: async function(user_id, project_id, idToken) {
@@ -798,7 +802,11 @@ var Projects = {
             },
             body: JSON.stringify(body)
         }
-        return rp(options)
+        const result = await rp(options)
+        if (result.statusCode !== 201) {
+            console.error(result.body)
+            throw new Error(result.body)
+        }
     },
 
     modelList: function(project_url, callback) {
