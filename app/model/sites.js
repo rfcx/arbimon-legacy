@@ -822,21 +822,6 @@ var Sites = {
         })
     },
 
-    findInCoreAPI: async function (guid) {
-        const token = await auth0Service.getToken();
-        const options = {
-            method: 'GET',
-            url: `${rfcxConfig.apiBaseUrl}/v2/guardians/${guid}`, // TODO: this should be changed once Core API fully migrate from MySQL to TimescaleDB
-            headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            },
-            json: true
-          }
-
-        return rp(options).then(({ body }) => body)
-    },
-
     setExternalId: function (siteId, externalId, connection) {
         return (connection? connection.query : dbpool.query)(`UPDATE sites SET external_id = "${externalId}" WHERE site_id = ${siteId}`, [])
     },

@@ -1119,26 +1119,6 @@ var Projects = {
         })
     },
 
-    findInCoreAPI: async function (guid) {
-        const token = await auth0Service.getToken();
-        const options = {
-            method: 'GET',
-            url: `${rfcxConfig.apiBaseUrl}/v1/sites/${guid}`, // TODO: this should be changed once Core API fully migrate from MySQL to TimescaleDB
-            headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            },
-            json: true
-          }
-
-        return rp(options).then(({ body }) => {
-            if (!body || !body.length) {
-                throw new EmptyResultError('External project with given guid not found.');
-            }
-            return body[0]
-        })
-    },
-
     setExternalId: function (projectId, externalId, connection) {
         return (connection? connection.query : dbpool.query)(`UPDATE projects SET external_id = "${externalId}" WHERE project_id = ${projectId}`, [])
     },
