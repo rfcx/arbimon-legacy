@@ -11,7 +11,7 @@ var AWS = require('aws-sdk');
 var request = require('request');
 var rp = util.promisify(request);
 const auth0Service = require('../model/auth0');
-const { EmptyResultError } = require('@rfcx/http-utils');
+const { ValidationError } = require('@rfcx/http-utils');
 
 var config = require('../config');
 const rfcxConfig = config('rfcx');
@@ -743,14 +743,14 @@ var Projects = {
                     await connection.rollback();
                     await connection.release();
                 }
-                throw new APIError('Failed to update user project role');
+                throw new APIError('Failed to set user role');
             })
     },
 
     updateUserRoleInCoreAPI: async function(userProjectRole, idToken) {
         const project = await this.findById(userProjectRole.project_id)
         if (!project.external_id) {
-            return
+            throw new ValidationError(`Project "${project.name}" data is invalid. Please contact administrator.`)
         }
 
         const user = await users.findById(userProjectRole.user_id)
@@ -778,7 +778,7 @@ var Projects = {
     removeUserRoleInCoreAPI: async function(user_id, project_id, idToken) {
         const project = await this.findById(project_id)
         if (!project.external_id) {
-            return
+            throw new ValidationError(`Project "${project.name}" data is invalid. Please contact administrator.`)
         }
 
         const user = await users.findById(user_id)
