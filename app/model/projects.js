@@ -750,7 +750,7 @@ var Projects = {
     updateUserRoleInCoreAPI: async function(userProjectRole, idToken) {
         const project = await this.findById(userProjectRole.project_id)
         if (!project.external_id) {
-            throw new ValidationError(`Project "${project.name}" data is invalid. Please contact administrator.`)
+            throw new ValidationError(`Project "${project.name}" data is invalid. Please contact to support.`)
         }
 
         const user = await users.findById(userProjectRole.user_id)
@@ -782,7 +782,7 @@ var Projects = {
     removeUserRoleInCoreAPI: async function(user_id, project_id, idToken) {
         const project = await this.findById(project_id)
         if (!project.external_id) {
-            throw new ValidationError(`Project "${project.name}" data is invalid. Please contact administrator.`)
+            throw new ValidationError(`Project "${project.name}" data is invalid. Please contact to support.`)
         }
 
         const user = await users.findById(user_id)
