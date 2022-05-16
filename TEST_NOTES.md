@@ -1,6 +1,15 @@
 # Arbimon Test Notes
 Test Notes are used to list what pages / components / features / user flows are affected by each update.
 
+## v3.0.53
+
+- Delete legacy part of the ingest endpoint which has been syncing GuardianSites
+  - Test that files upload works fine for existing sites
+  - Test that files upload works fine for newly creates project and site
+- Show error and rollback action if user role assignment is failed on Core API side
+  - Check that user can access a project which I have shared with him on Settings page
+  - Check that user role change works fine
+
 ## v3.0.50
 - #926 User is able to invite and assign a role a new user who have never been registered in the system
   - Test that user can still add a role to existing user
