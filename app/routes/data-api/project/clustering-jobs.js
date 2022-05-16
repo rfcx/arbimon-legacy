@@ -23,13 +23,8 @@ router.get('/', function(req, res, next) {
 });
 
 router.get('/asset', function(req, res, next) {
-    if (config('aws').env === 'dev') {
-        res.attachment(path.basename(req.query.path))
-        return model.ClusteringJobs.getAsset(req.query.path, res)
-    }
-    else {
-        return req.query.path;
-    }
+    res.attachment(path.basename(req.query.path))
+    return model.ClusteringJobs.getAsset(req.query.path, res)
 });
 
 router.get('/:job_id/job-details', function (req, res, next) {

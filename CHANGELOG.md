@@ -1,16 +1,18 @@
 # Arbimon Release Notes
 
-## v3.0.52 - May XX, 2022
+## v3.0.53 - May 17, 2022
+
+Resolved issues:
+
+- Fixed the issue with blank ROI images blank which appearing when the user opened the cluster Grid View
+
+## v3.0.52 - May 13, 2022
 
 New features:
 
 - #923 User has an ability to unvalidate audio event detections boxes on the Visualizer Page
-
-## v3.0.51 - May 06, 2022
-
-New features:
-
 - #928 An ability to export sites data is added
+- #919 An ability to listen to recordings in a browser is added
 
 ## v3.0.51 - May 06, 2022
 
@@ -20,7 +22,7 @@ New features:
 
 Resolved issues:
 
-- #962 Fixed an issue with getting thumbnails images for RFM's recordings uploaded with Uploader App
+- #958 Fixed an issue with getting thumbnails images for RFM's recordings uploaded with Uploader App
 
 ## v3.0.50 - April 29, 2022
 
