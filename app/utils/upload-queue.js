@@ -22,7 +22,8 @@ var Uploader = require('../utils/uploader');
 var tmpFileCache = require('../utils/tmpfilecache');
 var JobScheduler = require('../utils/job-scheduler');
 
-var lambda = new AWS.Lambda();
+const lambda = new AWS.Lambda();
+const moment = require('moment');
 
 var scheduler = new JobScheduler({
     fetch: function(queue){
@@ -89,11 +90,14 @@ module.exports = {
                     channels: upload.info.channels,
                     duration: upload.info.duration
                 };
-                model.recordings.calculateLocalTime(upload_row.site_id, upload_row.datetime, callback);
+                model.sites.getSiteTimezone(upload_row.site_id, callback)
             },
-            function(result, callback) {
+            function(timezone, callback) {
+                // Convert datetime with timezone offsets for browser AudioMoth recordings
+                // https://github.com/rfcx/arbimon/commit/efa1a487ce672ecf3d81c45470511e3f46a69305
                 if (upload.info && upload.info.isUTC) {
-                    upload_row.datetime = result? result : upload_row.datetime;
+                    const datetimeLocal = timezone ? moment.tz(upload_row.datetime, timezone).format('YYYY-MM-DD HH:mm:ss') : null;
+                    upload_row.datetime = datetimeLocal? datetimeLocal : upload_row.datetime;
                 }
                 model.uploads.insertRecToList(upload_row, callback);
             },
