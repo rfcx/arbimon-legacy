@@ -11,7 +11,7 @@ var AWS = require('aws-sdk');
 var request = require('request');
 var rp = util.promisify(request);
 const auth0Service = require('../model/auth0');
-const { EmptyResultError } = require('@rfcx/http-utils');
+const { ValidationError } = require('@rfcx/http-utils');
 
 var config = require('../config');
 const rfcxConfig = config('rfcx');
@@ -743,14 +743,14 @@ var Projects = {
                     await connection.rollback();
                     await connection.release();
                 }
-                throw new APIError('Failed to update user project role');
+                throw new APIError('Failed to set user role');
             })
     },
 
     updateUserRoleInCoreAPI: async function(userProjectRole, idToken) {
         const project = await this.findById(userProjectRole.project_id)
         if (!project.external_id) {
-            return
+            throw new ValidationError(`Project "${project.name}" data is invalid. Please contact to support.`)
         }
 
         const user = await users.findById(userProjectRole.user_id)
@@ -772,13 +772,17 @@ var Projects = {
             },
             body: JSON.stringify(body)
         }
-        return rp(options)
+        const result = await rp(options)
+        if (result.statusCode !== 201) {
+            console.error(result.body)
+            throw new Error(result.body)
+        }
     },
 
     removeUserRoleInCoreAPI: async function(user_id, project_id, idToken) {
         const project = await this.findById(project_id)
         if (!project.external_id) {
-            return
+            throw new ValidationError(`Project "${project.name}" data is invalid. Please contact to support.`)
         }
 
         const user = await users.findById(user_id)
@@ -798,7 +802,11 @@ var Projects = {
             },
             body: JSON.stringify(body)
         }
-        return rp(options)
+        const result = await rp(options)
+        if (result.statusCode !== 201) {
+            console.error(result.body)
+            throw new Error(result.body)
+        }
     },
 
     modelList: function(project_url, callback) {
@@ -1116,26 +1124,6 @@ var Projects = {
                     throw new APIError('Failed to delete project');
                 }
             } catch (e) { }
-        })
-    },
-
-    findInCoreAPI: async function (guid) {
-        const token = await auth0Service.getToken();
-        const options = {
-            method: 'GET',
-            url: `${rfcxConfig.apiBaseUrl}/v1/sites/${guid}`, // TODO: this should be changed once Core API fully migrate from MySQL to TimescaleDB
-            headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            },
-            json: true
-          }
-
-        return rp(options).then(({ body }) => {
-            if (!body || !body.length) {
-                throw new EmptyResultError('External project with given guid not found.');
-            }
-            return body[0]
         })
     },
 
