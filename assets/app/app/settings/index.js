@@ -148,15 +148,10 @@ angular.module('a2.settings',[
             project_id: $scope.project.project_id,
             user_id: $scope.userToAdd.id
         },
-        function(err, result){
-            if(err) {
-                notify.serverError();
-            }
-
-            if(result.error) {
-                notify.error(result.error);
-            }
-            else {
+        function (err) {
+            if (err) {
+                notify.error(err);
+            } else {
                 $scope.curQuery = ''
                 notify.log('User added to project');
             }
@@ -199,19 +194,12 @@ angular.module('a2.settings',[
             user_id: $scope.users[$index].id,
             role_id: role.id
         },
-        function(err, result){
-            if(err)
-            {
-                notify.serverError();
-            }
-
-            if(result.error) {
-                notify.error(result.error);
-            }
-            else {
+        function (err) {
+            if (err) {
+                notify.error(err);
+            } else {
                 notify.log('User role updated');
             }
-
             Project.getUsers(function(err, users){
                 $scope.users = users;
             });
@@ -239,18 +227,12 @@ angular.module('a2.settings',[
                 project_id: $scope.project.project_id,
                 user_id: $scope.users[$index].id
             },
-            function(err, result){
-                if(err) {
-                    notify.serverError();
-                }
-
-                if(result.error) {
-                    notify.error(result.error);
-                }
-                else {
+            function (err) {
+                if (err) {
+                    notify.error(err);
+                } else {
                     notify.log('User deleted from project');
                 }
-
                 Project.getUsers(function(err, users){
                     $scope.users = users;
                 });

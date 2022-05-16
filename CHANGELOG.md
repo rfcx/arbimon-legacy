@@ -1,10 +1,12 @@
 # Arbimon Release Notes
 
-## v3.0.53 - May 12, 2022
+## v3.0.53 - May 17, 2022
 
 Resolved issues:
 
-#933 Use moment timezone instead of convert_tz to get local datetime
+- Delete legacy part of the ingest endpoint which has been syncing GuardianSites
+- Show error and rollback action if user role assignment is failed on Core API side
+- #933 Use moment timezone instead of convert_tz to get local datetime
 
 ## v3.0.52 - May 12, 2022
 

@@ -37,47 +37,7 @@ router.post('/recordings/create', verifyToken(), hasRole(['systemUser']), async 
     const siteExternalId = converter.transformedArray[0].site_external_id
     var site = await model.sites.find({ external_id: siteExternalId }).get(0);
     if (!site) {
-      if (rfcxConfig.coreAPIEnabled) {
-        try {
-          // Find info about this site (guardian) in Core API DB
-          const externalSite = await model.sites.findInCoreAPI(siteExternalId)
-          // Check if we have a project for this site in the DB
-          var project = await model.projects.find({ url }).get(0)
-          if (!project) {
-            // Find info about this project in Core API DB
-            const externalProject = await model.projects.findInCoreAPI(url)
-            // All guardian sites belong to support user by default
-            const user = (await model.users.findByEmailAsync('support@rfcx.org'))[0];
-            // Create missing project
-            const url = await model.projects.findUniqueUrl(externalProject.name, externalProject.id, user.user_id)
-            let projectId = await model.projects.createProject({
-              name: externalProject.name,
-              description: externalProject.description,
-              is_private: true,
-              external_id: externalProject.id,
-              url: externalSite.site.guid
-            }, user.user_id)
-            project = await model.projects.find({ projectId }).get(0);
-          }
-          // Create missing site
-          const siteInsertData = await model.sites.insertAsync({
-            name: externalSite.shortname,
-            external_id: externalSite.guid,
-            lat: externalSite.latitude || 0,
-            lon: externalSite.longitude || 0,
-            alt: externalSite.altitude || 0,
-            project_id: project.project_id
-          });
-          site = (await model.sites.findByIdAsync(siteInsertData.insertId))[0];
-        }
-        catch (e) {
-          console.error('/ingest/recordings/create sync error', e)
-          throw new EmptyResultError('Site with given external_id not found.');
-        }
-      }
-      else {
-        throw new EmptyResultError('Site with given external_id not found.');
-      }
+      throw new EmptyResultError('Site with given external_id not found.');
     }
     for (let data of converter.transformedArray) {
       var recordingData = {
