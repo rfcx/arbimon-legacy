@@ -66,7 +66,7 @@ var Sites = {
     },
 
     getSiteTimezone: function(site_id, callback) {
-        return dbpool.query(`SELECT timezone FROM sites WHERE site_id=${site_id}`).get(0).get('timezone').nodeify(callback);
+        return this.getSiteTimezoneAsync(site_id).nodeify(callback);
     },
 
     getSiteTimezoneAsync: async function(site_id) {
