@@ -1,16 +1,21 @@
 # Arbimon Release Notes
 
-## v3.0.52 - May XX, 2022
+## v3.0.53 - May 17, 2022
+
+Resolved issues:
+
+- Delete legacy part of the ingest endpoint which has been syncing GuardianSites
+- Show error and rollback action if user role assignment is failed on Core API side
+- #933 Use moment timezone instead of convert_tz to get local datetime
+- - Fixed the issue with blank ROI images which appearing when the user opened the cluster Grid View
+
+## v3.0.52 - May 13, 2022
 
 New features:
 
 - #923 User has an ability to unvalidate audio event detections boxes on the Visualizer Page
-
-## v3.0.51 - May 06, 2022
-
-New features:
-
 - #928 An ability to export sites data is added
+- #919 An ability to listen to recordings in a browser is added
 
 ## v3.0.51 - May 06, 2022
 
@@ -20,7 +25,7 @@ New features:
 
 Resolved issues:
 
-- #962 Fixed an issue with getting thumbnails images for RFM's recordings uploaded with Uploader App
+- #958 Fixed an issue with getting thumbnails images for RFM's recordings uploaded with Uploader App
 
 ## v3.0.50 - April 29, 2022
 

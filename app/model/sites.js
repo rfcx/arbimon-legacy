@@ -65,6 +65,14 @@ var Sites = {
         return find(site_id)
     },
 
+    getSiteTimezone: function(site_id, callback) {
+        return dbpool.query(`SELECT timezone FROM sites WHERE site_id=${site_id}`).get(0).get('timezone').nodeify(callback);
+    },
+
+    getSiteTimezoneAsync: async function(site_id) {
+        return dbpool.query(`SELECT timezone FROM sites WHERE site_id=${site_id}`).get(0).get('timezone');
+    },
+
     insert: function(site, db, callback) {
         var values = [];
 
@@ -820,21 +828,6 @@ var Sites = {
                 throw new Error('Failed to delete site');
             }
         })
-    },
-
-    findInCoreAPI: async function (guid) {
-        const token = await auth0Service.getToken();
-        const options = {
-            method: 'GET',
-            url: `${rfcxConfig.apiBaseUrl}/v2/guardians/${guid}`, // TODO: this should be changed once Core API fully migrate from MySQL to TimescaleDB
-            headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            },
-            json: true
-          }
-
-        return rp(options).then(({ body }) => body)
     },
 
     setExternalId: function (siteId, externalId, connection) {
