@@ -717,7 +717,6 @@ var Projects = {
                 switch (action) {
                     case 'add':
                         await this.addUserAsync(options.userRole, connection);
-                        console.log('\n\n------rfcxConfig.coreAPIEnabled------', rfcxConfig.coreAPIEnabled)
                         if (rfcxConfig.coreAPIEnabled) {
                             await this.updateUserRoleInCoreAPI(options.userRole, token);
                         }
