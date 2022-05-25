@@ -717,6 +717,7 @@ var Projects = {
                 switch (action) {
                     case 'add':
                         await this.addUserAsync(options.userRole, connection);
+                        console.log('\n\n------rfcxConfig.coreAPIEnabled------', rfcxConfig.coreAPIEnabled)
                         if (rfcxConfig.coreAPIEnabled) {
                             await this.updateUserRoleInCoreAPI(options.userRole, token);
                         }
@@ -803,7 +804,7 @@ var Projects = {
             body: JSON.stringify(body)
         }
         const result = await rp(options)
-        if (result.statusCode !== 201) {
+        if (result.statusCode !== 200) {
             console.error(result.body)
             throw new Error(result.body)
         }
