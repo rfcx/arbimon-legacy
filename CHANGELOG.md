@@ -1,5 +1,11 @@
 # Arbimon Release Notes
 
+## v3.0.54 - May XX, 2022
+
+Resolved issues:
+
+- #991 Fixed an issue with export recordings tags
+
 ## v3.0.53 - May 17, 2022
 
 Resolved issues:
@@ -7,7 +13,7 @@ Resolved issues:
 - Delete legacy part of the ingest endpoint which has been syncing GuardianSites
 - Show error and rollback action if user role assignment is failed on Core API side
 - #933 Use moment timezone instead of convert_tz to get local datetime
-- - Fixed the issue with blank ROI images which appearing when the user opened the cluster Grid View
+- Fixed the issue with blank ROI images which appearing when the user opened the cluster Grid View
 
 ## v3.0.52 - May 13, 2022
 
