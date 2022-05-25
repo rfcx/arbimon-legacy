@@ -803,7 +803,7 @@ var Projects = {
             body: JSON.stringify(body)
         }
         const result = await rp(options)
-        if (result.statusCode !== 201) {
+        if (result.statusCode !== 200) {
             console.error(result.body)
             throw new Error(result.body)
         }
