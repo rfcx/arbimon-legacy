@@ -96,7 +96,7 @@ module.exports = {
                 // Convert datetime with timezone offsets for browser AudioMoth recordings
                 // https://github.com/rfcx/arbimon/commit/efa1a487ce672ecf3d81c45470511e3f46a69305
                 if (upload.info && upload.info.isUTC) {
-                    const datetimeLocal = timezone ? moment.tz(upload_row.datetime, timezone).format('YYYY-MM-DD HH:mm:ss') : null;
+                    const datetimeLocal = timezone ? moment.tz(upload_row.datetime, timezone).toISOString() : null;
                     upload_row.datetime = datetimeLocal? datetimeLocal : upload_row.datetime;
                 }
                 model.uploads.insertRecToList(upload_row, callback);
