@@ -1,5 +1,11 @@
 # Arbimon Release Notes
 
+## v3.0.55 - June XX, 2022
+
+Resolved issues:
+
+- Fixed an issue with date range format to create a new playlist
+
 ## v3.0.54 - May XX, 2022
 
 Resolved issues:
