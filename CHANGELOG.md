@@ -1,9 +1,10 @@
 # Arbimon Release Notes
 
-## v3.0.55 - June XX, 2022
+## v3.0.55 - June 22, 2022
 
 Resolved issues:
 
+- Fixed an issue with date range format to create a new playlist
 - Fixed an issue with datetime format for lambda function
 
 ## v3.0.54 - June 03, 2022
