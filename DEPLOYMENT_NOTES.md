@@ -1,5 +1,9 @@
 # Arbimon Deployment Notes
 
+## v3.0.55
+
+- Run 028-add-created-at-updated-at-to-projects.sql on the staging/production sides
+
 ## v3.0.50
 
 - Run 027-add-present-aed-to-recording-validations.sql on the production side
