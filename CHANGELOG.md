@@ -1,16 +1,18 @@
 # Arbimon Release Notes
 
-## v3.0.55 - June XX, 2022
+## v3.0.55 - June 22, 2022
 
 Resolved issues:
 
 - Fixed an issue with date range format to create a new playlist
+- Fixed an issue with datetime format for lambda function
 
-## v3.0.54 - May XX, 2022
+## v3.0.54 - June 03, 2022
 
 Resolved issues:
 
 - #991 Fixed an issue with export recordings tags
+- Fixed the issue with deleting users from projects
 
 ## v3.0.53 - May 17, 2022
 
