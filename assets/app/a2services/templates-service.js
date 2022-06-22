@@ -15,6 +15,9 @@ angular.module('a2.srv.templates', ['a2.srv.project'])
             if (opts && opts.publicTemplates) {
                 config.params.publicTemplates = opts.publicTemplates;
             }
+            if (opts && opts.q) {
+                config.params.q = opts.q;
+            }
             if (opts && opts.limit) {
                 config.params.limit = opts.limit;
             }

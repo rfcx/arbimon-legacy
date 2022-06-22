@@ -15,6 +15,9 @@
         </div>
         <div class="row templates">
             <div class="col-md-12">
+                <div class="mb-2 pull-left">
+                    <input type="text" class="form-control" ng-model="controller.search.q" style="width: 320px;" placeholder="Search templates by name, species or project" ng-change="controller.onSearchChanged()">
+                </div>
                 <loader ng-if="controller.loading"></loader>
                 <a2-table ng-if="!controller.loading" search="search" rows="controller.templates" no-checkbox>
                     <field tdclass="is-v-middle" tdclass="spectrogram-img">
@@ -36,7 +39,7 @@
                             </a>
                         </div>
                     </field>
-                    <field title="Name" key="name" filter tdclass="is-v-middle name">
+                    <field title="Name" key="name" tdclass="is-v-middle name">
                         <div>
                             <p class="m-0 is-v-middle no-wrap hidelongtext" title="{{ row.name }}">{{ row.name }}</p>
                             <a class="is-v-middle"
@@ -46,18 +49,18 @@
                             </a>
                         </div>
                     </field>
-                    <field title="Species" key="species_name" filter tdclass="is-v-middle no-wrap hidelongtext">
+                    <field title="Species" key="species_name" tdclass="is-v-middle no-wrap hidelongtext">
                         {{ row.species_name }}
                     </field>
                     <field title="Song type" key="songtype_name" tdclass="is-v-middle no-wrap hidelongtext">
                         {{ row.songtype_name }}
                     </field>
-                    <field title="Author" key="author" filter tdclass="is-v-middle no-wrap hidelongtext" show="controller.currentTab === 'publicTemplates'">
+                    <field title="Author" key="author" tdclass="is-v-middle no-wrap hidelongtext" show="controller.currentTab === 'publicTemplates'">
                         <span title="{{ row.author }}">
                             {{ row.author }}
                         </span>
                     </field>
-                    <field title="Project" key="project_name" filter tdclass="is-v-middle no-wrap hidelongtext" show="controller.currentTab === 'publicTemplates'">
+                    <field title="Project" key="project_name" tdclass="is-v-middle no-wrap hidelongtext" show="controller.currentTab === 'publicTemplates'">
                         {{ row.project_name }}
                     </field>
                     <field title="Sampling" key="sampling_rate" tdclass="is-v-middle no-wrap" show="controller.currentTab === 'publicTemplates'">
@@ -66,8 +69,8 @@
                     <field title="Date created" key="date_created" tdclass="is-v-middle no-wrap">
                         {{ row.date_created | moment: 'll' }}
                     </field>
-                    <field title="Source" key="source_project_name" filter tdclass="is-v-middle no-wrap hidelongtext" show="controller.currentTab === 'projectTemplates'" tdclass="source">
-                        <span title="{{ row.name }}">
+                    <field title="Source" key="source_project_name" tdclass="is-v-middle no-wrap hidelongtext" show="controller.currentTab === 'projectTemplates'" tdclass="source">
+                        <span title="{{ row.project !== row.source_project_id && row.source_project_id !== null ? row.author + ' / ' + row.source_project_name : '' }}">
                             {{ row.project !== row.source_project_id && row.source_project_id !== null ? row.author + ' / ' + row.source_project_name : '-' }}
                         </span>
                     </field>
@@ -83,23 +86,24 @@
                             ng-if="controller.currentTab === 'publicTemplates'"
                             ng-click="controller.addTemplate(row) | trackEvent:'Audiodata-template':'add clicked'"
                             tooltip="Add Template"
+                            ng-disabled="controller.isAdding === true"
                             tooltip-trigger="mouseenter">
                             <i class="fa fa-plus"></i>
                         </button>
                     </field>
                 </a2-table>
-                <div ng-if="controller.templates && (controller.paginationSettings.totalItems > controller.paginationSettings.limit)" class="row">
+                <div ng-if="controller.templates && (controller.pagination.totalItems > controller.pagination.limit)" class="row">
                   <div class="col-sm-12">
-                      <pagination total-items="controller.paginationSettings.totalItems"
-                          ng-model="controller.paginationSettings.page"
+                      <pagination total-items="controller.pagination.totalItems"
+                          ng-model="controller.pagination.page"
                           ng-change="controller.setCurrentPage()"
                           class="pagination-sm"
                           boundary-links="true"
                           max-size="10"
                           rotate="false"
-                          num-pages="controller.paginationSettings.totalPages"
+                          num-pages="controller.pagination.totalPages"
                           ng-disabled="controller.loading"
-                          items-per-page="controller.paginationSettings.limit">
+                          items-per-page="controller.pagination.limit">
                       </pagination>
                   </div>
               </div>

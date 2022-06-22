@@ -585,7 +585,8 @@ angular.module('a2.analysis.patternmatching', [
         };
     }
 )
-.controller('CreateNewPatternMatchingInstanceCtrl', function($scope, $modalInstance, a2PatternMatching, a2Templates, a2Playlists, notify) {
+.controller('CreateNewPatternMatchingInstanceCtrl', function($modalInstance, a2PatternMatching, a2Templates, a2Playlists, notify) {
+    var self = this;
     Object.assign(this, {
         initialize: function(){
             this.loading = {
@@ -593,37 +594,60 @@ angular.module('a2.analysis.patternmatching', [
                 templates: false,
                 createPatternMatching: false,
             };
-
             this.data = {
                 name: null,
                 playlist: null,
                 template: null,
                 params: { N: 1, threshold: 0.1 },
             };
+            this.list = {};
+            this.loading = {
+                templates: true,
+                playlists: true
+            };
+            this.isSaving = false;
 
-            var list = this.list = {};
+            this.getTemplates();
 
-            this.loading.templates = true;
-            a2Templates.getList().then((function(templates){
-                this.loading.templates = false;
-                list.templates = templates;
+            this.getPlaylists();
+        },
+        getTemplates: function() {
+            self.loading.templates = true;
+            return a2Templates.getList().then((function(templates){
+                self.loading = false;
+                self.list.templates = templates;
+            }.bind(this))).catch((function(err){
+                self.loading = false;
+                self.list.templates = [];
+                notify.serverError(err);
             }).bind(this));
-
-            this.loading.playlists = true;
-            a2Playlists.getList().then((function(playlists){
-                this.loading.playlists = false;
-                list.playlists = playlists;
+        },
+        getPlaylists: function() {
+            self.loading.playlists = true;
+            return a2Playlists.getList().then((function(playlists){
+                self.playlists = false;
+                self.list.playlists = playlists;
+            }.bind(this))).catch((function(err){
+                self.playlists = false;
+                self.list.playlists = [];
+                notify.serverError(err);
             }).bind(this));
         },
         ok: function () {
+            self.isSaving = true;
             return a2PatternMatching.create({
-                name: this.data.name,
-                playlist: this.data.playlist.id,
-                template: this.data.template.id,
-                params: this.data.params,
+                name: self.data.name,
+                playlist: self.data.playlist.id,
+                template: self.data.template.id,
+                params: self.data.params,
             }).then(function(patternMatching) {
+                self.isSaving = false;
                 $modalInstance.close({ok:true, patternMatching: patternMatching});
-            }).catch(notify.serverError);
+            }).catch((function(err){
+                console.log('err', err);
+                self.isSaving = false
+                notify.error(err);
+            }));
         },
         cancel: function (url) {
              $modalInstance.close({ cancel: true, url: url });
