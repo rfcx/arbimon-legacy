@@ -32,7 +32,7 @@
         </div>
         <div class="form-group">
             <label for="template">Select Playlist:</label>
-            <span class="red" ng-hide="controller.loading.playlists || controller.list.playlists.length">
+            <span class="red" ng-if="controller.list.playlists && !controller.list.playlists.length">
                 <em>No playlists found.
                     <a class="red cs-pointer linodeco" ng-click="controller.cancel('/audiodata/playlists') | trackEvent:'Analysis-PatternMatching-new pattern matching modal':'Cancel-Go to playlists'">
                         Create one.
@@ -73,7 +73,7 @@
     </form>
 </div>
 <div class="modal-footer">
-    <button class="btn btn-primary" ng-click="controller.ok() | trackEvent:'Analysis-PatternMatching-new pattern matching modal':'Submit'" ng-disabled="buttonEnable()">
+    <button class="btn btn-primary" ng-click="controller.ok() | trackEvent:'Analysis-PatternMatching-new pattern matching modal':'Submit'" ng-disabled="controller.isSaving">
         <i class="fa fa-cogs"></i>
         Create
     </button>
