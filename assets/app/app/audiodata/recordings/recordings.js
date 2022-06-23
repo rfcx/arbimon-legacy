@@ -85,7 +85,7 @@ angular.module('a2.audiodata.recordings', [
         this.searchRecs(['count', 'list']);
     };
     this.createPlaylist = function(filters) {
-        var listParams = filters;
+        var listParams = angular.merge({}, filters);
 
         if(!Object.keys(listParams).length)
             return;
@@ -106,6 +106,11 @@ angular.module('a2.audiodata.recordings', [
 
         if (listParams.presence && listParams.presence.length) {
             listParams.presence = listParams.presence[0]
+        }
+
+        if (listParams.range) {
+            listParams.range.from = moment(listParams.range.from).format('YYYY-MM-DD') + 'T00:00:00.000Z';
+            listParams.range.to = moment(listParams.range.to).format('YYYY-MM-DD') + 'T23:59:59.999Z';
         }
 
         var modalInstance = $modal.open({
