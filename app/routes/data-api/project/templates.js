@@ -13,6 +13,7 @@ router.get('/', function(req, res, next) {
     var params = {
         deleted: 0,
         showSpecies: true,
+        q: req.query.q,
     };
     if (req.query.showRecordingUri === 'true') {
         params.showRecordingUri = req.query.showRecordingUri;
@@ -34,10 +35,18 @@ router.get('/', function(req, res, next) {
     else {
         params.project = req.project.project_id;
     }
-    model.templates.find(params).then(function(count) {
-        res.json(count);
-        return null;
-    }).catch(next);
+    if (req.query.limit) {
+        model.templates.findWithPagination(params).then(function(data) {
+            res.json(data);
+            return null;
+        }).catch(next);
+    }
+    else {
+        model.templates.find(params).then(function(data) {
+            res.json(data);
+            return null;
+        }).catch(next);
+    }
 });
 
 router.get('/count', function(req, res, next) {
@@ -48,8 +57,8 @@ router.get('/count', function(req, res, next) {
     converter.convert('publicTemplates').optional().toBoolean();
     return converter.validate()
         .then(async (params) => {
-            const result = await model.templates.templatesCount(project_id, params && params.publicTemplates)
-            res.json({ count: result[0].count })
+            const count = await model.templates.templatesCount(project_id, params && params.publicTemplates)
+            res.json({ count })
         })
         .catch(httpErrorHandler(req, res, 'Error getting templates count'))
 });

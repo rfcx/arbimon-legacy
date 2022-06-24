@@ -14,23 +14,25 @@ angular.module('a2.audiodata.templates', [
         templateUrl: '/app/audiodata/templates/templates.html'
     });
 })
-.controller('TemplatesCtrl', function($state, $scope, a2Templates, Project, $q, a2UserPermit, notify, $modal, $window, a2AudioBarService) {
+.controller('TemplatesCtrl', function($scope, a2Templates, Project, $q, a2UserPermit, notify, $modal, $window, a2AudioBarService) {
     var self = this;
     Object.assign(this, {
         initialize: function(){
             this.loading = false;
+            this.isAdding = false;
             this.templates = [];
             this.currentTab = 'projectTemplates';
-            this.paginationSettings = {
+            this.pagination = {
                 page: 1,
                 limit: 100,
                 offset: 0,
                 totalItems: 0,
                 totalPages: 0
             }
-            this.getTotalCount();
-            this.getList();
             this.projecturl = Project.getUrl();
+            this.search = { q: '' };
+            this.getList();
+            this.timeout;
         },
         goToSourceProject: function(projectId) {
             if (!projectId) return;
@@ -40,37 +42,43 @@ angular.module('a2.audiodata.templates', [
                 }
             });
         },
-        getTotalCount: function() {
-            return a2Templates.count({ publicTemplates: this.currentTab === 'publicTemplates' }).then((function(data){
-                this.paginationSettings.totalItems = data.count
-                this.paginationSettings.totalPages = Math.ceil(this.paginationSettings.totalItems / this.paginationSettings.limit);
-            }.bind(this))).catch((function(err){
-                notify.serverError(err);
-            }).bind(this));
-        },
         setCurrentPage: function() {
-            this.paginationSettings.offset = (this.paginationSettings.page - 1) * this.paginationSettings.limit;
+            self.pagination.offset = self.pagination.page - 1;
             this.getList();
         },
         getList: function() {
             self.loading = true;
-            var opts = { 
+            const opts = { 
                 showRecordingUri: true,
-                limit: this.paginationSettings.limit,
-                offset: this.paginationSettings.offset
+                q: self.search.q,
+                limit: self.pagination.limit,
+                offset: self.pagination.offset * self.pagination.limit
             }
-            opts[this.currentTab] = true
+            opts[self.currentTab] = true
             return a2Templates.getList(opts).then((function(data){
                 self.loading = false;
-                self.templates = data;
+                self.templates = data.list;
+                self.pagination.totalItems = data.count;
+                self.pagination.totalPages = Math.ceil(self.pagination.totalItems / self.pagination.limit);
             }.bind(this))).catch((function(err){
                 self.loading = false;
                 self.templates = [];
                 notify.serverError(err);
             }).bind(this));
         },
+        onSearchChanged: function () {
+            clearTimeout(self.timeout);
+            self.timeout = setTimeout(() => {
+                if (self.search.q.trim().length > 0 && self.search.q.trim().length < 3) return
+                this.reloadPage()
+            }, 1000);
+        },
+        reloadPage: function () {
+            this.resetPagination();
+            this.getList();
+        },
         getTemplateVisualizerUrl: function(template){
-            var box = ['box', template.x1, template.y1, template.x2, template.y2].join(',');
+            const box = ['box', template.x1, template.y1, template.x2, template.y2].join(',');
             return template ? "/project/"+template.project_url+"/#/visualizer/rec/"+template.recording+"?a="+box : '';
         },
         deleteTemplate: function(templateId){
@@ -102,12 +110,10 @@ angular.module('a2.audiodata.templates', [
         },
         toggleTab: function(access) {
             self.currentTab = access;
-            this.resetPagination();
-            this.getTotalCount();
-            this.getList();
+            this.reloadPage()
         },
         resetPagination: function() {
-            this.paginationSettings = {
+            self.pagination = {
                 page: 1,
                 limit: 100,
                 offset: 0,
@@ -116,6 +122,7 @@ angular.module('a2.audiodata.templates', [
             }
         },
         addTemplate: function(template) {
+            self.isAdding = true
             a2Templates.add({
                 name : template.name,
                 recording : template.recording,
@@ -130,11 +137,13 @@ angular.module('a2.audiodata.templates', [
                 source_project_id: template.project
             }).then((function(template){
                 console.log('new template', template);
+                self.isAdding = false
                 if (template.id === 0) notify.error('The template already exists in the project templates.');
                 else if (template.error) notify.error('You do not have permission to manage templates');
                 else notify.log('The template is added to the project.');
             })).catch((function(err){
                 console.log('err', err);
+                self.isAdding = false
                 notify.error(err);
             }));
         },

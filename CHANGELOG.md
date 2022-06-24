@@ -1,5 +1,12 @@
 # Arbimon Release Notes
 
+## v3.0.56 - June 24, 2022
+
+Resolved issues:
+
+- Fixed an issue with searching templates
+- Disable create pattern matching button when the saving process is in a progress
+
 ## v3.0.55 - June 22, 2022
 
 Resolved issues:
