@@ -799,7 +799,7 @@ var Recordings = {
                             if (validationRow.present_review <= 1 && validationRow.present_aed === 0 && validationRow.present === null) {
                                 // Delete row
                                 queryHandler(
-                                    "DELETE FROM `recording_validations` "+
+                                    "UPDATE `recording_validations` SET present_review=0"+
                                     " WHERE `recording_id` = "+dbpool.escape(valobj.recording)+"  " +
                                     " and `species_id` = "+dbpool.escape(valobj.species)+" and `songtype_id` = "+dbpool.escape(valobj.songtype)+" ",
                                     function(err, data){
@@ -844,7 +844,7 @@ var Recordings = {
                 // 0 is not present , 1 is present and 2 is clear
                 if (valobj.val == 2) {
                     queryHandler(
-                        "DELETE FROM `recording_validations` "+
+                        "UPDATE `recording_validations` SET present=NULL"+
                         " WHERE `recording_id` = "+dbpool.escape(valobj.recording)+" and `project_id` = "+dbpool.escape(valobj.project_id)+"  " +
                         " and `species_id` = "+dbpool.escape(valobj.species)+" and `songtype_id` = "+dbpool.escape(valobj.songtype)+" ",
                         function(err, data){
