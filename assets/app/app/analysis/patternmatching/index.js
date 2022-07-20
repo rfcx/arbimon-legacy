@@ -322,10 +322,10 @@ angular.module('a2.analysis.patternmatching', [
             }
             this.sitesListBatchSize = 1;
         } else if (['best_per_site', 'best_per_site_day'].includes(search)) {
-            if (this.sitesListBatchSize !== 20) {
+            if (this.sitesListBatchSize !== 10) {
                 shouldRecalculate = true
             }
-            this.sitesListBatchSize = 20;
+            this.sitesListBatchSize = 10;
         }
         if (shouldRecalculate) {
             this.splitSitesListIntoBatches();
