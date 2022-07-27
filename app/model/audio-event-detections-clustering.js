@@ -111,7 +111,7 @@ let AudioEventDetectionsClustering = {
     },
 
     deletePresentAedCount: async function(opts) {
-        const q = `DELETE FROM recording_validations
+        const q = `UPDATE recording_validations SET present_aed=0
             WHERE project_id=${opts.projectId} AND recording_id IN (${opts.recordingId}) AND species_id=${opts.speciesId} AND songtype_id=${opts.songtypeId}`;
         return dbpool.query(q);
     },
