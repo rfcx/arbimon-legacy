@@ -1018,9 +1018,9 @@ var Recordings = {
         var q = "SELECT count(recording_id) as count \n"+
                 "FROM recordings \n"+
                 "WHERE site_id = %s \n"+
-                "AND uri LIKE %s";
+                "AND uri = %s";
 
-        var uri = dbpool.escape('%' + recording.filename + '%');
+        var uri = dbpool.escape(recording.filename);
         var site_id = dbpool.escape(Number(recording.site_id));
         q = util.format(q, site_id, uri);
 

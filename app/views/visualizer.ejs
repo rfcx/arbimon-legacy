@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html ng-app="a2.visualizer-app">
+
+<head>
     <%if(url_base){%><base href="<%= url_base %>"/><%}%>
     <% include fragments/header %>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <% include ng-permissions %>
     <title>RFCx Arbimon - <%= project.name %><% if(card && card.name){ %> - <%= card.name %><%} %></title>
 </head>
+
 <body ng-controller="MainCtrl">
     <nav class="navbar navbar-default" role="navigation">
         <div class="container-fluid">
@@ -99,6 +102,6 @@
     <div id="body">
         <div ui-view="visualizer" ng-show="$state.includes('visualizer')"></div>
     </div>
-
 </body>
+
 </html>

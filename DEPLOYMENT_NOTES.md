@@ -27,8 +27,8 @@
 ## v3.0.43
 
 - You have to add `bioAnalyticsBaseUrl` in `config/rfcx.local.json` file:
-    - For staging: https://staging-ba.rfcx.org
-    - For production: https://ba.rfcx.org
+    - For staging: https://staging-bio.rfcx.org
+    - For production: https://bio.rfcx.org
 
 - Run `bower install` to update `plotly.js` version
 
