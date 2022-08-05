@@ -117,20 +117,10 @@ angular.module('a2.analysis.clustering-jobs', [
     $scope.toggleMenu = false;
     $scope.selectedCluster = null;
     var timeout;
-    $scope.lists = {
-        types: [
-            { value: 'lda', text: 'LDA' },
-            { value: 'umap', text: 'UMAP' },
-        ]
-    };
     $scope.frequencyFilter = {
       min: null, max: null, currentMin: null, currentMax: null
     }
 
-    $scope.selectedType = $scope.lists.types[0];
-    $scope.onTypeSelect = function(type) {
-        getClusteringDetails(type.value);
-    }
     $scope.decrementClusters = function() {
         if ($scope.selectedCluster === 1) return
         $scope.selectedCluster -= 1;
@@ -178,7 +168,7 @@ angular.module('a2.analysis.clustering-jobs', [
         return arr
     }
 
-    var getClusteringDetails = function(type) {
+    var getClusteringDetails = function() {
         $scope.infopanedata = '';
         a2ClusteringJobs.getJobDetails($scope.clusteringJobId).then(function(data) {
             if (data) $scope.job_details = data;
@@ -186,7 +176,7 @@ angular.module('a2.analysis.clustering-jobs', [
             console.log(err);
         });
         // Get json file which is included aed_id, clusters names, x, y points.
-        a2ClusteringJobs.getClusteringDetails({job_id: $scope.clusteringJobId, type: type}).then(function(res) {
+        a2ClusteringJobs.getClusteringDetails({job_id: $scope.clusteringJobId}).then(function(res) {
             $scope.loading = false;
             if (res && res.aed_id) {
                 $scope.countAudioEventDetected = res.aed_id.length;

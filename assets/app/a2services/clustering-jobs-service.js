@@ -27,7 +27,6 @@ angular.module('a2.srv.clustering-jobs', [
         getClusteringDetails: function(opts) {
             var config = {
                 params: {
-                    type: opts.type,
                     aed_info: opts.aed_info
                 }
             };
