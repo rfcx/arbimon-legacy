@@ -14,6 +14,7 @@ var config = require('../../../config');
 const rfcxConfig = config('rfcx');
 const csv_stringify = require('csv-stringify');
 const dayInMs = 24 * 60 * 60 * 1000;
+const moment = require('moment');
 
 let summaryData = {
     projects: {
@@ -117,58 +118,70 @@ router.get('/:projectUrl/info/source-project', function(req, res, next) {
 
 });
 
+const getCountForSelectedMetric = async function(key) {
+    let count
+    switch (key) {
+        case 'project-count':
+            count = await model.projects.countAllProjects()
+            break;
+        case 'job-count':
+            count = await model.jobs.countAllCompletedJobs()
+            break;
+        case 'species-count':
+            count = await model.recordings.countAllSpecies()
+            break;
+        case 'recordings-count':
+            count = await model.recordings.countAllRecordings()
+            break;
+    }
+    return count
+}
+
+const getRandomMinAsMs = function(max, min) {
+    return Math.floor(Math.random() * (max - min + 1) + min);
+}
+
+const getCachedMetrics = async function(req, res, opts, next) {
+    model.projects.getCachedMetrics(opts.key).then(async function(results) {
+        if (!results.length) return
+        const [result] = results
+        const count = result.value
+        const dateNow = moment.utc().valueOf()
+        const dateIndb = moment.utc(result.expires_at).valueOf()
+        if (dateNow > dateIndb) {
+            const value = await getCountForSelectedMetric(opts.key)
+            const expires_at = moment.utc(dateNow + dayInMs + getRandomMinAsMs(0, 60000)).format('YYYY-MM-DD HH:mm:ss')
+            await model.projects.updateCachedMetrics({ ...opts, value, expires_at })
+        }
+        return res.json(count);
+    }).catch(next);
+}
+
 router.get('/projects-count', function(req, res, next) {
     res.type('json');
-
-    if (summaryData.projects.count === 0 || (Date.now() - summaryData.projects.time > dayInMs)) {
-        model.projects.countAllProjects(function(err, results) {
-            if(err) return next(err);
-            summaryData.projects.count = results[0].count;
-            res.json(results[0].count);
-        });
-    }
-    else {
-        return res.json(summaryData.projects.count);
-    }
+    const opts = { key: 'project-count' }
+    getCachedMetrics(req, res, opts, next);
 });
 
 router.get('/jobs-count', function(req, res, next) {
     res.type('json');
-    if (summaryData.jobs.count === 0 || (Date.now() - summaryData.jobs.time > dayInMs)) {
-        model.jobs.countAllCompletedJobs().then((results) => {
-            summaryData.jobs.count = results[0].count;
-            res.json(results[0].count);
-        }).catch(next);
-    }
-    else {
-        return res.json(summaryData.jobs.count);
-    }
+    const opts = { key: 'job-count' }
+
+    getCachedMetrics(req, res, opts, next);
 });
 
 router.get('/recordings-species-count', function(req, res, next) {
     res.type('json');
-    if (summaryData.species.count === 0 || (Date.now() - summaryData.species.time > dayInMs)) {
-        model.recordings.countAllSpecies().then((results) => {
-            summaryData.species.count = results[0].count;
-            res.json(results[0].count);
-        }).catch(next);
-    }
-    else {
-        return res.json(summaryData.species.count);
-    }
+    const opts = { key: 'species-count' }
+
+    getCachedMetrics(req, res, opts, next);
 });
 
 router.get('/recordings-count', function(req, res, next) {
     res.type('json');
-    if (summaryData.rec.count === 0 || (Date.now() - summaryData.rec.time > dayInMs)) {
-        model.recordings.countAllRecordings().then((results) => {
-            summaryData.rec.count = results[0].count;
-            res.json(results[0].count);
-        }).catch(next);
-    }
-    else {
-        return res.json(summaryData.rec.count);
-    }
+    const opts = { key: 'recordings-count' }
+
+    getCachedMetrics(req, res, opts, next);
 });
 
 router.post('/:projectUrl/info/update', function(req, res, next) {

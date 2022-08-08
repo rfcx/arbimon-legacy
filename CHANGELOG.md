@@ -1,5 +1,7 @@
 # Arbimon Release Notes
 
+- Fixed the issue about long loading website metrics on the Homepage
+
 ## v3.0.56 - June 24, 2022
 
 Resolved issues:
