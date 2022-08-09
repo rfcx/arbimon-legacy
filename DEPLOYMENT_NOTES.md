@@ -1,5 +1,9 @@
 # Arbimon Deployment Notes
 
+## v3.0.58
+
+- Run 031-cached-metrics-table.sql on the production
+
 ## v3.0.55
 
 - Run 028-add-created-at-updated-at-to-projects.sql on the staging/production sides

@@ -43,11 +43,24 @@ var Projects = {
         }
     },
 
-    countAllProjects: function(callback) {
-        var q = 'SELECT count(*) AS count \n'+
-                'FROM `projects`';
+    countAllProjects: async function() {
+        const q = 'SELECT count(*) AS count FROM projects';
 
-        queryHandler(q, callback);
+        return dbpool.query(q).get(0).get('count')
+    },
+
+    getCachedMetrics: async function(key) {
+        const q = `SELECT * FROM cached_metrics cm
+                 WHERE cm.key = '${key}'`
+
+        return dbpool.query(q)
+    },
+
+    updateCachedMetrics: async function(opts) {
+        const q = `UPDATE cached_metrics cm
+                SET cm.value = ${opts.value}, cm.expires_at = '${opts.expires_at}'
+                WHERE cm.key = '${opts.key}'`
+        return dbpool.query(q)
     },
 
     listAll: function(callback) {

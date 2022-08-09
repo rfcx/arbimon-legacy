@@ -483,8 +483,9 @@ var Jobs = {
         return null;
     },
 
-    countAllCompletedJobs: function() {
-        return dbpool.query("SELECT count(*) AS count FROM jobs WHERE state='completed'");
+    countAllCompletedJobs: async function() {
+        const q = "SELECT count(*) AS count FROM jobs WHERE state='completed'"
+        return dbpool.query(q).get(0).get('count')
     },
 
     /** Computes a summary of the current jobs status, by job type.
