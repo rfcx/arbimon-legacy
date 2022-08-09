@@ -1,5 +1,11 @@
 # Arbimon Release Notes
 
+## v3.0.59 - August 10, 2022
+
+Resolved issues:
+
+- Removed `UMAP` clustering visualization type
+- Show 0 frequency in the AED pop-up, if the box frequency equals to 0
 - Fixed the issue about long loading website metrics on the Homepage
 
 ## v3.0.56 - June 24, 2022

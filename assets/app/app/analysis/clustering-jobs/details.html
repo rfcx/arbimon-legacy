@@ -20,16 +20,6 @@
                     <button class="btn btn-default" ng-click="onGridViewSelected()">
                         View All Clusters
                     </button>
-                    <div class="btn-group" title="Clustering visualization type">
-                        <ui-select ng-model="selectedType" theme="bootstrap" class="btn-group-item" style="width:9em;" on-select="onTypeSelect($select.selected)">
-                            <ui-select-match>
-                                <i></i>{{$select.selected.text}}
-                            </ui-select-match>
-                            <ui-select-choices style="z-index: 10000;" repeat="$item in lists.types | filter:$select.search">
-                                <i ng-class="$item.class"></i> {{$item.text}}
-                            </ui-select-choices>
-                        </ui-select>
-                    </div>
                 </div>
                 <div class="input-group btn-group-margin row-flex flex-self-align-bottom" title="Select one cluster">
                     <button class="btn btn-default btn-sm" style="border-top-right-radius: 0; border-bottom-right-radius: 0;" type="button" ng-click="decrementClusters()">
