@@ -16,25 +16,6 @@ const csv_stringify = require('csv-stringify');
 const dayInMs = 24 * 60 * 60 * 1000;
 const moment = require('moment');
 
-let summaryData = {
-    projects: {
-        count: 0,
-        time: Date.now()
-    },
-    species: {
-        count: 0,
-        time: Date.now()
-    },
-    rec: {
-        count: 0,
-        time: Date.now()
-    },
-    jobs: {
-        count: 0,
-        time: Date.now()
-    }
-};
-
 var model = require('../../../model');
 
 // routes
@@ -137,51 +118,54 @@ const getCountForSelectedMetric = async function(key) {
     return count
 }
 
-const getRandomMinAsMs = function(max, min) {
+const getRandomMin = function(max, min) {
     return Math.floor(Math.random() * (max - min + 1) + min);
 }
 
-const getCachedMetrics = async function(req, res, opts, next) {
-    model.projects.getCachedMetrics(opts.key).then(async function(results) {
+const getCachedMetrics = async function(req, res, key, next) {
+    model.projects.getCachedMetrics(key).then(async function(results) {
         if (!results.length) return
         const [result] = results
         const count = result.value
+        
+        res.json(count)
+        
         const dateNow = moment.utc().valueOf()
         const dateIndb = moment.utc(result.expires_at).valueOf()
+        // Recalculate metrics each day and save the results in the db
         if (dateNow > dateIndb) {
-            const value = await getCountForSelectedMetric(opts.key)
-            const expires_at = moment.utc(dateNow + dayInMs + getRandomMinAsMs(0, 60000)).format('YYYY-MM-DD HH:mm:ss')
-            await model.projects.updateCachedMetrics({ ...opts, value, expires_at })
+            const value = await getCountForSelectedMetric(key)
+            const expires_at = moment.utc().add(1, 'days').add(getRandomMin(0, 60), 'minutes').format('YYYY-MM-DD HH:mm:ss')
+            await model.projects.updateCachedMetrics({ key, value, expires_at })
         }
-        return res.json(count);
     }).catch(next);
 }
 
 router.get('/projects-count', function(req, res, next) {
     res.type('json');
-    const opts = { key: 'project-count' }
-    getCachedMetrics(req, res, opts, next);
+    const key = 'project-count'
+    getCachedMetrics(req, res, key, next);
 });
 
 router.get('/jobs-count', function(req, res, next) {
     res.type('json');
-    const opts = { key: 'job-count' }
+    const key = 'job-count'
 
-    getCachedMetrics(req, res, opts, next);
+    getCachedMetrics(req, res, key, next);
 });
 
 router.get('/recordings-species-count', function(req, res, next) {
     res.type('json');
-    const opts = { key: 'species-count' }
+    const key = 'species-count'
 
-    getCachedMetrics(req, res, opts, next);
+    getCachedMetrics(req, res, key, next);
 });
 
 router.get('/recordings-count', function(req, res, next) {
     res.type('json');
-    const opts = { key: 'recordings-count' }
+    const key = 'recordings-count'
 
-    getCachedMetrics(req, res, opts, next);
+    getCachedMetrics(req, res, key, next);
 });
 
 router.post('/:projectUrl/info/update', function(req, res, next) {
