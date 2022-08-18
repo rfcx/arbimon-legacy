@@ -13,9 +13,8 @@ var uuid = require('node-uuid');
 var config = require('../../../config');
 const rfcxConfig = config('rfcx');
 const csv_stringify = require('csv-stringify');
-const dayInMs = 24 * 60 * 60 * 1000;
 const moment = require('moment');
-
+const { getCachedMetrics } = require('../../../utils/cached-metrics');
 var model = require('../../../model');
 
 // routes
@@ -99,72 +98,27 @@ router.get('/:projectUrl/info/source-project', function(req, res, next) {
 
 });
 
-const getCountForSelectedMetric = async function(key) {
-    let count
-    switch (key) {
-        case 'project-count':
-            count = await model.projects.countAllProjects()
-            break;
-        case 'job-count':
-            count = await model.jobs.countAllCompletedJobs()
-            break;
-        case 'species-count':
-            count = await model.recordings.countAllSpecies()
-            break;
-        case 'recordings-count':
-            count = await model.recordings.countAllRecordings()
-            break;
-    }
-    return count
-}
-
-const getRandomMin = function(max, min) {
-    return Math.floor(Math.random() * (max - min + 1) + min);
-}
-
-const getCachedMetrics = async function(req, res, key, next) {
-    model.projects.getCachedMetrics(key).then(async function(results) {
-        if (!results.length) return
-        const [result] = results
-        const count = result.value
-        
-        res.json(count)
-        
-        const dateNow = moment.utc().valueOf()
-        const dateIndb = moment.utc(result.expires_at).valueOf()
-        // Recalculate metrics each day and save the results in the db
-        if (dateNow > dateIndb) {
-            const value = await getCountForSelectedMetric(key)
-            const expires_at = moment.utc().add(1, 'days').add(getRandomMin(0, 60), 'minutes').format('YYYY-MM-DD HH:mm:ss')
-            await model.projects.updateCachedMetrics({ key, value, expires_at })
-        }
-    }).catch(next);
-}
-
 router.get('/projects-count', function(req, res, next) {
     res.type('json');
-    const key = 'project-count'
+    const key = { 'project-count': 'project-count' }
     getCachedMetrics(req, res, key, next);
 });
 
 router.get('/jobs-count', function(req, res, next) {
     res.type('json');
-    const key = 'job-count'
-
+    const key = { 'job-count': 'job-count' }
     getCachedMetrics(req, res, key, next);
 });
 
 router.get('/recordings-species-count', function(req, res, next) {
     res.type('json');
-    const key = 'species-count'
-
+    const key = { 'species-count': 'species-count' }
     getCachedMetrics(req, res, key, next);
 });
 
 router.get('/recordings-count', function(req, res, next) {
     res.type('json');
-    const key = 'recordings-count'
-
+    const key = { 'recording-count': 'recording-count' }
     getCachedMetrics(req, res, key, next);
 });
 

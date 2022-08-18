@@ -55,9 +55,11 @@ router.get('/count', function(req, res, next) {
     const project_id = req.project.project_id;
     const converter = new Converter(req.query, {});
     converter.convert('publicTemplates').optional().toBoolean();
+    converter.convert('projectTemplates').optional().toBoolean();
     return converter.validate()
         .then(async (params) => {
-            const count = await model.templates.templatesCount(project_id, params && params.publicTemplates)
+            const condition = params && params.projectTemplates ? ' AND T.source_project_id IS NULL' : null
+            const count = await model.templates.templatesCount(project_id, params && params.publicTemplates, null, condition)
             res.json({ count })
         })
         .catch(httpErrorHandler(req, res, 'Error getting templates count'))
