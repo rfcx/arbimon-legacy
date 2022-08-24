@@ -128,16 +128,16 @@ angular.module('a2.home', [
                 this.highlightedProjects = data.filter(item => item.featured === 1);
                 this.highlightedProjects.forEach(project => {
                     project.isLoading = true;
-                    $http.get('/api/project/' + project.url + '/pattern-matchings/count', {params: {cache: true}}).success(function(data) {
-                        project.patternMatchingsTotal = data || 0;
+                    $http.get('/api/project/' + project.url + '/templates/count', { params: { projectTemplates: true } }).success(function(data) {
+                        project.templatesTotal = data.count || 0;
                         project.isLoading = false;
                     });
-                    $http.get('/api/project/' + project.url + '/recordings/count', {params: {cache: true}}).success(function(data) {
-                        project.recCount = data.count;
+                    $http.get('/api/project/' + project.url + '/recordings/count').success(function(count) {
+                        project.recCount = count;
                         project.isLoading = false;
                     })
-                    $http.get('/api/project/' + project.url + '/recordings/species-count', {params: {cache: true}}).success(function(data) {
-                        project.speciesCount = data.count || 0;
+                    $http.get('/api/project/' + project.url + '/recordings/species-count').success(function(count) {
+                        project.speciesCount = count || 0;
                         project.isLoading = false;
                     })
                 });

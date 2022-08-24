@@ -6,15 +6,11 @@ var path   = require('path');
 var model = require('../../../model');
 const stream = require('stream');
 const moment = require('moment');
-const dayInMs = 24 * 60 * 60 * 1000;
 var config = require('../../../config');
 const mime = require('mime');
+const { getCachedMetrics } = require('../../../utils/cached-metrics');
 
 let s3, s3RFCx;
-let cachedData = {
-    counts: { },
-    species: { }
-};
 
 function defineS3Clients() {
     if (!s3) {
@@ -82,18 +78,15 @@ router.get('/species-count', function(req, res, next) {
     res.type('json');
     var params = req.query;
     params.project_id = req.query.project_id? req.query.project_id : req.project.project_id;
-    if (req.query.cache && cachedData.species[params.project_id] && (Date.now() - cachedData.species[params.project_id].time < dayInMs)) {
-        return res.json({count: cachedData.species[params.project_id].count});
-    }
-    else {
-        model.recordings.countProjectSpecies(params).then((data) => {
-            cachedData.species[params.project_id] = {
-                count: data[0].count,
-                time: Date.now()
-            };
-            res.json({count: data[0].count});
-        }).catch(next);
-    }
+    const key = { 'project-species-count': `project-${params.project_id}-species` }
+    getCachedMetrics(req, res, key, params, next);
+});
+
+router.get('/count', function(req, res, next) {
+    res.type('json');
+    let p = req.project.project_id;
+    const key = { 'project-recording-count': `project-${p}-rec` }
+    getCachedMetrics(req, res, key, p, next);
 });
 
 router.get('/occupancy-models-export/:species?', function(req, res, next) {
@@ -365,24 +358,6 @@ async function downloadRecordingById(req, res, inline, next) {
     res.setHeader('Content-type', `${ inline ? 'audio/wav' : mimetype }`)
     await getRecordingFromS3(bucketName, legacy, recordingUri, res)
 }
-
-
-router.get('/count', function(req, res, next) {
-    res.type('json');
-    let p = req.project.project_id;
-    if (req.query.cache && cachedData.counts[p] && (Date.now() - cachedData.counts[p].time < dayInMs)) {
-        return res.json(cachedData.counts[p].count);
-    }
-    else {
-        model.projects.totalRecordings(p).then((count) => {
-            cachedData.counts[p] = {
-                count: count[0],
-                time: Date.now()
-            };
-            res.json(count[0]);
-        }).catch(next);
-    }
-});
 
 router.get('/time-bounds', function(req, res, next) {
     res.type('json');
