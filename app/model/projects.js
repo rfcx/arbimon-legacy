@@ -65,7 +65,6 @@ var Projects = {
 
     insertCachedMetrics: async function(opts) {
         const {key, value, expiresAt} = opts
-        console.log(opts)
         const q = 'INSERT INTO cached_metrics(`key`, value, expires_at) VALUES (?,?,?)'
         return dbpool.query(q, [
             key,
