@@ -51,9 +51,10 @@ const getCachedMetrics = async function(req, res, key, params, next) {
         
         const dateNow = moment.utc().valueOf()
         const dateIndb = moment.utc(result.expires_at).valueOf()
-        // Recalculate metrics each day and save the results in the db
-        if (dateNow > dateIndb) {
-            await recalculateMetrics(k, v)
+        const isExpiresAtNotValid = !moment.utc(result.expires_at).isValid()
+        // Recalculate metrics each day or if the expires_at data not valid, and save the results in the db
+        if (isExpiresAtNotValid || (dateNow > dateIndb)) {
+            await recalculateMetrics(k, v, params)
         }
     }).catch(next);
 }

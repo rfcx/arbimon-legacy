@@ -101,25 +101,25 @@ router.get('/:projectUrl/info/source-project', function(req, res, next) {
 router.get('/projects-count', function(req, res, next) {
     res.type('json');
     const key = { 'project-count': 'project-count' }
-    getCachedMetrics(req, res, key, next);
+    getCachedMetrics(req, res, key, null, next);
 });
 
 router.get('/jobs-count', function(req, res, next) {
     res.type('json');
     const key = { 'job-count': 'job-count' }
-    getCachedMetrics(req, res, key, next);
+    getCachedMetrics(req, res, key, null, next);
 });
 
 router.get('/recordings-species-count', function(req, res, next) {
     res.type('json');
     const key = { 'species-count': 'species-count' }
-    getCachedMetrics(req, res, key, next);
+    getCachedMetrics(req, res, key, null, next);
 });
 
 router.get('/recordings-count', function(req, res, next) {
     res.type('json');
     const key = { 'recording-count': 'recording-count' }
-    getCachedMetrics(req, res, key, next);
+    getCachedMetrics(req, res, key, null, next);
 });
 
 router.post('/:projectUrl/info/update', function(req, res, next) {
