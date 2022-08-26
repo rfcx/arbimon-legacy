@@ -76,10 +76,9 @@ router.get('/search-count', function(req, res, next) {
 
 router.get('/species-count', function(req, res, next) {
     res.type('json');
-    var params = req.query;
-    params.project_id = req.query.project_id? req.query.project_id : req.project.project_id;
-    const key = { 'project-species-count': `project-${params.project_id}-species` }
-    getCachedMetrics(req, res, key, params, next);
+    let p = req.query.project_id? req.query.project_id : req.project.project_id;
+    const key = { 'project-species-count': `project-${p}-species` }
+    getCachedMetrics(req, res, key, p, next);
 });
 
 router.get('/count', function(req, res, next) {

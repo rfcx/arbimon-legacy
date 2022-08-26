@@ -120,9 +120,9 @@ angular.module('a2.srv.project', [
             getRecTotalQty: function(callback) {
                 return a2APIService.get('/recordings/count').then(function(data) {
                     if(callback){
-                        callback(data.count);
+                        callback(data);
                     }
-                    return data.count;
+                    return data;
                 });
             },
             getProjectTotalSpecies: function(projectId, callback) {
