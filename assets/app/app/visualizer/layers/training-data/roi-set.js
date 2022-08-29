@@ -25,10 +25,29 @@ angular.module('a2.visualizer.layers.training-sets.roi_set', [
         controller: 'a2VisualizerSpectrogramTrainingSetRoiSetData'
     });
 })
-.controller('a2VisualizerTrainingSetLayerRoiSetDataController', function($timeout, a2TrainingSets, training_set_types, a22PointBBoxEditor, a2UserPermit, notify) {
+.controller('a2VisualizerTrainingSetLayerRoiSetDataController', function($scope, $timeout, a2TrainingSets, training_set_types, a22PointBBoxEditor, a2UserPermit, notify) {
     var self=this;
     self.type='roi_set';
     self.typedef  = training_set_types.roi_set;
+    $scope.getXCoord = function(x1, x2){
+        return $scope.getXSide(x1, x2) == 'left' ? x1 : x2;
+    };
+    $scope.getXSide = function(x1, x2){
+        var px = Math.max(0, Math.min($scope.layout.sec2x(x2, 1) / $scope.layout.spectrogram.width, 1));
+        return px > .5 ? 'left' : 'right';
+    };
+    $scope.getTransform = function(x1, x2, y1, y2){
+        var tx = $scope.getXSide(x1, x2) == 'left' ? '-100%' : '0';
+        var ty = $scope.getYTranslation((y1 + y2)/2, true);
+        return 'translate(' + tx + ', ' + ty + ')';
+    };
+    $scope.getYTranslation = function(y, asrelativeoffset){
+        var py = Math.max(0.1, Math.min($scope.layout.hz2y(y, 1) / $scope.layout.spectrogram.height, .9));
+        if (asrelativeoffset){
+            py = -py;
+        }
+        return ((100 * py) | 0) + '%';
+    };
     self.fetchData = function(tsetId, rec){
         self.tsetId = tsetId;
         self.recording = rec;

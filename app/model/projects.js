@@ -58,9 +58,20 @@ var Projects = {
 
     updateCachedMetrics: async function(opts) {
         const q = `UPDATE cached_metrics cm
-                SET cm.value = ${opts.value}, cm.expires_at = '${opts.expires_at}'
+                SET cm.value = ${opts.value}, cm.expires_at = '${opts.expiresAt}'
                 WHERE cm.key = '${opts.key}'`
+
         return dbpool.query(q)
+    },
+
+    insertCachedMetrics: async function(opts) {
+        const {key, value, expiresAt} = opts
+        const q = 'INSERT INTO cached_metrics(`key`, value, expires_at) VALUES (?,?,?)'
+        return dbpool.query(q, [
+            key,
+            value,
+            expiresAt
+        ])
     },
 
     listAll: function(callback) {
@@ -988,7 +999,7 @@ var Projects = {
                 "FROM recordings AS r JOIN sites AS s ON s.site_id = r.site_id \n"+
                 "WHERE s.project_id = " + dbpool.escape(project_id);
 
-        return dbpool.query(q);
+        return dbpool.query(q).get(0).get('count');
     },
 
     recordingsMinMaxDates: function (project_id, callback) {
