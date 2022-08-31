@@ -166,8 +166,8 @@ processFiltersData = async function(req, res, next) {
                         // Occupancy parameter:
                         // 1 (present); 0 (absent);
                         // NA ( device was not active in that day, in other words, there are no recordings for this day);
-                        // NI ( no information from the user if species is present or absent).
-                        tempRow[item] = item === row.date? (row.count === 0 ? 0 : 1) : (site ? 'NI' : 'NA');
+                        // NI ( no information from the user if species is present or absent). Changed to 0
+                        tempRow[item] = item === row.date? (row.count === 0 ? 0 : 1) : (site ? '0' : 'NA');
                         // Detection parameter:
                         // The julian day when there are recordings for that day;
                         // NA if the recorder was not active in that day (i.e there is no recordings associated with that day).
@@ -189,7 +189,7 @@ processFiltersData = async function(req, res, next) {
                                 return item === moment(new Date(`${site.year}/${site.month}/${site.day}`)).format('YYYY/MM/DD');
                             }
                         });
-                        notValidatedRow[item] = site ? 'NI' : 'NA';
+                        notValidatedRow[item] = site ? '0' : 'NA';
                         notValidatedDays[item] = site ? (moment(new Date(`${site.year}/${site.month}/${site.day}`)).valueOf()/86400000 + 2440587.5).toFixed() : 'NA';
                     });
                     streamObject[row] = [...Object.values(notValidatedRow), ...Object.values(notValidatedDays)];
