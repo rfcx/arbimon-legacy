@@ -1,5 +1,18 @@
 # Arbimon Release Notes
 
+## v3.0.61 - August 31, 2022
+
+Resolved issues:
+
+- Change NI to `0` in the Occupancy models format
+
+## v3.0.60 - August 28, 2022
+
+Resolved issues:
+
+- Training sets/templates popup issue is fixed on the spectrogram visualizer
+- Use cached metrics for highlighted projects on the homepage
+
 ## v3.0.59 - August 10, 2022
 
 Resolved issues:
