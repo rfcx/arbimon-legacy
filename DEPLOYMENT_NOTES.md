@@ -1,5 +1,11 @@
 # Arbimon Deployment Notes
 
+## v3.0.62
+
+- Run 032-create-recordings-deleted-table.sql on the production
+- Run 033-add-deleted-at-to-sites.sql on the production
+
+
 ## v3.0.58
 
 - Run 031-cached-metrics-table.sql on the production

@@ -1,5 +1,12 @@
 # Arbimon Release Notes
 
+## v3.0.62 - September XX, 2022
+
+Performance improvements:
+
+- Keep deleted recording in the recordings_deleted table to sync this data with the Biodiversity website
+- Added `deleted_at` column to the sites table to sync deleted sites with the Biodiversity website
+
 ## v3.0.61 - August 31, 2022
 
 Resolved issues:

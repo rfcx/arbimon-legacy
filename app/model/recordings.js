@@ -1530,7 +1530,7 @@ var Recordings = {
         let query = `SELECT S.name as site, YEAR(R.datetime) as year, MONTH(R.datetime) as month, DAY(R.datetime) as day,COUNT(*) as count
             FROM sites S
             LEFT JOIN recordings R ON S.site_id = R.site_id
-            WHERE S.project_id = ${project_id}
+            WHERE S.project_id = ${project_id} AND S.deleted_at is null
             GROUP BY S.name, YEAR(R.datetime), MONTH(R.datetime), DAY(R.datetime);`;
         let queryResult = await dbpool.query({
             sql: query,
@@ -1797,6 +1797,14 @@ var Recordings = {
         });
     },
 
+    insertToRecordingsDeleted: function(rec, callback) {
+        queryHandler('INSERT INTO recordings_deleted (\n' +
+                '`recording_id`, `site_id`, `datetime`, `duration`, `deleted_at` \n'+
+            ') VALUES (?, ?, ?, ?, NOW());', [
+                rec.id, rec.site_id, rec.datetime, rec.duration, 
+            ], callback);
+    },
+
     /* fetch count of project recordings.
     */
     deleteMatching: function(filters, project_id){
@@ -1819,8 +1827,7 @@ var Recordings = {
         });
 
         var sqlFilterImported =
-            "SELECT r.recording_id AS id, \n"+
-            "       r.uri \n"+
+            "SELECT r.recording_id AS id, r.uri, r.site_id, r.datetime, r.duration \n"+
             "FROM recordings AS r  \n"+
             "JOIN sites AS s ON s.site_id = r.site_id  \n"+
             "WHERE r.recording_id IN (?) \n"+
@@ -1868,8 +1875,13 @@ var Recordings = {
                             if(err) next(err);
 
                             deleted.push(rec.id);
-                            next();
-                        });
+                            // Keep deleted recording in the recordings_deleted table
+                            // to sync this data with the Biodiversity website
+                            Recordings.insertToRecordingsDeleted(rec, function(err, results) {
+                                if(err) next(err);
+                                next()
+                            })
+                        })
                     });
                 },
                 function done(err) {
