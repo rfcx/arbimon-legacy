@@ -1883,24 +1883,21 @@ var Recordings = {
                         msg: 'No recordings were deleted'
                     }
                 }
-                let deleted = []
 
-                await this.deleteRecordingsFromS3(rows)
                 await this.deleteRecordingsFromArbimon(recIds, query)
-                deleted = recIds
+                await this.deleteRecordingsFromS3(rows)
 
                 // Keep deleted recording in the recordings_deleted table
                 // to sync this data with the Biodiversity website
                 await this.insertToRecordingsDeleted(rows, query)
-                console.info('recordings deleted:', deleted);
 
                 await db.commit();
                 await db.release();
 
-                let s = deleted.length > 1 ? 's' : '';
+                let s = recIds.length > 1 ? 's' : '';
                 return {
-                    deleted: deleted,
-                    msg: 'recording'+s+' deleted successfully'
+                    deleted: recIds,
+                    msg: `recording ${s} deleted successfully`
                 }
             })
             .catch(async (err) => {
