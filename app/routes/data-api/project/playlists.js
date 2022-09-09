@@ -16,14 +16,14 @@ getProjectPlaylists = async function(req, res, next) {
 
     // Get user role to filter playlists
     let roleData
-    if (req.query.isFiltered) {
-        [roleData] = await model.users.getUserProjectRole(userId, projectId)
+    if (req.query.filterByUserRole) {
+        roleData = await model.users.getUserProjectRole(userId, projectId)
     }
     return model.playlists.find({project: projectId}, {
         count:true,
         show_type:true,
         show_info: !!req.query.info,
-        isFiltered: req.query.isFiltered,
+        filterByUserRole: req.query.filterByUserRole,
         roleId: roleData && roleData.role_id
     }, function(err, count) {
         if(err) return next(err);

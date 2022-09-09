@@ -78,7 +78,7 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
             };
 
             this.loading.playlists = true;
-            a2Playlists.getList({isFiltered: true}).then((function(playlists){
+            a2Playlists.getList({filterByUserRole: true}).then((function(playlists){
                 this.loading.playlists = false;
                 list.playlists = playlists;
             }).bind(this));

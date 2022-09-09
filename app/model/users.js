@@ -268,15 +268,10 @@ var Users = {
     },
 
     getUserProjectRole: async function(user_id, project_id) {
-        return dbpool.query(
-            'SELECT r.name, r.role_id \n'+
-            'FROM user_project_role AS upr \n'+
-            'JOIN roles AS r ON upr.role_id = r.role_id \n'+
-            'WHERE upr.user_id = ? \n'+
-            'AND upr.project_id = ?', [
-            user_id,
-            project_id
-        ]);
+        const q = `SELECT r.role_id FROM user_project_role AS upr
+            JOIN roles AS r ON upr.role_id = r.role_id
+            WHERE upr.user_id = ${user_id} AND upr.project_id = ${project_id}`
+        return dbpool.query(q).get(0)
     },
 
     findOwnedProjects: function(user_id, query) {

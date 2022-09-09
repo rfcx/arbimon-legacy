@@ -65,7 +65,7 @@ var Playlists = {
             // joins.push("JOIN playlist_recordings PLR ON PL.playlist_id = PLR.playlist_id");
         }
 
-        if (options.isFiltered){
+        if (options.filterByUserRole) {
             const ifExternalUser = options.roleId && (options.roleId === 2 || options.roleId === 3)
             constraints.push(`PL.total_recordings <= ${ifExternalUser ? '5000' : '100000'}`)
         }
