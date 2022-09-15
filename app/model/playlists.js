@@ -65,14 +65,12 @@ var Playlists = {
             // joins.push("JOIN playlist_recordings PLR ON PL.playlist_id = PLR.playlist_id");
         }
 
-        if (options.filterByUserRole) {
-            const ifExternalUser = options.roleId && (options.roleId === 2 || options.roleId === 3)
-            constraints.push(`PL.total_recordings <= ${ifExternalUser ? '5000' : '100000'}`)
+        if (options.filterPlaylistLimit) {
+            constraints.push('PL.total_recordings <= 100000')
         }
 
         projection.push("PLT.name as type");
         joins.push("JOIN playlist_types PLT ON PL.playlist_type_id = PLT.playlist_type_id");
-
 
         return dbpool.query(
             "SELECT PL.playlist_id as id, PL.name, PL.project_id, PL.uri, PL.metadata \n" +

@@ -5,33 +5,20 @@ var model = require('../../../model');
 
 /** Return a list of all the playlists in a project.
  */
-router.get('/', function(req, res, next) {
+ router.get('/', function(req, res, next) {
     res.type('json');
-    getProjectPlaylists(req, res, next);
-});
-
-getProjectPlaylists = async function(req, res, next) {
-    const projectId = req.project.project_id
-    const userId = req.session.user.id
-
-    // Get user role to filter playlists
-    let roleData
-    if (req.query.filterByUserRole) {
-        roleData = await model.users.getUserProjectRole(userId, projectId)
-    }
-    return model.playlists.find({project: projectId}, {
+    model.playlists.find({project:req.project.project_id}, {
         count:true,
         show_type:true,
         show_info: !!req.query.info,
-        filterByUserRole: req.query.filterByUserRole,
-        roleId: roleData && roleData.role_id
+        filterPlaylistLimit: req.query.filterPlaylistLimit
     }, function(err, count) {
         if(err) return next(err);
 
         res.json(count);
         return null;
-    })
-}
+    });
+});
 
 router.param('playlist', function(req, res, next, playlist){
     res.type('json');
