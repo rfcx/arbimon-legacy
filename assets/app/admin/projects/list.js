@@ -133,6 +133,7 @@ angular.module('a2.admin.projects.list', [
                 pattern_matching_enabled : !!project.pattern_matching_enabled,
                 aed_enabled : !!project.aed_enabled,
                 clustering_enabled : !!project.clustering_enabled,
+                reports_enabled : !!project.reports_enabled,
                 plan : {
                     tier: project.tier,
                     storage: project.storage_limit,
