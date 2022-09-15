@@ -9,8 +9,8 @@ angular.module('a2.srv.playlists', [
             if(options){
                 options={params:options};
             }
-            if (options && options.filterByUserRole) {
-                options.params.filterByUserRole = options.filterByUserRole
+            if (options && options.filterPlaylistLimit) {
+                options.params.filterPlaylistLimit = options.filterPlaylistLimit
             }
             return $http.get('/api/project/'+projectName+'/playlists', options).then(function(response) {
                 return response.data;
