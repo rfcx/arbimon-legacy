@@ -150,6 +150,10 @@ var Sites = {
             site['updated_at'] = moment.utc(new Date()).format();
         }
 
+        if (site.deletedAt) {
+            site['deleted_at'] = moment.utc().format('YYYY-MM-DD HH:mm:ss');
+        }
+
         var tableFields = [
             "project_id",
             "name",
@@ -159,7 +163,8 @@ var Sites = {
             "published",
             "site_type_id",
             "timezone",
-            "updated_at"
+            "updated_at",
+            "deleted_at"
         ];
 
         for( var i in tableFields) {
@@ -222,14 +227,13 @@ var Sites = {
                     if(result) {
                         Sites.update({
                             id: site_id,
-                            project_id: config('trash-project').id,
-                            published: false
+                            published: false,
+                            deletedAt: true
                         }, connection, callback);
                     }
                     else {
                         var q = 'UPDATE sites SET deleted_at = NOW() \n'+
                                 'WHERE site_id = %s';
-
                         q = util.format(q, dbpool.escape(site_id));
                         connection? connection.query(q, callback): queryHandler(q, callback);
                     }
