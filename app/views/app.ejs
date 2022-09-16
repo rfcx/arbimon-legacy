@@ -61,34 +61,34 @@
                             </li>
                             <li ui-sref-active="active" ng-if="!citizenScientistUser">
                                 <a ui-sref="dashboard" tooltip="Summary" tooltip-placement="bottom">
-                                    <i class="fa fa-dashboard"></i>
-                                    <span class="visible-lg-inline visible-xs-inline">Summary</span>
+                                    <i class="visible-sm-inline visible-md-inline fa fa-dashboard"></i>
+                                    <span class="visible-xs-inline visible-lg-inline">Summary</span>
                                 </a>
                             </li>
                             <li ui-sref-active="open" tooltip="Data" tooltip-placement="bottom" ng-if="!citizenScientistUser">
                                 <a ui-sref="audiodata">
-                                    <i class="fa fa-cloud-upload"></i>
-                                    <span class="visible-lg-inline visible-xs-inline">Data</span>
+                                    <i class="visible-sm-inline visible-md-inline fa fa-cloud-upload"></i>
+                                    <span class="visible-xs-inline visible-lg-inline">Data</span>
                                 </a>
                                 <ul class="navbar-hide-collapsed dropdown-menu" a2-sidenav-bar-anchor="audiodata"></ul>
                             </li>
                             <li ui-sref-active="active" tooltip="Visualizer" tooltip-placement="bottom">
                                 <a ui-sref="visualizer">
-                                    <i class="fa fa-cubes"></i>
-                                    <span class="visible-lg-inline visible-xs-inline">Visualizer</span>
+                                    <i class="visible-sm-inline visible-md-inline fa fa-cubes"></i>
+                                    <span class="visible-xs-inline visible-lg-inline">Visualizer</span>
                                 </a>
                             </li>
                             <li ui-sref-active="open" tooltip="Analysis" tooltip-placement="bottom" ng-if="!citizenScientistUser">
                                 <a ui-sref="analysis">
-                                    <i class="fa fa-send-o"></i>
-                                    <span class="visible-lg-inline visible-xs-inline">Analysis</span>
+                                    <i class="visible-sm-inline visible-md-inline fa fa-send-o"></i>
+                                    <span class="visible-xs-inline visible-lg-inline">Analysis</span>
                                 </a>
                                 <ul class="navbar-hide-collapsed dropdown-menu" a2-sidenav-bar-anchor="analysis"></ul>
                             </li>
                             <li ui-sref-active="open" tooltip="Citizen Scientist" tooltip-placement="bottom" ng-if="userPermit.has('citizen_scientist')">
                                 <a ng-href="{{getUrlFor('citizen-scientist')}}" target="arbimonCSUI">
-                                    <i class="fa fa-users"></i>
-                                    <span class="visible-lg-inline visible-xs-inline">Citizen Scientist</span>
+                                    <i class="visible-sm-inline visible-md-inline fa fa-users"></i>
+                                    <span class="visible-xs-inline visible-lg-inline">Citizen Scientist</span>
                                 </a>
                                 <ul class="navbar-hide-collapsed dropdown-menu" a2-sidenav-bar-anchor="citizen-scientist"></ul>
                             </li>
@@ -96,8 +96,8 @@
                         <ul class="nav navbar-nav hide-tooltip-lg" ng-controller="StatusBarNavIndexController" ng-if="!citizenScientistUser">
                             <li ui-sref-active="active">
                                 <a ui-sref="jobs" tooltip="Active Jobs" tooltip-placement="bottom">
-                                    <i class="fa fa-cogs"></i>
-                                    <span class="visible-lg-inline visible-xs-inline">Jobs</span>
+                                    <i class="visible-sm-inline visible-md-inline fa fa-cogs"></i>
+                                    <span class="visible-xs-inline visible-lg-inline">Jobs</span>
                                     <span ng-show="jobslength" class="badge" ng-bind="jobslength"></span>
                                 </a>
                             </li>
@@ -105,8 +105,8 @@
                         <ul class="nav navbar-nav hide-tooltip-lg" ng-if="!citizenScientistUser">
                             <li ui-sref-active="open">
                                 <a ui-sref="settings" tooltip="Settings" tooltip-placement="bottom">
-                                    <i class="fa fa-wrench"></i>
-                                    <span class="visible-lg-inline visible-xs-inline">Settings</span>
+                                    <i class="visible-sm-inline visible-md-inline fa fa-wrench"></i>
+                                    <span class="visible-xs-inline visible-lg-inline">Settings</span>
                                 </a>
                                 <ul class="navbar-hide-collapsed dropdown-menu" a2-sidenav-bar-anchor="settings"></ul>
                             </li>
@@ -114,8 +114,8 @@
                         <ul class="nav navbar-nav hide-tooltip-lg" ng-if="reportsEnabled">
                             <li>
                                 <a ng-href="{{getUrlFor('reports')}}" tooltip="Insights" tooltip-placement="bottom">
-                                    <i class="fa fa-bar-chart"></i>
-                                    <span class="visible-lg-inline visible-xs-inline">Insights</span>
+                                    <span>Insights</span>
+                                    <i class="ml-1 fa fa-external-link"></i>
                                 </a>
                             </li>
                         </ul>
