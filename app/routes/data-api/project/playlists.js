@@ -5,12 +5,13 @@ var model = require('../../../model');
 
 /** Return a list of all the playlists in a project.
  */
-router.get('/', function(req, res, next) {
+ router.get('/', function(req, res, next) {
     res.type('json');
     model.playlists.find({project:req.project.project_id}, {
         count:true,
         show_type:true,
         show_info: !!req.query.info,
+        filterPlaylistLimit: req.query.filterPlaylistLimit
     }, function(err, count) {
         if(err) return next(err);
 

@@ -9,7 +9,10 @@ angular.module('a2.srv.playlists', [
             if(options){
                 options={params:options};
             }
-            return $http.get('/api/project/'+projectName+'/playlists/', options).then(function(response) {
+            if (options && options.filterPlaylistLimit) {
+                options.params.filterPlaylistLimit = options.filterPlaylistLimit
+            }
+            return $http.get('/api/project/'+projectName+'/playlists', options).then(function(response) {
                 return response.data;
             });
         },

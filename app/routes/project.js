@@ -116,6 +116,7 @@ router.get('/:projecturl?/', function(req, res, next) {
                         citizen_scientist: !!project.citizen_scientist_enabled,
                         aed: !!project.aed_enabled,
                         clustering: !!project.clustering_enabled,
+                        reports_enabled: !!project.reports_enabled,
                     },
                     super: !!req.session.user.isSuper,
                     permissions: rows.map(function(perm) { return perm.name; }),

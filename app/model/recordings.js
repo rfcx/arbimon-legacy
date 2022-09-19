@@ -333,6 +333,7 @@ var Recordings = {
                 constraints.shift()
                 data.push(urlquery.site['='])
                 constraints.push('S.name = ? AND S.project_id = ?');
+                constraints.push('S.deleted_at is null');
                 data.push(project_id);
             }
             group_by = sqlutil.compute_groupby_constraints(urlquery, fields, options.group_by, {
@@ -1116,7 +1117,7 @@ var Recordings = {
         var schema = Recordings.SCHEMAS.searchFilters;
 
         return Q.ninvoke(joi, 'validate', params, schema).then(function (parameters) {
-            return dbpool.query("SELECT s.* FROM sites s WHERE s.project_id = ?\n" +
+            return dbpool.query("SELECT s.* FROM sites s WHERE s.project_id = ? AND s.deleted_at is null\n" +
                 "OR s.site_id in (\n" +
                 "   SELECT pis.site_id FROM project_imported_sites pis WHERE pis.project_id = ?\n" +
                 ")", [parameters.project_id, parameters.project_id])
@@ -1530,7 +1531,7 @@ var Recordings = {
         let query = `SELECT S.name as site, YEAR(R.datetime) as year, MONTH(R.datetime) as month, DAY(R.datetime) as day,COUNT(*) as count
             FROM sites S
             LEFT JOIN recordings R ON S.site_id = R.site_id
-            WHERE S.project_id = ${project_id}
+            WHERE S.project_id = ${project_id} AND S.deleted_at is null
             GROUP BY S.name, YEAR(R.datetime), MONTH(R.datetime), DAY(R.datetime);`;
         let queryResult = await dbpool.query({
             sql: query,
@@ -1812,87 +1813,103 @@ var Recordings = {
         });
     },
 
-    delete: function(recs, project_id, callback) {
+    getDeletedRecordingData: async function(recs, project_id, query) {
+        const q = `SELECT r.recording_id AS id, r.uri, r.site_id, r.datetime, r.duration
+            FROM recordings AS r
+            JOIN sites AS s ON s.site_id = r.site_id
+            WHERE r.recording_id IN (${recs})
+            AND s.project_id = ${project_id}`
+        return query(q);
+    },
 
-        var recIds = recs.map(function(rec) {
-            return rec.id;
-        });
+    deleteRecordingsFromS3: async function(rows) {
+        // Remove multiple rows
+        let dataToDelete = []
 
-        var sqlFilterImported =
-            "SELECT r.recording_id AS id, \n"+
-            "       r.uri \n"+
-            "FROM recordings AS r  \n"+
-            "JOIN sites AS s ON s.site_id = r.site_id  \n"+
-            "WHERE r.recording_id IN (?) \n"+
-            "AND s.project_id = ?";
+        for (const rec of rows) {
+            const ext = path.extname(rec.uri)
+            const thumbnailUri = rec.uri.replace(ext, '.thumbnail.png')
+            dataToDelete.push({ Key: rec.uri })
+            dataToDelete.push({ Key: thumbnailUri })
+        }
 
-        queryHandler(dbpool.format(sqlFilterImported, [recIds, project_id]), function(err, rows) {
-
-            if(!rows.length) {
-                return callback(null, {
-                    deleted: [],
-                    msg: 'No recordings were deleted'
-                });
+        const params = {
+            Bucket: config('aws').bucketName,
+            Delete: {
+                Objects: dataToDelete
             }
+        }
 
-            var deleted = [];
-
-            async.eachSeries(rows,
-                function loop(rec, next) {
-                    var ext = path.extname(rec.uri);
-                    var thumbnailUri = rec.uri.replace(ext, '.thumbnail.png');
-
-                    var params = {
-                        Bucket: config('aws').bucketName,
-                        Delete: {
-                            Objects: [
-                                { Key: rec.uri },
-                                { Key: thumbnailUri }
-                            ],
-                        }
-                    };
-
-                    debug(params);
-
-                    s3.deleteObjects(params, function(err, data) {
-                        if(err && err.code != 'NoSuchKey') {
-                            return next(err);
-                        }
-
-                        debug(data);
-
-                        var sqlDelete = "DELETE FROM recordings \n"+
-                                        "WHERE recording_id = ?";
-
-                        queryHandler(dbpool.format(sqlDelete, [rec.id]), function(err, results) {
-                            if(err) next(err);
-
-                            deleted.push(rec.id);
-                            next();
-                        });
-                    });
-                },
-                function done(err) {
-                    if(err) {
-                        if(!deleted.length) return callback(err);
-
-                        return callback(err, {
-                            deleted: deleted,
-                            msg: 'some recordings where deleted but an error ocurred'
-                        });
-                    }
-
-                    debug('recordings deleted:', deleted);
-
-                    var s = deleted.length > 1 ? 's' : '';
-
-                    callback(null, {
-                        deleted: deleted,
-                        msg: 'recording'+s+' deleted successfully'
-                    });
-                }
-            );
+        return s3.deleteObjects(params, function(err, data) {
+            if (err && err.code != 'NoSuchKey') {
+                console.error(err);
+                return new Error(err);
+            }
+            console.info(data);
         });
+    },
+
+    deleteRecordingsFromArbimon: async function(recIds, query) {
+        // Remove multiple rows
+        const q = `DELETE FROM recordings
+            WHERE recording_id IN (${recIds})`
+        return query(q);
+    },
+
+    insertToRecordingsDeleted: async function(rows, query) {
+        // Remove multiple rows
+        const q = `INSERT INTO recordings_deleted (recording_id, site_id, datetime, duration, deleted_at)
+            VALUES (\n` + rows.map((rec) => {
+                const datetime = `${moment.utc(rec.datetime).format('YYYY-MM-DD HH:mm:ss')}`
+                return `${rec.id}, ${rec.site_id}, '${datetime}', ${rec.duration}, NOW()`
+            }).join('), (\n') + ')'
+        return query(q)
+    },
+
+    delete: async function(recs, project_id, callback) {
+        let db
+        return dbpool.getConnection()
+            .then(async (connection) => {
+                db = connection;
+                await db.beginTransaction();
+                const query = util.promisify(db.query).bind(db);
+
+                const recIds = recs.map(function(rec) {
+                    return rec.id
+                });
+                const rows = await this.getDeletedRecordingData(recIds, project_id, query)
+                if(!rows.length) {
+                    return {
+                        deleted: [],
+                        msg: 'No recordings were deleted'
+                    }
+                }
+
+                await this.deleteRecordingsFromArbimon(recIds, query)
+                await this.deleteRecordingsFromS3(rows)
+
+                // Keep deleted recording in the recordings_deleted table
+                // to sync this data with the Biodiversity website
+                await this.insertToRecordingsDeleted(rows, query)
+
+                await db.commit();
+                await db.release();
+
+                let s = recIds.length > 1 ? 's' : '';
+                return {
+                    deleted: recIds,
+                    msg: `recording ${s} deleted successfully`
+                }
+            })
+            .catch(async (err) => {
+                console.log('err', err);
+                if (db) {
+                    await db.rollback();
+                    await db.release();
+                }
+                throw new Error('Failed to delete recordings');
+            })
+            .nodeify(callback)
     }
 };
 

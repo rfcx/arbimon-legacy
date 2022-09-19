@@ -25,6 +25,8 @@ var Sites = {
         var selectExtra = '';
         var joinExtra = '';
 
+        whereExp.push('s.deleted_at is null')
+
         if(query.hasOwnProperty("id")) {
             whereExp.push("s.site_id = ?");
             data.push(query.id);
@@ -148,6 +150,10 @@ var Sites = {
             site['updated_at'] = moment.utc(new Date()).format();
         }
 
+        if (site.deletedAt) {
+            site['deleted_at'] = moment.utc().format('YYYY-MM-DD HH:mm:ss');
+        }
+
         var tableFields = [
             "project_id",
             "name",
@@ -157,7 +163,8 @@ var Sites = {
             "published",
             "site_type_id",
             "timezone",
-            "updated_at"
+            "updated_at",
+            "deleted_at"
         ];
 
         for( var i in tableFields) {
@@ -190,7 +197,7 @@ var Sites = {
         var q = 'SELECT count(*) as count \n'+
                 'FROM sites \n'+
                 'WHERE name = %s \n'+
-                'AND project_id = %s';
+                'AND project_id = %s AND deleted_at is null';
 
         q = util.format(q,
             dbpool.escape(site_name),
@@ -220,14 +227,13 @@ var Sites = {
                     if(result) {
                         Sites.update({
                             id: site_id,
-                            project_id: config('trash-project').id,
-                            published: false
+                            published: false,
+                            deletedAt: true
                         }, connection, callback);
                     }
                     else {
-                        var q = 'DELETE FROM sites \n'+
+                        var q = 'UPDATE sites SET deleted_at = NOW() \n'+
                                 'WHERE site_id = %s';
-
                         q = util.format(q, dbpool.escape(site_id));
                         connection? connection.query(q, callback): queryHandler(q, callback);
                     }
@@ -262,7 +268,7 @@ var Sites = {
                 "JOIN projects AS p ON s.project_id = p.project_id \n"+
                 "JOIN users AS u ON p.owner_id = u.user_id \n"+
                 "LEFT JOIN recordings AS r ON s.site_id = r.site_id \n"+
-                "WHERE s.published = 1 \n"+
+                "WHERE s.published = 1 AND s.deleted_at is null "+
                 "GROUP BY s.site_id";
 
         queryHandler(q, callback);
@@ -845,7 +851,8 @@ var Sites = {
 
     countAllSites: function(callback) {
         var q = 'SELECT count(*) AS count \n'+
-                'FROM `sites`';
+                'FROM `sites` \n'+
+                'WHERE deleted_at is null';
 
         queryHandler(q, callback);
     },
@@ -853,7 +860,7 @@ var Sites = {
     countSitesToday: function(callback) {
         var q = 'SELECT count(*) AS count \n'+
                 'FROM `sites` \n' +
-                'WHERE DATE(created_at) = DATE(NOW())';
+                'WHERE DATE(created_at) = DATE(NOW()) AND deleted_at is null';
 
         queryHandler(q, callback);
     }
