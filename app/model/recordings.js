@@ -333,6 +333,7 @@ var Recordings = {
                 constraints.shift()
                 data.push(urlquery.site['='])
                 constraints.push('S.name = ? AND S.project_id = ?');
+                constraints.push('S.deleted_at is null');
                 data.push(project_id);
             }
             group_by = sqlutil.compute_groupby_constraints(urlquery, fields, options.group_by, {
