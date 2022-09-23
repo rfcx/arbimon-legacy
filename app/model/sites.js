@@ -151,7 +151,9 @@ var Sites = {
         }
 
         if (site.deletedAt) {
-            site['deleted_at'] = moment.utc().format('YYYY-MM-DD HH:mm:ss');
+            const nowFormatted = moment.utc().format('YYYY-MM-DD HH:mm:ss')
+            site['deleted_at'] = nowFormatted
+            site['updated_at'] = nowFormatted
         }
 
         var tableFields = [
