@@ -151,7 +151,9 @@ var Sites = {
         }
 
         if (site.deletedAt) {
-            site['deleted_at'] = moment.utc().format('YYYY-MM-DD HH:mm:ss');
+            const nowFormatted = moment.utc().format('YYYY-MM-DD HH:mm:ss')
+            site['deleted_at'] = nowFormatted
+            site['updated_at'] = nowFormatted
         }
 
         var tableFields = [
@@ -232,7 +234,7 @@ var Sites = {
                         }, connection, callback);
                     }
                     else {
-                        var q = 'UPDATE sites SET deleted_at = NOW() \n'+
+                        var q = 'UPDATE sites SET deleted_at = NOW(), updated_at = NOW() \n'+
                                 'WHERE site_id = %s';
                         q = util.format(q, dbpool.escape(site_id));
                         connection? connection.query(q, callback): queryHandler(q, callback);
