@@ -2,6 +2,10 @@
 
 ## v3.0.62 - September XX, 2022
 
+Resolve issues:
+
+- Downloaded audio from visualizer cannot use to upload 
+
 Performance improvements:
 
 - Keep deleted recording in the recordings_deleted table to sync this data with the Biodiversity website
