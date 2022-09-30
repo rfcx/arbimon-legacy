@@ -1,5 +1,16 @@
 <div class="row">
-    <div class="col-md-8">
+    <div class="col-md-12">
+        <div class="panel panel-default upload-info-panel">
+            <div class="panel-body">
+                <p>Try the RFCx Uploader for fast, resumable uploads.</p>
+                <div>Download for:
+                    <a ng-href="{{controller.uploaderApps.mac}}">Mac</a>,
+                    <a ng-href="{{controller.uploaderApps.windows}}">Windows</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-12">
         <h3>
             Audio uploads
             <div class="btn btn-default btn-sm ml-3"  ng-click="batchInfo() | trackEvent:'Audiodata-Upload':'batchInfo'">
@@ -13,17 +24,6 @@
             Microphone: <span class="label label-default mr-2">{{ info.mic }}</span>
             Software version: <span class="label label-default mr-2">{{ info.sver }}</span>
             Filename format: <span class="label label-default">{{ info.format.name }}</span>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="panel panel-default upload-info-panel">
-            <div class="panel-body">
-                <p>Try the RFCx Uploader for fast, resumable uploads.</p>
-                <div>Download for:
-                    <a ng-href="{{controller.uploaderApps.mac}}">Mac</a>,
-                    <a ng-href="{{controller.uploaderApps.windows}}">Windows</a>
-                </div>
-            </div>
         </div>
     </div>
 </div>
