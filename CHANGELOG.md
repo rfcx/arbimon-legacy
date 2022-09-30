@@ -12,6 +12,7 @@ Performance improvements:
 Resolved issues:
 
 - Change NI to `0` in the Occupancy models format
+- #1056 Make desktop app more prominent
 
 ## v3.0.60 - August 28, 2022
 
