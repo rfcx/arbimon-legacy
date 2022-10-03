@@ -232,11 +232,13 @@ router.post('/:patternMatching/validate', function(req, res, next) {
                     await model.recordings.validate({id: roi.recording_id}, req.session.user.id, req.project.project_id,
                         { class: `${roi.species_id}-${roi.songtype_id}`, val: validation, oldVal: previousValidation, review: true})
                 }
-            }).then(function() {
+            }).then(async function() {
                 res.json({
                     rois: updatedRoiIds,
                     validation: req.body.validation,
             });
+            const classesToDelete = await model.recordings.getEmptyProjectClasses(projectId)
+            if (classesToDelete.length) await model.projects.removeClassesAsync(classesToDelete)
         }).catch(next);
     }).catch(next);
 });

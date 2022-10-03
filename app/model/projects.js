@@ -640,6 +640,11 @@ var Projects = {
         });
     },
 
+    removeClassesAsync: function(project_classes) {
+        let removeClasses = util.promisify(this.removeClasses)
+        return removeClasses(project_classes)
+    },
+
     getUsers: function(project_id, callback){
 
         if(typeof project_id !== 'number')
