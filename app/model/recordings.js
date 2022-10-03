@@ -40,7 +40,7 @@ var getUTC = function (date) {
     return d;
 };
 
-var fileExtPattern = /\.(wav|flac|opus)$/i;
+var audioFilePattern = /\.(wav|flac|opus)$/i;
 var freqFilterPrecision = 100;
 
 function defineS3Clients () {
@@ -553,6 +553,7 @@ var Recordings = {
      * @return Promise with the fetched file.
      */
     fetchAudioFile: function (recording, options, callback) {
+
         if(callback === undefined && options instanceof Function){
             callback = options;
             options = undefined;
@@ -560,7 +561,7 @@ var Recordings = {
 
         debug('fetchAudioFile');
         var mods=[];
-        var mp3_ext = '.mp3';
+        var mp3Extension = '.mp3';
 
         if(options){
             if(options.gain && options.gain != 1){
@@ -590,10 +591,10 @@ var Recordings = {
             }
         }
 
-        if(mods.length){
-            mp3_ext = '.' + mods.map(function(mod){
+        if(mods.length > 0){
+            mp3Extension = '.' + mods.map(function(mod){
                 return mod.ext;
-            }).join('.') + mp3_ext;
+            }).join('.') + mp3Extension;
         }
 
         var ifMissedGetFile = function(cache_miss) {
@@ -602,7 +603,7 @@ var Recordings = {
                 if(err) return callback(err);
 
                 var transcode_args = {
-                    sample_rate: recording.sample_rate? recording.sample_rate :44100,
+                    sample_rate: recording.sample_rate ? recording.sample_rate : 44100,
                     format: 'mp3',
                     channels: 1
                 };
@@ -633,8 +634,8 @@ var Recordings = {
             });
         };
 
-        var mp3audio_key = recording.uri.replace(fileExtPattern, mp3_ext);
-        return Q.denodeify(tmpfilecache.fetch.bind(tmpfilecache))(mp3audio_key, ifMissedGetFile).nodeify(callback);
+        var mp3FilePath = recording.uri.replace(audioFilePattern, mp3Extension);
+        return Q.denodeify(tmpfilecache.fetch.bind(tmpfilecache))(mp3FilePath, ifMissedGetFile).nodeify(callback);
     },
 
     /** Returns the spectrogram file of a given recording.
@@ -643,7 +644,7 @@ var Recordings = {
      * @param {Function} callback(err, path) function to call back with the recording spectrogram file's path.
      */
     fetchSpectrogramFile: function (recording, callback) {
-        var spectrogram_key = recording.uri.replace(fileExtPattern, '.png');
+        var spectrogram_key = recording.uri.replace(audioFilePattern, '.png');
         tmpfilecache.fetch(spectrogram_key, function(cache_miss){
             Recordings.fetchRecordingFile(recording, function(err, recording_path){
                 if(err) { callback(err); return; }
@@ -725,7 +726,7 @@ var Recordings = {
     },
 
     fetchOneSpectrogramTile: function (recording, i, j, callback) {
-        var tile_key = recording.uri.replace(fileExtPattern, '.tile_'+j+'_'+i+'.png');
+        var tile_key = recording.uri.replace(audioFilePattern, '.tile_'+j+'_'+i+'.png');
         tmpfilecache.fetch(tile_key, function(cache_miss){
             Recordings.fetchSpectrogramTiles(recording, function(err, recording){
                 if(err) { callback(err); return; }
@@ -740,7 +741,7 @@ var Recordings = {
      * @param {Function} callback(err, path) function to call back with the recording spectrogram file's path.
      */
     fetchThumbnailFile: function (recording, callback) {
-        var thumbnail_key = recording.uri.replace(fileExtPattern, '.thumbnail.png');
+        var thumbnail_key = recording.uri.replace(audioFilePattern, '.thumbnail.png');
         tmpfilecache.fetch(thumbnail_key, function(cache_miss){
             Recordings.fetchRecordingFile(recording, function(err, recording_path){
                 if(err) { callback(err); return; }
