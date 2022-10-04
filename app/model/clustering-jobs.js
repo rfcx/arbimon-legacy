@@ -128,7 +128,7 @@ let ClusteringJobs = {
             s3 = new AWS.S3();
         }
         return s3
-            .getObject({ Bucket: config('aws').mlSpecsName, Key: s3Path })
+            .getObject({ Bucket: config('aws').bucketName, Key: s3Path })
             .createReadStream()
             .pipe(res)
     },

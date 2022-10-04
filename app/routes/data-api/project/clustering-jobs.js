@@ -68,7 +68,7 @@ router.get('/:job_id/clustering-details', function (req, res, next) {
         s3 = new AWS.S3();
     }
     s3.getObject({
-        Bucket: config('aws').mlSpecsName,
+        Bucket: config('aws').bucketName,
         Key: uri
     }, function(err, data){
         if (err) {
