@@ -900,23 +900,18 @@ var Recordings = {
 
     },
 
-    getEmptyProjectClasses: async function(projectId) {
-        const sql = `SELECT pc.project_class_id
-            FROM project_classes pc
-            LEFT JOIN recording_validations rv ON pc.project_id=rv.project_id AND pc.species_id = rv.species_id AND pc.songtype_id = rv.songtype_id
-            WHERE pc.project_id = ${projectId}
-                AND ((rv.project_id IS NULL AND rv.species_id IS NULL AND rv.songtype_id IS NULL)
-                    OR (rv.present IS NULL and rv.present_review = 0 and rv.present_aed = 0))
-            GROUP BY pc.project_class_id;`
-        return dbpool.query(sql).then(function(rows){
-            return rows.map(row => row.project_class_id)
-        })
-    },
-
     getRecordingValidation: async function(opts) {
         const q = `SELECT present, present_review, present_aed FROM recording_validations
             WHERE project_id=${opts.projectId} AND recording_id IN (${opts.recordingId}) AND species_id=${opts.speciesId} AND songtype_id=${opts.songtypeId}`;
         return dbpool.query(q);
+    },
+
+    resetRecordingValidation: async function(projectId, classes) {
+        for (let cl of classes) {
+            const q = `UPDATE recording_validations SET present = NULL, present_review = 0, present_aed = 0
+            WHERE project_id=${projectId} AND species_id=${cl.speciesId} AND songtype_id=${cl.songtypeId}`;
+            return dbpool.query(q);
+        }
     },
 
     addRecordingValidation: async function(opts) {

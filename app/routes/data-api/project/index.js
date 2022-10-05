@@ -251,40 +251,42 @@ router.post('/:projectUrl/class/del', function(req, res, next){
         return res.status(401).json({ error: "you dont have permission to 'manage project species'" });
     }
 
-
-    async.waterfall([
-        function(callback) {
-            model.projects.getProjectClasses(req.project.project_id, function(err, classes) {
-                if(err) return next(err);
-
-                callback(null, classes);
-            });
-        },
-        function(classes) {
-            model.projects.removeClasses(req.body.project_classes, function(err, result){
-                if(err) return next(err);
-
-                var classesDeleted = classes.filter(function(clss) {
-                    return req.body.project_classes.indexOf(clss.id) >= 0;
-                });
-
-                classesDeleted = classesDeleted.map(function(clss){
-                    return clss.species_name + " " + clss.songtype_name;
-                });
-
-                model.projects.insertNews({
-                    news_type_id: 6, // class removed
-                    user_id: req.session.user.id,
-                    project_id: req.project.project_id,
-                    data: JSON.stringify({ classes: classesDeleted })
-                });
-
-                debug("class removed:", result);
-                res.json({ success: true, deleted: classesDeleted });
-            });
-        }
-    ]);
+    removeClasses(req, res, next);
 });
+
+async function removeClasses(req, res, next) {
+    const projectId = req.project.project_id
+    const classIds = req.body.project_classes
+    const classDeleted = await model.projects.getProjectClassesAsync(projectId, null, { ids: classIds })
+    if (classDeleted.length) {
+        await model.projects.removeClassesAsync(classIds)
+        // Insert project news
+        const deleted = classDeleted.map(function(clss){
+            return clss.species_name + " " + clss.songtype_name;
+        });
+
+        model.projects.insertNews({
+            news_type_id: 6, // class removed
+            user_id: req.session.user.id,
+            project_id: projectId,
+            data: JSON.stringify({ classes: deleted })
+        });
+
+        res.json({ success: true, deleted });
+
+        // Delete project species data
+        const speciesAndSongtypeIds = classDeleted.map(function(cl) {
+            return {
+                speciesId: cl.species,
+                songtypeId: cl.songtype
+            }
+        })
+        await model.recordings.resetRecordingValidation(projectId, speciesAndSongtypeIds)
+        await model.patternMatchings.deleteByClasses(projectId, speciesAndSongtypeIds)
+        await model.templates.deleteByClasses(projectId, speciesAndSongtypeIds)
+    }
+
+}
 
 router.get('/:projectUrl/roles', function(req, res, next) {
     res.type('json');

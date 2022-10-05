@@ -542,11 +542,9 @@ router.post('/validate/:oneRecUrl?', function(req, res, next) {
         return res.json({ error: "You do not have permission to validate species" });
     }
 
-    model.recordings.validate(req.recording, req.session.user.id, projectId, req.body, async function(err, validations) {
+    model.recordings.validate(req.recording, req.session.user.id, projectId, req.body, function(err, validations) {
         if(err) return next(err);
-        res.json(validations);
-        const classesToDelete = await model.recordings.getEmptyProjectClasses(projectId)
-        if (classesToDelete.length) await model.projects.removeClassesAsync(classesToDelete)
+        return res.json(validations);
     });
 });
 
