@@ -4,7 +4,8 @@
 
 Resolve issues:
 
-- Downloaded audio from visualizer cannot use to upload 
+- Downloaded audio from visualizer cannot use to upload
+- Clustering toggle should rely on AED toggle
 
 Performance improvements:
 

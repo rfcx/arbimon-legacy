@@ -7,7 +7,8 @@ angular.module('arbimon.directive.a2-switch', [
         require: 'ngModel',
         scope:{
             onText :'@',
-            offText :'@'
+            offText :'@',
+            disabled: '='
         },
         link: function(scope, element, attrs, ngModelCtrl){
             scope.toggle = function(event) {
