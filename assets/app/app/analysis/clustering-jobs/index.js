@@ -599,6 +599,8 @@ angular.module('a2.analysis.clustering-jobs', [
                 }
             };
 
+            this.timeout;
+
             this.loading.jobs = true;
             a2ClusteringJobs.audioEventDetections({completed: true}).then((function(jobs){
                 this.loading.jobs = false;
@@ -618,13 +620,17 @@ angular.module('a2.analysis.clustering-jobs', [
                     aed_job: this.data.aed_job,
                     params: this.data.params
                 }).then((function(clusteringModel) {
-                    this.loading.saving = false;
                     $modalInstance.close({create:true, clusteringModel: clusteringModel});
                 }).bind(this));
             } catch(error) {
                 this.loading.saving = false;
                 console.error(error);
             }
+            clearTimeout(timeout);
+            timeout = setTimeout(() => {
+                this.loading.saving = false;
+            }, 2000);
+
         },
         cancel: function (url) {
             this.loading.jobs = false;
