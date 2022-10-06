@@ -62,7 +62,7 @@ router.post('/recordings/create', verifyToken(), hasRole(['systemUser']), async 
         recordingData.recorder = 'AudioMoth';
       }
       if (parsedData && parsedData.comment && parsedData.comment.includes('SongMeter')) {
-        recordingData.recorder = 'SongMeter';
+        recordingData.recorder = 'Song Meter';
       }
       const datetimeUtc = data.datetime;
       const timezone = await model.sites.getSiteTimezoneAsync(recordingData.site_id);
