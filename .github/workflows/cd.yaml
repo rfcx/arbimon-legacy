@@ -5,7 +5,7 @@ on:
     branches:
       - master
       - staging
-      - bug/revert-deletion-of-pm-templates-for-deleted-species
+      - bug/run-recording-delete-job-from-the-arbimon-repo
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 jobs:
 
