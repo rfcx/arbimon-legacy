@@ -1,6 +1,13 @@
 # Arbimon Test Notes
 Test Notes are used to list what pages / components / features / user flows are affected by each update.
 
+## v3.0.63
+
+- Add SongMeter file type support
+  - When user uploads a file from SongMeter, the "recorder" field is set to "SongMeter" for this file
+  - Comments field on Recordings page shows SongMeter id and gain value
+  - AudioMoth comments still show correct info
+
 ## v3.0.53
 
 - Delete legacy part of the ingest endpoint which has been syncing GuardianSites
