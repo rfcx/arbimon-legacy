@@ -70,7 +70,7 @@ angular.module('a2.audiodata.species', [
         });
 
         var message = ["Are you sure you would like to remove the following species call from your project?"];
-        var message2 = ["Note: validations, templates and jobs for this species call will also be removed from your project."];
+        var message2 = ["Note: validations for this species call will also be removed from your project."];
 
         $scope.popup = {
             messages: message.concat(message2, speciesClasses),
