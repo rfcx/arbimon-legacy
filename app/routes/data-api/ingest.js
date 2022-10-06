@@ -61,6 +61,9 @@ router.post('/recordings/create', verifyToken(), hasRole(['systemUser']), async 
       if (parsedData && parsedData.ARTIST && parsedData.ARTIST.startsWith('AudioMoth')) {
         recordingData.recorder = 'AudioMoth';
       }
+      if (parsedData && parsedData.comment && parsedData.comment.includes('SongMeter')) {
+        recordingData.recorder = 'SongMeter';
+      }
       const datetimeUtc = data.datetime;
       const timezone = await model.sites.getSiteTimezoneAsync(recordingData.site_id);
       const format = 'YYYY-MM-DD HH:mm:ss';
