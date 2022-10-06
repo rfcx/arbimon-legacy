@@ -507,6 +507,14 @@ var PatternMatchings = {
         );
     },
 
+    deleteByClasses: async function (projectId, classes) {
+        for (let cl of classes) {
+            return dbpool.query(
+                'UPDATE pattern_matchings SET deleted=1, playlist_id=NULL, citizen_scientist=0, cs_expert=0 WHERE project_id = ? and species_id = ? and songtype_id = ?', [projectId, cl.speciesId, cl.songtypeId]
+            )
+        }
+    },
+
     __parse_meta_data : function(data) {
         try {
             const parsedData = JSON.parse(data);

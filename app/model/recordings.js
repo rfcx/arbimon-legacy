@@ -907,6 +907,14 @@ var Recordings = {
         return dbpool.query(q);
     },
 
+    resetRecordingValidation: async function(projectId, classes) {
+        for (let cl of classes) {
+            const q = `UPDATE recording_validations SET present = NULL, present_review = 0, present_aed = 0
+            WHERE project_id=${projectId} AND species_id=${cl.speciesId} AND songtype_id=${cl.songtypeId}`;
+            return dbpool.query(q);
+        }
+    },
+
     addRecordingValidation: async function(opts) {
         const q = `INSERT INTO recording_validations(recording_id, user_id, species_id, songtype_id, project_id)
             VALUES (${opts.recordingId}, ${opts.userId}, ${opts.speciesId}, ${opts.songtypeId}, ${opts.projectId})`;

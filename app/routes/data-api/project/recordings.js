@@ -538,11 +538,13 @@ router.get('/:get/:oneRecUrl?', function(req, res, next) {
 
 router.post('/validate/:oneRecUrl?', function(req, res, next) {
     res.type('json');
-    if(!req.haveAccess(req.project.project_id, "validate species")) {
+
+    const projectId = req.project.project_id
+    if(!req.haveAccess(projectId, "validate species")) {
         return res.json({ error: "You do not have permission to validate species" });
     }
 
-    model.recordings.validate(req.recording, req.session.user.id, req.project.project_id, req.body, function(err, validations) {
+    model.recordings.validate(req.recording, req.session.user.id, projectId, req.body, function(err, validations) {
         if(err) return next(err);
         return res.json(validations);
     });
