@@ -1,5 +1,11 @@
 # Arbimon Release Notes
 
+## v3.0.63 - October XX, 2022
+
+Resolve issues:
+
+- Add SongMeter file type support
+
 ## v3.0.62 - September XX, 2022
 
 Resolve issues:
