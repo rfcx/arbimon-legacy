@@ -8,7 +8,6 @@ async function getAllByChunks (func, filters = {}, options = {}, chunkSize = 100
   let items = []
   let step = 0
   while (true) {
-    // const result = await query({}, { limit: chunkSize, offset: step * chunkSize })
     const result = await func(filters, {
       limit: chunkSize,
       offset: step * chunkSize,
