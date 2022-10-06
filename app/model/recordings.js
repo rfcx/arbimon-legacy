@@ -1046,7 +1046,7 @@ var Recordings = {
             const isSongMeter = comment && comment.includes('SongMeter')
 
             if (isAudioMoth) {
-                const regArtist = /AudioMoth (\w+)/.exec(parsedData && parsedData.ARTIST? parsedData.ARTIST : parsedData.artist);
+                const regArtist = /AudioMoth (\w+)/.exec(artist);
                 const regArtistFromComment = /by AudioMoth (.*?) at gain/.exec(data);
                 text += regArtist && regArtist[1] ? regArtist[1] : regArtistFromComment && regArtistFromComment[1] ? regArtistFromComment[1] : '';
                 const regGain = /at (\w+) gain/.exec(data);
