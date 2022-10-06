@@ -282,8 +282,6 @@ async function removeClasses(req, res, next) {
             }
         })
         await model.recordings.resetRecordingValidation(projectId, speciesAndSongtypeIds)
-        await model.patternMatchings.deleteByClasses(projectId, speciesAndSongtypeIds)
-        await model.templates.deleteByClasses(projectId, speciesAndSongtypeIds)
     }
 
 }
