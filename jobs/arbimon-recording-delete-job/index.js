@@ -1,5 +1,5 @@
 require('dotenv').config()
-const db = require('./utils/db')
+const db = require('../db')
 const moment = require('moment')
 const { deleteRecordings } = require('../services/recordings')
 const { reportStats } = require('../services/stats')

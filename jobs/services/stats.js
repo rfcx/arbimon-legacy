@@ -4,9 +4,10 @@ const SLACK_REPORT_ENABLED = process.env.SLACK_REPORT_ENABLED === 'true'
 const SLACK_URL = process.env.SLACK_URL
 const SLACK_TOKEN = process.env.SLACK_TOKEN;
 const SLACK_CHANNEL = process.env.SLACK_CHANNEL
+const nodeEnv = process.env.NODE_ENV === 'production' ? 'production' : 'staging'
 
 function combineStats (reportData) {
-  let text = `\n:white_check_mark: *${reportData}* Arbimon recordings were deleted`
+  let text = `\n:white_check_mark: *${reportData}* Arbimon recordings were deleted | ${nodeEnv || '---'}`
   return text
 }
 
