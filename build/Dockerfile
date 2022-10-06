@@ -3,4 +3,4 @@ WORKDIR /app
 COPY ["package.json", "package-lock.json*", "./"]
 RUN npm install
 COPY . .
-CMD ["node", "--experimental-specifier-resolution=node", "jobs/arbimon-recording-delete-job/index.js"]
+CMD ["node", "jobs/arbimon-recording-delete-job/index.js"]
