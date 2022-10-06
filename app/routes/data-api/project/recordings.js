@@ -488,10 +488,7 @@ router.get('/:get/:oneRecUrl?', function(req, res, next) {
         },
         file : function(err, file){
             if(err || !file) return next(err);
-
-            const baseFilename = req.recording.file.replace(req.recording.ext, '')
-            const extension = file.path.split('.').pop()
-            res.download(file.path, `${baseFilename}.${extension}`)
+            res.download(file.path, recording.file)
         },
     };
 

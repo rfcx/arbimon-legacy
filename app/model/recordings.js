@@ -634,8 +634,7 @@ var Recordings = {
             });
         };
 
-        var mp3FilePath = recording.uri.replace(audioFilePattern, mp3Extension);
-        return Q.denodeify(tmpfilecache.fetch.bind(tmpfilecache))(mp3FilePath, ifMissedGetFile).nodeify(callback);
+        return Q.denodeify(tmpfilecache.fetch.bind(tmpfilecache))(recording.uri, ifMissedGetFile).nodeify(callback);
     },
 
     /** Returns the spectrogram file of a given recording.
