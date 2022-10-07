@@ -910,7 +910,7 @@ var Recordings = {
         for (let cl of classes) {
             const q = `UPDATE recording_validations SET present = NULL, present_review = 0, present_aed = 0
             WHERE project_id=${projectId} AND species_id=${cl.speciesId} AND songtype_id=${cl.songtypeId}`;
-            return dbpool.query(q);
+            dbpool.query(q);
         }
     },
 
