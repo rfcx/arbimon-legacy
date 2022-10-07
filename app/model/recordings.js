@@ -634,8 +634,7 @@ var Recordings = {
             });
         };
 
-        var mp3FilePath = recording.uri.replace(audioFilePattern, mp3Extension);
-        return Q.denodeify(tmpfilecache.fetch.bind(tmpfilecache))(mp3FilePath, ifMissedGetFile).nodeify(callback);
+        return Q.denodeify(tmpfilecache.fetch.bind(tmpfilecache))(recording.uri, ifMissedGetFile).nodeify(callback);
     },
 
     /** Returns the spectrogram file of a given recording.
@@ -907,6 +906,14 @@ var Recordings = {
         return dbpool.query(q);
     },
 
+    resetRecordingValidation: async function(projectId, classes) {
+        for (let cl of classes) {
+            const q = `UPDATE recording_validations SET present = NULL, present_review = 0, present_aed = 0
+            WHERE project_id=${projectId} AND species_id=${cl.speciesId} AND songtype_id=${cl.songtypeId}`;
+            dbpool.query(q);
+        }
+    },
+
     addRecordingValidation: async function(opts) {
         const q = `INSERT INTO recording_validations(recording_id, user_id, species_id, songtype_id, project_id)
             VALUES (${opts.recordingId}, ${opts.userId}, ${opts.speciesId}, ${opts.songtypeId}, ${opts.projectId})`;
@@ -1039,19 +1046,32 @@ var Recordings = {
     __parse_comments_data : function(data) {
         try {
             const parsedData = JSON.parse(data);
-            let comment = '';
-            const regArtist = /AudioMoth (\w+)/.exec(parsedData && parsedData.ARTIST? parsedData.ARTIST : parsedData.artist);
-            const regArtistFromComment = /by AudioMoth (.*?) at gain/.exec(data);
-            comment += regArtist && regArtist[1] ? regArtist[1] : regArtistFromComment && regArtistFromComment[1] ? regArtistFromComment[1] : '';
-            const regGain = /at (\w+) gain/.exec(data);
-            const regGainFromComment = /at gain setting (\w+) while/.exec(data);
-            comment += regGain && regGain[1] ? ` / ${regGain[1]} gain` : regGainFromComment && regGainFromComment[1] ? ` / ${regGainFromComment[1]} gain` : '';
-            const regState = /state was (.*?) and/.exec(data);
-            const regStateFromComment = /state was (.*?).","/.exec(data);
-            comment += regState && regState[1] ? ` / ${regState[1]}` : regStateFromComment && regStateFromComment[1] ? ` / ${regStateFromComment[1]}` : '';
-            const regTemp = /temperature was (.*?)(C|F)/g.exec(data);
-            comment += regTemp ? ` / ${regTemp[1]}${regTemp[2]}` : '';
-            return comment;
+            let text = '';
+            const artist = parsedData && parsedData.ARTIST? parsedData.ARTIST : parsedData.artist
+            const comment = parsedData.comment
+            const isAudioMoth = artist && artist.includes('AudioMoth')
+            const isSongMeter = comment && comment.includes('SongMeter')
+
+            if (isAudioMoth) {
+                const regArtist = /AudioMoth (\w+)/.exec(artist);
+                const regArtistFromComment = /by AudioMoth (.*?) at gain/.exec(data);
+                text += regArtist && regArtist[1] ? regArtist[1] : regArtistFromComment && regArtistFromComment[1] ? regArtistFromComment[1] : '';
+                const regGain = /at (\w+) gain/.exec(data);
+                const regGainFromComment = /at gain setting (\w+) while/.exec(data);
+                text += regGain && regGain[1] ? ` / ${regGain[1]} gain` : regGainFromComment && regGainFromComment[1] ? ` / ${regGainFromComment[1]} gain` : '';
+                const regState = /state was (.*?) and/.exec(data);
+                const regStateFromComment = /state was (.*?).","/.exec(data);
+                text += regState && regState[1] ? ` / ${regState[1]}` : regStateFromComment && regStateFromComment[1] ? ` / ${regStateFromComment[1]}` : '';
+                const regTemp = /temperature was (.*?)(C|F)/g.exec(data);
+                text += regTemp ? ` / ${regTemp[1]}${regTemp[2]}` : '';
+            }
+
+            if (isSongMeter) {
+                const songMeterData = /by SongMeter (\S+) at gain setting (\d+)/.exec(data)
+                text += `${songMeterData[1]} / ${songMeterData[2]}`
+            }
+
+            return text;
         } catch (e) {
             return null
         }

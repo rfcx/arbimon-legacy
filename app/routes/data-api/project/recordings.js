@@ -488,10 +488,7 @@ router.get('/:get/:oneRecUrl?', function(req, res, next) {
         },
         file : function(err, file){
             if(err || !file) return next(err);
-
-            const baseFilename = req.recording.file.replace(req.recording.ext, '')
-            const extension = file.path.split('.').pop()
-            res.download(file.path, `${baseFilename}.${extension}`)
+            res.download(file.path, recording.file)
         },
     };
 
@@ -538,11 +535,13 @@ router.get('/:get/:oneRecUrl?', function(req, res, next) {
 
 router.post('/validate/:oneRecUrl?', function(req, res, next) {
     res.type('json');
-    if(!req.haveAccess(req.project.project_id, "validate species")) {
+
+    const projectId = req.project.project_id
+    if(!req.haveAccess(projectId, "validate species")) {
         return res.json({ error: "You do not have permission to validate species" });
     }
 
-    model.recordings.validate(req.recording, req.session.user.id, req.project.project_id, req.body, function(err, validations) {
+    model.recordings.validate(req.recording, req.session.user.id, projectId, req.body, function(err, validations) {
         if(err) return next(err);
         return res.json(validations);
     });
