@@ -233,6 +233,14 @@ var Templates = {
         );
     },
 
+    deleteByClasses: async function (projectId, classes) {
+        for (let cl of classes) {
+            return dbpool.query(
+                'UPDATE templates SET deleted=1 WHERE project_id = ? and species_id = ? and songtype_id = ?', [projectId, cl.speciesId, cl.songtypeId]
+            )
+        }
+    },
+
     /** Fetches the image of a template.
      *  @param {Object}  templateId id of the template
      */

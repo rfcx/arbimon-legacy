@@ -183,21 +183,13 @@ angular.module('a2.visualizer.audio-player', [])
             this.scope.$broadcast('next-visobject');
         },
         download: function() {
-            fetch(this.resource.src)
-                .then(resp => resp.blob())
-                .then(blob => {
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.style.display = 'none';
-                    a.href = url;
-                    a.download = this.scope.visobject.file;
-                    document.body.appendChild(a);
-                    a.click();
-                    window.URL.revokeObjectURL(url);
-                })
-                .catch(error => {
-                    console.log("Download error:", error)
-                });
+            const form = document.createElement('form')
+            form.style.display = 'none'
+            form.method = 'GET'
+            form.action = this.resource.src
+            document.body.appendChild(form)
+            form.submit()
+            document.body.removeChild(form)
         },
     };
     return a2AudioPlayer;

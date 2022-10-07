@@ -1,0 +1,25 @@
+{
+  "name": "@rfcx/arbimon",
+  "version": "0.0.1",
+  "description": "Arbimon recordings delete job to delete recordings from the recordings_deleted table older than 30 days (background job).",
+  "main": "arbimon-recording-delete-job/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rfcx/arbimon.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rfcx/arbimon/issues"
+  },
+  "homepage": "https://github.com/rfcx/arbimon#readme",
+  "dependencies": {
+    "axios": "^0.27.2",
+    "dotenv": "^10.0.0",
+    "moment": "^2.29.4",
+    "mysql2": "^2.3.0"
+  }
+}

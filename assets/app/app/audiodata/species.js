@@ -69,11 +69,11 @@ angular.module('a2.audiodata.species', [
             return '"'+row.species_name +' | ' + row.songtype_name+'"';
         });
 
-        var message = ["You are about to delete the following project species: "];
-        var message2 = ["Are you sure?"];
+        var message = ["Are you sure you would like to remove the following species call from your project?"];
+        var message2 = ["Note: validations for this species call will also be removed from your project."];
 
         $scope.popup = {
-            messages: message.concat(speciesClasses, message2),
+            messages: message.concat(message2, speciesClasses),
             btnOk: "Yes, do it!",
             btnCancel: "No",
         };

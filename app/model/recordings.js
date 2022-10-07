@@ -40,7 +40,7 @@ var getUTC = function (date) {
     return d;
 };
 
-var fileExtPattern = /\.(wav|flac|opus)$/i;
+var audioFilePattern = /\.(wav|flac|opus)$/i;
 var freqFilterPrecision = 100;
 
 function defineS3Clients () {
@@ -553,6 +553,7 @@ var Recordings = {
      * @return Promise with the fetched file.
      */
     fetchAudioFile: function (recording, options, callback) {
+
         if(callback === undefined && options instanceof Function){
             callback = options;
             options = undefined;
@@ -560,7 +561,7 @@ var Recordings = {
 
         debug('fetchAudioFile');
         var mods=[];
-        var mp3_ext = '.mp3';
+        var mp3Extension = '.mp3';
 
         if(options){
             if(options.gain && options.gain != 1){
@@ -590,10 +591,10 @@ var Recordings = {
             }
         }
 
-        if(mods.length){
-            mp3_ext = '.' + mods.map(function(mod){
+        if(mods.length > 0){
+            mp3Extension = '.' + mods.map(function(mod){
                 return mod.ext;
-            }).join('.') + mp3_ext;
+            }).join('.') + mp3Extension;
         }
 
         var ifMissedGetFile = function(cache_miss) {
@@ -602,7 +603,7 @@ var Recordings = {
                 if(err) return callback(err);
 
                 var transcode_args = {
-                    sample_rate: recording.sample_rate? recording.sample_rate :44100,
+                    sample_rate: recording.sample_rate ? recording.sample_rate : 44100,
                     format: 'mp3',
                     channels: 1
                 };
@@ -633,8 +634,7 @@ var Recordings = {
             });
         };
 
-        var mp3audio_key = recording.uri.replace(fileExtPattern, mp3_ext);
-        return Q.denodeify(tmpfilecache.fetch.bind(tmpfilecache))(mp3audio_key, ifMissedGetFile).nodeify(callback);
+        return Q.denodeify(tmpfilecache.fetch.bind(tmpfilecache))(recording.uri, ifMissedGetFile).nodeify(callback);
     },
 
     /** Returns the spectrogram file of a given recording.
@@ -643,7 +643,7 @@ var Recordings = {
      * @param {Function} callback(err, path) function to call back with the recording spectrogram file's path.
      */
     fetchSpectrogramFile: function (recording, callback) {
-        var spectrogram_key = recording.uri.replace(fileExtPattern, '.png');
+        var spectrogram_key = recording.uri.replace(audioFilePattern, '.png');
         tmpfilecache.fetch(spectrogram_key, function(cache_miss){
             Recordings.fetchRecordingFile(recording, function(err, recording_path){
                 if(err) { callback(err); return; }
@@ -725,7 +725,7 @@ var Recordings = {
     },
 
     fetchOneSpectrogramTile: function (recording, i, j, callback) {
-        var tile_key = recording.uri.replace(fileExtPattern, '.tile_'+j+'_'+i+'.png');
+        var tile_key = recording.uri.replace(audioFilePattern, '.tile_'+j+'_'+i+'.png');
         tmpfilecache.fetch(tile_key, function(cache_miss){
             Recordings.fetchSpectrogramTiles(recording, function(err, recording){
                 if(err) { callback(err); return; }
@@ -740,7 +740,7 @@ var Recordings = {
      * @param {Function} callback(err, path) function to call back with the recording spectrogram file's path.
      */
     fetchThumbnailFile: function (recording, callback) {
-        var thumbnail_key = recording.uri.replace(fileExtPattern, '.thumbnail.png');
+        var thumbnail_key = recording.uri.replace(audioFilePattern, '.thumbnail.png');
         tmpfilecache.fetch(thumbnail_key, function(cache_miss){
             Recordings.fetchRecordingFile(recording, function(err, recording_path){
                 if(err) { callback(err); return; }
@@ -906,6 +906,14 @@ var Recordings = {
         return dbpool.query(q);
     },
 
+    resetRecordingValidation: async function(projectId, classes) {
+        for (let cl of classes) {
+            const q = `UPDATE recording_validations SET present = NULL, present_review = 0, present_aed = 0
+            WHERE project_id=${projectId} AND species_id=${cl.speciesId} AND songtype_id=${cl.songtypeId}`;
+            return dbpool.query(q);
+        }
+    },
+
     addRecordingValidation: async function(opts) {
         const q = `INSERT INTO recording_validations(recording_id, user_id, species_id, songtype_id, project_id)
             VALUES (${opts.recordingId}, ${opts.userId}, ${opts.speciesId}, ${opts.songtypeId}, ${opts.projectId})`;
@@ -1038,19 +1046,32 @@ var Recordings = {
     __parse_comments_data : function(data) {
         try {
             const parsedData = JSON.parse(data);
-            let comment = '';
-            const regArtist = /AudioMoth (\w+)/.exec(parsedData && parsedData.ARTIST? parsedData.ARTIST : parsedData.artist);
-            const regArtistFromComment = /by AudioMoth (.*?) at gain/.exec(data);
-            comment += regArtist && regArtist[1] ? regArtist[1] : regArtistFromComment && regArtistFromComment[1] ? regArtistFromComment[1] : '';
-            const regGain = /at (\w+) gain/.exec(data);
-            const regGainFromComment = /at gain setting (\w+) while/.exec(data);
-            comment += regGain && regGain[1] ? ` / ${regGain[1]} gain` : regGainFromComment && regGainFromComment[1] ? ` / ${regGainFromComment[1]} gain` : '';
-            const regState = /state was (.*?) and/.exec(data);
-            const regStateFromComment = /state was (.*?).","/.exec(data);
-            comment += regState && regState[1] ? ` / ${regState[1]}` : regStateFromComment && regStateFromComment[1] ? ` / ${regStateFromComment[1]}` : '';
-            const regTemp = /temperature was (.*?)(C|F)/g.exec(data);
-            comment += regTemp ? ` / ${regTemp[1]}${regTemp[2]}` : '';
-            return comment;
+            let text = '';
+            const artist = parsedData && parsedData.ARTIST? parsedData.ARTIST : parsedData.artist
+            const comment = parsedData.comment
+            const isAudioMoth = artist && artist.includes('AudioMoth')
+            const isSongMeter = comment && comment.includes('SongMeter')
+
+            if (isAudioMoth) {
+                const regArtist = /AudioMoth (\w+)/.exec(artist);
+                const regArtistFromComment = /by AudioMoth (.*?) at gain/.exec(data);
+                text += regArtist && regArtist[1] ? regArtist[1] : regArtistFromComment && regArtistFromComment[1] ? regArtistFromComment[1] : '';
+                const regGain = /at (\w+) gain/.exec(data);
+                const regGainFromComment = /at gain setting (\w+) while/.exec(data);
+                text += regGain && regGain[1] ? ` / ${regGain[1]} gain` : regGainFromComment && regGainFromComment[1] ? ` / ${regGainFromComment[1]} gain` : '';
+                const regState = /state was (.*?) and/.exec(data);
+                const regStateFromComment = /state was (.*?).","/.exec(data);
+                text += regState && regState[1] ? ` / ${regState[1]}` : regStateFromComment && regStateFromComment[1] ? ` / ${regStateFromComment[1]}` : '';
+                const regTemp = /temperature was (.*?)(C|F)/g.exec(data);
+                text += regTemp ? ` / ${regTemp[1]}${regTemp[2]}` : '';
+            }
+
+            if (isSongMeter) {
+                const songMeterData = /by SongMeter (\S+) at gain setting (\d+)/.exec(data)
+                text += `${songMeterData[1]} / ${songMeterData[2]}`
+            }
+
+            return text;
         } catch (e) {
             return null
         }

@@ -1,6 +1,17 @@
 # Arbimon Release Notes
 
-## v3.0.62 - September XX, 2022
+## v3.0.63 - October XX, 2022
+
+Resolve issues:
+
+- Add SongMeter file type support
+
+## v3.0.62 - September 19, 2022
+
+Resolve issues:
+
+- Downloaded audio from visualizer cannot use to upload
+- Clustering toggle should rely on AED toggle
 
 Performance improvements:
 
@@ -12,6 +23,7 @@ Performance improvements:
 Resolved issues:
 
 - Change NI to `0` in the Occupancy models format
+- #1056 Make desktop app more prominent
 
 ## v3.0.60 - August 28, 2022
 

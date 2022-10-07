@@ -63,7 +63,7 @@ router.get('/dashboard-stats', function(req, res, next) {
             newProjects: results[1][0][0].count,
             newSites: results[2][0][0].count,
             newUsers: results[3][0][0].count,
-            allProjects: results[4][0][0].count,
+            allProjects: results[4],
             allSites: results[5][0][0].count,
             allUsers: results[6][0][0].count
         };

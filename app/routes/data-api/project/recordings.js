@@ -480,7 +480,7 @@ router.get('/:get/:oneRecUrl?', function(req, res, next) {
     var get       = req.params.get;
     var recording = req.recording;
 
-    var and_return = {
+    var returnType = {
         recording : function(err, recordings){
             if(err) return next(err);
 
@@ -488,8 +488,7 @@ router.get('/:get/:oneRecUrl?', function(req, res, next) {
         },
         file : function(err, file){
             if(err || !file) return next(err);
-
-            res.sendFile(file.path);
+            res.download(file.path, recording.file)
         },
     };
 
@@ -523,24 +522,26 @@ router.get('/:get/:oneRecUrl?', function(req, res, next) {
                 });
             });
         break;
-        case 'audio'     : model.recordings.fetchAudioFile(recording, req.query, and_return.file); break;
-        case 'image'     : model.recordings.fetchSpectrogramFile(recording, and_return.file); break;
-        case 'thumbnail' : model.recordings.fetchThumbnailFile(recording, and_return.file); break;
-        case 'find'      : and_return.recording(null, [recording]); break;
-        case 'tiles'     : model.recordings.fetchSpectrogramTiles(recording, and_return.recording); break;
-        case 'next'      : model.recordings.fetchNext(recording, and_return.recording); break;
-        case 'previous'  : model.recordings.fetchPrevious(recording, and_return.recording); break;
+        case 'audio'     : model.recordings.fetchAudioFile(recording, req.query, returnType.file); break;
+        case 'image'     : model.recordings.fetchSpectrogramFile(recording, returnType.file); break;
+        case 'thumbnail' : model.recordings.fetchThumbnailFile(recording, returnType.file); break;
+        case 'find'      : returnType.recording(null, [recording]); break;
+        case 'tiles'     : model.recordings.fetchSpectrogramTiles(recording, returnType.recording); break;
+        case 'next'      : model.recordings.fetchNext(recording, returnType.recording); break;
+        case 'previous'  : model.recordings.fetchPrevious(recording, returnType.recording); break;
         default:  next(); return;
     }
 });
 
 router.post('/validate/:oneRecUrl?', function(req, res, next) {
     res.type('json');
-    if(!req.haveAccess(req.project.project_id, "validate species")) {
+
+    const projectId = req.project.project_id
+    if(!req.haveAccess(projectId, "validate species")) {
         return res.json({ error: "You do not have permission to validate species" });
     }
 
-    model.recordings.validate(req.recording, req.session.user.id, req.project.project_id, req.body, function(err, validations) {
+    model.recordings.validate(req.recording, req.session.user.id, projectId, req.body, function(err, validations) {
         if(err) return next(err);
         return res.json(validations);
     });

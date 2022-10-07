@@ -78,13 +78,19 @@
             <div class="form-group">
                 <label>Audio Event Detection:</label>
                 <div class="btn-group">
-                    <a2-switch ng-model="controller.project.aed_enabled" />
+                    <a2-switch
+                        ng-model="controller.project.aed_enabled"
+                        ng-change="controller.handleAedToggle()"
+                    />
                 </div>
             </div>
             <div class="form-group">
                 <label>Clustering:</label>
                 <div class="btn-group">
-                    <a2-switch ng-model="controller.project.clustering_enabled" />
+                    <a2-switch
+                        ng-model="controller.project.clustering_enabled"
+                        disabled="!controller.project.aed_enabled"
+                    />
                 </div>
             </div>
             <div class="form-group">

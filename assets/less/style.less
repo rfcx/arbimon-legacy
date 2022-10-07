@@ -1163,8 +1163,11 @@ label.row {
 
 .btn.disabled,
 .btn[disabled],
+.btn-group.disabled,
 fieldset[disabled] .btn {
   opacity: 0.5;
+  pointer-events: none;
+  cursor: @cursor-disabled !important;
 }
 
 .em {

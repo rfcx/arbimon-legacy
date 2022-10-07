@@ -86,6 +86,10 @@ angular.module('a2.admin.projects.list', [
         });
     };
 
+    this.handleAedToggle = function () {
+        this.project.clustering_enabled = this.project.aed_enabled
+    }
+
     this.initialize();
 })
 .service('AdminProjectsListService', function($http){
