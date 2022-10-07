@@ -86,8 +86,11 @@ angular.module('a2.admin.projects.list', [
         });
     };
 
-    this.handleAedToggle = function () {
-        this.project.clustering_enabled = this.project.aed_enabled
+    this.handleAedToggle = function (enable) {
+        const isAedEnabled = enable === 'aed_enabled'
+        this.project.aed_enabled = isAedEnabled
+        this.project.clustering_enabled = !isAedEnabled
+
     }
 
     this.initialize();

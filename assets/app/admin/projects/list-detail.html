@@ -80,7 +80,7 @@
                 <div class="btn-group">
                     <a2-switch
                         ng-model="controller.project.aed_enabled"
-                        ng-change="controller.handleAedToggle()"
+                        ng-change="controller.handleAedToggle('aed_enabled')"
                     />
                 </div>
             </div>
@@ -89,7 +89,7 @@
                 <div class="btn-group">
                     <a2-switch
                         ng-model="controller.project.clustering_enabled"
-                        disabled="!controller.project.aed_enabled"
+                        ng-change="controller.handleAedToggle('clustering_enabled')"
                     />
                 </div>
             </div>
