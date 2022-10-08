@@ -38,11 +38,13 @@
         <i class="fa fa-circle-o control-point cp-resize-br" style="position:absolute; bottom:-7px; right:-6px" ></i>
     </div>
     <div a2-insert-in=".visualizer-root">
-        <div class="popover right confirm-roi"
+        <div class="popover confirm-roi"
+            ng-class="getXSide(layer.controller.bbox.bbox.x1, layer.controller.bbox.bbox.x2)"
             ng-style="{
                 display: layer.controller.bbox.valid ? 'block' : 'none', 
-                left:(layout.viewport.left + layout.sec2x(layer.controller.bbox.bbox.x2, 1)) + 'px', 
-                top:(layout.spectrogram.top + layout.hz2y((layer.controller.bbox.bbox.y1 + layer.controller.bbox.bbox.y2)/2, 1)) + 'px'
+                left:(layout.viewport.left + layout.sec2x(getXCoord(layer.controller.bbox.bbox.x1, layer.controller.bbox.bbox.x2), 1)) + 'px',
+                top:(layout.spectrogram.top + layout.hz2y((layer.controller.bbox.bbox.y1 + layer.controller.bbox.bbox.y2)/2, 1)) + 'px',
+                transform: getTransform(layer.controller.bbox.bbox.x1, layer.controller.bbox.bbox.x2, layer.controller.bbox.bbox.y1, layer.controller.bbox.bbox.y2)
             }">
             <div class="arrow"></div>
             <div class="popover-content" ng-if="layer.controller.bbox.valid">
