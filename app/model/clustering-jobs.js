@@ -247,7 +247,7 @@ let ClusteringJobs = {
                         })
                     ]
                 )
-            ).then(async () => {
+                ).then(async () => {
                 data.kubernetesJobName = `aed-clustering-${new Date().getTime()}`;
                 let jobParam = jsonTemplates.getTemplate('aed-clustering', 'job', {
                     kubernetesJobName: data.kubernetesJobName,
@@ -261,10 +261,7 @@ let ClusteringJobs = {
             }).then(() => {
                 return job_id;
             })
-        ).catch(function(err){
-            console.log('APIError', err)
-            throw new APIError(err.message);
-        }).nodeify(callback);
+        ).nodeify(callback);
     },
 };
 
