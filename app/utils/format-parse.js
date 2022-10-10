@@ -21,7 +21,8 @@ var formatParse = function(formatName, filename) {
         Wildlife: /(.*(\d{4})(\d{2})(\d{2})[_|\$](\d{2})(\d{2})\d{2}.*)(\.\w+)$/,
         Arbimon: /(.*(\d{4})-(\d{2})-(\d{2})_(\d{2})-(\d{2})(-(\d{2}))?.*)(\.\w+)$/,
         'AudioMoth legacy': /([0-9A-F]{8})(\.\w+)$/,
-        AudioMoth: /(.*(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2}))(\.\w+)$/
+        AudioMoth: /(.*(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2}))(\.\w+)$/,
+        SongMeter: /(SM-.*_(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2}))(\.\w+)$/
     };
     var parsed, errors=[];
 
@@ -55,7 +56,6 @@ var formatParse = function(formatName, filename) {
                     datetime: new Date(results[2], results[3]-1, results[4], results[5], results[6], results[7]),
                     filetype: results[8]
                 };
-                console.log(parsed);
             } else {
                 parsed = {
                     filename: results[1],
