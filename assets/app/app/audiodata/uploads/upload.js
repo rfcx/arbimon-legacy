@@ -203,12 +203,12 @@ angular.module('a2.audiodata.uploads.upload', [
     }
 
     $scope.formats = [
-		{ name: "Arbimon", format: "(*-YYYY-MM-DD_HH-MM)" },
-		{ name: "AudioMoth", format: "(*YYYYMMDD_HHMMSS)" },
-		{ name: "AudioMoth legacy", format: "(Unix Time code in Hex)" },
-		{ name: "Cornell" , format: "(*_YYYYMMDD_HHMMSSZ)" },
+        { name: "Arbimon", format: "(*-YYYY-MM-DD_HH-MM)" },
+        { name: "AudioMoth", format: "(*YYYYMMDD_HHMMSS)" },
+        { name: "AudioMoth legacy", format: "(Unix Time code in Hex)" },
+        { name: "Cornell" , format: "(*_YYYYMMDD_HHMMSSZ)" },
         { name: "SongMeter", format: "(SM-*_YYYYMMDD_HHMMSS)" },
-		{ name: "Wildlife", format: "(YYYYMMDD_HHMMSS)" }
+        { name: "Wildlife", format: "(YYYYMMDD_HHMMSS)" }
     ];
 
     Project.getSites(function(sites) {
