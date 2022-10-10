@@ -22,7 +22,7 @@ var formatParse = function(formatName, filename) {
         Arbimon: /(.*(\d{4})-(\d{2})-(\d{2})_(\d{2})-(\d{2})(-(\d{2}))?.*)(\.\w+)$/,
         'AudioMoth legacy': /([0-9A-F]{8})(\.\w+)$/,
         AudioMoth: /(.*(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2}))(\.\w+)$/,
-        SongMeter: /(SM-.*_(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2}))(\.\w+)$/
+        'Song Meter': /(SM-.*_(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2}))(\.\w+)$/
     };
     var parsed, errors=[];
 
@@ -50,7 +50,7 @@ var formatParse = function(formatName, filename) {
                     datetime: new Date(parseInt(results[1], 16)*1000),
                     filetype: results[2]
                 };
-            } else if (formatName == 'AudioMoth') {
+            } else if (formatName == 'AudioMoth' || formatName == 'Song Meter') {
                 parsed = {
                     filename: results[1],
                     datetime: new Date(results[2], results[3]-1, results[4], results[5], results[6], results[7]),
