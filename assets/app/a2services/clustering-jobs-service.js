@@ -69,9 +69,10 @@ angular.module('a2.srv.clustering-jobs', [
             }).catch(notify.serverError);
         },
         create: function(data) {
-            return $http.post('/api/project/'+Project.getUrl()+'/clustering-jobs/new', data).then(function(response){
-                return response.data;
-            });
+            return $http.post('/api/project/'+Project.getUrl()+'/clustering-jobs/new', data)
+                .then(function(response){
+                    return response.data;
+                }).catch(notify.serverError);
         },
     };
 })

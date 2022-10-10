@@ -111,12 +111,12 @@ _TODO: How do services get deployed? How do we change configuration? How do we m
     - `ssh ec2-user@54.159.71.198 -i ~/.ssh/arbimon2-bastion.pem`
 2. From inside the Bastion server, SSH into dev/prod server
     - `ssh-web-dev` for arbimon-dev.sieve-analytics.com
-    - `ssh-web` for arbimon.sieve-analytics.com
+    - `ssh -i ~/.ssh/arbimon2-app.pem ubuntu@{{Private IPv4 addresses}}` for arbimon.sieve-analytics.com. Copy IPv4 address from web instance on this [page](https://us-east-1.console.aws.amazon.com/ec2/v2/home?region=us-east-1#Instances:)
     - Both these connections are defined in the `.bashrc` file and rely on the same `.ssh/arbimon2-app.pem` key.
 3. Change to app directory
     - `cd apps/arbimon2`
 4. Pull the latest changes from git
-    - `git fetch -p` and `git pull`
+    - `git fetch -p` and `git pull origin master`
 4. Perform any dependency installs and rebuild the source code (same as local install)
     - `npm i` and `bower i`
     - `npm run build` to build css
@@ -139,6 +139,7 @@ Additional steps for production (to support auto-scaling of the frontend)
 8. Choose the AMI that was created in step 6 and create the launch configuration.
     - Name: arbimon-web-2020-09-09
     - AMI: arbimon-web-2020-09-09
+    - Select: "I acknowledge that I have access to the selected private key..."
     - (everything else the same)
 
 9. Open "Auto scaling groups", and edit the `arbimon` group. Select the newly created launch configuration and then "Update".

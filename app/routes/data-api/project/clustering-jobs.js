@@ -99,10 +99,10 @@ router.post('/new', function(req, res, next) {
         name: req.body.name,
         audioEventDetectionJob: req.body.aed_job,
         params: req.body.params,
+    }, function(err, result) {
+        if (err) return next(err);
+        res.json({ create: true, result });
     })
-    .then(function(result){
-        res.json({ create: true, result: result });
-    }).catch(next);
 });
 
 module.exports = router;
