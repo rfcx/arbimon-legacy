@@ -207,7 +207,7 @@ angular.module('a2.audiodata.uploads.upload', [
         { name: "AudioMoth", format: "(*YYYYMMDD_HHMMSS)" },
         { name: "AudioMoth legacy", format: "(Unix Time code in Hex)" },
         { name: "Cornell" , format: "(*_YYYYMMDD_HHMMSSZ)" },
-        { name: "Song Meter", format: "(SM-*_YYYYMMDD_HHMMSS)" },
+        { name: "Song Meter", format: "(*_YYYYMMDD_HHMMSS)" },
         { name: "Wildlife", format: "(YYYYMMDD_HHMMSS)" }
     ];
 

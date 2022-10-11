@@ -1,10 +1,22 @@
 # Arbimon Release Notes
 
-## v3.0.63 - October XX, 2022
+## v3.0.63 - October 08, 2022
 
-Resolve issues:
+New features:
 
-- Add SongMeter file type support
+- Add Songmeter meta support
+- Add an audio event detection and clustering toggle from the Admin page
+- Add system status link to footer
+- Run recording delete job from the Arbimon repo
+
+Resolved issues:
+
+- The downloaded file is able used to upload
+- Update the desktop app panel to be full-width with yellow
+- Fix the spinner problem on the Clustering's create form
+- Remove species validation when the user removes any project species
+- Update bucket for the AED/clustering assets
+- Fix a tag popup window issue on the Visualizer page
 
 ## v3.0.62 - September 19, 2022
 

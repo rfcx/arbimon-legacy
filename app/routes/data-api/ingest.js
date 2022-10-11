@@ -58,10 +58,16 @@ router.post('/recordings/create', verifyToken(), hasRole(['systemUser']), async 
         meta: data.meta
       };
       const parsedData = data.meta ? JSON.parse(data.meta) : null;
-      if (parsedData && parsedData.ARTIST && parsedData.ARTIST.startsWith('AudioMoth')) {
+			const artist = parsedData && parsedData.ARTIST ? parsedData.ARTIST : parsedData.artist
+      const comment = parsedData && parsedData.comment
+			const isAudioMoth = artist && artist.includes('AudioMoth')
+			const songMeterOptions = ['SongMeter', 'Song Meter']
+			const isSongMeter = comment && songMeterOptions.some(sm => comment.includes(sm)) ||
+				artist && songMeterOptions.some(sm => artist.includes(sm))
+      if (isAudioMoth) {
         recordingData.recorder = 'AudioMoth';
       }
-      if (parsedData && parsedData.comment && parsedData.comment.includes('SongMeter')) {
+      if (isSongMeter) {
         recordingData.recorder = 'Song Meter';
       }
       const datetimeUtc = data.datetime;
