@@ -1052,25 +1052,42 @@ var Recordings = {
             const artist = parsedData && parsedData.ARTIST? parsedData.ARTIST : parsedData.artist
             const comment = parsedData.comment
             const isAudioMoth = artist && artist.includes('AudioMoth')
-            const isSongMeter = comment && comment.includes('SongMeter')
+            const songMeterOptions = ['SongMeter', 'Song Meter']
+            const isSongMeter = comment && songMeterOptions.some(sm => comment.includes(sm)) ||
+                artist && songMeterOptions.some(sm => artist.includes(sm))
 
             if (isAudioMoth) {
                 const regArtist = /AudioMoth (\w+)/.exec(artist);
                 const regArtistFromComment = /by AudioMoth (.*?) at gain/.exec(data);
                 text += regArtist && regArtist[1] ? regArtist[1] : regArtistFromComment && regArtistFromComment[1] ? regArtistFromComment[1] : '';
-                const regGain = /at (\w+) gain/.exec(data);
-                const regGainFromComment = /at gain setting (\w+) while/.exec(data);
-                text += regGain && regGain[1] ? ` / ${regGain[1]} gain` : regGainFromComment && regGainFromComment[1] ? ` / ${regGainFromComment[1]} gain` : '';
-                const regState = /state was (.*?) and/.exec(data);
-                const regStateFromComment = /state was (.*?).","/.exec(data);
-                text += regState && regState[1] ? ` / ${regState[1]}` : regStateFromComment && regStateFromComment[1] ? ` / ${regStateFromComment[1]}` : '';
+                // Parse a gain from different formats
+                const regGainType1 = /at (\w+) gain/.exec(data);
+                const regGainType2 = /at gain setting (\w+) while/.exec(data);
+                text += regGainType1 && regGainType1[1] ?
+                    ` / ${regGainType1[1]} gain` : regGainType2 && regGainType2[1] ?
+                    ` / ${regGainType2[1]} gain` : '';
+
+                // Parse a state from different formats
+                const regStateType1 = /state was (.*?) and/.exec(data);
+                const regStateType2 = /state was (.*?).","/.exec(data);
+                text += regStateType1 && regStateType1[1] ?
+                    ` / ${regStateType1[1]}` : regStateType2 && regStateType2[1] ?
+                    ` / ${regStateType2[1]}` : '';
+
+                // Parse a temperature
                 const regTemp = /temperature was (.*?)(C|F)/g.exec(data);
                 text += regTemp ? ` / ${regTemp[1]}${regTemp[2]}` : '';
             }
 
             if (isSongMeter) {
-                const songMeterData = /by SongMeter (\S+) at gain setting (\d+)/.exec(data)
-                text += `${songMeterData[1]} / ${songMeterData[2]}`
+                const songMeterType1 = /by SongMeter (\S+) at gain setting (\d+)/.exec(data)
+                const songMeterType2 = /Prefix:(\S+);/.exec(data)
+                const songMeterType3 = /Prefix:(\S+) WA/.exec(data)
+                const regGainType1 = /gain:(\w+);/.exec(data)
+                const regGainType2 = /gain(.*?):(\d+)/.exec(data)
+                text += songMeterType1 && `${songMeterType1[1]} / ${songMeterType1[2]}` ||
+                    songMeterType2 && `${songMeterType2[1]} / ${regGainType1[1]}` ||
+                    songMeterType3 && `${songMeterType3[1]} / ${regGainType2[2]}` || ''
             }
 
             return text;

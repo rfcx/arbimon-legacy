@@ -116,7 +116,8 @@ _TODO: How do services get deployed? How do we change configuration? How do we m
 3. Change to app directory
     - `cd apps/arbimon2`
 4. Pull the latest changes from git
-    - `git fetch -p` and `git pull origin master`
+    - `git fetch -p`
+    - `git pull origin develop/master`
 4. Perform any dependency installs and rebuild the source code (same as local install)
     - `npm i` and `bower i`
     - `npm run build` to build css
