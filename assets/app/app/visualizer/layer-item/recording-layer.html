@@ -65,7 +65,7 @@
                     <div class="btn-group ml-1">
                         <button class="btn btn-default btn-sm"
                             ng-disabled="!audio_player.has_recording"
-                            ng-click="audio_player.download() | trackEvent:'Visualizer-RecordingLayer':'AudioControl download rec'" >
+                            ng-click="audio_player.download(visobject) | trackEvent:'Visualizer-RecordingLayer':'AudioControl download rec'" >
 
                             <i class="fa fa-download"></i>
                         </button>

@@ -195,6 +195,12 @@ angular.module('a2.srv.project', [
                         callback(data.exists);
                     });
             },
+            downloadRecording: function(rec_id, callback) {
+                $http.get('/api/project/'+url+'/recordings/download/'+ rec_id)
+                    .success(function(data) {
+                        callback(data);
+                    });
+            },
             addClass: function(projectClass, callback) {
                 return $http.post('/api/project/'+url+'/class/add', projectClass);
             },

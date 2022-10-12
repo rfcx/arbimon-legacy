@@ -1,5 +1,5 @@
 angular.module('a2.visualizer.audio-player', [])
-.service('a2AudioPlayer', function(A2AudioObject, $q, notify, a2Playlists, $localStorage){
+.service('a2AudioPlayer', function(A2AudioObject, $q, notify, a2Playlists, Project, $localStorage){
     'use strict';
     var a2AudioPlayer = function(scope, options){
         this.scope = scope;
@@ -182,11 +182,12 @@ angular.module('a2.visualizer.audio-player', [])
         next_recording : function(){
             this.scope.$broadcast('next-visobject');
         },
-        download: function() {
+        download: function(visobject) {
             const form = document.createElement('form')
             form.style.display = 'none'
             form.method = 'GET'
-            form.action = this.resource.src
+            const url = '/api/project/' + Project.getUrl() + '/recordings/download/' + visobject.id;
+            form.action = url
             document.body.appendChild(form)
             form.submit()
             document.body.removeChild(form)
