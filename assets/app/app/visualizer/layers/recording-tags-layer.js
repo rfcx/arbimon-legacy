@@ -29,27 +29,7 @@ angular.module('a2.visualizer.layers.recording-tags', ['a2.srv.tags'])
  * Responds to VisualizerCtrl.event::visobject by loading the visobject tags, if it is a
  * recording.
  */
-.controller('a2VisualizerRecordingTagsLayerController', function(VisualizerCtrl, a2Tags, a2LookaheadHelper, a22PointBBoxEditor, $q, $debounce, $scope){
-    $scope.getXCoord = function(x1, x2){
-        return $scope.getXSide(x1, x2) == 'left' ? x1 : x2;
-    };
-    $scope.getXSide = function(x1, x2){
-        var px = Math.max(0, Math.min($scope.layout.sec2x(x2, 1) / $scope.layout.spectrogram.width, 1));
-        return px > .5 ? 'left' : 'right';
-    };
-    $scope.getTransform = function(x1, x2, y1, y2){
-        var tx = $scope.getXSide(x1, x2) == 'left' ? '-100%' : '0';
-        var ty = $scope.getYTranslation((y1 + y2)/2, true);
-        return 'translate(' + tx + ', ' + ty + ')';
-    };
-    $scope.getYTranslation = function(y, asrelativeoffset){
-        var py = Math.max(0.1, Math.min($scope.layout.hz2y(y, 1) / $scope.layout.spectrogram.height, .9));
-        if (asrelativeoffset){
-            py = -py;
-        }
-        return ((100 * py) | 0) + '%';
-    };
-
+.controller('a2VisualizerRecordingTagsLayerController', function(VisualizerCtrl, a2Tags, a2LookaheadHelper, a22PointBBoxEditor, $q, $debounce){
     function makeTagsIndex(tags){
         return tags.reduce(function(idx, tag){
             if(tag.id){
