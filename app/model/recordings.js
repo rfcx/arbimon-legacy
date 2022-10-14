@@ -1266,6 +1266,8 @@ var Recordings = {
                     }
                 }
                 constraints.push('rv.project_id = ?');
+                // Do not get deleted validations values in the filters result.
+                constraints.push('(rv.present IS NOT NULL OR rv.present_review > 0 OR rv.present_aed > 0)');
                 data.push(parameters.project_id);
             }
 
