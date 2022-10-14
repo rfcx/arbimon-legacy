@@ -73,7 +73,9 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
                     amplitudeThreshold: 1,
                     durationThreshold: 0.2,
                     bandwidthThreshold: 1,
-                    filterSize: 10
+                    filterSize: 10,
+                    minFrequency: 0,
+                    maxFrequency: 24
                 }
             };
 
