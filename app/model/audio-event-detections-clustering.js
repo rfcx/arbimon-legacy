@@ -126,6 +126,8 @@ let AudioEventDetectionsClustering = {
             durationThreshold: joi.number(),
             bandwidthThreshold: joi.number(),
             filterSize: joi.number(),
+            minFrequency: joi.number(),
+            maxFrequency: joi.number()
         }),
     }),
 
@@ -139,7 +141,9 @@ let AudioEventDetectionsClustering = {
                 'Amplitude Threshold': data.params.amplitudeThreshold,
                 'Duration Threshold': data.params.durationThreshold,
                 'Bandwidth Threshold': data.params.bandwidthThreshold,
-                'Filter Size': data.params.filterSize
+                'Filter Size': data.params.filterSize,
+                'Min Frequency': data.params.minFrequency,
+                'Max Frequency': data.params.maxFrequency
             }
         )
         return q.ninvoke(joi, 'validate', data, AudioEventDetectionsClustering.JOB_SCHEMA).then(() => lambda.invoke({
