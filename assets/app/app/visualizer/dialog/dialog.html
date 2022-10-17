@@ -2,8 +2,8 @@
     <div class="popover create-template"
         ng-style="{
             display: show ? 'block' : 'none',
-            left:(layout.viewport.left + (layout.spectrogram.width / 2) - 140) + 'px',
-            top:(layout.spectrogram.top + (layout.spectrogram.height / 3)) + 'px',
+            left: (layout.sec2x(layout.center.s, 1) - 70) + 'px',
+            top: (layout.hz2y(layout.center.hz, 1) - 100) + 'px'
         }"
     >
         <div ng-transclude></div>
