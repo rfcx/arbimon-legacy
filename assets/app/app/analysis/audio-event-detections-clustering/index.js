@@ -101,6 +101,16 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
         cancel: function (url) {
             $modalInstance.close({ cancel: true, url: url });
         },
+        handleMinFrequency: function () {
+            if (this.data.params.minFrequency >= this.data.params.maxFrequency) {
+                this.data.params.minFrequency = this.data.params.maxFrequency - 1
+            }
+        },
+        handleMaxFrequency: function () {
+            if (this.data.params.maxFrequency <= this.data.params.minFrequency) {
+                this.data.params.maxFrequency = this.data.params.minFrequency + 1
+            }
+        },
         isJobValid: function () {
             return this.data && this.data.name && this.data.name.length > 3 && this.data.playlist;
         }
