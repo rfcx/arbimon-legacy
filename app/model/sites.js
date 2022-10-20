@@ -67,6 +67,10 @@ var Sites = {
         return find(site_id)
     },
 
+    getSiteExternalId: function(site_id, callback) {
+        return dbpool.query(`SELECT external_id FROM sites WHERE site_id=${site_id}`).get(0).get('external_id').nodeify(callback);
+    },
+
     getSiteTimezone: function(site_id, callback) {
         return dbpool.query(`SELECT timezone FROM sites WHERE site_id=${site_id}`).get(0).get('timezone').nodeify(callback);
     },

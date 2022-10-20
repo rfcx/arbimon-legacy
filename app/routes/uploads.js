@@ -6,7 +6,7 @@ var util = require('util');
 var _ = require('lodash');
 var q = require('q');
 
-
+const fileHelper = require('../utils/file-helper')
 var model = require('../model');
 var audioTools= require('../utils/audiotool');
 var tmpFileCache = require('../utils/tmpfilecache');
@@ -220,45 +220,19 @@ var receiveUpload = function(req, res, next) {
                     deleteFile(upload.path);
                     return res.status(403).json({ error: "Recording is too long, please contact support" });
                 }
-
-                if(info.duration > 61) {
-                    audioTools.splitter(upload.path, info.duration, function(err, files) {
-                        if(err) return next(err);
-
-                        var i = 0;
-                        async.eachSeries(files, function(f, nextUpload) {
-                            var uploadPart = _.cloneDeep(upload);
-
-                            uploadPart.FFI.filename = uploadPart.FFI.filename +'.p'+ (i+1);
-
-                            uploadPart.FFI.datetime.setMinutes(uploadPart.FFI.datetime.getMinutes()+i);
-
-                            uploadPart.name = uploadPart.FFI.filename + uploadPart.FFI.filetype;
-                            uploadPart.path = f;
-
-                            console.log('upload', uploadPart);
-                            uploadQueue.enqueue(_.cloneDeep(uploadPart), function(err) {
-                                if(err) return nextUpload(err);
-
-                                i++;
-                                nextUpload();
-                            });
-                        }, function splitDone(err2) {
-                            if(err2) return next(err2);
-
-                            deleteFile(upload.path);
-                            res.status(202).json({ success: "upload done!" });
-                        });
-                    });
+                const idToken = req.session.idToken
+                const uploadsBody = {
+                    originalFilename: upload.FFI.filename,
+                    filePath: upload.path,
+                    fileExt: fileHelper.getExtension(upload.name),
+                    streamId: upload.siteId,
+                    timestamp: upload.FFI.datetime
                 }
-                else {
-                    console.log('upload', upload);
-                    uploadQueue.enqueue(upload, function(err) {
-                        if(err) return next(err);
+                uploadQueue.enqueue(upload, uploadsBody, idToken, function(err) {
+                    if(err) return next(err);
 
-                        res.status(202).json({ success: "upload done!" });
-                    });
-                }
+                    res.status(202).json({ success: "upload done!" });
+                });
             }
         ]);
 

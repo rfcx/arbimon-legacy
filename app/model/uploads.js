@@ -1,14 +1,17 @@
-var util = require('util');
-var Joi = require('joi');
-var sprintf = require("sprintf-js").sprintf;
-var dbpool       = require('../utils/dbpool');
-var q= require('q');
-// local variables
-var queryHandler = dbpool.queryHandler;
+const util = require('util');
+const Joi = require('joi');
+const dbpool = require('../utils/dbpool');
+const q = require('q');
+const queryHandler = dbpool.queryHandler;
+const config = require('../config');
+const rfcxConfig = config('rfcx');
+const fileHelper = require('../utils/file-helper');
+const request = require('request');
+const { promisify } = require('util');
+const rp = promisify(request);
+const fs = require('fs');
 
 // model for uploads processing status in status bar
-
-
 module.exports = {
     insertRecToList: function(uploadData, callback) {
         var schema =  {
@@ -133,5 +136,86 @@ module.exports = {
 
         q = util.format(q, dbpool.escape(upload_id));
         queryHandler(q, callback);
+    },
+
+    uploadFile: async function(data, idToken) {
+        const { originalFilename, filePath, fileExt, streamId, timestamp } = data
+        const uploadOptions = { originalFilename, filePath, streamId, timestamp }
+        return this.requestUploadUrl(uploadOptions, idToken)
+            .then(async (data) => {
+                const { url, uploadId } = data
+                return this.performUpload(url, filePath, fileExt).then(async () => {
+                    // TODO: check the status of upload by uploadId
+                    return uploadId
+                })
+        })
+    },
+
+    requestUploadUrl: async function(data, idToken) {
+        const { originalFilename, filePath, streamId, timestamp } = data
+        const sha1 = fileHelper.getCheckSum(filePath)
+        const body = { filename: originalFilename, checksum: sha1, stream: streamId, timestamp: timestamp }
+        const options = {
+            method: 'POST',
+            url: `${rfcxConfig.ingestBaseUrl}/uploads`,
+            headers: {
+                'content-type': 'application/json',
+                Authorization: `Bearer ${idToken}`
+            },
+            body: JSON.stringify(body)
+        }
+        return rp(options).then((response) => {
+            try {
+                const body = JSON.parse(response.body);
+                if (body && body.error) {
+                    throw new Error('Failed to upload recording');
+                }
+                const url = body.url
+                const uploadId = body.uploadId
+                return { url, uploadId }
+            } catch (e) {
+                throw new Error('Failed to upload recording');
+            }
+        })
+    },
+
+    performUpload: async function(signedUrl, filePath, fileExt) {
+        var headers = {
+          'Content-Type': `audio/${fileExt}`
+        }
+        // S3 doesn't allow chunked uploads, so setting the Content-Length is required
+        const fileSize = fileHelper.getFileSize(filePath)
+        headers['Content-Length'] = fileSize
+        const readStream = fs.createReadStream(filePath)
+        const options = {
+          method: 'PUT',
+          headers: headers
+          // maxContentLength: 209715200
+        }
+        return rp(signedUrl, options)
+    },
+
+    checkStatus: async function(uploadId, idToken) {
+        const options = {
+            method: 'GET',
+            url: `${rfcxConfig.ingestBaseUrl}/uploads/${uploadId}`,
+            headers: {
+                'content-type': 'application/json',
+                Authorization: `Bearer ${idToken}`
+            }
+        }
+        return rp(options).then((response) => {
+            try {
+                const data = JSON.parse(response.data);
+                if (data && data.error) {
+                    throw new Error('Failed to get a status');
+                }
+                const status = data.status
+                const failureMessage = data.failureMessage
+                return { status: status, failureMessage: failureMessage }
+            } catch (e) {
+                throw new Error('Failed to get a status');
+            }
+        })
     },
 };

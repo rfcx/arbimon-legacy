@@ -74,7 +74,7 @@ function uploadFromUploadItemEntry(upload_item){
 }
 
 module.exports = {
-    enqueue: function(upload, cb) {
+    enqueue: function(upload, uploadsBody, idToken, cb) {
         var upload_row;
         async.waterfall([
             function(callback) {
@@ -106,24 +106,19 @@ module.exports = {
                 upload_row.upload_id = result.insertId;
                 callback();
             },
-            function storeRawFileInBucket(callback){
-                Uploader.moveToTempArea(upload, callback);
+            function(callback) {
+                model.sites.getSiteExternalId(upload_row.site_id, callback)
+            },
+            function storeRawFileInBucket(externalId, callback) {
+                uploadsBody.streamId = externalId ? externalId : null
+                model.uploads.uploadFile(uploadsBody, idToken, function(err){
+                    callback(err);
+                });
             },
             function flagAsWaiting(callback){
                 model.uploads.updateState(upload.id, 'waiting', function(err){
                     callback(err);
                 });
-            },
-            function(callback){
-                if(config('lambdas').process_uploaded_recording){
-                    lambda.invoke({
-                        FunctionName: config('lambdas').process_uploaded_recording,
-                        InvocationType: 'Event',
-                        Payload: JSON.stringify(upload_row),
-                    }, callback);
-                } else {
-                    callback();
-                }
             }
         ], cb);
     },
