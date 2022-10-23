@@ -63,6 +63,10 @@ let AudioEventDetectionsClustering = {
             constraints.push('JP.playlist_id = ' + dbpool.escape(Number(options.playlist)));
         }
 
+        if (options.deleted !== undefined) {
+            constraints.push('JP.`deleted` = ' + dbpool.escape(options.deleted));
+        }
+
         postprocess.push((rows) => {
             rows.forEach(row => {
                 try {
@@ -113,6 +117,11 @@ let AudioEventDetectionsClustering = {
     deletePresentAedCount: async function(opts) {
         const q = `UPDATE recording_validations SET present_aed=0
             WHERE project_id=${opts.projectId} AND recording_id IN (${opts.recordingId}) AND species_id=${opts.speciesId} AND songtype_id=${opts.songtypeId}`;
+        return dbpool.query(q);
+    },
+
+    delete: function (jobId) {
+        const q = `UPDATE job_params_audio_event_detection_clustering SET deleted=1 WHERE job_id = ${jobId}`
         return dbpool.query(q);
     },
 

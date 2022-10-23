@@ -7,7 +7,7 @@
                 tooltip="Create Audio Event Detection"
                 tooltip-placement="right"
                 ng-click="createNewClusteringModel() | trackEvent:'Analysis-ClusteringModel-List':'Create new Audio Event Detection'" >
-                <i class="fa fa-plus mr-1" ></i> New Audio Event Detections
+                <i class="fa fa-plus mr-1" ></i> New Audio Event Detection
             </a>
         </h3>
         <loader ng-if="loading"></loader>
@@ -27,8 +27,8 @@
                 <field title="Playlist" key="playlist_name" filter tdclass="no-wrap-table-cell is-v-middle">
                     {{row.playlist_name}}
                 </field>
-                <field title="Parameters" key="parameters" filter="parameters.$" tdclass="no-wrap-table-cell is-v-middle">
-                    {{row.parameters | asCSV }}
+                <field title="Parameters" key="parameters" filter="parameters.$" tdclass="hidelongtext widthtd is-v-middle">
+                    <span title="{{row.parameters | asCSV }}">{{row.parameters | asCSV }}</span>
                 </field>
                 <field title="User" key="user" filter tdclass="is-v-middle">
                     {{ row.user }}
@@ -39,6 +39,12 @@
                         title="View in Visualizer">
                         <i class="fa fa-cubes"></i>
                     </a>
+                    <button class="btn btn-default btn-xs"
+                        ng-click="deleteAedJob(row, $event) | trackEvent:'Analysis-Audio-Event-Detection-List':'delete aed job'"
+                        tooltip="Delete"
+                        tooltip-trigger="mouseenter">
+                        <i class="fa fa-trash"></i>
+                    </button>
                 </field>
             </a2-table>
             <div class="jumbotron seconds-div-center" ng-show="(!audioEventDetectionsOriginal || !audioEventDetectionsOriginal.length > 0) && !loading">
