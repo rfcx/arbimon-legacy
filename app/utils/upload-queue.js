@@ -53,9 +53,9 @@ function uploadFromUploadItemEntry(upload_item){
         var upload = {
             id: upload_item.id,
             metadata: {
-                recorder: upload_item.recorder,
-                mic: upload_item.mic,
-                sver: upload_item.software
+                recorder: 'n/a',
+                mic: 'n/a',
+                sver: 'n/a'
             },
             FFI: {
                 filename: f[1],
@@ -110,16 +110,16 @@ module.exports = {
                 uploadsBody.streamId = externalId ? externalId : null
                 model.uploads.uploadFile(uploadsBody, idToken, callback);
             },
-            function flagAsWaiting(uploadId, callback){
+            function flagAsWaiting(uploadId, callback) {
                 upload.uploadId = uploadId
                 model.uploads.updateState(upload.id, 'waiting', function(err){
                     callback(err);
                 });
             },
-            function checkStatus(callback){
+            function checkStatus(callback) {
                 model.uploads.checkStatus(upload.uploadId, idToken, callback);
             },
-            function status(status, callback){
+            function status(status, callback) {
                 callback();
             },
         ], cb);

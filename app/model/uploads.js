@@ -144,7 +144,7 @@ module.exports = {
         return this.requestUploadUrl(uploadOptions, idToken)
             .then(async (data) => {
                 const { url, uploadId } = data
-                this.performUpload(url, filePath, fileExt).then( () => {
+                await this.performUpload(url, filePath, fileExt).then((data) => {
                     callback(undefined, uploadId)
                     return;
                 })
@@ -183,21 +183,20 @@ module.exports = {
         var headers = {
           'Content-Type': `audio/${fileExt}`
         }
-        // S3 doesn't allow chunked uploads, so setting the Content-Length is required
         const fileSize = fileHelper.getFileSize(filePath)
         headers['Content-Length'] = fileSize
-        // const readStream = fs.createReadStream(filePath)
+        const readStream = fs.createReadStream(filePath)
         const options = {
           method: 'PUT',
-          headers: headers
-          // maxContentLength: 209715200
+          headers: headers,
+          body: readStream
         }
         return rp(signedUrl, options)
     },
 
     checkStatus: async function(uploadId, idToken, callback) {
         let status = 0
-        while (status === 0) {
+        while ([0, 10].includes(status)) {
             try {
                 const options = {
                     method: 'GET',
@@ -212,8 +211,11 @@ module.exports = {
                     status = data.status
                 })
             } catch (e) {
-                throw new Error('Failed to get a status');
+                callback('Failed to get a status')
             }
+        }
+        if ([30, 32].includes(status)) {
+            callback('Corrupted file')
         }
         callback(undefined, status)
         return;

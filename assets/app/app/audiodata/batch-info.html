@@ -29,23 +29,6 @@
                 </ui-select-choices>
             </ui-select>
         </div>
-        <div class="form-group">
-            <label class="control-label" for="recorder">Recorder: </label>
-            <input class="form-control" name="recorder" id="recorder" type="text"
-                ng-model="info.recorder"
-                required>
-        </div>
-        <div class="form-group">
-            <label class="control-label" for="mic">Microphone: </label>
-            <input class="form-control" name="mic" id="mic" type="text"
-                ng-model="info.mic"
-                required>
-        </div>
-        <div class="form-group">
-            <label class="control-label" for="sver">Software version: </label>
-            <input class="form-control" name="sver" id="sver" type="text"  ng-model="info.sver"
-                required>
-        </div>
         <div ng-if="sites && !sites.length" class="alert alert-danger" role="alert">
             You need to <a ng-href="/project/{{projectUrl}}/audiodata/sites" class="alert-link" ng-click="$dismiss()">create a site
             </a> first
