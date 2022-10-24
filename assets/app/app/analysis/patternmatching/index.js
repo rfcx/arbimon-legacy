@@ -593,7 +593,7 @@ angular.module('a2.analysis.patternmatching', [
                 name: null,
                 playlist: null,
                 template: null,
-                params: { N: 1, threshold: 0.1 },
+                params: { N: 1, threshold: 0.3 },
             };
             this.list = {};
             this.loading = {
