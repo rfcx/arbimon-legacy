@@ -1,13 +1,14 @@
 /* jshint node:true */
 "use strict";
 
-var express = require('express');
-var path = require('path')
-var router = express.Router();
-var model = require('../../../model');
-var AWS = require('aws-sdk');
-var s3 = new AWS.S3();
-var config = require('../../../config');
+const express = require('express');
+const path = require('path')
+const router = express.Router();
+const model = require('../../../model');
+const AWS = require('aws-sdk');
+const s3 = new AWS.S3();
+const config = require('../../../config');
+const q = require('q');
 
 router.get('/', function(req, res, next) {
     res.type('json');
@@ -15,7 +16,8 @@ router.get('/', function(req, res, next) {
     return model.ClusteringJobs.find({
         project_id: req.project.project_id,
         ...!!req.query.job_id && { job_id: req.query.job_id },
-        ...!!req.query.completed && { completed: req.query.completed }
+        ...!!req.query.completed && { completed: req.query.completed },
+        deleted: 0
     })
     .then(function(data){
         res.json(data);
@@ -103,6 +105,24 @@ router.post('/new', function(req, res, next) {
         if (err) return next(err);
         res.json({ create: true, result });
     })
+});
+
+router.post('/:clusteringJobId/remove', function(req, res, next) {
+    res.type('json');
+
+    const project_id = req.project.project_id;
+
+    q.resolve().then(function(){
+        if(!req.haveAccess(project_id, 'manage AED and Clustering job')){
+            throw new Error({
+                error: "You don't have permission to remove Clustering job"
+            });
+        }
+    }).then(function(){
+        return model.ClusteringJobs.delete(req.params.clusteringJobId);
+    }).then(function(){
+        res.json({ ok: true });
+    }).catch(next);
 });
 
 module.exports = router;

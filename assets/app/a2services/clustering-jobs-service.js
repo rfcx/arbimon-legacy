@@ -74,6 +74,11 @@ angular.module('a2.srv.clustering-jobs', [
                     return response.data;
                 }).catch(notify.serverError);
         },
+        delete: function(clusteringJobId) {
+            return $http.post('/api/project/' + Project.getUrl() + '/clustering-jobs/' + clusteringJobId + '/remove').then(function(response){
+                return response.data;
+            }).catch(notify.serverError);
+        }
     };
 })
 ;

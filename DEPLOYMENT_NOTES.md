@@ -1,5 +1,9 @@
 # Arbimon Deployment Notes
 
+## v3.0.64
+
+- Run 034-add-deleted-to-aed-ans-clustering.sql  on the production
+
 ## v3.0.62
 
 - Run 032-create-recordings-deleted-table.sql on the production

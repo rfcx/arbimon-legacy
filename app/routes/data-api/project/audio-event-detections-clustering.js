@@ -15,7 +15,8 @@ router.get('/', function(req, res, next) {
         ...!!req.query && !!req.query.rec_id && { rec_id: req.query.rec_id },
         playlist: req.query.playlist,
         dataExtended: req.query.dataExtended,
-        user: req.query.user
+        user: req.query.user,
+        deleted: 0
     })
     .then(function(data){
         res.json(data);
@@ -146,6 +147,24 @@ router.post('/unvalidate', function(req, res, next) {
             res.sendStatus(200)
         })
         .catch(httpErrorHandler(req, res, 'Error while removing audio event detections validation'))
+});
+
+router.post('/:aedJobId/remove', function(req, res, next) {
+    res.type('json');
+
+    const project_id = req.project.project_id;
+
+    q.resolve().then(function(){
+        if(!req.haveAccess(project_id, 'manage AED and Clustering job')){
+            throw new Error({
+                error: "You don't have permission to remove Audio Event Detection job"
+            });
+        }
+    }).then(function(){
+        return model.AudioEventDetectionsClustering.delete(req.params.aedJobId);
+    }).then(function(){
+        res.json({ ok: true });
+    }).catch(next);
 });
 
 module.exports = router;

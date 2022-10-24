@@ -1,5 +1,9 @@
 # Arbimon Release Notes
 
+## v3.0.64 - October 23, 2022
+
+- Add an ability to delete AED/clustering jobs
+
 ## v3.0.63 - October 08, 2022
 
 New features:
