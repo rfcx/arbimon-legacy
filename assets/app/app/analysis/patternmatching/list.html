@@ -11,14 +11,14 @@
         </h3>
         <div>
           <input ng-if="!loading.rows && patternmatchingsData && patternmatchingsData.length" type="text" class="form-control pull-left" ng-model="search.q" style="width: 320px;" placeholder="Search jobs by name, template" ng-change="onFilterChanged()">
-          <button class="btn btn-default pull-right"
+          <button ng-if="loading.showRefreshBtn" class="btn btn-default pull-right"
               tooltip="Refresh list"
               ng-click="loadPatternMatchings()">
                   <i class="fa fa-refresh"></i>
           </button>
         </div>
         <div class="ml-2"><loader ng-show="loading.rows"></loader></div>
-        <div ng-show="!loading.rows && patternmatchingsData && !patternmatchingsData.length" class="col-sm-12 pt-20" style="text-align: center;">
+        <div ng-show="!loading.rows && patternmatchingsData && !patternmatchingsData.length" class="help-wrapper col-sm-12 row-flex flex-direction-column flex-space-center flex-align-middle" style="text-align: center;">
             <h4>Crete
                 <a class="link-btn btn-default" ng-click="createNewPatternMatching() | trackEvent:'Analysis-Pattern-Matching-List':'Create new pattern matching'" >
                     + new
