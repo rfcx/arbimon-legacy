@@ -104,22 +104,24 @@ module.exports = {
             function(result, fields, callback) {
                 upload.id = result.insertId;
                 upload_row.upload_id = result.insertId;
-                callback();
-            },
-            function(callback) {
                 model.sites.getSiteExternalId(upload_row.site_id, callback)
             },
             function storeRawFileInBucket(externalId, callback) {
                 uploadsBody.streamId = externalId ? externalId : null
-                model.uploads.uploadFile(uploadsBody, idToken, function(err){
-                    callback(err);
-                });
+                model.uploads.uploadFile(uploadsBody, idToken, callback);
             },
-            function flagAsWaiting(callback){
+            function flagAsWaiting(uploadId, callback){
+                upload.uploadId = uploadId
                 model.uploads.updateState(upload.id, 'waiting', function(err){
                     callback(err);
                 });
-            }
+            },
+            function checkStatus(callback){
+                model.uploads.checkStatus(upload.uploadId, idToken, callback);
+            },
+            function status(status, callback){
+                callback();
+            },
         ], cb);
     },
     resume: function(){

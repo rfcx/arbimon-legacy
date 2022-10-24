@@ -210,7 +210,6 @@ var receiveUpload = function(req, res, next) {
                 });
             },
             function sendToProcess(info, callback) {
-
                 upload.projectId = req.upload.projectId;
                 upload.siteId = req.upload.siteId;
                 upload.userId = req.upload.userId;

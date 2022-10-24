@@ -138,15 +138,15 @@ module.exports = {
         queryHandler(q, callback);
     },
 
-    uploadFile: async function(data, idToken) {
+    uploadFile: async function(data, idToken, callback) {
         const { originalFilename, filePath, fileExt, streamId, timestamp } = data
         const uploadOptions = { originalFilename, filePath, streamId, timestamp }
         return this.requestUploadUrl(uploadOptions, idToken)
             .then(async (data) => {
                 const { url, uploadId } = data
-                return this.performUpload(url, filePath, fileExt).then(async () => {
-                    // TODO: check the status of upload by uploadId
-                    return uploadId
+                this.performUpload(url, filePath, fileExt).then( () => {
+                    callback(undefined, uploadId)
+                    return;
                 })
         })
     },
@@ -186,7 +186,7 @@ module.exports = {
         // S3 doesn't allow chunked uploads, so setting the Content-Length is required
         const fileSize = fileHelper.getFileSize(filePath)
         headers['Content-Length'] = fileSize
-        const readStream = fs.createReadStream(filePath)
+        // const readStream = fs.createReadStream(filePath)
         const options = {
           method: 'PUT',
           headers: headers
@@ -195,27 +195,27 @@ module.exports = {
         return rp(signedUrl, options)
     },
 
-    checkStatus: async function(uploadId, idToken) {
-        const options = {
-            method: 'GET',
-            url: `${rfcxConfig.ingestBaseUrl}/uploads/${uploadId}`,
-            headers: {
-                'content-type': 'application/json',
-                Authorization: `Bearer ${idToken}`
-            }
-        }
-        return rp(options).then((response) => {
+    checkStatus: async function(uploadId, idToken, callback) {
+        let status = 0
+        while (status === 0) {
             try {
-                const data = JSON.parse(response.data);
-                if (data && data.error) {
-                    throw new Error('Failed to get a status');
+                const options = {
+                    method: 'GET',
+                    url: `${rfcxConfig.ingestBaseUrl}/uploads/${uploadId}`,
+                    headers: {
+                        Authorization: `Bearer ${idToken}`
+                    },
+                    json: true
                 }
-                const status = data.status
-                const failureMessage = data.failureMessage
-                return { status: status, failureMessage: failureMessage }
+                await rp(options).then((response)=> {
+                    const data = response.body;
+                    status = data.status
+                })
             } catch (e) {
                 throw new Error('Failed to get a status');
             }
-        })
+        }
+        callback(undefined, status)
+        return;
     },
 };
