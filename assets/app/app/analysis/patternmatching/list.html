@@ -3,14 +3,14 @@
         <h3>
             Pattern Matching
             <a class="btn btn-sm btn-default"
-                tooltip="Create New Pattern Matching"
+                tooltip="Create New Pattern Matching job"
                 tooltip-placement="right"
                 ng-click="createNewPatternMatching() | trackEvent:'Analysis-Pattern-Matching-List':'Create new pattern matching'" >
-                <i class="fa fa-plus" ></i>
+                <i class="fa fa-plus mr-1" ></i> New job
             </a>
         </h3>
         <div>
-          <input type="text" class="form-control pull-left" ng-model="search.q" style="width: 320px;" placeholder="Search jobs by name, template" ng-change="onFilterChanged()">
+          <input ng-if="!loading.rows && patternmatchingsData && patternmatchingsData.length" type="text" class="form-control pull-left" ng-model="search.q" style="width: 320px;" placeholder="Search jobs by name, template" ng-change="onFilterChanged()">
           <button class="btn btn-default pull-right"
               tooltip="Refresh list"
               ng-click="loadPatternMatchings()">
@@ -18,7 +18,17 @@
           </button>
         </div>
         <div class="ml-2"><loader ng-show="loading.rows"></loader></div>
-        <div ng-hide="loading.rows">
+        <div ng-show="!loading.rows && patternmatchingsData && !patternmatchingsData.length" class="col-sm-12 pt-20" style="text-align: center;">
+            <h4>Crete
+                <a class="link-btn btn-default" ng-click="createNewPatternMatching() | trackEvent:'Analysis-Pattern-Matching-List':'Create new pattern matching'" >
+                    + new
+                </a>
+            Pattern Matching job</h4>
+            <p class="mb-0"><a class="help">Learn more</a></p>
+            <p class="mb-0"><a class="help" href="https://support.rfcx.org/article/99-what-is-pattern-matching-pm-in-arbimon" target="_blank">1. What is Pattern Matching?<i class="ml-1 fa fa-external-link"></i></a></p>
+            <p class="mb-0"><a class="help" href="https://support.rfcx.org/article/135-pattern-matching-best-practices" target="_blank">2. Pattern Matching best practice<i class="ml-1 fa fa-external-link"></i></a></p>
+        </div>
+        <div ng-if="!loading.rows && patternmatchingsData && patternmatchingsData.length">
             <a2-table rows="patternmatchingsData" no-checkbox="true" on-select="selectItem(row.id) | trackEvent:'Analysis-Pattern-Matching-List':' show pattern matching details'">
                 <field title="Name" tdclass="is-v-middle hidelongtext widthtd" key="name">
                     <div class="roi-thumbnail mr-1">
@@ -62,9 +72,6 @@
                     </button>
                 </field>
             </a2-table>
-            <div class="jumbotron seconds-div-center" ng-show="patternmatchingsOriginal && !patternmatchingsOriginal.length && !loading.rows">
-                <h3>{{ infopanedata }}</h3>
-            </div>
         </div>
     </div>
     <div ng-if="paginationSettings.totalJobs && (paginationSettings.totalJobs > paginationSettings.limit)" class="row">

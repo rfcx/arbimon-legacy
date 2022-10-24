@@ -74,11 +74,6 @@ angular.module('a2.analysis.patternmatching', [
             $scope.paginationSettings.totalPages = Math.ceil($scope.paginationSettings.totalJobs / $scope.paginationSettings.limit);
             $scope.showInfo = false;
             $scope.loading.rows = false;
-            $scope.infopanedata = "";
-
-            if(data.list && !data.list.length) {
-                $scope.infopanedata = "No pattern matchings found.";
-            }
         });
     };
 
