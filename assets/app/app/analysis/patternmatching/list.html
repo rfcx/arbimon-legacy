@@ -18,7 +18,7 @@
           </button>
         </div>
         <div class="ml-2"><loader ng-show="loading.rows"></loader></div>
-        <div ng-show="!loading.rows && patternmatchingsData && !patternmatchingsData.length" class="col-sm-12 pt-20" style="text-align: center;">
+        <div ng-show="!loading.rows && patternmatchingsData && !patternmatchingsData.length" class="help-wrapper col-sm-12 row-flex flex-direction-column flex-space-center flex-align-middle" style="text-align: center;">
             <h4>Crete
                 <a class="link-btn btn-default" ng-click="createNewPatternMatching() | trackEvent:'Analysis-Pattern-Matching-List':'Create new pattern matching'" >
                     + new
