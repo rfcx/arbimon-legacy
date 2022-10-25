@@ -214,9 +214,6 @@ module.exports = {
                 callback('Failed to get a status')
             }
         }
-        if ([30, 32].includes(status)) {
-            callback('Corrupted file')
-        }
         callback(undefined, status)
         return;
     },

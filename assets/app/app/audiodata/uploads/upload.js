@@ -35,7 +35,7 @@ angular.module('a2.audiodata.uploads.upload', [
     $scope,
     uploads, Project,
     AppListingsService,
-    $modal, $window, a2UserPermit,
+    a2UserPermit,
     notify
 ) {
 
@@ -48,8 +48,13 @@ angular.module('a2.audiodata.uploads.upload', [
         var index = 0;
         $scope.uploading = true;
 
-
         var _verifyAndUpload = function() {
+
+            if(!a2UserPermit.can('manage project recordings')) {
+                notify.log('You do not have permission to upload recordings');
+                return;
+            }
+
             var item = $scope.uploader.queue[index];
 
             var next = function() {
@@ -71,14 +76,6 @@ angular.module('a2.audiodata.uploads.upload', [
                     item.isDuplicate = true;
                     return next();
                 }
-
-                item.formData.push({
-                    info: JSON.stringify({
-                        recorder: $scope.info.recorder,
-                        mic: $scope.info.mic,
-                        sver: $scope.info.sver
-                    })
-                });
 
                 item.url = '/uploads/audio?project=' + $scope.project.project_id+
                             '&site=' + $scope.info.site.id +
@@ -104,36 +101,30 @@ angular.module('a2.audiodata.uploads.upload', [
         });
     };
 
-    $scope.batchInfo = function() {
-
-        if(!a2UserPermit.can('manage project recordings')) {
-            notify.log("You do not have permission to upload recordings");
-            return;
-        }
-
-        var modalInstance = $modal.open({
-            templateUrl: '/app/audiodata/batch-info.html',
-            controller: 'BatchInfoCtrl',
-            resolve: {
-                info: function() {
-                    return $scope.info;
-                }
-            }
-        });
-
-        modalInstance.result.then(function(newInfo) {
-            uploads.setBatchInfo(newInfo);
-            $scope.info = newInfo;
-        });
-    };
-
     $scope.uploader = uploads.getUploader();
-    $scope.info = uploads.getBatchInfo();
-    var randomString = Math.round(Math.random() * 100000000)
+
+    $scope.formats = [
+        { name: "Arbimon", format: "(*-YYYY-MM-DD_HH-MM)" },
+        { name: "AudioMoth", format: "(*YYYYMMDD_HHMMSS)" },
+        { name: "AudioMoth legacy", format: "(Unix Time code in Hex)" },
+        { name: "Cornell" , format: "(*_YYYYMMDD_HHMMSSZ)" },
+        { name: "Song Meter", format: "(*_YYYYMMDD_HHMMSS)" },
+        { name: "Wildlife", format: "(YYYYMMDD_HHMMSS)" }
+    ];
+
+    Project.getSites(function(sites) {
+        $scope.sites = sites.sort(function(a, b) { return new Date(b.updated_at) - new Date(a.updated_at)});
+    });
+
+    $scope.info = {}
+
+    const randomString = Math.round(Math.random() * 100000000)
+
     this.uploaderApps = {
         mac: 'https://rf.cx/ingest-app-latest-mac?r=' + randomString,
         windows: 'https://rf.cx/ingest-app-latest-win?r=' + randomString,
     };
+
     Project.getInfo(function(info) {
         $scope.project = info;
     });
@@ -193,41 +184,7 @@ angular.module('a2.audiodata.uploads.upload', [
     };
 
 })
-.controller('BatchInfoCtrl', function($scope, Project, info, $modalInstance, notify) {
 
-    if(info) {
-        $scope.info = angular.copy(info);
-    }
-    else {
-        $scope.info = {};
-    }
-
-    $scope.formats = [
-        { name: "Arbimon", format: "(*-YYYY-MM-DD_HH-MM)" },
-        { name: "AudioMoth", format: "(*YYYYMMDD_HHMMSS)" },
-        { name: "AudioMoth legacy", format: "(Unix Time code in Hex)" },
-        { name: "Cornell" , format: "(*_YYYYMMDD_HHMMSSZ)" },
-        { name: "Song Meter", format: "(*_YYYYMMDD_HHMMSS)" },
-        { name: "Wildlife", format: "(YYYYMMDD_HHMMSS)" }
-    ];
-
-    Project.getSites(function(sites) {
-        $scope.sites = sites.sort(function(a, b) { return new Date(b.updated_at) - new Date(a.updated_at)});
-    });
-
-    $scope.projectUrl = Project.getUrl();
-
-    $scope.close = function(){
-        if($scope.uploadInfo.$valid && $scope.info.site) {
-            return $modalInstance.close($scope.info);
-        }
-        else if(!$scope.info.site) {
-            return notify.error('You need to create a site first');
-        }
-
-        notify.error('all fields are required');
-    };
-})
 .factory('uploads', function(FileUploader){
 
     var u = new FileUploader();

@@ -119,8 +119,11 @@ module.exports = {
             function checkStatus(callback) {
                 model.uploads.checkStatus(upload.uploadId, idToken, callback);
             },
-            function status(status, callback) {
-                callback();
+            function status(result, callback) {
+                const status = !result || [30, 32].includes(result) ? 'error' : 'uploaded'
+                model.uploads.updateState(upload.id, status, function(err){
+                    callback(err);
+                });
             },
         ], cb);
     },
