@@ -1,5 +1,19 @@
 # Arbimon Release Notes
 
+## v3.0.65 - October XX, 2022
+
+Performance improvements:
+
+- Switch to the Ingest Service support for uploading files
+
+## v3.0.64 - October 24, 2022
+
+New features:
+
+- Add the learn more section for a new PM job
+- Add the ability to delete AED/ Clustering job
+- Display the note on the new AED form if the Max frequency more then Min frequency
+
 ## v3.0.63 - October 08, 2022
 
 New features:

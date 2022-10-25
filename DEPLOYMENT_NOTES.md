@@ -1,5 +1,12 @@
 # Arbimon Deployment Notes
 
+## v3.0.44
+
+- Install `sha1-file` library (^1.0.4)
+- Add `ingestBaseUrl` in `config/rfcx.local.json` file:
+    - For staging: https://staging-ingest.rfcx.org
+    - For production: https://ingest.rfcx.org
+
 ## v3.0.62
 
 - Run 032-create-recordings-deleted-table.sql on the production
