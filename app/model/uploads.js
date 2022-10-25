@@ -143,6 +143,10 @@ module.exports = {
         const uploadOptions = { originalFilename, filePath, streamId, timestamp }
         return this.requestUploadUrl(uploadOptions, idToken)
             .then(async (data) => {
+                if (!data) {
+                    callback('Failed to upload recording')
+                    return;
+                }
                 const { url, uploadId } = data
                 await this.performUpload(url, filePath, fileExt).then((data) => {
                     callback(undefined, uploadId)
@@ -153,6 +157,7 @@ module.exports = {
 
     requestUploadUrl: async function(data, idToken) {
         const { originalFilename, filePath, streamId, timestamp } = data
+        const errorMessage = 'Failed to upload recording'
         const sha1 = fileHelper.getCheckSum(filePath)
         const body = { filename: originalFilename, checksum: sha1, stream: streamId, timestamp: timestamp }
         const options = {
@@ -168,13 +173,15 @@ module.exports = {
             try {
                 const body = JSON.parse(response.body);
                 if (body && body.error) {
-                    throw new Error('Failed to upload recording');
+                    console.error(errorMessage,  body.error)
+                    throw new Error(errorMessage);
                 }
                 const url = body.url
                 const uploadId = body.uploadId
                 return { url, uploadId }
             } catch (e) {
-                throw new Error('Failed to upload recording');
+                console.error(errorMessage, e)
+                return undefined;
             }
         })
     },
