@@ -53,9 +53,9 @@ function uploadFromUploadItemEntry(upload_item){
         var upload = {
             id: upload_item.id,
             metadata: {
-                recorder: 'n/a',
-                mic: 'n/a',
-                sver: 'n/a'
+                recorder: 'Unknown',
+                mic: 'Unknown',
+                sver: 'Unknown'
             },
             FFI: {
                 filename: f[1],

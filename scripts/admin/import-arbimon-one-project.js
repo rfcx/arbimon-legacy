@@ -121,9 +121,9 @@ var getSiteRecs = function(station, nextStation) {
                                 siteId: siteId,
                                 userId: newProject.ownerId,
                                 metadata: {
-                                    recorder: 'n/a',
-                                    mic: 'n/a',
-                                    sver: 'n/a'
+                                    recorder: 'Unknown',
+                                    mic: 'Unknown',
+                                    sver: 'Unknown'
                                 },
                                 FFI: {
                                     filename: file,

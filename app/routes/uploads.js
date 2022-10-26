@@ -197,9 +197,9 @@ var receiveUpload = function(req, res, next) {
                     return res.status(403).json({ error: "Recording is too long, please contact support" });
                 }
                 upload.metadata = {
-                    recorder: 'n/a',
-                    mic: 'n/a',
-                    sver: 'n/a'
+                    recorder: 'Unknown',
+                    mic: 'Unknown',
+                    sver: 'Unknown'
                 }
                 const idToken = req.session.idToken
                 const uploadsBody = {
