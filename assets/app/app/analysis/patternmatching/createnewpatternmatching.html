@@ -1,14 +1,18 @@
-<div class="modal-header">
+<div class="modal-header row-flex flex-space-between">
     <h3 class="modal-title">Create a new pattern matching</h3>
+    <p class="mb-0 flex-self-align-bottom"><a class="help" href="https://support.rfcx.org/article/135-pattern-matching-best-practices" target="_blank">Learn more<i class="ml-1 fa fa-external-link"></i></a></p>
 </div>
 <div class="modal-body">
     <form role="form">
         <div class="form-group">
-            <label for="modelName">Name:</label>
+            <label for="modelName">Job Name</label>
             <input id-"modelName" class="form-control" ng-model="controller.data.name" placeholder="Enter pattern matching name" type="text"/>
         </div>
         <div class="form-group">
-            <label for="template">Template:</label>
+            <label for="template">Template</label>
+            <i class="fa fa-info-circle ml-2"
+                tooltip="What to search for">
+            </i>
             <span class="red" ng-hide="controller.loading.templates || controller.list.templates.length">
                 <em>No templates found.
                     <a class="red cs-pointer linodeco" ng-click="controller.cancel('/visualizer') | trackEvent:'Analysis-PatternMatching-new pattern matching modal':'Cancel-Create template'">Create one.</a>
@@ -31,7 +35,10 @@
             </ui-select>
         </div>
         <div class="form-group">
-            <label for="template">Select Playlist:</label>
+            <label for="template">Playlist</label>
+            <i class="fa fa-info-circle ml-2"
+                tooltip="Which recordings to perform the search on">
+            </i>
             <span class="red" ng-if="controller.list.playlists && !controller.list.playlists.length">
                 <em>No playlists found.
                     <a class="red cs-pointer linodeco" ng-click="controller.cancel('/audiodata/playlists') | trackEvent:'Analysis-PatternMatching-new pattern matching modal':'Cancel-Go to playlists'">
@@ -56,15 +63,24 @@
             </ui-select>
         </div>
         <div class="form-group">
-            <label for="param-N">Matches per recording:</label>
+            <label for="param-N">Matches per recording</label>
+            <i class="fa fa-info-circle ml-2"
+                tooltip="Maximum number of detections/matches in a single recording">
+            </i>
             <input id="param-N" class="form-control" ng-model="controller.data.params.N" placeholder="1" type="text"/>
         </div>
         <div class="form-group">
-            <label for="param-persite">Matches per site:</label>
+            <label for="param-persite">Matches per site</label>
+            <i class="fa fa-info-circle ml-2"
+                tooltip="Maximum number of detections/matches in a site">
+            </i>
             <input id="param-persite" class="form-control" style="text-align:left;" min="0" step="1" placeholder="(no limit)" ng-model="controller.data.params.persite" type="number"/>
         </div>
         <div class="form-group">
-            <label for="param-th">Threshold:</label>
+            <label for="param-th">Threshold</label>
+            <i class="fa fa-info-circle ml-2"
+                tooltip="Minimum confidence value of detection/match">
+            </i>
             <input id="param-th" class="form-control" ng-model="controller.data.params.threshold" placeholder="0.1" type="text"/>
         </div>
         <div class="form-group">

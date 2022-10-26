@@ -4,7 +4,7 @@
 <div class="modal-body">
     <form role="form">
         <div class="form-group">
-            <label for="modelName">Name</label>
+            <label for="modelName">Job Name</label>
             <input id="modelName" class="form-control" ng-model="controller.data.name" type="text"/>
         </div>
         <div class="form-group">
@@ -73,18 +73,18 @@
             </div>
             <div class="row">
                 <div class="col-sm-6">
-                    <label for="minFrequency">min</label>
+                    <label for="minFrequency">Min</label>
                     <i class="fa fa-info-circle ml-2"
                         tooltip="The minimum frequency of sound events to detect (kHz)">
                     </i>
-                    <input id="minFrequency" class="form-control" style="text-align:left;" min="0" step="1" max="24" ng-change="controller.handleMinFrequency()" ng-model="controller.data.params.minFrequency" type="number"/>
+                    <input id="minFrequency" class="form-control" style="text-align:left;" min="0" step="1" max="24" ng-model="controller.data.params.minFrequency" type="number"/>
                 </div>
                 <div class="col-sm-6">
-                    <label for="maxFrequency">max</label>
+                    <label for="maxFrequency">Max</label>
                     <i class="fa fa-info-circle ml-2"
-                        tooltip="The maximum frequency of sound events to detec (kHz)">
+                        tooltip="The maximum frequency of sound events to detect (kHz)">
                     </i>
-                    <input id="maxFrequency" class="form-control" style="text-align:left;" min="0" step="1" max="24" ng-change="controller.handleMaxFrequency()" ng-model="controller.data.params.maxFrequency" type="number"/>
+                    <input id="maxFrequency" class="form-control" style="text-align:left;" min="0" step="1" max="24" ng-model="controller.data.params.maxFrequency" type="number"/>
                 </div>
             </div>
         </div>

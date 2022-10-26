@@ -41,7 +41,12 @@ angular.module('a2.srv.audio-event-detections-clustering', [
               .then(function(response){
                   return response.data;
               });
-      },
+        },
+        delete: function(jobId) {
+            return $http.post('/api/project/' + Project.getUrl() + '/audio-event-detections-clustering/' + jobId + '/remove').then(function(response){
+                return response.data;
+            }).catch(notify.serverError);
+        }
     };
 })
 ;
