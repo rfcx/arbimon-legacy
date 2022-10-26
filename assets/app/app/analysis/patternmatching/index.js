@@ -25,7 +25,7 @@ angular.module('a2.analysis.patternmatching', [
 })
 .controller('PatternMatchingCtrl' , function($scope, $modal, $filter, Project, JobsData, a2Playlists, $location, notify, $q, a2PatternMatching, a2UserPermit, $state, $stateParams) {
     $scope.selectedPatternMatchingId = $stateParams.patternMatchingId;
-    $scope.loading = {rows: false};
+    $scope.loading = { rows: false, showRefreshBtn: false };
     $scope.paginationSettings = {
         page: 1,
         limit: 10,
@@ -74,10 +74,8 @@ angular.module('a2.analysis.patternmatching', [
             $scope.paginationSettings.totalPages = Math.ceil($scope.paginationSettings.totalJobs / $scope.paginationSettings.limit);
             $scope.showInfo = false;
             $scope.loading.rows = false;
-            $scope.infopanedata = "";
-
-            if(data.list && !data.list.length) {
-                $scope.infopanedata = "No pattern matchings found.";
+            if (data && data.list.length) {
+                $scope.loading.showRefreshBtn = true;
             }
         });
     };
@@ -113,6 +111,7 @@ angular.module('a2.analysis.patternmatching', [
             data = result;
             if (data.ok) {
                 JobsData.updateJobs();
+                $scope.loading.showRefreshBtn = true;
                 notify.log("Your new pattern matching is waiting to start processing.<br> Check its status on <b>Jobs</b>.");
             } else if (data.error) {
                 notify.error("Error: "+data.error);
@@ -598,7 +597,7 @@ angular.module('a2.analysis.patternmatching', [
                 name: null,
                 playlist: null,
                 template: null,
-                params: { N: 1, threshold: 0.1 },
+                params: { N: 1, threshold: 0.3 },
             };
             this.list = {};
             this.loading = {

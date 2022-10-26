@@ -11,28 +11,28 @@ angular.module('a2.analysis.clustering-jobs', [
 ])
 .config(function($stateProvider) {
     $stateProvider
-      .state('analysis.clustering-jobs', {
-          url: '/clustering-jobs',
-          controller: 'ClusteringJobsModelCtrl',
-          templateUrl: '/app/analysis/clustering-jobs/list.html',
-      })
-      .state('analysis.clustering-jobs-details', {
-          url: '/clustering-jobs/:clusteringJobId?freqMin&freqMax',
-          controller: 'ClusteringJobsModelCtrl',
-          params: {
-            freqMin: null,
-            freqMax: null
-          },
-          templateUrl: '/app/analysis/clustering-jobs/list.html',
-      })
-      .state('analysis.grid-view', {
-        url: '/clustering-jobs/:clusteringJobId/grid-view',
-        controller: 'ClusteringJobsModelCtrl',
-        params: { gridContext: null },
-        templateUrl: '/app/analysis/clustering-jobs/list.html'
-    });
+        .state('analysis.clustering-jobs', {
+            url: '/clustering-jobs',
+            controller: 'ClusteringJobsModelCtrl',
+            templateUrl: '/app/analysis/clustering-jobs/list.html',
+        })
+        .state('analysis.clustering-jobs-details', {
+            url: '/clustering-jobs/:clusteringJobId?freqMin&freqMax',
+            controller: 'ClusteringJobsModelCtrl',
+            params: {
+                freqMin: null,
+                freqMax: null
+            },
+            templateUrl: '/app/analysis/clustering-jobs/list.html',
+        })
+        .state('analysis.grid-view', {
+            url: '/clustering-jobs/:clusteringJobId/grid-view',
+            controller: 'ClusteringJobsModelCtrl',
+            params: { gridContext: null },
+            templateUrl: '/app/analysis/clustering-jobs/list.html'
+        });
 })
-.controller('ClusteringJobsModelCtrl' , function($scope, $state, $stateParams, a2ClusteringJobs, JobsData, notify, $location, $modal) {
+.controller('ClusteringJobsModelCtrl' , function($scope, $state, $stateParams, a2ClusteringJobs, JobsData, notify, $location, $modal, a2UserPermit) {
     $scope.selectedClusteringJobId = $stateParams.clusteringJobId;
     $scope.showViewGridPage = false;
     $scope.loadClusteringJobs = function() {
@@ -85,7 +85,57 @@ angular.module('a2.analysis.clustering-jobs', [
             }
         });
     };
+
+    $scope.deleteClusteringJob = function(clusteringJob, $event) {
+        $event.stopPropagation();
+        if(!a2UserPermit.can('manage AED and Clustering job')) {
+            notify.log('You do not have permission to delete Clustering job');
+            return;
+        }
+
+        const modalInstance = $modal.open({
+            templateUrl: '/app/analysis/clustering-jobs/delete-clustering-job.html',
+            controller: 'DeleteClusteringJobCtrl as controller',
+            resolve: {
+                clusteringJob: function() {
+                    return clusteringJob;
+                },
+            }
+        });
+
+        modalInstance.result.then(function(ret) {
+            if (ret.err) {
+                notify.error('Error: ' + ret.err);
+            } else {
+                const modArr = angular.copy($scope.clusteringJobsOriginal);
+                const indx = modArr.findIndex(item => item.clustering_job_id === clusteringJob.clustering_job_id);
+                if (indx > -1) {
+                    $scope.clusteringJobsOriginal.splice(indx, 1);
+                    notify.log('Clustering Job deleted successfully');
+                }
+            }
+        });
+    };
 })
+
+.controller('DeleteClusteringJobCtrl',
+    function($scope, $modalInstance, a2ClusteringJobs, clusteringJob) {
+        this.clusteringJob = clusteringJob;
+        $scope.deletingloader = false;
+
+        $scope.ok = function() {
+            $scope.deletingloader = true;
+            a2ClusteringJobs.delete(clusteringJob.clustering_job_id).then(function(data) {
+                $modalInstance.close(data);
+            });
+        };
+
+        $scope.cancel = function() {
+            $modalInstance.dismiss('cancel');
+        };
+    }
+)
+
 .directive('a2ClusteringDetails', function(){
     return {
         restrict : 'E',
@@ -469,7 +519,7 @@ angular.module('a2.analysis.clustering-jobs', [
                     }
                 })
                 $scope.removeFromLocalStorage();
-                var tempPlaylistData = {};
+                tempPlaylistData = {};
                 tempPlaylistData.aed = $scope.selectedClusters.aed;
                 tempPlaylistData.boxes = $scope.selectedClusters.boxes;
                 tempPlaylistData.playlist = {

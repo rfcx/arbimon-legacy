@@ -54,6 +54,10 @@ let ClusteringJobs = {
             constraints.push('J.state = "completed"');
         }
 
+        if (options.deleted !== undefined) {
+            constraints.push('C.`deleted` = ' + dbpool.escape(options.deleted));
+        }
+
         postprocess.push((rows) => {
             rows.forEach(row => {
                 try {
@@ -192,6 +196,11 @@ let ClusteringJobs = {
             "FROM " + tables.join("\n") + "\n" +
             "WHERE " + constraints.join(" AND ")
         )
+    },
+
+    delete: function (jobId) {
+        const q = `UPDATE job_params_audio_event_clustering SET deleted=1 WHERE job_id = ${jobId}`;
+        return dbpool.query(q);
     },
 
     JOB_SCHEMA : joi.object().keys({
