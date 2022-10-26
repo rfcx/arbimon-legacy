@@ -6,6 +6,7 @@
 - Add `ingestBaseUrl` in `config/rfcx.local.json` file:
     - For staging: https://staging-ingest.rfcx.org
     - For production: https://ingest.rfcx.org
+- Remove `process_uploaded_recording` and `clustering_jobs` from the `config/rfcx.local.json`
 
 ## v3.0.62
 
