@@ -53,9 +53,9 @@ function uploadFromUploadItemEntry(upload_item){
         var upload = {
             id: upload_item.id,
             metadata: {
-                recorder: upload_item.recorder,
-                mic: upload_item.mic,
-                sver: upload_item.software
+                recorder: 'Unknown',
+                mic: 'Unknown',
+                sver: 'Unknown'
             },
             FFI: {
                 filename: f[1],
@@ -74,7 +74,7 @@ function uploadFromUploadItemEntry(upload_item){
 }
 
 module.exports = {
-    enqueue: function(upload, cb) {
+    enqueue: function(upload, uploadsBody, idToken, cb) {
         var upload_row;
         async.waterfall([
             function(callback) {
@@ -104,27 +104,27 @@ module.exports = {
             function(result, fields, callback) {
                 upload.id = result.insertId;
                 upload_row.upload_id = result.insertId;
-                callback();
+                model.sites.getSiteExternalId(upload_row.site_id, callback)
             },
-            function storeRawFileInBucket(callback){
-                Uploader.moveToTempArea(upload, callback);
+            function storeRawFileInBucket(externalId, callback) {
+                uploadsBody.streamId = externalId ? externalId : null
+                model.uploads.uploadFile(uploadsBody, idToken, callback);
             },
-            function flagAsWaiting(callback){
+            function flagAsWaiting(uploadId, callback) {
+                upload.uploadId = uploadId
                 model.uploads.updateState(upload.id, 'waiting', function(err){
                     callback(err);
                 });
             },
-            function(callback){
-                if(config('lambdas').process_uploaded_recording){
-                    lambda.invoke({
-                        FunctionName: config('lambdas').process_uploaded_recording,
-                        InvocationType: 'Event',
-                        Payload: JSON.stringify(upload_row),
-                    }, callback);
-                } else {
-                    callback();
-                }
-            }
+            function checkStatus(callback) {
+                model.uploads.checkStatus(upload.uploadId, idToken, callback);
+            },
+            function status(result, callback) {
+                const status = !result || [30, 32].includes(result) ? 'error' : 'uploaded'
+                model.uploads.updateState(upload.id, status, function(err){
+                    callback(err);
+                });
+            },
         ], cb);
     },
     resume: function(){

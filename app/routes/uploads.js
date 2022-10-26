@@ -6,12 +6,13 @@ var util = require('util');
 var _ = require('lodash');
 var q = require('q');
 
-
+const fileHelper = require('../utils/file-helper')
 var model = require('../model');
 var audioTools= require('../utils/audiotool');
 var tmpFileCache = require('../utils/tmpfilecache');
 var formatParse = require('../utils/format-parse');
-var uploadQueue = require('../utils/upload-queue');
+const uploadQueue = require('../utils/upload-queue');
+const moment = require('moment');
 
 var deleteFile = function(filename) {
     fs.unlink(filename, function(err) {
@@ -126,25 +127,6 @@ var receiveUpload = function(req, res, next) {
 
     req.busboy.on('field', function(fieldname, val) {
         console.log('field %s = %s', fieldname, val);
-
-        if(fieldname === 'info') {
-            try {
-                upload.metadata = JSON.parse(val);
-            }
-            catch(err) {
-                error = true;
-                return res.status(400).json({ error: err.message });
-            }
-
-            var notValid = !upload.metadata.recorder ||
-                            !upload.metadata.sver ||
-                            !upload.metadata.mic;
-
-            if(notValid && !error) {
-                error = true;
-                return res.status(400).json({ error: "missing basic metadata" });
-            }
-        }
     });
 
     req.busboy.on('file', function(fieldname, file, filename, encoding, mimetype) {
@@ -172,11 +154,6 @@ var receiveUpload = function(req, res, next) {
     req.busboy.on('finish', function() {
         if(error) return;
 
-        if(!upload.metadata || !upload.name || !upload.path) {
-            return res.status(400).json({ error: "form data not complete"});
-        }
-
-        console.log('metadata: ', upload.metadata);
         console.log('filename: ', upload.name);
 
         async.waterfall([
@@ -210,7 +187,6 @@ var receiveUpload = function(req, res, next) {
                 });
             },
             function sendToProcess(info, callback) {
-
                 upload.projectId = req.upload.projectId;
                 upload.siteId = req.upload.siteId;
                 upload.userId = req.upload.userId;
@@ -220,45 +196,24 @@ var receiveUpload = function(req, res, next) {
                     deleteFile(upload.path);
                     return res.status(403).json({ error: "Recording is too long, please contact support" });
                 }
-
-                if(info.duration > 61) {
-                    audioTools.splitter(upload.path, info.duration, function(err, files) {
-                        if(err) return next(err);
-
-                        var i = 0;
-                        async.eachSeries(files, function(f, nextUpload) {
-                            var uploadPart = _.cloneDeep(upload);
-
-                            uploadPart.FFI.filename = uploadPart.FFI.filename +'.p'+ (i+1);
-
-                            uploadPart.FFI.datetime.setMinutes(uploadPart.FFI.datetime.getMinutes()+i);
-
-                            uploadPart.name = uploadPart.FFI.filename + uploadPart.FFI.filetype;
-                            uploadPart.path = f;
-
-                            console.log('upload', uploadPart);
-                            uploadQueue.enqueue(_.cloneDeep(uploadPart), function(err) {
-                                if(err) return nextUpload(err);
-
-                                i++;
-                                nextUpload();
-                            });
-                        }, function splitDone(err2) {
-                            if(err2) return next(err2);
-
-                            deleteFile(upload.path);
-                            res.status(202).json({ success: "upload done!" });
-                        });
-                    });
+                upload.metadata = {
+                    recorder: 'Unknown',
+                    mic: 'Unknown',
+                    sver: 'Unknown'
                 }
-                else {
-                    console.log('upload', upload);
-                    uploadQueue.enqueue(upload, function(err) {
-                        if(err) return next(err);
-
-                        res.status(202).json({ success: "upload done!" });
-                    });
+                const idToken = req.session.idToken
+                const uploadsBody = {
+                    originalFilename: upload.name,
+                    filePath: upload.path,
+                    fileExt: fileHelper.getExtension(upload.name),
+                    streamId: upload.siteId,
+                    timestamp: moment.utc(upload.FFI.datetime).toISOString()
                 }
+                uploadQueue.enqueue(upload, uploadsBody, idToken, function(err) {
+                    if(err) return next(err);
+
+                    res.status(202).json({ success: "upload done!" });
+                });
             }
         ]);
 

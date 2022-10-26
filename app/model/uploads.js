@@ -1,14 +1,17 @@
-var util = require('util');
-var Joi = require('joi');
-var sprintf = require("sprintf-js").sprintf;
-var dbpool       = require('../utils/dbpool');
-var q= require('q');
-// local variables
-var queryHandler = dbpool.queryHandler;
+const util = require('util');
+const Joi = require('joi');
+const dbpool = require('../utils/dbpool');
+const q = require('q');
+const queryHandler = dbpool.queryHandler;
+const config = require('../config');
+const rfcxConfig = config('rfcx');
+const fileHelper = require('../utils/file-helper');
+const request = require('request');
+const { promisify } = require('util');
+const rp = promisify(request);
+const fs = require('fs');
 
 // model for uploads processing status in status bar
-
-
 module.exports = {
     insertRecToList: function(uploadData, callback) {
         var schema =  {
@@ -133,5 +136,92 @@ module.exports = {
 
         q = util.format(q, dbpool.escape(upload_id));
         queryHandler(q, callback);
+    },
+
+    uploadFile: async function(data, idToken, callback) {
+        const { originalFilename, filePath, fileExt, streamId, timestamp } = data
+        const uploadOptions = { originalFilename, filePath, streamId, timestamp }
+        return this.requestUploadUrl(uploadOptions, idToken)
+            .then(async (data) => {
+                if (!data) {
+                    callback('Failed to upload recording')
+                    return;
+                }
+                const { url, uploadId } = data
+                await this.performUpload(url, filePath, fileExt).then((data) => {
+                    callback(undefined, uploadId)
+                    return;
+                })
+        })
+    },
+
+    requestUploadUrl: async function(data, idToken) {
+        const { originalFilename, filePath, streamId, timestamp } = data
+        const errorMessage = 'Failed to upload recording'
+        const sha1 = fileHelper.getCheckSum(filePath)
+        const body = { filename: originalFilename, checksum: sha1, stream: streamId, timestamp: timestamp }
+        const options = {
+            method: 'POST',
+            url: `${rfcxConfig.ingestBaseUrl}/uploads`,
+            headers: {
+                'content-type': 'application/json',
+                Authorization: `Bearer ${idToken}`
+            },
+            body: JSON.stringify(body)
+        }
+        return rp(options).then((response) => {
+            try {
+                const body = JSON.parse(response.body);
+                if (body && body.error) {
+                    console.error(errorMessage,  body.error)
+                    throw new Error(errorMessage);
+                }
+                const url = body.url
+                const uploadId = body.uploadId
+                return { url, uploadId }
+            } catch (e) {
+                console.error(errorMessage, e)
+                return undefined;
+            }
+        })
+    },
+
+    performUpload: async function(signedUrl, filePath, fileExt) {
+        var headers = {
+          'Content-Type': `audio/${fileExt}`
+        }
+        const fileSize = fileHelper.getFileSize(filePath)
+        headers['Content-Length'] = fileSize
+        const readStream = fs.createReadStream(filePath)
+        const options = {
+          method: 'PUT',
+          headers: headers,
+          body: readStream
+        }
+        return rp(signedUrl, options)
+    },
+
+    checkStatus: async function(uploadId, idToken, callback) {
+        let status = 0
+        while ([0, 10].includes(status)) {
+            try {
+                const options = {
+                    method: 'GET',
+                    url: `${rfcxConfig.ingestBaseUrl}/uploads/${uploadId}`,
+                    headers: {
+                        Authorization: `Bearer ${idToken}`
+                    },
+                    json: true
+                }
+                await rp(options).then((response)=> {
+                    const data = response.body;
+                    status = data.status
+                })
+            } catch (e) {
+                callback('Failed to get a status')
+            }
+        }
+        callback(undefined, status)
+        return;
     },
 };
