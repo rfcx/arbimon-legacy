@@ -834,7 +834,7 @@ var Sites = {
                 Authorization: `Bearer ${idToken}`,
                 source: 'arbimon'
             }
-          }
+        }
         return rp(options).then((response) => {
             if (response.statusCode !== 204) {
                 throw new Error('Failed to delete site');

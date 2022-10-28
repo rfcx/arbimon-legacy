@@ -1,5 +1,5 @@
 const listOfRoles = {
-  1: "Member", // Admin
+  1: "Admin", // Admin
   2: "Member", // User
   3: "Guest", // Guest
   4: "Admin", // Project Owner
