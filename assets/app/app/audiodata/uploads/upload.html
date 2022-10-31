@@ -20,7 +20,11 @@
 <div class="row">
     <div class="col-sm-12 mt-3 row-flex" style="align-content: flex-end;">
         <div class="col-sm-2 pl-0">
-            <label class="control-label visible-lg-inline" for="site">Site:</label>
+            <label class="control-label visible-lg-inline" for="site">Site</label>
+            <i class="fa fa-info-circle ml-2 visible-lg-inline"
+                tooltip-placement="bottom"
+                tooltip="Please choose a site before starting uploads">
+            </i>
             <span ng-if="sites && !sites.length">
                 <em>Please create a site first.</em>
             </span>
@@ -33,8 +37,9 @@
             </ui-select>
         </div>
         <div class="col-sm-3">
-            <label class="control-label visible-lg-inline" for="format">Filename Format:</label>
+            <label class="control-label visible-lg-inline" for="format">Filename Format</label>
             <i class="fa fa-info-circle ml-2 visible-lg-inline"
+                tooltip-placement="bottom"
                 tooltip="The system gets the recording's date and time from
                 the filename by searching one of the patterns below">
             </i>
@@ -48,8 +53,9 @@
             </ui-select>
         </div>
         <div class="col-sm-2">
-            <label class="control-label visible-lg-inline" for="format">Filename Timezone:</label>
+            <label class="control-label visible-lg-inline" for="format">Filename Timezone</label>
             <i class="fa fa-info-circle ml-2 visible-lg-inline"
+                tooltip-placement="bottom"
                 tooltip="Switch the Filename Timezone between UTC Time or Local Time depending on the site location">
             </i>
             <ui-select ng-model="info.timezone" theme="bootstrap">
