@@ -30,21 +30,22 @@ var authorize = function(authtype){
         var accessToken = req.get('X-X-access-token-X-X') || req.body.token;
 
         if(authtype.session && req.session && req.session.loggedIn) {
-            if(!req.query.project || !req.query.site || !req.query.nameformat) {
-                return res.status(400).json({ error: "missing parameters" });
+            if(!req.query.project || !req.query.site || !req.query.nameformat || !req.query.timezone) {
+                return res.status(400).json({ error: 'missing parameters' });
             }
 
-            console.log('project_id: %s | site_id: %s |format: %s',
+            console.log('project_id: %s | site_id: %s |format: %s |timezone: %s',
                 req.query.project,
                 req.query.site,
-                req.query.nameformat
+                req.query.nameformat,
+                req.query.timezone
             );
 
-            var perm = "manage project recordings";
+            var perm = 'manage project recordings';
 
             if(!req.haveAccess(req.query.project, perm)) {
                 res.status(401).json({
-                    error: "you dont have permission to '"+ perm +"'"
+                    error: `you dont have permission to ${ perm }`
                 });
                 return;
             }
@@ -54,6 +55,7 @@ var authorize = function(authtype){
                 projectId: Number(req.query.project),
                 siteId: Number(req.query.site),
                 nameFormat: req.query.nameformat,
+                timezone: req.query.timezone,
             };
 
             next();
@@ -66,7 +68,8 @@ var authorize = function(authtype){
                 userId: 0,
                 projectId: Number(req.token.project),
                 siteId: Number(req.token.site),
-                nameFormat: "Arbimon",
+                nameFormat: 'Arbimon',
+                timezone: 'local',
             };
 
             next();
@@ -75,13 +78,14 @@ var authorize = function(authtype){
         // verify access token
         else if(authtype.access_token && accessToken) {
             res.type('json');
-            return model.AccessTokens.verifyTokenAccess(accessToken, "manage project recordings", {requireScope:true, requireProject:true}).then(function(resolvedToken){
+            return model.AccessTokens.verifyTokenAccess(accessToken, 'manage project recordings', {requireScope:true, requireProject:true}).then(function(resolvedToken){
                 return model.users.hasProjectAccess(resolvedToken.user, resolvedToken.project, {required:true}).then(function(){
                     req.upload = {
                         userId: resolvedToken.user,
                         projectId: Number(resolvedToken.project),
                         siteId: Number(resolvedToken.site),
-                        nameFormat: resolvedToken.nameFormat || "any",
+                        nameFormat: resolvedToken.nameFormat || 'any',
+                        timezone: resolvedToken.timezone || 'local',
                     };
                 });
             }).finally(next);
@@ -148,6 +152,7 @@ var receiveUpload = function(req, res, next) {
 
         upload.name = filename;
         upload.path = saveTo;
+        upload.timezone = req.upload.timezone
 
     });
 
@@ -206,8 +211,7 @@ var receiveUpload = function(req, res, next) {
                     originalFilename: upload.name,
                     filePath: upload.path,
                     fileExt: fileHelper.getExtension(upload.name),
-                    streamId: upload.siteId,
-                    timestamp: moment.utc(upload.FFI.datetime).toISOString()
+                    streamId: upload.siteId
                 }
                 uploadQueue.enqueue(upload, uploadsBody, idToken, function(err) {
                     if(err) return next(err);

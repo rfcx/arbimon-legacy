@@ -93,12 +93,17 @@ module.exports = {
                 model.sites.getSiteTimezone(upload_row.site_id, callback)
             },
             function(timezone, callback) {
+                const datetimeUtc = moment.utc(upload_row.datetime).toISOString()
                 // Convert datetime with timezone offsets for browser AudioMoth recordings
                 // https://github.com/rfcx/arbimon/commit/efa1a487ce672ecf3d81c45470511e3f46a69305
                 if (upload.info && upload.info.isUTC) {
                     const datetimeLocal = timezone ? moment.tz(upload_row.datetime, timezone).toISOString() : null;
                     upload_row.datetime = datetimeLocal? datetimeLocal : upload_row.datetime;
+                } else {
+                    const isLocal = upload.timezone === 'local'
+                    upload_row.datetime = isLocal ? upload_row.datetime : datetimeUtc;
                 }
+                uploadsBody.timestamp = datetimeUtc
                 model.uploads.insertRecToList(upload_row, callback);
             },
             function(result, fields, callback) {

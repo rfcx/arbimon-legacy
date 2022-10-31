@@ -79,7 +79,8 @@ angular.module('a2.audiodata.uploads.upload', [
 
                 item.url = '/uploads/audio?project=' + $scope.project.project_id+
                             '&site=' + $scope.info.site.id +
-                            '&nameformat=' + $scope.info.format.name;
+                            '&nameformat=' + $scope.info.format.name +
+                            '&timezone=' + $scope.info.timezone.format;
 
                 item.upload();
                 item.onSuccess = next;
@@ -112,11 +113,16 @@ angular.module('a2.audiodata.uploads.upload', [
         { name: "Wildlife", format: "(YYYYMMDD_HHMMSS)" }
     ];
 
+    $scope.fileTimezone = [
+        { name: "UTC", format: "utc" },
+        { name: "Site timezone", format: "local" }
+    ];
+
     Project.getSites(function(sites) {
         $scope.sites = sites.sort(function(a, b) { return new Date(b.updated_at) - new Date(a.updated_at)});
     });
 
-    $scope.info = {}
+    $scope.info = { timezone: $scope.fileTimezone[1] }
 
     const randomString = Math.round(Math.random() * 100000000)
 
@@ -133,7 +139,7 @@ angular.module('a2.audiodata.uploads.upload', [
         name: 'supportedFormats',
         fn: function(item) {
             var name = item.name.split('.');
-            var extension = name[name.length-1];
+            var extension = name[name.length-1].toLowerCase();
 
             //~ console.log('format', extension);
             var validFormats = /mp3|flac|wav/i;
