@@ -12,7 +12,6 @@ var audioTools= require('../utils/audiotool');
 var tmpFileCache = require('../utils/tmpfilecache');
 var formatParse = require('../utils/format-parse');
 const uploadQueue = require('../utils/upload-queue');
-const moment = require('moment');
 
 var deleteFile = function(filename) {
     fs.unlink(filename, function(err) {

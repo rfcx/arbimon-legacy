@@ -23,7 +23,8 @@ var tmpFileCache = require('../utils/tmpfilecache');
 var JobScheduler = require('../utils/job-scheduler');
 
 const lambda = new AWS.Lambda();
-const moment = require('moment');
+const moment = require('moment-timezone');
+const fileHelper = require('../utils/file-helper')
 
 var scheduler = new JobScheduler({
     fetch: function(queue){
@@ -93,17 +94,18 @@ module.exports = {
                 model.sites.getSiteTimezone(upload_row.site_id, callback)
             },
             function(timezone, callback) {
-                const datetimeUtc = moment.utc(upload_row.datetime).toISOString()
+                const isLocal = upload.timezone === 'local'
                 // Convert datetime with timezone offsets for browser AudioMoth recordings
                 // https://github.com/rfcx/arbimon/commit/efa1a487ce672ecf3d81c45470511e3f46a69305
                 if (upload.info && upload.info.isUTC) {
                     const datetimeLocal = timezone ? moment.tz(upload_row.datetime, timezone).toISOString() : null;
                     upload_row.datetime = datetimeLocal? datetimeLocal : upload_row.datetime;
                 } else {
-                    const isLocal = upload.timezone === 'local'
+                    const datetimeUtc = moment.utc(upload_row.datetime).format('YYYY-MM-DD HH:mm:ss')
                     upload_row.datetime = isLocal ? upload_row.datetime : datetimeUtc;
                 }
-                uploadsBody.timestamp = datetimeUtc
+                const timezoneOffset = fileHelper.tzOffsetMinutesFromTzName(isLocal ? timezone : 'UTC')
+                uploadsBody.timestamp = moment(upload.FFI.datetime).utcOffset(timezoneOffset, true)
                 model.uploads.insertRecToList(upload_row, callback);
             },
             function(result, fields, callback) {
