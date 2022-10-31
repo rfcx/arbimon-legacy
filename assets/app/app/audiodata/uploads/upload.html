@@ -1,19 +1,20 @@
 <div class="row">
-    <div class="col-md-12">
-        <div class="alert alert-warning" role="alert">
-            <h4 class="alert-heading">⚠️ Recommend: Use RFCx Uploader</h4>
-            <p class="mb-0">Please download either
-                <a ng-href="{{controller.uploaderApps.windows}}" class="alert-link">Windows</a>
-                or
-                <a ng-href="{{controller.uploaderApps.mac}}" class="alert-link">macOS</a>
-                version of the Uploader app for faster, resumable uploads.
-            </p>
+    <div class="col-md-12 row-flex flex-direction-row mt-3">
+        <div class="mr-4 mb-4"><h3 class="mt-0">Audio uploads</h3></div>
+        <div class="alert alert-warning row-flex flex-direction-row flex-align-middle col-sm-3 m-0 p-3" role="alert">
+            <div class="mr-3">
+                <i class="fa fa-exclamation-triangle exclamation-triangle"></i>
+            </div>
+            <div>
+                <p class="alert-heading mb-1 alert-text-color">Recommend: Use RFCx Uploader</p>
+                <p class="mb-0 alert-text-color"><small>
+                    Please download the Uploader app for faster, resumable uploads.
+                    <a  class="pr-1 alert-link-color" ng-href="{{controller.uploaderApps.mac}}">macOS</a>or
+                    <a class="alert-link-color" ng-href="{{controller.uploaderApps.windows}}">Windows</a>
+                </small></p>
+            </div>
+            <button type="button" class="close alert-close-color" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
         </div>
-    </div>
-    <div class="col-md-12">
-        <h3>
-            Audio uploads
-        </h3>
     </div>
 </div>
 <div class="row">
