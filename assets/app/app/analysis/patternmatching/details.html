@@ -71,7 +71,6 @@
                 </div>
                 <div class="col-sm-5 flex-self-align-top">
                     <div class="pull-right">
-                    <div class="pull-right">
                         <div class="btn-group btn-group-margin">
                             <button class="btn btn-default not-active" ><i class="fa fa-search"></i></button>
                             <ui-select ng-model="controller.search" theme="bootstrap" class="btn-group-item border-left-radius" on-select="controller.onSearchChanged()">
@@ -85,8 +84,8 @@
                             </ui-select>
                         </div>
                     </div>
-                    <div class="pull-right">
-                        <div class="btn-group btn-group-margin pull-right">
+                    <div class="pull-right row-flex flex-direction-row flex-self-align-bottom">
+                        <div class="btn-group btn-group-margin">
                             <ui-select ng-model="controller._selection" theme="bootstrap" style="display:inline-block; width:9em;"
                                 on-select="controller.onSelect($select.selected)"
                             >
@@ -97,7 +96,7 @@
                             </ui-select>
                         </div>
 
-                        <div class="btn-group btn-group-margin pull-right">
+                        <div class="btn-group btn-group-margin row-flex flex-direction-row">
                             <button class="btn btn-default  not-active" >Validate as:</button>
                             <ui-select ng-model="controller.validation" class="btn-group-item border-left-radius" theme="bootstrap">
                                 <ui-select-match  class="right-corners">
@@ -109,7 +108,7 @@
                             </ui-select>
                         </div>
 
-                        <div class="btn-group btn-group-margin pull-right">
+                        <div class="btn-group btn-group-margin">
                             <button class="btn btn-primary" ng-click="controller.validate()">Submit</button>
                         </div>
                     </div>
@@ -141,7 +140,6 @@
                                 <i class="fa fa-download"></i>
                             </a>
                         </div>
-                    </div>
                     </div>
                 </div>
             </div>
