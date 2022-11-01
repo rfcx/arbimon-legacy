@@ -43,7 +43,7 @@
                 <div class="col-sm-4 is-v-middle">
                     <div class="mb-3">
                         <p class="section-header mb-1">{{controller.patternMatching.timestamp | moment : 'lll' }}</p>
-                        <p class="section-header-title mb-0">{{controller.patternMatching.name}}</p>
+                        <p title="{{controller.patternMatching.name}}" class="section-header-title mb-0 hidelongtext">{{controller.patternMatching.name}}</p>
                         <p class="section-sub-header mb-0">{{controller.patternMatching.species_name }}, {{controller.patternMatching.songtype_name }}</p>
                     </div>
                     <div class="mb-3">
