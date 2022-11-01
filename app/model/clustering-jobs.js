@@ -222,6 +222,7 @@ let ClusteringJobs = {
             aed_job_id: data.audioEventDetectionJob.jobId,
             min_points: data.params.minPoints,
             distance_threshold: data.params.distanceThreshold,
+            max_cluster_size: data.params.maxClusterSize
         });
         let job_id;
         let jobQuery =
@@ -252,7 +253,8 @@ let ClusteringJobs = {
                         data.name, data.project_id, data.user_id, data.id, data.audioEventDetectionJob.jobId,
                         JSON.stringify({
                             "Min. Points": data.params.minPoints,
-                            "Distance Threshold": data.params.distanceThreshold
+                            "Distance Threshold": data.params.distanceThreshold,
+                            "Max. Cluster Size": data.params.maxClusterSize
                         })
                     ]
                 )
@@ -263,6 +265,7 @@ let ClusteringJobs = {
                     imagePath: k8sConfig.imagePath,
                     minPoints: `${data.params.minPoints}`,
                     distanceThreshold: `${data.params.distanceThreshold}`,
+                    maxClusterSize: `${data.params.maxClusterSize}`,
                     clusterJobId: `${data.id}`,
                     aedJobId: `${data.audioEventDetectionJob.jobId}`
                 });
