@@ -1,25 +1,21 @@
 <div class="row">
-    <div class="col-md-12 row-flex flex-direction-row mt-3">
-        <div class="mr-4 mb-4"><h3 class="mt-0">Audio uploads</h3></div>
-        <div class="alert alert-warning row-flex flex-direction-row flex-align-middle col-sm-3 m-0 p-3" role="alert">
-            <div class="mr-3">
+    <div class="col-md-12 row-flex flex-direction-row flex-align-middle mt-3">
+        <div class="pr-4"><h3 class="mt-4 mb-4">Audio uploads</h3></div>
+        <div class="alert alert-warning row-flex flex-direction-row flex-align-middle col-sm-6 m-0 ml-4 p-3" role="alert">
+            <div class="mr-4">
                 <i class="fa fa-exclamation-triangle exclamation-triangle"></i>
             </div>
-            <div>
-                <p class="alert-heading mb-1 alert-text-color">Recommend: Use RFCx Uploader</p>
-                <p class="mb-0 alert-text-color"><small>
-                    Please download the Uploader app for faster, resumable uploads.
-                    <a  class="pr-1 alert-link-color" ng-href="{{controller.uploaderApps.mac}}">macOS</a>or
-                    <a class="alert-link-color" ng-href="{{controller.uploaderApps.windows}}">Windows</a>
-                </small></p>
+            <div class="alert-heading alert-text-color">Recommend: Download RFCx Uploader app for faster, resumable uploads.
+                <a  class="pr-1 alert-link-color" ng-href="{{controller.uploaderApps.mac}}">macOS</a>or
+                <a class="alert-link-color" ng-href="{{controller.uploaderApps.windows}}">Windows</a>
             </div>
-            <button type="button" class="close alert-close-color" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <button type="button" class="close alert-close-color flex-space-end ml-auto" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
         </div>
     </div>
 </div>
 <div class="row">
     <div class="col-sm-12 mt-3 row-flex" style="align-content: flex-end;">
-        <div class="col-sm-2 pl-0">
+        <div class="col-sm-1 pl-0">
             <label class="control-label visible-lg-inline" for="site">Site</label>
             <i class="fa fa-info-circle ml-2 visible-lg-inline"
                 tooltip-placement="bottom"
@@ -36,7 +32,7 @@
                 </ui-select-choices>
             </ui-select>
         </div>
-        <div class="col-sm-3">
+        <div class="col-sm-2">
             <label class="control-label visible-lg-inline" for="format">Filename Format</label>
             <i class="fa fa-info-circle ml-2 visible-lg-inline"
                 tooltip-placement="bottom"
@@ -44,7 +40,7 @@
                 the filename by searching one of the patterns below">
             </i>
             <ui-select ng-model="info.format" theme="bootstrap">
-                <ui-select-match placeholder="format (pattern)">
+                <ui-select-match placeholder="Format (pattern)">
                     {{ $select.selected.name }} {{ $select.selected.format }}
                 </ui-select-match>
                 <ui-select-choices repeat="item in formats | filter:$select.search">
@@ -67,7 +63,7 @@
                 </ui-select-choices>
             </ui-select>
         </div>
-        <div class="pl-3 flex-self-align-bottom">
+        <div class="pl-4 flex-self-align-bottom">
             <div class="btn btn-default btn-file mr-1">
                 <i class="fa fa-plus"></i> Add files
                 <input accept="audio/*,.flac"
