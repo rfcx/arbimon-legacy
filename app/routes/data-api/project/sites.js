@@ -14,7 +14,8 @@ router.get('/', function(req, res, next) {
         compute:{
             rec_count: !!req.query.count,
             has_logs: !!req.query.logs
-        }
+        },
+        utcDiff: !!req.query.utcDiff
     }).then(function(rows) {
         res.json(rows);
     }).catch(next);

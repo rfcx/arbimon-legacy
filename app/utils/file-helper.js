@@ -24,6 +24,9 @@ const fileHelper = {
         if (!timezone) return null
         const dateString = moment().tz(timezone).format()
         return moment.parseZone(dateString)
+    },
+    formattedTzOffsetFromTimezoneName: function(timezoneName) {
+        return this.getMomentFromTimezoneName(timezoneName).format('zZ')
     }
 }
 

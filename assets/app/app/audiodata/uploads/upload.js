@@ -104,6 +104,8 @@ angular.module('a2.audiodata.uploads.upload', [
 
     $scope.uploader = uploads.getUploader();
 
+    $scope.info = {}
+
     $scope.formats = [
         { name: "Arbimon", format: "(*-YYYY-MM-DD_HH-MM)" },
         { name: "AudioMoth", format: "(*YYYYMMDD_HHMMSS)" },
@@ -118,11 +120,19 @@ angular.module('a2.audiodata.uploads.upload', [
         { name: "Site timezone", format: "local" }
     ];
 
-    Project.getSites(function(sites) {
+    Project.getSites({ utcDiff: true }, function(sites) {
         $scope.sites = sites.sort(function(a, b) { return new Date(b.updated_at) - new Date(a.updated_at)});
     });
 
-    $scope.info = { timezone: $scope.fileTimezone[1] }
+    $scope.selectSite = function() {
+        const local = $scope.info && $scope.info.site && $scope.info.site.utcOffset ? $scope.info.site.utcOffset + ' (local)' : 'Site timezone'
+        $scope.fileTimezone[1].name = local
+        $scope.info.timezone = $scope.fileTimezone[1]
+    }
+
+    $scope.isStartUploadDisabled = function() {
+        return !$scope.uploader.queue.length || $scope.uploader.queue.length > 100 || !$scope.info.site || !$scope.info.format || $scope.uploading
+    }
 
     const randomString = Math.round(Math.random() * 100000000)
 

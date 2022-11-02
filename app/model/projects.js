@@ -1,28 +1,29 @@
 /* jshint node:true */
 "use strict";
 
-var debug = require('debug')('arbimon2:model:projects');
-var util = require('util');
-var async = require('async');
-var joi = require('joi');
-var q = require('q');
-var sprintf = require("sprintf-js").sprintf;
-var AWS = require('aws-sdk');
-var request = require('request');
-var rp = util.promisify(request);
+const debug = require('debug')('arbimon2:model:projects');
+const util = require('util');
+const async = require('async');
+const joi = require('joi');
+const q = require('q');
+const sprintf = require("sprintf-js").sprintf;
+const AWS = require('aws-sdk');
+const request = require('request');
+const rp = util.promisify(request);
 const auth0Service = require('../model/auth0');
 const { ValidationError } = require('@rfcx/http-utils');
 
-var config = require('../config');
+const config = require('../config');
 const rfcxConfig = config('rfcx');
-var dbpool = require('../utils/dbpool');
-var sqlutil = require('../utils/sqlutil');
-var queryHandler = dbpool.queryHandler;
-var APIError = require('../utils/apierror');
-var species = require('./species');
-var songtypes = require('./songtypes');
-var users = require('./users')
-var roles = require('./roles')
+const fileHelper = require('../utils/file-helper')
+const dbpool = require('../utils/dbpool');
+const sqlutil = require('../utils/sqlutil');
+const queryHandler = dbpool.queryHandler;
+const APIError = require('../utils/apierror');
+const species = require('./species');
+const songtypes = require('./songtypes');
+const users = require('./users')
+const roles = require('./roles')
 
 const projectSchema = joi.object().keys({
     name: joi.string(),
@@ -233,7 +234,16 @@ var Projects = {
                         });
                     }): q()
                 ]).then(function(){
-                    return sites;
+                    if (options.utcDiff) {
+                        const result = sites.map(s => {
+                            return {
+                                ...s,
+                                utcOffset: fileHelper.formattedTzOffsetFromTimezoneName(s.timezone)
+                            }
+                        })
+                        return result
+                    }
+                    else return sites;
                 });
             }
             return sites;
