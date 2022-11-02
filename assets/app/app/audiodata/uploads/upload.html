@@ -62,7 +62,7 @@
                     <i class="fa fa-caret-down"></i>
                 </button>
                 <ul class="dropdown-menu" role="menu">
-                    <li><a ng-click="uploader.clearQueue() | trackEvent:'Audiodata-Upload':'uploader.clearQueue'">All</a></li>
+                    <li><a ng-click="uploader.clearQueue(); clearQueue() | trackEvent:'Audiodata-Upload':'uploader.clearQueue'">All</a></li>
                     <li><a ng-click="removeCompleted()">Completed</a></li>
                 </ul>
             </div>

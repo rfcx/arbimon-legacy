@@ -194,6 +194,11 @@ angular.module('a2.audiodata.uploads.upload', [
         });
     };
 
+    $scope.clearQueue = function() {
+        $scope.uploader.progress = 0;
+        $scope.uploaded = 0
+    }
+
     $scope.uploaded = 0;
     $scope.uploader.onProgressAll = function() {
         $scope.uploaded = Math.floor($scope.uploader.progress/100 * $scope.uploader.queue.length);
