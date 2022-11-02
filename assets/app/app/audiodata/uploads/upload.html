@@ -10,7 +10,7 @@
                 <em>Please create a site first.</em>
             </span>
             <ui-select ng-model="info.site" ng-change="selectSite()" theme="bootstrap">
-                <ui-select-match placeholder="Site name">{{ $select.selected.name }}</ui-select-match>
+                <ui-select-match placeholder="Site name" title="{{ $select.selected.name }}">{{ $select.selected.name }}</ui-select-match>
                 <ui-select-choices class="has-badges" repeat="site in sites | filter:$select.search">
                     {{ site.name }}
                     <span class="a2-badge" title="ARBIMON ONLY" ng-if="!site.external_id">ARBIMON ONLY</span>
@@ -25,7 +25,7 @@
                 the filename by searching one of the patterns below">
             </i>
             <ui-select ng-model="info.format" theme="bootstrap">
-                <ui-select-match placeholder="Format (pattern)">
+                <ui-select-match placeholder="Format (pattern)" title="{{ $select.selected.name }}">
                     {{ $select.selected.name }} {{ $select.selected.format }}
                 </ui-select-match>
                 <ui-select-choices repeat="item in formats | filter:$select.search">
@@ -40,7 +40,7 @@
                 tooltip="Switch the Filename Timezone between UTC Time or Local Time depending on the site location">
             </i>
             <ui-select ng-model="info.timezone" theme="bootstrap" ng-disabled="!info.site">
-                <ui-select-match placeholder="Select Timezone">
+                <ui-select-match class="hidelongtext" placeholder="Select Timezone" title="{{ $select.selected.name }}">
                     {{ $select.selected.name }}
                 </ui-select-match>
                 <ui-select-choices repeat="item in fileTimezone | filter:$select.search">
@@ -133,7 +133,7 @@
                     </tr>
                 </tbody>
             </table>
-            <div class="jumbotron text-center pb-3 mb-5" ng-show="!uploader.queue.length">
+            <div class="jumbotron text-center pb-3 mb-2" ng-show="!uploader.queue.length">
                 <div class="container">
                     <h3 class="mt-4 mb-0"><i class="fa fa-arrow-circle-down"></i></h3>
                     <h2 class="mt-0">Drop audio</h2>
@@ -141,7 +141,7 @@
                 </div>
             </div>
             <div class="row row-flex flex-space-center">
-                <div class="alert alert-warning alert-border-radius row-flex flex-direction-row flex-align-middle col-sm-3 m-0 p-3" role="alert">
+                <div class="alert alert-warning alert-border-radius row-flex flex-direction-row flex-align-middle col-sm-3 m-3 p-3" role="alert">
                     <div class="mr-3">
                         <i class="fa fa-exclamation-triangle exclamation-triangle"></i>
                     </div>
