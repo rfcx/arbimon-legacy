@@ -89,8 +89,8 @@ router.post('/delete', function(req, res, next) {
     var project = req.project;
     var site = req.body.site;
 
-    if(!req.haveAccess(project.project_id, "manage project sites")) {
-        return res.json({ error: "you dont have permission to 'manage project sites'" });
+    if(!req.haveAccess(project.project_id, "delete site")) {
+        return res.json({ error: "you do not have permission to remove sites" });
     }
 
     model.sites.removeSite(site.id, project.project_id, req.session.idToken).then(function() {

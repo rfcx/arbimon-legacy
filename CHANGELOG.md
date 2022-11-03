@@ -2,6 +2,10 @@
 
 ## v3.0.65 - October XX, 2022
 
+New features:
+
+- Users with the user roles can be able to create and edit project sites
+
 Performance improvements:
 
 - Switch to the Ingest Service support for uploading files
