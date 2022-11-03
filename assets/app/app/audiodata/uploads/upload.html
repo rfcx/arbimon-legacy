@@ -77,12 +77,13 @@
                 ng-disabled="isStartUploadDisabled()">
                 <i class="fa fa-cloud-upload mr-1"></i>Start upload
             </button>
-            <button type="button" class="btn btn-default mr-2"
+            <button type="button" class="btn btn-default mr-3"
                 ng-click="stopQueue() | trackEvent:'Audiodata-Upload':'uploader.cancelAll'"
                 ng-disabled="!uploading">
                 <i class="fa fa-ban mr-1"></i>Stop all
             </button>
-            <h4>Total uploaded: {{ uploaded }}/{{ uploader.queue.length }}</h4>
+            <h4 class="text-danger" ng-if="isLimitExceeded()">File limit exceeded.</h4>
+            <h4 ng-if="!isLimitExceeded()">Total uploaded: {{ uploaded }}/{{ uploader.queue.length }}</h4>
         </div>
     </div>
     <div class="row">
@@ -141,19 +142,19 @@
                 </div>
             </div>
             <div class="row row-flex flex-space-center">
-                <div class="alert alert-warning alert-border-radius row-flex flex-direction-row flex-align-middle col-sm-3 m-3 p-3" role="alert">
-                    <div class="mr-3">
+                <div class="alert alert-warning alert-border-radius row-flex flex-direction-row flex-align-middle col-sm-3 m-3 p-2" role="alert">
+                    <div class="mr-2 ml-2">
                         <i class="fa fa-exclamation-triangle exclamation-triangle"></i>
                     </div>
-                    <div>
+                    <div class="mr-2 ml-2">
                         <p class="alert-heading mb-1 alert-text-color">Recommend: Use RFCx Uploader</p>
-                        <p class="mb-0 alert-text-color"><small>
+                        <p class="mb-1 alert-text-color alert-line-height"><small>
                             Please download the Uploader app for faster, resumable uploads.
                             <a  class="pr-1 alert-link-color" ng-href="{{controller.uploaderApps.mac}}">macOS</a>or
                             <a class="alert-link-color" ng-href="{{controller.uploaderApps.windows}}">Windows</a>
                         </small></p>
                     </div>
-                    <button type="button" class="close alert-close-color flex-space-end ml-auto" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <button type="button" class="close alert-close-color flex-space-end ml-auto mr-2 ml-2" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                 </div>
             </div>
         </div>

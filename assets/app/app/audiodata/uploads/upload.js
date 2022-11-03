@@ -131,7 +131,11 @@ angular.module('a2.audiodata.uploads.upload', [
     }
 
     $scope.isStartUploadDisabled = function() {
-        return !$scope.uploader.queue.length || $scope.uploader.queue.length > 100 || !$scope.info.site || !$scope.info.format || $scope.uploading
+        return !$scope.uploader.queue.length || $scope.isLimitExceeded() || !$scope.info.site || !$scope.info.format || $scope.uploading
+    }
+
+    $scope.isLimitExceeded = function() {
+        return $scope.uploader.queue.length > 100
     }
 
     const randomString = Math.round(Math.random() * 100000000)
