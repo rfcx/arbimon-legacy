@@ -273,7 +273,7 @@ angular.module('a2.audiodata.sites', [
         if(!$scope.selected)
             return;
 
-        if(!a2UserPermit.can('manage project sites')) {
+        if(!a2UserPermit.can('delete site')) {
             notify.log("You do not have permission to remove sites");
             return;
         }
