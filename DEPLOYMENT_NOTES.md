@@ -6,7 +6,8 @@
 - Add `ingestBaseUrl` in `config/rfcx.local.json` file:
     - For staging: https://staging-ingest.rfcx.org
     - For production: https://ingest.rfcx.org
-- Remove `process_uploaded_recording` and `clustering_jobs` from the `config/rfcx.local.json`
+- Remove `process_uploaded_recording` from the `config/rfcx.local.json` and `clustering_jobs` from `config/lambdas.local.json`
+- Run 035-update-user-role-permissions.sql on the production
 
 ## v3.0.64
 
