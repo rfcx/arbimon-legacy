@@ -63,6 +63,12 @@ let AudioEventDetectionsClustering = {
             constraints.push('JP.playlist_id = ' + dbpool.escape(Number(options.playlist)));
         }
 
+        if (options.completed) {
+            tables.push('JOIN jobs J ON JP.job_id = J.job_id')
+            select.push('J.state')
+            constraints.push('J.state = "completed"')
+        }
+
         if (options.deleted !== undefined) {
             constraints.push('JP.`deleted` = ' + dbpool.escape(options.deleted));
         }
@@ -85,7 +91,7 @@ let AudioEventDetectionsClustering = {
             "SELECT " + select.join(",\n    ") + "\n" +
             "FROM " + tables.join("\n") + "\n" +
             "WHERE " + constraints.join(" AND ") + "\n" +
-            "ORDER BY date_created DESC"
+            "ORDER BY timestamp DESC"
         ))
     },
 

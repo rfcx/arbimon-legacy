@@ -18,7 +18,7 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
         $scope.loading = true;
         $scope.projectUrl = Project.getUrl();
 
-        return a2AudioEventDetectionsClustering.list({user: true, dataExtended: true}).then(function(data) {
+        return a2AudioEventDetectionsClustering.list({ user: true, dataExtended: true, completed: true }).then(function(data) {
             $scope.audioEventDetectionsOriginal = data;
             $scope.audioEventDetectionsData = data;
             $scope.loading = false;
