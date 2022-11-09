@@ -1,8 +1,33 @@
 # Arbimon Release Notes
 
-## v3.0.64 - October 23, 2022
+## v3.0.65 - November 09, 2022
 
-- Add an ability to delete AED/clustering jobs
+New features:
+
+- Users with the user roles can be able to create and edit project sites
+- Detect when playlist contains 500,000+, when creating PM job and show warning
+- Limit number of uploading files (100 files)
+- Update yellow bar size on the Upload page
+- Change control inputs location on the Upload page
+- Hide new AED job advanced parameters in dropdown
+- Show only completed AED jobs on the AED list page
+- A new parameter added to Clustering called "Max. Cluster Size"
+
+Resolve issues:
+
+- Fix long name of CNN shows over the details and alignment of selecting bars
+
+Performance improvements:
+
+- Switch to the Ingest Service support for uploading files
+
+## v3.0.64 - October 24, 2022
+
+New features:
+
+- Add the learn more section for a new PM job
+- Add the ability to delete AED/ Clustering job
+- Display the note on the new AED form if the Max frequency more then Min frequency
 
 ## v3.0.63 - October 08, 2022
 

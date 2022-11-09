@@ -1,66 +1,89 @@
 <div class="row">
-    <div class="col-md-12">
-        <div class="alert alert-warning" role="alert">
-            <h4 class="alert-heading">⚠️ Recommend: Use RFCx Uploader</h4>
-            <p class="mb-0">Please download either
-                <a ng-href="{{controller.uploaderApps.windows}}" class="alert-link">Windows</a>
-                or
-                <a ng-href="{{controller.uploaderApps.mac}}" class="alert-link">macOS</a>
-                version of the Uploader app for faster, resumable uploads.
-            </p>
+    <div class="col-sm-12 mt-3 row-flex" style="align-content: flex-end;">
+        <div class="col-sm-2 pl-0">
+            <label class="control-label visible-lg-inline" for="site">Site</label>
+            <i class="fa fa-info-circle ml-2 visible-lg-inline"
+                tooltip-placement="bottom"
+                tooltip="Please choose a site before starting uploads">
+            </i>
+            <span ng-if="sites && !sites.length">
+                <em>Please create a site first.</em>
+            </span>
+            <ui-select ng-model="info.site" ng-change="selectSite()" theme="bootstrap">
+                <ui-select-match placeholder="Site name" title="{{ $select.selected.name }}">{{ $select.selected.name }}</ui-select-match>
+                <ui-select-choices class="has-badges" repeat="site in sites | filter:$select.search">
+                    {{ site.name }}
+                    <span class="a2-badge" title="ARBIMON ONLY" ng-if="!site.external_id">ARBIMON ONLY</span>
+                </ui-select-choices>
+            </ui-select>
         </div>
-    </div>
-    <div class="col-md-12">
-        <h3>
-            Audio uploads
-            <div class="btn btn-default btn-sm ml-3"  ng-click="batchInfo() | trackEvent:'Audiodata-Upload':'batchInfo'">
-                Choose site
+        <div class="col-sm-3">
+            <label class="control-label visible-lg-inline" for="format">Filename Format</label>
+            <i class="fa fa-info-circle ml-2 visible-lg-inline"
+                tooltip-placement="bottom"
+                tooltip="The system gets the recording's date and time from
+                the filename by searching one of the patterns below">
+            </i>
+            <ui-select ng-model="info.format" theme="bootstrap">
+                <ui-select-match placeholder="Format (pattern)" title="{{ $select.selected.name }}">
+                    {{ $select.selected.name }} {{ $select.selected.format }}
+                </ui-select-match>
+                <ui-select-choices repeat="item in formats | filter:$select.search">
+                    {{ item.name }} {{ item.format }}
+                </ui-select-choices>
+            </ui-select>
+        </div>
+        <div class="col-sm-2">
+            <label class="control-label visible-lg-inline" for="format">Filename Timezone</label>
+            <i class="fa fa-info-circle ml-2 visible-lg-inline"
+                tooltip-placement="bottom"
+                tooltip="Switch the Filename Timezone between UTC Time or Local Time depending on the site location">
+            </i>
+            <ui-select ng-model="info.timezone" theme="bootstrap" ng-disabled="!info.site">
+                <ui-select-match class="hidelongtext" placeholder="Select Timezone" title="{{ $select.selected.name }}">
+                    {{ $select.selected.name }}
+                </ui-select-match>
+                <ui-select-choices repeat="item in fileTimezone | filter:$select.search">
+                    {{ item.name }}
+                </ui-select-choices>
+            </ui-select>
+        </div>
+        <div class="pl-4 flex-self-align-bottom">
+            <div class="btn btn-default btn-file mr-2">
+                <i class="fa fa-plus"></i> Add files
+                <input accept="audio/*,.flac"
+                    nv-file-select uploader="uploader" type="file" multiple>
             </div>
-        </h3>
-        <p ng-hide="info"><small>Please choose a site before starting uploads</small></p>
-        <div ng-show="info">
-            Site: <span class="label label-default mr-2">{{ info.site.name }}</span>
-            Recorder: <span class="label label-default mr-2">{{ info.recorder }}</span>
-            Microphone: <span class="label label-default mr-2">{{ info.mic }}</span>
-            Software version: <span class="label label-default mr-2">{{ info.sver }}</span>
-            Filename format: <span class="label label-default">{{ info.format.name }}</span>
-        </div>
-    </div>
-</div>
-<div class="row">
-    <div class="col-sm-12 mt-3">
-        <div class="btn btn-default btn-file">
-            <i class="fa fa-plus"></i> Add files
-            <input accept="audio/*,.flac"
-                nv-file-select uploader="uploader" type="file" multiple>
-        </div>
-        <button type="button" class="btn btn-default"
-            ng-click="verifyAndUpload() | trackEvent:'Audiodata-Upload':'verifyAndUpload'"
-            ng-disabled="!uploader.getNotUploadedItems().length || !info || uploading">
-            <i class="fa fa-cloud-upload"></i> Start
-        </button>
-        <button type="button" class="btn btn-default"
-            ng-click="stopQueue() | trackEvent:'Audiodata-Upload':'uploader.cancelAll'"
-            ng-disabled="!uploading">
-            <i class="fa fa-ban"></i> Stop all
-        </button>
-        <div class="btn-group" dropdown>
-            <button type="button" class="btn btn-default dropdown-toggle"
-                dropdown-toggle>
-                <i class="fa fa-trash"></i> Remove
-                <i class="fa fa-caret-down"></i>
-            </button>
-            <ul class="dropdown-menu" role="menu">
-                <li><a ng-click="uploader.clearQueue() | trackEvent:'Audiodata-Upload':'uploader.clearQueue'">All</a></li>
-                <li><a ng-click="removeCompleted()">Completed</a></li>
-            </ul>
+            <div class="btn-group mr-1" dropdown>
+                <button type="button" class="btn btn-default dropdown-toggle"
+                    ng-disabled="!uploader.queue.length"
+                    dropdown-toggle>
+                    <i class="fa fa-trash mr-1"></i>Clear
+                    <i class="fa fa-caret-down"></i>
+                </button>
+                <ul class="dropdown-menu" role="menu">
+                    <li><a ng-click="uploader.clearQueue(); clearQueue() | trackEvent:'Audiodata-Upload':'uploader.clearQueue'">All</a></li>
+                    <li><a ng-click="removeCompleted()">Completed</a></li>
+                </ul>
+            </div>
         </div>
     </div>
 </div>
 <div class="mt-4">
     <div class="row">
-        <div class="col-sm-12" ng-show="uploader.queue.length">
-            <h4>Total uploaded: {{ uploaded }}/{{ uploader.queue.length }}</h4>
+        <div class="col-md-12 row-flex flex-direction-row flex-align-middle">
+            <button type="button" class="btn btn-primary mr-2"
+                ng-click="verifyAndUpload() | trackEvent:'Audiodata-Upload':'verifyAndUpload'"
+                ng-disabled="isStartUploadDisabled()">
+                <i class="fa fa-cloud-upload mr-1"></i>Start upload
+            </button>
+            <button type="button" class="btn btn-default mr-3"
+                ng-click="stopQueue() | trackEvent:'Audiodata-Upload':'uploader.cancelAll'"
+                ng-disabled="!uploading">
+                <i class="fa fa-ban mr-1"></i>Stop all
+            </button>
+            <h4 class="text-danger font-size-base" ng-if="isLimitExceeded()">Exceeded maximum of 100 files in queue.</h4>
+            <h4 class="font-size-base" ng-if="!isLimitExceeded()">Total uploaded: {{ uploaded }}/{{ uploader.queue.length }}</h4>
         </div>
     </div>
     <div class="row">
@@ -102,18 +125,38 @@
                         </td>
                         <td nowrap>
                             <button type="button" class="btn btn-warning btn-xs" ng-click="item.cancel() | trackEvent:'Audiodata-Upload':'item.cancel'" ng-disabled="!item.isUploading">
-                                <i class="fa fa-ban"></i> Stop
+                                <i class="fa fa-ban"></i>Stop
                             </button>
                             <button type="button" class="btn btn-default btn-xs" ng-click="item.remove() | trackEvent:'Audiodata-Upload':'item.remove'">
-                                <i class="fa fa-trash"></i> Remove
+                                <i class="fa fa-trash"></i>Remove
                             </button>
                         </td>
                     </tr>
                 </tbody>
             </table>
-            <div class="jumbotron" ng-show="!uploader.queue.length">
-            <h3 class="text-center">Drop files here <i class="fa fa-hand-o-down"></i></h3>
-        </div>
+            <div class="jumbotron text-center pb-3 mb-2" ng-show="!uploader.queue.length">
+                <div class="container">
+                    <h3 class="mt-4 mb-0"><i class="fa fa-arrow-circle-down"></i></h3>
+                    <h2 class="mt-0">Drop audio</h2>
+                    <p>Up to 100 files</p>
+                </div>
+            </div>
+            <div class="row row-flex flex-space-center">
+                <div class="alert alert-warning alert-border-radius row-flex flex-direction-row flex-align-middle col-sm-3 m-3 p-2" role="alert">
+                    <div class="mr-2 ml-2">
+                        <i class="fa fa-exclamation-triangle exclamation-triangle"></i>
+                    </div>
+                    <div class="mr-2 ml-2">
+                        <p class="alert-heading mb-1 alert-text-color">Recommend: Use RFCx Uploader</p>
+                        <p class="mb-1 alert-text-color alert-line-height"><small>
+                            Please download the Uploader app for faster, resumable uploads.
+                            <a  class="pr-1 alert-link-color" ng-href="{{controller.uploaderApps.mac}}">macOS</a>or
+                            <a class="alert-link-color" ng-href="{{controller.uploaderApps.windows}}">Windows</a>
+                        </small></p>
+                    </div>
+                    <button type="button" class="close alert-close-color flex-space-end ml-auto mr-2 ml-2" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                </div>
+            </div>
         </div>
     </div>
 </div>

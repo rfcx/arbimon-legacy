@@ -1,8 +1,17 @@
 # Arbimon Deployment Notes
 
+## v3.0.65
+
+- Install `sha1-file` library (^1.0.4)
+- Add `ingestBaseUrl` in `config/rfcx.local.json` file:
+    - For staging: https://staging-ingest.rfcx.org
+    - For production: https://ingest.rfcx.org
+- Remove `process_uploaded_recording` from the `config/rfcx.local.json` and `clustering_jobs` from `config/lambdas.local.json`
+- Run 035-update-user-role-permissions.sql on the production
+
 ## v3.0.64
 
-- Run 034-add-deleted-to-aed-ans-clustering.sql  on the production
+- Run 034-add-deleted-to-aed-and-clustering.sql on the production
 
 ## v3.0.62
 

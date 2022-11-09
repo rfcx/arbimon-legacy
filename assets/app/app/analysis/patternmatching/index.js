@@ -606,6 +606,8 @@ angular.module('a2.analysis.patternmatching', [
             };
             this.isSaving = false;
 
+            this.warningMessage = 'Warning: Large playlist (500,000+ recordings). Save resources by reducing playlist size.'
+
             this.getTemplates();
 
             this.getPlaylists();
@@ -651,6 +653,9 @@ angular.module('a2.analysis.patternmatching', [
         cancel: function (url) {
              $modalInstance.close({ cancel: true, url: url });
         },
+        isWarningMessage: function () {
+            return this.data.playlist && this.data.playlist.count > 500000
+        }
     });
     this.initialize();
 });

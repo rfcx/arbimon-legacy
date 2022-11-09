@@ -43,7 +43,7 @@
                 <div class="col-sm-4 is-v-middle">
                     <div class="mb-3">
                         <p class="section-header mb-1">{{controller.patternMatching.timestamp | moment : 'lll' }}</p>
-                        <p class="section-header-title mb-0">{{controller.patternMatching.name}}</p>
+                        <p title="{{controller.patternMatching.name}}" class="section-header-title mb-0 hidelongtext">{{controller.patternMatching.name}}</p>
                         <p class="section-sub-header mb-0">{{controller.patternMatching.species_name }}, {{controller.patternMatching.songtype_name }}</p>
                     </div>
                     <div class="mb-3">
@@ -71,7 +71,6 @@
                 </div>
                 <div class="col-sm-5 flex-self-align-top">
                     <div class="pull-right">
-                    <div class="pull-right">
                         <div class="btn-group btn-group-margin">
                             <button class="btn btn-default not-active" ><i class="fa fa-search"></i></button>
                             <ui-select ng-model="controller.search" theme="bootstrap" class="btn-group-item border-left-radius" on-select="controller.onSearchChanged()">
@@ -85,7 +84,7 @@
                             </ui-select>
                         </div>
                     </div>
-                    <div class="pull-right">
+                    <div class="pull-right row-flex flex-direction-row flex-self-align-bottom">
                         <div class="btn-group btn-group-margin">
                             <ui-select ng-model="controller._selection" theme="bootstrap" style="display:inline-block; width:9em;"
                                 on-select="controller.onSelect($select.selected)"
@@ -97,7 +96,7 @@
                             </ui-select>
                         </div>
 
-                        <div class="btn-group btn-group-margin">
+                        <div class="btn-group btn-group-margin row-flex flex-direction-row">
                             <button class="btn btn-default  not-active" >Validate as:</button>
                             <ui-select ng-model="controller.validation" class="btn-group-item border-left-radius" theme="bootstrap">
                                 <ui-select-match  class="right-corners">
@@ -141,7 +140,6 @@
                                 <i class="fa fa-download"></i>
                             </a>
                         </div>
-                    </div>
                     </div>
                 </div>
             </div>

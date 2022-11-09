@@ -644,8 +644,9 @@ angular.module('a2.analysis.clustering-jobs', [
                 name: null,
                 aed_job: {},
                 params: {
-                    minPoints: 2,
-                    distanceThreshold: 0.1
+                    minPoints: 3,
+                    distanceThreshold: 0.1,
+                    maxClusterSize: 100
                 }
             };
 

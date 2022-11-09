@@ -18,7 +18,7 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
         $scope.loading = true;
         $scope.projectUrl = Project.getUrl();
 
-        return a2AudioEventDetectionsClustering.list({user: true, dataExtended: true}).then(function(data) {
+        return a2AudioEventDetectionsClustering.list({ user: true, dataExtended: true, completed: true }).then(function(data) {
             $scope.audioEventDetectionsOriginal = data;
             $scope.audioEventDetectionsData = data;
             $scope.loading = false;
@@ -112,6 +112,8 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
                 playlists: false
             };
 
+            this.details = { show: false }
+
             var list = this.list = {};
 
             this.data = {
@@ -133,6 +135,10 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
                 this.loading.playlists = false;
                 list.playlists = playlists;
             }).bind(this));
+        },
+
+        toggleDetails: function() {
+            this.details.show = !this.details.show
         },
 
         create: function () {

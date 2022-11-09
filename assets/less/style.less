@@ -117,6 +117,40 @@ b, strong {
   font-weight: 900;
 }
 
+.alert-link-color {
+  color: #152a6a;
+  font-weight: 900;
+  &:hover {
+    color: #152a6a;
+  }
+}
+
+.alert-text-color {
+  color: #684e24;
+}
+
+.alert-line-height {
+  line-height: 1;
+}
+
+.alert-border-radius {
+  border-radius: 8px
+}
+
+.alert-close-color {
+  color: #684f24;
+  opacity: 1;
+  &:hover {
+    color: #684f24;
+    opacity: 0.8;
+  }
+}
+
+.exclamation-triangle {
+  color: #ecb82d;
+  font-size: 18px;
+}
+
 // .inline -> newmodel.html, frequency-adjust-layer.html
 // .a2-block-inline -> (directive)a2TrainingSetDataImage
 // .ib -> new_roi_set_tset_partial.html
@@ -680,6 +714,11 @@ textarea.fixed-width {
   font-size: small;
 }
 
+.brand-warning {
+  color: @brand-warning;
+  font-size: small;
+}
+
 // directive a2DrawPeakThreshold
 a2-draw-peak-threshold {
   text {
@@ -817,6 +856,10 @@ a2-draw-peak-threshold {
 // -> visualizer-spectrogram
 .fa-xs {
   font-size: 0.5em;
+}
+
+.font-size-base {
+  font-size: @font-size-base;
 }
 
 // -> deleteclassification.html
@@ -1257,6 +1300,13 @@ a.ui-select-choices-row-inner {
   }
   .button-group {
     margin: 18px 0;
+  }
+  .container {
+    max-width: 27%;
+    border: dashed 1px @gray-light;
+    @media (max-width: @screen-lg-desktop) {
+      max-width: 50%;
+    }
   }
 }
 

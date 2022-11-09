@@ -6,12 +6,12 @@ var util = require('util');
 var _ = require('lodash');
 var q = require('q');
 
-
+const fileHelper = require('../utils/file-helper')
 var model = require('../model');
 var audioTools= require('../utils/audiotool');
 var tmpFileCache = require('../utils/tmpfilecache');
 var formatParse = require('../utils/format-parse');
-var uploadQueue = require('../utils/upload-queue');
+const uploadQueue = require('../utils/upload-queue');
 
 var deleteFile = function(filename) {
     fs.unlink(filename, function(err) {
@@ -29,21 +29,22 @@ var authorize = function(authtype){
         var accessToken = req.get('X-X-access-token-X-X') || req.body.token;
 
         if(authtype.session && req.session && req.session.loggedIn) {
-            if(!req.query.project || !req.query.site || !req.query.nameformat) {
-                return res.status(400).json({ error: "missing parameters" });
+            if(!req.query.project || !req.query.site || !req.query.nameformat || !req.query.timezone) {
+                return res.status(400).json({ error: 'missing parameters' });
             }
 
-            console.log('project_id: %s | site_id: %s |format: %s',
+            console.log('project_id: %s | site_id: %s |format: %s |timezone: %s',
                 req.query.project,
                 req.query.site,
-                req.query.nameformat
+                req.query.nameformat,
+                req.query.timezone
             );
 
-            var perm = "manage project recordings";
+            var perm = 'manage project recordings';
 
             if(!req.haveAccess(req.query.project, perm)) {
                 res.status(401).json({
-                    error: "you dont have permission to '"+ perm +"'"
+                    error: `you dont have permission to ${ perm }`
                 });
                 return;
             }
@@ -53,6 +54,7 @@ var authorize = function(authtype){
                 projectId: Number(req.query.project),
                 siteId: Number(req.query.site),
                 nameFormat: req.query.nameformat,
+                timezone: req.query.timezone,
             };
 
             next();
@@ -65,7 +67,8 @@ var authorize = function(authtype){
                 userId: 0,
                 projectId: Number(req.token.project),
                 siteId: Number(req.token.site),
-                nameFormat: "Arbimon",
+                nameFormat: 'Arbimon',
+                timezone: 'local',
             };
 
             next();
@@ -74,13 +77,14 @@ var authorize = function(authtype){
         // verify access token
         else if(authtype.access_token && accessToken) {
             res.type('json');
-            return model.AccessTokens.verifyTokenAccess(accessToken, "manage project recordings", {requireScope:true, requireProject:true}).then(function(resolvedToken){
+            return model.AccessTokens.verifyTokenAccess(accessToken, 'manage project recordings', {requireScope:true, requireProject:true}).then(function(resolvedToken){
                 return model.users.hasProjectAccess(resolvedToken.user, resolvedToken.project, {required:true}).then(function(){
                     req.upload = {
                         userId: resolvedToken.user,
                         projectId: Number(resolvedToken.project),
                         siteId: Number(resolvedToken.site),
-                        nameFormat: resolvedToken.nameFormat || "any",
+                        nameFormat: resolvedToken.nameFormat || 'any',
+                        timezone: resolvedToken.timezone || 'local',
                     };
                 });
             }).finally(next);
@@ -126,25 +130,6 @@ var receiveUpload = function(req, res, next) {
 
     req.busboy.on('field', function(fieldname, val) {
         console.log('field %s = %s', fieldname, val);
-
-        if(fieldname === 'info') {
-            try {
-                upload.metadata = JSON.parse(val);
-            }
-            catch(err) {
-                error = true;
-                return res.status(400).json({ error: err.message });
-            }
-
-            var notValid = !upload.metadata.recorder ||
-                            !upload.metadata.sver ||
-                            !upload.metadata.mic;
-
-            if(notValid && !error) {
-                error = true;
-                return res.status(400).json({ error: "missing basic metadata" });
-            }
-        }
     });
 
     req.busboy.on('file', function(fieldname, file, filename, encoding, mimetype) {
@@ -166,17 +151,13 @@ var receiveUpload = function(req, res, next) {
 
         upload.name = filename;
         upload.path = saveTo;
+        upload.timezone = req.upload.timezone
 
     });
 
     req.busboy.on('finish', function() {
         if(error) return;
 
-        if(!upload.metadata || !upload.name || !upload.path) {
-            return res.status(400).json({ error: "form data not complete"});
-        }
-
-        console.log('metadata: ', upload.metadata);
         console.log('filename: ', upload.name);
 
         async.waterfall([
@@ -210,7 +191,6 @@ var receiveUpload = function(req, res, next) {
                 });
             },
             function sendToProcess(info, callback) {
-
                 upload.projectId = req.upload.projectId;
                 upload.siteId = req.upload.siteId;
                 upload.userId = req.upload.userId;
@@ -220,45 +200,23 @@ var receiveUpload = function(req, res, next) {
                     deleteFile(upload.path);
                     return res.status(403).json({ error: "Recording is too long, please contact support" });
                 }
-
-                if(info.duration > 61) {
-                    audioTools.splitter(upload.path, info.duration, function(err, files) {
-                        if(err) return next(err);
-
-                        var i = 0;
-                        async.eachSeries(files, function(f, nextUpload) {
-                            var uploadPart = _.cloneDeep(upload);
-
-                            uploadPart.FFI.filename = uploadPart.FFI.filename +'.p'+ (i+1);
-
-                            uploadPart.FFI.datetime.setMinutes(uploadPart.FFI.datetime.getMinutes()+i);
-
-                            uploadPart.name = uploadPart.FFI.filename + uploadPart.FFI.filetype;
-                            uploadPart.path = f;
-
-                            console.log('upload', uploadPart);
-                            uploadQueue.enqueue(_.cloneDeep(uploadPart), function(err) {
-                                if(err) return nextUpload(err);
-
-                                i++;
-                                nextUpload();
-                            });
-                        }, function splitDone(err2) {
-                            if(err2) return next(err2);
-
-                            deleteFile(upload.path);
-                            res.status(202).json({ success: "upload done!" });
-                        });
-                    });
+                upload.metadata = {
+                    recorder: 'Unknown',
+                    mic: 'Unknown',
+                    sver: 'Unknown'
                 }
-                else {
-                    console.log('upload', upload);
-                    uploadQueue.enqueue(upload, function(err) {
-                        if(err) return next(err);
-
-                        res.status(202).json({ success: "upload done!" });
-                    });
+                const idToken = req.session.idToken
+                const uploadsBody = {
+                    originalFilename: upload.name,
+                    filePath: upload.path,
+                    fileExt: fileHelper.getExtension(upload.name),
+                    streamId: upload.siteId
                 }
+                uploadQueue.enqueue(upload, uploadsBody, idToken, function(err) {
+                    if(err) return next(err);
+
+                    res.status(202).json({ success: "upload done!" });
+                });
             }
         ]);
 

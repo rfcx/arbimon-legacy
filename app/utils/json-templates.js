@@ -23,6 +23,7 @@ function getTemplate (name, type, opts) {
         "imagePath": opts.imagePath,
         "ARG_EPSILON":  opts.distanceThreshold,
         "ARG_MINSAMPLES": opts.minPoints,
+        "ARG_MAXCLUSTERSIZE": opts.maxClusterSize,
         "ARG_CLUSTER_JOBID": opts.clusterJobId,
         "ARG_AED_JOBID": opts.aedJobId
     });

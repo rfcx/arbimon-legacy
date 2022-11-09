@@ -10,8 +10,8 @@
     <div class="panel-body a2-page-header" ng-class="{ 'is-fixed': scrolledPastHeader }">
         <div class="row row-flex flex-align-top">
             <div class="col-sm-4 flex-self-align-top ml-4">
-                <div class="row row-flex flex-align-top">
-                    <h3>
+                <div class="row row-flex flex-align-top hidelongtext">
+                    <h3 class="hidelongtext" title="{{job_details.name}}">
                         {{ job_details.name }}
                     </h3>
                 </div>
@@ -76,7 +76,7 @@
                             </ui-select>
                     </div>
 
-                <div class="pull-right">
+                <div class="pull-right row-flex flex-direction-row flex-self-align-bottom">
                     <div class="btn-group btn-group-margin">
                         <ui-select ng-model="_selection" theme="bootstrap" style="display:inline-block; width:9em;"
                             on-select="onSelect($select.selected)"
@@ -87,7 +87,7 @@
                             </ui-select-choices>
                         </ui-select>
                     </div>
-                    <div class="btn-group btn-group-margin">
+                    <div class="btn-group btn-group-margin row-flex flex-direction-row">
                         <button class="btn btn-default not-active" >Validate as:</button>
                         <ui-select ng-model="validation.current" class="btn-group-item border-left-radius" theme="bootstrap">
                             <ui-select-match class="right-corners">

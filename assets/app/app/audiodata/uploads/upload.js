@@ -35,7 +35,7 @@ angular.module('a2.audiodata.uploads.upload', [
     $scope,
     uploads, Project,
     AppListingsService,
-    $modal, $window, a2UserPermit,
+    a2UserPermit,
     notify
 ) {
 
@@ -48,8 +48,13 @@ angular.module('a2.audiodata.uploads.upload', [
         var index = 0;
         $scope.uploading = true;
 
-
         var _verifyAndUpload = function() {
+
+            if(!a2UserPermit.can('manage project recordings')) {
+                notify.log('You do not have permission to upload recordings');
+                return;
+            }
+
             var item = $scope.uploader.queue[index];
 
             var next = function() {
@@ -72,17 +77,10 @@ angular.module('a2.audiodata.uploads.upload', [
                     return next();
                 }
 
-                item.formData.push({
-                    info: JSON.stringify({
-                        recorder: $scope.info.recorder,
-                        mic: $scope.info.mic,
-                        sver: $scope.info.sver
-                    })
-                });
-
                 item.url = '/uploads/audio?project=' + $scope.project.project_id+
                             '&site=' + $scope.info.site.id +
-                            '&nameformat=' + $scope.info.format.name;
+                            '&nameformat=' + $scope.info.format.name +
+                            '&timezone=' + $scope.info.timezone.format;
 
                 item.upload();
                 item.onSuccess = next;
@@ -104,36 +102,49 @@ angular.module('a2.audiodata.uploads.upload', [
         });
     };
 
-    $scope.batchInfo = function() {
-
-        if(!a2UserPermit.can('manage project recordings')) {
-            notify.log("You do not have permission to upload recordings");
-            return;
-        }
-
-        var modalInstance = $modal.open({
-            templateUrl: '/app/audiodata/batch-info.html',
-            controller: 'BatchInfoCtrl',
-            resolve: {
-                info: function() {
-                    return $scope.info;
-                }
-            }
-        });
-
-        modalInstance.result.then(function(newInfo) {
-            uploads.setBatchInfo(newInfo);
-            $scope.info = newInfo;
-        });
-    };
-
     $scope.uploader = uploads.getUploader();
-    $scope.info = uploads.getBatchInfo();
-    var randomString = Math.round(Math.random() * 100000000)
+
+    $scope.info = {}
+
+    $scope.formats = [
+        { name: "Arbimon", format: "(*-YYYY-MM-DD_HH-MM)" },
+        { name: "AudioMoth", format: "(*YYYYMMDD_HHMMSS)" },
+        { name: "AudioMoth legacy", format: "(Unix Time code in Hex)" },
+        { name: "Cornell" , format: "(*_YYYYMMDD_HHMMSSZ)" },
+        { name: "Song Meter", format: "(*_YYYYMMDD_HHMMSS)" },
+        { name: "Wildlife", format: "(YYYYMMDD_HHMMSS)" }
+    ];
+
+    $scope.fileTimezone = [
+        { name: "UTC", format: "utc" },
+        { name: "Site timezone", format: "local" }
+    ];
+
+    Project.getSites({ utcDiff: true }, function(sites) {
+        $scope.sites = sites.sort(function(a, b) { return new Date(b.updated_at) - new Date(a.updated_at)});
+    });
+
+    $scope.selectSite = function() {
+        const local = $scope.info && $scope.info.site && $scope.info.site.utcOffset ? $scope.info.site.utcOffset + ' (local)' : 'Site timezone'
+        $scope.fileTimezone[1].name = local
+        $scope.info.timezone = $scope.fileTimezone[1]
+    }
+
+    $scope.isStartUploadDisabled = function() {
+        return !$scope.uploader.queue.length || $scope.isLimitExceeded() || !$scope.info.site || !$scope.info.format || $scope.uploading
+    }
+
+    $scope.isLimitExceeded = function() {
+        return $scope.uploader.queue.length > 100
+    }
+
+    const randomString = Math.round(Math.random() * 100000000)
+
     this.uploaderApps = {
         mac: 'https://rf.cx/ingest-app-latest-mac?r=' + randomString,
         windows: 'https://rf.cx/ingest-app-latest-win?r=' + randomString,
     };
+
     Project.getInfo(function(info) {
         $scope.project = info;
     });
@@ -142,7 +153,7 @@ angular.module('a2.audiodata.uploads.upload', [
         name: 'supportedFormats',
         fn: function(item) {
             var name = item.name.split('.');
-            var extension = name[name.length-1];
+            var extension = name[name.length-1].toLowerCase();
 
             //~ console.log('format', extension);
             var validFormats = /mp3|flac|wav/i;
@@ -187,47 +198,18 @@ angular.module('a2.audiodata.uploads.upload', [
         });
     };
 
+    $scope.clearQueue = function() {
+        $scope.uploader.progress = 0;
+        $scope.uploaded = 0
+    }
+
     $scope.uploaded = 0;
     $scope.uploader.onProgressAll = function() {
         $scope.uploaded = Math.floor($scope.uploader.progress/100 * $scope.uploader.queue.length);
     };
 
 })
-.controller('BatchInfoCtrl', function($scope, Project, info, $modalInstance, notify) {
 
-    if(info) {
-        $scope.info = angular.copy(info);
-    }
-    else {
-        $scope.info = {};
-    }
-
-    $scope.formats = [
-        { name: "Arbimon", format: "(*-YYYY-MM-DD_HH-MM)" },
-        { name: "AudioMoth", format: "(*YYYYMMDD_HHMMSS)" },
-        { name: "AudioMoth legacy", format: "(Unix Time code in Hex)" },
-        { name: "Cornell" , format: "(*_YYYYMMDD_HHMMSSZ)" },
-        { name: "Song Meter", format: "(*_YYYYMMDD_HHMMSS)" },
-        { name: "Wildlife", format: "(YYYYMMDD_HHMMSS)" }
-    ];
-
-    Project.getSites(function(sites) {
-        $scope.sites = sites.sort(function(a, b) { return new Date(b.updated_at) - new Date(a.updated_at)});
-    });
-
-    $scope.projectUrl = Project.getUrl();
-
-    $scope.close = function(){
-        if($scope.uploadInfo.$valid && $scope.info.site) {
-            return $modalInstance.close($scope.info);
-        }
-        else if(!$scope.info.site) {
-            return notify.error('You need to create a site first');
-        }
-
-        notify.error('all fields are required');
-    };
-})
 .factory('uploads', function(FileUploader){
 
     var u = new FileUploader();
