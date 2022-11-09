@@ -263,8 +263,8 @@ let ClusteringJobs = {
                 let jobParam = jsonTemplates.getTemplate('aed-clustering', 'job', {
                     kubernetesJobName: data.kubernetesJobName,
                     imagePath: k8sConfig.imagePath,
-                    minPoints: `${data.params.minPoints}`,
                     distanceThreshold: `${data.params.distanceThreshold}`,
+                    minPoints: `${data.params.minPoints}`,
                     maxClusterSize: `${data.params.maxClusterSize}`,
                     clusterJobId: `${data.id}`,
                     aedJobId: `${data.audioEventDetectionJob.jobId}`
