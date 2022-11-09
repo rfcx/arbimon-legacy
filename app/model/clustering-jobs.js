@@ -211,6 +211,7 @@ let ClusteringJobs = {
         aed_job_id: joi.number(),
         min_points: joi.number(),
         distance_threshold: joi.number(),
+        max_cluster_size: joi.number()
     }),
 
     requestNewClusteringJob: function(data, callback){
