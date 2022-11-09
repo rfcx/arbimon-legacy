@@ -1,10 +1,21 @@
 # Arbimon Release Notes
 
-## v3.0.65 - October XX, 2022
+## v3.0.65 - November 09, 2022
 
 New features:
 
 - Users with the user roles can be able to create and edit project sites
+- Detect when playlist contains 500,000+, when creating PM job and show warning
+- Limit number of uploading files (100 files)
+- Update yellow bar size on the Upload page
+- Change control inputs location on the Upload page
+- Hide new AED job advanced parameters in dropdown
+- Show only completed AED jobs on the AED list page
+- A new parameter added to Clustering called "Max. Cluster Size"
+
+Resolve issues:
+
+- Fix long name of CNN shows over the details and alignment of selecting bars
 
 Performance improvements:
 
