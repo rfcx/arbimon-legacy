@@ -606,7 +606,7 @@ angular.module('a2.analysis.patternmatching', [
             };
             this.isSaving = false;
 
-            this.warningMessage = 'The playlist has over 500.000 recordings. Job processing time may be longer than usual.'
+            this.warningMessage = 'Warning: Large playlist (500,000+ recordings). Save resources by reducing playlist size.'
 
             this.getTemplates();
 
