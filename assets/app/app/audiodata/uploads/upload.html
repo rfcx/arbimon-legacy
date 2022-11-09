@@ -82,7 +82,8 @@
                 ng-disabled="!uploading">
                 <i class="fa fa-ban mr-1"></i>Stop all
             </button>
-            <h4>Total uploaded: {{ uploaded }}/{{ uploader.queue.length }}</h4>
+            <h4 class="text-danger font-size-base" ng-if="isLimitExceeded()">Exceeded maximum of 100 files in queue.</h4>
+            <h4 class="font-size-base" ng-if="!isLimitExceeded()">Total uploaded: {{ uploaded }}/{{ uploader.queue.length }}</h4>
         </div>
     </div>
     <div class="row">
