@@ -46,6 +46,9 @@
                     </a>
                 </em>
             </span>
+            <span class="pl-1 brand-warning" ng-if="controller.isWarningMessage()">
+                <em>The playlist has over 500,000 recordings. Job processing time may be longer than usual.</em>
+            </span>
             <ui-select ng-disabled="disabled" ng-model="controller.data.playlist" theme="/common/templates/a2-ui-select">
                 <ui-select-match placeholder="Select or search a playlist...">
                     {{$select.selected.name}}
