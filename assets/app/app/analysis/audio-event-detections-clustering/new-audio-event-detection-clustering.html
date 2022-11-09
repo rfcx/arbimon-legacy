@@ -35,7 +35,7 @@
         <div class="form-group">
             <label for="amplitude">Amplitude Threshold</label>
             <i class="fa fa-info-circle ml-2"
-                tooltip="Minimum amplitude of detected events (number of standard deviations from the median of the filter spectrogram)">
+                tooltip="Minimum amplitude of detected events (number of standard deviations from the mean of the filter spectrogram)">
             </i>
             <input id="amplitude" class="form-control" style="text-align:left;" min="0.5" step="0.1" ng-model="controller.data.params.amplitudeThreshold" type="number"/>
         </div>

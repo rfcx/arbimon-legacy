@@ -27,6 +27,8 @@
                             "{{ARG_EPSILON}}",
                             "-m",
                             "{{ARG_MINSAMPLES}}",
+                            "-s",
+                            "{{ARG_MAXCLUSTERSIZE}}",
                             "-j",
                             "{{ARG_CLUSTER_JOBID}}",
                             "-a",

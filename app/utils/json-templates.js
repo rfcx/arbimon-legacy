@@ -4,8 +4,9 @@ const k8s = require('../k8s')
 /** Simple JSON value templating for Kubernetes Job Config.
  * @param {Object} options - Options defining the Kubernetes Job.
  * @param {String} opts.kubernetesJobName - The Kubernetes Job name.
- * @param {Integer} opts.minPoints - Min. samples clustering parameter.
  * @param {Integer} opts.distanceThreshold - Epsilon clustering parameter.
+ * @param {Integer} opts.minPoints - Min. samples clustering parameter.
+ * @param {String} opts.maxClusterSize - The maximum number of points to retain in each cluster.
  * @param {String} opts.clusterJobId - Clustering job id parameter.
  * @param {String} opts.aedJobId - Audio Event Detection job id clustering parameter.
 */
