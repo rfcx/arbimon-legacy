@@ -191,6 +191,10 @@ let ClusteringJobs = {
             tables.push("JOIN jobs J ON JP.job_id = J.job_id");
         }
 
+        if (options.deleted !== undefined) {
+            constraints.push('JP.`deleted` = ' + dbpool.escape(options.deleted));
+        }
+
         return dbpool.query(
             "SELECT " + select.join(",\n    ") + "\n" +
             "FROM " + tables.join("\n") + "\n" +

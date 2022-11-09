@@ -123,7 +123,7 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
                     areaThreshold: 1,
                     amplitudeThreshold: 1,
                     durationThreshold: 0.2,
-                    bandwidthThreshold: 0.4,
+                    bandwidthThreshold: 0.5,
                     filterSize: 10,
                     minFrequency: 0,
                     maxFrequency: 24
