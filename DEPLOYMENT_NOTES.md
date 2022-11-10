@@ -1,5 +1,9 @@
 # Arbimon Deployment Notes
 
+## v3.0.66
+
+- Run 036-add-aeds-clusters-detected-to-job-params-audio-event-clustering.sql on the production
+
 ## v3.0.65
 
 - Install `sha1-file` library (^1.0.4)

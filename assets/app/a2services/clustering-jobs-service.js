@@ -6,15 +6,9 @@ angular.module('a2.srv.clustering-jobs', [
 
     return {
         list: function(opts) {
-            var config = {
-                params: {}
+            const config = {
+                params: opts
             };
-            if (opts.job_id) {
-                config.params.job_id = opts.job_id;
-            }
-            if (opts.completed) {
-                config.params.completed = opts.completed;
-            }
             return $http.get('/api/project/'+Project.getUrl()+'/clustering-jobs', config).then(function(response){
                 return response.data;
             }).catch(notify.serverError);
