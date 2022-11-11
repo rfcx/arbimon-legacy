@@ -298,6 +298,22 @@ angular.module('a2.analysis.clustering-jobs', [
     $scope.isFilteredClusters = function() {
         return $location.search().freqMin && $location.search().freqMax
     }
+
+    $scope.isEmpty = function() {
+        return $scope.countAudioEventDetected !== undefined && $scope.countAudioEventDetected === 0 && !$scope.loading
+    }
+
+    $scope.aedsDetected = function() {
+        if ($scope.countAudioEventDetected === undefined && $scope.loading) return ''
+        if ($scope.countAudioEventDetected === undefined && !$scope.loading) return 'no data'
+        return $scope.countAudioEventDetected
+    }
+
+    $scope.clustersDetected = function() {
+        if ($scope.countClustersDetected === undefined && $scope.loading) return ''
+        if ($scope.countClustersDetected === undefined && !$scope.loading) return 'no data'
+        return $scope.countClustersDetected
+    }
     
     var drawClusteringPoints = function(clusters) {
         var el = document.getElementById('plotly');

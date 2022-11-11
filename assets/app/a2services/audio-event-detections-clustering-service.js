@@ -6,24 +6,9 @@ angular.module('a2.srv.audio-event-detections-clustering', [
 
     return {
         list: function(opts, callback) {
-            var config = {
-                params: {}
+            const config = {
+                params: opts
             };
-            if (opts && opts.rec_id) {
-                config.params.rec_id = opts.rec_id;
-            }
-            if (opts && opts.playlist) {
-                config.params.playlist = opts.playlist;
-            }
-            if (opts && opts.user) {
-                config.params.user = opts.user;
-            }
-            if (opts && opts.dataExtended) {
-                config.params.dataExtended = opts.dataExtended;
-            }
-            if (opts.completed) {
-                config.params.completed = opts.completed;
-            }
             return $http.get('/api/project/'+Project.getUrl()+'/audio-event-detections-clustering', config).then(function(response){
                 return response.data;
             }).catch(notify.serverError);

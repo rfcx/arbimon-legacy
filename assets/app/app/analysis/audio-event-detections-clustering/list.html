@@ -33,6 +33,9 @@
                 <field title="User" key="user" filter tdclass="is-v-middle">
                     {{ row.user }}
                 </field>
+                <field title="Detected AEDs" key="count" filter tdclass="is-v-middle">
+                    {{ row.aed_count }}
+                </field>
                 <field tdclass="is-v-middle">
                     <a class="btn btn-default btn-xs"
                         ng-click="onSelectedJob(row.playlist_id, row.job_id)"

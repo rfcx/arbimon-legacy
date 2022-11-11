@@ -627,7 +627,7 @@ angular.module('a2.analysis.patternmatching', [
             self.loading.playlists = true;
             return a2Playlists.getList().then((function(playlists){
                 self.playlists = false;
-                self.list.playlists = playlists;
+                self.list.playlists = playlists
             }.bind(this))).catch((function(err){
                 self.playlists = false;
                 self.list.playlists = [];
@@ -635,6 +635,9 @@ angular.module('a2.analysis.patternmatching', [
             }).bind(this));
         },
         ok: function () {
+            if (self.data.playlist.count === 0) {
+                return notify.log('Note: The playlist should not be empty.');
+            }
             self.isSaving = true;
             return a2PatternMatching.create({
                 name: self.data.name,
@@ -649,6 +652,10 @@ angular.module('a2.analysis.patternmatching', [
                 self.isSaving = false
                 notify.error(err);
             }));
+        },
+        isJobValid: function () {
+            return self.data && self.data.name && self.data.name.length > 3 &&
+                self.data.playlist && self.data.template;
         },
         cancel: function (url) {
              $modalInstance.close({ cancel: true, url: url });

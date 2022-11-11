@@ -17,7 +17,8 @@ router.get('/', function(req, res, next) {
         playlist: req.query.playlist,
         dataExtended: req.query.dataExtended,
         user: req.query.user,
-        deleted: 0
+        deleted: 0,
+        aedCount: req.query.aedCount
     })
     .then(function(data){
         res.json(data);

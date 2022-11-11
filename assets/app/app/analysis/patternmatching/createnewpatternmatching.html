@@ -92,7 +92,7 @@
     </form>
 </div>
 <div class="modal-footer">
-    <button class="btn btn-primary" ng-click="controller.ok() | trackEvent:'Analysis-PatternMatching-new pattern matching modal':'Submit'" ng-disabled="controller.isSaving">
+    <button class="btn btn-primary" ng-click="controller.ok() | trackEvent:'Analysis-PatternMatching-new pattern matching modal':'Submit'" ng-disabled="controller.isSaving || !controller.isJobValid()">
         <i class="fa fa-cogs"></i>
         Create
     </button>

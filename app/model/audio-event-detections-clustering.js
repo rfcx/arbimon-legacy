@@ -69,6 +69,10 @@ let AudioEventDetectionsClustering = {
             constraints.push('J.state = "completed"')
         }
 
+        if (options.aedCount) {
+            select.push('(SELECT COUNT(*) FROM audio_event_detections_clustering A WHERE JP.job_id = A.job_id) as aed_count')
+        }
+
         if (options.deleted !== undefined) {
             constraints.push('JP.`deleted` = ' + dbpool.escape(options.deleted));
         }
