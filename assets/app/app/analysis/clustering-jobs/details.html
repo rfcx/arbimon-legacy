@@ -5,8 +5,8 @@
                 Job Name: {{ job_details.name }}
                 <br>User: {{ job_details.user }}
                 <br>Date: {{ job_details.timestamp | moment : 'lll' }}
-                <br>Number of audio event detected: {{ countAudioEventDetected || 'no data' }}
-                <br>Number of clusters detected: {{ countClustersDetected || 'no data' }}
+                <br>Number of audio event detected: {{ aedsDetected() }}
+                <br>Number of clusters detected: {{ clustersDetected() }}
             </div>
             <div class="col-sm-6 row-flex flex-space-end panel-body pr-0 pb-0">
                 <div class="flex-self-align-bottom btn-group-margin">
@@ -39,6 +39,7 @@
         <h3>{{ infopanedata }}</h3>
     </div>
     <div ng-if="loading" class="ml-2">Loading...<loader></loader></div>
+    <h4 class="seconds-div-center" ng-if="isEmpty()">No data found.</h4>
     <div style="position: relative;" ng-class="{'navbar-menu-hide': !infopanedata.length, 'collapse-menu-hide': infopanedata.length}">
         <div id="plotly"></div>
         <div ng-if="toggleMenu" class="popup-chart panel panel-default">
