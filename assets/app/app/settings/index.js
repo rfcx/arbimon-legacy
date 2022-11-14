@@ -206,13 +206,12 @@ angular.module('a2.settings',[
         });
     };
 
+    const message = ['Are you sure you would like to remove the following user from this project?'];
+
     $scope.del = function($index) {
+        const user = $scope.users[$index]
         $scope.popup = {
-            messages : [
-                "You are about to remove: ",
-                $scope.users[$index].username,
-                "Are you sure?"
-            ],
+            messages : message.concat(user.firstname + ' ' + user.lastname + ' ' + '(' + user.email + ')'),
             btnOk: "Yes, do it!",
             btnCancel: "No",
         };

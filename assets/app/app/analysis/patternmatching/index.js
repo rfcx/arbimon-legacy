@@ -81,19 +81,23 @@ angular.module('a2.analysis.patternmatching', [
     };
 
     $scope.onFilterChanged = function () {
-      clearTimeout(timeout);
-      timeout = setTimeout(() => {
-          if ($scope.search.q.trim().length > 0 && $scope.search.q.trim().length < 4) return
-          $scope.resetPagination()
-          $scope.loadPatternMatchings()
-      }, 1000);
+        clearTimeout(timeout);
+        timeout = setTimeout(() => {
+            if ($scope.search.q.trim().length > 0 && $scope.search.q.trim().length < 4) return
+            $scope.resetPagination()
+            $scope.loadPatternMatchings()
+        }, 1000);
     }
 
+    $scope.isShowSearch = function () {
+        return ($scope.patternmatchingsData && $scope.patternmatchingsData.length) || $scope.search.q.trim().length > 0
+      }
+
     $scope.resetPagination = function () {
-      $scope.paginationSettings.page = 1
-      $scope.paginationSettings.offset = 0
-      $scope.paginationSettings.totalJobs = 0
-      $scope.paginationSettings.totalPages = 0
+        $scope.paginationSettings.page = 1
+        $scope.paginationSettings.offset = 0
+        $scope.paginationSettings.totalJobs = 0
+        $scope.paginationSettings.totalPages = 0
     }
 
     $scope.createNewPatternMatching = function () {
@@ -231,7 +235,7 @@ angular.module('a2.analysis.patternmatching', [
         ],
     },
 
-    fetchDetails: function(){
+    fetchDetails: function() {
         this.loading.details = true;
         return a2PatternMatching.getDetailsFor(this.id).then((function(patternMatching){
             this.loading.details = false;
@@ -252,13 +256,13 @@ angular.module('a2.analysis.patternmatching', [
         }).bind(this));
     },
 
-    onSearchChanged: function(){
+    onSearchChanged: function() {
         this.selected.page = 1;
         this.recalculateSiteListBatch();
         this.loadData(1);
     },
 
-    setupExportUrl: function(){
+    setupExportUrl: function() {
         this.patternMatchingExportUrl = a2PatternMatching.getExportUrl({
             patternMatching: this.patternMatching.id,
             jobName: encodeURIComponent(this.patternMatching.name)
