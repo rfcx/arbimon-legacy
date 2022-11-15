@@ -910,12 +910,18 @@ var Recordings = {
         return dbpool.query(q);
     },
 
-    resetRecordingValidation: async function(projectId, classes) {
+    resetRecValidationBySpeciesAndSongtype: async function(projectId, classes) {
         for (let cl of classes) {
             const q = `UPDATE recording_validations SET present = NULL, present_review = 0, present_aed = 0
             WHERE project_id=${projectId} AND species_id=${cl.speciesId} AND songtype_id=${cl.songtypeId}`;
             dbpool.query(q);
         }
+    },
+
+    resetRecValidationByRecordingId: async function(projectId, recIds) {
+        const q = `UPDATE recording_validations SET present = NULL, present_review = 0, present_aed = 0
+        WHERE project_id=${projectId} AND recording_id IN (${recIds})`;
+        return dbpool.query(q);
     },
 
     addRecordingValidation: async function(opts) {
@@ -1953,7 +1959,7 @@ var Recordings = {
                     }
                 }
 
-                // TODO: delete validations first
+                await this.resetRecValidationByRecordingId(project_id, recIds)
                 const arbimonRecs = rows.filter(rec => Recordings.isLegacy(rec))
                 const coreRecs = rows.filter(rec => !Recordings.isLegacy(rec))
                 await this.deleteInCoreAPI(coreRecs, project_id, idToken)
