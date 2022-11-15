@@ -36,11 +36,11 @@
                         ],
                         "resources": {
                             "requests": {
-                                "memory": "0.8",
+                                "memory": "1",
                                 "cpu": "1"
                             },
                             "limits": {
-                                "memory": "1",
+                                "memory": "2",
                                 "cpu": "1.5"
                             }
                         }
