@@ -9,10 +9,10 @@
         </div>
         <div class="form-group">
             <label for="playlist">Playlist</label>
-            <span ng-hide="controller.loading.playlists || controller.list.playlists.length">
+            <span class="red" ng-if="controller.list.playlists && !controller.list.playlists.length">
                 <em>No playlists found.
-                    <a ng-click="controller.cancel('/audiodata/playlists') | trackEvent:'Analysis-Audio-Event-Detection-new audio event detection clustering model':'Cancel-Go to playlists'">
-                        Create one.
+                    <a class="cs-pointer" ng-click="controller.cancel('/audiodata/recordings')">
+                        Click here to filter recordings and create a playlist
                     </a>
                 </em>
             </span>

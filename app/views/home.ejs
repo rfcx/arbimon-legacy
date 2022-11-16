@@ -40,7 +40,7 @@
                                             <i ng-show="summaryDataLoading" class="fa fa-spinner fa-spin" style="font-size: 36px"></i>
                                             <span class="hide" ng-class="{'show': !summaryDataLoading}">{{ summary_data[data.index] | number }}</span>
                                         </p>
-                                        <h3 class="hide" ng-class="{'show': data.title}" style="line-height: 1.6; margin-top: 0; margin-bottom: 0;">
+                                        <h3 class="hide" ng-class="{'show': data.title}" title="{{data.description}}" style="line-height: 1.6; margin-top: 0; margin-bottom: 0;">
                                             {{ data.title }}
                                         </h3>
                                     </div>

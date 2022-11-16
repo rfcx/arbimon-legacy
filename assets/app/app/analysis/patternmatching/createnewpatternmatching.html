@@ -41,8 +41,8 @@
             </i>
             <span class="red" ng-if="controller.list.playlists && !controller.list.playlists.length">
                 <em>No playlists found.
-                    <a class="red cs-pointer linodeco" ng-click="controller.cancel('/audiodata/playlists') | trackEvent:'Analysis-PatternMatching-new pattern matching modal':'Cancel-Go to playlists'">
-                        Create one.
+                    <a class="cs-pointer" ng-click="controller.cancel('/audiodata/recordings')">
+                        Click here to filter recordings and create a playlist
                     </a>
                 </em>
             </span>

@@ -18,6 +18,15 @@
             </div>
         </div>
 
+        <div class="btn-group padding-left" dropdown dropdown-append-to-body="true" a2-auto-close-on-outside-click>
+            <button class="btn btn-default"
+                ng-click="controller.createPlaylist() | trackEvent:'Audiodata-Recordings':'createPlaylist'"
+                tooltip="Save filtered results as playlist"
+                tooltip-trigger="mouseenter" ng-disabled="loading">
+                <i class="fa fa-list-alt"></i> Save to Playlist
+            </button>
+        </div>
+
         <div class="btn-group padding-leftx2" dropdown dropdown-append-to-body="true" a2-auto-close-on-outside-click>
             <button class="btn btn-default" dropdown-toggle ng-disabled="loading">
                 <i class="fa fa-trash"></i> Delete <i class="fa fa-caret-down"></i></button>

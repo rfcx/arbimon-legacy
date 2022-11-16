@@ -42,10 +42,10 @@
       -->
         <div class="form-group">
             <label for="classifier">Select Playlist:</label>
-            <span class="text-danger small pull-right" ng-hide="playlists">
+            <span class="red" ng-if="playlists && !playlists.length">
                 <em>No playlists found.
-                    <a ng-click="cancel('/audiodata/recordings') | trackEvent:'Analysis-Classification-new classification modal':'Cancel-Go to recordings'">
-                        Create one.
+                    <a class="cs-pointer" ng-click="cancel('/audiodata/recordings')">
+                        Click here to filter recordings and create a playlist
                     </a>
                 </em>
             </span>
