@@ -9,12 +9,10 @@
         </div>
         <div class="form-group">
             <label for="playlist">Playlist</label>
-            <span class="red" ng-if="controller.list.playlists && !controller.list.playlists.length">
-                <em>No playlists found.
-                    <a class="cs-pointer" ng-click="controller.cancel('/audiodata/recordings')">
-                        Click here to filter recordings and create a playlist
-                    </a>
-                </em>
+            <span class="ml-2" ng-if="controller.list.playlists && !controller.list.playlists.length">
+                <a class="cs-pointer red" ng-click="controller.cancel('/audiodata/recordings')">
+                    Create a new playlist
+                </a>
             </span>
             <ui-select ng-disabled="disabled" ng-model="controller.data.playlist" theme="/common/templates/a2-ui-select">
                 <ui-select-match placeholder="Select or search a playlist...">

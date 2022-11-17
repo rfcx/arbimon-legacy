@@ -12,11 +12,9 @@
       <div class="form-group">
         <label for="classifier">Select playlist:</label>
         <span class="red ml-1" ng-if="playlists && !playlists.length">
-            <em>No playlists found.
-                <a class="cs-pointer" ng-click="cancel('/audiodata/recordings')">
-                    Click here to filter recordings and create a playlist
-                </a>
-            </em>
+            <a class="cs-pointer red" ng-click="cancel('/audiodata/recordings')">
+                Create a new playlist
+            </a>
         </span>
         <ui-select ng-model="datasubmit.playlist" ng-disabled="disabled">
         <ui-select-match placeholder="Select or search a playlist...">{{$select.selected.name}}</ui-select-match>

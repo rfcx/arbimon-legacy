@@ -39,12 +39,10 @@
             <i class="fa fa-info-circle ml-2"
                 tooltip="Which recordings to perform the search on">
             </i>
-            <span class="red" ng-if="controller.list.playlists && !controller.list.playlists.length">
-                <em>No playlists found.
-                    <a class="cs-pointer" ng-click="controller.cancel('/audiodata/recordings')">
-                        Click here to filter recordings and create a playlist
-                    </a>
-                </em>
+            <span class="ml-2" ng-if="controller.list.playlists && !controller.list.playlists.length">
+                <a class="cs-pointer red" ng-click="controller.cancel('/audiodata/recordings')">
+                    Create a new playlist
+                </a>
             </span>
             <span class="pl-1 brand-warning" ng-if="controller.isWarningMessage()">
                 <em>{{ controller.warningMessage }}</em>
