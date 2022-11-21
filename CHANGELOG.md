@@ -1,5 +1,11 @@
 # Arbimon Release Notes
 
+## v3.0.66 - November 21, 2022
+
+Performance improvements:
+
+- rfcx/engineering-support#1098 Remove stream segment and the file from s3 side when deleting core recordings
+
 ## v3.0.65 - November 09, 2022
 
 New features:
