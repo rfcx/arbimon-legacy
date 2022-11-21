@@ -71,7 +71,7 @@ jobs:
       previous-run-id: ${{ needs.prepare.outputs.previous-run-id }}
       status: ${{ needs.deploy.result }}
       always: true
-      notification-title: 'CI: Arbimon Build'
+      notification-title: 'CI: Arbimon Build-Deploy'
       notification-footer: "Build: ${{ needs.build.result || 'n/a' }} | Deploy: ${{ needs.deploy.result || 'n/a' }}"
       notification-success-statement: '{0} deployed the build!'
     secrets:
