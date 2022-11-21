@@ -1,5 +1,11 @@
 # Arbimon Release Notes
 
+## v3.0.66 - November 21, 2022
+
+Performance improvements:
+
+- #978 Move Arbimon web frontend to Kubernetes
+
 ## v3.0.65 - November 09, 2022
 
 New features:
