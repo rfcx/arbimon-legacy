@@ -33,15 +33,7 @@
                             "{{ARG_CLUSTER_JOBID}}",
                             "-a",
                             "{{ARG_AED_JOBID}}"
-                        ],
-                        "resources": {
-                            "requests": {
-                                "memory": "7Gi"
-                            },
-                            "limits": {
-                                "memory": "7Gi"
-                            }
-                        }
+                        ]
                     }
                 ],
                 "imagePullSecrets": [

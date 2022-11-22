@@ -12,7 +12,7 @@ angular.module('a2.analysis.random-forest-models.classification', [
         templateUrl: '/app/analysis/random-forest-models/classification/list.html'
     });
 })
-.controller('ClassificationCtrl' , function($scope, $modal, $filter, Project, ngTableParams, JobsData, a2Playlists, notify, $q, a2Classi, a2UserPermit) {
+.controller('ClassificationCtrl' , function($scope, $modal, $filter, Project, ngTableParams, JobsData, a2Playlists, notify, $location, a2Classi, a2UserPermit) {
     var initTable = function(p,c,s,f,t) {
         var sortBy = {};
         var acsDesc = 'desc';
@@ -480,7 +480,7 @@ angular.module('a2.analysis.random-forest-models.classification', [
     };
 
     $scope.cancel = function (url) {
-         $modalInstance.close( {url:url});
+        $modalInstance.close( {url:url});
     };
 
 

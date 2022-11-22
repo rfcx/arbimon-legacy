@@ -35,7 +35,8 @@ angular.module('a2.home', [
                 });
             },
         },
-        {   title:'analyses executed',
+        {   title:'analyses performed',
+            description: 'Number of files processed by pattern matching jobs',
             getData: function($http){
                 return $http.get('/api/project/jobs-count').then(function(jobs) {
                     return jobs.data;

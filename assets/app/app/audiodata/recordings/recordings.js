@@ -84,18 +84,20 @@ angular.module('a2.audiodata.recordings', [
     this.reloadList = function() {
         this.searchRecs(['count', 'list']);
     };
-    this.createPlaylist = function(filters) {
-        var listParams = angular.merge({}, filters);
+    this.createPlaylist = function() {
+        var listParams = angular.merge({}, $scope.params);
 
-        if(!Object.keys(listParams).length)
+        if (!Object.keys(listParams).length) {
+            notify.log('Filter recordings and create a playlist');
             return;
+        }
 
-        if($scope.totalRecs == 0) {
+        if ($scope.totalRecs == 0) {
             notify.log('You can\'t create playlist with 0 recording');
             return;
         }
 
-        if(!a2UserPermit.can('manage playlists')) {
+        if (!a2UserPermit.can('manage playlists')) {
             notify.log('You do not have permission to create playlists');
             return;
         }
