@@ -1,5 +1,26 @@
 # Arbimon Release Notes
 
+## v3.0.66 - November 22, 2022
+
+New features:
+
+- Add support links to AED/Clustering pages
+- Show create button for the empty playlists list
+- Move the playlist button to the Recordings page
+- UI updates for an empty scatter plot
+- Display the count of detected AEDs on the Audio Event Detection page
+- Change homepage “analyses executed” stats from jobs to recordings
+
+Resolved issues:
+
+- Remove h-index from soundscape details
+- User should not be able to create PM with an empty playlist
+- Show the user’s first name, last name, and email when deleting the user from any project
+
+Performance improvements:
+
+- Update project country and state
+
 ## v3.0.65 - November 09, 2022
 
 New features:
