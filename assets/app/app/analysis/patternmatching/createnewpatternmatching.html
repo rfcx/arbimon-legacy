@@ -13,7 +13,7 @@
             <i class="fa fa-info-circle ml-2"
                 tooltip="What to search for">
             </i>
-            <span class="red" ng-hide="controller.loading.templates || controller.list.templates.length">
+            <span ng-hide="controller.loading.templates || controller.list.templates.length">
                 <em>No templates found.
                     <a class="red cs-pointer linodeco" ng-click="controller.cancel('/visualizer') | trackEvent:'Analysis-PatternMatching-new pattern matching modal':'Cancel-Create template'">Create one.</a>
                 </em>

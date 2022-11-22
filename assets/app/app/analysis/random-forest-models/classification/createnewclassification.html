@@ -42,11 +42,14 @@
       -->
         <div class="form-group">
             <label for="classifier">Select Playlist:</label>
-            <span class="ml-2" ng-if="playlists && !playlists.length">
-                <a class="cs-pointer red" ng-click="cancel('/audiodata/recordings')">
-                    Create a new playlist
-                </a>
-            </span>
+            <div class="mb-3 flex flex-row flex-align-middle" ng-if="playlists && !playlists.length">
+                <em class="pr-2">No playlist found.</em>
+                Go to
+                <button class="btn btn-sm btn-default" ng-click="cancel('/audiodata/recordings')">
+                    Recordings
+                </button>
+                and create a playlist.
+            </div>
             <ui-select ng-disabled="disabled" ng-model="datas.playlist" theme="/common/templates/a2-ui-select">
                 <ui-select-match placeholder="Select or search a playlist...">{{$select.selected.name}}</ui-select-match>
                 <ui-select-choices repeat="playlist in playlists | filter: $select.search">
