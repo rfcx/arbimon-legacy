@@ -42,7 +42,7 @@ angular.module('a2.analysis.clustering-jobs', [
             $scope.clusteringJobsOriginal = data;
             $scope.clusteringJobsData = data;
             $scope.loading = false;
-            if (data && !data.length) {
+            if (data && data.length) {
                 $scope.showRefreshBtn = true;
             }
         });
