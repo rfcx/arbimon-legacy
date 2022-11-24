@@ -14,33 +14,27 @@
                     <a class="red cs-pointer linodeco" ng-click="controller.cancel('/audiodata/random-forest-models/models') | trackEvent:'Analysis-CNN-new cnn modal':'Cancel-Create model'">Create one.</a>
                 </em>
             </span>
-            <ui-select class="ui-select-6em" ng-disabled="disabled" ng-model="controller.data.model" theme="/common/templates/a2-ui-select">
+            <ui-select ng-disabled="disabled" ng-model="controller.data.model" theme="/common/templates/a2-ui-select">
                 <ui-select-match placeholder="Select or search a model...">
-                    <!-- <div class="roi-thumbnail" >
-                        <img ng-src="{{$select.selected.uri}}" class="roi-img is-small"/>
-                    </div> -->
                     {{$select.selected.name}}
                     [{{$select.search}}]
                 </ui-select-match>
                 <ui-select-choices repeat="model in controller.list.models | filter: $select.search">
-                    <!-- <div class="roi-thumbnail" >
-                        <img ng-src="{{model.uri}}" class="roi-img is-small"/>
-                    </div> -->
                     {{model.name}}
                 </ui-select-choices>
             </ui-select>
         </div>
         <div class="form-group">
             <label for="template">Select Playlist:</label>
-            <div class="mb-3 flex flex-row flex-align-middle" ng-if="controller.loading.playlists || controller.list.playlists.length">
-                <em class="pr-2">No playlist found.</em>
+            <div class="mb-3 flex flex-row flex-align-middle" ng-if="!controller.loading || (controller.list.playlists && !controller.list.playlists.length)">
+                <em class="pr-2">No playlists found.</em>
                 Go to
                 <button class="btn btn-sm btn-default" ng-click="controller.cancel('/audiodata/recordings')">
                     Recordings
                 </button>
                 and create a playlist.
             </div>
-            <ui-select ng-disabled="disabled" ng-model="controller.data.playlist" theme="/common/templates/a2-ui-select">
+            <ui-select ng-disabled="disabled" ng-if="controller.list.playlists && controller.list.playlists.length" ng-model="controller.data.playlist" theme="/common/templates/a2-ui-select">
                 <ui-select-match placeholder="Select or search a playlist...">
                     {{$select.selected.name}}
                 </ui-select-match>
