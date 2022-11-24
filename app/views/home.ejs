@@ -36,9 +36,9 @@
                             <div class="summary-stats" style="margin-top: 48px" ng-view>
                                 <div class="summary-stats-row row-flex flex-space-between" style="flex-wrap: wrap;" ng-if="list_summary_data && list_summary_data.length && summary_data">
                                     <div class="text-center" style="width: 50%;" ng-repeat="data in list_summary_data">
-                                        <p ng-init="data.index=$index" style="font-size: 36px; margin: 22px 0 0">
-                                            <i ng-show="summaryDataLoading" class="fa fa-spinner fa-spin" style="font-size: 36px"></i>
-                                            <span class="hide" ng-class="{'show': !summaryDataLoading}">{{ summary_data[data.index] | number }}</span>
+                                        <p ng-init="data.index=$index" class="summary-font-size" style="margin: 22px 0 0">
+                                            <i ng-show="summaryDataLoading" class="fa fa-spinner fa-spin summary-font-size"></i>
+                                            <span class="hide" title="{{data.description}}" ng-class="{'show': !summaryDataLoading}">{{ summary_data[data.index] | number }}</span>
                                         </p>
                                         <h3 class="hide" ng-class="{'show': data.title}" title="{{data.description}}" style="line-height: 1.6; margin-top: 0; margin-bottom: 0;">
                                             {{ data.title }}

@@ -480,7 +480,7 @@ angular.module('a2.analysis.random-forest-models.classification', [
     };
 
     $scope.cancel = function (url) {
-        $modalInstance.close( {url:url});
+        $modalInstance.close({url: url});
     };
 
 

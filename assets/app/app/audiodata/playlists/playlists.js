@@ -12,7 +12,7 @@ angular.module('a2.audiodata.playlists', [
         templateUrl: '/app/audiodata/playlists/playlists.html'
     });
 })
-.controller('PlaylistCtrl', function($scope, a2Playlists, $modal, notify, a2UserPermit) {
+.controller('PlaylistCtrl', function($scope, a2Playlists, $modal, notify, a2UserPermit, $location) {
     this.initialize = function(){
         removeOnInvalidateHandler = a2Playlists.$on('invalidate-list', (function(){
             this.reset();
@@ -28,7 +28,6 @@ angular.module('a2.audiodata.playlists', [
         });
     };
 
-
     this.operate = function(expression){
         if(!a2UserPermit.can('manage playlists')) {
             notify.log('You do not have permission to combine playlists');
@@ -43,19 +42,20 @@ angular.module('a2.audiodata.playlists', [
         });
     };
 
-    $scope.edit = function() {
-        if(!$scope.selected)
+    this.edit = function() {
+        if(!$scope.checked.length || $scope.checked.length > 1) {
+            notify.log('Please select one playlist to edit');
             return;
+        }
 
         if(!a2UserPermit.can('manage playlists')) {
             notify.log('You do not have permission to edit playlists');
             return;
         }
 
-        $scope.pname = $scope.selected.name;
-        var playlist_id = $scope.selected.id;
-
-        var modalInstance = $modal.open({
+        $scope.pname = $scope.checked[0].name;
+        const playlist_id = $scope.checked[0].id;
+        const modalInstance = $modal.open({
             templateUrl: '/app/audiodata/edit-playlist.html',
             scope: $scope
         });
@@ -68,8 +68,6 @@ angular.module('a2.audiodata.playlists', [
             function(data) {
                 if(data.error)
                     return console.log(data.error);
-
-                $scope.selected.name = playlistName;
             });
         });
     };
@@ -82,13 +80,12 @@ angular.module('a2.audiodata.playlists', [
             return;
         }
 
-        var playlists = $scope.checked.map(function(row) {
+        const playlists = $scope.checked.map(function(row) {
             return '"'+ row.name +'"';
         });
 
-        var message = ["You are about to delete the following playlists: "];
-        var message2 = ["Are you sure?"];
-
+        const message = ["You are about to delete the following playlists: "];
+        const message2 = ["Are you sure?"];
         $scope.popup = {
             messages: message.concat(playlists, message2),
             btnOk: "Yes",
@@ -96,14 +93,14 @@ angular.module('a2.audiodata.playlists', [
         };
 
 
-        var modalInstance = $modal.open({
+        const modalInstance = $modal.open({
             templateUrl: '/common/templates/pop-up.html',
             scope: $scope
         });
 
         modalInstance.result.then(function() {
 
-            var playlistIds = $scope.checked.map(function(pl) {
+            const playlistIds = $scope.checked.map(function(pl) {
                 return pl.id;
             });
 
@@ -119,6 +116,10 @@ angular.module('a2.audiodata.playlists', [
             });
         });
     };
+
+    $scope.create = function (url) {
+        $location.path(url);
+   };
 
     this.initialize();
 

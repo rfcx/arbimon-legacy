@@ -7,12 +7,12 @@
             Model training is disable at the moment, please try again later
         </p> 
         <div class="form-group">
-            <label for="modelName">Model name:</label>
+            <label for="modelName">Model name</label>
             <input name="modelName" ng-model="data.name" type="text" class="form-control" placeholder="Enter model name" />
             <span ng-bind="nameMsg" class="nameExistsSpan"></span>
         </div>
         <div class="form-group">
-            <label for="classifier">Classifier:</label>
+            <label for="classifier">Classifier</label>
             <span class="pull-right small">
                 <em>Classifiers may change without notice. <a ng-href="/classifiers">More information.</a></em>
             </span>
@@ -29,11 +29,16 @@
             </ui-select>
         </div>
         <div class="form-group">
-            <label for="trainingSet">Training Set:</label>
-            <span ng-hide="trainings.length" value="-1" class="pull-right small">
-                <em>No training sets found. <a ng-click="cancel('/audiodata/training-sets') | trackEvent:'Analysis-Newmodel':'cancel goto training-sets'">Create one.</a></em>
-            </span>
-            <ui-select ng-model="data.training" theme="/common/templates/a2-ui-select" ng-disabled="disabled">
+            <label for="trainingSet">Training Set</label>
+            <div class="mb-3 flex flex-row flex-align-middle" ng-if="trainings && !trainings.length">
+                <em class="pr-2">No training sets found.</em>
+                Go to
+                <button class="btn btn-sm btn-default" ng-click="cancel('/audiodata/training-sets')">
+                    Training sets
+                </button>
+                and create a training set.
+            </div>
+            <ui-select ng-if="trainings && trainings.length" ng-model="data.training" theme="/common/templates/a2-ui-select" ng-disabled="disabled">
                 <ui-select-match placeholder="Search and select a training set">{{$select.selected.name}}</ui-select-match>
                 <ui-select-choices repeat="train in trainings | filter: $select.search" value="train.training_set_id">
                     {{train.name}}
