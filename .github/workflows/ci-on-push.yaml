@@ -5,7 +5,6 @@ on:
     branches:
       - master
       - staging
-      - feature/move-web-frontend-to-kubernetes
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 jobs:
 
