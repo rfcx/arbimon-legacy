@@ -1,4 +1,4 @@
-name: 'CD'
+name: 'CI On Push'
 on:
   workflow_dispatch:
   push:
