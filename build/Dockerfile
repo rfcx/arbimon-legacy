@@ -9,4 +9,4 @@ FROM 887044485231.dkr.ecr.eu-west-1.amazonaws.com/arbimon/base:v0.0.1 as arbimon
 WORKDIR /app
 COPY . /app
 RUN npm i && bower i --allow-root
-RUN ./node_modules/.bin/gulp build
+CMD ["npm", "run", "dev"]
