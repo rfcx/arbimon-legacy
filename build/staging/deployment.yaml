@@ -24,8 +24,8 @@ spec:
               value: "staging"
           resources:
             requests:
-              memory: '50Mi'
-              cpu: '100m'
+              memory: '512Mi'
+              cpu: '0.5'
             limits:
-              memory: '200Mi'
-              cpu: '400m'
+              memory: '2000Mi'
+              cpu: '2'
