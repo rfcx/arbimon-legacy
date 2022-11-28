@@ -113,9 +113,6 @@ let ClusteringJobs = {
         }
 
         if (options.rec_id) {
-            select.push("PL.`name` as `playlist_name`, PL.`playlist_id`");
-            tables.push('JOIN playlist_aed PLE ON A.aed_id = PLE.aed_id');
-            tables.push('JOIN playlists PL ON PLE.playlist_id = PL.playlist_id');
             constraints.push('A.recording_id = ' + dbpool.escape(options.rec_id));
         }
 
@@ -126,6 +123,15 @@ let ClusteringJobs = {
             (groupby.length ? ("\nGROUP BY " + groupby.join(",\n    ")) : "")
         )
     },
+
+    getClusteringPlaylist: async function(recId) {
+        const q = `SELECT aed.aed_id, pl.name as playlist_name, pl.playlist_id FROM audio_event_detections_clustering aed
+            JOIN playlist_aed ple ON aed.aed_id = ple.aed_id
+            JOIN playlists pl ON ple.playlist_id = pl.playlist_id
+            WHERE aed.recording_id = ${recId}`;
+        return dbpool.query(q);
+    },
+
 
     getAsset: function (s3Path, res) {
         if(!s3){
