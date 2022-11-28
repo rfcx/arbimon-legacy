@@ -9,12 +9,15 @@
         </div>
         <div class="form-group">
             <label for="playlist">Audio Event Detection Job</label>
-            <span class="ml-2" ng-hide="controller.loading.jobs || controller.list.jobs.length">
-                <a class="cs-pointer red" ng-click="controller.cancel('/analysis/audio-event-detections-clustering')">
-                    Create a new AED job
-                </a>
-            </span>
-            <ui-select ng-disabled="disabled" ng-model="controller.data.aed_job" theme="/common/templates/a2-ui-select">
+            <div class="mb-3 flex flex-row flex-align-middle" ng-if="!controller.loading.jobs || (controller.list.jobs && !controller.list.jobs.length)">
+                <em class="pr-2">No AED found.</em>
+                Go to
+                <button class="btn btn-sm btn-default" ng-click="controller.cancel('/analysis/audio-event-detections-clustering')">
+                    AED
+                </button>
+                and create an audio event detection.
+            </div>
+            <ui-select ng-if="controller.list.jobs && controller.list.jobs.length" ng-disabled="disabled" ng-model="controller.data.aed_job" theme="/common/templates/a2-ui-select">
                 <ui-select-match placeholder="Select or search a job...">
                     {{$select.selected.name}}
                 </ui-select-match>

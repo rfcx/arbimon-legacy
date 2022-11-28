@@ -231,6 +231,10 @@ angular.module('a2.analysis.random-forest-models.models', [
                 if (result.error) {
                     notify.error("Error "+result.error);
                 }
+
+                if (result.url) {
+                    $location.path(result.url);
+                }
             });
         });
     };
@@ -347,8 +351,11 @@ angular.module('a2.analysis.random-forest-models.models', [
 
     };
 
+    $scope.cancel = function(url) {
+        $modalInstance.close({url: url});
+    };
+
     $scope.ok = function() {
-        var url = $scope.projectData.url;
         $scope.nameMsg = '';
         a2Models.create({
                 n: $scope.data.name,
@@ -372,11 +379,6 @@ angular.module('a2.analysis.random-forest-models.models', [
                     err: "Could not create job"
                 });
             });
-    };
-    $scope.cancel = function(url) {
-        $modalInstance.close({
-            url: url
-        });
     };
 })
 .controller('DeleteModelInstanceCtrl', function($scope, $modalInstance, a2Models, model_name, model_id, projectData, notify) {

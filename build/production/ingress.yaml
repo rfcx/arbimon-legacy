@@ -1,0 +1,17 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/limit-rpm: "120"
+  name: arbimon-ingress
+  namespace: production
+  labels:
+    app: arbimon
+spec:
+  rules:
+    - host: arbimon2.rfcx.org
+      http:
+        paths:
+          - backend:
+              serviceName: arbimon-service
+              servicePort: 80

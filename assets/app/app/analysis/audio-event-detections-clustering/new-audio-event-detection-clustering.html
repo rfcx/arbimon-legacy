@@ -10,14 +10,14 @@
         <div class="form-group">
             <label>Playlist</label>
             <div class="mb-3 flex flex-row flex-align-middle" ng-if="controller.list.playlists && !controller.list.playlists.length">
-                <em class="pr-2">No playlist found.</em>
+                <em class="pr-2">No playlists found.</em>
                 Go to
                 <button class="btn btn-sm btn-default" ng-click="controller.cancel('/audiodata/recordings')">
                     Recordings
                 </button>
                 and create a playlist.
             </div>
-            <ui-select ng-disabled="disabled" ng-model="controller.data.playlist" theme="/common/templates/a2-ui-select">
+            <ui-select ng-disabled="disabled" ng-if="controller.list.playlists && controller.list.playlists.length" ng-model="controller.data.playlist" theme="/common/templates/a2-ui-select">
                 <ui-select-match placeholder="Select or search a playlist...">
                     {{$select.selected.name}}
                 </ui-select-match>

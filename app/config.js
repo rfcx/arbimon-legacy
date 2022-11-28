@@ -39,7 +39,7 @@ module.exports = function(config_file){
             }
         }
     }
-
+    // Enable config to be pulled in from environment variables
     Object.keys(cache[config_file]).forEach(key => {
         const envVarName = `${config_file.toUpperCase()}_${key.toUpperCase()}`;
         if (process.env[envVarName]) {
