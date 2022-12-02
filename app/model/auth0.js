@@ -60,7 +60,7 @@ function isTokenValid() {
 
 async function createToken() {
   console.log('\n\n----auth-temp-log---', auth0BackendConfig)
-  console.log('\n\n----aws-temp-log---', config('aws-rfcx'))
+  console.log('\n\n----aws-temp-log---', config('aws_rfcx'))
   console.log('\n\n----map-temp-log---', config('mapbox-api'))
   const options = {
     method: 'POST',
