@@ -88,7 +88,7 @@ router.get('/projects', function(req, res) {
         auth0UniversalLoginUrl: auth0Service.universalLoginUrl,
         state: 'projects',
         inject_data: {
-            mapbox_access_token: config('mapbox-api').accessToken
+            mapbox_access_token: config('mapbox_api').accessToken
         },
     });
 });
@@ -101,7 +101,7 @@ router.get('/', function(req, res) {
         auth0UniversalLoginUrl: auth0Service.universalLoginUrl,
         state: 'home',
         inject_data: {
-            mapbox_access_token: config('mapbox-api').accessToken
+            mapbox_access_token: config('mapbox_api').accessToken
         },
     });
 });
