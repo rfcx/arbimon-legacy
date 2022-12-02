@@ -59,6 +59,7 @@ function isTokenValid() {
 }
 
 async function createToken() {
+  console.log('\n\n-----temp log---', auth0BackendConfig, auth0Config)
   const options = {
     method: 'POST',
     url: `https://${auth0BackendConfig.auth0Domain}/oauth/token`,
