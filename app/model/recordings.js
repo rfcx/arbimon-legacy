@@ -1903,12 +1903,11 @@ var Recordings = {
         if (!recs.length) return
         const segments = recs.map(rec => rec.segment_id)
         const body = {
-            project_external_id: project_id,
             segments
         }
         const options = {
             method: 'DELETE',
-            url: `${rfcxConfig.apiBaseUrl}/internal/arbimon/segments`,
+            url: `${rfcxConfig.apiBaseUrl}/internal/arbimon/segment`,
             headers: {
                 'content-type': 'application/json',
                 Authorization: `Bearer ${idToken}`,
