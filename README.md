@@ -104,7 +104,7 @@ If you use Windows it's recommended to use WSL (Windows Subsystem for Linux) [ht
 
 ### Kubernetes
 
-The yaml configuration files are in `scripts/k8s`.
+The yaml configuration files are in `build/[environment]`.
 
 _TODO: How do services get deployed? How do we change configuration? How do we manually deploy to testing namespace?_
 
