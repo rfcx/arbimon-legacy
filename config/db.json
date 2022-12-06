@@ -1,8 +1,8 @@
 {
-    "host": "",
-    "user": "",
+    "host": "mysql",
+    "user": "admin",
     "port": "3306",
-    "password": "",
-    "database": "",
+    "password": "admin-secret",
+    "database": "arbimon2",
     "timezone": "Z"
 }

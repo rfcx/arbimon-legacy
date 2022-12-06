@@ -1,8 +1,0 @@
-{
-    "host": "mysql",
-    "user": "admin",
-    "port": "3306",
-    "password": "admin-secret",
-    "database": "arbimon2",
-    "timezone": "Z"
-}
