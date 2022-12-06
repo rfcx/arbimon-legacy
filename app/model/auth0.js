@@ -1,7 +1,7 @@
 const config = require('../config');
 const jsonwebtoken = require('jsonwebtoken');
 const auth0Config = config('auth0');
-const auth0BackendConfig = config('auth0-backend');
+const auth0BackendConfig = config('auth0_backend');
 const request = require('request');
 const { promisify } = require('util');
 const rp = promisify(request);
@@ -59,6 +59,9 @@ function isTokenValid() {
 }
 
 async function createToken() {
+//   console.log('\n\n----auth-temp-log---', auth0BackendConfig)
+//   console.log('\n\n----aws-temp-log---', config('aws_rfcx'))
+//   console.log('\n\n----map-temp-log---', config('mapbox-api'))
   const options = {
     method: 'POST',
     url: `https://${auth0BackendConfig.auth0Domain}/oauth/token`,

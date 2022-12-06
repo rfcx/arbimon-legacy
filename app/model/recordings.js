@@ -48,7 +48,7 @@ function defineS3Clients () {
         s3 = new AWS.S3(getS3ClientConfig('aws'))
     }
     if (!s3RFCx) {
-        s3RFCx = new AWS.S3(getS3ClientConfig('aws-rfcx'))
+        s3RFCx = new AWS.S3(getS3ClientConfig('aws_rfcx'))
     }
 }
 
@@ -529,7 +529,7 @@ var Recordings = {
             const legacy = this.isLegacy(recording)
             let s3Client = legacy? s3 : s3RFCx
             const opts = {
-                Bucket : config(legacy? 'aws' : 'aws-rfcx').bucketName,
+                Bucket : config(legacy? 'aws' : 'aws_rfcx').bucketName,
                 Key    : recording.uri
             }
             s3Client.getObject(opts, function(err, data){
