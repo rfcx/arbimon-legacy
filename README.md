@@ -16,9 +16,13 @@ The recommended dev setup is to use docker-compose to create your web and databa
 
 2. Run the containers (web and database)
 
-   ```sh
-   docker-compose up
-   ```
+    ```sh
+    docker run -p 3000:3000 --env-file .env -it --rm arbimon
+    ```
+   Old docker settings
+    ```sh
+    docker-compose up
+    ```
 
    (To stop the server, press Ctrl-C.)
 
@@ -154,28 +158,28 @@ _TODO: How do services get deployed? How do we change configuration? How do we m
 
 Additional steps for production (to support auto-scaling of the frontend)
 
-1. In the EC2 console, create an image of the current `web` instance.
+7. In the EC2 console, create an image of the current `web` instance.
     - Name: arbimon-web-2020-09-09
     - No reboot: true
 
     ![production-deployment-1](https://user-images.githubusercontent.com/1175362/92625187-8c6a3700-f2f2-11ea-869e-bc39b7c502a6.png)
 
-2. After the image is created, open "Auto scaling" -> "Launch configurations". Find the last launch configuration and make a copy ("Actions" -> "Copy launch configuration").
+8. After the image is created, open "Auto scaling" -> "Launch configurations". Find the last launch configuration and make a copy ("Actions" -> "Copy launch configuration").
 
     ![production-deployment-2](https://user-images.githubusercontent.com/1175362/92625432-d3582c80-f2f2-11ea-97ca-09f235a74183.png)
 
-3. Choose the AMI that was created in step 6 and create the launch configuration.
+9. Choose the AMI that was created in step 6 and create the launch configuration.
     - Name: arbimon-web-2020-09-09
     - AMI: arbimon-web-2020-09-09
     - Select: "I acknowledge that I have access to the selected private key..."
     - (everything else the same)
 
-4. Open "Auto scaling groups", and edit the `arbimon` group. Select the newly created launch configuration and then "Update".
+10. Open "Auto scaling groups", and edit the `arbimon` group. Select the newly created launch configuration and then "Update".
     - Launch configuration: arbimon-web-2020-09-09
 
     ![production-deployment-3](https://user-images.githubusercontent.com/1175362/92625454-db17d100-f2f2-11ea-8089-8e85e9c999f9.png)
 
-5.  If there were more than 1 EC2 instances before deployment, terminate rest instances (but not the one that was used for image creation).
+11.  If there were more than 1 EC2 instances before deployment, terminate rest instances (but not the one that was used for image creation).
     ![production-deployment-4](https://user-images.githubusercontent.com/2122991/96923854-84d5aa80-14ba-11eb-996d-97cb6cb9a604.png)
 
 
