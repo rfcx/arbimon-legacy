@@ -1899,7 +1899,7 @@ var Recordings = {
         });
     },
 
-    deleteInCoreAPI: async function(recs, project_id, idToken) {
+    deleteInCoreAPI: async function(recs, idToken) {
         if (!recs.length) return
         const segments = recs.map(rec => rec.segment_id)
         const body = {
@@ -1961,7 +1961,7 @@ var Recordings = {
                 await this.resetRecValidationByRecordingId(project_id, recIds)
                 const arbimonRecs = rows.filter(rec => Recordings.isLegacy(rec))
                 const coreRecs = rows.filter(rec => !Recordings.isLegacy(rec))
-                await this.deleteInCoreAPI(coreRecs, project_id, idToken)
+                await this.deleteInCoreAPI(coreRecs, idToken)
                 await this.deleteRecordingsFromArbimon(recIds, query)
                 await this.deleteRecordingsFromS3(arbimonRecs)
 
