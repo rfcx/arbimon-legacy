@@ -110,7 +110,7 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
         };
     }
 )
-.controller('CreateNewAudioEventDetectionClusteringCtrl', function($modalInstance, a2AudioEventDetectionsClustering, a2Playlists, notify) {
+.controller('CreateNewAudioEventDetectionClusteringCtrl', function($modalInstance, a2AudioEventDetectionsClustering, a2Playlists, a2UserPermit, notify) {
     Object.assign(this, {
         initialize: function(){
             this.loading = {
@@ -134,6 +134,9 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
                     maxFrequency: 24
                 }
             };
+
+            this.isRfcxUser = a2UserPermit.isRfcx();
+            this.isSuper = a2UserPermit.isSuper();
 
             this.loading.playlists = true;
             a2Playlists.getList({filterPlaylistLimit: true}).then((function(playlists){

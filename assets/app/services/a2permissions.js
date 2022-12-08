@@ -13,6 +13,9 @@ angular.module('a2.permissions', [
         isSuper: function(){
             return permit.super;
         },
+        isRfcx: function(){
+            return permit.rfcxUser;
+        },
         has: function(feature) {
             return permit.features && permit.features[feature];
         },
