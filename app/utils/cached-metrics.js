@@ -23,7 +23,7 @@ const getCountForSelectedMetric = async function(key, params) {
             count = await model.projects.totalRecordings(params)
             break;
     }
-    return count
+    return count || 0
 }
 
 const getRandomMin = function(max, min) {

@@ -1216,6 +1216,7 @@ CREATE TABLE `projects` (
   `pattern_matching_enabled` tinyint(1) NOT NULL DEFAULT '0',
   `citizen_scientist_enabled` tinyint(1) NOT NULL DEFAULT '0',
   `cnn_enabled` tinyint(1) NOT NULL DEFAULT '0',
+  `reports_enabled` tinyint(1) NOT NULL DEFAULT '0',
   `external_id` varchar(12) DEFAULT NULL,
   PRIMARY KEY (`project_id`),
   UNIQUE KEY `url` (`url`),
