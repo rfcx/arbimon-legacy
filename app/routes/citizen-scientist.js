@@ -131,7 +131,7 @@ router.get('/:projecturl?/', function(req, res, next) {
                         res.render('citizen-scientist', {
                             env : req.app.get('env'),
                             project: req.project,
-                            url_base: req.originalUrl + (/\//.test(req.originalUrl) ? '' : '/'),
+                            url_base: req.originalUrl + (/\/$/.test(req.originalUrl) ? '' : '/'),
                             user: req.session.user,
                             // a2GoogleMapsLoader
                             inject_data : injected_data,
