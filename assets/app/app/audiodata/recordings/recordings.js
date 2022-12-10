@@ -115,6 +115,13 @@ angular.module('a2.audiodata.recordings', [
             listParams.range.to = moment(listParams.range.to).format('YYYY-MM-DD') + 'T23:59:59.999Z';
         }
 
+        if ($scope.checked && $scope.checked.length) {
+            const recs = $scope.checked.filter(function(rec){
+                return !rec.imported;
+            });
+            listParams.recIds = recs.map(function(rec) { return rec.id });
+        }
+
         var modalInstance = $modal.open({
             controller: 'SavePlaylistModalInstanceCtrl',
             templateUrl: '/app/audiodata/create-playlist.html',
@@ -132,28 +139,28 @@ angular.module('a2.audiodata.recordings', [
     };
 
     this.deleteRecordings = function() {
-        if(!a2UserPermit.can('manage project recordings')) {
+        if (!a2UserPermit.can('manage project recordings')) {
             notify.log('You do not have permission to delete recordings');
             return;
         }
 
-        var recs = $scope.checked.filter(function(rec){
-                return !rec.imported;
-            });
+        const recs = $scope.checked.filter(function(rec){
+            return !rec.imported;
+        });
 
-        if(!recs || !recs.length){
+        if (!recs || !recs.length){
             return notify.log('Recordings from imported sites can not be deleted');
         }
 
-        var recCount = recs.reduce(function(_, rec){
+        const recCount = recs.reduce(function(_, rec){
             _[rec.site] = _[rec.site] + 1 || 1;
             return _;
         }, {});
 
-        var messages = [];
+        const messages = [];
         messages.push("You are about to delete: ");
         messages.push.apply(messages, Object.keys(recCount).map(function(site) {
-            var s = recCount[site] > 1 ? 's' : '';
+            const s = recCount[site] > 1 ? 's' : '';
             return recCount[site] + ' recording'+s+' from "' + site + '"';
         }));
         messages.push("Are you sure?");
@@ -167,7 +174,6 @@ angular.module('a2.audiodata.recordings', [
             },
             controllerAs: 'popup'
         }).result.then(function() {
-            var recIds = recs.map(function(rec) { return rec.id; });
             return $http.post('/api/project/'+Project.getUrl()+'/recordings/delete', { recs: recs });
         }).then((function(response){
             if(response.data.error){
