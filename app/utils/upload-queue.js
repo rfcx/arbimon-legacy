@@ -76,22 +76,18 @@ function uploadFromUploadItemEntry(upload_item){
 
 module.exports = {
     enqueue: function(upload, uploadsBody, idToken, cb) {
-        var upload_row;
+        var upload_row = {
+            filename: upload.name,
+            project_id: upload.projectId,
+            site_id: upload.siteId,
+            user_id: upload.userId,
+            state: 'initializing',
+            metadata: upload.metadata,
+            datetime: upload.FFI.datetime
+        }
         async.waterfall([
             function(callback) {
-                upload.tempFileUri = Uploader.computeTempAreaPath(upload);
-                upload_row = {
-                    filename: upload.name,
-                    project_id: upload.projectId,
-                    site_id: upload.siteId,
-                    user_id: upload.userId,
-                    state: 'initializing',
-                    metadata: upload.metadata,
-                    datetime: upload.FFI.datetime,
-                    channels: upload.info.channels,
-                    duration: upload.info.duration
-                };
-                model.sites.getSiteTimezone(upload_row.site_id, callback)
+                model.sites.getSiteTimezone(upload.siteId, callback)
             },
             function(timezone, callback) {
                 const isLocal = upload.timezone === 'local'
