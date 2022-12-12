@@ -11,20 +11,9 @@ CMD ["node", "jobs/arbimon-recording-delete-job/index.js"]
 
 FROM ubuntu:18.04 as arbimon
 RUN apt-get update && apt-get install --no-install-recommends -y \
-    curl git g++ \
-    imagemagick \
-    software-properties-common \
-    libsox-dev libsox-fmt-all sox \
-    libwavpack-dev \
-    libvorbis-dev libvorbis-ocaml vorbis-tools \
-    libogg-dev \
-    libopus-dev libopusfile-dev opus-tools \
-    libflac-dev \
-    libmp3lame-dev \
-    libsndfile1-dev \
-    libpng-tools \
+    curl sox \
+    git g++ software-properties-common imagemagick \ 
     python-dev virtualenv pkg-config libpng-dev libfreetype6-dev libmysqlclient-dev
-    # Removed: libmagic-dev, libtool
 
 RUN set -x \
     && curl -sL 'https://deb.nodesource.com/setup_8.x' | bash - \
