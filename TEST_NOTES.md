@@ -1,6 +1,11 @@
 # Arbimon Test Notes
 Test Notes are used to list what pages / components / features / user flows are affected by each update.
 
+## v3.0.67
+
+- Remove some logic from upload process
+  - Test that flac and wav are uploaded successfully, and show correctly in Recordings page
+
 ## v3.0.63
 
 - Add SongMeter file type support
