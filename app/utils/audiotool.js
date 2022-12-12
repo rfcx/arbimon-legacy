@@ -209,43 +209,4 @@ var audiotools = {
         audiotools.sox(args, {}, callback);
     },
 
-    /** split a file longer than 1 minute into 1 minute files
-     * @method splitter
-     * @param {String} sourcePath path to the source audio file.
-     * @param {Number} duration of the recording in secon.
-     * @param {Function} callback (optional) set of options.
-     */
-    splitter: function(sourcePath, duration, callback) {
-        var rec = {};
-        rec.ext = path.extname(sourcePath);
-        rec.dir = path.dirname(sourcePath);
-        rec.filename = path.basename(sourcePath, rec.ext);
-
-        var splitCommand = sprintf('sox %(dir)s/%(filename)s%(ext)s %(dir)s/%(filename)s.p%%1n%(ext)s', rec);
-
-        var files = [];
-
-        // splits only if recording is longer than 1 min
-        if(duration < 61) return callback(new Error('File duration is not greater than 1 minute'), []);
-
-        var oneMinPieces = Math.floor(duration / 60);
-        var lastPieceLength = duration - (oneMinPieces * 60);
-
-        for(var i=0; i < oneMinPieces; i++) {
-            files.push(sprintf("%s/%s.p%d%s", rec.dir, rec.filename, i+1, rec.ext));
-            splitCommand += ' trim 0 60 : newfile :';
-        }
-        if (lastPieceLength > 0) {
-            files.push(sprintf("%s/%s.p%d%s", rec.dir, rec.filename, oneMinPieces+1, rec.ext));
-            splitCommand += ' trim 0 '+ lastPieceLength;
-        }
-
-        debug('splitter:', splitCommand);
-
-        var split = childProcess.exec(splitCommand, function(error, stdout, stderr) {
-            callback(error, files);
-        });
-    }
-};
-
 module.exports = audiotools;

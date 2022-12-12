@@ -78,39 +78,6 @@ Uploader.prototype.insertUploadRecs = function(callback) {
 };
 
 /**
- * Transcodes the recording to flac and/or mix down to mono if needed
- */
-Uploader.prototype.convertMonoFlac = function(callback) {
-    debug('convertMonoFlac:', this.upload.name);
-    var needConvert = false;
-
-    var args = [this.inFile];
-
-    if(this.upload.info.channels > 1) {
-        needConvert = true;
-        args.push('-c', 1);
-    }
-    if(this.upload.FFI.filetype !== ".flac") {
-        needConvert = true;
-        args.push('-t', 'flac');
-    }
-
-    if(!needConvert) {
-        this.outFile = this.inFile;
-        return callback(null, 'did not process');
-    }
-
-    args.push(this.outFile);
-
-    audioTools.sox(args, (function(code, stdout, stderr) {
-        if(code !== 0)
-            return callback(new Error("error converting to mono and/or to flac: \n" + stderr));
-        this.upload.info.channels = 1;
-        callback(null, code);
-    }).bind(this));
-};
-
-/**
  * Fetches initial audio info if it wasnt provided or is incomplete.
  */
 Uploader.prototype.getInitialAudioInfo = function(callback) {
@@ -349,7 +316,6 @@ Uploader.prototype.process = function(upload, done) {
     .then(step('ensureFileIsLocallyAvailable'))
     .then(step('insertUploadRecs'))
     .then(step('getInitialAudioInfo')) // run initial audio file info, just in case that data is missing, before deciding if conversion is needed
-    .then(step('convertMonoFlac'))
     .then(step('updateAudioInfo')) // update audio file info after conversion
     .then(step('updateFileSize'))
     .then(step('genThumbnail'))

@@ -138,34 +138,6 @@ var getSiteRecs = function(station, nextStation) {
                             processUpload(upload, function(err, results) {
                                 if(err) return nextRec(err);
                                 
-                                // console.dir(results);
-                                // 
-                                // { insertUploadRecs: 
-                                //    [ { fieldCount: 0,
-                                //        affectedRows: 1,
-                                //        insertId: 149,
-                                //        serverStatus: 2,
-                                //        warningCount: 0,
-                                //        message: '',
-                                //        protocol41: true,
-                                //        changedRows: 0 },
-                                //      undefined ],
-                                //   convertMonoFlac: 'did not process',
-                                //   updateAudioInfo: undefined,
-                                //   genThumbnail: 0,
-                                //   uploadThumbnail: { ETag: '"5e11e7a0fcec8f0b08978eae663be2aa"' },
-                                //   uploadFlac: { ETag: '"6da26cc01d99ef759204bf01017a0e61"' },
-                                //   insertOnDB: 
-                                //    [ { fieldCount: 0,
-                                //        affectedRows: 1,
-                                //        insertId: 10096473,
-                                //        serverStatus: 2,
-                                //        warningCount: 0,
-                                //        message: '',
-                                //        protocol41: true,
-                                //        changedRows: 0 },
-                                //      undefined ] }
-                                
                                 recId = results.insertOnDB[0].insertId;
                                 
                                 arbimonOneDb.query(q.recValidations, [rec.event_data_id], function(err, rows) {
