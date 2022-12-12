@@ -207,6 +207,7 @@ var audiotools = {
         args.push('-lm');
         args.push('-o', destination_path);
         audiotools.sox(args, {}, callback);
-    },
+    }
+};
 
 module.exports = audiotools;
