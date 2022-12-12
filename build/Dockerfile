@@ -45,8 +45,15 @@ RUN virtualenv --python=$(which python2) .env && . .env/bin/activate && \
     pip2 install -r requirements.txt && \
     echo `realpath lib` > .env/lib/python2.7/site-packages/arbimon-server-libs.pth
 
-COPY app assets bin config lib public scripts *.js* /app/
-RUN npm i
+COPY app /app/app
+COPY assets /app/assets
+COPY bin /app/bin
+COPY config /app/config
+COPY lib /app/lib
+COPY public /app/public
+COPY scripts /app/scripts
+COPY *.js* /app/
+RUN npm set unsafe-perm true && npm i
 RUN ./node_modules/.bin/gulp build
 
 EXPOSE 3000
