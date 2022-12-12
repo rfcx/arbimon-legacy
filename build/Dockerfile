@@ -45,8 +45,7 @@ WORKDIR /app
 
 COPY . /app
 RUN npm i
-RUN ./node_modules/gulp/bin/gulp.js build
-RUN ./node_modules/gulp/bin/gulp.js watch
+RUN ./node_modules/.bin/gulp build
 
 EXPOSE 3000
 CMD ["node", "bin/www"]
