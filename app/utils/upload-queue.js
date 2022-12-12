@@ -82,7 +82,6 @@ module.exports = {
             site_id: upload.siteId,
             user_id: upload.userId,
             state: 'initializing',
-            metadata: upload.metadata,
             datetime: upload.FFI.datetime
         }
         async.waterfall([
