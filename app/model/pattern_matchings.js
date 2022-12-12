@@ -13,7 +13,6 @@ var q = require('q');
 var config       = require('../config');
 var APIError = require('../utils/apierror');
 var tmpfilecache = require('../utils/tmpfilecache');
-var audioTools   = require('../utils/audiotool');
 var sqlutil      = require('../utils/sqlutil');
 var SQLBuilder   = require('../utils/sqlbuilder');
 var dbpool       = require('../utils/dbpool');
