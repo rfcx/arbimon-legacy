@@ -219,7 +219,7 @@ The seed files in `scripts/db` are separated into reference data, species data a
 
 ### Python
 
-Some parts of the Node.js app call Python. For this to work locally, you will need Python 2.7 and to (pip) install the dependencies from requirements.txt. The following script might be useful, or `scripts/setup/010-make_virtual_env.sh`. _TODO: complete the docs_
+Some parts of the Node.js app call Python. For this to work locally, you will need Python 2.7 and to (pip) install the dependencies from requirements.txt. The following script might be useful. _TODO: complete the docs_
 
 ```sh
     cd ~/apps/arbimon2
