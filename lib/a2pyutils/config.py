@@ -47,7 +47,7 @@ class Config(object):
             config = json.load(filedata)
 
         for key in config:
-            env_key = f'{cfg}_{key}'
+            env_key = '{0}_{1}'.format(cfg, key)
             if env_key in os.environ:
                 config[key] = os.environ[env_key]
 
