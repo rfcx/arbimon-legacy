@@ -13,7 +13,7 @@ var childProcess = require('child_process');
      * @param {Function} callback function to call when the sox is done, its arguments are (code, stdout_output, stderr_output).
      */
 function sox(args, options, callback){
-    console.log('running sox with ', args, options);
+    console.log('sox args:', args.join(', '));
     if(options instanceof Function) { callback = options; }
     options = options || {};
 
@@ -34,11 +34,9 @@ function sox(args, options, callback){
     });
 
     cp.on('close', function(code){
-        console.log('sox ended with code : ', code);
-        console.log('stdout ', stdout);
-        console.log('stderr ', stderr);
-        console.log('stdout : \n  >> ', stdout.value.replace(/\n/g, '\n  >> '));
-        console.log('stderr : \n  >> ', stderr.value.replace(/\n/g, '\n  >> '));
+        console.log('sox exit code:', code);
+        console.log('sox stdout:', stdout.value.replace(/\n/g, ' | '));
+        console.log('sox stderr:', stderr.value.replace(/\n/g, ' | '));
         callback(code, stdout.value, stderr.value);
     });
 }
