@@ -87,10 +87,9 @@ router.post('/recordings/create', verifyToken(), hasRole(['systemUser']), async 
 router.get('/recordings/:attr', async function(req, res) {
   const token = await auth0Service.getToken();
   const apiUrl = `${rfcxConfig.mediaBaseUrl}/internal/assets/streams/${req.params.attr}`;
+  console.debug('forwarding', apiUrl);
   request.get(apiUrl, {
-    headers: {
-      'Authorization': `Bearer ${token}`
-    }
+    headers: { 'Authorization': `Bearer ${token}` }
   }).pipe(res);
 })
 
