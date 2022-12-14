@@ -45,7 +45,7 @@ let tokenData;
 
 async function getToken () {
   if (!tokenData || !isTokenValid()) {
-    await createToken();
+    await createToken().catch(() => {});
   }
   if (!tokenData || !tokenData.token) {
     throw new Error('Can not get authentication token')
