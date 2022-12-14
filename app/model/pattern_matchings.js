@@ -74,7 +74,7 @@ var PatternMatchings = {
         }
 
         if (options.q) {
-            constraints.push("(PM.name LIKE '%" + options.q + "%' OR T.name LIKE '%" + options.q + "%')");
+            constraints.push(`(PM.name LIKE '%${options.q}%' OR T.name LIKE '%${options.q}%' OR Sp.scientific_name LIKE '%${options.q}%' OR St.songtype LIKE '%${options.q}%')`);
             tables.push("JOIN templates T ON T.template_id = PM.template_id");
         }
 
@@ -118,7 +118,7 @@ var PatternMatchings = {
                     (_[row.template_id] || (_[row.template_id] = [])).push(row);
                     return _;
                 }, {});
-                return Templates.find({idIn: Object.keys(idmap), sourceProjectUri: true}).then(templates => {
+                return Templates.find({idIn: Object.keys(idmap), sourceProjectUri: true, showSpecies: true}).then(templates => {
                     templates.forEach((template) => idmap[template.id].forEach(row => row.template = template));
                     return rows;
                 });

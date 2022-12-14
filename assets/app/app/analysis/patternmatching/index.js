@@ -66,7 +66,8 @@ angular.module('a2.analysis.patternmatching', [
             completed: true,
             q: $scope.search.q,
             limit: $scope.paginationSettings.limit,
-            offset: $scope.paginationSettings.offset * $scope.paginationSettings.limit
+            offset: $scope.paginationSettings.offset * $scope.paginationSettings.limit,
+            showCounts: true
         }).then(function(data) {
             $scope.patternmatchingsOriginal = data.list;
             $scope.patternmatchingsData = data.list;
