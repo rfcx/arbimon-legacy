@@ -17,7 +17,7 @@
                         Job Name: {{ job_details.name }}
                         <br>User: {{ job_details.user }}
                         <br>Date: {{ job_details.timestamp | moment : 'lll' }}
-                        <br>Number of audio event detected: {{ aedData.id.length || 'no data' }}
+                        <br>Number of audio events clustered: {{ aedData.id.length || 'no data' }}
                         <br>Number of clusters detected: {{ aedData.count || 'no data' }}
                     </div>
                     <div class="col-sm-8 row-flex flex-space-end panel-body pb-0 pr-0 clusters-filter-right">
