@@ -28,7 +28,6 @@ var systemSettings = require('./utils/settings-monitor');
 var tmpfilecache = require('./utils/tmpfilecache');
 var APIError = require('./utils/apierror');
 var model = require('./model');
-var uploadQueue = require('./utils/upload-queue');
 
 var www_root_path = path.resolve(__dirname, '..', 'public');
 
@@ -178,9 +177,6 @@ app.use(function(err, req, res, next) {
 
 app.start = function(){
     tmpfilecache.cleanup();
-    if(config("upload-queue").enabled){
-        uploadQueue.resume();
-    }
 };
 
 module.exports = app;
