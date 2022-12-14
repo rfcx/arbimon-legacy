@@ -93,12 +93,11 @@
                                 <ul class="navbar-hide-collapsed dropdown-menu" a2-sidenav-bar-anchor="citizen-scientist"></ul>
                             </li>
                         </ul>
-                        <ul class="nav navbar-nav hide-tooltip-lg" ng-controller="StatusBarNavIndexController" ng-if="!citizenScientistUser">
+                        <ul class="nav navbar-nav hide-tooltip-lg" ng-if="!citizenScientistUser">
                             <li ui-sref-active="active">
                                 <a ui-sref="jobs" tooltip="Active Jobs" tooltip-placement="bottom">
                                     <i class="visible-sm-inline visible-md-inline fa fa-cogs"></i>
                                     <span class="visible-xs-inline visible-lg-inline">Jobs</span>
-                                    <span ng-show="jobslength" class="badge" ng-bind="jobslength"></span>
                                 </a>
                             </li>
                         </ul>

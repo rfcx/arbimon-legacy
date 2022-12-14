@@ -51,8 +51,6 @@ class Config(object):
             if env_key in os.environ:
                 config[key] = os.environ[env_key]
 
-        print('config', cfg, config)
-
         self.cache[cfg] = config
         return config
 

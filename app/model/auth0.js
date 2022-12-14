@@ -45,10 +45,10 @@ let tokenData;
 
 async function getToken () {
   if (!tokenData || !isTokenValid()) {
-    await createToken();
+    await createToken().catch(() => {});
   }
   if (!tokenData || !tokenData.token) {
-    throw new Error('Can not get authentication token')
+    throw new Error('Cannot get authentication token')
   }
   return tokenData.token;
 }
@@ -59,9 +59,6 @@ function isTokenValid() {
 }
 
 async function createToken() {
-//   console.log('\n\n----auth-temp-log---', auth0BackendConfig)
-//   console.log('\n\n----aws-temp-log---', config('aws_rfcx'))
-//   console.log('\n\n----map-temp-log---', config('mapbox-api'))
   const options = {
     method: 'POST',
     url: `https://${auth0BackendConfig.auth0Domain}/oauth/token`,

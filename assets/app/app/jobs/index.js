@@ -9,14 +9,6 @@ angular.module('a2.jobs', [
         templateUrl: '/app/jobs/index.html'
     });
 })
-.controller('StatusBarNavIndexController',function($scope, $http, $timeout, JobsData) {
-    $scope.$watch(function() {
-        return JobsData.getjobLength();
-    },
-    function() {
-        $scope.jobslength = JobsData.getjobLength();
-    });
-})
 .controller('StatusBarNavController', function($scope, $http, $modal, Project, JobsData, notify, a2UserPermit) {
     $scope.show = {};
     $scope.showClassifications = true;
@@ -164,9 +156,7 @@ angular.module('a2.jobs', [
 
 })
 .service('JobsData', function($http, $interval, Project, $q) {
-    var jobslength = 0;
     var jobs = [];
-    var job_types;
     var url = Project.getUrl();
     var intervalPromise;
 
@@ -182,7 +172,6 @@ angular.module('a2.jobs', [
                     }
                 })
                 jobs = data;
-                jobslength = jobs.length;
             });
     };
     updateJobs();
@@ -190,9 +179,6 @@ angular.module('a2.jobs', [
     return {
         geturl: function() {
             return url;
-        },
-        getjobLength: function() {
-            return jobslength;
         },
         getJobs: function() {
             return jobs;
