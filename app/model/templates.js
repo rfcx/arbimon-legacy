@@ -195,7 +195,6 @@ var Templates = {
     insert: function (data, callback) {
         var x1 = Math.min(data.x1, data.x2), y1 = Math.min(data.y1, data.y2);
         var x2 = Math.max(data.x1, data.x2), y2 = Math.max(data.y1, data.y2);
-        console.log('data', data);
         var query =
         "INSERT INTO templates (\n" +
         "    `name`, `uri`,\n" +
