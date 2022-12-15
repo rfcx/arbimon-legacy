@@ -50,14 +50,11 @@
                 <field title="Playlist" key="playlist_name" tdclass="hidelongtext no-wrap-table-cell is-v-middle">
                     <span title="{{row.playlist_name}}">{{row.playlist_name}}</span>
                 </field>
-                <field title="Species name, Song type" key="species" tdclass="species is-v-middle hidelongtext">
-                    <div class="mr-1" title="{{row.template.species_name}}, {{row.template.songtype_name}}">
-                        <p class="mb-0">{{row.template.species_name}},</p>
-                        <p class="mb-0">{{row.template.songtype_name}}</p>
+                <field title="Template" key="template" tdclass="species is-v-middle hidelongtext">
+                    <div>
+                        <p title="{{row.template.species_name}}, {{row.template.songtype_name}}"> {{row.template.species_name}}, {{row.template.songtype_name}}</p>
+                        <p class="section-sub-header mb-0" title="Template name">{{row.template.name}}</p>
                     </div>
-                </field>
-                <field title="Presences / Absences" key="present" tdclass="no-wrap-table-cell is-v-middle seconds-div-center">
-                    {{row.present}} / {{row.absent}}
                 </field>
                 <field title="Parameters" key="parameters" tdclass="hidelongtext no-wrap-table-cell is-v-middle">
                     <span class="mr-1" title="{{row.parameters | asCSV }}">{{row.parameters | asCSV }}</span>
