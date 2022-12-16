@@ -29,9 +29,9 @@
             <p class="mb-0"><a href="https://support.rfcx.org/article/99-what-is-pattern-matching-pm-in-arbimon" target="_blank">1. What is Pattern Matching?<i class="ml-2 fa fa-external-link"></i></a></p>
             <p class="mb-0"><a href="https://support.rfcx.org/article/135-pattern-matching-best-practices" target="_blank">2. Pattern Matching best practices<i class="ml-2 fa fa-external-link"></i></a></p>
         </div>
-        <div class="pm-list" ng-if="!loading.rows && patternmatchingsData && patternmatchingsData.length">
+        <div ng-if="!loading.rows && patternmatchingsData && patternmatchingsData.length">
             <a2-table rows="patternmatchingsData" no-checkbox="true" on-select="selectItem(row.id) | trackEvent:'Analysis-Pattern-Matching-List':' show pattern matching details'">
-                <field title="Name" tdclass="name is-v-middle hidelongtext widthtd" key="name">
+                <field title="Name" tdclass="is-v-middle hidelongtext widthtd" key="name">
                     <div class="roi-thumbnail mr-1">
                         <img ng-src="{{row.template.uri}}" class="roi-img is-small"/>
                         <a class="roi-btn-br" ng-href="{{getTemplateVisualizerUrl(row.template)}}">
@@ -44,13 +44,13 @@
                     </div>
                     <span title="{{ row.name }}">{{ row.name }}</span>
                 </field>
-                <field title="Timestamp" key="timestamp" tdclass="date is-v-middle">
+                <field title="Timestamp" key="timestamp" tdclass="is-v-middle">
                     {{ row.timestamp | moment : 'lll' }}
                 </field>
                 <field title="Playlist" key="playlist_name" tdclass="hidelongtext no-wrap-table-cell is-v-middle">
                     <span title="{{row.playlist_name}}">{{row.playlist_name}}</span>
                 </field>
-                <field title="Template" key="template" tdclass="species is-v-middle hidelongtext">
+                <field title="Template" key="template" tdclass="is-v-middle hidelongtext">
                     <div>
                         <p title="{{row.template.species_name}}, {{row.template.songtype_name}}"> {{row.template.species_name}}, {{row.template.songtype_name}}</p>
                         <p class="section-sub-header mb-0" title="Template name">{{row.template.name}}</p>
