@@ -58,7 +58,7 @@
 </div>
 <div class="row">
     <div class="col-sm-12">
-        <a2-table rows="recs" data-checked="checked" ext-sort="controller.sortRecs(sortBy, reverse)" default-sort="site">
+        <a2-table rows="recs" data-checked="checked" on-check="selectRec(row)" ext-sort="controller.sortRecs(sortBy, reverse)" default-sort="site">
             <field title="Site" key="site" tdclass="hidelongtext widthtd">
                 <span title="{{ row.site }}">{{ row.site }}</span>
             </field>

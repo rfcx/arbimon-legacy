@@ -304,8 +304,12 @@ var Playlists = {
                     data.params.project_id = data.project_id;
                     data.params.sortBy = 'site_id, datetime'
                     data.params.output = ['list', 'sql']
-                    const sqlParts = await model.recordings.findProjectRecordings(data.params)
-                    await query(`INSERT INTO playlist_recordings(recording_id, playlist_id) SELECT DISTINCT r.recording_id, ${playlistId} ${sqlParts[1]} ${sqlParts[2]}`)
+                    if (data.params.recIds) {
+                        await this.addRecs(query, playlistId, data.params.recIds);
+                    } else {
+                        const sqlParts = await model.recordings.findProjectRecordings(data.params)
+                        await query(`INSERT INTO playlist_recordings(recording_id, playlist_id) SELECT DISTINCT r.recording_id, ${playlistId} ${sqlParts[1]} ${sqlParts[2]}`)
+                    }
                 }
                 await this.refreshTotalRecs(playlistId, query)
                 await db.commit()

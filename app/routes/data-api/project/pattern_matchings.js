@@ -45,11 +45,13 @@ async function getPatternMatchings(req, res, next) {
         deleted:0,
         showUser:true,
         showTemplate: true,
+        showSpecies: true,
         showPlaylistName: true,
         ...!!req.query.completed && { completed: req.query.completed },
         q: req.query.q,
         limit: req.query.limit,
-        offset: req.query.offset
+        offset: req.query.offset,
+        showCounts: req.query.showCounts
     };
 
     if (req.query.limit) {

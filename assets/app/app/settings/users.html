@@ -42,6 +42,7 @@
                             <td>
                                 <span class="username">{{ user.firstname }}</span>
                                 <span class="username ml-1">{{ user.lastname }}</span>
+                                <span class="text-dim ml-3">{{ user.email }}</span>
                             </td>
                             <td class="text-right">
                                 <span ng-show="user.rolename == 'Owner'">Project Owner</span>
@@ -49,7 +50,7 @@
                                     <select ng-model="user.rolename" class="btn btn-default" ng-change="changeRole($index)">
                                         <option ng-repeat="role in roles">{{ role.name }}</option>
                                     </select>
-                                    <button class="btn btn-default"
+                                    <button class="btn btn-default ml-3 py-0"
                                         ng-click="del($index) | trackEvent:'Dashboard-users':'delete user'"
                                         tooltip="Remove user"
                                         tooltip-trigger="mouseenter">

@@ -11,17 +11,15 @@ The recommended dev setup is to use docker-compose to create your web and databa
 1. Build the docker image
 
    ```sh
-   docker build -t arbimon -f build/Dockerfile .
+   docker build -t arbimon --target=arbimon -f build/Dockerfile .
    ```
+
+   Note: on Apple silicon, you might need `docker buildx build --platform linux/amd64 -t arbimon --target=arbimon -f build/Dockerfile .`.
 
 2. Run the containers (web and database)
 
     ```sh
-    docker run -p 3000:3000 --env-file .env -it --rm arbimon
-    ```
-   Old docker settings
-    ```sh
-    docker-compose up
+    docker compose up
     ```
 
    (To stop the server, press Ctrl-C.)
@@ -104,7 +102,7 @@ If you use Windows it's recommended to use WSL (Windows Subsystem for Linux) [ht
 
 ### Kubernetes
 
-The yaml configuration files are in `scripts/k8s`.
+The yaml configuration files are in `build/[environment]`.
 
 _TODO: How do services get deployed? How do we change configuration? How do we manually deploy to testing namespace?_
 
@@ -221,7 +219,7 @@ The seed files in `scripts/db` are separated into reference data, species data a
 
 ### Python
 
-Some parts of the Node.js app call Python. For this to work locally, you will need Python 2.7 and to (pip) install the dependencies from requirements.txt. The following script might be useful, or `scripts/setup/010-make_virtual_env.sh`. _TODO: complete the docs_
+Some parts of the Node.js app call Python. For this to work locally, you will need Python 2.7 and to (pip) install the dependencies from requirements.txt. The following script might be useful. _TODO: complete the docs_
 
 ```sh
     cd ~/apps/arbimon2

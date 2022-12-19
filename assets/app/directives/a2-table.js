@@ -39,9 +39,10 @@ angular.module('a2.directive.a2-table', [
         restrict: 'E',
         scope: {
             rows: '=',
-            selected: '=?',
+            selected: '=?',  // able to work with $scope.selected rows
             onSelect: '&',
-            checked: '=?',
+            onCheck: '&',
+            checked: '=?', // able to work with $scope.checked rows
             search: '=?',
             // noCheckbox: '@',    // disable row checkboxes
             // noSelect: '@',      // disable row selection
@@ -90,6 +91,9 @@ angular.module('a2.directive.a2-table', [
                 options.onSelect = scope.onSelect && function (row){
                     return scope.onSelect({row:row});
                 };
+                options.onCheck = scope.onCheck && function (row){
+                    return scope.onCheck({row:row});
+                };
 
                 a2TableCtrl.initialize(options);
 
@@ -134,6 +138,7 @@ angular.module('a2.directive.a2-table', [
         tableScope = options.tableScope;
         this.options = options;
         this.__onSelect = options.onSelect;
+        this.__onCheck = options.onCheck;
         this.hasFilters = options.fields.reduce(function (_, field){ return _ || field.filter !== undefined; }, false);
         this.filter = {};
     };
@@ -226,6 +231,12 @@ angular.module('a2.directive.a2-table', [
         }
         if(this.__onSelect){
             this.__onSelect(row);
+        }
+    };
+
+    this.onCheck = function(row, $index, $event) {
+        if(this.__onCheck){
+            this.__onCheck(row);
         }
     };
 

@@ -13,25 +13,9 @@ angular.module('a2.srv.patternmatching', [
             return saveData;
         },
         list: function(opts, callback) {
-            var config = {
-                params: {}
+            const config = {
+                params: opts
             };
-            if (opts && opts.completed) {
-                config.params.completed = opts.completed;
-            }
-            if (opts && opts.rec_id) {
-                config.params.rec_id = opts.rec_id;
-            }
-            if (opts && opts.validated) {
-                config.params.validated = opts.validated;
-            }
-            if (opts && opts.q) {
-              config.params.q = opts.q;
-          }
-            if (opts && opts.limit) {
-                config.params.limit = opts.limit;
-                config.params.offset = opts.offset;
-            }
             return $http.get('/api/project/'+Project.getUrl()+'/pattern-matchings', config).then(function(response){
                 return response.data;
             }).catch(notify.serverError);

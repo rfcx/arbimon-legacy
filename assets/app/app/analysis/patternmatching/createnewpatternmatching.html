@@ -13,7 +13,7 @@
             <i class="fa fa-info-circle ml-2"
                 tooltip="What to search for">
             </i>
-            <div class="mb-3 flex flex-row flex-align-middle" ng-if="controller.list.templates && !controller.list.templates.length">
+            <div class="mb-3 flex row-flex flex-align-middle" ng-if="controller.list.templates && !controller.list.templates.length">
                 <em class="pr-2">No templates found.</em>
                 Go to
                 <button class="btn btn-sm btn-default" ng-click="controller.cancel('/visualizer') | trackEvent:'Analysis-PatternMatching-new pattern matching modal':'Cancel-Create template'">
@@ -30,10 +30,15 @@
                     [{{$select.search}}]
                 </ui-select-match>
                 <ui-select-choices repeat="template in controller.list.templates | filter: $select.search">
-                    <div class="roi-thumbnail" >
-                        <img ng-src="{{template.uri}}" class="roi-img is-small"/>
+                    <div class="flex row-flex flex-align-middle">
+                        <div class="roi-thumbnail mr-3">
+                            <img ng-src="{{template.uri}}" class="roi-img is-small"/>
+                        </div>
+                        <div>
+                            <div title="Species, song type">{{template.species_name}}, {{template.songtype_name}}</div>
+                            <div title="Template name" class="text-dim">{{template.name}}</div>
+                        </div>
                     </div>
-                    {{template.name}}
                 </ui-select-choices>
             </ui-select>
         </div>
@@ -42,7 +47,7 @@
             <i class="fa fa-info-circle ml-2"
                 tooltip="Which recordings to perform the search on">
             </i>
-            <div class="mb-3 flex flex-row flex-align-middle" ng-if="controller.list.playlists && !controller.list.playlists.length">
+            <div class="mb-3 flex row-flex flex-align-middle" ng-if="controller.list.playlists && !controller.list.playlists.length">
                 <em class="pr-2">No playlists found.</em>
                 Go to
                 <button class="btn btn-sm btn-default" ng-click="controller.cancel('/audiodata/recordings')">

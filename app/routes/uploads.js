@@ -8,7 +8,6 @@ var q = require('q');
 
 const fileHelper = require('../utils/file-helper')
 var model = require('../model');
-var audioTools= require('../utils/audiotool');
 var tmpFileCache = require('../utils/tmpfilecache');
 var formatParse = require('../utils/format-parse');
 const uploadQueue = require('../utils/upload-queue');
@@ -165,8 +164,7 @@ var receiveUpload = function(req, res, next) {
                 model.recordings.exists({
                     site_id: req.upload.siteId,
                     filename: upload.FFI.filename
-                },
-                function(err, exists) {
+                }, function(err, exists) {
                     if(err) return next(err);
 
                     if(exists) {
@@ -179,32 +177,10 @@ var receiveUpload = function(req, res, next) {
                     callback();
                 });
             },
-            function getAudioInfo(callback) {
-                audioTools.info(upload.path, function(code, info) {
-                    if(code !== 0) {
-                        deleteFile(upload.path);
-                        console.log('error getting audio file info', code, info)
-                        return res.status(500).json({ error: 'error getting audio file info'});
-                    }
-
-                    callback(null, info);
-                });
-            },
-            function sendToProcess(info, callback) {
+            function sendToProcess(callback) {
                 upload.projectId = req.upload.projectId;
                 upload.siteId = req.upload.siteId;
                 upload.userId = req.upload.userId;
-                upload.info = info;
-
-                if(info.duration >= 3600) {
-                    deleteFile(upload.path);
-                    return res.status(403).json({ error: "Recording is too long, please contact support" });
-                }
-                upload.metadata = {
-                    recorder: 'Unknown',
-                    mic: 'Unknown',
-                    sver: 'Unknown'
-                }
                 const idToken = req.session.idToken
                 const uploadsBody = {
                     originalFilename: upload.name,

@@ -119,6 +119,7 @@ router.get('/:projecturl?/', function(req, res, next) {
                         reports_enabled: !!project.reports_enabled,
                     },
                     super: !!req.session.user.isSuper,
+                    rfcxUser: !!req.session.user.email.includes('rfcx.org'),
                     permissions: rows.map(function(perm) { return perm.name; }),
                 };
 
@@ -145,7 +146,7 @@ router.get('/:projecturl?/', function(req, res, next) {
                         res.render('app', {
                             env : req.app.get('env'),
                             project: req.project,
-                            url_base: req.originalUrl + (/\//.test(req.originalUrl) ? '' : '/'),
+                            url_base: req.originalUrl + (/\/$/.test(req.originalUrl) ? '' : '/'),
                             user: req.session.user,
                             // a2GoogleMapsLoader
                             inject_data : injected_data,
