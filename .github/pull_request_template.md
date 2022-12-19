@@ -5,6 +5,7 @@
 - [ ] Test notes notes updated
 - [ ] Deployment notes updated / na
 - [ ] DB migrations updated / na
+- [ ] HelpScout documentation updates proposed / na
 
 ## 📝 Summary
 
