@@ -21,6 +21,7 @@ a2.komodoproject
 
 # python virtual env
 .env
+.env.*
 
 # python compiled binaries
 *.pyc

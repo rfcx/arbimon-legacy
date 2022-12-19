@@ -17,7 +17,7 @@ function defineS3Clients() {
         s3 = new AWS.S3(getS3ClientConfig('aws'))
     }
     if (!s3RFCx) {
-        s3RFCx = new AWS.S3(getS3ClientConfig('aws-rfcx'))
+        s3RFCx = new AWS.S3(getS3ClientConfig('aws_rfcx'))
     }
 }
 
@@ -352,7 +352,7 @@ async function downloadRecordingById(req, res, inline, next) {
     const recordingName = recordingUri.split('/').pop()
     const legacy = recordingUri.startsWith('project_')
     const mimetype = mime.getType(recordingName)
-    const bucketName = config(legacy ? 'aws' : 'aws-rfcx').bucketName
+    const bucketName = config(legacy ? 'aws' : 'aws_rfcx').bucketName
     res.set({ 'Content-Disposition' : `${ inline ? 'inline' : 'attachment' }; filename=${ recordingName }`})
     res.setHeader('Content-type', `${ inline ? 'audio/wav' : mimetype }`)
     await getRecordingFromS3(bucketName, legacy, recordingUri, res)
