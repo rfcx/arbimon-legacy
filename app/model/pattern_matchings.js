@@ -136,8 +136,8 @@ var PatternMatchings = {
         }
 
         if(options.showSpecies){
-            tables.push('JOIN species Sp ON PM.species_id = Sp.species_id');
-            tables.push('JOIN songtypes St ON PM.songtype_id = St.songtype_id');
+            tables.push('JOIN species Sp ON Sp.species_id = PM.species_id');
+            tables.push('JOIN songtypes St ON St.songtype_id = PM.songtype_id');
             select.push('Sp.scientific_name as species_name', 'St.songtype as songtype_name');
         }
 
@@ -213,8 +213,10 @@ var PatternMatchings = {
     findWithPagination: async function (options) {
         const count = options.q ? await PatternMatchings.totalPatternMatchings(
             options.project,
-            `JOIN templates T ON T.template_id = PM.template_id \n`,
-            ` AND (PM.name LIKE '%${options.q}%' OR T.name LIKE '%${options.q}%')`
+            `JOIN templates T ON T.template_id = PM.template_id
+            JOIN species Sp ON Sp.species_id = PM.species_id
+            JOIN songtypes St ON St.songtype_id = PM.songtype_id`,
+            ` AND (PM.name LIKE '%${options.q}%' OR T.name LIKE '%${options.q}%' OR Sp.scientific_name LIKE '%${options.q}%' OR St.songtype LIKE '%${options.q}%')`
         ) : await PatternMatchings.totalPatternMatchings(options.project);
         if (count) {
             const list =  await PatternMatchings.find(options);
