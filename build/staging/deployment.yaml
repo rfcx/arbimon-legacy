@@ -4,6 +4,7 @@ metadata:
   name: arbimon
   namespace: staging
 spec:
+  replicas: 1
   selector:
     matchLabels:
       app: arbimon
