@@ -19,7 +19,7 @@ var dbpool       = require('../utils/dbpool');
 var Recordings   = require('./recordings');
 var Projects     = require('./projects');
 var Templates     = require('./templates');
-
+const models = require("./index");
 // local variables
 var s3;
 var lambda = new AWS.Lambda();
@@ -506,6 +506,26 @@ var PatternMatchings = {
         return dbpool.query(
             "UPDATE pattern_matchings SET deleted=1, playlist_id=NULL, citizen_scientist=0, cs_expert=0 WHERE pattern_matching_id = ?", [patternMatchingId]
         );
+    },
+
+    getPresentAbsentRois: function (patternMatchingId) {
+        const q = `SELECT pattern_matching_roi_id as id, pattern_matching_id, recording_id, species_id, songtype_id, validated
+        FROM pattern_matching_rois
+        WHERE pattern_matching_id = ${patternMatchingId} AND (validated = 1 OR validated = 0);`
+        return dbpool.query(q)
+    },
+
+    unvalidateRois: async function (patternMatchingId, userId, projectId) {
+        const rois = await PatternMatchings.getPresentAbsentRois(patternMatchingId)
+        const ids = rois.map(roi => { return roi.id })
+        PatternMatchings.validateRois(patternMatchingId, ids, null)
+            .then(async function(validatedRois) {
+                for (let roi of rois) {
+                    const previousValidation = roi.validated;
+                    await models.recordings.validate({id: roi.recording_id}, userId, projectId,
+                        { class: `${roi.species_id}-${roi.songtype_id}`, val: null, oldVal: previousValidation, review: true})
+                }
+            })
     },
 
     __parse_meta_data : function(data) {

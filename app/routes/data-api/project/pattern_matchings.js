@@ -246,18 +246,20 @@ router.post('/:patternMatching/validate', function(req, res, next) {
 router.post('/:patternMatching/remove', function(req, res, next) {
     res.type('json');
 
-    var project_id = req.project.project_id;
-
+    const projectId = req.project.project_id;
+    const patternMatchingId = req.params.patternMatching
     q.resolve().then(function(){
-        if(!req.haveAccess(project_id, "manage pattern matchings")){
+        if(!req.haveAccess(projectId, "manage pattern matchings")){
             throw new Error({
                 error: "You don't have permission to delete pattern matchings"
             });
         }
     }).then(function(){
-        return model.patternMatchings.delete(req.params.patternMatching | 0);
-    }).then(function(){
+        return model.patternMatchings.delete(patternMatchingId | 0);
+    }).then(async function(){
         res.json({ok: true});
+        const userId = req.session.user.id
+        await model.patternMatchings.unvalidateRois(patternMatchingId, userId, projectId)
     }).catch(next);
 });
 

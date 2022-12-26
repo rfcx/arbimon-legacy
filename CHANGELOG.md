@@ -1,10 +1,31 @@
 # Arbimon Release Notes
 
-## v3.0.67 - November XX, 2022
+## v3.0.68 - December 27, 2022
+
+- Delete recording validation after removing the PM job
+
+## v3.0.67 - December 22, 2022
+
+New features:
+
+- Add species name and songtype column associated with the template on the PM list page
+- Show user email in project settings
+- Remove jobs count from nav
+- Hide upload recommend box on drag
+- Change wording on the Grid View page
+- Add ability to select recordings on different pages
+- Create a playlist with selected recordings
+- External users can run AED jobs of up to 1000 recordings
+
+Resolved issues:
+
+- Open new tab from Arbimon tabs appear error page
 
 Performance improvements:
 
-- #978 Move Arbimon web frontend to Kubernetes
+- Move Arbimon web frontend to Kubernetes
+- Improve docker build caching
+- Refactor sox usage, make sox function private
 
 ## v3.0.66 - November 22, 2022
 
