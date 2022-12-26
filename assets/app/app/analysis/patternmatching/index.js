@@ -150,7 +150,7 @@ angular.module('a2.analysis.patternmatching', [
                 var index = -1;
                 var modArr = angular.copy($scope.patternmatchingsOriginal);
                 for (var i = 0; i < modArr.length; i++) {
-                    if (modArr[i].id === id) {
+                    if (modArr[i].id === patternMatching.id) {
                         index = i;
                         break;
                     }
