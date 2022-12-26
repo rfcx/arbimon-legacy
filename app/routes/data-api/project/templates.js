@@ -31,6 +31,7 @@ router.get('/', function(req, res, next) {
     if (req.query.publicTemplates === 'true') {
         params.publicTemplates = req.query.publicTemplates;
         params.user_id = req.session.user.id;
+        params.isRfcxUser = req.session.user.isRfcx
     }
     else {
         params.project = req.project.project_id;
@@ -59,7 +60,8 @@ router.get('/count', function(req, res, next) {
     return converter.validate()
         .then(async (params) => {
             const condition = params && params.projectTemplates ? ' AND T.source_project_id IS NULL' : null
-            const count = await model.templates.templatesCount(project_id, params && params.publicTemplates, null, condition)
+            const isRfcxUser = req.session.user.isRfcx
+            const count = await model.templates.templatesCount(project_id, params && params.publicTemplates, null, condition, isRfcxUser)
             res.json({ count })
         })
         .catch(httpErrorHandler(req, res, 'Error getting templates count'))

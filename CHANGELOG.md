@@ -2,6 +2,12 @@
 
 ## v3.0.68 - December 27, 2022
 
+New features:
+
+- Make the private templates available to rfcx users
+
+Resolved issues:
+
 - Delete recording validation after removing the PM job
 
 ## v3.0.67 - December 22, 2022
