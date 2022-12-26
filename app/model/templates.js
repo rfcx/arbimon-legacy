@@ -103,7 +103,10 @@ var Templates = {
         }
 
         if (options.publicTemplates) {
-            constraints.push('P.is_private = 0', 'T.source_project_id IS NULL');
+            if (!options.isRfcxUser) {
+                constraints.push('P.is_private = 0')
+            }
+            constraints.push('T.source_project_id IS NULL');
         }
 
         if (options.projectTemplates) {
@@ -135,7 +138,7 @@ var Templates = {
         return find(query).then(data => data[0]);
     },
 
-    templatesCount: async function(project, publicTemplates, join, whereCondition) {
+    templatesCount: async function(project, publicTemplates, join, whereCondition, isRfcxUser) {
         let q = `SELECT count(*) AS count FROM templates as T
         JOIN projects P ON T.project_id = P.project_id`
         if (join) {
@@ -144,7 +147,10 @@ var Templates = {
         const where = 'WHERE T.deleted=0';
         if (publicTemplates) {
             // Find an original templates, not copied
-            q += ` ${where} AND T.source_project_id IS NULL AND P.is_private=0`
+            q += ` ${where} AND T.source_project_id IS NULL`
+            if (!isRfcxUser) {
+                q += ' AND P.is_private = 0'
+            }
         }
         else {
             q += ` ${where} AND T.project_id=${project}`
@@ -160,8 +166,9 @@ var Templates = {
             options.project,
             options.publicTemplates,
             ` JOIN species S ON T.species_id = S.species_id ${options.projectTemplates ? 'LEFT JOIN projects P2 ON T.source_project_id = P2.project_id' : ''}`,
-            ` AND (T.name LIKE '%${options.q}%' OR ${options.projectTemplates ? 'P2.name' : 'P.name'} LIKE '%${options.q}%' OR S.scientific_name LIKE '%${options.q}%')`
-        ) : await Templates.templatesCount(options.project, options.publicTemplates);
+            ` AND (T.name LIKE '%${options.q}%' OR ${options.projectTemplates ? 'P2.name' : 'P.name'} LIKE '%${options.q}%' OR S.scientific_name LIKE '%${options.q}%')`,
+            options.isRfcxUser
+        ) : await Templates.templatesCount(options.project, options.publicTemplates, null, null, options.isRfcxUser);
         if (count) {
             const list =  await Templates.find(options);
             return { list: list, count: count }
