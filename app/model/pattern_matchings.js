@@ -508,15 +508,15 @@ var PatternMatchings = {
         );
     },
 
-    getPresentAbsentRois: function (patternMatchingId) {
+    getPresentRois: function (patternMatchingId) {
         const q = `SELECT pattern_matching_roi_id as id, pattern_matching_id, recording_id, species_id, songtype_id, validated
         FROM pattern_matching_rois
-        WHERE pattern_matching_id = ${patternMatchingId} AND (validated = 1 OR validated = 0);`
+        WHERE pattern_matching_id = ${patternMatchingId} AND validated = 1;`
         return dbpool.query(q)
     },
 
     unvalidateRois: async function (patternMatchingId, userId, projectId) {
-        const rois = await PatternMatchings.getPresentAbsentRois(patternMatchingId)
+        const rois = await PatternMatchings.getPresentRois(patternMatchingId)
         const ids = rois.map(roi => { return roi.id })
         PatternMatchings.validateRois(patternMatchingId, ids, null)
             .then(async function(validatedRois) {
