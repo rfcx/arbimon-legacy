@@ -28,12 +28,12 @@
     "zxcvbn": "~3.2.0",
     "roboto-fontface": "~0.4.3",
     "moment-timezone": "^0.5.33",
-    "plotly.js": "^2.6.4"
+    "plotly.js": "2.6.4"
   },
   "devDependencies": {
     "angular-mocks": "~1.4.5"
   },
   "resolutions": {
-    "d3": "~3.5.3"
+    "d3": "3.5.17"
   }
 }
