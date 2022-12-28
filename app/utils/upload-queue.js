@@ -13,85 +13,24 @@
  */
 var debug = require('debug')('arbimon2:upload-queue');
 var async = require('async');
-var q = require('q');
-var AWS = require('aws-sdk');
-
-var config       = require('../config');
 var model = require('../model');
-var Uploader = require('../utils/uploader');
-var tmpFileCache = require('../utils/tmpfilecache');
-var JobScheduler = require('../utils/job-scheduler');
-
-const lambda = new AWS.Lambda();
 const moment = require('moment-timezone');
 const fileHelper = require('../utils/file-helper')
 
-var scheduler = new JobScheduler({
-    fetch: function(queue){
-        return model.uploads.fetchRandomUploadItems(10).then(function(upload_items){
-            if(upload_items.length){
-                queue.push.apply(queue, upload_items.map(uploadFromUploadItemEntry));
-            }
-        });
-    },
-    process: function(upload){
-        var uploader = new Uploader();
-        return q.ninvoke(uploader, 'process', upload);
-    },
-    drain: function(){
-        console.log('done processing uploads on queue');
-    }
-});
-
-function uploadFromUploadItemEntry(upload_item){
-    if(upload_item.datetime){
-        var f = /^(.+?)(.[^.]+)?$/.exec(upload_item.filename);
-        if(!f){
-            return;
-        }
-        var ct = ((uploadFromUploadItemEntry.ct || 0) + 1) & 0xff;
-        uploadFromUploadItemEntry.ct = ct;
-        var upload = {
-            id: upload_item.id,
-            metadata: {
-                recorder: 'Unknown',
-                mic: 'Unknown',
-                sver: 'Unknown'
-            },
-            FFI: {
-                filename: f[1],
-                filetype: f[2],
-                datetime: upload_item.datetime
-            },
-            name: upload_item.filename,
-            path: tmpFileCache.key2File("upload-item/" + Date.now() + '/' + ct + '/' + upload_item.filename),
-            projectId: upload_item.project_id,
-            siteId: upload_item.site_id,
-            userId: upload_item.user_id
-        };
-        upload.tempFileUri = Uploader.computeTempAreaPath(upload);
-        return upload;
-    }
-}
 
 module.exports = {
     enqueue: function(upload, uploadsBody, idToken, cb) {
-        var upload_row;
+        var upload_row = {
+            filename: upload.name,
+            project_id: upload.projectId,
+            site_id: upload.siteId,
+            user_id: upload.userId,
+            state: 'initializing',
+            datetime: upload.FFI.datetime
+        }
         async.waterfall([
             function(callback) {
-                upload.tempFileUri = Uploader.computeTempAreaPath(upload);
-                upload_row = {
-                    filename: upload.name,
-                    project_id: upload.projectId,
-                    site_id: upload.siteId,
-                    user_id: upload.userId,
-                    state: 'initializing',
-                    metadata: upload.metadata,
-                    datetime: upload.FFI.datetime,
-                    channels: upload.info.channels,
-                    duration: upload.info.duration
-                };
-                model.sites.getSiteTimezone(upload_row.site_id, callback)
+                model.sites.getSiteTimezone(upload.siteId, callback)
             },
             function(timezone, callback) {
                 const isLocal = upload.timezone === 'local'

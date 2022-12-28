@@ -2,53 +2,47 @@
     @module utils/audiotool
 */
 
-var debug = require('debug')('arbimon2:audiotool');
 var childProcess = require('child_process');
-var path = require('path');
-var sprintf = require("sprintf-js").sprintf;
 
-/*
- * sox documentation http://sox.sourceforge.net/sox.html
- */
 
-var audiotools = {
-    /** Runs sox with the specified arguments, and returns the results in a callback.
+/** Runs sox with the specified arguments, and returns the results in a callback.
      * @method sox
      * @param {Array} args array of parameters to give to sox. (warning!! arguments are not escaped, passing unsecure arguments can lead to security problems.)
      * @param {Object} options options that modify the call.
      * @param {Boolean} options.stderr2stdout wether stderr output should be mixed with stdout ouput.
      * @param {Function} callback function to call when the sox is done, its arguments are (code, stdout_output, stderr_output).
      */
-    sox : function(args, options, callback){
-        console.log('running sox with ', args, options);
-        if(options instanceof Function) { callback = options; }
-        options = options || {};
+function sox(args, options, callback){
+    console.log('sox args:', args.join(', '));
+    if(options instanceof Function) { callback = options; }
+    options = options || {};
 
-        var cp = childProcess.spawn('sox', args);
-        var stdout = {value:""},
-            stderr = {value:""};
+    var cp = childProcess.spawn('sox', args);
+    var stdout = {value:""},
+        stderr = {value:""};
 
-        if(options.stderr2stdout) {
-            stderr = stdout;
-        }
-        cp.stderr.setEncoding('utf8');
-        cp.stderr.on('data', function(data) {
-            stderr.value += data;
-        });
-        cp.stdout.setEncoding('utf8');
-        cp.stdout.on('data', function(data) {
-            stdout.value += data;
-        });
+    if(options.stderr2stdout) {
+        stderr = stdout;
+    }
+    cp.stderr.setEncoding('utf8');
+    cp.stderr.on('data', function(data) {
+        stderr.value += data;
+    });
+    cp.stdout.setEncoding('utf8');
+    cp.stdout.on('data', function(data) {
+        stdout.value += data;
+    });
 
-        cp.on('close', function(code){
-            console.log('sox ended with code : ', code);
-            console.log('stdout ', stdout);
-            console.log('stderr ', stderr);
-            console.log('stdout : \n  >> ', stdout.value.replace(/\n/g, '\n  >> '));
-            console.log('stderr : \n  >> ', stderr.value.replace(/\n/g, '\n  >> '));
-            callback(code, stdout.value, stderr.value);
-        });
-    },
+    cp.on('close', function(code){
+        console.log('sox exit code:', code);
+        console.log('sox stdout:', stdout.value.replace(/\n/g, ' | '));
+        console.log('sox stderr:', stderr.value.replace(/\n/g, ' | '));
+        callback(code, stdout.value, stderr.value);
+    });
+}
+
+var audiotools = {
+
     /** Returns information about a given audio file
      * @method info
      * @param {String} source_path - audio file path
@@ -56,7 +50,7 @@ var audiotools = {
      */
     info: function(source_path, callback){
         var args = ['--info', source_path];
-        audiotools.sox(args, function(code, stdout, stderr){
+        sox(args, function(code, stdout, stderr){
             // TODO catch error if code !== 0 and verify usage across the app
             var lines = stdout.split('\n');
             var info = {};
@@ -153,7 +147,7 @@ var audiotools = {
             args.push('trim', +options.trim.from, +options.trim.duration);
         }
 
-        audiotools.sox(args, {}, callback);
+        sox(args, {}, callback);
     },
     /** Generates a spectrogram of a given audio file.
      * @method spectrogram
@@ -206,45 +200,7 @@ var audiotools = {
         }
         args.push('-lm');
         args.push('-o', destination_path);
-        audiotools.sox(args, {}, callback);
-    },
-
-    /** split a file longer than 1 minute into 1 minute files
-     * @method splitter
-     * @param {String} sourcePath path to the source audio file.
-     * @param {Number} duration of the recording in secon.
-     * @param {Function} callback (optional) set of options.
-     */
-    splitter: function(sourcePath, duration, callback) {
-        var rec = {};
-        rec.ext = path.extname(sourcePath);
-        rec.dir = path.dirname(sourcePath);
-        rec.filename = path.basename(sourcePath, rec.ext);
-
-        var splitCommand = sprintf('sox %(dir)s/%(filename)s%(ext)s %(dir)s/%(filename)s.p%%1n%(ext)s', rec);
-
-        var files = [];
-
-        // splits only if recording is longer than 1 min
-        if(duration < 61) return callback(new Error('File duration is not greater than 1 minute'), []);
-
-        var oneMinPieces = Math.floor(duration / 60);
-        var lastPieceLength = duration - (oneMinPieces * 60);
-
-        for(var i=0; i < oneMinPieces; i++) {
-            files.push(sprintf("%s/%s.p%d%s", rec.dir, rec.filename, i+1, rec.ext));
-            splitCommand += ' trim 0 60 : newfile :';
-        }
-        if (lastPieceLength > 0) {
-            files.push(sprintf("%s/%s.p%d%s", rec.dir, rec.filename, oneMinPieces+1, rec.ext));
-            splitCommand += ' trim 0 '+ lastPieceLength;
-        }
-
-        debug('splitter:', splitCommand);
-
-        var split = childProcess.exec(splitCommand, function(error, stdout, stderr) {
-            callback(error, files);
-        });
+        sox(args, {}, callback);
     }
 };
 

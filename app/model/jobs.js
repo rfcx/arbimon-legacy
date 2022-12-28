@@ -488,6 +488,14 @@ var Jobs = {
         return dbpool.query(q).get(0).get('count')
     },
 
+    countAnalysesExecuted: async function() {
+        const q = `SELECT SUM(p.total_recordings) AS count FROM pattern_matchings pm
+            JOIN playlists p ON pm.playlist_id = p.playlist_id
+            JOIN jobs j ON pm.job_id = j.job_id
+            WHERE j.state='completed'`
+        return dbpool.query(q).get(0).get('count')
+    },
+
     /** Computes a summary of the current jobs status, by job type.
     * @param {Function} callback called back current jobs status, by job type.
     */

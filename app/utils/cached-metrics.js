@@ -8,7 +8,7 @@ const getCountForSelectedMetric = async function(key, params) {
             count = await model.projects.countAllProjects()
             break;
         case 'job-count':
-            count = await model.jobs.countAllCompletedJobs()
+            count = await model.jobs.countAnalysesExecuted()
             break;
         case 'species-count':
             count = await model.recordings.countAllSpecies()
@@ -23,7 +23,7 @@ const getCountForSelectedMetric = async function(key, params) {
             count = await model.projects.totalRecordings(params)
             break;
     }
-    return count
+    return count || 0
 }
 
 const getRandomMin = function(max, min) {

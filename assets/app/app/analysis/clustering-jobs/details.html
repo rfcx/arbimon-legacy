@@ -5,7 +5,7 @@
                 Job Name: {{ job_details.name }}
                 <br>User: {{ job_details.user }}
                 <br>Date: {{ job_details.timestamp | moment : 'lll' }}
-                <br>Number of audio event detected: {{ aedsDetected() }}
+                <br>Number of audio event clustered: {{ aedsDetected() }}
                 <br>Number of clusters detected: {{ clustersDetected() }}
             </div>
             <div class="col-sm-6 row-flex flex-space-end panel-body pr-0 pb-0">

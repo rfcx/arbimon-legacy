@@ -73,7 +73,7 @@ var OAuth = {
             },
 
             validate: function(token){
-                if(token && /(https:\/\/)?accounts.google.com/.test(token.iss) && token.aud == config('google-api').oauthId){
+                if(token && /(https:\/\/)?accounts.google.com/.test(token.iss) && token.aud == config('google_api').oauthId){
                     return q(this.token2NormalizedCredentials(token));
                 }
                 return q.reject(new Error("Invalid oauth token."));
@@ -93,10 +93,10 @@ var OAuth = {
         facebook : {
             GRAPH_API_URL : "https://graph.facebook.com/",
             getAccessToken: function(token){
-                return q(config('facebook-api').public.appId + '|' + config('facebook-api').secret);
+                return q(config('facebook_api').public.appId + '|' + config('facebook_api').secret);
             },
             getSecretProof: function(access_token){
-                var hmac = crypto.createHmac('sha256', config('facebook-api').secret);
+                var hmac = crypto.createHmac('sha256', config('facebook_api').secret);
                 hmac.setEncoding('hex');
                 hmac.write(access_token);
                 hmac.end();
@@ -122,7 +122,7 @@ var OAuth = {
                 }).bind(this)).then(function(args) {
                     var data = args[1] && args[1].data;
                     if(data &&
-                        data.app_id == config('facebook-api').public.appId &&
+                        data.app_id == config('facebook_api').public.appId &&
                         data.expires_at * 1000 > new Date().getTime() &&
                         data.is_valid &&
                         data.scopes && data.scopes.indexOf('email') !=-1 && data.scopes.indexOf('public_profile') !=-1

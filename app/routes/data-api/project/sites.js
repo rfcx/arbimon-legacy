@@ -26,7 +26,7 @@ router.post('/create', function(req, res, next) {
     var project = req.project;
     var site = req.body.site;
 
-    if(!req.haveAccess(req.project.project_id, "manage project sites")) {
+    if(!req.haveAccess(project.project_id, "manage project sites")) {
         return res.json({ error: "you dont have permission to 'manage project sites'" });
     }
 
@@ -41,28 +41,13 @@ router.post('/create', function(req, res, next) {
         try {
             await model.sites.createSiteInArbimonAndCoreAPI(site, project, req.session.idToken);
             res.json({ message: "New site created" });
+            model.projects.updateProjectLocation(project.project_id, site.lat, site.lon)
         }
         catch(e) {
             return next(err);
         }
     });
 });
-
-// router.post('/import', function(req, res, next) {
-//     var project = req.project;
-//     var site = req.body.site;
-//
-//     if(!req.haveAccess(project.project_id, "manage project sites")) {
-//         return res.json({ error: "you dont have permission to 'manage project sites'" });
-//     }
-//
-//     model.sites.importSiteToProject(site.id, project.project_id, function(err, rows) {
-//         if(err) return next(err);
-//
-//         debug(rows);
-//         res.json({ msg: "site imported", success: true });
-//     });
-// });
 
 router.post('/update', function(req, res, next) {
     res.type('json');
@@ -81,6 +66,7 @@ router.post('/update', function(req, res, next) {
 
     model.sites.updateSite(site, req.session.idToken).then(function() {
         res.json({ message: 'Site updated' });
+        model.projects.updateProjectLocation(project.project_id, site.lat, site.lon)
     }).catch(next);
 });
 

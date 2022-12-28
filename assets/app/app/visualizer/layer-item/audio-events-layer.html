@@ -4,16 +4,13 @@
         Audio Events
     </h5>
     <div ng-show="layer.is_open">
-        <div ng-if="!layer.audio_events.audioEvents || !layer.audio_events.clusteringEvents" class="row ng-cloak text-center py-2">
-            <i class="fa fa-spinner fa-spin" style="font-size: 16px;"></i>
-        </div>
-        <div ng-if="layer.audio_events.audioEvents && !layer.audio_events.audioEvents.length && layer.audio_events.clusteringEvents && !layer.audio_events.clusteringEvents.length">
-            There are no audio events in this recording.
-        </div>
-        <div ng-if="layer.audio_events.audioEvents && layer.audio_events.clusteringEvents">
-            <div ng-if="layer.audio_events.audioEvents && layer.audio_events.audioEvents.length">
+        <div ng-if="layer.audio_events.audioEvents || layer.audio_events.clusteringEvents">
+            <div>
                 <strong>Detection Jobs</strong>
-                <ul class="ulnodeco px-2">
+                <div ng-if="!layer.audio_events.audioEvents" class="row ng-cloak text-center py-2">
+                    <i class="fa fa-spinner fa-spin" style="font-size: 16px;"></i>
+                </div>
+                <ul ng-if="layer.audio_events.audioEvents && layer.audio_events.audioEvents.length" class="ulnodeco px-2">
                     <li ng-repeat="job in layer.audio_events.audioEventJobs" class="my-3">
                         <div class="row-flex flex-direction-row no-text-wrap" style="position: relative">
                             <span class="hidelongtext" style="width: 90%;" title="{{ row.name }}">
@@ -27,10 +24,16 @@
                         <div class="mt-1 item-description" style="width: 90%;">{{ job.parameters | asCSV }}</div>
                     </li>
                 </ul>
+                <div ng-if="layer.audio_events.audioEvents && !layer.audio_events.audioEvents.length">
+                    There are no audio events in this recording.
+                </div>
             </div>
-            <div ng-if="layer.audio_events.clusteringEvents && layer.audio_events.clusteringEvents.length">
+            <div class="pt-2">
                 <strong>Cluster Playlists</strong>
-                <ul class="ulnodeco px-2">
+                <div ng-if="!layer.audio_events.clusteringEvents" class="row ng-cloak text-center py-2">
+                    <i class="fa fa-spinner fa-spin" style="font-size: 16px;"></i>
+                </div>
+                <ul ng-if="layer.audio_events.clusteringEvents && layer.audio_events.clusteringEvents.length" class="ulnodeco px-2">
                     <li ng-repeat="row in layer.audio_events.clusterPlaylists" class="my-3" style="display: flex; flex-direction: row; justify-content: flex-start; align-items: baseline; position: relative; white-space: nowrap;">
                         <span class="hidelongtext" style="width: 90%;" title="{{ row.playlist_name }}">
                             {{ row.playlist_name }}
@@ -41,6 +44,9 @@
                         </button>
                     </li>
                 </ul>
+                <div ng-if="layer.audio_events.clusteringEvents && !layer.audio_events.clusteringEvents.length">
+                    There are no related clustering playlists to this recording.
+                </div>
             </div>
         </div>
     </div>

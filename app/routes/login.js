@@ -30,7 +30,7 @@ var mailTemplates = {
 };
 
 const mandrill = require('mandrill-api/mandrill');
-const mandrill_client = new mandrill.Mandrill(config('mandrill-key').key)
+const mandrill_client = new mandrill.Mandrill(config('mandrill_key').key)
 
 router.use(function create_anonymous_guest_if_not_logged_in(req, res, next){
     if(req.session && !req.session.loggedIn && (!req.session.isAnonymousGuest || !req.session.user)){
@@ -46,6 +46,7 @@ router.use(function create_anonymous_guest_if_not_logged_in(req, res, next){
             lastname: 'Guest',
             isAnonymousGuest: true,
             isSuper: 0,
+            isRfcx: 0,
             imageUrl: gravatar.url(dummyEmail, { d: 'monsterid', s: 60 }, req.secure),
             projectLimit: 0
         };

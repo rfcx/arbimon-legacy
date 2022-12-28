@@ -13,8 +13,10 @@
         </div>
         <div class="form-group">
             <label>Playlist:</label>
-            <span ng-hide="controller.playlists.length" value="-1" class="red">
-                <em>No playlists found. <a ng-click="cancel('/audiodata/playlists') | trackEvent:'Analysis-New-AED':'cancel goto playlists'">Create one.</a></em>
+            <span class="ml-2" ng-if="controller.playlists && !controller.playlists.length">
+                <a class="cs-pointer red" ng-click="controller.cancel('/audiodata/recordings')">
+                    Create a new playlist
+                </a>
             </span>
             <ui-select name="playlist" ng-model="controller.aed.playlist" theme="bootstrap" ng-required="true"
                 ng-change="controller.recomputeDefaultName()"

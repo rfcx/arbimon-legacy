@@ -9,8 +9,8 @@ var cardResolver = require('../utils/card-resolver')(cardStack);
 const auth0Service = require('../model/auth0')
 
 var injected_data = {
-    facebook_api: config('facebook-api').public,
-    googleAPI : config('google-api')
+    facebook_api: config('facebook_api').public,
+    googleAPI : config('google_api')
 };
 
 // discards rest of path
@@ -131,7 +131,7 @@ router.get('/:projecturl?/', function(req, res, next) {
                         res.render('citizen-scientist', {
                             env : req.app.get('env'),
                             project: req.project,
-                            url_base: req.originalUrl + (/\//.test(req.originalUrl) ? '' : '/'),
+                            url_base: req.originalUrl + (/\/$/.test(req.originalUrl) ? '' : '/'),
                             user: req.session.user,
                             // a2GoogleMapsLoader
                             inject_data : injected_data,

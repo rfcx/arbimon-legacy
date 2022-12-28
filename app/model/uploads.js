@@ -20,14 +20,7 @@ module.exports = {
             site_id: Joi.number().required(),
             user_id: Joi.number().required(),
             state: Joi.string().required(),
-            duration: Joi.number().required(),
-            metadata: Joi.object().required().keys({
-                recorder: Joi.string().required(),
-                mic: Joi.string().required(),
-                sver: Joi.string().required()
-            }),
-            datetime: Joi.date().required(),
-            channels: Joi.number().required()
+            datetime: Joi.date().required()
         };
         Joi.validate(uploadData, schema, function(err, upload) {
             if(err){
@@ -44,10 +37,6 @@ module.exports = {
                 project_id: upload.project_id,
                 state: upload.state,
                 datetime: upload.datetime,
-                recorder: upload.metadata.recorder,
-                mic: upload.metadata.mic,
-                software: upload.metadata.sver,
-                duration: upload.duration
             });
             queryHandler(q, callback);
         });
@@ -103,7 +92,7 @@ module.exports = {
 
     fetchRandomUploadItems: function(count){
         return q.denodeify(queryHandler)(
-            "SELECT upload_id as id, project_id, site_id, user_id, upload_time, filename, state, duration, datetime, recorder, mic, software\n" +
+            "SELECT upload_id as id, project_id, site_id, user_id, upload_time, filename, state, datetime\n" +
             "FROM uploads_processing\n" +
             "WHERE state='waiting'\n" +
             "ORDER BY RAND()\n" +

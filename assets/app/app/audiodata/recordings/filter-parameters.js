@@ -15,8 +15,7 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
             minDate : '=',
             recTotal: '=',
             isLoading: '=',
-            onApplyFilters : '&',
-            onCreatePlaylist : '&',
+            onApplyFilters : '&'
         },
         controller:'recordingFilterParametersController as controller',
         requires:'^RecsCtrl',
@@ -30,9 +29,6 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
                 controller.params = {};
                 scope.onApplyFilters({filters: controller.getFilters()});
             };
-            scope.createPlaylist = function() {
-                scope.onCreatePlaylist({filters: controller.getFilters()});
-            };
 
             controller.fetchOptions();
         }
@@ -44,7 +40,7 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
     a2SoundscapeCompositionService,
     a2Playlists,
     $q,
-    $http, $modal, notify, a2UserPermit, a2Tags,
+    a2Tags,
     $window
 ) {
     var staticMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map(function (mon, ind) {

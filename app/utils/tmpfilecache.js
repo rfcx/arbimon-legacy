@@ -12,6 +12,11 @@ var Q = require('q');
 var config = require('../config');
 var sha256 = require('./sha256');
 
+var root = path.resolve(config("tmpfilecache").path);
+if (!fs.existsSync(root)) {
+    fs.mkdirSync(root);
+}
+
 var filesProcessing = {};
 
 // files that misses after fetch
@@ -58,7 +63,6 @@ var cache = {
     },
 
     key2File: function(key){
-        var root = path.resolve(config("tmpfilecache").path);
         return path.join(root, this.hash_key(key));
     },
 
@@ -124,8 +128,6 @@ var cache = {
 
     cleanup: function(){
         debug('Cleaning up tmpcache.');
-        var root = path.resolve(config("tmpfilecache").path);
-
         fs.readdir(root, function(err, files){
             if(err) return console.error(err.stack);
             async.each(files, function(subfile, next){

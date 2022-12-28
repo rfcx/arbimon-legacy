@@ -1,7 +1,7 @@
 const config = require('../config');
 const jsonwebtoken = require('jsonwebtoken');
 const auth0Config = config('auth0');
-const auth0BackendConfig = config('auth0-backend');
+const auth0BackendConfig = config('auth0_backend');
 const request = require('request');
 const { promisify } = require('util');
 const rp = promisify(request);
@@ -45,10 +45,10 @@ let tokenData;
 
 async function getToken () {
   if (!tokenData || !isTokenValid()) {
-    await createToken();
+    await createToken().catch(() => {});
   }
   if (!tokenData || !tokenData.token) {
-    throw new Error('Can not get authentication token')
+    throw new Error('Cannot get authentication token')
   }
   return tokenData.token;
 }

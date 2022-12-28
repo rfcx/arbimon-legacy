@@ -441,6 +441,32 @@ var Projects = {
         }).nodeify(callback);
     },
 
+    updateProjectLocation: async function(projectId, lat, lon) {
+        if (!projectId || !lat || !lon) return
+        const config = {
+            method: 'get',
+            url: `https://api.geoapify.com/v1/geocode/reverse?lat=${lat}&lon=${lon}&apiKey=5a8e8fdff1f44dbda20ca67b4e99362b`,
+            headers: { }
+        };
+        console.log('config', config)
+        return rp(config).then((response) => {
+            try {
+                const body = JSON.parse(response.body);
+                console.log('body.features[0].properties', body.features[0].properties)
+                if (body && body.error) {
+                    throw new Error('Failed to update project location');
+                }
+                const props = body.features[0].properties
+                if (!props.country || !props.state) return
+                const q = `UPDATE projects SET country = '${props.country}', state = '${props.state}' WHERE project_id=${projectId}`;
+                console.log(q)
+                return dbpool.query(q);
+            } catch (e) {
+                throw new Error('Failed to update project location');
+            }
+        })
+    },
+
     insertNews: function(news, callback) {
 
         var schema = {
