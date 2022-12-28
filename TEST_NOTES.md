@@ -1,6 +1,13 @@
 # Arbimon Test Notes
 Test Notes are used to list what pages / components / features / user flows are affected by each update.
 
+## v3.0.68
+- Remove stream segment and the file from s3 side when deleting core recordings
+  - The user uploads new recordings to stream. The user remove these recordings from the Arbimon: Recordings page. The user can upload the same recordings again.
+  - The user uploads new recordings to stream. The user makes any recording validations on the Visualizer page. The user remove these recordings from the Arbimon: Recordings page. The user can upload the same recordings again.
+  - We can not remove the recordings which are used in the analysis jobs.
+  - Please check the same test case for the tags.
+
 ## v3.0.67
 
 - Remove some logic from upload process

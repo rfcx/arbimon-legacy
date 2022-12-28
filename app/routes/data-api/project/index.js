@@ -281,7 +281,7 @@ async function removeClasses(req, res, next) {
                 songtypeId: cl.songtype
             }
         })
-        await model.recordings.resetRecordingValidation(projectId, speciesAndSongtypeIds)
+        await model.recordings.resetRecValidationBySpeciesAndSongtype(projectId, speciesAndSongtypeIds)
     }
 
 }
