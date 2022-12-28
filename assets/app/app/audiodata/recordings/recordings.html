@@ -18,7 +18,16 @@
             </div>
         </div>
 
-        <div class="btn-group padding-leftx2" dropdown dropdown-append-to-body="true" a2-auto-close-on-outside-click>
+        <div class="btn-group padding-left">
+            <button class="btn btn-default"
+                ng-click="controller.createPlaylist() | trackEvent:'Audiodata-Recordings':'createPlaylist'"
+                tooltip="Save filtered results as playlist"
+                tooltip-trigger="mouseenter" ng-disabled="loading">
+                <i class="fa fa-list-alt"></i> Save to Playlist
+            </button>
+        </div>
+
+        <div class="btn-group padding-left" dropdown dropdown-append-to-body="true" a2-auto-close-on-outside-click>
             <button class="btn btn-default" dropdown-toggle ng-disabled="loading">
                 <i class="fa fa-trash"></i> Delete <i class="fa fa-caret-down"></i></button>
             </button>
@@ -49,7 +58,7 @@
 </div>
 <div class="row">
     <div class="col-sm-12">
-        <a2-table rows="recs" data-checked="checked" ext-sort="controller.sortRecs(sortBy, reverse)" default-sort="site">
+        <a2-table rows="recs" data-checked="checked" on-check="selectRec(row)" ext-sort="controller.sortRecs(sortBy, reverse)" default-sort="site">
             <field title="Site" key="site" tdclass="hidelongtext widthtd">
                 <span title="{{ row.site }}">{{ row.site }}</span>
             </field>

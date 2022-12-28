@@ -736,7 +736,6 @@ angular.module('a2.analysis.soundscapes', [
 
         $scope.indices.push({
             time: "TIME",
-            H: "H",
             ACI: "ACI",
             NP: "NP",
         });
@@ -746,7 +745,6 @@ angular.module('a2.analysis.soundscapes', [
 
             $scope.indices.push({
                 time: t,
-                H: result.H[i],
                 ACI: result.ACI[i],
                 NP: result.NP[i],
             });

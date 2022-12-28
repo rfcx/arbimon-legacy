@@ -1,10 +1,62 @@
 # Arbimon Release Notes
 
-## v3.0.66 - November 21, 2022
+## v3.0.68 - December 27, 2022
+
+New features:
+
+- Make the private templates available to rfcx users
+
+Resolved issues:
+
+- Delete recording validation after removing the PM job
 
 Performance improvements:
 
 - rfcx/engineering-support#1098 Remove stream segment and the file from s3 side when deleting core recordings
+
+## v3.0.67 - December 22, 2022
+
+New features:
+
+- Add species name and songtype column associated with the template on the PM list page
+- Show user email in project settings
+- Remove jobs count from nav
+- Hide upload recommend box on drag
+- Change wording on the Grid View page
+- Add ability to select recordings on different pages
+- Create a playlist with selected recordings
+- External users can run AED jobs of up to 1000 recordings
+
+Resolved issues:
+
+- Open new tab from Arbimon tabs appear error page
+
+Performance improvements:
+
+- Move Arbimon web frontend to Kubernetes
+- Improve docker build caching
+- Refactor sox usage, make sox function private
+
+## v3.0.66 - November 22, 2022
+
+New features:
+
+- Add support links to AED/Clustering pages
+- Show create button for the empty playlists list
+- Move the playlist button to the Recordings page
+- UI updates for an empty scatter plot
+- Display the count of detected AEDs on the Audio Event Detection page
+- Change homepage “analyses executed” stats from jobs to recordings
+
+Resolved issues:
+
+- Remove h-index from soundscape details
+- User should not be able to create PM with an empty playlist
+- Show the user’s first name, last name, and email when deleting the user from any project
+
+Performance improvements:
+
+- Update project country and state
 
 ## v3.0.65 - November 09, 2022
 

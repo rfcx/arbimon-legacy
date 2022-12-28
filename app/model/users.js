@@ -642,6 +642,7 @@ var Users = {
             username: user.login,
             imageUrl: profile.picture,
             isSuper: user.is_super,
+            isRfcx: user.email.includes('rfcx.org')
         };
         if(options.all){
             userObj.isAnonymousGuest = false;

@@ -4,12 +4,12 @@ services:
     image: "arbimon"
     ports:
       - "3000:3000"
-      - "3001:3001"
     volumes:
       - $PWD:/app
     environment:
       - NODE_ENV=development
       - DB_HOST=mysql
+      - DB_DATABASE=arbimon2
       - DB_USER=admin
       - DB_PASSWORD=admin-secret
     command: ["./node_modules/.bin/gulp", "watch"]

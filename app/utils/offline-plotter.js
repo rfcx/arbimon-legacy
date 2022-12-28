@@ -1,4 +1,8 @@
-var phantom = require('phantom');
+// TODO: Remove
+// This file is only used by audio-event-detections.js, which hasn't been supported for a long time
+
+// var phantom = require('phantom');
+var phantom = { create: function() { return Promise.reject('Support removed') } };
 var path  = require('path');
 var paths = {
     phantom : path.resolve(__dirname, '..', '..', 'phantom'),
@@ -6,6 +10,7 @@ var paths = {
     assets  : path.resolve(__dirname, '..', '..', 'assets'),
 };
 
+// The /phantom folder was removed
 paths.plot_html = path.join(paths.phantom, 'plot.html');
 paths.shim_js   = path.join(paths.phantom, 'shim.js');
 paths.plotly_js = path.join(paths.public, 'assets', 'plotly.js', 'plotly.js');

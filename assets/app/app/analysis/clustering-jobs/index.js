@@ -37,13 +37,13 @@ angular.module('a2.analysis.clustering-jobs', [
     $scope.showViewGridPage = false;
     $scope.loadClusteringJobs = function() {
         $scope.loading = true;
+        $scope.showRefreshBtn = false;
         return a2ClusteringJobs.list({completed: true}).then(function(data) {
             $scope.clusteringJobsOriginal = data;
             $scope.clusteringJobsData = data;
             $scope.loading = false;
-            $scope.infopanedata = '';
-            if (data && !data.length) {
-                $scope.infopanedata = 'No clustering jobs found.';
+            if (data && data.length) {
+                $scope.showRefreshBtn = true;
             }
         });
     };
@@ -77,6 +77,7 @@ angular.module('a2.analysis.clustering-jobs', [
             data = result;
             if (data.create) {
                 JobsData.updateJobs();
+                $scope.showRefreshBtn = true;
                 notify.log("Your new clustering job is waiting to start processing.<br> Check its status on <b>Jobs</b>.");
             } else if (data.error) {
                 notify.error("Error: "+data.error);

@@ -13,14 +13,13 @@ var q = require('q');
 var config       = require('../config');
 var APIError = require('../utils/apierror');
 var tmpfilecache = require('../utils/tmpfilecache');
-var audioTools   = require('../utils/audiotool');
 var sqlutil      = require('../utils/sqlutil');
 var SQLBuilder   = require('../utils/sqlbuilder');
 var dbpool       = require('../utils/dbpool');
 var Recordings   = require('./recordings');
 var Projects     = require('./projects');
 var Templates     = require('./templates');
-
+const models = require("./index");
 // local variables
 var s3;
 var lambda = new AWS.Lambda();
@@ -75,7 +74,7 @@ var PatternMatchings = {
         }
 
         if (options.q) {
-            constraints.push("(PM.name LIKE '%" + options.q + "%' OR T.name LIKE '%" + options.q + "%')");
+            constraints.push(`(PM.name LIKE '%${options.q}%' OR T.name LIKE '%${options.q}%' OR Sp.scientific_name LIKE '%${options.q}%' OR St.songtype LIKE '%${options.q}%')`);
             tables.push("JOIN templates T ON T.template_id = PM.template_id");
         }
 
@@ -119,7 +118,7 @@ var PatternMatchings = {
                     (_[row.template_id] || (_[row.template_id] = [])).push(row);
                     return _;
                 }, {});
-                return Templates.find({idIn: Object.keys(idmap), sourceProjectUri: true}).then(templates => {
+                return Templates.find({idIn: Object.keys(idmap), sourceProjectUri: true, showSpecies: true}).then(templates => {
                     templates.forEach((template) => idmap[template.id].forEach(row => row.template = template));
                     return rows;
                 });
@@ -137,8 +136,8 @@ var PatternMatchings = {
         }
 
         if(options.showSpecies){
-            tables.push('JOIN species Sp ON PM.species_id = Sp.species_id');
-            tables.push('JOIN songtypes St ON PM.songtype_id = St.songtype_id');
+            tables.push('JOIN species Sp ON Sp.species_id = PM.species_id');
+            tables.push('JOIN songtypes St ON St.songtype_id = PM.songtype_id');
             select.push('Sp.scientific_name as species_name', 'St.songtype as songtype_name');
         }
 
@@ -214,8 +213,10 @@ var PatternMatchings = {
     findWithPagination: async function (options) {
         const count = options.q ? await PatternMatchings.totalPatternMatchings(
             options.project,
-            `JOIN templates T ON T.template_id = PM.template_id \n`,
-            ` AND (PM.name LIKE '%${options.q}%' OR T.name LIKE '%${options.q}%')`
+            `JOIN templates T ON T.template_id = PM.template_id
+            JOIN species Sp ON Sp.species_id = PM.species_id
+            JOIN songtypes St ON St.songtype_id = PM.songtype_id`,
+            ` AND (PM.name LIKE '%${options.q}%' OR T.name LIKE '%${options.q}%' OR Sp.scientific_name LIKE '%${options.q}%' OR St.songtype LIKE '%${options.q}%')`
         ) : await PatternMatchings.totalPatternMatchings(options.project);
         if (count) {
             const list =  await PatternMatchings.find(options);
@@ -505,6 +506,26 @@ var PatternMatchings = {
         return dbpool.query(
             "UPDATE pattern_matchings SET deleted=1, playlist_id=NULL, citizen_scientist=0, cs_expert=0 WHERE pattern_matching_id = ?", [patternMatchingId]
         );
+    },
+
+    getPresentRois: function (patternMatchingId) {
+        const q = `SELECT pattern_matching_roi_id as id, pattern_matching_id, recording_id, species_id, songtype_id, validated
+        FROM pattern_matching_rois
+        WHERE pattern_matching_id = ${patternMatchingId} AND validated = 1;`
+        return dbpool.query(q)
+    },
+
+    unvalidateRois: async function (patternMatchingId, userId, projectId) {
+        const rois = await PatternMatchings.getPresentRois(patternMatchingId)
+        const ids = rois.map(roi => { return roi.id })
+        PatternMatchings.validateRois(patternMatchingId, ids, null)
+            .then(async function(validatedRois) {
+                for (let roi of rois) {
+                    const previousValidation = roi.validated;
+                    await models.recordings.validate({id: roi.recording_id}, userId, projectId,
+                        { class: `${roi.species_id}-${roi.songtype_id}`, val: null, oldVal: previousValidation, review: true})
+                }
+            })
     },
 
     __parse_meta_data : function(data) {

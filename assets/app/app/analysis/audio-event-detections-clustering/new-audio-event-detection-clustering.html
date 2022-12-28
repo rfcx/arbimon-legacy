@@ -8,27 +8,35 @@
             <input id="modelName" class="form-control" ng-model="controller.data.name" type="text"/>
         </div>
         <div class="form-group">
-            <label for="playlist">Playlist</label>
-            <span ng-hide="controller.loading.playlists || controller.list.playlists.length">
-                <em>No playlists found.
-                    <a ng-click="controller.cancel('/audiodata/playlists') | trackEvent:'Analysis-Audio-Event-Detection-new audio event detection clustering model':'Cancel-Go to playlists'">
-                        Create one.
-                    </a>
-                </em>
+            <label>Playlist</label>
+            <span class="ml-2 smaller flex flex-row flex-align-middle" ng-if="!controller.isRfcxUser && !controller.isSuper && controller.list.playlists && controller.list.playlists.length">
+                Max 1000 recordings
             </span>
-            <ui-select ng-disabled="disabled" ng-model="controller.data.playlist" theme="/common/templates/a2-ui-select">
+            <div class="ml-3 flex flex-row flex-align-middle" ng-if="controller.list.playlists && !controller.list.playlists.length">
+                <em class="pr-2">No playlists found.</em>
+                Go to
+                <button class="btn btn-sm btn-default" ng-click="controller.cancel('/audiodata/recordings')">
+                    Recordings
+                </button>
+                and create a playlist.
+            </div>
+            <ui-select ng-disabled="disabled" ng-if="controller.list.playlists && controller.list.playlists.length" ng-model="controller.data.playlist" theme="/common/templates/a2-ui-select">
                 <ui-select-match placeholder="Select or search a playlist...">
                     {{$select.selected.name}}
                 </ui-select-match>
-                <ui-select-choices repeat="playlist in controller.list.playlists | filter: $select.search">
-                    {{playlist.name}}
-                    <span class="pull-right">
-                        <small>
-                            <em>
-                                <strong >Count:</strong>({{playlist.count}})
-                            </em>
-                        </small>
-                    </span>
+                <ui-select-choices repeat="playlist in controller.list.playlists | filter: $select.search" ui-disable-choice="playlist.count > 1000 && !controller.isRfcxUser && !controller.isSuper">
+                    <div
+                        ng-class="{'row-disabled': playlist.count > 1000 && !controller.isRfcxUser && !controller.isSuper }"
+                    >
+                        {{playlist.name}}
+                        <span class="pull-right">
+                            <small>
+                                <em>
+                                    <strong >Count:</strong>({{playlist.count}})
+                                </em>
+                            </small>
+                        </span>
+                    </div>
                 </ui-select-choices>
             </ui-select>
         </div>

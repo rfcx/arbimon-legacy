@@ -23,6 +23,7 @@
             <input type="checkbox"
                 ng-model="row.checked"
                 ng-click="a2TableController.check($event, $index)"
+                ng-change="a2TableController.onCheck(row, $index, $event)"
                 stop-click
                 class="cs-pointer">
         </td>

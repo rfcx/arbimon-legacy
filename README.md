@@ -11,14 +11,16 @@ The recommended dev setup is to use docker-compose to create your web and databa
 1. Build the docker image
 
    ```sh
-   docker build -t arbimon .
+   docker build -t arbimon --target=arbimon -f build/Dockerfile .
    ```
+
+   Note: on Apple silicon, you might need `docker buildx build --platform linux/amd64 -t arbimon --target=arbimon -f build/Dockerfile .`.
 
 2. Run the containers (web and database)
 
-   ```sh
-   docker-compose up
-   ```
+    ```sh
+    docker compose up
+    ```
 
    (To stop the server, press Ctrl-C.)
 
@@ -100,7 +102,7 @@ If you use Windows it's recommended to use WSL (Windows Subsystem for Linux) [ht
 
 ### Kubernetes
 
-The yaml configuration files are in `scripts/k8s`.
+The yaml configuration files are in `build/[environment]`.
 
 _TODO: How do services get deployed? How do we change configuration? How do we manually deploy to testing namespace?_
 
@@ -108,47 +110,74 @@ _TODO: How do services get deployed? How do we change configuration? How do we m
 ### Deployment to staging or production on AWS (sieve-analytics account)
 
 1. SSH into the Bastion tunnel server
-    - `ssh ec2-user@54.159.71.198 -i ~/.ssh/arbimon2-bastion.pem`
+    ```sh
+    ssh ec2-user@54.159.71.198 -i ~/.ssh/arbimon2-bastion.pem
+    ```
 2. From inside the Bastion server, SSH into dev/prod server
-    - `ssh-web-dev` for arbimon-dev.sieve-analytics.com
+    ```sh
+    ssh-web-dev
+    ```
+    for arbimon-dev.sieve-analytics.com
     - `ssh -i ~/.ssh/arbimon2-app.pem ubuntu@{{Private IPv4 addresses}}` for arbimon.sieve-analytics.com. Copy IPv4 address from web instance on this [page](https://us-east-1.console.aws.amazon.com/ec2/v2/home?region=us-east-1#Instances:)
     - Both these connections are defined in the `.bashrc` file and rely on the same `.ssh/arbimon2-app.pem` key.
 3. Change to app directory
-    - `cd apps/arbimon2`
+   ```sh
+   cd apps/arbimon2
+   ```
 4. Pull the latest changes from git
-    - `git fetch -p`
-    - `git pull origin develop/master`
-4. Perform any dependency installs and rebuild the source code (same as local install)
-    - `npm i` and `bower i`
-    - `npm run build` to build css
-5. Restart the web server/app
-    - `pm2 restart 0 --time` to perform restart
-    - `pm2 list` to check that the arbimon2 process is running
+    ```sh
+    git fetch -p
+    ```
+
+    ```sh
+    git pull origin develop/master
+    ```
+5. Perform any dependency installs and rebuild the source code (same as local install)
+    ```sh
+    npm i
+    ```
+    and
+    ```sh
+    bower i
+    ```
+    Build css
+    ```sh
+    npm run build
+    ```
+6. Restart the web server/app
+   Perform restart
+    ```sh
+    pm2 restart 0 --time
+    ```
+    Check that the arbimon2 process is running
+    ```sh
+    pm2 list
+    ```
 
 Additional steps for production (to support auto-scaling of the frontend)
 
-6. In the EC2 console, create an image of the current `web` instance.
+7. In the EC2 console, create an image of the current `web` instance.
     - Name: arbimon-web-2020-09-09
     - No reboot: true
 
     ![production-deployment-1](https://user-images.githubusercontent.com/1175362/92625187-8c6a3700-f2f2-11ea-869e-bc39b7c502a6.png)
 
-7. After the image is created, open "Auto scaling" -> "Launch configurations". Find the last launch configuration and make a copy ("Actions" -> "Copy launch configuration").
+8. After the image is created, open "Auto scaling" -> "Launch configurations". Find the last launch configuration and make a copy ("Actions" -> "Copy launch configuration").
 
     ![production-deployment-2](https://user-images.githubusercontent.com/1175362/92625432-d3582c80-f2f2-11ea-97ca-09f235a74183.png)
 
-8. Choose the AMI that was created in step 6 and create the launch configuration.
+9. Choose the AMI that was created in step 6 and create the launch configuration.
     - Name: arbimon-web-2020-09-09
     - AMI: arbimon-web-2020-09-09
     - Select: "I acknowledge that I have access to the selected private key..."
     - (everything else the same)
 
-9. Open "Auto scaling groups", and edit the `arbimon` group. Select the newly created launch configuration and then "Update".
+10. Open "Auto scaling groups", and edit the `arbimon` group. Select the newly created launch configuration and then "Update".
     - Launch configuration: arbimon-web-2020-09-09
 
     ![production-deployment-3](https://user-images.githubusercontent.com/1175362/92625454-db17d100-f2f2-11ea-8089-8e85e9c999f9.png)
 
-10. If there were more than 1 EC2 instances before deployment, terminate rest instances (but not the one that was used for image creation).
+11.  If there were more than 1 EC2 instances before deployment, terminate rest instances (but not the one that was used for image creation).
     ![production-deployment-4](https://user-images.githubusercontent.com/2122991/96923854-84d5aa80-14ba-11eb-996d-97cb6cb9a604.png)
 
 
@@ -190,7 +219,7 @@ The seed files in `scripts/db` are separated into reference data, species data a
 
 ### Python
 
-Some parts of the Node.js app call Python. For this to work locally, you will need Python 2.7 and to (pip) install the dependencies from requirements.txt. The following script might be useful, or `scripts/setup/010-make_virtual_env.sh`. _TODO: complete the docs_
+Some parts of the Node.js app call Python. For this to work locally, you will need Python 2.7 and to (pip) install the dependencies from requirements.txt. The following script might be useful. _TODO: complete the docs_
 
 ```sh
     cd ~/apps/arbimon2

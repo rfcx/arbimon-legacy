@@ -16,6 +16,7 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
 .controller('AudioEventDetectionsClusteringModelCtrl' , function($scope, $modal, $location, JobsData, notify, a2AudioEventDetectionsClustering, Project, $localStorage, $window, a2UserPermit) {
     $scope.loadAudioEventDetections = function() {
         $scope.loading = true;
+        $scope.showRefreshBtn = false;
         $scope.projectUrl = Project.getUrl();
 
         return a2AudioEventDetectionsClustering.list({
@@ -27,10 +28,8 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
             $scope.audioEventDetectionsOriginal = data;
             $scope.audioEventDetectionsData = data;
             $scope.loading = false;
-            $scope.infopanedata = "";
-
-            if(data && !data.length) {
-                $scope.infopanedata = "No audio event detections found.";
+            if (data && data.length) {
+                $scope.showRefreshBtn = true;
             }
         });
     };
@@ -52,6 +51,7 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
             data = result;
             if (data.create) {
                 JobsData.updateJobs();
+                $scope.showRefreshBtn = true
                 notify.log("Your new Audio Event Detection Clustering model is waiting to start processing.<br> Check it's status on <b>Jobs</b>.");
             } else if (data.error) {
                 notify.error("Error: "+data.error);
@@ -110,7 +110,7 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
         };
     }
 )
-.controller('CreateNewAudioEventDetectionClusteringCtrl', function($modalInstance, a2AudioEventDetectionsClustering, a2Playlists, notify) {
+.controller('CreateNewAudioEventDetectionClusteringCtrl', function($modalInstance, a2AudioEventDetectionsClustering, a2Playlists, a2UserPermit, notify) {
     Object.assign(this, {
         initialize: function(){
             this.loading = {
@@ -134,6 +134,9 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
                     maxFrequency: 24
                 }
             };
+
+            this.isRfcxUser = a2UserPermit.isRfcx();
+            this.isSuper = a2UserPermit.isSuper();
 
             this.loading.playlists = true;
             a2Playlists.getList({filterPlaylistLimit: true}).then((function(playlists){

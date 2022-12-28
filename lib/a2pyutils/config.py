@@ -46,7 +46,11 @@ class Config(object):
         with open(cfgpath) as filedata:
             config = json.load(filedata)
 
-        attr = cfg + "Config"
+        for key in config:
+            env_key = '{0}_{1}'.format(cfg, key).upper()
+            if env_key in os.environ:
+                config[key] = os.environ[env_key]
+
         self.cache[cfg] = config
         return config
 
