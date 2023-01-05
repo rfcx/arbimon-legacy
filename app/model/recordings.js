@@ -27,8 +27,6 @@ var tyler        = require('../utils/tyler.js');
 const rfcxConfig = config('rfcx');
 const moment = require('moment');
 const Projects = require('./projects');
-const request = require('request');
-const rp = util.promisify(request);
 
 // local variables
 var s3, s3RFCx;
@@ -910,18 +908,12 @@ var Recordings = {
         return dbpool.query(q);
     },
 
-    resetRecValidationBySpeciesAndSongtype: async function(projectId, classes) {
+    resetRecordingValidation: async function(projectId, classes) {
         for (let cl of classes) {
             const q = `UPDATE recording_validations SET present = NULL, present_review = 0, present_aed = 0
             WHERE project_id=${projectId} AND species_id=${cl.speciesId} AND songtype_id=${cl.songtypeId}`;
             dbpool.query(q);
         }
-    },
-
-    resetRecValidationByRecordingId: async function(projectId, recIds) {
-        const q = `UPDATE recording_validations SET present = NULL, present_review = 0, present_aed = 0
-        WHERE project_id=${projectId} AND recording_id IN (${recIds})`;
-        return dbpool.query(q);
     },
 
     addRecordingValidation: async function(opts) {
@@ -1864,7 +1856,7 @@ var Recordings = {
     },
 
     getDeletedRecordingData: async function(recs, project_id, query) {
-        const q = `SELECT r.recording_id AS id, r.uri, r.site_id, r.datetime, r.duration, left(right(r.uri,41),36) AS segment_id
+        const q = `SELECT r.recording_id AS id, r.uri, r.site_id, r.datetime, r.duration
             FROM recordings AS r
             JOIN sites AS s ON s.site_id = r.site_id
             WHERE r.recording_id IN (${recs})
@@ -1899,29 +1891,6 @@ var Recordings = {
         });
     },
 
-    deleteInCoreAPI: async function(recs, idToken) {
-        if (!recs.length) return
-        const segments = recs.map(rec => rec.segment_id)
-        const body = {
-            segments
-        }
-        const options = {
-            method: 'DELETE',
-            url: `${rfcxConfig.apiBaseUrl}/internal/arbimon/segment`,
-            headers: {
-                'content-type': 'application/json',
-                Authorization: `Bearer ${idToken}`,
-                source: 'arbimon'
-            },
-            body: JSON.stringify(body)
-        }
-        return rp(options).then((response) => {
-            if (response.statusCode !== 204) {
-                throw new Error('Failed to delete recordings');
-            }
-        })
-    },
-
     deleteRecordingsFromArbimon: async function(recIds, query) {
         // Remove multiple rows
         const q = `DELETE FROM recordings
@@ -1939,7 +1908,7 @@ var Recordings = {
         return query(q)
     },
 
-    delete: async function(recs, project_id, idToken, callback) {
+    delete: async function(recs, project_id, callback) {
         let db
         return dbpool.getConnection()
             .then(async (connection) => {
@@ -1958,12 +1927,8 @@ var Recordings = {
                     }
                 }
 
-                await this.resetRecValidationByRecordingId(project_id, recIds)
-                const arbimonRecs = rows.filter(rec => Recordings.isLegacy(rec))
-                const coreRecs = rows.filter(rec => !Recordings.isLegacy(rec))
-                await this.deleteInCoreAPI(coreRecs, idToken)
                 await this.deleteRecordingsFromArbimon(recIds, query)
-                await this.deleteRecordingsFromS3(arbimonRecs)
+                await this.deleteRecordingsFromS3(rows)
 
                 // Keep deleted recording in the recordings_deleted table
                 // to sync this data with the Biodiversity website

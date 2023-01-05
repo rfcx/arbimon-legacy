@@ -1,6 +1,6 @@
 # Arbimon Release Notes
 
-## v3.0.68 - December 29, 2022
+## v3.0.68 - December 27, 2022
 
 New features:
 
@@ -9,10 +9,6 @@ New features:
 Resolved issues:
 
 - Delete recording validation after removing the PM job
-
-Performance improvements:
-
-- rfcx/engineering-support#1098 Remove stream segment and the file from s3 side when deleting core recordings
 
 ## v3.0.67 - December 22, 2022
 
