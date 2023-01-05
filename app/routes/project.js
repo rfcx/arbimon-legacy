@@ -119,7 +119,7 @@ router.get('/:projecturl?/', function(req, res, next) {
                         reports_enabled: !!project.reports_enabled,
                     },
                     super: !!req.session.user.isSuper,
-                    rfcxUser: !!req.session.user.email.includes('rfcx.org'),
+                    rfcxUser: !!req.session.user && !!req.session.user.email && !!req.session.user.email.includes('rfcx.org'),
                     permissions: rows.map(function(perm) { return perm.name; }),
                 };
 

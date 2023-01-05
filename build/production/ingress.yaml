@@ -10,7 +10,7 @@ metadata:
     app: arbimon
 spec:
   rules:
-    - host: arbimon2.rfcx.org
+    - host: arbimon.rfcx.org
       http:
         paths:
           - backend:
