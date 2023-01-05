@@ -42,52 +42,12 @@ module.exports = {
         });
     },
 
-    getUploadsList: function(options){
-        options = options || {};
-        var select = ['UP.upload_id as id, UP.project_id, UP.site_id, UP.user_id, UP.upload_time, UP.filename, UP.state, UP.duration, UP.datetime, UP.recorder, UP.mic, UP.software'];
-        var from = ['uploads_processing UP'];
-        var where=[], data=[], limit='';
-        if(options.project){
-            where.push('UP.project_id = ?');
-            data.push(options.project);
-        }
-        if(options.refs){
-            select.push('S.name as site');
-            from.push('JOIN sites S ON S.site_id = UP.site_id');
-            select.push('U.login as username');
-            from.push('JOIN users U ON U.user_id = UP.user_id');
-        }
-
-        if(options.count){
-            options.count = false;
-            return q.all([
-                this.getUploadsList(options),
-                q.nfcall(queryHandler,
-                    "SELECT COUNT(*) as count\n" +
-                    "FROM uploads_processing UP" +
-                    (where.length ? '\nWHERE (' + where.join(') AND (') + ')' : ''),
-                    data
-                ).get(0).get(0).get('count')
-            ]).then(function(all){
-                return {list:all[0], count:all[1]};
-            });
-        }
-
-        if(options.limit){
-            limit = "\nLIMIT ?";
-            data.push(Math.max(options.limit|0, 0));
-            if(options.offset){
-                limit += " OFFSET ?";
-                data.push(options.offset|0);
-            }
-        }
-
-        return q.denodeify(queryHandler)(
-            "SELECT " + select.join(', ') + "\n" +
-            "FROM " + from.join("\n") +
-            (where.length ? '\nWHERE (' + where.join(') AND (') + ')' : '') +
-            limit, data
-        ).get(0);
+    getUploadingRecordings: function(options) {
+        const q = `SELECT upload_id as id, upload_url as uploadUrl, state
+        FROM uploads_processing
+        WHERE project = ${options.projectId}
+            AND state = 'waiting' AND upload_url is not null`
+        return dbpool.query(q);
     },
 
     fetchRandomUploadItems: function(count){
@@ -100,16 +60,16 @@ module.exports = {
         ).get(0);
     },
 
-    updateState: function(uploadId, newState, callback) {
-        var q = "UPDATE uploads_processing \n"+
-                "SET state = ? \n"+
+    updateState: function(opts, callback) {
+        const q = "UPDATE uploads_processing \n"+
+                "SET state = ?, upload_url = ? \n"+
                 "WHERE upload_id = ?";
-        q = dbpool.format(q, [newState, uploadId]);
+        q = dbpool.format(q, [opts.status, opts.uploadUrl, opts.uploadId]);
         queryHandler(q, callback);
     },
 
     updateStateAndComment: function(uploadId, newState, remark, callback) {
-        var q = "UPDATE uploads_processing \n"+
+        const q = "UPDATE uploads_processing \n"+
                 "SET state = ?, remark = ? \n"+
                 "WHERE upload_id = ?";
         q = dbpool.format(q, [newState, remark, uploadId]);

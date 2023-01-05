@@ -81,15 +81,59 @@ angular.module('a2.audiodata.uploads.upload', [
                             '&site=' + $scope.info.site.id +
                             '&nameformat=' + $scope.info.format.name +
                             '&timezone=' + $scope.info.timezone.format;
-
                 item.upload();
-                item.onSuccess = next;
+                // TODO: do not mark recordings with success status. They are still in progress.
+                item.isUploading = next;
+                // item.onSuccess = next;
                 item.onError = next;
             });
         };
 
         _verifyAndUpload();
     };
+
+    $scope.isCheckingStatus = false
+
+    $scope.queueJobToCheckStatus = function() {
+        if ($scope.isCheckingStatus) return
+        $scope.isCheckingStatus = true
+        a2UploadsService.getProcessingList().then(function (files) {
+            if (files && files.length) {
+                const itemsToCheck = files.slice(0, 5).map(item => {
+                    return {
+                        uploadUrl: item.uploadUrl,
+                        uploadId: item.id
+                    }
+                })
+                return a2UploadsService.checkStatus({ items: itemsToCheck }).then(function () {
+                    this.isCheckingStatus = false
+                })
+            }
+        })
+    }
+
+    // TODO: check uploader queue recordings status
+
+    // $scope.$watch('uploader.queue', function (newValue, oldValue) {
+    //     const uploadingFiles = $scope.uploader.queue.filter(function(file) {
+    //         return !file.isSuccess;
+    //     });
+    //     if (uploadingFiles) {
+    //         $scope.startTimer()
+    //     }
+    //     else $scope.cancelTimer()
+    // }, true);
+
+    // $scope.startTimer = function() {
+    //     $scope.cancelTimer()
+    //     $scope.checkStatusInterval = $interval(function() {
+    //         $scope.queueJobToCheckStatus()
+    //     }, 3000)
+    // }
+
+    // $scope.cancelTimer = function() {
+    //     $interval.cancel($scope.checkStatusInterval);
+    // }
 
     AppListingsService.getFor('arbimon2-desktop-uploader').then((function(uploaderAppListing){
         this.uploaderAppListing = uploaderAppListing;
