@@ -145,6 +145,10 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
             }).bind(this));
         },
 
+        checkDisable: function(playlist) {
+            return playlist.count > 2000 && !this.isRfcxUser && !this.isSuper
+        },
+
         toggleDetails: function() {
             this.details.show = !this.details.show
         },
