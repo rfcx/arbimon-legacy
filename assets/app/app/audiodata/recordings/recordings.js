@@ -152,10 +152,6 @@ angular.module('a2.audiodata.recordings', [
             return !rec.imported;
         });
 
-        if ($scope.checked || $scope.checked.length > 10){
-            return notify.log('You can delete up to 10 files');
-        }
-
         if (!recs || !recs.length){
             return notify.log('Recordings from imported sites can not be deleted');
         }

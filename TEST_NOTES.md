@@ -1,7 +1,7 @@
 # Arbimon Test Notes
 Test Notes are used to list what pages / components / features / user flows are affected by each update.
 
-## v3.0.68
+## v3.0.69
 
 - Fix parallel uploading of recordings via web-uploader
   - The user can upload long recordings. 
