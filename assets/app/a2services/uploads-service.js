@@ -3,8 +3,11 @@ angular.module('a2.srv.uploads', [
 ])
 .factory('a2UploadsService',function(a2APIService){
     return {
-        getProcessingList: function() {
-            return a2APIService.get('/uploads/processing').then(function(data) {
+        getProcessingList: function(opts) {
+            const config = {
+                params: opts
+            };
+            return a2APIService.get('/uploads/processing', config).then(function(data) {
                 return data
             })
         },
@@ -13,7 +16,7 @@ angular.module('a2.srv.uploads', [
                 params: opts
             };
             return a2APIService.get('/uploads/check', config).then(function(data) {
-                return data
+                return data.items
             })
         },
     };

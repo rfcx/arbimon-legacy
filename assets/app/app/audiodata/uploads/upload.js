@@ -36,7 +36,9 @@ angular.module('a2.audiodata.uploads.upload', [
     uploads, Project,
     AppListingsService,
     a2UserPermit,
-    notify
+    notify,
+    $interval,
+    a2UploadsService
 ) {
 
     $scope.verifyAndUpload = function() {
@@ -49,11 +51,6 @@ angular.module('a2.audiodata.uploads.upload', [
         $scope.uploading = true;
 
         var _verifyAndUpload = function() {
-
-            if(!a2UserPermit.can('manage project recordings')) {
-                notify.log('You do not have permission to upload recordings');
-                return;
-            }
 
             var item = $scope.uploader.queue[index];
 
@@ -82,9 +79,7 @@ angular.module('a2.audiodata.uploads.upload', [
                             '&nameformat=' + $scope.info.format.name +
                             '&timezone=' + $scope.info.timezone.format;
                 item.upload();
-                // TODO: do not mark recordings with success status. They are still in progress.
-                item.isUploading = next;
-                // item.onSuccess = next;
+                item.onSuccess = next;
                 item.onError = next;
             });
         };
@@ -97,43 +92,67 @@ angular.module('a2.audiodata.uploads.upload', [
     $scope.queueJobToCheckStatus = function() {
         if ($scope.isCheckingStatus) return
         $scope.isCheckingStatus = true
-        a2UploadsService.getProcessingList().then(function (files) {
+        a2UploadsService.getProcessingList({site: $scope.info.site.id}).then(function (files) {
+            const uploadingFiles = $scope.getUploadingFiles()
+            if (!uploadingFiles.length) {
+                $scope.cancelTimer()
+                $scope.isCheckingStatus = false
+                return
+            }
+            const userFiles = uploadingFiles.map(fileObj => { return fileObj.file.name })
             if (files && files.length) {
-                const itemsToCheck = files.slice(0, 5).map(item => {
+                const filesToCheck = files.filter(file => { return userFiles.includes(file.name) })
+                const items = filesToCheck.slice(0, 5).map(item => {
                     return {
                         uploadUrl: item.uploadUrl,
-                        uploadId: item.id
+                        uploadId: item.id,
+                        filename: item.name
                     }
                 })
-                return a2UploadsService.checkStatus({ items: itemsToCheck }).then(function () {
-                    this.isCheckingStatus = false
+                a2UploadsService.checkStatus({ items: items }).then(function (data) {
+                    if (data) {
+                        data.forEach(item => {
+                            const userFile = uploadingFiles.find(fileObj => { return fileObj.file.name === item.filename })
+                            if (userFile && item.status === 'uploaded') {
+                                $scope.makeSuccessItem(userFile)
+                            }
+                        })
+                        $scope.isCheckingStatus = false
+                    }
                 })
             }
         })
     }
 
-    // TODO: check uploader queue recordings status
+    $scope.getUploadingFiles = function() {
+        const uploadingFiles = $scope.uploader.queue.filter(function(file) {
+            return file.isSuccess === true && file.isUploaded === false;
+        });
+        return uploadingFiles && uploadingFiles.length ? uploadingFiles : []
+    }
 
-    // $scope.$watch('uploader.queue', function (newValue, oldValue) {
-    //     const uploadingFiles = $scope.uploader.queue.filter(function(file) {
-    //         return !file.isSuccess;
-    //     });
-    //     if (uploadingFiles) {
-    //         $scope.startTimer()
-    //     }
-    //     else $scope.cancelTimer()
-    // }, true);
+    $scope.checkUploadingFiles = function() {
+        if ($scope.getUploadingFiles().length) {
+            $scope.startTimer()
+        }
+    }
 
-    // $scope.startTimer = function() {
-    //     $scope.cancelTimer()
-    //     $scope.checkStatusInterval = $interval(function() {
-    //         $scope.queueJobToCheckStatus()
-    //     }, 3000)
-    // }
+    $scope.startTimer = function() {
+        $scope.cancelTimer()
+        $scope.checkStatusInterval = $interval(function() {
+            $scope.queueJobToCheckStatus()
+        }, 10000)
+    }
 
-    // $scope.cancelTimer = function() {
-    //     $interval.cancel($scope.checkStatusInterval);
-    // }
+    $scope.cancelTimer = function() {
+        if ($scope.checkStatusInterval) {
+            $interval.cancel($scope.checkStatusInterval);
+        }
+    }
+
+    $scope.$on('$destroy', function() {
+        $scope.cancelTimer()
+    });
 
     AppListingsService.getFor('arbimon2-desktop-uploader').then((function(uploaderAppListing){
         this.uploaderAppListing = uploaderAppListing;
@@ -199,7 +218,6 @@ angular.module('a2.audiodata.uploads.upload', [
             var name = item.name.split('.');
             var extension = name[name.length-1].toLowerCase();
 
-            //~ console.log('format', extension);
             var validFormats = /mp3|flac|wav/i;
 
             if(!validFormats.exec(extension))
@@ -234,6 +252,25 @@ angular.module('a2.audiodata.uploads.upload', [
         }
     };
 
+    $scope.uploader.onSuccessItem = function(item, response, status, headers) {
+        item.isUploaded = false
+        $scope.checkUploadingFiles()
+    };
+
+    $scope.makeSuccessItem = function(item) {
+        item.status = 'uploaded'
+        item.isUploading = false
+        item.isSuccess = false
+        item.isUploaded = true
+        item.progress = 100
+    }
+
+    $scope.getProgress = function(item) {
+        if ( item.isUploading && item.progress === 100) return 90
+        else if ( item.isSuccess && !item.isUploaded) return 90
+        else return item.progress
+    }
+
     $scope.removeCompleted = function() {
         if(!$scope.uploader.queue.length) return;
 
@@ -258,8 +295,6 @@ angular.module('a2.audiodata.uploads.upload', [
 
     var u = new FileUploader();
 
-    var uploadInfo = null;
-
     window.addEventListener("beforeunload", function(e) {
         if(u.isUploading) {
             var confirmationMessage = "Upload is in progress, Are you sure to exit?";
@@ -272,14 +307,6 @@ angular.module('a2.audiodata.uploads.upload', [
     return {
         getUploader: function() {
             return u;
-        },
-
-        getBatchInfo: function() {
-            return uploadInfo;
-        },
-
-        setBatchInfo: function(info) {
-            uploadInfo = info;
         }
     };
 });

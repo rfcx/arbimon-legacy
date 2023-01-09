@@ -43,9 +43,9 @@ module.exports = {
     },
 
     getUploadingRecordings: function(options) {
-        const q = `SELECT upload_id as id, upload_url as uploadUrl, state
+        const q = `SELECT upload_id as id, upload_url as uploadUrl, state, filename as name
         FROM uploads_processing
-        WHERE project = ${options.projectId}
+        WHERE project_id = ${options.project} AND site_id = ${options.site}
             AND state = 'waiting' AND upload_url is not null`
         return dbpool.query(q);
     },
@@ -61,15 +61,20 @@ module.exports = {
     },
 
     updateState: function(opts, callback) {
-        const q = "UPDATE uploads_processing \n"+
+        let q = "UPDATE uploads_processing \n"+
                 "SET state = ?, upload_url = ? \n"+
                 "WHERE upload_id = ?";
         q = dbpool.format(q, [opts.status, opts.uploadUrl, opts.uploadId]);
         queryHandler(q, callback);
     },
 
+    updateStateAsync: function(opts) {
+        let updateState = util.promisify(this.updateState)
+        return updateState(opts)
+    },
+
     updateStateAndComment: function(uploadId, newState, remark, callback) {
-        const q = "UPDATE uploads_processing \n"+
+        let q = "UPDATE uploads_processing \n"+
                 "SET state = ?, remark = ? \n"+
                 "WHERE upload_id = ?";
         q = dbpool.format(q, [newState, remark, uploadId]);
@@ -150,27 +155,24 @@ module.exports = {
         return rp(signedUrl, options)
     },
 
-    checkStatus: async function(uploadId, idToken, callback) {
+    checkStatus: async function(uploadId, idToken) {
         let status = 0
-        while ([0, 10].includes(status)) {
-            try {
-                const options = {
-                    method: 'GET',
-                    url: `${rfcxConfig.ingestBaseUrl}/uploads/${uploadId}`,
-                    headers: {
-                        Authorization: `Bearer ${idToken}`
-                    },
-                    json: true
-                }
-                await rp(options).then((response)=> {
-                    const data = response.body;
-                    status = data.status
-                })
-            } catch (e) {
-                callback('Failed to get a status')
+        try {
+            const options = {
+                method: 'GET',
+                url: `${rfcxConfig.ingestBaseUrl}/uploads/${uploadId}`,
+                headers: {
+                    Authorization: `Bearer ${idToken}`
+                },
+                json: true
             }
+            await rp(options).then((response)=> {
+                const data = response.body;
+                status = data.status
+            })
+        } catch (e) {
+            throw new Error('Failed to get a status');
         }
-        callback(undefined, status)
-        return;
+        return status
     },
 };

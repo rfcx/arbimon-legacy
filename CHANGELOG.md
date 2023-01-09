@@ -1,6 +1,12 @@
 # Arbimon Release Notes
 
-## v3.0.68 - December 29, 2022
+## v3.0.69 - January 09, 2023
+
+Performance improvements:
+
+- Fix parallel uploading of recordings via web-uploader
+
+## v3.0.68 - January 05, 2023
 
 New features:
 

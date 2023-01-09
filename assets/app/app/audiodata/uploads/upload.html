@@ -86,7 +86,7 @@
             <h4 class="font-size-base" ng-if="!isLimitExceeded()">Total uploaded: {{ uploaded }}/{{ uploader.queue.length }}</h4>
         </div>
     </div>
-    <div class="row">
+    <div class="row mt-4">
         <div class="col-sm-12" nv-file-over  nv-file-drop  uploader="uploader" over-class="drophere">
             <table class="table table-upload">
                 <thead>
@@ -104,12 +104,13 @@
                         <td ng-show="uploader.isHTML5" nowrap>{{ item.file.size | prettyBytes }}</td>
                         <td ng-show="uploader.isHTML5">
                             <div class="progress" style="margin-bottom: 0;">
-                                <div class="progress-bar" role="progressbar" ng-style="{ 'width': item.progress + '%' }"></div>
+                                <div class="progress-bar" role="progressbar" ng-style="{ 'width': getProgress(item) + '%' }"></div>
                             </div>
                         </td>
                         <td>
                             <span ng-if="item.isUploading"><i class="fa fa-cloud-upload"></i> Uploading</span>
-                            <span ng-if="item.isSuccess"><i class="fa fa-check"></i> Success</span>
+                            <span ng-if="item.isSuccess"><i class="fa fa-cloud-upload"></i> Uploading</span>
+                            <span ng-if="item.isUploaded && !item.isError "><i class="fa fa-check"></i> Success</span>
                             <span ng-if="item.isError">
                                 Error
                                 <i ng-if="item.errorMsg"
