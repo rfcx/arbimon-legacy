@@ -557,7 +557,7 @@ router.post('/delete', function(req, res, next) {
         return res.json({ error: 'missing arguments' });
     }
 
-    model.recordings.delete(req.body.recs, req.project.project_id, req.session.idToken, function(err, result) {
+    model.recordings.delete(req.body.recs, req.project.project_id, function(err, result) {
         if(err) return next(err);
 
         res.json(result);

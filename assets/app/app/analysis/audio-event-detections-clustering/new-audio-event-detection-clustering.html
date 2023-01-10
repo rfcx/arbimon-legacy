@@ -10,7 +10,7 @@
         <div class="form-group">
             <label>Playlist</label>
             <span class="ml-2 smaller flex flex-row flex-align-middle" ng-if="!controller.isRfcxUser && !controller.isSuper && controller.list.playlists && controller.list.playlists.length">
-                Max 1000 recordings
+                Max 2000 recordings
             </span>
             <div class="ml-3 flex flex-row flex-align-middle" ng-if="controller.list.playlists && !controller.list.playlists.length">
                 <em class="pr-2">No playlists found.</em>
@@ -24,9 +24,9 @@
                 <ui-select-match placeholder="Select or search a playlist...">
                     {{$select.selected.name}}
                 </ui-select-match>
-                <ui-select-choices repeat="playlist in controller.list.playlists | filter: $select.search" ui-disable-choice="playlist.count > 1000 && !controller.isRfcxUser && !controller.isSuper">
+                <ui-select-choices repeat="playlist in controller.list.playlists | filter: $select.search" ui-disable-choice="controller.checkDisable(playlist)">
                     <div
-                        ng-class="{'row-disabled': playlist.count > 1000 && !controller.isRfcxUser && !controller.isSuper }"
+                        ng-class="{'row-disabled': controller.checkDisable(playlist) }"
                     >
                         {{playlist.name}}
                         <span class="pull-right">
