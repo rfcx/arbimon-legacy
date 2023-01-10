@@ -39,7 +39,7 @@
         <h3>{{ infopanedata }}</h3>
     </div>
     <div ng-if="loading" class="ml-2">Loading...<loader></loader></div>
-    <h4 class="seconds-div-center" ng-if="isEmpty()">No data found.</h4>
+    <h4 class="seconds-div-center" ng-if="isEmpty()">No clusters found.</h4>
     <div style="position: relative;" ng-class="{'navbar-menu-hide': !infopanedata.length, 'collapse-menu-hide': infopanedata.length}">
         <div id="plotly"></div>
         <div ng-if="toggleMenu" class="popup-chart panel panel-default">
