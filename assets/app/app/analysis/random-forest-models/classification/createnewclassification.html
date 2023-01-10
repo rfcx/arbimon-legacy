@@ -10,7 +10,7 @@
         </div>
         <div class="form-group">
             <label for="classifier">Model</label>
-            <div class="mb-3 flex flex-row flex-align-middle" ng-if="data && !data.legth">
+            <div class="mb-3 flex flex-row flex-align-middle" ng-if="data && !data.length">
                 <em class="pr-2">No models found.</em>
                 Go to
                 <button class="btn btn-sm btn-default" ng-click="cancel('/analysis/random-forest-models/models') | trackEvent:'Analysis-Classification-new classification modal':'Cancel-Go to models'">
@@ -18,7 +18,7 @@
                 </button>
                 and create a model.
             </div>
-            <ui-select ng-if="data && data.legth" ng-disabled="disabled" ng-model="datas.classifier" theme="/common/templates/a2-ui-select">
+            <ui-select ng-if="data && data.length" ng-disabled="disabled" ng-model="datas.classifier" theme="/common/templates/a2-ui-select">
                 <ui-select-match placeholder="Select or search a model...">{{$select.selected.mname}}</ui-select-match>
                 <ui-select-choices repeat="m in data | filter: $select.search">
                     {{m.mname}} <span ng-if="!m.enabled" class="pull-right text-danger"><i>unavailable</i></span>
