@@ -4,7 +4,7 @@
 
 Performance improvements:
 
-- Fix parallel uploading of recordings via web-uploader
+- Improve web-uploader to be able upload long recordings
 
 ## v3.0.68 - January 05, 2023
 

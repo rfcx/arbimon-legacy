@@ -3,7 +3,7 @@ Test Notes are used to list what pages / components / features / user flows are 
 
 ## v3.0.68
 
-- Fix parallel uploading of recordings via web-uploader
+- Improve web-uploader to be able upload long recordings
   - The user can upload long recordings. 
 
 
