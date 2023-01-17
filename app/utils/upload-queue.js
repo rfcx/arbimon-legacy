@@ -58,19 +58,10 @@ module.exports = {
             },
             function flagAsWaiting(uploadId, callback) {
                 upload.uploadId = uploadId
-                model.uploads.updateState(upload.id, 'waiting', function(err){
+                model.uploads.updateState({ uploadId: upload.id, status: 'waiting', uploadUrl: uploadId }, function(err){
                     callback(err);
                 });
-            },
-            function checkStatus(callback) {
-                model.uploads.checkStatus(upload.uploadId, idToken, callback);
-            },
-            function status(result, callback) {
-                const status = !result || [30, 32].includes(result) ? 'error' : 'uploaded'
-                model.uploads.updateState(upload.id, status, function(err){
-                    callback(err);
-                });
-            },
+            }
         ], cb);
     },
     resume: function(){

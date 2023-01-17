@@ -191,7 +191,7 @@ var receiveUpload = function(req, res, next) {
                 uploadQueue.enqueue(upload, uploadsBody, idToken, function(err) {
                     if(err) return next(err);
 
-                    res.status(202).json({ success: "upload done!" });
+                    res.status(202).json({ success: "upload processing" });
                 });
             }
         ]);

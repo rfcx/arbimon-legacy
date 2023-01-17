@@ -1,5 +1,8 @@
 # Arbimon Deployment Notes
 
+## v3.0.68
+- Run 039-add-upload-url-to-uploads-processing.sql on the production
+
 ## v3.0.66
 
 - Run 036-add-aeds-clusters-detected-to-job-params-audio-event-clustering.sql on the production
