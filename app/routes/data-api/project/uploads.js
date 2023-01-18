@@ -27,10 +27,11 @@ async function checkStatus(req, res, next) {
     for (let item of items) {
         if (!item.uploadUrl) return
         const code = await model.uploads.checkStatus(item.uploadUrl, idToken)
-        if (!code) return
-        const status = getStatus(code)
-        item.status = status
-        await  model.uploads.updateStateAsync({ uploadId: item.id, status: status, uploadUrl: item.uploadUrl })
+        if (code) {
+            const status = getStatus(code)
+            item.status = status
+            await  model.uploads.updateStateAsync({ uploadId: item.id, status: status, uploadUrl: item.uploadUrl })
+        }
     }
     res.json({ items: items });
 }

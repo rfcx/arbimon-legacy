@@ -188,8 +188,10 @@ router.get('/:patternMatching/:jobName?', function(req, res, next) {
 
 router.get('/:patternMatching/audio/:roiId', function(req, res, next) {
     model.patternMatchings.getRoiAudioFile(req.params.patternMatching, req.params.roiId, { gain: req.query.gain }).then(function(roiAudio) {
-        if(!roiAudio){
+        if (!roiAudio){
             res.sendStatus(404);
+        } if (roiAudio.path.includes('/internal')) {
+            roiAudio.pipe(res)
         } else {
             res.sendFile(roiAudio.path);
         }

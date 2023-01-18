@@ -218,7 +218,7 @@ angular.module('a2.audiodata.uploads.upload', [
             var name = item.name.split('.');
             var extension = name[name.length-1].toLowerCase();
 
-            var validFormats = /mp3|flac|wav/i;
+            var validFormats = /mp3|flac|wav|opus/i;
 
             if(!validFormats.exec(extension))
                 return false;
