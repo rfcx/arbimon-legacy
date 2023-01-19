@@ -2,5 +2,6 @@
   "auth0Domain": "",
   "clientId": "",
   "redirectUri": "",
-  "audience": ""
+  "audience": "",
+  "logoutRedirectUri": ""
 }
