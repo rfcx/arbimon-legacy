@@ -385,24 +385,29 @@ angular.module('a2.analysis.patternmatching', [
             opts.sites = data.sites
         }
         var limit, offset;
+        const doubleLimit = 200
+        const offsetCalc = offset = (data.pageNumber - 1) * this.limit
         switch (search) {
             case 'top_200_per_site':
-                limit = 200;
+                limit = doubleLimit;
                 offset = 0
                 break;
             case 'best_per_site':
                 limit = 1;
                 offset = 0
                 break;
+            case 'by_score_per_site':
+                limit = doubleLimit
+                offset = offsetCalc
+                break;
             case 'all':
             case 'unvalidated':
-            case 'by_score_per_site':
                 limit = 100000000;
                 offset = 0;
                 break;
             default:
                 limit = this.limit
-                offset = (data.pageNumber - 1) * this.limit
+                offset = offsetCalc
         }
         return {
             limit: limit,
