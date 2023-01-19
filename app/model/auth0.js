@@ -9,6 +9,8 @@ const rp = promisify(request);
 const universalLoginUrl = `https://${auth0Config.auth0Domain}/authorize?audience=${auth0Config.audience}&scope=openid%20email%20profile%20offline_access` +
     `&response_type=code&client_id=${auth0Config.clientId}&redirect_uri=${auth0Config.redirectUri}&theme=dark`;
 
+const logoutUrl = `https://${auth0Config.auth0Domain}/v2/logout?client_id=${auth0Config.clientId}&returnTo=${auth0Config.logoutRedirectUri}`;
+
 async function getTokensByCode(code) {
   const exchangeOptions = {
     grant_type: 'authorization_code',
@@ -84,6 +86,7 @@ async function createToken() {
 
 module.exports = {
   universalLoginUrl,
+  logoutUrl,
   getTokensByCode,
   parseTokens,
   getToken,
