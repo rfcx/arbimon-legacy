@@ -76,8 +76,10 @@ router.get('/:template/image', function(req, res, next) {
 
 router.get('/:template/audio', function(req, res, next) {
     model.templates.getAudioFile(req.params.template, { gain: req.query.gain }).then(function(roiAudio) {
-        if(!roiAudio){
+        if (!roiAudio){
             res.sendStatus(404);
+        } if (roiAudio.path.includes('/internal')) {
+            roiAudio.pipe(res)
         } else {
             res.sendFile(roiAudio.path);
         }

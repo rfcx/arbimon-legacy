@@ -18,6 +18,7 @@ var tmpfilecache = require('../utils/tmpfilecache');
 var dbpool       = require('../utils/dbpool');
 
 var Recordings = require('./recordings');
+const fileHelper = require('../utils/file-helper')
 
 // local variables
 var s3;
@@ -80,6 +81,11 @@ var Templates = {
         if (options.showRecordingUri){
             tables.push('JOIN recordings R ON T.recording_id = R.recording_id');
             select.push('R.uri as recUri, R.site_id as recSiteId, R.sample_rate');
+        }
+
+        if (options.showSiteData) {
+            tables.push('JOIN sites S ON S.site_id = R.site_id');
+            select.push('R.datetime', 'R.datetime_utc', 'S.external_id');
         }
 
         if (options.sourceProjectUri){
@@ -261,25 +267,33 @@ var Templates = {
         options = options || {};
         return this.find({
             id: templateId,
-            showRecordingUri: true
+            showRecordingUri: true,
+            showSiteData: true
         }).get(0).then(template => {
             if(!template) {
                 next(new Error("Requested template data does not exists."));
                 return;
             }
 
-            return q.ninvoke(Recordings, 'fetchAudioFile', {
+            const opts = {
                 uri: template.recUri,
-                site_id: template.recSiteId
-            }, {
+                site_id: template.recSiteId,
+                external_id: template.external_id,
+                datetime: template.datetime,
+                datetime_utc: template.datetime_utc
+            }
+            const filter = {
                 maxFreq: Math.max(template.y1, template.y2),
                 minFreq: Math.min(template.y1, template.y2),
                 gain: options.gain,
                 trim: {
                     from: Math.min(template.x1, template.x2),
                     to: Math.max(template.x1, template.x2)
-                },
-            });
+                }
+            }
+            if (fileHelper.getExtension(template.recUri) === 'opus') {
+                return Recordings.getAudioFromCore(opts, filter)
+            } else return q.ninvoke(Recordings, 'fetchAudioFile', opts, filter);
         });
     },
 

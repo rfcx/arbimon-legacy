@@ -26,7 +26,8 @@ var dbpool       = require('../utils/dbpool');
 var tyler        = require('../utils/tyler.js');
 const rfcxConfig = config('rfcx');
 const moment = require('moment');
-const Projects = require('./projects');
+const auth0Service = require('./auth0');
+const request = require('request');
 
 // local variables
 var s3, s3RFCx;
@@ -1552,6 +1553,32 @@ var Recordings = {
 
             return builder;
         });
+    },
+
+    async getAudioFromCore (opts, filter) {
+        const ms = 1000
+        const from = ((+filter.trim.from * ms) | 0) / ms;
+        const to = ((+filter.trim.to * ms) | 0) / ms;
+        const duration = filter.trim.duration ? (+filter.trim.duration) : (((to - from) * ms) | 0) / ms;
+        const momentStart = moment.utc(opts.datetime_utc ? opts.datetime_utc : opts.datetime).add(from, 'seconds')
+        const momentEnd = momentStart.clone().add(duration, 'seconds')
+        const dateFormat = 'YYYYMMDDTHHmmssSSS'
+        const start = momentStart.format(dateFormat)
+        const end = momentEnd.format(dateFormat)
+        var fmin = Math.min(((filter.minFreq / 100) | 0) * 100, 22049);
+        var fmax = Math.min(((filter.maxFreq / 100) | 0) * 100, 22049);
+        const attr = `${opts.external_id}_t${start}Z.${end}Z_r${fmin}.${fmax}_fmp3.mp3`
+        const token = await auth0Service.getToken();
+        const options = {
+            method: 'GET',
+            url: `${rfcxConfig.mediaBaseUrl}/internal/assets/streams/${attr}`,
+            headers: {
+              Authorization: `Bearer ${token}`
+            },
+            json: true
+          }
+
+        return request(options)
     },
 
     exportOccupancyModels: async function(projection, filters){
