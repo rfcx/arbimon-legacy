@@ -68,6 +68,11 @@ angular.module('a2.analysis.clustering-jobs', [
     }
 
     $scope.createNewClusteringJob = function () {
+        if(!a2UserPermit.can('manage AED and Clustering job')) {
+            notify.log('You do not have permission to create Clustering job');
+            return;
+        }
+
         var modalInstance = $modal.open({
             templateUrl: '/app/analysis/clustering-jobs/new-clustering-job.html',
             controller: 'CreateNewClusteringJobCtrl as controller',
@@ -161,7 +166,8 @@ angular.module('a2.analysis.clustering-jobs', [
     Project,
     a2Playlists,
     $localStorage,
-    $modal
+    $modal,
+    a2UserPermit
 ) {
     var d3 = $window.d3
     $scope.loading = true;
@@ -558,6 +564,10 @@ angular.module('a2.analysis.clustering-jobs', [
     }
 
     $scope.savePlaylist = function(opts) {
+        if(!a2UserPermit.can('manage AED and Clustering job')) {
+            notify.log('You do not have permission to manage AED and Clustering job');
+            return;
+        }
         a2Playlists.create(opts,
         function(data) {
             $window.location.href = '/project/'+Project.getUrl()+'/visualizer/playlist/' + data.playlist_id + '?clusters';
@@ -954,11 +964,14 @@ angular.module('a2.analysis.clustering-jobs', [
     var timeout;
 
     $scope.isValidationAccessible = function() {
-        // TODO: check permissions: a2UserPermit.can('validate species')
-        return true
+        return a2UserPermit.can('manage AED and Clustering job')
     }
 
     $scope.setValidation = function() {
+        if(!a2UserPermit.can('manage AED and Clustering job')) {
+            notify.log('You do not have permission to manage AED and Clustering job');
+            return;
+        }
         $scope.speciesLoading = true;
         clearTimeout(timeout);
         timeout = setTimeout(() => {
