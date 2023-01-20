@@ -396,12 +396,9 @@ angular.module('a2.analysis.patternmatching', [
                 limit = 1;
                 offset = 0
                 break;
-            case 'by_score_per_site':
-                limit = doubleLimit
-                offset = offsetCalc
-                break;
             case 'all':
             case 'unvalidated':
+            case 'by_score_per_site':
                 limit = 100000000;
                 offset = 0;
                 break;
