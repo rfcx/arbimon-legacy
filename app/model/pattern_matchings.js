@@ -270,6 +270,7 @@ var PatternMatchings = {
             url: joi.boolean(),
             showSpecies: joi.boolean(),
             showFrequency: joi.boolean(),
+            totalPerSite: joi.boolean()
         }),
         limit:  joi.number(),
         offset: joi.number(),
@@ -481,6 +482,17 @@ var PatternMatchings = {
                 , []);
             }
 
+            if (parameters.show.totalPerSite) {
+                builder.addProjection(
+                    "(\n" +
+                    "    SELECT count(*) as count \n" +
+                    "    FROM pattern_matching_rois sq2PMR\n" +
+                    "    WHERE sq2PMR.denorm_site_id = PMR.denorm_site_id\n" +
+                    "      AND sq2PMR.pattern_matching_id = " + (parameters.patternMatching | 0)+ "\n" +
+                    ") as countPerSite"
+                );
+            }
+
             if(parameters.whereExpert){
                 builder.addConstraint("PMR.expert_validated IS NOT NULL", []);
             }
@@ -567,7 +579,7 @@ var PatternMatchings = {
             bestPerSiteDay: options.bestPerSiteDay,
             limit: options.limit,
             offset: options.offset,
-            show: { patternMatchingId: true, datetime: true, names: options.showNames },
+            show: { patternMatchingId: true, datetime: true, names: options.showNames, totalPerSite: options.byScorePerSite },
             sortBy,
         }).then((builder) => {
             return dbpool.query(builder.getSQL())

@@ -269,7 +269,10 @@ angular.module('a2.analysis.patternmatching', [
         });
     },
 
-    onScroll: function($event, $controller){
+    onScroll: function($event, $controller) {
+        if (this.search.value === 'by_score_per_site') {
+            return false
+        }
         this.scrollElement = $controller.scrollElement;
         var scrollPos = $controller.scrollElement.scrollY;
         var headerTop = $controller.anchors.header.offset().top;
@@ -299,6 +302,10 @@ angular.module('a2.analysis.patternmatching', [
         this.sitesBatches = batches
     },
 
+    getCountPerSite: function () {
+        return this.rois && this.rois[0] && this.rois[0].list[0].countPerSite
+    },
+
     recalculateTotalItems: function () {
         var search = this.search && this.search.value ? this.search.value : undefined;
         switch (search) {
@@ -310,6 +317,9 @@ angular.module('a2.analysis.patternmatching', [
                 break;
             case 'by_score':
                 this.paginationTotal = this.patternMatching.matches;
+                break;
+            case 'by_score_per_site':
+                this.paginationTotal = this.getCountPerSite();
                 break;
             default:
                 this.paginationTotal = 0
@@ -336,8 +346,9 @@ angular.module('a2.analysis.patternmatching', [
     },
 
     setSiteBookmark: function(site) {
-        if (this.shouldGetPerSite()) {
-            this.selected.page = this.search.value === 'by_score_per_site' ? 1 : this.getSiteBatchIndexBySiteId(site.site_id) + 1
+        const scorePerSite = this.search.value === 'by_score_per_site'
+        if (this.shouldGetPerSite() || scorePerSite) {
+            this.selected.page = scorePerSite ? 1 : this.getSiteBatchIndexBySiteId(site.site_id) + 1
             return this.loadData();
         }
         var bookmark = 'site-' + site.site_id;
@@ -346,7 +357,7 @@ angular.module('a2.analysis.patternmatching', [
     },
 
     shouldGetPerSite: function() {
-        return this.search && ['all', 'unvalidated', 'top_200_per_site', 'best_per_site', 'best_per_site_day', 'by_score_per_site'].includes(this.search.value);
+        return this.search && ['all', 'unvalidated', 'top_200_per_site', 'best_per_site', 'best_per_site_day'].includes(this.search.value);
     },
 
     getSiteBatchIndexBySiteId: function (siteId) {
