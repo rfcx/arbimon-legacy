@@ -337,7 +337,7 @@ angular.module('a2.analysis.patternmatching', [
 
     setSiteBookmark: function(site) {
         if (this.shouldGetPerSite()) {
-            this.selected.page = this.getSiteBatchIndexBySiteId(site.site_id) + 1
+            this.selected.page = this.search.value === 'by_score_per_site' ? 1 : this.getSiteBatchIndexBySiteId(site.site_id) + 1
             return this.loadData();
         }
         var bookmark = 'site-' + site.site_id;
@@ -398,7 +398,6 @@ angular.module('a2.analysis.patternmatching', [
                 break;
             case 'all':
             case 'unvalidated':
-            case 'by_score_per_site':
                 limit = 100000000;
                 offset = 0;
                 break;
@@ -439,7 +438,11 @@ angular.module('a2.analysis.patternmatching', [
 
     loadData: function (page) {
         var params;
-        if (this.shouldGetPerSite()) {
+        if (this.search.value === 'by_score_per_site') {
+            const site = this.selected.siteBookmark ? this.selected.siteBookmark.site_id : this.sitesBatches[0][0].site_id
+            params = this.combOpts({ sites: site, pageNumber: this.selected.page });
+        }
+        else if (this.shouldGetPerSite()) {
             page = page || this.selected.page
             var siteBatch = this.getSiteBatchByPageNumber(page)
             var siteIds = siteBatch.map(function(s) {

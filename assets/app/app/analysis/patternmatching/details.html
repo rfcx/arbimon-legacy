@@ -83,6 +83,15 @@
                                 </ui-select-choices>
                             </ui-select>
                         </div>
+                        <div class="btn-group btn-group-margin">
+                            <ui-select class="btn-group-item" ng-model="controller.selected.siteBookmark" theme="bootstrap" style="display:inline-block; width:4em;"
+                                ng-change="controller.setSiteBookmark($select.selected)">
+                                <ui-select-match class="a2-uism-btn-icon icon-site"> </ui-select-match>
+                                <ui-select-choices repeat="$item in controller.sitesList | filter:$select.search">
+                                    <span class="text-wrap"><i class="fa fa-map-marker"></i> {{$item.site}}</span>
+                                </ui-select-choices>
+                            </ui-select>
+                        </div>
                     </div>
                     <div class="pull-right row-flex flex-direction-row flex-self-align-bottom">
                         <div class="btn-group btn-group-margin">
@@ -113,16 +122,6 @@
                         </div>
                     </div>
                     <div class="pull-right">
-                        <div class="btn-group btn-group-margin">
-                            <ui-select class="btn-group-item" ng-model="controller.selected.siteBookmark" theme="bootstrap" style="display:inline-block; width:4em;"
-                                ng-change="controller.setSiteBookmark($select.selected)">
-                                <ui-select-match class="a2-uism-btn-icon icon-site"> </ui-select-match>
-                                <ui-select-choices repeat="$item in controller.sitesList | filter:$select.search">
-                                    <span class="text-wrap"><i class="fa fa-map-marker"></i> {{$item.site}}</span>
-                                </ui-select-choices>
-                            </ui-select>
-                        </div>
-
                         <div class="btn-group btn-group-margin">
                             <button class="btn btn-default"
                                 ng-repeat="item in controller.lists.thumbnails"
