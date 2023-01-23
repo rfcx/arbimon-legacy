@@ -43,7 +43,7 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
 
     $scope.createNewClusteringModel = function () {
         if(!a2UserPermit.can('manage AED and Clustering job')) {
-            notify.log('You do not have permission to create Audio Event Detection job');
+            notify.log('You do not have permission to create <br> Audio Event Detection job');
             return;
         }
 
@@ -69,7 +69,7 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
     $scope.deleteAedJob = function(aedJob, $event) {
         $event.stopPropagation();
         if(!a2UserPermit.can('manage AED and Clustering job')) {
-            notify.log('You do not have permission to delete Audio Event Detection job');
+            notify.log('You do not have permission to delete <br> Audio Event Detection job');
             return;
         }
 
