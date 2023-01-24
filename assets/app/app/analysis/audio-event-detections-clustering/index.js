@@ -57,7 +57,7 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
             if (data.create) {
                 JobsData.updateJobs();
                 $scope.showRefreshBtn = true
-                notify.log("Your new Audio Event Detection Clustering model is waiting to start processing.<br> Check it's status on <b>Jobs</b>.");
+                notify.log("Your new Audio Event Detection Clustering model is waiting to start processing.<br> Check its status on <b>Jobs</b>.");
             } else if (data.error) {
                 notify.error("Error: "+data.error);
             } else if (data.url) {
@@ -161,6 +161,9 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
         create: function () {
             if (this.data.params.maxFrequency <= this.data.params.minFrequency) {
                 return notify.log('Note: The maximum frequency must be greater than the minimum frequency.');
+            }
+            if (this.checkDisable(this.data.playlist)) {
+                return notify.log('Note: AED job has a limit of 2000 recordings per playlist.');
             }
             try {
                 return a2AudioEventDetectionsClustering.create({

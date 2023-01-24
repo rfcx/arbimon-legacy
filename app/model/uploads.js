@@ -102,10 +102,11 @@ module.exports = {
                     return;
                 }
                 const { url, uploadId } = data
-                await this.performUpload(url, filePath, fileExt).then((data) => {
-                    callback(undefined, uploadId)
-                    return;
+                this.performUpload(url, filePath, fileExt).then((data) => {
+                    console.info('Perform upload status', data.statusCode)
                 })
+                callback(undefined, uploadId)
+                return;
         })
     },
 
