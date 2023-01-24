@@ -25,6 +25,17 @@ router.get('/', function(req, res, next) {
     }).catch(next);
 });
 
+router.get('/total-recordings', function(req, res, next) {
+    res.type('json');
+    return model.AudioEventDetectionsClustering.getTotalRecInLast24Hours({
+        project_id: req.project.project_id
+    })
+    .then(function(result) {
+        res.json(result);
+    }).catch(next);
+});
+
+
 router.post('/new', function(req, res, next) {
     res.type('json');
     return model.AudioEventDetectionsClustering.requestNewAudioEventDetectionClusteringJob({

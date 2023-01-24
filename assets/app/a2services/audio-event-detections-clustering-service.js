@@ -13,6 +13,11 @@ angular.module('a2.srv.audio-event-detections-clustering', [
                 return response.data;
             }).catch(notify.serverError);
         },
+        count: function() {
+            return $http.get('/api/project/'+Project.getUrl()+'/audio-event-detections-clustering/total-recordings').then(function(response){
+                return response.data;
+            });
+        },
         create: function(data) {
             return $http.post('/api/project/'+Project.getUrl()+'/audio-event-detections-clustering/new', data).then(function(response){
                 return response.data;

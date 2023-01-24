@@ -7,6 +7,7 @@ const q = require('q');
 const lambda = new AWS.Lambda();
 const config = require('../config');
 const dbpool = require('../utils/dbpool');
+const moment = require('moment');
 
 let AudioEventDetectionsClustering = {
     find: function (options) {
@@ -133,6 +134,15 @@ let AudioEventDetectionsClustering = {
     delete: function (jobId) {
         const q = `UPDATE job_params_audio_event_detection_clustering SET deleted=1 WHERE job_id = ${jobId}`
         return dbpool.query(q);
+    },
+
+    getTotalRecInLast24Hours: async function(opts) {
+        const last24hours = moment.utc().subtract(1, 'days').format('YYYY-MM-DD HH:mm:ss')
+        const q = `SELECT SUM(pl.total_recordings) as totalRecordings
+            FROM playlists pl
+            JOIN job_params_audio_event_detection_clustering jp ON jp.playlist_id = pl.playlist_id
+            WHERE pl.project_id=${opts.project_id} AND jp.date_created >= '${last24hours}'`;
+        return dbpool.query(q).get(0);
     },
 
     JOB_SCHEMA : joi.object().keys({
