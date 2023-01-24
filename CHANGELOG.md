@@ -1,5 +1,24 @@
 # Arbimon Release Notes
 
+## v3.0.71 - January 27, 2023
+
+Performance improvements:
+
+- Limit the non-RFCx user to only creating AED jobs on max 10k recordings in the last 24 hours
+- Survicate survey support
+
+## v3.0.70 - January 23, 2023
+
+Performance improvements:
+
+- Improve the score per site filter logic on the PM details page
+
+Resolved issues:
+
+- Fix pagination for the score per site filter
+- Add an ability to listen to the opus templates sound
+- Fix opus file upload. Fix audio play on the Pattern matching analysis
+
 ## v3.0.69 - January 09, 2023
 
 Performance improvements:
