@@ -604,7 +604,6 @@ var PatternMatchings = {
     },
 
     async getPmRois (req) {
-        // let prom
         let rois = []
         let sites = [undefined] // a hack to make a loop workable even if no sites are specified
         if (req.query.site) {
