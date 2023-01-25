@@ -171,7 +171,7 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
                 return notify.log('The maximum frequency must be greater than the minimum frequency.');
             }
             if (this.checkDisable(this.data.playlist)) {
-                return notify.log('Limit: AED job has a limit of 2000 recordings per playlist.');
+                return notify.log('The maximum recording is 2,000 per playlist.');
             }
         },
 
@@ -194,7 +194,7 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
             if (this.isRfcx()) return this.newJob()
             return a2AudioEventDetectionsClustering.count().then(data => {
                 if (this.checkLimit(data.totalRecordings)) {
-                    return notify.log('Limit: Can not analyse more than 10,000 recordings per day');
+                    return notify.log('The maximum total of recordings is 10,000 recordings within 24 hours.');
                 } else this.newJob()
             })
         },
