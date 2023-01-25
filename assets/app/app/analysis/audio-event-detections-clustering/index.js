@@ -168,7 +168,7 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
 
         checkCreateForm: function () {
             if (this.data.params.maxFrequency <= this.data.params.minFrequency) {
-                return notify.log('The maximum frequency must be greater than the minimum frequency.');
+                return notify.log('The maximum frequency must be greater than <br> the minimum frequency.');
             }
             if (this.checkDisable(this.data.playlist)) {
                 return notify.log('The maximum recording is 2,000 per playlist.');
@@ -194,7 +194,7 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
             if (this.isRfcx()) return this.newJob()
             return a2AudioEventDetectionsClustering.count().then(data => {
                 if (this.checkLimit(data.totalRecordings)) {
-                    return notify.log('The maximum total of recordings is 10,000 recordings within 24 hours.');
+                    return notify.log('The maximum total of recordings is 10,000 recordings <br> within 24 hours.');
                 } else this.newJob()
             })
         },
