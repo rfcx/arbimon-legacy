@@ -3,7 +3,7 @@ kind: Ingress
 metadata:
   annotations:
     nginx.ingress.kubernetes.io/limit-rpm: "120"
-    nginx.ingress.kubernetes.io/proxy-body-size: "128m"
+    nginx.ingress.kubernetes.io/proxy-body-size: "200m"
   name: arbimon-ingress
   namespace: staging
   labels:
