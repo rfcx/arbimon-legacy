@@ -140,15 +140,9 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
                 }
             };
 
-            this.errors = {
-                playlistLimit: false,
-                jobLimit: false,
-                frequency: false,
-                name: false
-            };
-
             this.isRfcxUser = a2UserPermit.isRfcx();
             this.isSuper = a2UserPermit.isSuper();
+            this.errorJobLimit = false;
 
             this.loading.playlists = true;
             a2Playlists.getList({filterPlaylistLimit: true}).then((function(playlists){
@@ -161,23 +155,12 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
             return this.isRfcxUser || this.isSuper
         },
 
-        checkDisable: function(playlist) {
-            return playlist.count > 2000 && !this.isRfcx()
-        },
-
         checkLimit: function(count) {
             return count > 10000 && !this.isRfcx()
         },
 
         toggleDetails: function() {
             this.details.show = !this.details.show
-        },
-
-        resetErrorMessages: function () {
-            this.errors.playlistLimit = false;
-            this.errors.jobLimit = false;
-            this.errors.frequency = false;
-            this.errors.name = false;
         },
 
         newJob: function () {
@@ -195,23 +178,11 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
         },
 
         create: function () {
-            this.resetErrorMessages()
-            if (this.data.name.length < 4) {
-                this.errors.name = true
-                return
-            }
-            if (this.checkDisable(this.data.playlist)) {
-                this.errors.playlistLimit = true
-                return
-            }
-            if (this.data.params.maxFrequency <= this.data.params.minFrequency) {
-                this.errors.frequency = true
-                return
-            }
+            this.errorJobLimit = false
             if (this.isRfcx()) return this.newJob()
             return a2AudioEventDetectionsClustering.count().then(data => {
                 if (this.checkLimit(data.totalRecordings)) {
-                    this.errors.jobLimit = true
+                    this.errorJobLimit = true
                     return
                 } else this.newJob()
             })
@@ -222,8 +193,20 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
         },
 
         isJobValid: function () {
-            return this.data && this.data.name &&
-                this.data.playlist;
+            return this.data && this.data.name && this.data.name.length > 3 && this.data.playlist;
+        },
+
+        showNameWarning: function () {
+            return this.data && this.data.name && this.data.name.length > 1 && this.data.name.length < 4
+        },
+
+        showPlaylistLimitWarning: function () {
+            if (!this.data && !this.data.playlist) return
+            return this.data && this.data.playlist && this.data.playlist.count > 2000 && !this.isRfcx()
+        },
+
+        showFrequenWarning: function () {
+            return this.data.params.maxFrequency <= this.data.params.minFrequency
         }
     });
     this.initialize();
