@@ -140,6 +140,13 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
                 }
             };
 
+            this.errors = {
+                playlistLimit: false,
+                jobLimit: false,
+                frequency: false,
+                name: false
+            };
+
             this.isRfcxUser = a2UserPermit.isRfcx();
             this.isSuper = a2UserPermit.isSuper();
 
@@ -166,13 +173,11 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
             this.details.show = !this.details.show
         },
 
-        checkCreateForm: function () {
-            if (this.data.params.maxFrequency <= this.data.params.minFrequency) {
-                return notify.log('The maximum frequency must be greater than <br> the minimum frequency.');
-            }
-            if (this.checkDisable(this.data.playlist)) {
-                return notify.log('The maximum recording is 2,000 per playlist.');
-            }
+        resetErrorMessages: function () {
+            this.errors.playlistLimit = false;
+            this.errors.jobLimit = false;
+            this.errors.frequency = false;
+            this.errors.name = false;
         },
 
         newJob: function () {
@@ -190,11 +195,24 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
         },
 
         create: function () {
-            this.checkCreateForm()
+            this.resetErrorMessages()
+            if (this.data.name.length < 4) {
+                this.errors.name = true
+                return
+            }
+            if (this.checkDisable(this.data.playlist)) {
+                this.errors.playlistLimit = true
+                return
+            }
+            if (this.data.params.maxFrequency <= this.data.params.minFrequency) {
+                this.errors.frequency = true
+                return
+            }
             if (this.isRfcx()) return this.newJob()
             return a2AudioEventDetectionsClustering.count().then(data => {
                 if (this.checkLimit(data.totalRecordings)) {
-                    return notify.log('The maximum total of recordings is 10,000 recordings <br> within 24 hours.');
+                    this.errors.jobLimit = true
+                    return
                 } else this.newJob()
             })
         },
@@ -205,7 +223,6 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
 
         isJobValid: function () {
             return this.data && this.data.name &&
-                this.data.name.length > 3 &&
                 this.data.playlist;
         }
     });
