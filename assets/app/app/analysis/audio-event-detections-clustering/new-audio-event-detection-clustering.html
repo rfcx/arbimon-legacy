@@ -5,8 +5,8 @@
     <form role="form">
         <div class="form-group">
             <label for="modelName">Job Name</label>
-            <input id="modelName" class="form-control" ng-model="controller.data.name" type="text"/>
-            <div ng-if="controller.errors.name" class="smaller mt-2 red">
+            <input id="modelName" class="form-control form-group" ng-class="{'red-border': controller.showNameWarning()}" ng-model="controller.data.name" type="text"/>
+            <div ng-if="controller.showNameWarning()" class="smaller mt-2 red">
                 <span>
                     <i class="fa fa-exclamation-triangle mr-1" tooltip="Please enter in the job name more than 3 letters."></i>
                 </span>
@@ -14,7 +14,8 @@
             </div>
         </div>
         <div class="form-group">
-            <label class="mr-2">Playlist</label>
+            <label class="mr-1">Playlist</label>
+            <span ng-if="!controller.isRfcxUser && controller.list.playlists && controller.list.playlists.length">(maximum {{ 2000 | number }} recordings)</span>
             <div class="ml-3 flex flex-row flex-align-middle" ng-if="controller.list.playlists && !controller.list.playlists.length">
                 <em class="pr-2">No playlists found.</em>
                 Go to
@@ -23,34 +24,34 @@
                 </button>
                 and create a playlist.
             </div>
-            <ui-select ng-disabled="disabled" ng-if="controller.list.playlists && controller.list.playlists.length" ng-model="controller.data.playlist" theme="/common/templates/a2-ui-select">
-                <ui-select-match placeholder="Select or search a playlist...">
-                    {{$select.selected.name}}
-                </ui-select-match>
-                <ui-select-choices repeat="playlist in controller.list.playlists | filter: $select.search">
-                    <div>
-                        {{playlist.name}}
-                        <span class="pull-right">
-                            <small>
-                                <em>
-                                    <strong >Count:</strong>({{playlist.count}})
-                                </em>
-                            </small>
-                        </span>
-                    </div>
-                </ui-select-choices>
-            </ui-select>
-            <div ng-if="controller.errors.playlistLimit" class="smaller mt-2 red">
-                <span>
-                    <i class="fa fa-exclamation-triangle mr-1" tooltip="Please select a playlist with less than 2000 recordings."></i>
-                </span>
-                Please select a playlist with less than 2000 recordings.
+            <div ng-class="{'input-red-border': controller.showPlaylistLimitWarning()}">
+                <ui-select ng-disabled="disabled" ng-if="controller.list.playlists && controller.list.playlists.length" ng-model="controller.data.playlist" theme="/common/templates/a2-ui-select">
+                    <ui-select-match placeholder="Select or search a playlist..."> {{ $select.selected.name }} </ui-select-match>
+                    <ui-select-choices repeat="playlist in controller.list.playlists | filter: $select.search">
+                        <div>
+                            {{ playlist.name }}
+                            <span class="pull-right">
+                                <small>
+                                    <em>
+                                        <strong class="mr-1">{{ playlist.count | number }}</strong>recordings
+                                    </em>
+                                </small>
+                            </span>
+                        </div>
+                    </ui-select-choices>
+                </ui-select>
             </div>
-            <div ng-if="controller.errors.jobLimit" class="smaller mt-2 red">
+            <div ng-if="controller.showPlaylistLimitWarning()" class="smaller mt-2 red">
                 <span>
-                    <i class="fa fa-exclamation-triangle mr-1" tooltip="The maximum total of recordings is 10,000 within 24 hours."></i>
+                    <i class="fa fa-exclamation-triangle mr-1" tooltip="Please select a playlist with less than {{ 2000 | number }} recordings."></i>
                 </span>
-                The maximum total of recordings is 10,000 within 24 hours.
+                Please select a playlist with less than {{ 2000 | number }} recordings.
+            </div>
+            <div ng-if="controller.errorJobLimit" class="smaller mt-2 red">
+                <span>
+                    <i class="fa fa-exclamation-triangle mr-1" tooltip="The maximum total of recordings is {{ 10000 | number }} within 24 hours."></i>
+                </span>
+                The maximum total of recordings is {{ 10000 | number }} within 24 hours.
             </div>
         </div>
         <div class="form-group">
@@ -70,17 +71,17 @@
                     <i class="fa fa-info-circle ml-2"
                         tooltip="The minimum frequency of sound events to detect (kHz)">
                     </i>
-                    <input id="minFrequency" class="form-control" style="text-align:left;" min="0" step="1" max="24" ng-model="controller.data.params.minFrequency" type="number"/>
+                    <input id="minFrequency" class="form-control" ng-class="{'red-border': controller.showFrequenWarning()}" style="text-align:left;" min="0" step="1" max="24" ng-model="controller.data.params.minFrequency" type="number"/>
                 </div>
                 <div class="col-sm-6">
                     <label for="maxFrequency">Max</label>
                     <i class="fa fa-info-circle ml-2"
                         tooltip="The maximum frequency of sound events to detect (kHz)">
                     </i>
-                    <input id="maxFrequency" class="form-control" style="text-align:left;" min="0" step="1" max="24" ng-model="controller.data.params.maxFrequency" type="number"/>
+                    <input id="maxFrequency" class="form-control" ng-class="{'red-border': controller.showFrequenWarning()}" style="text-align:left;" min="0" step="1" max="24" ng-model="controller.data.params.maxFrequency" type="number"/>
                 </div>
             </div>
-            <div ng-if="controller.errors.frequency" class="smaller mt-2 red">
+            <div ng-if="controller.showFrequenWarning()" class="smaller mt-2 red">
                 <span>
                     <i class="fa fa-exclamation-triangle mr-1" tooltip="The maximum frequency must be greater than the minimum frequency."></i>
                 </span>
@@ -91,7 +92,7 @@
             <button type="button" name="button" class="btn btn-default"
                 ng-click="controller.toggleDetails()">
                     <i class="fa" ng-class="controller.details.show ? 'fa-caret-up' : 'fa-caret-down'"></i>
-                    Details
+                    Advanced Parameters
             </button>
         </div>
         <div ng-show="controller.details.show">
@@ -129,6 +130,6 @@
 </div>
 <div class="modal-footer">
     <button class="btn btn-primary" ng-click="controller.create() | trackEvent:'Analysis-Audio-Event-Detection-new audio event detection clustering model':'Submit'" ng-disabled="!controller.isJobValid()">
-        Run
+        Start Job
     </button>
 </div>
