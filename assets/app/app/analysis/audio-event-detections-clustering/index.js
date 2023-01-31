@@ -4,6 +4,7 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
   'a2.services',
   'a2.permissions',
   'humane',
+  'a2.directive.error-message'
 ])
 .config(function($stateProvider) {
     $stateProvider
