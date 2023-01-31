@@ -1223,7 +1223,7 @@ var Recordings = {
 
             if (parameters.sites) {
                 tables.push("JOIN sites AS s ON s.site_id = r.site_id");
-                constraints.push('s.name IN (?) AND s.project_id = ?');
+                constraints.push('s.name IN (?) AND s.project_id = ? AND s.deleted_at IS NULL');
                 data.push(parameters.sites);
                 data.push(parameters.project_id);
             }
