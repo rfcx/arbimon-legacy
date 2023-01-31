@@ -193,7 +193,8 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
         },
 
         isJobValid: function () {
-            return this.data && this.data.name && this.data.name.length > 3 && this.data.playlist;
+            return this.data && this.data.name && this.data.name.length > 3 && this.data.playlist &&
+                this.data.params.maxFrequency && this.data.params.minFrequency;
         },
 
         showNameWarning: function () {
@@ -205,8 +206,12 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
             return this.data && this.data.playlist && this.data.playlist.count > 2000 && !this.isRfcx()
         },
 
-        showFrequenWarning: function () {
+        showFrequencyWarning: function () {
             return this.data.params.maxFrequency <= this.data.params.minFrequency
+        },
+
+        isNotDefined: function (item) {
+            return item === undefined || item === null
         }
     });
     this.initialize();
