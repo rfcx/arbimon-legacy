@@ -195,7 +195,7 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
 
         isJobValid: function () {
             return this.data && this.data.name && this.data.name.length > 3 && this.data.playlist &&
-                this.data.params.maxFrequency && this.data.params.minFrequency;
+                !this.isNotDefined(this.data.params.maxFrequency) && !this.isNotDefined(this.data.params.minFrequency);
         },
 
         showNameWarning: function () {
