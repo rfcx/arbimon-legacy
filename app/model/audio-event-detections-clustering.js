@@ -137,11 +137,11 @@ let AudioEventDetectionsClustering = {
     },
 
     getTotalRecInLast24Hours: async function(opts) {
-        const last24hours = moment.utc().subtract(1, 'days').format('YYYY-MM-DD HH:mm:ss')
+        const last24hours = moment.utc().subtract(1, 'days').valueOf()
         const q = `SELECT SUM(pl.total_recordings) as totalRecordings
             FROM playlists pl
             JOIN job_params_audio_event_detection_clustering jp ON jp.playlist_id = pl.playlist_id
-            WHERE pl.project_id=${opts.project_id} AND jp.date_created >= '${last24hours}'`;
+            WHERE pl.project_id=${opts.project_id} AND (UNIX_TIMESTAMP(jp.date_created) * 1000) >= ${last24hours}`;
         return dbpool.query(q).get(0);
     },
 
