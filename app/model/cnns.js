@@ -1,29 +1,15 @@
 /* jshint node:true */
 "use strict";
 
-// 3rd party dependencies
-var debug = require('debug')('arbimon2:model:pattern_matchings');
-var async = require('async');
-var joi = require('joi');
-var jimp = require('jimp');
-var AWS = require('aws-sdk');
-var q = require('q');
-
-// local dependencies
-var config = require('../config');
-var APIError = require('../utils/apierror');
-var tmpfilecache = require('../utils/tmpfilecache');
-var sqlutil = require('../utils/sqlutil');
-var SQLBuilder = require('../utils/sqlbuilder');
-var dbpool = require('../utils/dbpool');
-var Recordings = require('./recordings');
-var Projects = require('./projects');
-var Templates = require('./templates');
-
-// local variables
-var s3;
-var lambda = new AWS.Lambda();
-var queryHandler = dbpool.queryHandler;
+const joi = require('joi');
+const AWS = require('aws-sdk');
+const q = require('q');
+const config = require('../config');
+const dbpool = require('../utils/dbpool');
+const Recordings = require('./recordings');
+const models = require("./index");
+const lambda = new AWS.Lambda();
+const fileHelper = require('../utils/file-helper')
 
 var CNN = {
     find: function (options) {
@@ -275,9 +261,11 @@ var CNN = {
     getRoiAudioFile(cnnId, roiId, options){
         options = options || {};
 
-        var query = "SELECT CRR.x1, CRR.x2, CRR.y1, CRR.y2, CRR.uri as imgUri, R.uri as recUri, R.site_id as recSiteId\n" +
+        var query = "SELECT CRR.x1, CRR.x2, CRR.y1, CRR.y2, CRR.uri as imgUri, R.uri as recUri, R.site_id as recSiteId,\n" +
+            "R.datetime, R.datetime_utc, S.external_id\n" +
         "FROM cnn_results_rois CRR\n" +
         "JOIN recordings R ON CRR.recording_id = R.recording_id\n" +
+        "JOIN sites S ON S.site_id = R.site_id\n" +
         "WHERE CRR.cnn_result_roi_id = ?";
 
         return dbpool.query(
@@ -288,19 +276,25 @@ var CNN = {
             if(!crr){
                 return;
             }
-
-            return q.ninvoke(Recordings, 'fetchAudioFile', {
+            const opts = {
                 uri: crr.recUri,
-                site_id: crr.recSiteId
-            }, {
+                site_id: crr.recSiteId,
+                external_id: crr.external_id,
+                datetime: crr.datetime,
+                datetime_utc: crr.datetime_utc
+            }
+            const filter = {
                 maxFreq: Math.max(crr.y1, crr.y2),
                 minFreq: Math.min(crr.y1, crr.y2),
                 gain: options.gain || 15,
                 trim: {
                     from: Math.min(crr.x1, crr.x2),
                     to: Math.max(crr.x1, crr.x2)
-                },
-            });
+                }
+            }
+            if (fileHelper.getExtension(crr.recUri) === 'opus') {
+                return models.recordings.getAudioFromCore(opts, filter)
+            } else return q.ninvoke(Recordings, 'fetchAudioFile', opts, filter);
         })
     },
 

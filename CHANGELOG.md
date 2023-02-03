@@ -1,5 +1,35 @@
 # Arbimon Release Notes
 
+## v3.0.73 - February 03, 2023
+
+Resolved issues:
+
+- Add an ability to listen to the opus CNN sound
+
+## v3.0.72 - February 01, 2023
+
+Performance improvements:
+
+- Add an error message directive to process all error messages on the new AED form
+- Increase proxy-body-size to 200m
+- Add env key to support logout url
+- External users can run AED jobs of up to 2000 recordings
+
+Resolved issues:
+
+- Fix getting the total recording count in the AED jobs
+- Decrease the min frequency range
+- Fix getting the page recording results
+- Fix pagination for the score per site filter
+- Add an ability to listen to the opus templates sound
+- Add an ability to listen to the opus PM sound
+- Fix permission to manage AED and Clustering job
+- Add auth0 logout link to reset the previous user settings
+- Fix opus file upload
+- Unable to create RFM classification when there is the model already exists
+- Update message for empty clustering job
+- External users can run AED jobs of up to 2000 recordings
+
 ## v3.0.71 - January 27, 2023
 
 Performance improvements:
