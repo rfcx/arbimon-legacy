@@ -195,8 +195,10 @@ router.get('/roisBySpecies/:job_id/:species_id', function (req, res, next) {
 
 router.get('/:cnnId/audio/:roiId', function(req, res, next) {
     model.CNN.getRoiAudioFile(req.params.cnnId, req.params.roiId).then(function(roiAudio) {
-        if(!roiAudio){
+        if (!roiAudio){
             res.sendStatus(404);
+        } if (roiAudio.path.includes('/internal')) {
+            roiAudio.pipe(res)
         } else {
             res.sendFile(roiAudio.path);
         }
