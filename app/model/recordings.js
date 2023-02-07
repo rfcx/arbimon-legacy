@@ -516,6 +516,14 @@ var Recordings = {
         return recording.uri.startsWith('project_')
     },
 
+    deleteTempFile: function (path) {
+        let timeout;
+        clearTimeout(timeout);
+        timeout = setTimeout(() => {
+            tmpfilecache.deleteFile(path)
+        }, 30000);
+    },
+
     /** Downloads a recording from the bucket, storing it in a temporary file cache, and returns its path.
      * @param {Object} recording object containing the recording's data, like the ones returned in findByUrlMatch.
      * @param {Object} recording.uri url containing the recording's path in the bucket.
@@ -630,6 +638,11 @@ var Recordings = {
                             return callback({ code: status_code });
                         }
                         cache_miss.retry_get();
+                        if (cache_miss.file) {
+                            const mp3TempPath = recording_path.path.replace(audioFilePattern, mp3Extension);
+                            Recordings.deleteTempFile(recording_path.path)
+                            Recordings.deleteTempFile(mp3TempPath)
+                        }
                     }
                 );
             });
@@ -658,6 +671,9 @@ var Recordings = {
                 },function(status_code){
                     if(status_code) { callback({code:status_code}); return; }
                     cache_miss.retry_get();
+                    if (spectrogram_key) {
+                        Recordings.deleteTempFile(tmpfilecache.key2File(spectrogram_key))
+                    }
                 });
             });
         }, callback);
@@ -685,8 +701,10 @@ var Recordings = {
                 //     if(err) console.error('failed to deleted spectrogram file');
                 // });
             },
-            function(specTiles, next){
-
+            function(specTiles, tileFilenames, next){
+                if (tileFilenames && tileFilenames.length) {
+                    tileFilenames.forEach(path => Recordings.deleteTempFile(path))
+                }
                 var maxFreq = recording.sample_rate / 2;
                 var pixels2Secs = recording.duration / specTiles.width ;
                 var pixels2Hz = maxFreq / specTiles.height;
@@ -733,6 +751,9 @@ var Recordings = {
             Recordings.fetchSpectrogramTiles(recording, function(err, recording){
                 if(err) { callback(err); return; }
                 cache_miss.retry_get();
+                if (cache_miss.file) {
+                    Recordings.deleteTempFile(cache_miss.file)
+                }
             });
         }, callback);
     },
@@ -754,6 +775,9 @@ var Recordings = {
                 },function(status_code){
                     if(status_code) { callback({code:status_code}); return; }
                     cache_miss.retry_get();
+                    if (cache_miss.file) {
+                        Recordings.deleteTempFile(cache_miss.file)
+                    }
                 });
             });
         }, callback);

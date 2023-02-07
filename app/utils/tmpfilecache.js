@@ -124,6 +124,12 @@ var cache = {
         });
     },
 
+    deleteFile: function(filepath) {
+        fs.unlink(filepath, function(err) {
+            if (err) console.error('failed to delete:', filepath)
+        })
+    },
+
     cleanupTimeout: 0,
 
     cleanup: function(){

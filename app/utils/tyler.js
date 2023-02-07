@@ -64,6 +64,8 @@ function tyler(filePath, callback1) {
             set: tiles
         };
 
+        var tileFilenames = []
+
         debug('tiles coordinates:', tiles);
 
         async.each(tiles,
@@ -78,7 +80,7 @@ function tyler(filePath, callback1) {
                             tileInfo.x0, tileInfo.y0,
                             tileInfo.x1 - tileInfo.x0, tileInfo.y1 - tileInfo.y0
                         );
-
+                        tileFilenames.push(tileFilename)
                         tile.write(tileFilename, function(err) {
                             if(err) return callback(err);
 
@@ -93,8 +95,7 @@ function tyler(filePath, callback1) {
             function finished(err) {
                 if(err) return callback1(err);
 
-                // console.timeEnd('duration');
-                callback1(null, result);
+                callback1(null, result, tileFilenames);
             }
         );
     });
