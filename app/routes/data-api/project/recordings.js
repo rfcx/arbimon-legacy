@@ -9,6 +9,7 @@ const moment = require('moment');
 var config = require('../../../config');
 const mime = require('mime');
 const { getCachedMetrics } = require('../../../utils/cached-metrics');
+const fs = require('fs')
 
 let s3, s3RFCx;
 
@@ -471,7 +472,7 @@ router.get('/tiles/:recordingId/:i/:j', function(req, res, next) {
         }
         model.recordings.fetchOneSpectrogramTile(recording, i, j, function(err, file){
             if(err || !file){ next(err); return; }
-            res.sendFile(file.path);
+            res.sendFile(file.path, function () { fs.unlink(file.path) });
         });
     });
 });
@@ -488,7 +489,7 @@ router.get('/:get/:oneRecUrl?', function(req, res, next) {
         },
         file : function(err, file){
             if(err || !file) return next(err);
-            res.download(file.path, recording.file)
+            res.download(file.path, recording.file, function() { fs.unlink(file.path) })
         },
     };
 

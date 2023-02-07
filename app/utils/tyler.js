@@ -8,7 +8,7 @@ var config = require('../config');
 
 
 
-function tyler(filePath, callback1) {
+function tyler(filePath, isLegacy, callback1) {
     // console.time('duration');
 
     if(!filePath || typeof filePath !== "string") {
@@ -79,11 +79,13 @@ function tyler(filePath, callback1) {
                             tileInfo.x1 - tileInfo.x0, tileInfo.y1 - tileInfo.y0
                         );
 
-                        tile.write(tileFilename, function(err) {
-                            if(err) return callback(err);
+                        if (isLegacy) {
+                            tile.write(tileFilename, function(err) {
+                                if(err) return callback(err);
 
-                            callback();
-                        });
+                                callback();
+                            });
+                        } else callback();
 
                     } catch(err){
                         callback(err);
@@ -94,7 +96,7 @@ function tyler(filePath, callback1) {
                 if(err) return callback1(err);
 
                 // console.timeEnd('duration');
-                callback1(null, result);
+                callback1(null, result, filePath);
             }
         );
     });
