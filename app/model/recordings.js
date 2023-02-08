@@ -626,7 +626,7 @@ var Recordings = {
                     transcode_args,
                     function(status_code){
                         debug('done transcoding');
-                        fs.unlink(recording_path.path) // delete original file
+                        fs.unlink(recording_path.path, () => {}) // delete original file
                         if(status_code) {
                             return callback({ code: status_code });
                         }
@@ -688,7 +688,7 @@ var Recordings = {
                 // });
             },
             function(specTiles, specFile, next){
-                fs.unlink(specFile)
+                fs.unlink(specFile, () => {})
                 var maxFreq = recording.sample_rate / 2;
                 var pixels2Secs = recording.duration / specTiles.width ;
                 var pixels2Hz = maxFreq / specTiles.height;
