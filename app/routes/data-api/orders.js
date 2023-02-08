@@ -115,6 +115,7 @@ var projectSchema = joi.object().keys({
     url: joi.string(),
     description: joi.string().optional(),
     is_private: joi.boolean(),
+    reports_enabled: joi.boolean(),
 });
 
 var planSchema = joi.object().keys({
@@ -145,6 +146,7 @@ router.post('/create-project', function(req, res, next) {
     delete project.plan;
     //type cast is_private
     project.is_private = !!project.is_private;
+    project.reports_enabled = true;
 
     q.all([
         q.ninvoke(joi, 'validate', project, projectSchema, {
