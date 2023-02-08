@@ -138,6 +138,7 @@ var Projects = {
                           "   pp.activation AS plan_activated, \n"+
                           "   p.citizen_scientist_enabled, \n"+
                           "   p.pattern_matching_enabled, \n"+
+                          "   p.reports_enabled, \n"+
                           "   p.cnn_enabled, \n"+
                           "   pp.duration_period AS plan_period \n";
             joinExtra   += "JOIN project_plans AS pp ON pp.plan_id = p.current_plan \n";
@@ -340,6 +341,7 @@ var Projects = {
         project.storage_usage = 0;
         project.processing_usage = 0;
         project.pattern_matching_enabled = 1;
+        project.reports_enabled = 1;
 
         if (!db) {
             db = await dbpool.getConnection()
