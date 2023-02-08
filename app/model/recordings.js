@@ -626,6 +626,7 @@ var Recordings = {
                     transcode_args,
                     function(status_code){
                         debug('done transcoding');
+                        fs.unlink(recording_path.path) // delete original file
                         if(status_code) {
                             return callback({ code: status_code });
                         }
@@ -678,15 +679,16 @@ var Recordings = {
                 Recordings.fetchSpectrogramFile(recording, next);
             },
             function(specFile, next){
-                tyler(specFile.path, next);
+                const isLegacy = recording && recording.legacy
+                tyler(specFile.path, isLegacy, next);
 
                 // TODO to enabled file deletion need to skip file creation if tiles exists
                 // fs.unlink(filePath, function() {
                 //     if(err) console.error('failed to deleted spectrogram file');
                 // });
             },
-            function(specTiles, next){
-
+            function(specTiles, specFile, next){
+                fs.unlink(specFile)
                 var maxFreq = recording.sample_rate / 2;
                 var pixels2Secs = recording.duration / specTiles.width ;
                 var pixels2Hz = maxFreq / specTiles.height;
