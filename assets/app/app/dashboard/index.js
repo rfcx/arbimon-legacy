@@ -6,7 +6,9 @@ angular.module('a2.app.dashboard',[
     'ct.ui.router.extras',
     'a2.forms',
     'humane',
-    'a2.googlemaps'
+    'a2.googlemaps',
+    'ngSanitize',
+    'mdMarkdownIt',
 ])
 .config(function($stateProvider, $urlRouterProvider) {
     $stateProvider.state('dashboard', {
@@ -25,7 +27,7 @@ angular.module('a2.app.dashboard',[
     Project.getInfo(function(info){
         $scope.project = info;
         $scope.isSpeciesLoading = true
-
+        $scope.markdown = $scope.project && $scope.project.description ? $scope.project.description : ''
         Project.getProjectTotalSpecies(info.project_id, function(data) {
             $scope.speciesQty = data || 0;
             $scope.isSpeciesLoading = false

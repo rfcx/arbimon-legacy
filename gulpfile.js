@@ -53,6 +53,8 @@ var app={
             'selectize'          :{'dist/css/selectize.default.css': '../angular-ui-select/', },
             'ui-router-extras'   :{'release/ct-ui-router-extras.min.js': '' },
             zxcvbn               :{'dist/zxcvbn.*': '', },
+            'markdown-it'        :{'dist/markdown-it.min.js': '', },
+            'angular-markdown-it' :{'dist/ng-markdownit.min.js': '', },
         },
     },
     code:{
