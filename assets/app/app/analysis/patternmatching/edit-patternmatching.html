@@ -1,0 +1,20 @@
+<div class="modal-header">
+    <h3>Rename pattern matching job</h3>
+</div>
+
+<div class="modal-body">
+    <form>
+        <div class="form-group">
+            <label for="name">Pattern matching name</label>
+            <input type="text"
+                name="name"
+                id="name"
+                class="form-control"
+                ng-model="pmName">
+        </div>
+    </form>
+</div>
+<div class="modal-footer">
+    <button class="btn btn-primary" ng-click="$close(pmName) | trackEvent:'Audiodata-Edit-playlists':'close clicked'"><i class="fa fa-floppy-o"></i> Save &amp; Close </button>
+    <button class="btn btn-default" ng-click="$dismiss() | trackEvent:'Audiodata-Edit-playlists':'dismiss clicked'"><i class="fa fa-times"></i> Close</button>
+</div>

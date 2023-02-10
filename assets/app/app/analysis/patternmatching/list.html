@@ -62,6 +62,13 @@
                 </field>
                 <field tdclass="is-v-middle">
                     <button class="btn btn-default btn-xs"
+                        ng-click="update(row, $event)"
+                        tooltip="Edit Name"
+                        tooltip-trigger="mouseenter">
+                        <i class="fa fa-pencil"></i>
+                        Edit
+                    </button>
+                    <button class="btn btn-default btn-xs"
                         ng-click="selectItem(row.id) | trackEvent:'Analysis-Pattern-Matching-List':' show pattern matching details'"
                     >
                             Show Details
