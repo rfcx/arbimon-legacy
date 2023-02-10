@@ -65,6 +65,11 @@ angular.module('a2.srv.patternmatching', [
                 return response.data;
             });
         },
+        update: function(patternMatchingId, data) {
+            return $http.post('/api/project/'+Project.getUrl()+'/pattern-matchings/' + patternMatchingId + '/update', data).then(function(response){
+                return response.data;
+            });
+        },
         delete: function(patternMatchingId) {
             return $http.post('/api/project/' + Project.getUrl() + '/pattern-matchings/' + patternMatchingId + '/remove').then(function(response){
                 return response.data;

@@ -198,6 +198,12 @@ router.get('/:patternMatching/audio/:roiId', function(req, res, next) {
     }).catch(next);
 });
 
+router.post('/:patternMatching/update', function(req, res, next) {
+    res.type('json');
+    model.patternMatchings.updateJobName(req.params.patternMatching, req.body.name).then(function() {
+        res.json();
+    }).catch(next);
+});
 
 router.post('/:patternMatching/validate', function(req, res, next) {
     res.type('json');
