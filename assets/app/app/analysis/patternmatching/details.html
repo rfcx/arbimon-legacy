@@ -43,7 +43,15 @@
                 <div class="col-sm-4 is-v-middle">
                     <div class="mb-3">
                         <p class="section-header mb-1">{{controller.patternMatching.timestamp | moment : 'lll' }}</p>
-                        <p title="{{controller.patternMatching.name}}" class="section-header-title mb-0 hidelongtext">{{controller.patternMatching.name}}</p>
+                        <div class="row-flex flex-align-middle flex-direction-row flex-space-start">
+                            <span title="{{controller.patternMatching.name}}" class="section-header-title mr-3 hidelongtext">{{controller.patternMatching.name}}</span>
+                            <button class="btn btn-default btn-xs"
+                                ng-click="controller.update(controller.patternMatching, $event)"
+                                tooltip="Edit Name"
+                                tooltip-trigger="mouseenter">
+                                <i class="fa fa-pencil"></i>
+                            </button>
+                        </div>
                         <p class="section-sub-header mb-0">{{controller.patternMatching.species_name }}, {{controller.patternMatching.songtype_name }}</p>
                     </div>
                     <div class="mb-3">
