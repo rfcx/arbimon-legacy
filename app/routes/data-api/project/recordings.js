@@ -472,7 +472,14 @@ router.get('/tiles/:recordingId/:i/:j', function(req, res, next) {
         }
         model.recordings.fetchOneSpectrogramTile(recording, i, j, function(err, file){
             if(err || !file){ next(err); return; }
-            res.sendFile(file.path, function () { fs.unlink(file.path) });
+            res.sendFile(file.path, function () {
+                if (fs.existsSync(file.path)) {
+                    fs.unlink(file.path, function (err) {
+                        if (err) console.error('Error deleting the tile file.', err);
+                        console.info('Tile file deleted.');
+                    })
+                }
+            })
         });
     });
 });
