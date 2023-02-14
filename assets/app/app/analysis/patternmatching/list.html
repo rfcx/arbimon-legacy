@@ -29,20 +29,28 @@
             <p class="mb-0"><a href="https://support.rfcx.org/article/99-what-is-pattern-matching-pm-in-arbimon" target="_blank">1. What is Pattern Matching?<i class="ml-2 fa fa-external-link"></i></a></p>
             <p class="mb-0"><a href="https://support.rfcx.org/article/135-pattern-matching-best-practices" target="_blank">2. Pattern Matching best practices<i class="ml-2 fa fa-external-link"></i></a></p>
         </div>
-        <div ng-if="!loading.rows && patternmatchingsData && patternmatchingsData.length">
+        <div ng-if="!loading.rows && patternmatchingsData && patternmatchingsData.length" class="pm-list">
             <a2-table rows="patternmatchingsData" no-checkbox="true" on-select="selectItem(row.id) | trackEvent:'Analysis-Pattern-Matching-List':' show pattern matching details'">
                 <field title="Name" tdclass="is-v-middle hidelongtext widthtd" key="name">
-                    <div class="roi-thumbnail mr-1">
-                        <img ng-src="{{row.template.uri}}" class="roi-img is-small"/>
-                        <a class="roi-btn-br" ng-href="{{getTemplateVisualizerUrl(row.template)}}">
-                            <i tooltip-placement="left"
-                                tooltip-append-to-body="true"
-                                tooltip="View in Visualizer"
-                                class="fa fa-cubes">
-                            </i>
-                        </a>
+                    <div class="row-flex flex-align-middle flex-direction-row flex-space-start">
+                        <div class="roi-thumbnail mr-3">
+                            <img ng-src="{{row.template.uri}}" class="roi-img is-small"/>
+                            <a class="roi-btn-br" ng-href="{{getTemplateVisualizerUrl(row.template)}}">
+                                <i tooltip-placement="left"
+                                    tooltip-append-to-body="true"
+                                    tooltip="View in Visualizer"
+                                    class="fa fa-cubes">
+                                </i>
+                            </a>
+                        </div>
+                        <span class="mr-3 hidelongtext" title="{{ row.name }}">{{ row.name }}</span>
+                        <button class="btn btn-default btn-xs"
+                            ng-click="update(row, $event)"
+                            tooltip="Edit Name"
+                            tooltip-trigger="mouseenter">
+                            <i class="fa fa-pencil"></i>
+                        </button>
                     </div>
-                    <span title="{{ row.name }}">{{ row.name }}</span>
                 </field>
                 <field title="Timestamp" key="timestamp" tdclass="is-v-middle">
                     {{ row.timestamp | moment : 'lll' }}
@@ -61,18 +69,6 @@
                     {{ row.user }}
                 </field>
                 <field tdclass="is-v-middle">
-                    <button class="btn btn-default btn-xs"
-                        ng-click="update(row, $event)"
-                        tooltip="Edit Name"
-                        tooltip-trigger="mouseenter">
-                        <i class="fa fa-pencil"></i>
-                        Edit
-                    </button>
-                    <button class="btn btn-default btn-xs"
-                        ng-click="selectItem(row.id) | trackEvent:'Analysis-Pattern-Matching-List':' show pattern matching details'"
-                    >
-                            Show Details
-                    </button>
                     <button class="btn btn-default btn-xs"
                         ng-click="deletePatternMatching(row, $event) | trackEvent:'Analysis-Pattern-Matching-list':'delete pattern matching'"
                         tooltip="Delete"
