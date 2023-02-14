@@ -8,6 +8,7 @@ var model = require('../../../model');
 var pokeDaMonkey = require('../../../utils/monkey');
 var csv_stringify = require("csv-stringify");
 const dayInMs = 24 * 60 * 60 * 1000;
+const fs = require('fs');
 
 let cachedData = {
     counts: { }
@@ -193,7 +194,14 @@ router.get('/:patternMatching/audio/:roiId', function(req, res, next) {
         } if (roiAudio.path.includes('/internal')) {
             roiAudio.pipe(res)
         } else {
-            res.sendFile(roiAudio.path);
+            res.sendFile(roiAudio.path, function () {
+                if (fs.existsSync(roiAudio.path)) {
+                    fs.unlink(roiAudio.path, function (err) {
+                        if (err) console.error('Error deleting the PM file.', err);
+                        console.info('PM file deleted.');
+                    })
+                }
+            })
         }
     }).catch(next);
 });
