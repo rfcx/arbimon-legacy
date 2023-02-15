@@ -23,7 +23,7 @@ angular.module('a2.analysis.patternmatching', [
         templateUrl: '/app/analysis/patternmatching/list.html'
     });
 })
-.controller('PatternMatchingCtrl' , function($scope, $modal, $filter, Project, JobsData, a2Playlists, $location, notify, $q, a2PatternMatching, a2UserPermit, $state, $stateParams) {
+.controller('PatternMatchingCtrl' , function($scope, $modal, JobsData, $location, notify, $q, a2PatternMatching, a2UserPermit, $state, $stateParams) {
     $scope.selectedPatternMatchingId = $stateParams.patternMatchingId;
     $scope.loading = { rows: false, showRefreshBtn: false };
     $scope.paginationSettings = {
@@ -55,6 +55,27 @@ angular.module('a2.analysis.patternmatching', [
     $scope.setCurrentPage = function() {
         this.paginationSettings.offset = $scope.paginationSettings.page - 1;
         $scope.loadPatternMatchings();
+    };
+
+    $scope.update = function(patternMatching, $event){
+        $event.stopPropagation();
+
+        if(!a2UserPermit.can('manage pattern matchings')) {
+            notify.log('You do not have permission to edit pattern matchings');
+            return;
+        }
+        $scope.pmName = patternMatching.name
+        const modalInstance = $modal.open({
+            templateUrl: '/app/analysis/patternmatching/edit-patternmatching.html',
+            scope: $scope
+        });
+
+        modalInstance.result.then(function(name) {
+            a2PatternMatching.update(patternMatching.id, { name: name })
+                .then(function() {
+                    $scope.loadPatternMatchings();
+                })
+        });
     };
 
     $scope.loadPatternMatchings = function() {
@@ -180,7 +201,7 @@ angular.module('a2.analysis.patternmatching', [
         templateUrl: '/app/analysis/patternmatching/details.html'
     };
 })
-.controller('PatternMatchingDetailsCtrl' , function($scope, $q, a2PatternMatching, a2Templates, a2UserPermit, Project, a2AudioBarService, notify, $anchorScroll, $window) {
+.controller('PatternMatchingDetailsCtrl' , function($scope, $q, a2PatternMatching, a2Templates, a2UserPermit, Project, a2AudioBarService, notify, $anchorScroll, $modal) {
     Object.assign(this, {
     id: null,
     initialize: function(patternMatchingId){
@@ -260,6 +281,28 @@ angular.module('a2.analysis.patternmatching', [
         this.selected.page = 1;
         this.recalculateSiteListBatch();
         this.loadData(1);
+    },
+
+    update: function(patternMatching, $event) {
+        const self = this
+        $event.stopPropagation();
+
+        if(!a2UserPermit.can('manage pattern matchings')) {
+            notify.log('You do not have permission to edit pattern matchings');
+            return;
+        }
+        $scope.pmName = patternMatching.name
+        const modalInstance = $modal.open({
+            templateUrl: '/app/analysis/patternmatching/edit-patternmatching.html',
+            scope: $scope
+        });
+
+        modalInstance.result.then(function(name) {
+            a2PatternMatching.update(patternMatching.id, { name: name })
+                .then(function() {
+                    patternMatching.name = name
+                })
+        });
     },
 
     setupExportUrl: function() {

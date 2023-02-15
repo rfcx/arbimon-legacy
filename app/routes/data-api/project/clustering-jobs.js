@@ -9,6 +9,7 @@ const AWS = require('aws-sdk');
 const s3 = new AWS.S3();
 const config = require('../../../config');
 const q = require('q');
+const fs = require('fs');
 
 router.get('/', function(req, res, next) {
     res.type('json');
@@ -67,7 +68,14 @@ router.get('/:recId/audio/:aedId', function(req, res, next) {
         if(!roiAudio){
             res.sendStatus(404);
         } else {
-            res.sendFile(roiAudio.path);
+            res.sendFile(roiAudio.path, function () {
+                if (fs.existsSync(roiAudio.path)) {
+                    fs.unlink(roiAudio.path, function (err) {
+                        if (err) console.error('Error deleting the Clustering roi file.', err);
+                        console.info('Clustering roi file deleted.');
+                    })
+                }
+            })
         }
     }).catch(next);
 });

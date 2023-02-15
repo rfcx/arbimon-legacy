@@ -7,7 +7,7 @@ var router = express.Router();
 var model = require('../../../model');
 var pokeDaMonkey = require('../../../utils/monkey');
 var csv_stringify = require("csv-stringify");
-
+const fs = require('fs');
 
 router.get('/:cnnId/rois.csv', function(req, res, next) {
     if(req.query.out=="text"){
@@ -200,7 +200,14 @@ router.get('/:cnnId/audio/:roiId', function(req, res, next) {
         } if (roiAudio.path.includes('/internal')) {
             roiAudio.pipe(res)
         } else {
-            res.sendFile(roiAudio.path);
+            res.sendFile(roiAudio.path, function () {
+                if (fs.existsSync(roiAudio.path)) {
+                    fs.unlink(roiAudio.path, function (err) {
+                        if (err) console.error('Error deleting the CNN file.', err);
+                        console.info('CNN file deleted.');
+                    })
+                }
+            })
         }
     }).catch(next);
 });

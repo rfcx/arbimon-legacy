@@ -781,6 +781,16 @@ var PatternMatchings = {
         ]) : Promise.resolve();
     },
 
+    updateJobName(patternMatchingId, name){
+        return dbpool.query(
+            "UPDATE pattern_matchings\n" +
+            "SET name = ?\n" +
+            "WHERE pattern_matching_id = ?", [
+            name,
+            patternMatchingId
+        ])
+    },
+
     getRoi(patternMatchingId, roisId){
         return dbpool.query(
             "SELECT *\n" +

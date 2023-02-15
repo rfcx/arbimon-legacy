@@ -5,6 +5,7 @@ const express = require('express');
 const router = express.Router();
 const model = require('../../../model');
 const { httpErrorHandler, Converter } = require('@rfcx/http-utils');
+const fs = require('fs');
 
 /** Return a list of all the templates in a project.
  */
@@ -81,7 +82,14 @@ router.get('/:template/audio', function(req, res, next) {
         } if (roiAudio.path.includes('/internal')) {
             roiAudio.pipe(res)
         } else {
-            res.sendFile(roiAudio.path);
+            res.sendFile(roiAudio.path, function () {
+                if (fs.existsSync(roiAudio.path)) {
+                    fs.unlink(roiAudio.path, function (err) {
+                        if (err) console.error('Error deleting the template file.', err);
+                        console.info('Template file deleted.');
+                    })
+                }
+            })
         }
     }).catch(next);
 });
