@@ -84,11 +84,11 @@
         <loader ng-hide="!loading"></loader>
     </div>
 </div>
-<div class="row" ng-if="totalRecs">
-    <div class="col-sm-12">
+<div class="row col-sm-12" ng-if="totalRecs">
+    <div class="row-flex flex-align-middle flex-space-start">
         <pagination total-items="totalRecs"
             ng-model="currentPage" ng-change="controller.setCurrentPage(currentPage)"
-            class="pagination-sm"
+            class="pagination-sm mr-4"
             boundary-links="true"
             max-size="10"
             rotate="false"
@@ -96,6 +96,9 @@
             ng-disabled="loading"
             items-per-page="limitPerPage">
         </pagination>
-
+        <div>
+            <label class="mr-2">Jump to page:</label>
+            <input id="currentPage" class="form-control page-selector" min="1" step="1" max="totalPages" ng-change="controller.setCurrentPage(currentPage)" ng-model="currentPage" type="number"/>
+        </div>
     </div>
 </div>
