@@ -13,3 +13,19 @@ spec:
     - name: node
       port: 80
       targetPort: 3000
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: arbimon-ingest-consumer-service
+  namespace: production
+  labels:
+    app: arbimon-ingest-consumer
+spec:
+  selector:
+    app: arbimon-ingest-consumer
+  type: ClusterIP
+  ports:
+    - name: node
+      port: 80
+      targetPort: 3000
