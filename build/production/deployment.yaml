@@ -31,3 +31,36 @@ spec:
             limits:
               memory: '3000Mi'
               cpu: '2'
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: arbimon-ingest-consumer
+  namespace: production
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: arbimon-ingest-consumer
+  template:
+    metadata:
+      labels:
+        app: arbimon-ingest-consumer
+    spec:
+      containers:
+        - name: arbimon
+          image: 887044485231.dkr.ecr.eu-west-1.amazonaws.com/arbimon:latest
+          imagePullPolicy: Always
+          envFrom:
+          - secretRef:
+              name: arbimon-secrets
+          env:
+            - name: NODE_ENV
+              value: "production"
+          resources:
+            requests:
+              memory: '128Mi'
+              cpu: '0.25'
+            limits:
+              memory: '1000Mi'
+              cpu: '1'
