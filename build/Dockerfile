@@ -1,6 +1,6 @@
 # Jobs
 
-FROM node:14.17.4 as arbimon-recording-delete-job
+FROM node:18.14.0 as arbimon-recording-delete-job
 WORKDIR /app
 COPY ["jobs/package.json", "jobs/package-lock.json*", "/app/"]
 RUN npm install
@@ -17,7 +17,7 @@ RUN apt-get update && \
       curl sox libsox-fmt-all \
       git g++ software-properties-common imagemagick \
       python-dev virtualenv pkg-config libpng-dev libfreetype6-dev libmysqlclient-dev && \
-    curl -sL 'https://deb.nodesource.com/setup_8.x' | bash - && \
+    curl -sL 'https://deb.nodesource.com/setup_18.x' | bash - && \
     apt-get -y install nodejs && \
     ln -s /usr/bin/nodejs /usr/local/bin/node
 

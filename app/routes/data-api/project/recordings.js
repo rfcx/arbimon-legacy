@@ -496,7 +496,7 @@ router.get('/:get/:oneRecUrl?', function(req, res, next) {
         },
         file : function(err, file){
             if(err || !file) return next(err);
-            res.download(file.path, recording.file, function() { fs.unlink(file.path) })
+            res.download(file.path, recording.file, function() { fs.unlink(file.path, () => {}) })
         },
     };
 
@@ -517,7 +517,7 @@ router.get('/:get/:oneRecUrl?', function(req, res, next) {
                     recording.aedValidations = aedValidations.map(item => {
                         return { ...item, name: `${item.scientific_name} ${item.songtype_name}`, isPopupOpened: false, presentReview: 1 }
                     });
-                } 
+                }
                 recording.validations = validations;
                 model.recordings.fetchInfo(recording, function(err, rec){
                     if(err) return next(err);

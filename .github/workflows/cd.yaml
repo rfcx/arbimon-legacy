@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      # - master
+      - master
       - staging
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 jobs:
