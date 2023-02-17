@@ -1,4 +1,5 @@
 # local config files
 
 *.local.json
+*.local.staging.json
 *.bak
