@@ -16,19 +16,13 @@ var AWS = require('aws-sdk');
 var jwt = require('express-jwt');
 var paypal = require('paypal-rest-sdk');
 var config = require('./config');
-const redis = require('redis')
+const redisClient = require('./utils/redis')
 
 AWS.config.update({
     accessKeyId: config('aws').accessKeyId,
     secretAccessKey: config('aws').secretAccessKey,
     region: config('aws').region
 });
-
-let redisClient = redis.createClient({
-    url: config('redis').url,
-    legacyMode: true
-})
-redisClient.connect().catch(console.error)
 
 var systemSettings = require('./utils/settings-monitor');
 var tmpfilecache = require('./utils/tmpfilecache');
