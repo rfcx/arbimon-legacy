@@ -470,17 +470,23 @@ router.get('/tiles/:recordingId/:i/:j', function(req, res, next) {
         if (recording === null){
             return res.status(404).json({ error: "recording not found"});
         }
-        model.recordings.fetchOneSpectrogramTile(recording, i, j, function(err, file){
-            if(err || !file){ next(err); return; }
-            res.sendFile(file.path, function () {
-                if (fs.existsSync(file.path)) {
-                    fs.unlink(file.path, function (err) {
-                        if (err) console.error('Error deleting the tile file.', err);
-                        console.info('Tile file deleted.');
-                    })
-                }
-            })
+
+        model.recordings.fetchInfo(recording, function(err, rec){
+            if(err) return next(err);
+            model.recordings.fetchOneSpectrogramTile(rec, i, j, function(err, file){
+                if(err || !file){ next(err); return; }
+                res.sendFile(file.path, function () {
+                    if (fs.existsSync(file.path)) {
+                        fs.unlink(file.path, function (err) {
+                            if (err) console.error('Error deleting the tile file.', err);
+                            console.info('Tile file deleted.');
+                        })
+                    }
+                })
+            });
         });
+
+
     });
 });
 
