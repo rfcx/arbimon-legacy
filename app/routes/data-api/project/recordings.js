@@ -99,12 +99,19 @@ router.get('/occupancy-models-export/:species?', function(req, res, next) {
 });
 
 router.get('/recordings-export.csv', function(req, res, next) {
-    if(req.query.out=="text"){
-        res.type('text/plain');
-    } else {
-        res.type('text/csv');
+    let filters, projection
+    try {
+        filters = req.query.filters ? JSON.parse(req.query.filters) : {}
+        projection = req.query.show ? JSON.parse(req.query.show) : {};
+    } catch(e){
+        return next(e);
     }
-    processFiltersData(req, res, next);
+
+    filters.projectId = req.project.project_id;
+    filters.userId = req.session.user.id;
+    model.recordings.writeExportParams(projection, filters).then(function(data) {
+        res.json(data);
+    }).catch(next);
 });
 
 router.get('/grouped-detections-export.csv', function(req, res, next) {

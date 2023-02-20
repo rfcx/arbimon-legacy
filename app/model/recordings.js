@@ -1694,7 +1694,16 @@ var Recordings = {
 
     },
 
-    exportRecordingData: function(projection, filters){
+    writeExportParams: function(projection, filters) {
+        return Q.ninvoke(joi, 'validate', projection, Recordings.SCHEMAS.exportProjections)
+            .then((projection_parameters) => {
+                const q = `INSERT INTO recordings_export_parameters (project_id, user_id, user_email, projection_parameters, filters, date_created, processed_at)
+                VALUES(${filters.projectId}, ${filters.userId}, ${filters.userEmail}, ${projection_parameters}, ${filters.projection_parameters}, NOW(), null)`
+                return dbpool.query(q)
+            })
+    },
+
+    exportRecordingData: function(projection, filters) { // 
         let summaryBuilders = [];
         return Q.ninvoke(joi, 'validate', projection, Recordings.SCHEMAS.exportProjections)
             .then(async (all) => {
