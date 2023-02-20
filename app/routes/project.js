@@ -120,6 +120,7 @@ router.get('/:projecturl?/', function(req, res, next) {
                     },
                     super: !!req.session.user.isSuper,
                     rfcxUser: !!req.session.user && !!req.session.user.email && !!req.session.user.email.includes('rfcx.org'),
+                    userEmail: !!req.session.user && !!req.session.user.email ? req.session.user.email : '',
                     permissions: rows.map(function(perm) { return perm.name; }),
                 };
 

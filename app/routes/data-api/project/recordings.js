@@ -110,7 +110,7 @@ router.get('/recordings-export.csv', function(req, res, next) {
     filters.projectId = req.project.project_id;
     filters.userId = req.session.user.id;
     model.recordings.writeExportParams(projection, filters).then(function(data) {
-        res.json(data);
+        res.json({ success: true })
     }).catch(next);
 });
 

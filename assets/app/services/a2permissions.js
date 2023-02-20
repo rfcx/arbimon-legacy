@@ -16,6 +16,9 @@ angular.module('a2.permissions', [
         isRfcx: function(){
             return permit.rfcxUser;
         },
+        getUserEmail: function() {
+            return permit.userEmail;
+        },
         has: function(feature) {
             return permit.features && permit.features[feature];
         },

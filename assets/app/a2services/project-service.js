@@ -96,7 +96,7 @@ angular.module('a2.srv.project', [
                 }
                 return a2APIService.get('/recordings/search-count', {params:query || {}});
             },
-            getRecordingDataUrl: function(filters, projection){
+            getRecordingData: function(filters, projection, ){
                 if (filters.tags) {
                     filters.tags = filters.tags.flat();
                 }
@@ -109,10 +109,13 @@ angular.module('a2.srv.project', [
                 });
 
                 var serializedParams = $httpParamSerializer(params);
-                return '/api/project/'+url+'/recordings/'+ (
+                const getUrl = '/api/project/'+url+'/recordings/'+ (
                     projection && projection.species ? 'occupancy-models-export/'+projection.species_name+'.csv' :
                     (projection && projection.grouped ? 'grouped-detections-export.csv' : 'recordings-export.csv'))
                     + (serializedParams.length ? '?'+serializedParams : '');
+                return $http.get(getUrl).then(function(response) {
+                    return response.data;
+                });
             },
             getSitesExportUrl: function() {
                 return '/api/project/' + url + '/sites-export.csv';
