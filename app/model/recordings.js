@@ -679,7 +679,7 @@ var Recordings = {
                 Recordings.fetchSpectrogramFile(recording, next);
             },
             function(specFile, next){
-                const isLegacy = recording && recording.legacy
+                const isLegacy = Recordings.isLegacy(recording)
                 tyler(specFile.path, isLegacy, next);
 
                 // TODO to enabled file deletion need to skip file creation if tiles exists
@@ -1651,7 +1651,7 @@ var Recordings = {
                                         cls.species,
                                         cls.project,
                                     ]);
-                                    summaryBuilders[c].addProjection(`(CASE WHEN ${clsid}.present_review > 0 OR ${clsid}.present_aed > 0 THEN ${clsid}.present_review + ${clsid}.present_aed ELSE ${clsid}.present END)` + " AS " + dbpool.escapeId("val<" + cls.species_name + "/" + cls.songtype_name + ">"));
+                                    summaryBuilders[c].addProjection(`(CASE WHEN ${clsid}.present_review > 0 OR ${clsid}.present_aed > 0 THEN ${clsid}.present + ${clsid}.present_review + ${clsid}.present_aed ELSE ${clsid}.present END)` + " AS " + dbpool.escapeId("val<" + cls.species_name + "/" + cls.songtype_name + ">"));
                                 })
                             }
                         }
@@ -1734,7 +1734,7 @@ var Recordings = {
                                         cls.species,
                                         cls.project,
                                     ]);
-                                    summaryBuilders[c].addProjection(`(CASE WHEN ${clsid}.present_review > 0 OR ${clsid}.present_aed > 0 THEN ${clsid}.present_review + ${clsid}.present_aed ELSE ${clsid}.present END)` + " AS " + dbpool.escapeId("val<" + cls.species_name + "/" + cls.songtype_name + ">"));
+                                    summaryBuilders[c].addProjection(`(CASE WHEN ${clsid}.present_review > 0 OR ${clsid}.present_aed > 0 THEN ${clsid}.present + ${clsid}.present_review + ${clsid}.present_aed ELSE ${clsid}.present END)` + " AS " + dbpool.escapeId("val<" + cls.species_name + "/" + cls.songtype_name + ">"));
                                 })
                             }
                         }

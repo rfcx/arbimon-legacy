@@ -10,14 +10,14 @@ var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var session = require('express-session');
-var SessionStore = require('express-mysql-session')(session);
+var RedisStore = require('connect-redis')(session)
 var busboy = require('connect-busboy');
 var AWS = require('aws-sdk');
 var jwt = require('express-jwt');
 var paypal = require('paypal-rest-sdk');
-const db = require('./utils/dbpool');
-const pool = db.getPool();
 var config = require('./config');
+const redisClient = require('./utils/redis')
+
 AWS.config.update({
     accessKeyId: config('aws').accessKeyId,
     secretAccessKey: config('aws').secretAccessKey,
@@ -107,16 +107,29 @@ var sessionConfig = {
     secret : config('session').secret,
     resave : true,
     saveUninitialized : false,
-    store: new SessionStore({
-        expiration : config('session').expiration
-    }, pool)
+    store: new RedisStore({
+        client: redisClient,
+        ttl: config('session').expiration
+    })
 };
 
 if (app.get('env') === 'production') {
     sessionConfig.cookie = { secure: true }; // use secure cookies
 }
 
-app.use(session(sessionConfig));
+var sessionMiddleware = session(sessionConfig)
+// https://github.com/expressjs/session/issues/99#issuecomment-63853989
+app.use(function (req, res, next) {
+    var tries = 3
+    function lookupSession(error) {
+      if (error) { return next(error) }
+      tries -= 1
+      if (req.session !== undefined) { return next() }
+      if (tries < 0) { return next(new Error('Failed getting user session')) }
+      sessionMiddleware(req, res, lookupSession)
+    }
+    lookupSession()
+  })
 app.use(systemSettings.middleware());
 
 // routes ----------------------------------------------

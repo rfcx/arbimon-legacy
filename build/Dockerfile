@@ -1,6 +1,6 @@
 # Jobs
 
-FROM node:14.17.4 as arbimon-recording-delete-job
+FROM node:18.14.0 as arbimon-recording-delete-job
 WORKDIR /app
 COPY ["jobs/package.json", "jobs/package-lock.json*", "/app/"]
 RUN npm install
@@ -12,22 +12,38 @@ CMD ["node", "jobs/arbimon-recording-delete-job/index.js"]
 # Frontend and backend
 
 FROM ubuntu:18.04 as arbimon
-RUN apt-get update && \
-    apt-get install --no-install-recommends -y \
-      curl sox libsox-fmt-all \
-      git g++ software-properties-common imagemagick \
-      python-dev virtualenv pkg-config libpng-dev libfreetype6-dev libmysqlclient-dev && \
-    curl -sL 'https://deb.nodesource.com/setup_8.x' | bash - && \
-    apt-get -y install nodejs && \
-    ln -s /usr/bin/nodejs /usr/local/bin/node
-
-# RUN curl http://downloads.sourceforge.net/project/sox/sox/14.4.2/sox-14.4.2.tar.gz -L --output /tmp/sox-14.4.2.tar.gz --silent && \
-#     tar xzf /tmp/sox-14.4.2.tar.gz -C /tmp && \
-#     cd /tmp/sox-14.4.2 && \
-#     ./configure --with-opus=yes  --with-flac=yes --with-oggvorbis=yes && \
-#     make -s && make install && \
-#     ln -s /usr/local/bin/sox /usr/bin/sox && ln -s /usr/local/bin/sox /usr/bin/soxi && \
-#     rm -rf /tmp/*
+RUN apt update \
+    && apt install -y \
+        curl \
+        gnupg \
+        gcc \
+        g++ \
+        make \
+        sox \
+        imagemagick \
+        python-dev \
+        software-properties-common \
+        libsox-fmt-all \
+        libsox-dev \
+        libvorbis-dev \
+        libogg-dev \
+        vorbis-tools \
+        libopus-dev \
+        libopusfile-dev \
+        libtool \
+        opus-tools \
+        pkg-config \
+        libflac-dev \
+        autoconf \
+        automake \
+        git \
+        virtualenv \
+        libpng-dev \
+        libfreetype6-dev \
+        libmysqlclient-dev
+RUN curl -sL https://deb.nodesource.com/setup_16.x | bash - && \
+        apt update && \
+        apt install -y nodejs
 
 WORKDIR /app
 COPY requirements.txt /app/
@@ -36,7 +52,7 @@ RUN virtualenv --python=$(which python2) .env && . .env/bin/activate && \
     echo `realpath lib` > .env/lib/python2.7/site-packages/arbimon-server-libs.pth
 
 COPY *.js* /app/
-RUN npm set unsafe-perm true && npm i
+RUN npm i
 
 COPY app /app/app
 COPY assets /app/assets
