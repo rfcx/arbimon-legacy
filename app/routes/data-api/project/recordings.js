@@ -98,7 +98,7 @@ router.get('/occupancy-models-export/:species?', function(req, res, next) {
     processFiltersData(req, res, next);
 });
 
-router.get('/recordings-export.csv', function(req, res, next) {
+router.get('/recordings-export', function(req, res, next) {
     let filters, projection
     try {
         filters = req.query.filters ? JSON.parse(req.query.filters) : {}
