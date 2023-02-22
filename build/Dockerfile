@@ -64,4 +64,4 @@ COPY scripts /app/scripts
 RUN ./node_modules/.bin/gulp build
 
 EXPOSE 3000
-ENTRYPOINT ["/bin/sh", "-c", '"node bin/www"']
+ENTRYPOINT ["node", "bin/www"]
