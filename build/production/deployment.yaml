@@ -32,7 +32,7 @@ spec:
               memory: '1500Mi'
               cpu: '1.5'
           args:
-          - -cpus
+          - --cpus
           - "2"
 ---
 apiVersion: apps/v1
