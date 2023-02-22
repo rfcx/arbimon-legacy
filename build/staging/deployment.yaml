@@ -17,8 +17,6 @@ spec:
       containers:
         - name: arbimon
           image: 887044485231.dkr.ecr.eu-west-1.amazonaws.com/arbimon:latest
-          command: ['node bin/www']
-          args: ['--cpus', '"2"']
           imagePullPolicy: Always
           envFrom:
           - secretRef:
@@ -33,3 +31,6 @@ spec:
             limits:
               memory: '2000Mi'
               cpu: '2'
+          args:
+          - --cpus
+          - "2"
