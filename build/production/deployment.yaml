@@ -31,9 +31,6 @@ spec:
             limits:
               memory: '1500Mi'
               cpu: '1.5'
-          args:
-          - --cpus
-          - "2"
 ---
 apiVersion: apps/v1
 kind: Deployment
