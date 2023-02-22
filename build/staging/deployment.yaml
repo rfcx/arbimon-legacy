@@ -28,9 +28,4 @@ spec:
             requests:
               memory: '512Mi'
               cpu: '0.25'
-            limits:
-              memory: '2000Mi'
-              cpu: '0.75'
-          args:
-          - --cpus
-          - "2"
+
