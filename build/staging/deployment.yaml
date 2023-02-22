@@ -32,5 +32,5 @@ spec:
               memory: '2000Mi'
               cpu: '2'
           args:
-          - --cpus
+          - -cpus
           - "2"
