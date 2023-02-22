@@ -1694,19 +1694,21 @@ var Recordings = {
 
     },
 
-    writeExportParams: function(projection, filters) {
+    writeExportParams: function(projection, filters, userId, userEmail) {
         return Q.ninvoke(joi, 'validate', projection, Recordings.SCHEMAS.exportProjections)
             .then((projection_parameters) => {
-                const q = `INSERT INTO recordings_export_parameters (project_id, user_id, user_email, projection_parameters, filters, date_created, processed_at)
-                VALUES(${filters.projectId}, ${filters.userId}, ${filters.userEmail}, ${JSON.stringify(projection_parameters)}, ${JSON.stringify(filters)}, NOW(), null)`
+                const q = `INSERT INTO recordings_export_parameters (project_id, user_id, user_email, projection_parameters, filters, created_at, processed_at)
+                VALUES(${filters.projectId}, ${userId}, '${userEmail}', '${JSON.stringify(projection_parameters)}', '${JSON.stringify(filters)}', NOW(), null)`
+                console.log('\n\n----------q-----------', q)
                 return dbpool.query(q)
             })
     },
 
-    exportRecordingData: function(projection, filters) {
+    exportRecordingData: async function(projection, filters) {
         let summaryBuilders = [];
         return Q.ninvoke(joi, 'validate', projection, Recordings.SCHEMAS.exportProjections)
             .then(async (all) => {
+                // console.log('\n\n------all--------', all)
                 var projection_parameters = all;
                 var promises=[];
                 if (projection_parameters.recording.includes('day')) {
@@ -1833,6 +1835,7 @@ var Recordings = {
             }).then(async function() {
                 let results = [];
                 for (let builder in summaryBuilders) {
+                    // console.log('\n\n------sql--------', summaryBuilders[builder].getSQL())
                     let queryResult = await (projection.grouped ? dbpool.query : dbpool.streamQuery)({
                         sql: summaryBuilders[builder].getSQL(),
                         typeCast: sqlutil.parseUtcDatetime,

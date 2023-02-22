@@ -107,9 +107,12 @@ router.get('/recordings-export', function(req, res, next) {
         return next(e);
     }
 
-    filters.projectId = req.project.project_id;
-    filters.userId = req.session.user.id;
-    model.recordings.writeExportParams(projection, filters).then(function(data) {
+    filters.project_id = req.project.project_id;
+    const userEmail = filters.userEmail
+    delete filters.userEmail
+    const userId = req.session.user.id;
+    console.log('\n\n------projection, filter--------', projection, filter)
+    model.recordings.writeExportParams(projection, filters, userId, userEmail).then(function(data) {
         res.json({ success: true })
     }).catch(next);
 });

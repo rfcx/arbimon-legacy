@@ -4,7 +4,8 @@
   "description": "Arbimon recordings delete job to delete recordings from the recordings_deleted table older than 30 days (background job).",
   "main": "arbimon-recording-delete-job/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "arbimon-export-recordings": "node jobs/arbimon-export-recordings/index.js"
   },
   "repository": {
     "type": "git",
@@ -19,6 +20,7 @@
   "dependencies": {
     "axios": "^0.27.2",
     "dotenv": "^10.0.0",
+    "mandrill-api": "^1.0.45",
     "moment": "^2.29.4",
     "mysql2": "^2.3.0"
   }

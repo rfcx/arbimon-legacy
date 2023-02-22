@@ -3,7 +3,7 @@ angular.module('a2.srv.project', [
 ])
 .factory('Project', function(
     $location, $http, $q, $httpParamSerializer,
-    a2APIService
+    a2APIService, notify
 ) {
 
         var nameRe = /\/?(project|citizen-scientist|visualizer)\/([\w\_\-]+)/;
@@ -115,7 +115,7 @@ angular.module('a2.srv.project', [
                     + (serializedParams.length ? '?'+serializedParams : '');
                 return $http.get(getUrl).then(function(response) {
                     return response.data;
-                });
+                }).catch(notify.serverError);;
             },
             getSitesExportUrl: function() {
                 return '/api/project/' + url + '/sites-export.csv';
