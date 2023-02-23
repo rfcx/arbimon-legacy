@@ -72,7 +72,7 @@ var cache = {
 
             var now = (new Date()).getTime();
 
-            if (stats.atime.getTime() + config("tmpfilecache").maxObjectLifetime >= now ) {
+            if (stats.atime.getTime() + parseInt(config("tmpfilecache").maxObjectLifetime) >= now ) {
                 debug('file is fresh %s', file);
                 callback(null, {
                     path : file,
@@ -127,7 +127,7 @@ var cache = {
     cleanupTimeout: 0,
 
     cleanup: function(){
-        debug('Cleaning up tmpcache.');
+        console.info('Cleaning up tmpcache.');
         fs.readdir(root, function(err, files){
             if(err) return console.error(err.stack);
             async.each(files, function(subfile, next){
@@ -148,7 +148,7 @@ var cache = {
             return;
         }
 
-        var delay = config("tmpfilecache").cleanupInterval;
+        var delay = parseInt(config("tmpfilecache").cleanupInterval);
         debug('tmpfilecache cleanup will run in: %d seconds.', (delay/1000.0));
         cache.cleanupTimeout = setTimeout(function(){
             cache.cleanupTimeout = 0;
