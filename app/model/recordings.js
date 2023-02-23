@@ -679,7 +679,7 @@ var Recordings = {
                 Recordings.fetchSpectrogramFile(recording, next);
             },
             function(specFile, next){
-                const isLegacy = recording && recording.legacy
+                const isLegacy = Recordings.isLegacy(recording)
                 tyler(specFile.path, isLegacy, next);
 
                 // TODO to enabled file deletion need to skip file creation if tiles exists
