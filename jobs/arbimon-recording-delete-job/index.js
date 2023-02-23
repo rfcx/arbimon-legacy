@@ -26,7 +26,7 @@ async function main () {
     }
     await db.closeAll()
 
-    // Send report to the slack biodiversity-dev
+    // Send report to the slack arbimon-dev
     await reportStats(countOfDeletedRows)
     console.log('arbimon-recording-delete job finished')
   } catch (e) {

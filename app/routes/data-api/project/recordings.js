@@ -90,12 +90,22 @@ router.get('/count', function(req, res, next) {
 });
 
 router.get('/occupancy-models-export/:species?', function(req, res, next) {
-    if(req.query.out=="text"){
-        res.type('text/plain');
-    } else {
-        res.type('text/csv');
+    let filters, projection
+    try {
+        filters = req.query.filters ? JSON.parse(req.query.filters) : {}
+        projection = req.query.show ? JSON.parse(req.query.show) : {};
+    } catch(e){
+        return next(e);
     }
-    processFiltersData(req, res, next);
+    filters.project_id = req.project.project_id
+    filters.species_name = projection.species_name
+    const userEmail = filters.userEmail
+    delete filters.userEmail
+    delete projection.species_name
+    const userId = req.session.user.id;
+    model.recordings.writeExportParams(projection, filters, userId, userEmail).then(function(data) {
+        res.json({ success: true })
+    }).catch(next);
 });
 
 router.get('/recordings-export', function(req, res, next) {
@@ -111,19 +121,29 @@ router.get('/recordings-export', function(req, res, next) {
     const userEmail = filters.userEmail
     delete filters.userEmail
     const userId = req.session.user.id;
-    console.log('\n\n------projection, filter--------', projection, filter)
     model.recordings.writeExportParams(projection, filters, userId, userEmail).then(function(data) {
         res.json({ success: true })
     }).catch(next);
 });
 
-router.get('/grouped-detections-export.csv', function(req, res, next) {
-    if(req.query.out=="text"){
-        res.type('text/plain');
-    } else {
-        res.type('text/csv');
+router.get('/grouped-detections-export', function(req, res, next) {
+    let filters, projection
+    try {
+        filters = req.query.filters ? JSON.parse(req.query.filters) : {}
+        projection = req.query.show ? JSON.parse(req.query.show) : {};
+    } catch(e){
+        return next(e);
     }
-    processFiltersData(req, res, next);
+
+    filters.project_id = req.project.project_id
+    filters.grouped = projection.grouped
+    const userEmail = filters.userEmail
+    delete filters.userEmail
+    delete projection.grouped
+    const userId = req.session.user.id;
+    model.recordings.writeExportParams(projection, filters, userId, userEmail).then(function(data) {
+        res.json({ success: true })
+    }).catch(next);
 });
 
 processFiltersData = async function(req, res, next) {

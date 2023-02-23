@@ -26,7 +26,7 @@ Run script:
 node index.js
 ```
 
-Script will delete recordings and send a slack message to the biodiversity-dev channel.
+Script will delete recordings and send a slack message to the arbimon-dev channel.
 
 An example of terminal logs which you should see:
 ```shell

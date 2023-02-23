@@ -1631,7 +1631,7 @@ var Recordings = {
                             let index = 0;
                             for (let c in classesArray) {
                                 let builder = new SQLBuilder();
-                                builder.setOrderBy(filters.sortBy || 'site', !filters.sortRev);
+                                builder.setOrderBy('s.name');
                                 summaryBuilders.push(builder);
                                 classesArray[c].forEach(function(cls, idx){
                                     index++;
@@ -1666,7 +1666,6 @@ var Recordings = {
                     // Get rows for the detections grouped by site.
                     if (projection.grouped && projection.grouped === 'site') {
                         summaryBuilders[c].addProjection('s.name as site');
-                        // summaryBuilders[c].addConstraint('s.site_id=22489');
                     }
                     // Get rows for the detections grouped by date.
                     if (projection.grouped && projection.grouped === 'date') {
@@ -1683,7 +1682,7 @@ var Recordings = {
             }).then(async function() {
                 let results = [];
                 for (let builder in summaryBuilders) {
-                    let queryResult = await (projection.grouped ? dbpool.query : dbpool.streamQuery)({
+                    let queryResult = await dbpool.query({
                         sql: summaryBuilders[builder].getSQL(),
                         typeCast: sqlutil.parseUtcDatetime,
                     })
@@ -1697,9 +1696,8 @@ var Recordings = {
     writeExportParams: function(projection, filters, userId, userEmail) {
         return Q.ninvoke(joi, 'validate', projection, Recordings.SCHEMAS.exportProjections)
             .then((projection_parameters) => {
-                const q = `INSERT INTO recordings_export_parameters (project_id, user_id, user_email, projection_parameters, filters, created_at, processed_at)
-                VALUES(${filters.projectId}, ${userId}, '${userEmail}', '${JSON.stringify(projection_parameters)}', '${JSON.stringify(filters)}', NOW(), null)`
-                console.log('\n\n----------q-----------', q)
+                const q = `INSERT INTO recordings_export_parameters (project_id, user_id, user_email, projection_parameters, filters, created_at, processed_at, error)
+                VALUES(${filters.project_id}, ${userId}, '${userEmail}', '${JSON.stringify(projection_parameters)}', '${JSON.stringify(filters)}', NOW(), null, null)`
                 return dbpool.query(q)
             })
     },
@@ -1708,7 +1706,6 @@ var Recordings = {
         let summaryBuilders = [];
         return Q.ninvoke(joi, 'validate', projection, Recordings.SCHEMAS.exportProjections)
             .then(async (all) => {
-                // console.log('\n\n------all--------', all)
                 var projection_parameters = all;
                 var promises=[];
                 if (projection_parameters.recording.includes('day')) {
@@ -1757,21 +1754,7 @@ var Recordings = {
                     summaryBuilders.push(builder);
                 }
                 for (let c in summaryBuilders) {
-                    // Get rows for the detections grouped by site.
-                    if (projection.grouped && projection.grouped === 'site') {
-                        summaryBuilders[c].addProjection('s.name as site');
-                    }
-                    // Get rows for the detections grouped by date.
-                    if (projection.grouped && projection.grouped === 'date') {
-                        summaryBuilders[c].addProjection('DATE_FORMAT(r.datetime, "%Y/%m/%d") as date');
-                        summaryBuilders[c].setOrderBy('r.datetime');
-                    }
-                    // Get rows for the detections grouped by hour.
-                    if (projection.grouped && projection.grouped === 'hour') {
-                        summaryBuilders[c].addProjection('DATE_FORMAT(r.datetime, "%H") as hour');
-                        summaryBuilders[c].setOrderBy('r.datetime');
-                    }
-                    if (projection_parameters.recording && !projection.grouped) {
+                    if (projection_parameters.recording) {
                         var recParamMap = {
                             'filename' : "SUBSTRING_INDEX(r.uri,'/',-1) as filename",
                             'site' : 's.name as site',
@@ -1792,7 +1775,7 @@ var Recordings = {
                             summaryBuilders[c].setOrderBy('r.datetime');
                         }
                     }
-                    if (projection_parameters.classification && !projection.grouped) {
+                    if (projection_parameters.classification) {
                         promises.push(models.classifications.getFor({id:projection_parameters.classification, showModel:true}).then(function(classifications){
                             classifications.forEach(function(classification, idx){
                                 var clsid = "p_CR_" + idx;
@@ -1808,7 +1791,7 @@ var Recordings = {
                             });
                         }));
                     }
-                    if (projection_parameters.soundscapeComposition && !projection.grouped) {
+                    if (projection_parameters.soundscapeComposition) {
                         promises.push(models.SoundscapeComposition.getClassesFor({id:projection_parameters.soundscapeComposition}).then(function(classes){
                             classes.forEach(function(cls, idx){
                                 var clsid = "p_SCC_" + idx;
@@ -1821,7 +1804,7 @@ var Recordings = {
                             });
                         }));
                     }
-                    if(projection_parameters.tag && !projection.grouped){
+                    if(projection_parameters.tag){
                         promises.push(models.tags.getFor({id:projection_parameters.tag}).then(function(tags){
                             tags.forEach(function(tag, idx){
                                 var prtid = "p_RT_" + idx;
@@ -1835,19 +1818,13 @@ var Recordings = {
             }).then(async function() {
                 let results = [];
                 for (let builder in summaryBuilders) {
-                    // console.log('\n\n------sql--------', summaryBuilders[builder].getSQL())
-                    let queryResult = await (projection.grouped ? dbpool.query : dbpool.streamQuery)({
+                    let queryResult = await dbpool.streamQuery({
                         sql: summaryBuilders[builder].getSQL(),
                         typeCast: sqlutil.parseUtcDatetime,
                     })
-                    if (projection.grouped) {
-                        results = results.concat([...new Set(queryResult)]);
-                    }
-                    else {
-                        results = [...new Set(queryResult)];
-                    }
+                    results = [...new Set(queryResult)];
                 }
-                return projection.grouped? results : Q.all(results);
+                return Q.all(results);
             })
     },
 

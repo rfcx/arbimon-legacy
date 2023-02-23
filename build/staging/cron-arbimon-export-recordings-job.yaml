@@ -1,0 +1,32 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: arbimon-export-recording-job
+  namespace: staging
+spec:
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 1
+  # at every 5 minute
+  schedule: '*/5 * * * *'
+  jobTemplate:
+    spec:
+      backoffLimit: 100
+      template:
+        spec:
+          containers:
+            - name: arbimon-export-recording-job
+              image: 887044485231.dkr.ecr.eu-west-1.amazonaws.com/arbimon-export-recording-job:latest
+              imagePullPolicy: Always
+              envFrom:
+              - secretRef:
+                  name: arbimon-export-recording-job
+              env:
+                - name: NODE_ENV
+                  value: "staging"
+                - name: SLACK_REPORT_ENABLED
+                  value: "true"
+                - name: SLACK_URL
+                  value: "https://slack.com/api/chat.postMessage"
+                - name: SLACK_CHANNEL
+                  value: "#arbimon-dev"
+          restartPolicy: Never

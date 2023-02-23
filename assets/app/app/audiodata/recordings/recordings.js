@@ -282,7 +282,7 @@ angular.module('a2.audiodata.recordings', [
         });
 
         modalInstance.result.then(function() {
-            notify.log('The export recordings report is processing.');
+            notify.log('The export report is processing.');
         });
     };
 

@@ -11,6 +11,11 @@ function combineStats (reportData) {
   return text
 }
 
+function combineErrorMessage (error) {
+    let text = `\n:x: *${error}* Arbimon export recording error | ${nodeEnv || '---'}`
+    return text
+  }
+
 async function reportStatsToSlack (text) {
   return await axios.post(SLACK_URL, {
     channel: SLACK_CHANNEL,
@@ -26,6 +31,21 @@ async function reportStatsToSlack (text) {
   })
 }
 
+async function errorToSlack (text) {
+    return await axios.post(SLACK_URL, {
+      channel: SLACK_CHANNEL,
+      username: `Arbimon Export Recording Job ${process.env.NODE_ENV}`,
+      icon_emoji: ':fire:',
+      mrkdwn: true,
+      text
+    }, {
+      headers: {
+        authorization: `Bearer ${SLACK_TOKEN}`,
+        'Content-Type': 'application/json'
+      }
+    })
+}
+
 async function reportStats (reportData) {
   const text = combineStats(reportData)
   console.info(text)
@@ -34,6 +54,15 @@ async function reportStats (reportData) {
   }
 }
 
+async function errorMessage (error) {
+    const text = combineErrorMessage(error)
+    console.info(text)
+    if (SLACK_REPORT_ENABLED) {
+      await errorToSlack(text)
+    }
+  }
+
 module.exports = {
-  reportStats
+  reportStats,
+  errorMessage
 }
