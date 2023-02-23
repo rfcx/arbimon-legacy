@@ -49,27 +49,27 @@ async function main () {
             console.log('arbimon-export-recording job finished')
         })
     }
-    else if (projection_parameters && filters.grouped && projection_parameters.validation && !projection_parameters.species) {
+    else if (projection_parameters && projection_parameters.grouped && projection_parameters.validation && !projection_parameters.species) {
         // Combine grouped detections report
         let allData
         // Get all sites, data, hours for selected project.
-        if (filters.grouped === 'site') {
+        if (projection_parameters.grouped === 'site') {
             projects.getProjectSites(filters.project_id).then(function(rows) {
                 allData = rows.map(s=>s.name)
             })
         }
-        if (filters.grouped === 'date') {
+        if (projection_parameters.grouped === 'date') {
             await projects.getProjectDates(filters.project_id, "%Y/%m/%d").then(function(rows) {
                 allData = rows.map(r=>r.date)
             })
         }
-        if (filters.grouped === 'hour') {
+        if (projection_parameters.grouped === 'hour') {
             await projects.getProjectDates(filters.project_id, "%H").then(function(rows) {
                 allData = rows.map(r=>r.date)
             })
         }
         const data = await recordings.groupedDetections(projection_parameters, filters)
-        return combineGroupedDetectionsStream(data, filters, allData, dateByCondition, message).then(async () => {
+        return combineGroupedDetectionsStream(data, projection_parameters, allData, dateByCondition, message).then(async () => {
             await mysqlConnection.query('COMMIT;')
             await db.closeAll()
             console.log('arbimon-export-recording job finished')
@@ -189,13 +189,15 @@ async function transformOccupancyModelStream (results, rowData, dateByCondition,
 }
 
 // Combine grouped detections report
-async function combineGroupedDetectionsStream (results, filters, allData, dateByCondition, message) {
+async function combineGroupedDetectionsStream (results, projection_parameters, allData, dateByCondition, message) {
     return new Promise(async function (resolve, reject) {
-        let gKey = filters.grouped;
+        let gKey = projection_parameters.grouped;
+
         let fields = [];
         results.forEach(result => {
             fields.push(...Object.keys(result).filter(f => f !== gKey && !fields.includes(f)))
         });
+
         let data = {};
         results.forEach((r, i) => {
             const s = r[gKey]
@@ -246,13 +248,13 @@ async function combineGroupedDetectionsStream (results, filters, allData, dateBy
             csv_stringify(_buf, { header: true, columns: fields }, async (err, data) => {
                 const content = Buffer.from(data).toString('base64')
                 try {
-                    // await sendEmail('Export grouped detections [RFCx Arbimon]', 'grouped-detections-export.csv', content)
-                    // await updateExportRecordings(rowData, { processed_at: dateByCondition })
+                    await sendEmail('Export grouped detections [RFCx Arbimon]', 'grouped-detections-export.csv', content)
+                    await updateExportRecordings(rowData, { processed_at: dateByCondition })
                     resolve()
                 } catch(error) {
                     console.error('Error while sending an email.', error)
-                    // await reportStats(message)
-                    // await updateExportRecordings(rowData, { error })
+                    await reportStats(message)
+                    await updateExportRecordings(rowData, { error })
                     resolve()
                 }
             })
