@@ -1,5 +1,12 @@
 # Arbimon Release Notes
 
+## v3.0.74 - February 24, 2023
+
+Performance improvements:
+
+- Add a background job to Export recordings, Occupancy models and Grouped detections
+
+
 ## v3.0.73 - February 03, 2023
 
 Resolved issues:
