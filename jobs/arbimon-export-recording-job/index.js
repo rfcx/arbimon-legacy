@@ -2,7 +2,7 @@ require('dotenv').config()
 const db = require('../db')
 const moment = require('moment')
 const { getExportRecordingsRow, updateExportRecordings, getCountConnections } = require('../services/recordings')
-const { reportStats } = require('../services/stats')
+const { errorMessage } = require('../services/stats')
 const recordings = require('../../app/model/recordings')
 const projects = require('../../app/model/projects')
 const stream = require('stream');
@@ -36,7 +36,7 @@ async function main () {
         projection_parameters = JSON.parse(rowData.projection_parameters)
     } catch (error) {
         await updateExportRecordings(rowData, { error })
-        await reportStats(message)
+        await errorMessage(message)
         return
     }
 
@@ -69,7 +69,7 @@ async function main () {
             })
         }
         const data = await recordings.groupedDetections(projection_parameters, filters)
-        return combineGroupedDetectionsStream(data, projection_parameters, allData, dateByCondition, message).then(async () => {
+        return combineGroupedDetectionsStream(data, rowData, projection_parameters, allData, dateByCondition, message).then(async () => {
             await mysqlConnection.query('COMMIT;')
             await db.closeAll()
             console.log('arbimon-export-recording job finished')
@@ -174,12 +174,12 @@ async function transformOccupancyModelStream (results, rowData, dateByCondition,
             csv_stringify(_buf, { header: true, columns: fields }, async (err, data) => {
                 const content = Buffer.from(data).toString('base64')
                 try {
-                    await sendEmail('Export occypancy model report [RFCx Arbimon]', 'occupancy-model.csv', content)
+                    await sendEmail('Export occypancy model report [RFCx Arbimon]', 'occupancy-model.csv', rowData, content)
                     await updateExportRecordings(rowData, { processed_at: dateByCondition })
                     resolve()
                 } catch(error) {
                     console.error('Error while sending an email.', error)
-                    await reportStats(message)
+                    await errorMessage(message)
                     await updateExportRecordings(rowData, { error })
                     resolve()
                 }
@@ -189,7 +189,7 @@ async function transformOccupancyModelStream (results, rowData, dateByCondition,
 }
 
 // Combine grouped detections report
-async function combineGroupedDetectionsStream (results, projection_parameters, allData, dateByCondition, message) {
+async function combineGroupedDetectionsStream (results, rowData, projection_parameters, allData, dateByCondition, message) {
     return new Promise(async function (resolve, reject) {
         let gKey = projection_parameters.grouped;
 
@@ -248,12 +248,12 @@ async function combineGroupedDetectionsStream (results, projection_parameters, a
             csv_stringify(_buf, { header: true, columns: fields }, async (err, data) => {
                 const content = Buffer.from(data).toString('base64')
                 try {
-                    await sendEmail('Export grouped detections [RFCx Arbimon]', 'grouped-detections-export.csv', content)
+                    await sendEmail('Export grouped detections [RFCx Arbimon]', 'grouped-detections-export.csv', rowData, content)
                     await updateExportRecordings(rowData, { processed_at: dateByCondition })
                     resolve()
                 } catch(error) {
                     console.error('Error while sending an email.', error)
-                    await reportStats(message)
+                    await errorMessage(message)
                     await updateExportRecordings(rowData, { error })
                     resolve()
                 }
@@ -316,12 +316,12 @@ async function transformStream (results, rowData, dateByCondition, message) {
             csv_stringify(_buf, { header: true, columns: fields }, async (err, data) => {
                 const content = Buffer.from(data).toString('base64')
                 try {
-                    await sendEmail('Export recording report [RFCx Arbimon]', 'export-recording.csv', content)
+                    await sendEmail('Export recording report [RFCx Arbimon]', 'export-recording.csv', rowData, content)
                     await updateExportRecordings(rowData, { processed_at: dateByCondition })
                     resolve()
                 } catch(error) {
                     console.error('Error while sending an email.', error)
-                    await reportStats(message)
+                    await errorMessage(message)
                     await updateExportRecordings(rowData, { error })
                     resolve()
                 }
@@ -330,11 +330,11 @@ async function transformStream (results, rowData, dateByCondition, message) {
     })
 }
 
-async function sendEmail (subject, title, content) {
+async function sendEmail (subject, title, rowData, content) {
     const message = {
-        from_email: 'stas@rfcx.org', // 'contact@rfcx.org',
+        from_email: 'contact@rfcx.org',
         to: [{
-            email: 'zhenya@rfcx.org' // rowData.user_email
+            email: rowData.user_email
         }],
         subject: subject,
         attachments: [{
