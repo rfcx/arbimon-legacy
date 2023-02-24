@@ -4,24 +4,27 @@ var config = require('../config');
 var sqlutil = require('./sqlutil');
 var q = require('q');
 var showQueriesInConsole = true;
+
 var dbpool = {
     pool: undefined,
     getPool: function(){
-        var pool = dbpool.pool;
-        if(!pool){
-            console.log("making mysql pool...")
-            pool = dbpool.pool = mysql.createPool({
+        if (!dbpool.pool) {
+            console.log("MySQL pool is being created")
+            dbpool.pool = mysql.createPool({
                 host : config('db').host,
                 port : config('db').port || 3306,
                 user : config('db').user,
                 password : config('db').password,
                 database : config('db').database,
                 timezone: config('db').timezone
+            })
+            dbpool.pool.on('connection', function (connection) {
+                console.log('MySQL pool connection %d is set', connection.threadId);
             });
         }
-        return pool;
+        return dbpool.pool
     },
-    
+
     format: mysql.format.bind(mysql),
     escape: mysql.escape.bind(mysql),
     escapeId: mysql.escapeId.bind(mysql),
@@ -107,9 +110,9 @@ var dbpool = {
         debug('queryHandler : fetching db connection.');
         dbpool.getPool().getConnection(function(err, connection) {
             if(err) return callback(err);
-            
+
             var padding = '\n        ';
-            
+
             // for debugging
             var sql = query.sql || query;
             debug('  query : -|', padding+sql.replace(/\n/g, padding));

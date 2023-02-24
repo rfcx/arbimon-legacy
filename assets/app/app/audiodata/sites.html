@@ -54,8 +54,13 @@
             <field title="Altitude" key="alt">
                 {{ row.alt | number:2 }}
             </field>
+            <field title="Timezone" key="timezone" tdclass="timezone hidelongtext">
+                <span title="{{ row.timezone }}">{{ row.timezone }}</span>
+            </field>
             <field title="Last updated" key="date" tdclass="date hidelongtext">
-                {{ row.updated_at | moment : 'lll' : row.timezone }}
+                <span title="{{ row.updated_at | moment : 'lll' : row.timezone }}">
+                    {{ row.updated_at | moment : 'lll' : row.timezone }}
+                </span>
             </field>
         </a2-table>
         <div class="jumbotron" ng-show="(!sites || !sites.length > 0) && !loading">

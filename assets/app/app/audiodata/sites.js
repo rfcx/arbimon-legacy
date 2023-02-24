@@ -237,14 +237,19 @@ angular.module('a2.audiodata.sites', [
 
         var tempObj = Object.assign({}, $scope.temp);
 
-        // do not include equal location metadata to update endpoint
+        // Do not include equal location metadata / updated at data to the update endpoint.
         if (action === 'update') {
-            var locationArray = ['alt', 'updated_at'];
-            for (var i = 0; i < locationArray.length; i++) {
-                var key = locationArray[i];
+            const attrArray = ['alt', 'updated_at'];
+            for (var i = 0; i < attrArray.length; i++) {
+                var key = attrArray[i];
                 if ($scope.temp[key] === $scope.selected[key]) {
                   delete tempObj[key]
                 }
+            }
+            const locationArray = ['lat', 'lon'];
+            if ($scope.temp[locationArray[0]] === $scope.selected[locationArray[0]] && $scope.temp[locationArray[1]] === $scope.selected[locationArray[1]]) {
+                delete tempObj[locationArray[0]]
+                delete tempObj[locationArray[1]]
             }
         }
 

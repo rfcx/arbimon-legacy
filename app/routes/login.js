@@ -47,8 +47,7 @@ router.use(function create_anonymous_guest_if_not_logged_in(req, res, next){
             isAnonymousGuest: true,
             isSuper: 0,
             isRfcx: 0,
-            imageUrl: gravatar.url(dummyEmail, { d: 'monsterid', s: 60 }, req.secure),
-            projectLimit: 0
+            imageUrl: ''
         };
         debug("Anonimous guest user created in session.");
     }
