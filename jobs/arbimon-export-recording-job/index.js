@@ -12,9 +12,6 @@ const mandrill = require('mandrill-api/mandrill')
 async function main () {
   try {
     console.log('arbimon-export-recordings job started')
-
-    const mysqlConnection = await db.mysql.getConnection()
-    await mysqlConnection.query('START TRANSACTION;')
     
     const countConnections = await getCountConnections()
     if (countConnections > 10) {
@@ -43,9 +40,7 @@ async function main () {
     // Process the Occupancy model report.
     if (projection_parameters && projection_parameters.species) {
         const data = await recordings.exportOccupancyModels(projection_parameters, filters)
-        return transformOccupancyModelStream(data, rowData, dateByCondition, message).then(async () => {
-            await mysqlConnection.query('COMMIT;')
-            await db.closeAll()
+        return processOccupancyModelStream(data, rowData, dateByCondition, message).then(async () => {
             console.log('arbimon-export-recording job finished')
         })
     }
@@ -69,27 +64,22 @@ async function main () {
             })
         }
         const data = await recordings.groupedDetections(projection_parameters, filters)
-        return combineGroupedDetectionsStream(data, rowData, projection_parameters, allData, dateByCondition, message).then(async () => {
-            await mysqlConnection.query('COMMIT;')
-            await db.closeAll()
+        return processGroupedDetectionsStream(data, rowData, projection_parameters, allData, dateByCondition, message).then(async () => {
             console.log('arbimon-export-recording job finished')
         })
     }
 
     const data = await recordings.exportRecordingData(projection_parameters, filters)
     return transformStream(data, rowData, dateByCondition, message).then(async () => {
-        await mysqlConnection.query('COMMIT;')
-        await db.closeAll()
         console.log('arbimon-export-recording job finished')
     })
   } catch (e) {
     console.error(e)
-    await db.closeAll()
   }
 }
 
-// Process the Occupancy model report
-async function transformOccupancyModelStream (results, rowData, dateByCondition, message) {
+// Process the Occupancy model report and send the email
+async function processOccupancyModelStream (results, rowData, dateByCondition, message) {
     return new Promise(async function (resolve, reject) {
         let sitesData = await recordings.getCountSitesRecPerDates(rowData.project_id);
         let allSites = sitesData.map(item => { return item.site }).filter((v, i, s) => s.indexOf(v) === i);
@@ -188,8 +178,8 @@ async function transformOccupancyModelStream (results, rowData, dateByCondition,
     })
 }
 
-// Combine grouped detections report
-async function combineGroupedDetectionsStream (results, rowData, projection_parameters, allData, dateByCondition, message) {
+// Combine grouped detections report and send the email
+async function processGroupedDetectionsStream (results, rowData, projection_parameters, allData, dateByCondition, message) {
     return new Promise(async function (resolve, reject) {
         let gKey = projection_parameters.grouped;
 
@@ -262,7 +252,7 @@ async function combineGroupedDetectionsStream (results, rowData, projection_para
     })
 }
 
-// Process the Export recordings report.
+// Process the Export recordings report and send the email
 async function transformStream (results, rowData, dateByCondition, message) {
     return new Promise(function (resolve, reject) {
         // Process csv file header
@@ -332,7 +322,7 @@ async function transformStream (results, rowData, dateByCondition, message) {
 
 async function sendEmail (subject, title, rowData, content) {
     const message = {
-        from_email: 'contact@rfcx.org',
+        from_email: 'no-reply@rfcx.org',
         to: [{
             email: rowData.user_email
         }],

@@ -42,7 +42,7 @@ async function updateExportRecordings (options, attrs) {
 
 async function getCountConnections (options = {}) {
     const connection = await mysql.getConnection()
-    const sql = `SELECT COUNT(*) FROM information_schema.PROCESSLIST`
+    const sql = `SELECT COUNT(*) FROM information_schema.PROCESSLIST WHERE state IS NOT NULL`
     const [rows, fields] = await connection.execute(sql)
     return rows
 }
