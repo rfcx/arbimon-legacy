@@ -540,6 +540,35 @@ var Recordings = {
         }, callback);
     },
 
+    getAssetFileFromMediaAPI: async function(recording, type) {
+        let asset
+        switch (type) {
+            case 'spectro':
+                asset = 'rfull_g1_fspec_d1024.256_wdolph_z120.png'
+                break;
+            case 'audio':
+                asset = 'rfull_g1_fmp3.mp3'
+                break;
+        }
+        const duration = recording.duration / 1000;
+        const momentStart = moment.utc(recording.datetime_utc ? recording.datetime_utc : recording.datetime)
+        const momentEnd = momentStart.clone().add(duration, 'seconds')
+        const dateFormat = 'YYYYMMDDTHHmmssSSS'
+        const start = momentStart.format(dateFormat)
+        const end = momentEnd.format(dateFormat)
+        const attr = `${recording.external_id}_t${start}Z.${end}Z_${asset}`
+        const token = await auth0Service.getToken();
+        const options = {
+            method: 'GET',
+            url: `${rfcxConfig.mediaBaseUrl}/internal/assets/streams/${attr}`,
+            headers: {
+            Authorization: `Bearer ${token}`
+            },
+            json: true
+        }
+        return request(options)
+    },
+
     /** Returns the audio file of a given recording.
      * @param {Object} recording object containing the recording's data, like the ones returned in findByUrlMatch.
      * @param {Object} recording.uri url containing the recording's path in the bucket.
@@ -641,6 +670,19 @@ var Recordings = {
         // return Q.denodeify(tmpfilecache.fetch.bind(tmpfilecache))(recording.uri, ifMissedGetFile).nodeify(callback);
     },
 
+    getAudioFile: function (recording, callback) {
+        const audio_key = recording.uri.replace(audioFilePattern, '.mp3');
+        tmpfilecache.fetch(audio_key, function(cache_miss){
+            Recordings.fetchRecordingFile(recording, async function(err, recording_path){
+                if(err) { callback(err); return; }
+                // Get the audio file from the Media API for the non-legacy recordings
+                Recordings.getAssetFileFromMediaAPI(recording, 'audio').then(res => {
+                    res.pipe(fs.createWriteStream(cache_miss.file).on('close', function () { cache_miss.retry_get() }))
+                })
+            });
+        }, callback);
+    },
+
     /** Returns the spectrogram file of a given recording.
      * @param {Object} recording object containing the recording's data, like the ones returned in findByUrlMatch.
      * @param {Object} recording.uri url containing the recording's path in the bucket.
@@ -649,17 +691,25 @@ var Recordings = {
     fetchSpectrogramFile: function (recording, callback) {
         var spectrogram_key = recording.uri.replace(audioFilePattern, '.png');
         tmpfilecache.fetch(spectrogram_key, function(cache_miss){
-            Recordings.fetchRecordingFile(recording, function(err, recording_path){
+            Recordings.fetchRecordingFile(recording, async function(err, recording_path){
                 if(err) { callback(err); return; }
-                audioTools.spectrogram(recording_path.path, cache_miss.file, {
-                    pixPerSec : config("spectrograms").spectrograms.pixPerSec,
-                    height    : config("spectrograms").spectrograms.height,
-                    ...recording.uri.endsWith('.opus') && recording.sample_rate && { maxfreq: recording.sample_rate * 2 },
-                    ...recording.contrast && { contrast: recording.contrast }
-                },function(status_code){
-                    if(status_code) { callback({code:status_code}); return; }
-                    cache_miss.retry_get();
-                });
+                // Get the spectrogram file from the Media API for the non-legacy recordings
+                const isLegacy = Recordings.isLegacy(recording)
+                if (isLegacy) {
+                    audioTools.spectrogram(recording_path.path, cache_miss.file, {
+                        pixPerSec : config("spectrograms").spectrograms.pixPerSec,
+                        height    : config("spectrograms").spectrograms.height,
+                        ...recording.uri.endsWith('.opus') && recording.sample_rate && { maxfreq: recording.sample_rate * 2 },
+                        ...recording.contrast && { contrast: recording.contrast }
+                    },function(status_code){
+                        if(status_code) { callback({code:status_code}); return; }
+                        cache_miss.retry_get();
+                    });
+                } else {
+                    Recordings.getAssetFileFromMediaAPI(recording, 'spectro').then(res => {
+                        res.pipe(fs.createWriteStream(cache_miss.file).on('close', function () { cache_miss.retry_get() }))
+                    })
+                }
             });
         }, callback);
     },
