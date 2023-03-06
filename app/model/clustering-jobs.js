@@ -145,8 +145,10 @@ let ClusteringJobs = {
         options = options || {};
 
         let query = "SELECT A.time_min, A.time_max, A.frequency_min, A.frequency_max, R.`uri` as `rec_uri`, R.site_id\n" +
+        "R.datetime, R.datetime_utc, S.external_id\n" +
         "FROM audio_event_detections_clustering A\n" +
         "JOIN recordings R ON A.recording_id = R.recording_id\n" +
+        "JOIN sites S ON S.site_id = R.site_id\n" +
         "WHERE A.recording_id = ? AND A.aed_id = ?";
 
         return dbpool.query(
@@ -160,7 +162,10 @@ let ClusteringJobs = {
             }
             return q.ninvoke(Recordings, 'fetchAudioFile', {
                 uri: rec.rec_uri,
-                site_id: rec.site_id
+                site_id: rec.site_id,
+                external_id: rec.external_id,
+                datetime: rec.datetime,
+                datetime_utc: rec.datetime_utc
             }, {
                 maxFreq: rec.frequency_max,
                 minFreq: rec.frequency_min,

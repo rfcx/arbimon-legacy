@@ -216,7 +216,6 @@ angular.module('a2.visualizer.audio-player', [])
         // bugfix for chrome...
         $window.setTimeout(function() {
             audio.src = url;
-            console.log('audio', audio)
         }, 1);
 
         return deferred.promise;
@@ -226,24 +225,16 @@ angular.module('a2.visualizer.audio-player', [])
         var d = $q.defer();
         this.url = url;
         this.onCompleteListeners = [];
-        // this.context = new AudioContext();
-        // $window.a2ao = this;
 
         this.interval = $interval(this._check_current_time.bind(this), poll_loop_interval);
 
         this.load_promise = loadAudio(url).then((function(nativeAudio) {
             this.audio = nativeAudio;
-            console.log('nativeAudio', this.audio)
             this.audio.addEventListener('canplay', (function() {
-                console.log('canplay', this.audio.src, this.audio.duration)
-                // if(!this.ctx_source){
-                //     this.ctx_source = this.context.createMediaElementSource(this.audio);
-                    this.duration = this.audio.duration;
-                    this.paused = this.audio.paused;
-                    this.src = this.audio.src;
-                    this.canPlay = true;
-                //     this.setup_ctx_connections();
-                // }
+                this.duration = this.audio.duration;
+                this.paused = this.audio.paused;
+                this.src = this.audio.src;
+                this.canPlay = true;
             }).bind(this));
             this.audio.addEventListener('error', (function(err) {
                 console.log(err)

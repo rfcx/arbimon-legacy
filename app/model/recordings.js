@@ -30,19 +30,19 @@ const auth0Service = require('./auth0');
 const request = require('request');
 
 // local variables
-var s3, s3RFCx;
+let s3, s3RFCx;
 defineS3Clients();
-var queryHandler = dbpool.queryHandler;
+const queryHandler = dbpool.queryHandler;
 
 
-var getUTC = function (date) {
+const getUTC = function (date) {
     var d = new Date(date);
     d.setTime(d.getTime() + (d.getTimezoneOffset() * 60000));
     return d;
 };
 
-var audioFilePattern = /\.(wav|flac|opus)$/i;
-var freqFilterPrecision = 100;
+const audioFilePattern = /\.(wav|flac|opus)$/i;
+const freqFilterPrecision = 100;
 
 function defineS3Clients () {
     if (!s3) {
@@ -540,25 +540,44 @@ var Recordings = {
         }, callback);
     },
 
-    getAssetFileFromMediaAPI: async function(recording, type) {
-        let asset
+    getAssetFileFromMediaAPI: async function(recording, type, options) {
+        let asset, fmin, fmax, trimFrom, trimDuration
+        const isFrequency = options && (options.minFreq || options.maxFreq)
+        const isGain = options && options.gain
+        const isTrim = options && options.trim
+        if (isFrequency) {
+            fmin = Math.min((options.minFreq / freqFilterPrecision) * freqFilterPrecision, 22049).toFixed()
+            fmax = Math.min((options.maxFreq / freqFilterPrecision) * freqFilterPrecision, 22049).toFixed()
+        }
+        if (isTrim) {
+            trimFrom = +options.trim.from
+            const to = +options.trim.to
+            trimDuration = options.trim.duration ? (+options.trim.duration) : (to - trimFrom);
+        }
+
         switch (type) {
             case 'spectro':
                 asset = 'rfull_g1_fspec_d1024.256_wdolph_z120.png'
                 break;
             case 'audio':
-                asset = 'rfull_g1_fmp3.mp3'
+                asset = `r${isFrequency ? fmin + '.' + fmax : 'full'}_g${isGain ? options.gain : 1}_fmp3.mp3`
                 break;
         }
-        const duration = recording.duration / 1000;
-        const momentStart = moment.utc(recording.datetime_utc ? recording.datetime_utc : recording.datetime)
-        const momentEnd = momentStart.clone().add(duration, 'seconds')
+
+        const recordingDatetime = recording.datetime_utc ? recording.datetime_utc : recording.datetime
+        let momentStart = moment.utc(recordingDatetime)
+        let momentEnd = momentStart.clone().add(recording.duration, 'seconds')
+        if (isTrim) {
+            momentStart = momentStart.add(trimFrom, 'seconds')
+            momentEnd = momentStart.clone().add(trimDuration, 'seconds')
+        }
         const dateFormat = 'YYYYMMDDTHHmmssSSS'
         const start = momentStart.format(dateFormat)
         const end = momentEnd.format(dateFormat)
         const attr = `${recording.external_id}_t${start}Z.${end}Z_${asset}`
         const token = await auth0Service.getToken();
-        const options = {
+
+        const params = {
             method: 'GET',
             url: `${rfcxConfig.mediaBaseUrl}/internal/assets/streams/${attr}`,
             headers: {
@@ -566,7 +585,7 @@ var Recordings = {
             },
             json: true
         }
-        return request(options)
+        return request(params)
     },
 
     /** Returns the audio file of a given recording.
@@ -589,6 +608,25 @@ var Recordings = {
             options = undefined;
         }
 
+        const isNonLegacy = !Recordings.isLegacy(recording)
+        if (isNonLegacy) {
+            const audio_key = recording.uri.replace(audioFilePattern, '.mp3');
+            tmpfilecache.fetch(audio_key, function(cache_miss) {
+                Recordings.fetchRecordingFile(recording, async function(err, recording_path){
+                    if(err) { callback(err); return; }
+                    // Get an audio file from the Media API for the non-legacy recordings
+                    Recordings.getAssetFileFromMediaAPI(recording, 'audio', options).then(res => {
+                        res.pipe(fs.createWriteStream(cache_miss.file).on('close', function () {
+                            fs.unlink(recording_path.path, () => {})
+                            cache_miss.retry_get()
+                        }))
+                    })
+                });
+            }, callback);
+            return;
+        }
+
+        //TODO: remove the code below after recordings' migration
         debug('fetchAudioFile');
         var mods=[];
         var mp3Extension = '.mp3';
@@ -668,19 +706,6 @@ var Recordings = {
         return Q.denodeify(tmpfilecache.fetch.bind(tmpfilecache))(mp3FilePath, ifMissedGetFile).nodeify(callback);
         // TODO: add condition for the output format: mp3 OR original extension
         // return Q.denodeify(tmpfilecache.fetch.bind(tmpfilecache))(recording.uri, ifMissedGetFile).nodeify(callback);
-    },
-
-    getAudioFile: function (recording, callback) {
-        const audio_key = recording.uri.replace(audioFilePattern, '.mp3');
-        tmpfilecache.fetch(audio_key, function(cache_miss){
-            Recordings.fetchRecordingFile(recording, async function(err, recording_path){
-                if(err) { callback(err); return; }
-                // Get the audio file from the Media API for the non-legacy recordings
-                Recordings.getAssetFileFromMediaAPI(recording, 'audio').then(res => {
-                    res.pipe(fs.createWriteStream(cache_miss.file).on('close', function () { cache_miss.retry_get() }))
-                })
-            });
-        }, callback);
     },
 
     /** Returns the spectrogram file of a given recording.
@@ -1607,30 +1632,19 @@ var Recordings = {
         });
     },
 
-    async getAudioFromCore (opts, filter) {
-        const ms = 1000
-        const from = ((+filter.trim.from * ms) | 0) / ms;
-        const to = ((+filter.trim.to * ms) | 0) / ms;
-        const duration = filter.trim.duration ? (+filter.trim.duration) : (((to - from) * ms) | 0) / ms;
-        const momentStart = moment.utc(opts.datetime_utc ? opts.datetime_utc : opts.datetime).add(from, 'seconds')
-        const momentEnd = momentStart.clone().add(duration, 'seconds')
-        const dateFormat = 'YYYYMMDDTHHmmssSSS'
-        const start = momentStart.format(dateFormat)
-        const end = momentEnd.format(dateFormat)
-        var fmin = Math.min(((filter.minFreq / 100) | 0) * 100, 22049);
-        var fmax = Math.min(((filter.maxFreq / 100) | 0) * 100, 22049);
-        const attr = `${opts.external_id}_t${start}Z.${end}Z_r${fmin}.${fmax}_fmp3.mp3`
-        const token = await auth0Service.getToken();
-        const options = {
-            method: 'GET',
-            url: `${rfcxConfig.mediaBaseUrl}/internal/assets/streams/${attr}`,
-            headers: {
-              Authorization: `Bearer ${token}`
-            },
-            json: true
-          }
-
-        return request(options)
+    exportOccupancyModels: async function(projection, filters){
+        let query = `SELECT S.name as site, DATE_FORMAT(R.datetime, "%Y/%m/%d") as date, SUM(rv.present=1 OR rv.present_review>0 OR rv.present_aed>0) as count
+            FROM recordings R
+            JOIN sites S ON S.site_id = R.site_id
+            LEFT JOIN project_imported_sites AS pis ON S.site_id = pis.site_id AND pis.project_id = ${filters.project_id}
+            LEFT JOIN recording_validations AS rv ON R.recording_id = rv.recording_id
+            WHERE rv.species_id = ${projection.species} AND (S.project_id = ${filters.project_id} OR pis.project_id = ${filters.project_id}) AND (rv.present_review>0 OR rv.present_aed>0 OR rv.present is not null)
+            GROUP BY S.name, YEAR(R.datetime), MONTH(R.datetime), DAY(R.datetime) ORDER BY R.datetime ASC`;
+        let queryResult = await dbpool.query({
+            sql: query,
+            typeCast: sqlutil.parseUtcDatetime,
+        })
+        return queryResult;
     },
 
     getCountSitesRecPerDates: async function(project_id){
