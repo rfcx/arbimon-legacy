@@ -292,9 +292,8 @@ var CNN = {
                     to: Math.max(crr.x1, crr.x2)
                 }
             }
-            if (fileHelper.getExtension(crr.recUri) === 'opus') {
-                return models.recordings.getAudioFromCore(opts, filter)
-            } else return q.ninvoke(Recordings, 'fetchAudioFile', opts, filter);
+
+            return q.ninvoke(Recordings, 'fetchAudioFile', opts, filter);
         })
     },
 

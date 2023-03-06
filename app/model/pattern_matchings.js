@@ -738,15 +738,14 @@ var PatternMatchings = {
             const filter = {
                 maxFreq: Math.max(pmr.y1, pmr.y2),
                 minFreq: Math.min(pmr.y1, pmr.y2),
-                gain: options.gain,
+                gain: options.gain || 15,
                 trim: {
                     from: Math.min(pmr.x1, pmr.x2),
                     to: Math.max(pmr.x1, pmr.x2)
                 }
             }
-            if (fileHelper.getExtension(pmr.recUri) === 'opus') {
-                return models.recordings.getAudioFromCore(opts, filter)
-            } else return q.ninvoke(Recordings, 'fetchAudioFile', opts, filter);
+
+            return q.ninvoke(Recordings, 'fetchAudioFile', opts, filter);
         })
     },
 

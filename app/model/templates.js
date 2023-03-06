@@ -285,15 +285,14 @@ var Templates = {
             const filter = {
                 maxFreq: Math.max(template.y1, template.y2),
                 minFreq: Math.min(template.y1, template.y2),
-                gain: options.gain,
+                gain: options.gain || 15,
                 trim: {
                     from: Math.min(template.x1, template.x2),
                     to: Math.max(template.x1, template.x2)
                 }
             }
-            if (fileHelper.getExtension(template.recUri) === 'opus') {
-                return Recordings.getAudioFromCore(opts, filter)
-            } else return q.ninvoke(Recordings, 'fetchAudioFile', opts, filter);
+
+            return q.ninvoke(Recordings, 'fetchAudioFile', opts, filter);
         });
     },
 
