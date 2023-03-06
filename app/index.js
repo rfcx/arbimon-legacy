@@ -102,6 +102,8 @@ if(app.get('env') === 'development') {
     app.use('/docs', express.static(path.join(__dirname, 'docs')));
 }
 
+app.use('/', require('./routes/non-session'))
+
 var sessionConfig = {
     key    : config('session').key,
     secret : config('session').secret,
