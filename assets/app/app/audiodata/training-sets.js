@@ -211,7 +211,6 @@ angular.module('a2.audiodata.training-sets', [
         }
 
         this.selected.trainingSet = selected;
-        this.selected.trainingSet.export_url = a2TrainingSets.getExportUrl(selected.id);
 
         Project.validationBySpeciesSong(selected.species, selected.songtype, (function(data) {
             this.selected.trainingSet.validations = data;
@@ -234,6 +233,17 @@ angular.module('a2.audiodata.training-sets', [
                 this.selected.page = 0;
             }).bind(this) );
         }).bind(this));
+    };
+
+    this.setupExportUrl = function() {
+        this.selected.trainingSet.export_url = a2TrainingSets.getExportUrl(selected.id);
+    };
+
+    this.exportTSReport = function ($event) {
+        $event.stopPropagation();
+        if ((a2UserPermit.all && !a2UserPermit.all.length) || !a2UserPermit.can('export report')) {
+            return notify.log('You do not have permission to export Training Set data');
+        } else return this.setupExportUrl()
     };
 
     this.setDetailedView = function(detailedView){

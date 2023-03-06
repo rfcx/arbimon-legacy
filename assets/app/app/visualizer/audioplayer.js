@@ -1,5 +1,5 @@
 angular.module('a2.visualizer.audio-player', [])
-.service('a2AudioPlayer', function(A2AudioObject, $q, notify, a2Playlists, Project, $localStorage){
+.service('a2AudioPlayer', function(A2AudioObject, $q, notify, a2Playlists, Project, $localStorage, a2UserPermit){
     'use strict';
     var a2AudioPlayer = function(scope, options){
         this.scope = scope;
@@ -183,6 +183,9 @@ angular.module('a2.visualizer.audio-player', [])
             this.scope.$broadcast('next-visobject');
         },
         download: function(visobject) {
+            if ((a2UserPermit.all && !a2UserPermit.all.length) || !a2UserPermit.can('export report')) {
+                return notify.log('You do not have permission to download recording');
+            }
             const form = document.createElement('form')
             form.style.display = 'none'
             form.method = 'GET'

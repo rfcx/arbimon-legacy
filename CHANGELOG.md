@@ -1,5 +1,12 @@
 # Arbimon Release Notes
 
+## v3.0.74 - March 07, 2023
+
+Resolved issues:
+
+- Fix permissions for export recordings
+- Display the opus spectrogram file on the Visualizer page
+
 ## v3.0.73 - February 03, 2023
 
 Resolved issues:

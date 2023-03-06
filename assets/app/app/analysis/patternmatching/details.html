@@ -141,8 +141,7 @@
                         <div class="export-url pull-right">
                                 <a class="btn btn-default"
                                 ng-href="{{controller.patternMatchingExportUrl}}"
-                                ng-click="true | trackEvent:'Pattern Matching Details':'export'"
-                                ng-disabled="!controller.patternMatchingExportUrl"
+                                ng-click="controller.exportPmReport($event) | trackEvent:'Pattern Matching Details':'export'"
                                 tooltip="Export Pattern Matching Data">
                                 <i class="fa fa-download"></i>
                             </a>

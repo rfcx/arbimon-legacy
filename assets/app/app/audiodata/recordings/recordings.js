@@ -264,7 +264,9 @@ angular.module('a2.audiodata.recordings', [
     };
 
     this.exportRecordings = function(parameters){
-        $downloadResource(Project.getRecordingDataUrl($scope.params, parameters));
+        if ((a2UserPermit.all && !a2UserPermit.all.length) || !a2UserPermit.can('export report')) {
+            return notify.log('You do not have permission to export data');
+        } else $downloadResource(Project.getRecordingDataUrl($scope.params, parameters));
     };
 
 })

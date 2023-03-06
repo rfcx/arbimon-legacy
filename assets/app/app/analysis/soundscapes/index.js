@@ -271,9 +271,8 @@ angular.module('a2.analysis.soundscapes', [
 
 
     this.exportSoundscape = function(options) {
-        if(!a2UserPermit.can('manage soundscapes')) {
-            notify.log('You do not have permission to export soundscapes data');
-            return;
+        if ((a2UserPermit.all && !a2UserPermit.all.length) || !a2UserPermit.can('export report')) {
+            return notify.log('You do not have permission to export soundscape data');
         }
 
         a2Soundscapes.getExportUrl(options).then(function(export_url){
