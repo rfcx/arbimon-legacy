@@ -236,7 +236,7 @@ angular.module('a2.audiodata.training-sets', [
     };
 
     this.setupExportUrl = function() {
-        this.selected.trainingSet.export_url = a2TrainingSets.getExportUrl(selected.id);
+        this.selected.trainingSet.export_url = a2TrainingSets.getExportUrl(this.selected.trainingSet.id);
     };
 
     this.exportTSReport = function ($event) {
