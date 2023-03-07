@@ -557,7 +557,7 @@ var Recordings = {
 
         switch (type) {
             case 'spectro':
-                asset = 'rfull_g1_fspec_d1024.256_wdolph_z120.png'
+                asset = 'rfull_g1_fspec_mtrue_d1023.255_wdolph_z120.png'
                 break;
             case 'audio':
                 asset = `r${isFrequency ? fmin + '.' + fmax : 'full'}_g${isGain ? options.gain : 1}_fmp3.mp3`

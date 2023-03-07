@@ -98,7 +98,7 @@ router.get('/:template/audio', function(req, res, next) {
 router.use(function(req, res, next) {
     res.type('json');
     if(!req.haveAccess(req.project.project_id, "manage templates")){
-        return res.json({ error: "you dont have permission to 'manage templates'" });
+        return res.json({ error: "you dont have permission to manage templates" });
     }
     next();
 });
