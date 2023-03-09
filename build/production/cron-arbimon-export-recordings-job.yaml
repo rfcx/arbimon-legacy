@@ -1,32 +1,33 @@
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
-  name: arbimon-recording-delete-job
-  namespace: staging
+  name: arbimon-export-recording-job
+  namespace: production
 spec:
   concurrencyPolicy: Forbid
   failedJobsHistoryLimit: 1
-  # At 10:00 on every day-of-week from Monday through Saturday
-  schedule: "0 10 * * 1-6"
+  successfulJobsHistoryLimit: 3
+  # at every 5 minute
+  schedule: '*/5 * * * *'
   jobTemplate:
     spec:
       backoffLimit: 100
       template:
         spec:
           containers:
-            - name: arbimon-recording-delete-job
-              image: 887044485231.dkr.ecr.eu-west-1.amazonaws.com/arbimon-recording-delete-job:latest
+            - name: arbimon-export-recording-job
+              image: 887044485231.dkr.ecr.eu-west-1.amazonaws.com/arbimon-export-recording-job:latest
               imagePullPolicy: Always
               envFrom:
               - secretRef:
-                  name: arbimon-recording-delete-job-secrets
+                  name: arbimon-export-recording-job
               env:
                 - name: NODE_ENV
-                  value: "staging"
+                  value: "production"
                 - name: SLACK_REPORT_ENABLED
                   value: "true"
                 - name: SLACK_URL
                   value: "https://slack.com/api/chat.postMessage"
                 - name: SLACK_CHANNEL
-                  value: "#biodiversity-dev"
+                  value: "#arbimon-dev"
           restartPolicy: Never

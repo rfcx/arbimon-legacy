@@ -1,0 +1,27 @@
+<div class="modal-header">
+    <h3>Export report</h3>
+</div>
+
+<div class="modal-body">
+    <form>
+        <div class="form-group">
+            <label for="name">Please enter your email to receive the report</label><span class="text-danger small pull-right">{{errMess}}</span>
+            <input type="text"
+                name="name"
+                id="name"
+                class="form-control"
+                ng-model="userEmail"
+                ng-change="changeUserEmail()"
+                ng-disabled="isExportingRecs">
+        </div>
+    </form>
+</div>
+<div class="modal-footer">
+    <i class="fa fa-spinner fa-spin" ng-if="isExportingRecs" style="font-size: 26px; vertical-align: middle; margin-right: 5px;"></i>
+    <button class="btn btn-primary" ng-click="exportRecordings(userEmail) | trackEvent:'Export-Recordings':'close clicked'" ng-disabled="isExportingRecs">
+        <i class="fa fa-send-o"></i> Export &amp; Close
+    </button>
+    <button class="btn btn-default" ng-click="$dismiss() | trackEvent:'Export-Recordings':'dismiss clicked'" ng-disabled="isExportingRecs">
+        <i class="fa fa-times"></i> Close
+    </button>
+</div>

@@ -11,7 +11,7 @@
 
 
         <div class="btn-group padding-left" dropdown dropdown-append-to-body="true" a2-auto-close-on-outside-click>
-            <button class="btn btn-default" dropdown-toggle ng-disabled="loading"><i class="fa fa-download"></i> Export <i class="fa fa-caret-down"></i></button>
+            <button class="btn btn-default" dropdown-toggle ng-disabled="loading || !controller.exportPermit()"><i class="fa fa-send-o"></i> Export <i class="fa fa-caret-down"></i></button>
             <div class="dropdown-form dropdown-menu" role="menu">
                 <recording-data-export-parameters on-export="controller.exportRecordings(parameters)"
                 ></recording-data-export-parameters>

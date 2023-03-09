@@ -91,6 +91,11 @@ angular.module('a2.audiodata.recordings', [
     this.reloadList = function() {
         this.searchRecs(['count', 'list']);
     };
+
+    this.exportPermit = function() {
+        return a2UserPermit.can('manage project recordings')
+    };
+
     this.createPlaylist = function() {
         var listParams = angular.merge({}, $scope.params);
 
@@ -263,10 +268,25 @@ angular.module('a2.audiodata.recordings', [
         this.searchRecs();
     };
 
-    this.exportRecordings = function(parameters){
+    this.exportRecordings = function(listParams) {
         if ((a2UserPermit.all && !a2UserPermit.all.length) || !a2UserPermit.can('export report')) {
             return notify.log('You do not have permission to export data');
-        } else $downloadResource(Project.getRecordingDataUrl($scope.params, parameters));
+        }
+        $scope.params.userEmail = a2UserPermit.getUserEmail() || '';
+        const modalInstance = $modal.open({
+            controller: 'ExportRecordingstModalInstanceCtrl',
+            templateUrl: '/app/audiodata/export-report.html',
+            resolve: {
+                data: function() {
+                    return { params: $scope.params,  listParams: listParams }
+                }
+            },
+            backdrop: false
+        });
+
+        modalInstance.result.then(function() {
+            notify.log('The export report is processing.');
+        });
     };
 
 })
@@ -288,6 +308,26 @@ angular.module('a2.audiodata.recordings', [
         });
     };
     $scope.changePlaylistName = function() {
+        $scope.errMess = null;
+    }
+})
+.controller('ExportRecordingstModalInstanceCtrl', function($scope, $modalInstance, Project, data) {
+    $scope.userEmail = data.params.userEmail
+    $scope.exportRecordings = function(email) {
+        data.params.userEmail = email
+        $scope.isExportingRecs = true
+        $scope.errMess = ''
+        Project.getRecordingData(data.params, data.listParams).then(data => {
+            $scope.isExportingRecs = false
+            if (data.error) {
+                $scope.errMess = data.error;
+            }
+            else {
+                $modalInstance.close();
+            }
+        })
+    }
+    $scope.changeUserEmail = function() {
         $scope.errMess = null;
     }
 })

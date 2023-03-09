@@ -1,0 +1,32 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: arbimon-recording-delete-job
+  namespace: production
+spec:
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 1
+  # At 11:00 on every day-of-week from Monday through Saturday
+  schedule: "0 11 * * 1-6"
+  jobTemplate:
+    spec:
+      backoffLimit: 100
+      template:
+        spec:
+          containers:
+            - name: arbimon-recording-delete-job
+              image: 887044485231.dkr.ecr.eu-west-1.amazonaws.com/arbimon-recording-delete-job:latest
+              imagePullPolicy: Always
+              envFrom:
+              - secretRef:
+                  name: arbimon-recording-delete-job-secrets
+              env:
+                - name: NODE_ENV
+                  value: "production"
+                - name: SLACK_REPORT_ENABLED
+                  value: "true"
+                - name: SLACK_URL
+                  value: "https://slack.com/api/chat.postMessage"
+                - name: SLACK_CHANNEL
+                  value: "#arbimon-dev"
+          restartPolicy: Never

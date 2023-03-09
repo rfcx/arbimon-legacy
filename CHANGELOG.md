@@ -7,6 +7,10 @@ Resolved issues:
 - Improve the message for a count of uploaded files
 - The timezone column is changed
 
+Performance improvements:
+
+- Add a background job to Export recordings, Occupancy models and Grouped detections
+
 ## v3.0.74 - March 09, 2023
 
 Resolved issues:

@@ -1,5 +1,8 @@
 # Arbimon Deployment Notes
 
+## v3.0.74
+- Run 040-create-recordings-export-parameters-table.sql on staging/production
+
 ## v3.0.68
 - Run 039-add-upload-url-to-uploads-processing.sql on the production
 

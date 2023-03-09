@@ -3,7 +3,7 @@ angular.module('a2.srv.project', [
 ])
 .factory('Project', function(
     $location, $http, $q, $httpParamSerializer,
-    a2APIService
+    a2APIService, notify
 ) {
 
         var nameRe = /\/?(project|citizen-scientist|visualizer)\/([\w\_\-]+)/;
@@ -96,7 +96,7 @@ angular.module('a2.srv.project', [
                 }
                 return a2APIService.get('/recordings/search-count', {params:query || {}});
             },
-            getRecordingDataUrl: function(filters, projection){
+            getRecordingData: function(filters, projection, ){
                 if (filters.tags) {
                     filters.tags = filters.tags.flat();
                 }
@@ -109,10 +109,13 @@ angular.module('a2.srv.project', [
                 });
 
                 var serializedParams = $httpParamSerializer(params);
-                return '/api/project/'+url+'/recordings/'+ (
-                    projection && projection.species ? 'occupancy-models-export/'+projection.species_name+'.csv' :
-                    (projection && projection.grouped ? 'grouped-detections-export.csv' : 'recordings-export.csv'))
+                const getUrl = '/api/project/'+url+'/recordings/'+ (
+                    projection && projection.species ? 'occupancy-models-export/'+projection.species_name :
+                    (projection && projection.grouped ? 'grouped-detections-export' : 'recordings-export'))
                     + (serializedParams.length ? '?'+serializedParams : '');
+                return $http.get(getUrl).then(function(response) {
+                    return response.data;
+                }).catch(notify.serverError);;
             },
             getSitesExportUrl: function() {
                 return '/api/project/' + url + '/sites-export.csv';
