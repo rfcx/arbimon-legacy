@@ -15,9 +15,11 @@ router.get('/', function(req, res, next) {
         utcDiff: !!req.query.utcDiff
     }).then(function(rows) {
         for (let row of rows) {
-            const isTimezone = null
-            const timezone = isTimezone ? moment().tz(row.timezone).format('ZZ') : '-0000' // UTC+07:00 or 'UTC-00:00'
-            row.utc = `UTC${timezone.slice(0, 3)}:${timezone.slice(3)}`
+            const isTimezone = row.timezone
+            const timezone = isTimezone ? moment().tz(row.timezone).format('ZZ') : '-0000' // UTC+07 , UTC+07:30, 'UTC-00'
+            const utc = `${timezone.slice(0, 3)}:${timezone.slice(3)}`
+            const reg = /^(.\d*[\d:]*?)\.?:00*$/.exec(utc)
+            row.utc = reg && reg[1] ? `UTC${reg[1]}` : `UTC${utc}`
         }
         res.json(rows);
     }).catch(next);
