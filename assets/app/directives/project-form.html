@@ -42,16 +42,27 @@
             placeholder="this project is about...">
         </textarea>
     </div>
-    <div class="radio">
-        <label class="control-label" for="public">
-            <input id="public" type="radio" ng-model="project.is_private" value="0" class="cs-pointer">
-            <i class="fa fa-globe"></i> Public - anyone can view this project as a guest. Only authorize users can edit
-        </label>
-    </div>
-    <div class="radio">
-        <label class="control-label" for="private">
-            <input id="private" type="radio" ng-model="project.is_private" value="1" ng-checked="true" class="cs-pointer">
-            <i class="fa fa-lock"></i> Private - only you and users you authorize can access this project
-        </label>
+    <div class="form-group">
+        <div class="radio">
+            <label class="control-label" for="public">
+                <input id="public" type="radio" ng-model="project.is_private" value="0" class="cs-pointer">
+                <i class="fa fa-globe"></i> Public
+            </label>
+        </div>
+        <div class="pl-1">Any Arbimon user can:</div>
+        <ul>
+            <li>View this project on Arbimon and Insights.</li>
+            <li>Download summary figures and maps from Insights pages.</li>
+        </ul>
+        <div class="pl-1">However, only authorized users can edit the project and download raw data (e.g., results tables and labeled data).</div>
+        <div class="radio">
+            <label class="control-label" for="private">
+                <input id="private" type="radio" ng-model="project.is_private" value="1" ng-checked="true" class="cs-pointer">
+                <i class="fa fa-lock"></i> Private
+            </label>
+        </div>
+        <ul>
+            <li>Only authorized users can view, access, edit and explore this project on Arbimon and Insights.</li>
+        </ul>
     </div>
 </ng-form>

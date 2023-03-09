@@ -6,6 +6,7 @@ Resolved issues:
 
 - Fix permissions for export recordings
 - Display the opus spectrogram file on the Visualizer page
+- Change the description on Arbimon settings page
 
 ## v3.0.73 - February 03, 2023
 
