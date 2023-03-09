@@ -1,5 +1,11 @@
 # Arbimon Release Notes
 
+## v3.0.75 - March 10, 2023
+
+Resolved issues:
+
+- Improve the count of uploaded files message
+
 ## v3.0.74 - March 07, 2023
 
 Resolved issues:
