@@ -4,6 +4,7 @@
 
 Resolved issues:
 
+- Improve the message for a count of uploaded files
 - The timezone column is changed
 
 ## v3.0.74 - March 09, 2023
