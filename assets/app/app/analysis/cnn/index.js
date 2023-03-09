@@ -308,9 +308,18 @@ angular.module('a2.analysis.cnn', [
     $scope.limit = 100;
     //$scope.viewType = "species";
 
-    $scope.CNNExportUrl = a2CNN.getExportUrl({
-        cnnId: $scope.cnnId
-    });
+    var setupExportUrl = function() {
+        $scope.CNNExportUrl = a2CNN.getExportUrl({
+            cnnId: $scope.cnnId
+        });
+    }
+
+    $scope.exportCnnReport = function($event) {
+        $event.stopPropagation();
+        if ((a2UserPermit.all && !a2UserPermit.all.length) || !a2UserPermit.can('export report')) {
+            return notify.log('You do not have permission to export CNN data');
+        } else return setupExportUrl()
+    }
 
     var audio_player = new a2AudioPlayer($scope);
 

@@ -409,7 +409,7 @@ angular.module('a2.analysis.random-forest-models.models', [
         $modalInstance.dismiss('cancel');
     };
 })
-.controller('ModelDetailsCtrl', function($scope, a2Models, $stateParams, $location, Project, a2Classi, notify, $window) {
+.controller('ModelDetailsCtrl', function($scope, a2Models, $stateParams, $location, Project, a2Classi, notify, $window, a2UserPermit) {
     var scopeExited = false;
     $scope.$on('$destroy', function(argument) {
         scopeExited = true;
@@ -743,6 +743,10 @@ angular.module('a2.analysis.random-forest-models.models', [
         $("#patternDivMain").css("min-width", 420);
         $("#patternDivMain").css("height", 150);
     };
+
+    $scope.isExport = function() {
+        return a2UserPermit.can('export report')
+    }
 
     $scope.getValidations = function() {
         var vals = [];

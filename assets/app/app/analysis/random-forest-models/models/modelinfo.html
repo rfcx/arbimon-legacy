@@ -309,7 +309,8 @@
         <div class="col-sm-12 col-lg-8" ng-show="!loadingValidations && showValidationsTable">
             <h3>
                 Validations
-                <div class="btn btn-default"
+                <div ng-if="isExport()"
+                    class="btn btn-default"
                     ng-csv="getValidations()"
                     filename="matrixValues.csv"
                     csv-header="['Site', 'Date', 'User presence','Model presence','Threshold presence' ,'Threshold value']">

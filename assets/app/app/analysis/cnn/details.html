@@ -139,8 +139,7 @@
                     <div class="export-url pull-right">
                         <a class="btn btn-default"
                             ng-href="{{CNNExportUrl}}"
-                            ng-click="true | trackEvent:'CNN Details':'export'"
-                            ng-disabled="!CNNExportUrl"
+                            ng-click="exportCnnReport($event) | trackEvent:'CNN Details':'export'"
                             tooltip="Export CNN Data">
                             <i class="fa fa-download"></i>
                         </a>

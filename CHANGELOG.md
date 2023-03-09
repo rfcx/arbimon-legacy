@@ -1,11 +1,23 @@
 # Arbimon Release Notes
 
-## v3.0.74 - February 24, 2023
+## v3.0.75 - March 10, 2023
+
+Resolved issues:
+
+- Improve the message for a count of uploaded files
+- The timezone column is changed
 
 Performance improvements:
 
 - Add a background job to Export recordings, Occupancy models and Grouped detections
 
+## v3.0.74 - March 09, 2023
+
+Resolved issues:
+
+- Fix permissions for export recordings
+- Display the opus spectrogram file on the Visualizer page
+- Change the description on Arbimon settings page
 
 ## v3.0.73 - February 03, 2023
 

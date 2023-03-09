@@ -144,7 +144,7 @@ let ClusteringJobs = {
     getRoiAudioFile: function (options) {
         options = options || {};
 
-        let query = "SELECT A.time_min, A.time_max, A.frequency_min, A.frequency_max, R.`uri` as `rec_uri`, R.site_id\n" +
+        let query = "SELECT A.time_min, A.time_max, A.frequency_min, A.frequency_max, R.`uri` as `rec_uri`, R.site_id,\n" +
         "R.datetime, R.datetime_utc, S.external_id\n" +
         "FROM audio_event_detections_clustering A\n" +
         "JOIN recordings R ON A.recording_id = R.recording_id\n" +

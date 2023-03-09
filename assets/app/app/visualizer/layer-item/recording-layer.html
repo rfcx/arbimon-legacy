@@ -57,7 +57,9 @@
                                 </div>
                             </div>
                         </div>
-                        <button class="btn btn-sm btn-default" ng-class="audio_player.freq_filter ? 'active' : ''" ng-click="layer.controller.openFreqFilterModal()" ng-disabled="!audio_player.has_recording">
+                        <button class="btn btn-sm btn-default" ng-class="audio_player.freq_filter ? 'active' : ''" ng-click="layer.controller.openFreqFilterModal()" ng-disabled="!audio_player.has_recording"
+                            tooltip="Frequency filter"
+                        >
                             <i class="fa fa-filter" ></i>
                             <span class="fa fa-ellipsis-h fa-concat-sub"></span>
                         </button>
@@ -65,8 +67,8 @@
                     <div class="btn-group ml-1">
                         <button class="btn btn-default btn-sm"
                             ng-disabled="!audio_player.has_recording"
-                            ng-click="audio_player.download(visobject) | trackEvent:'Visualizer-RecordingLayer':'AudioControl download rec'" >
-
+                            ng-click="audio_player.download(visobject) | trackEvent:'Visualizer-RecordingLayer':'AudioControl download rec'"
+                            tooltip="Download recording" >
                             <i class="fa fa-download"></i>
                         </button>
                     </div>
@@ -98,14 +100,6 @@
                                 </button>
                             </div>
                         </div>
-                    </div>
-                    <div class="btn-group ml-1" ng-class="{ 'mt-1': visobject.explorerUrl && audio_player.clustersData }" ng-show="visobject.explorerUrl">
-                        <a class="btn btn-default btn-sm"
-                            ng-href="{{layer.controller.explorerUrl()}}"
-                            ng-disabled="true"
-                            tooltip="Navigate to Explorer (temporarily unavailable)">
-                            <i class="fa fa-external-link"></i>
-                        </a>
                     </div>
                 </div>
             </div>

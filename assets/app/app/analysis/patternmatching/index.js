@@ -266,7 +266,6 @@ angular.module('a2.analysis.patternmatching', [
                 'Matches/Recording': this.patternMatching.parameters.N,
                 'Matches/Site': this.patternMatching.parameters.persite || 'no limit'
             };
-            this.setupExportUrl();
             this.total = {
                 rois: patternMatching.matches,
                 pages: Math.ceil(patternMatching.matches / this.limit)
@@ -310,6 +309,13 @@ angular.module('a2.analysis.patternmatching', [
             patternMatching: this.patternMatching.id,
             jobName: encodeURIComponent(this.patternMatching.name)
         });
+    },
+
+    exportPmReport: function ($event) {
+        $event.stopPropagation();
+        if ((a2UserPermit.all && !a2UserPermit.all.length) || !a2UserPermit.can('export report')) {
+            return notify.log('You do not have permission to export Pattern Matching data');
+        } else return this.setupExportUrl()
     },
 
     onScroll: function($event, $controller) {
