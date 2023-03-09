@@ -1,6 +1,12 @@
 # Arbimon Release Notes
 
-## v3.0.74 - March 07, 2023
+## v3.0.75 - March 10, 2023
+
+Resolved issues:
+
+- The timezone column is changed
+
+## v3.0.74 - March 09, 2023
 
 Resolved issues:
 
