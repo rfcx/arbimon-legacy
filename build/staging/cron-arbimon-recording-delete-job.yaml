@@ -6,6 +6,7 @@ metadata:
 spec:
   concurrencyPolicy: Forbid
   failedJobsHistoryLimit: 1
+  successfulJobsHistoryLimit: 3
   # At 10:00 on every day-of-week from Monday through Saturday
   schedule: "0 10 * * 1-6"
   jobTemplate:

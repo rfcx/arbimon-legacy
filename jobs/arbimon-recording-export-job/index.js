@@ -11,14 +11,14 @@ const mandrill = require('mandrill-api/mandrill')
 
 async function main () {
   try {
-    console.log('arbimon-export-recordings job started')
-    
+    console.log('arbimon-recordings-export job started')
+
     const countConnections = await getCountConnections()
     if (countConnections > 10) {
         console.log('arbiton-export-recordings job stopped due to high db connections count')
         process.exit(1)
     }
-    
+
     let filters, projection_parameters
     const dateByCondition = moment.utc().format('YYYY-MM-DD HH:mm:ss')
     const limit = 1
@@ -41,7 +41,7 @@ async function main () {
     if (projection_parameters && projection_parameters.species) {
         const data = await recordings.exportOccupancyModels(projection_parameters, filters)
         return processOccupancyModelStream(data, rowData, dateByCondition, message).then(async () => {
-            console.log('arbimon-export-recording job finished')
+            console.log('arbimon-recording-export job finished')
         })
     }
     else if (projection_parameters && projection_parameters.grouped && projection_parameters.validation && !projection_parameters.species) {
@@ -65,13 +65,13 @@ async function main () {
         }
         const data = await recordings.groupedDetections(projection_parameters, filters)
         return processGroupedDetectionsStream(data, rowData, projection_parameters, allData, dateByCondition, message).then(async () => {
-            console.log('arbimon-export-recording job finished')
+            console.log('arbimon-recording-export job finished')
         })
     }
 
     const data = await recordings.exportRecordingData(projection_parameters, filters)
     return transformStream(data, rowData, dateByCondition, message).then(async () => {
-        console.log('arbimon-export-recording job finished')
+        console.log('arbimon-recording-export job finished')
     })
   } catch (e) {
     console.error(e)

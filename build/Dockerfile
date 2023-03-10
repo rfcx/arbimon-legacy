@@ -10,9 +10,9 @@ COPY jobs /app/jobs
 FROM build as arbimon-recording-delete-job
 CMD ["node", "jobs/arbimon-recording-delete-job/index.js"]
 
-# -- arbimon-export-recording-job --
-FROM build as arbimon-export-recording-job
-CMD ["node", "jobs/arbimon-export-recording-job/index.js"]
+# -- arbimon-recording-export-job --
+FROM build as arbimon-recording-export-job
+CMD ["node", "jobs/arbimon-recording-export-job/index.js"]
 
 # ---
 

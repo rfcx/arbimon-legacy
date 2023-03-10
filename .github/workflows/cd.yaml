@@ -41,7 +41,7 @@ jobs:
     uses: rfcx/cicd/.github/workflows/ecr-build-push.yaml@master
     with:
       dockerfile: build/Dockerfile
-      targets: "[\"arbimon-recording-delete-job\",\"arbimon-export-recording-job\",\"arbimon\"]"
+      targets: "[\"arbimon-recording-delete-job\",\"arbimon-recording-export-job\",\"arbimon\"]"
       tag-environment: ${{ needs.configure.outputs.namespace }}
       tag-latest: ${{ needs.configure.outputs.namespace == 'production' }}
     secrets:
