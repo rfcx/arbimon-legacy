@@ -12,6 +12,8 @@ CMD ["node", "jobs/arbimon-recording-delete-job/index.js"]
 
 # -- arbimon-recording-export-job --
 FROM build as arbimon-recording-export-job
+COPY app/model /app/app/model/recordings.js
+COPY app/model /app/app/model/projects.js
 CMD ["node", "jobs/arbimon-recording-export-job/index.js"]
 
 # ---
