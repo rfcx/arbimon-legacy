@@ -6,11 +6,9 @@ var debug = require('debug')('arbimon2:model:users');
 var request = require('request');
 var config = require('../config');
 var util = require('util');
-var joi = require('joi');
 var q = require('q');
 var APIError = require('../utils/apierror');
 var sprintf = require("sprintf-js").sprintf;
-var gravatar = require('gravatar');
 const rp = util.promisify(request);
 const rfcxConfig = config('rfcx');
 
@@ -20,7 +18,7 @@ var sha256 = require('../utils/sha256');
 var generator = require('../utils/generator');
 const auth0Service = require('./auth0');
 
-var models = require('./index');
+const projects = require('./projects')
 
 function hashPassword(password){
     return sha256(password);
@@ -222,7 +220,7 @@ var Users = {
             userId
         ]).get(0).then(function(user){
             if(user.is_super){
-                return q.ninvoke(models.projects, 'listAll').get(0);
+                return q.ninvoke(projects, 'listAll').get(0);
             } else {
                 return Users.projectList(userId);
             }

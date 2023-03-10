@@ -12,8 +12,24 @@ CMD ["node", "jobs/arbimon-recording-delete-job/index.js"]
 
 # -- arbimon-recording-export-job --
 FROM build as arbimon-recording-export-job
-RUN mkdir -p app/model
-COPY app/model /app/app/model
+RUN mkdir -p /config
+COPY config/ /app/config
+RUN mkdir -p /app
+COPY app/config.js /app/app/config.js
+RUN mkdir -p /app/utils
+COPY app/utils /app/app/utils
+RUN mkdir -p /app/model
+COPY app/model/recordings.js /app/app/model/recordings.js
+COPY app/model/projects.js /app/app/model/projects.js
+COPY app/model/users.js /app/app/model/users.js
+COPY app/model/auth0.js /app/app/model/auth0.js
+COPY app/model/species.js /app/app/model/species.js
+COPY app/model/songtypes.js /app/app/model/songtypes.js
+COPY app/model/roles.js /app/app/model/roles.js
+COPY app/model/tags.js /app/app/model/tags.js
+COPY app/model/soundscape-composition.js /app/app/model/soundscape-composition.js
+COPY app/model/sites.js /app/app/model/sites.js
+COPY app/model/classifications.js /app/app/model/classifications.js
 CMD ["node", "jobs/arbimon-recording-export-job/index.js"]
 
 # ---

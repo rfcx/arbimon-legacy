@@ -12,9 +12,12 @@ var async = require('async');
 var AWS   = require('aws-sdk');
 var joi   = require('joi');
 var _     = require('lodash');
-var sprintf = require("sprintf-js").sprintf;
 
-var models = require("./index");
+const siteModel = require('./sites')
+const projectModel = require('./projects')
+const classificationsModel = require('./classifications')
+const tagsModel = require('./tags')
+const soundscapeCompositionModel = require('./soundscape-composition')
 
 var config       = require('../config');
 var SQLBuilder  = require('../utils/sqlbuilder');
@@ -500,7 +503,7 @@ var Recordings = {
             let recs = await this.findByIdAsync(recording.id)
             recording.site_id = recs[0].site_id
         }
-        let sites = await models.sites.findByIdAsync(recording.site_id)
+        let sites = await siteModel.findByIdAsync(recording.site_id)
         if (sites && sites.length) {
             var site = sites[0]
         }
@@ -1632,21 +1635,6 @@ var Recordings = {
         });
     },
 
-    exportOccupancyModels: async function(projection, filters){
-        let query = `SELECT S.name as site, DATE_FORMAT(R.datetime, "%Y/%m/%d") as date, SUM(rv.present=1 OR rv.present_review>0 OR rv.present_aed>0) as count
-            FROM recordings R
-            JOIN sites S ON S.site_id = R.site_id
-            LEFT JOIN project_imported_sites AS pis ON S.site_id = pis.site_id AND pis.project_id = ${filters.project_id}
-            LEFT JOIN recording_validations AS rv ON R.recording_id = rv.recording_id
-            WHERE rv.species_id = ${projection.species} AND (S.project_id = ${filters.project_id} OR pis.project_id = ${filters.project_id}) AND (rv.present_review>0 OR rv.present_aed>0 OR rv.present is not null)
-            GROUP BY S.name, YEAR(R.datetime), MONTH(R.datetime), DAY(R.datetime) ORDER BY R.datetime ASC`;
-        let queryResult = await dbpool.query({
-            sql: query,
-            typeCast: sqlutil.parseUtcDatetime,
-        })
-        return queryResult;
-    },
-
     getCountSitesRecPerDates: async function(project_id){
         let query = `SELECT S.name as site, YEAR(R.datetime) as year, MONTH(R.datetime) as month, DAY(R.datetime) as day,COUNT(*) as count
             FROM sites S
@@ -1676,7 +1664,7 @@ var Recordings = {
                 var projection_parameters = all;
                 var promises=[];
                 if (projection_parameters.validation) {
-                    let classPromise = await models.projects.getProjectClasses(null,null,{noProject:true, ids:projection_parameters.validation}).then(async (classes) => {
+                    let classPromise = await projectModel.getProjectClasses(null,null,{noProject:true, ids:projection_parameters.validation}).then(async (classes) => {
                         if (classes && classes.length) {
                             let classesArray = classes.reduce((resultArray, item, index) => {
                                 const chunkIndex = Math.floor(index/1);
@@ -1763,7 +1751,7 @@ var Recordings = {
                     projection_parameters.recording.push('date');
                 }
                 if (projection_parameters.validation) {
-                    let classPromise = await models.projects.getProjectClasses(null,null,{noProject:true, ids:projection_parameters.validation}).then(async (classes) => {
+                    let classPromise = await projectModel.getProjectClasses(null,null,{noProject:true, ids:projection_parameters.validation}).then(async (classes) => {
                         if (classes && classes.length) {
                             // Divide the results of the validations if the count more than 50 tables.
                             let classesArray = classes.reduce((resultArray, item, index) => {
@@ -1825,7 +1813,7 @@ var Recordings = {
                         }
                     }
                     if (projection_parameters.classification) {
-                        promises.push(models.classifications.getFor({id:projection_parameters.classification, showModel:true}).then(function(classifications){
+                        promises.push(classificationsModel.getFor({id:projection_parameters.classification, showModel:true}).then(function(classifications){
                             classifications.forEach(function(classification, idx){
                                 var clsid = "p_CR_" + idx;
                                 summaryBuilders[c].addTable("LEFT JOIN classification_results", clsid,
@@ -1841,7 +1829,7 @@ var Recordings = {
                         }));
                     }
                     if (projection_parameters.soundscapeComposition) {
-                        promises.push(models.SoundscapeComposition.getClassesFor({id:projection_parameters.soundscapeComposition}).then(function(classes){
+                        promises.push(soundscapeCompositionModel.getClassesFor({id:projection_parameters.soundscapeComposition}).then(function(classes){
                             classes.forEach(function(cls, idx){
                                 var clsid = "p_SCC_" + idx;
                                 summaryBuilders[c].addTable("LEFT JOIN recording_soundscape_composition_annotations", clsid,
@@ -1854,7 +1842,7 @@ var Recordings = {
                         }));
                     }
                     if(projection_parameters.tag){
-                        promises.push(models.tags.getFor({id:projection_parameters.tag}).then(function(tags){
+                        promises.push(tagsModel.getFor({id:projection_parameters.tag}).then(function(tags){
                             tags.forEach(function(tag, idx){
                                 var prtid = "p_RT_" + idx;
                                 const tagQuery = `(SELECT COUNT(*) FROM recording_tags AS ${prtid} WHERE r.recording_id = ${prtid}.recording_id AND ${prtid}.tag_id = ${tag.tag_id}) AS ${dbpool.escapeId('tag<' + tag.tag + '>')}`

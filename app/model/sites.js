@@ -8,7 +8,6 @@ const rfcxConfig = config('rfcx');
 var request = require('request');
 var rp = util.promisify(request);
 var tzlookup = require("tz-lookup");
-var model = require('../model');
 var s3;
 var dbpool = require('../utils/dbpool');
 var queryHandler = dbpool.queryHandler;

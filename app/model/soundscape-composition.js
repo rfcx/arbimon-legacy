@@ -1,6 +1,6 @@
 var q = require('q');
 var joi = require('joi');
-var models = require('./index');
+var projects = require('./projects');
 var dbpool = require('../utils/dbpool');
 var APIError = require('../utils/apierror');
 
@@ -21,7 +21,7 @@ var SoundscapeComposition = {
 
         if(options.tally){
             if(options.project){
-                presteps.push(models.projects.getProjectSites(options.project).then(function(sites){
+                presteps.push(projects.getProjectSites(options.project).then(function(sites){
                     if(sites.length){
                         select.push("(" +
                         "SELECT COUNT(*) " +
