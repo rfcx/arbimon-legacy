@@ -1,17 +1,17 @@
 # Jobs
 
-FROM node:18.14.0 as arbimon-recording-delete-job
+FROM node:18.14.0 as build
 WORKDIR /app
 COPY ["jobs/package.json", "jobs/package-lock.json*", "/app/"]
 RUN npm install
 COPY jobs /app/jobs
+
+# -- arbimon-recording-delete-job --
+FROM build as arbimon-recording-delete-job
 CMD ["node", "jobs/arbimon-recording-delete-job/index.js"]
 
-FROM node:18.14.0 as arbimon-export-recording-job
-WORKDIR /app
-COPY ["jobs/package.json", "jobs/package-lock.json*", "/app/"]
-RUN npm install
-COPY jobs /app/jobs
+# -- arbimon-export-recording-job --
+FROM build as arbimon-export-recording-job
 CMD ["node", "jobs/arbimon-export-recording-job/index.js"]
 
 # ---
