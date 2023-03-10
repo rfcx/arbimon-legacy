@@ -5,7 +5,7 @@
   "main": "arbimon-recording-delete-job/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "arbimon-export-recording": "node jobs/arbimon-export-recording/index.js"
+    "arbimon-export-recording": "node jobs/arbimon-recording-export-job/index.js"
   },
   "repository": {
     "type": "git",
