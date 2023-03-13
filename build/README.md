@@ -3,7 +3,7 @@
 Overview:
 - arbimon-recording-delete-job is built and deployed by Github Actions.
 - Deployment is triggered by push to staging/master. All configuration is in the sub-folders `staging` and `production` (corresponding to a Kubernetes namespace).
-- Secrets are stored on Kubernetes only in `arbimon-secrets` and `arbimon-recording-delete-job-secrets` file of each namespace.
+- Secrets are stored on Kubernetes only in `arbimon-secrets` and `arbimon-cron-job-secrets` file of each namespace.
 - Deployment notifications are posted on Slack #alerts-deployment
 
 

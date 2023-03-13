@@ -20,7 +20,7 @@ spec:
               imagePullPolicy: Always
               envFrom:
               - secretRef:
-                  name: arbimon-recording-delete-job-secrets
+                  name: arbimon-cron-job-secretss
               env:
                 - name: NODE_ENV
                   value: "staging"
