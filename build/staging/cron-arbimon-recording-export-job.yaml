@@ -9,6 +9,7 @@ spec:
   successfulJobsHistoryLimit: 3
   # at every 5 minute
   schedule: '*/5 * * * *'
+  # startingDeadlineSeconds: 180
   jobTemplate:
     spec:
       backoffLimit: 100
