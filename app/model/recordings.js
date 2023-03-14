@@ -1977,6 +1977,14 @@ var Recordings = {
         return query(q)
     },
 
+    closeConnection: async function() {
+        return dbpool.getConnection()
+            .then(async (connection) => {
+                await connection.release();
+                console.log('Pool connection closed')
+            })
+    },
+
     delete: async function(recs, project_id, callback) {
         let db
         return dbpool.getConnection()

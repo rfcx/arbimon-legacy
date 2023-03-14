@@ -172,11 +172,13 @@ async function processOccupancyModelStream (results, rowData, dateByCondition, m
                 try {
                     await sendEmail('Export occypancy model report [RFCx Arbimon]', 'occupancy-model.csv', rowData, content)
                     await updateExportRecordings(rowData, { processed_at: dateByCondition })
+                    await recordings.closeConnection()
                     resolve()
                 } catch(error) {
                     console.error('Error while sending occupancy-model email.', error)
                     await errorMessage(message)
                     await updateExportRecordings(rowData, { error: JSON.stringify(error) })
+                    await recordings.closeConnection()
                     resolve()
                 }
             })
@@ -246,11 +248,13 @@ async function processGroupedDetectionsStream (results, rowData, projection_para
                 try {
                     await sendEmail('Export grouped detections [RFCx Arbimon]', 'grouped-detections-export.csv', rowData, content)
                     await updateExportRecordings(rowData, { processed_at: dateByCondition })
+                    await recordings.closeConnection()
                     resolve()
                 } catch(error) {
                     console.error('Error while sending grouped-detections-export email.', error)
                     await errorMessage(message)
                     await updateExportRecordings(rowData, { error: JSON.stringify(error) })
+                    await recordings.closeConnection()
                     resolve()
                 }
             })
@@ -314,11 +318,13 @@ async function transformStream (results, rowData, dateByCondition, message) {
                 try {
                     await sendEmail('Export recording report [RFCx Arbimon]', 'export-recording.csv', rowData, content)
                     await updateExportRecordings(rowData, { processed_at: dateByCondition })
+                    await recordings.closeConnection()
                     resolve()
                 } catch(error) {
                     console.error('Error while sending export-recording email.', error)
                     await errorMessage(message)
                     await updateExportRecordings(rowData, { error: JSON.stringify(error) })
+                    await recordings.closeConnection()
                     resolve()
                 }
             })
