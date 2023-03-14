@@ -6,10 +6,9 @@ metadata:
 spec:
   concurrencyPolicy: Forbid
   failedJobsHistoryLimit: 1
-  successfulJobsHistoryLimit: 3
+  successfulJobsHistoryLimit: 1
   # at every 5 minute
   schedule: '*/5 * * * *'
-  # startingDeadlineSeconds: 180
   jobTemplate:
     spec:
       backoffLimit: 100
