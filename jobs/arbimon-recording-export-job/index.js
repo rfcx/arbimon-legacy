@@ -16,7 +16,7 @@ async function main () {
     const countConnections = await getCountConnections()
     if (countConnections > 10) {
         console.log('arbiton-export-recordings job stopped due to high db connections count')
-        process.exit(1)
+        return
     }
 
     let filters, projection_parameters
@@ -29,7 +29,7 @@ async function main () {
 
     if (!rowData) {
         console.log('arbimon-recording-export job finished')
-        process.exit(1)
+        return
     }
 
     const message = `project = ${ rowData.name } [${ rowData.project_id }]`
