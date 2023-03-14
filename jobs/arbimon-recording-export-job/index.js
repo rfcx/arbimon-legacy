@@ -27,6 +27,11 @@ async function main () {
         limit
     })
 
+    if (!rowData) {
+        console.log('arbimon-recording-export job finished')
+        process.exit(1)
+    }
+
     const message = `project = ${ rowData.name } [${ rowData.project_id }]`
     try {
         filters = JSON.parse(rowData.filters)
