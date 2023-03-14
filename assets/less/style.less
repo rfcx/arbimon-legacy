@@ -747,7 +747,12 @@ textarea.fixed-width {
 
 .red-border,
 .input-red-border .ui-select-toggle {
-  border-color: @brand-danger;
+  border: solid 1px @brand-danger;
+  border-radius: 4px;
+  &:focus {
+    border: solid 1px @brand-danger;
+    border-radius: 4px;
+  }
 }
 
 .brand-warning {

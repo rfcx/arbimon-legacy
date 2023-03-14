@@ -56,14 +56,14 @@
                     <i class="fa fa-info-circle ml-2"
                         tooltip="The minimum frequency of sound events to detect (kHz)">
                     </i>
-                    <input id="minFrequency" class="form-control" ng-class="{'red-border': controller.showFrequencyWarning()}" style="text-align:left;" min="0" step="1" max="23" ng-model="controller.data.params.minFrequency" type="number"/>
+                    <input id="minFrequency" class="form-control" ng-class="{'red-border': controller.showFrequencyWarning() || controller.isNotDefined(controller.data.params.minFrequency)}" style="text-align:left;" min="0" step="1" max="23" ng-model="controller.data.params.minFrequency" type="number"/>
                 </div>
                 <div class="col-sm-6">
                     <label for="maxFrequency">Max</label>
                     <i class="fa fa-info-circle ml-2"
                         tooltip="The maximum frequency of sound events to detect (kHz)">
                     </i>
-                    <input id="maxFrequency" class="form-control" ng-class="{'red-border': controller.showFrequencyWarning()}" style="text-align:left;" min="0" step="1" max="24" ng-model="controller.data.params.maxFrequency" type="number"/>
+                    <input id="maxFrequency" class="form-control" ng-class="{'red-border': controller.showFrequencyWarning() || controller.isNotDefined(controller.data.params.maxFrequency)}" style="text-align:left;" min="0" step="1" max="24" ng-model="controller.data.params.maxFrequency" type="number"/>
                 </div>
             </div>
             <error-message ng-if="controller.isNotDefined(controller.data.params.minFrequency)" message="'The minimum frequency must be in a range from 0 to 23 kHz.'"></error-message>
