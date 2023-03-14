@@ -1803,7 +1803,6 @@ var Recordings = {
                             'url' : 'r.recording_id as url'
                         };
                         summaryBuilders[c].addProjection.apply(summaryBuilders[c], projection_parameters.recording.map(function(recParam){
-                            console.log("recParam", recParam, recParamMap[recParam]);
                             return recParamMap[recParam];
                         }));
                         summaryBuilders[c].addProjection('r.meta');
