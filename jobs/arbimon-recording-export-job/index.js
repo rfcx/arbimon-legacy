@@ -364,3 +364,6 @@ async function sendEmail (subject, title, rowData, content) {
 }
 
 main()
+    .finally(() => {
+        db.closeAll()
+    })
