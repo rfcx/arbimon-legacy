@@ -37,7 +37,8 @@ async function main () {
         filters = JSON.parse(rowData.filters)
         projection_parameters = JSON.parse(rowData.projection_parameters)
     } catch (error) {
-        await updateExportRecordings(rowData, { error })
+        console.error('Error parse params', error)
+        await updateExportRecordings(rowData, { error: JSON.stringify(error) })
         await errorMessage(message)
         return
     }
@@ -173,9 +174,9 @@ async function processOccupancyModelStream (results, rowData, dateByCondition, m
                     await updateExportRecordings(rowData, { processed_at: dateByCondition })
                     resolve()
                 } catch(error) {
-                    console.error('Error while sending an email.', error)
+                    console.error('Error while sending occupancy-model email.', error)
                     await errorMessage(message)
-                    await updateExportRecordings(rowData, { error })
+                    await updateExportRecordings(rowData, { error: JSON.stringify(error) })
                     resolve()
                 }
             })
@@ -247,9 +248,9 @@ async function processGroupedDetectionsStream (results, rowData, projection_para
                     await updateExportRecordings(rowData, { processed_at: dateByCondition })
                     resolve()
                 } catch(error) {
-                    console.error('Error while sending an email.', error)
+                    console.error('Error while sending grouped-detections-export email.', error)
                     await errorMessage(message)
-                    await updateExportRecordings(rowData, { error })
+                    await updateExportRecordings(rowData, { error: JSON.stringify(error) })
                     resolve()
                 }
             })
@@ -315,9 +316,9 @@ async function transformStream (results, rowData, dateByCondition, message) {
                     await updateExportRecordings(rowData, { processed_at: dateByCondition })
                     resolve()
                 } catch(error) {
-                    console.error('Error while sending an email.', error)
+                    console.error('Error while sending export-recording email.', error)
                     await errorMessage(message)
-                    await updateExportRecordings(rowData, { error })
+                    await updateExportRecordings(rowData, { error: JSON.stringify(error) })
                     resolve()
                 }
             })
@@ -350,6 +351,7 @@ async function sendEmail (subject, title, rowData, content) {
           resolve({ success: true })
         },
         (e) => {
+          console.error('Error send email.', e)
           reject(e)
         })
     })
