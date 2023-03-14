@@ -285,7 +285,7 @@ angular.module('a2.audiodata.recordings', [
         });
 
         modalInstance.result.then(function() {
-            notify.log('Your report export request is processing and will be sent by email.');
+            notify.log('Your report export request is processing <br> and will be sent by email.');
         });
     };
 
