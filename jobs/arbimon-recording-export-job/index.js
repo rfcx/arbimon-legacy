@@ -28,11 +28,11 @@ async function main () {
     })
 
     if (!rowData) {
-        console.log('arbimon-recording-export job finished')
+        console.log('arbimon-recording-export has not any new export report')
         return
     }
 
-    const message = `project = ${ rowData.name } [${ rowData.project_id }]`
+    const message = `project = ${ rowData.name } [${ rowData.project_id }] ${ rowData.created_at }`
     try {
         filters = JSON.parse(rowData.filters)
         projection_parameters = JSON.parse(rowData.projection_parameters)
@@ -46,7 +46,7 @@ async function main () {
     if (projection_parameters && projection_parameters.species) {
         const data = await recordings.exportOccupancyModels(projection_parameters, filters)
         return processOccupancyModelStream(data, rowData, dateByCondition, message).then(async () => {
-            console.log('arbimon-recording-export job finished')
+            console.log('arbimon-recording-export job finished: occupancy models report')
         })
     }
     else if (projection_parameters && projection_parameters.grouped && projection_parameters.validation && !projection_parameters.species) {
@@ -70,13 +70,13 @@ async function main () {
         }
         const data = await recordings.groupedDetections(projection_parameters, filters)
         return processGroupedDetectionsStream(data, rowData, projection_parameters, allData, dateByCondition, message).then(async () => {
-            console.log('arbimon-recording-export job finished')
+            console.log('arbimon-recording-export job finished: grouped detections report')
         })
     }
 
     const data = await recordings.exportRecordingData(projection_parameters, filters)
     return transformStream(data, rowData, dateByCondition, message).then(async () => {
-        console.log('arbimon-recording-export job finished')
+        console.log('arbimon-recording-export job finished: export recordings report')
     })
   } catch (e) {
     console.error(e)
