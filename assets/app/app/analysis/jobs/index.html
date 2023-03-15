@@ -6,7 +6,7 @@
             <div ng-show="jobs.length && !loading.jobs">
                 <a2-table rows="jobs" search="search" selected="selected" no-checkbox>
                     <field title="Name" key="name" tdclass="widthtd hidelongtext">
-                        <span title="{{ row.name }}">{{ row.name }}</span>
+                        <a class="cs-pointer" ng-click="openJob(row)" title="{{ row.name }}">{{ row.name }}</a>
                     </field>
                     <field title="Type" key="type">
                         <i class="fa fa-circle mr-2" ng-style="{ color: job_types.for[row.job_type_id].color}"></i>

@@ -160,8 +160,7 @@ angular.module('a2.analysis.jobs', [
     }
 
     $scope.openJob = function (row) {
-        const urls = { 1: 'model', 2: 'classification', 4: 'soundscapes', 6: 'patternmatching', 7: 'cnn', 8: 'audio-event-detections-clustering', 9: 'clustering-jobs' }
-        $window.location.href = '/project/'+Project.getUrl()+'/analysis/'+row.url // urls[row.job_type_id]+(row.job_type_id === 8 ? '' : ('/'+row.job_id))
+        $window.location.href = '/project/'+Project.getUrl()+'/analysis/'+row.url
     }
 })
 .service('JobsData', function($http, $interval, Project, $q) {
