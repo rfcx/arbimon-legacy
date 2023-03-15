@@ -1,8 +1,8 @@
-var q = require('q');
-var dbpool = require('../utils/dbpool');
-var APIError = require('../utils/apierror');
-var projects = require('./projects');
-var recordings = require('./recordings')
+"use strict";
+const q = require('q');
+const dbpool = require('../utils/dbpool');
+const APIError = require('../utils/apierror');
+const projects = require('./projects');
 
 /** Tags model.
  *  Holds all functions for manipulating tags.
@@ -45,7 +45,7 @@ var tags = {
     },
     /** Adds a tag to a given resource.
      *  @param {String} resource - type of the resource to add the tag to.
-     *  @param {String} id - the id of the resource to add the tag to.
+     *  @param {Object} recording - original recording object.
      *  @param {String} tag - tag to be added to the resource.
      *  @param {Number} tag.id - tag is referenced by the given id.
      *  @param {String} tag.text - tag is to be created with the given text.
@@ -54,13 +54,13 @@ var tags = {
      *  @returns {Promise} Promise resolving to fetched tags, or rejecting if the
      *     resource type does not support tags or any error occurred.
      */
-    addTagTo: function(resource, id, tag){
+    addTagTo: function(resource, recording, tag) {
         var resourceDef = this.resourceDefs[resource];
         if(!resourceDef){
             return q.reject(new APIError(resource + " resources do not support tags.", 415));
         }
 
-        return resourceDef.addTo(id, tag);
+        return resourceDef.addTo(recording, tag);
     },
     /** Removes a tag from a given resource.
      *  @param {String} resource - type of the resource to remove the tag from.
@@ -172,7 +172,7 @@ tags.resourceDefs.recording = {
      *  @param {Any} tag.* - recording-specific tag data.
      *  @returns {Promise} Promise resolving to added tags.
      */
-    addTo: function(id, tag){
+    addTo: function(recording, tag){
         var userId = tag.user && tag.user.id;
         if(!tag.id && !tag.text){
             return q.reject(new APIError('No tag id or text given'));
@@ -191,14 +191,10 @@ tags.resourceDefs.recording = {
         });
 
         return tagIdPromise.then(async function(tagId){
-            const recording = await recordings.findByIdAsync(id)
-            if (!recording || !recording.length) {
-                throw new Error('Recording not found')
-            }
             return q.ninvoke(dbpool, 'queryHandler',
                 "INSERT INTO recording_tags(recording_id, site_id, tag_id, user_id, datetime, t0, f0, t1, f1)\n"+
                 "VALUES (?, ?, ?, ?, NOW(), ?, ?, ?, ?)", [
-                    id, recording[0].site_id, tagId, userId,
+                    recording.recording_id, recording.site_id, tagId, userId,
                     tag.t0 || null, tag.f0 || null,
                     tag.t1 || null, tag.f1 || null
                 ]

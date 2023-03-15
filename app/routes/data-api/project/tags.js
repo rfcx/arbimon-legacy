@@ -1,7 +1,6 @@
-var express = require('express');
-var router = express.Router();
-
-var model = require('../../../model');
+const express = require('express');
+const router = express.Router();
+const model = require('../../../model');
 
 router.get('/', function(req, res, next){
     res.type('json');
@@ -32,24 +31,28 @@ router.get('/:resource/:id', function(req, res, next) {
 
 
 router.use(function(req, res, next) { 
-    // TODO: use another permission, instead of borrowing this one.
-    if(!req.haveAccess(req.project.project_id, "manage training sets"))
-        return res.json({ error: "you dont have permission to 'add/remove tags'" });        
+    if(!req.haveAccess(req.project.project_id, 'manage project recordings'))
+    throw new Error('You do not have permission to add and remove tags');
     next();
 });
 
 router.put('/:resource/:id', function(req, res, next) {
     res.type('json');
-    var tag = {};
+    let tag = {};
     if(req.body){
         Object.keys(req.body).forEach(function(k){
             tag[k] = req.body[k];
         });
     }
     tag.user = req.session && req.session.user;
-    model.tags.addTagTo(req.params.resource, req.params.id, tag).then(function(tags){
-        res.json(tags);
-    }).catch(next);
+    model.recordings.findByIdAsync(req.params.id).then(function(recording) {
+        if (!recording || !recording.length) {
+            throw new Error('Recording not found')
+        }
+        model.tags.addTagTo(req.params.resource, recording[0], tag).then(function(tags){
+            res.json(tags);
+        }).catch(next);
+    })
 });
 
 router.delete('/:resource/:id/:tagId', function(req, res, next) {

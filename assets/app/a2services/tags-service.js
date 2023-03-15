@@ -1,5 +1,5 @@
 angular.module('a2.srv.tags', ['a2.srv.api'])
-.factory('a2Tags', function($q, a2APIService) {
+.factory('a2Tags', function($q, a2APIService, notify) {
     function isTaggableType(type){
         return /^recording$/.test('' + type);
     }
@@ -42,7 +42,7 @@ angular.module('a2.srv.tags', ['a2.srv.api'])
                     data.t1 = tag.t1;
                     data.f1 = tag.f1;
                 }
-                return a2APIService.put('/tags/' + visobject.type + '/' + (visobject.id|0), data);
+                return a2APIService.put('/tags/' + visobject.type + '/' + (visobject.id|0), data).catch(notify.serverError)
             } else {
                 return $q.resolve([]);
             }
