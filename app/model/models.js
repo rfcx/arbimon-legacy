@@ -54,6 +54,13 @@ module.exports = {
             callback(null, vectorUri);
         });
     },
+
+    getModelId: function (job_id) {
+        const sql = `SELECT m.model_id FROM models m
+            JOIN job_params_training jpt ON jpt.trained_model_id = m.model_id
+            WHERE jpt.job_id = ${job_id}`
+        return dbpool.query(sql).get(0);
+    },
     
     details: function(model_id, callback) {
         var q = "SELECT ms.`json_stats` as json, \n"+

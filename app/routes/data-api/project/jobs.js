@@ -12,7 +12,9 @@ var model = require('../../../model');
 
 router.get('/progress', function(req, res, next) {
     res.type('json');
-    model.jobs.activeJobs({ id: req.project.project_id }, function(err, row) {
+
+    const last3Months = req.query.last3Months
+    model.jobs.activeJobs({ id: req.project.project_id, last3Months }, function(err, row) {
         if(err) return next(err);
 
         res.json(row);

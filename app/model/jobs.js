@@ -1,17 +1,15 @@
 /* jshint node:true */
 "use strict";
 
-var util = require('util');
-var q = require('q');
-var async = require('async');
-var debug = require('debug')('arbimon2:models:jobs');
-var joi   = require('joi');
-
-var dbpool = require('../utils/dbpool');
-var sqlutil = require('../utils/sqlutil');
-var arrays_util  = require('../utils/arrays');
-var queryHandler = dbpool.queryHandler;
+const q = require('q');
+const async = require('async');
+const joi = require('joi');
+const moment = require('moment')
+const dbpool = require('../utils/dbpool');
+const sqlutil = require('../utils/sqlutil');
+const queryHandler = dbpool.queryHandler;
 const { capitalize } = require('../utils/string')
+const models = require('./index')
 
 
 // TODO define jobs as module that are require, and user db identifier field to
@@ -303,33 +301,37 @@ var Jobs = {
      *  @param {Function} callback - callback to return with the search results
      */
     activeJobs: function(project, callback) {
-        if(project instanceof Function){
+        if (project instanceof Function){
             callback = project;
             project = undefined;
         }
 
-        var union=[], constraints=[], tables=[];
+        let union = [], constraints = [], tables = [];
 
         constraints.push("J.`hidden` = 0");
         tables.push("JOIN job_types JT ON J.job_type_id = JT.job_type_id");
 
-        if(project){
-            if(typeof project != 'object'){
+        if (project) {
+            if( typeof project != 'object' ) {
                 project = {id:project};
             }
-            if(project.id){
+            if (project.id) {
                 constraints.push('J.project_id = ' + (project.id|0));
             }
-            else if(project.url){
+            if (project.last3Months) {
+                const dateByCondition = moment.utc().subtract(3, 'months').format('YYYY-MM-DD HH:mm:ss')
+                constraints.push(`J.date_created > '${dateByCondition}'`);
+            }
+            else if(project.url) {
                 constraints.push('P.url = ' + dbpool.escape(project.url));
                 tables.push('JOIN projects P ON J.project_id = P.project_id');
             }
         }
 
-        var union = Object.keys(this.job_types).map(i => {
-            var job_type = this.job_types[i];
-            var selects = job_type.sql && job_type.sql.report && job_type.sql.report.projections || [];
-            var joins = job_type.sql && job_type.sql.report && job_type.sql.report.tables || [];
+        union = Object.keys(this.job_types).map(i => {
+            const job_type = this.job_types[i];
+            const selects = job_type.sql && job_type.sql.report && job_type.sql.report.projections || [];
+            const joins = job_type.sql && job_type.sql.report && job_type.sql.report.tables || [];
             return (
                 `SELECT J.progress, J.progress_steps, J.job_type_id, JT.name as type, J.job_id, J.state, J.remarks, J.completed, J.last_update, J.progress, J.progress_steps ${selects.length? ', ' + selects.join(', ') : ''}
                 FROM jobs as J ${joins.join(' ')} ${tables.join(" ")}
@@ -337,7 +339,40 @@ var Jobs = {
             );
         });
         const sql = `(${union.join(") UNION (")})`
+
         return dbpool.query(sql, [])
+            .then(async (jobs) => {
+                if (!project.last3Months) return jobs
+                for (let job of jobs) {
+                    switch (job.job_type_id) {
+                        case 1:
+                            const modelData = await models.models.getModelId(job.job_id)
+                            job.url = `model/${ modelData && modelData.model_id ? modelData.model_id : '' }`
+                            break;
+                        case 2:
+                            job.url = `random-forest-models/classification`
+                            break;
+                        case 4:
+                            job.url = 'soundscapes'
+                            break;
+                        case 6:
+                            const pmData = await models.patternMatchings.getPmId(job.job_id)
+                            job.url = `patternmatching/${ pmData && pmData.pattern_matching_id ? pmData.pattern_matching_id : '' }`
+                            break;
+                        case 7:
+                            const cnnData = await models.CNN.getCnnId(job.job_id)
+                            job.url = `cnn/${ cnnData && cnnData.cnn_id ? cnnData.cnn_id : '' }`
+                            break;
+                        case 8:
+                            job.url = 'audio-event-detections-clustering'
+                            break;
+                        case 9:
+                            job.url = `clustering-jobs/${ job.job_id }`
+                            break;
+                    }
+                }
+                return jobs
+            })
             .then((jobs) => {
                 jobs.sort((a, b) => b.last_update - a.last_update)
                     .forEach(j => {
