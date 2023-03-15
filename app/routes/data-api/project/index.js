@@ -339,6 +339,7 @@ router.post('/:projectUrl/user/add', async function(req, res, next) {
     const userRole = {
         project_id: req.project.project_id,
         user_id: req.body.user_id,
+        user_email: req.body.user_email,
         role_id: 2 // default to normal user
     }
     model.projects.updateUserRoleInArbimonAndCoreAPI({userRole: userRole}, req.session.idToken, 'add').then(function() {
@@ -360,9 +361,10 @@ router.post('/:projectUrl/user/role', async function(req, res, next) {
     const userRole = {
         project_id: req.project.project_id,
         user_id: req.body.user_id,
+        user_email: req.body.user_email,
         role_id: req.body.role_id
     }
-    model.projects.updateUserRoleInArbimonAndCoreAPI({userRole: userRole}, req.session.idToken, 'change').then(function() {
+    model.projects.updateUserRoleInArbimonAndCoreAPI({ userRole: userRole }, req.session.idToken, 'change').then(function() {
         res.json({ success: true });
     }).catch(next);
 });
@@ -377,7 +379,13 @@ router.post('/:projectUrl/user/del', async function(req, res, next) {
         return res.json({ error: "you don't have permission to manage project settings and users" });
     }
 
-    model.projects.updateUserRoleInArbimonAndCoreAPI({user_id: req.body.user_id, project_id: req.project.project_id}, req.session.idToken, 'remove').then(function() {
+    const options = {
+        project_id: req.project.project_id,
+        user_id: req.body.user_id,
+        user_email: req.body.user_email
+    }
+
+    model.projects.updateUserRoleInArbimonAndCoreAPI(options, req.session.idToken, 'remove').then(function() {
         res.json({ success: true });
     }).catch(next);
 });

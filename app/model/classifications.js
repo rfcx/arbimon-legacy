@@ -1,28 +1,14 @@
 /* jshint node:true */
 "use strict";
 
-var util = require('util');
-
-var debug = require('debug')('arbimon2:model:classifications');
-var async = require('async');
-var joi = require('joi');
-var sprintf = require("sprintf-js").sprintf;
-var AWS = require('aws-sdk');
-
-
-var config = require('../config');
-var SQLBuilder = require('../utils/sqlbuilder');
-var dbpool = require('../utils/dbpool');
-var sqlutil = require('../utils/sqlutil');
-var queryHandler = dbpool.queryHandler;
-
-var s3 = new AWS.S3();
-
-// other schema modules
-var species = require('./species');
-var songtypes = require('./songtypes');
-
-
+const util = require('util');
+const async = require('async');
+const config = require('../config');
+const SQLBuilder = require('../utils/sqlbuilder');
+const dbpool = require('../utils/dbpool');
+const queryHandler = dbpool.queryHandler;
+const AWS = require('aws-sdk');
+const s3 = new AWS.S3();
 
 var Classifications = {
     // classifications -> list

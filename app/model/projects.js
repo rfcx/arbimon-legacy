@@ -710,6 +710,7 @@ var Projects = {
     addUser: function(userProjectRole, connection, callback) {
         var schema = {
             user_id: joi.number().required(),
+            user_email: joi.string(),
             project_id: joi.number().required(),
             role_id: joi.number().required()
         };
@@ -750,6 +751,7 @@ var Projects = {
     changeUserRole: function(userProjectRole, connection, callback) {
         var schema = {
             user_id: joi.number().required(),
+            user_email: joi.string(),
             project_id: joi.number().required(),
             role_id: joi.number().required()
         };
@@ -798,7 +800,7 @@ var Projects = {
                     case 'remove':
                       await this.removeUserRoleAsync(options.user_id, options.project_id, connection);
                       if (rfcxConfig.coreAPIEnabled) {
-                        await this.removeUserRoleInCoreAPI(options.user_id, options.project_id, token);
+                        await this.removeUserRoleInCoreAPI(options.user_email, options.project_id, token);
                     }
                       break;
                 }
@@ -821,12 +823,9 @@ var Projects = {
             throw new ValidationError(`Project "${project.name}" data is invalid. Please contact to support.`)
         }
 
-        const user = await users.findById(userProjectRole.user_id)
-        const email = user[0].email
-
         const role = roles.getCoreRoleById(userProjectRole.role_id)
         var body = {
-            email: email,
+            email: userProjectRole.user_email,
             role: role
         }
 
@@ -847,17 +846,14 @@ var Projects = {
         }
     },
 
-    removeUserRoleInCoreAPI: async function(user_id, project_id, idToken) {
+    removeUserRoleInCoreAPI: async function(user_email, project_id, idToken) {
         const project = await this.findById(project_id)
         if (!project.external_id) {
             throw new ValidationError(`Project "${project.name}" data is invalid. Please contact to support.`)
         }
 
-        const user = await users.findById(user_id)
-        const email = user[0].email
-
         var body = {
-            email: email
+            email: user_email
         }
 
         const options = {

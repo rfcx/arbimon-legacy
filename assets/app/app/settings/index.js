@@ -146,7 +146,8 @@ angular.module('a2.settings',[
 
         Project.addUser({
             project_id: $scope.project.project_id,
-            user_id: $scope.userToAdd.id
+            user_id: $scope.userToAdd.id,
+            user_email: $scope.userToAdd.email
         },
         function (err) {
             if (err) {
@@ -192,6 +193,7 @@ angular.module('a2.settings',[
         Project.changeUserRole({
             project_id: $scope.project.project_id,
             user_id: $scope.users[$index].id,
+            user_email: $scope.users[$index].email,
             role_id: role.id
         },
         function (err) {
@@ -224,7 +226,8 @@ angular.module('a2.settings',[
         modalInstance.result.then(function() {
             Project.removeUser({
                 project_id: $scope.project.project_id,
-                user_id: $scope.users[$index].id
+                user_id: $scope.users[$index].id,
+                user_email: $scope.users[$index].email
             },
             function (err) {
                 if (err) {
