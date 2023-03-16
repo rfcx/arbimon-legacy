@@ -92,7 +92,6 @@ angular.module('a2.analysis.jobs', [
         $scope.job_types.types.forEach(function(c, i) {
             $scope.show[c.id] = true;
             $scope.job_types.for[c.id] = c;
-            // $scope.job_types.for[c.id].url = urls[c.id];
             c.color = colors[i % colors.length];
         });
     });
@@ -138,17 +137,17 @@ angular.module('a2.analysis.jobs', [
     };
 
     $scope.hide = function(job) {
-        if(!a2UserPermit.can('manage project jobs')) {
-            notify.log("You do not have permission to hide jobs");
+        if (!a2UserPermit.can('manage project jobs')) {
+            notify.log('You do not have permission to hide jobs');
             return;
         }
 
-        var jobId = job.job_id;
+        const jobId = job.job_id;
 
         $scope.infoInfo = "Loading...";
         $scope.showInfo = true;
         if (job.percentage < 100) {
-            confirm('Hide', 'hide', hideJob, jobId);
+            confirm('Cancel', 'hide', hideJob, jobId);
         }
         else {
             hideJob(jobId);
@@ -159,8 +158,16 @@ angular.module('a2.analysis.jobs', [
         return row.state === 'completed'
     }
 
+    $scope.isProcessing = function (row) {
+        return row.state === 'processing'
+    }
+
+    $scope.isWaiting = function (row) {
+        return row.state === 'waiting'
+    }
+
     $scope.openJob = function (row) {
-        $window.location.href = '/project/'+Project.getUrl()+'/analysis/'+row.url
+        $window.location.href = '/project/' + Project.getUrl() + '/analysis/' + row.url
     }
 })
 .service('JobsData', function($http, $interval, Project, $q) {
