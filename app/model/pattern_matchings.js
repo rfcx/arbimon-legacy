@@ -511,6 +511,11 @@ var PatternMatchings = {
         });
     },
 
+    getPmId: function (job_id) {
+        const sql = `SELECT pattern_matching_id FROM pattern_matchings WHERE job_id = ${job_id}`
+        return dbpool.query(sql).get(0);
+    },
+
     /** Deletes a pattern matching results.
      * @param {int} patternMatchingId
      * @return {Promise} resolved after deleting the pattern matching

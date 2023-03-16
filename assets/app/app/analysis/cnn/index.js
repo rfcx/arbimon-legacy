@@ -110,7 +110,7 @@ angular.module('a2.analysis.cnn', [
             data = result;
             if (data.ok) {
                 JobsData.updateJobs();
-                notify.log("Your new cnn is waiting to start processing.<br> Check its status on <b>Jobs</b>.");
+                notify.log("Your new cnn is waiting to start processing.<br> Check its status on <b>Active Jobs</b>.");
             } else if (data.error) {
                 notify.error("Error: "+data.error);
             } else if (data.url) {

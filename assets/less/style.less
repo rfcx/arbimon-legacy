@@ -535,6 +535,14 @@ textarea.fixed-width {
   user-select: none;
 }
 
+.selectable {
+  -moz-user-select: text !important;
+  -khtml-user-select: text !important;
+  -webkit-user-select: text !important;
+  -ms-user-select: text !important;
+  user-select: text !important;
+}
+
 // a2-table directive style
 .a2-table {
   & > tbody > tr.active > td {
@@ -607,6 +615,12 @@ textarea.fixed-width {
 
 .smaller {
   font-size: smaller;
+}
+
+.progress-bar[aria-valuenow="0"] {
+    color: #000;
+    min-width: 0px;
+    margin-left: 5px;
 }
 
 .page-selector {

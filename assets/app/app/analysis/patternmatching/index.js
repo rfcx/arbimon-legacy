@@ -112,7 +112,7 @@ angular.module('a2.analysis.patternmatching', [
 
     $scope.isShowSearch = function () {
         return ($scope.patternmatchingsData && $scope.patternmatchingsData.length) || $scope.search.q.trim().length > 0
-      }
+    }
 
     $scope.resetPagination = function () {
         $scope.paginationSettings.page = 1
@@ -137,7 +137,7 @@ angular.module('a2.analysis.patternmatching', [
             if (data.ok) {
                 JobsData.updateJobs();
                 $scope.loading.showRefreshBtn = true;
-                notify.log("Your new pattern matching is waiting to start processing.<br> Check its status on <b>Jobs</b>.");
+                notify.log("Your new pattern matching is waiting to start processing.<br> Check its status on <b>Active Jobs</b>.");
             } else if (data.error) {
                 notify.error("Error: "+data.error);
             } else if (data.url) {
