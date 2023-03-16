@@ -342,7 +342,7 @@ var Jobs = {
 
         return dbpool.query(sql, [])
             .then(async (jobs) => {
-                if (!project.last3Months) return jobs
+                if (!project || !project.last3Months) return jobs
                 for (let job of jobs) {
                     switch (job.job_type_id) {
                         case 1:

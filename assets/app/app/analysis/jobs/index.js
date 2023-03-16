@@ -61,11 +61,12 @@ angular.module('a2.analysis.jobs', [
     //         });
     // };
 
-    var hideJob = function(jobId) {
+    var hideJob = function(jobId, action) {
         $http.get('/api/project/' + Project.getUrl() + '/jobs/hide/' + jobId)
             .success(function(data) {
                     JobsData.updateJobs();
-                    notify.log("Job hidden successfully");
+                    const message = 'Job ' + action + ' successfully.'
+                    notify.log(message);
             })
             .error(function(data) {
                 if(data.error) {
@@ -114,11 +115,11 @@ angular.module('a2.analysis.jobs', [
         JobsData.cancelTimer();
     });
 
-    var confirm = function(titlen, action, cb, vl) {
+    var confirm = function(titlen, action, cb, vl, message) {
             var modalInstance = $modal.open({
                 templateUrl: '/common/templates/pop-up.html',
                 controller: function() {
-                    this.title = titlen+"running job";
+                    this.title = titlen + ' running job';
                     this.messages = ["This job has not finished yet. Are you sure?"];
                     this.btnOk = "Yes, "+action+" it";
                     this.btnCancel = "No";
@@ -132,13 +133,13 @@ angular.module('a2.analysis.jobs', [
             });
 
             modalInstance.result.then(function(ok) {
-                cb(vl);
+                cb(vl, message);
             });
     };
 
     $scope.hide = function(job) {
         if (!a2UserPermit.can('manage project jobs')) {
-            notify.log('You do not have permission to hide jobs');
+            notify.log('You do not have permission to hide or cancel jobs');
             return;
         }
 
@@ -147,10 +148,10 @@ angular.module('a2.analysis.jobs', [
         $scope.infoInfo = "Loading...";
         $scope.showInfo = true;
         if (job.percentage < 100) {
-            confirm('Cancel', 'hide', hideJob, jobId);
+            confirm('Cancel', 'cancel', hideJob, jobId, 'canceled');
         }
         else {
-            hideJob(jobId);
+            hideJob(jobId, 'hidden');
         }
     };
 
