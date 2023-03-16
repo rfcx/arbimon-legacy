@@ -58,7 +58,7 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
             if (data.create) {
                 JobsData.updateJobs();
                 $scope.showRefreshBtn = true
-                notify.log("Your new Audio Event Detection Clustering model is waiting to start processing.<br> Check its status on <b>Jobs</b>.");
+                notify.log("Your new Audio Event Detection Clustering model is waiting to start processing.<br> Check its status on <b>Active Jobs</b>.");
             } else if (data.error) {
                 notify.error("Error: "+data.error);
             } else if (data.url) {

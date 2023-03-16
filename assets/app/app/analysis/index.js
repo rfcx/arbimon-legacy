@@ -1,8 +1,8 @@
 angular.module('a2.analysis', [
+    'a2.analysis.jobs',
     'a2.analysis.patternmatching',
     'a2.directive.audio-bar',
     'a2.analysis.random-forest-models',
-    'a2.analysis.patternmatching',
     'a2.analysis.cnn',
     'a2.analysis.soundscapes',
     'a2.analysis.audio-event-detection',

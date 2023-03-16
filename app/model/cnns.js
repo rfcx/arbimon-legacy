@@ -123,6 +123,11 @@ var CNN = {
         });
     },
 
+    getCnnId: function (job_id) {
+        const sql = `SELECT cnn_id FROM job_params_cnn WHERE job_id = ${job_id}`
+        return dbpool.query(sql).get(0);
+    },
+
     listModels: function (options) {
         var constraints = [],
             projection = [];

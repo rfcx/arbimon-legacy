@@ -231,7 +231,7 @@ angular.module('a2.analysis.soundscapes', [
             data = result;
             if (data.ok) {
                 JobsData.updateJobs();
-                notify.log("Your new soundscape is waiting to start processing.<br> Check its status on <b>Jobs</b>.");
+                notify.log("Your new soundscape is waiting to start processing.<br> Check its status on <b>Active Jobs</b>.");
             }
 
             if (data.err) {

@@ -184,7 +184,7 @@ angular.module('a2.analysis.random-forest-models.classification', [
             data = result;
             if (data.ok) {
                 JobsData.updateJobs();
-                notify.log("Your new classification is waiting to start processing.<br> Check its status on <b>Jobs</b>.");
+                notify.log("Your new classification is waiting to start processing.<br> Check its status on <b>Active Jobs</b>.");
             }
 
             if (data.error) {
