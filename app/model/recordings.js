@@ -1854,12 +1854,19 @@ var Recordings = {
             }).then(async function() {
                 let results = [];
                 for (let builder in summaryBuilders) {
+                    const timeStart = moment.utc()
+                    console.log('timeStart', timeStart)
                     console.log(summaryBuilders[builder].getSQL())
                     let queryResult = await dbpool.streamQuery({
                         sql: summaryBuilders[builder].getSQL(),
                         typeCast: sqlutil.parseUtcDatetime,
                     })
+                    const timeEnd = moment.utc()
+                    console.log('timeEnd', timeEnd)
+                    const diff = moment.duration(timeEnd.diff(timeStart));
+                    console.log('diff', diff)
                     results = [...new Set(queryResult)];
+                    console.log('results', results.length)
                 }
                 return Q.all(results);
             })
