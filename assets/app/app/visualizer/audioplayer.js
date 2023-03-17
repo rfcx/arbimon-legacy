@@ -183,9 +183,13 @@ angular.module('a2.visualizer.audio-player', [])
             this.scope.$broadcast('next-visobject');
         },
         download: function(visobject) {
+            if (a2UserPermit.isSuper()) return this.getExportUrl(visobject);
             if ((a2UserPermit.all && !a2UserPermit.all.length) || !a2UserPermit.can('export report')) {
                 return notify.log('You do not have permission to download recording');
             }
+            return this.getExportUrl(visobject);
+        },
+        getExportUrl: function(visobject) {
             const form = document.createElement('form')
             form.style.display = 'none'
             form.method = 'GET'
@@ -194,7 +198,7 @@ angular.module('a2.visualizer.audio-player', [])
             document.body.appendChild(form)
             form.submit()
             document.body.removeChild(form)
-        },
+        }
     };
     return a2AudioPlayer;
 })
