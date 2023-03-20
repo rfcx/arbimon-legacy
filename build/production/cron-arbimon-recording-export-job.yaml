@@ -30,9 +30,4 @@ spec:
                   value: "https://slack.com/api/chat.postMessage"
                 - name: SLACK_CHANNEL
                   value: "#arbimon-dev"
-              resources:
-                requests:
-                  memory: '256Mi'
-                limits:
-                  memory: '256Mi'
           restartPolicy: Never

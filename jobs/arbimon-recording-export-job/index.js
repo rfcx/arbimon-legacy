@@ -267,6 +267,7 @@ async function transformStream (results, rowData, dateByCondition, message) {
     return new Promise(function (resolve, reject) {
         // Process csv file header
         let datastream = results[0];
+        console.log(datastream)
         let fields = results[1].map(function(f) { return f.name })
         const metaIndex = fields.indexOf('meta');
         if (metaIndex !== -1) {

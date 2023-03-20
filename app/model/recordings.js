@@ -1858,6 +1858,7 @@ var Recordings = {
             }).then(async function() {
                 let results = [];
                 for (let builder in summaryBuilders) {
+                    console.log(summaryBuilders[builder].getSQL())
                     let queryResult = await dbpool.streamQuery({
                         sql: summaryBuilders[builder].getSQL(),
                         typeCast: sqlutil.parseUtcDatetime,
