@@ -1518,7 +1518,7 @@ var Recordings = {
         }
     },
 
-    buildSearchQuery: function(searchParameters){
+    buildSearchQuery: function(searchParameters, filterImportedSites){
         var builder = new SQLBuilder();
         return Q.ninvoke(joi, 'validate', searchParameters, Recordings.SCHEMAS.searchFilters).then(function(parameters){
             var outputs = parameters.output instanceof Array ? parameters.output : [parameters.output];
@@ -1527,12 +1527,16 @@ var Recordings = {
 
             builder.addTable("recordings", "r");
             builder.addTable("JOIN sites", "s", "s.site_id = r.site_id");
-            builder.addTable("LEFT JOIN project_imported_sites", "pis", "s.site_id = pis.site_id AND pis.project_id = ?", parameters.project_id);
 
-            builder.addConstraint("(s.project_id = ? OR pis.project_id = ?)",[
-                parameters.project_id,
-                parameters.project_id
-            ]);
+            if (filterImportedSites) {
+                builder.addTable("LEFT JOIN project_imported_sites", "pis", "s.site_id = pis.site_id AND pis.project_id = ?", parameters.project_id);
+                builder.addConstraint("(s.project_id = ? OR pis.project_id = ?)",[
+                    parameters.project_id,
+                    parameters.project_id
+                ]);
+            }
+
+            builder.addConstraint("(s.project_id = ?)",[ parameters.project_id ]);
 
             if(parameters.range) {
                 builder.addConstraint('r.datetime BETWEEN ? AND ?',[
@@ -1705,7 +1709,7 @@ var Recordings = {
                     promises.push(classPromise)
                 }
                 if (!summaryBuilders.length) {
-                    let builder = await this.buildSearchQuery(filters)
+                    let builder = await this.buildSearchQuery(filters, false)
                     summaryBuilders.push(builder);
                 }
                 for (let c in summaryBuilders) {
@@ -1765,7 +1769,7 @@ var Recordings = {
                             let index = 0;
                             for (let c in classesArray) {
                                 // Create a new builder for each parts of validations arrays.
-                                let builder = await this.buildSearchQuery(filters)
+                                let builder = await this.buildSearchQuery(filters, false)
                                 summaryBuilders.push(builder);
                                 classesArray[c].forEach(function(cls, idx){
                                     index++;
@@ -1787,7 +1791,7 @@ var Recordings = {
                     promises.push(classPromise)
                 }
                 if (!summaryBuilders.length) {
-                    let builder = await this.buildSearchQuery(filters)
+                    let builder = await this.buildSearchQuery(filters, false)
                     summaryBuilders.push(builder);
                 }
                 for (let c in summaryBuilders) {
@@ -1898,7 +1902,7 @@ var Recordings = {
     /* fetch count of project recordings.
     */
     countProjectRecordings: function(filters){
-        return this.buildSearchQuery(filters).then(function(builder){
+        return this.buildSearchQuery(filters, true).then(function(builder){
             builder.addProjection.apply(builder, [
                 's.site_id', 's.name as site', 'pis.site_id IS NOT NULL as imported',
                 'COUNT(recording_id) as count'
@@ -1912,7 +1916,7 @@ var Recordings = {
     /* fetch count of project recordings.
     */
     deleteMatching: function(filters, project_id){
-        return this.buildSearchQuery(filters).then(function(builder){
+        return this.buildSearchQuery(filters, true).then(function(builder){
             builder.addProjection.apply(builder, [
                 'r.recording_id as id'
             ]);

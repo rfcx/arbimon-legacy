@@ -37,6 +37,7 @@ async function updateExportRecordings (options, attrs) {
                     AND user_id = ${options.user_id}
                     AND created_at = '${options.created_at}'`
     const [rows, fields] = await connection.execute(sql)
+    await connection.commit()
     return rows
 }
 
