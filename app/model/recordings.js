@@ -1536,7 +1536,7 @@ var Recordings = {
                 ]);
             }
 
-            builder.addConstraint("(s.project_id = ?)",[ parameters.project_id ]);
+            builder.addConstraint("s.project_id = ?",[ parameters.project_id ]);
 
             if(parameters.range) {
                 builder.addConstraint('r.datetime BETWEEN ? AND ?',[
@@ -1858,14 +1858,24 @@ var Recordings = {
             }).then(async function() {
                 let results = [];
                 for (let builder in summaryBuilders) {
-                    console.log(summaryBuilders[builder].getSQL())
-                    let queryResult = await dbpool.streamQuery({
-                        sql: summaryBuilders[builder].getSQL(),
-                        typeCast: sqlutil.parseUtcDatetime,
-                    })
-                    results = [...new Set(queryResult)];
+                    let index = 0
+                    const baseSql = summaryBuilders[builder].getSQL().replace(';', '')
+                    async function getData () {
+                        let limit = 5000
+                        let offset = limit * index
+                        const sql = `${baseSql} LIMIT ${limit} OFFSET ${offset};`
+                        console.log('summaryBuilders offset', offset)
+                        const queryResult = await dbpool.query({ sql, typecast: sqlutil.parseUtcDatetime })
+                        console.log('result length', queryResult.length)
+                        if (queryResult.length) {
+                            index++
+                            results = results.concat([...new Set(queryResult)]);
+                            await getData()
+                        }
+                    }
+                    await getData()
                 }
-                return Q.all(results);
+                return results
             })
     },
 

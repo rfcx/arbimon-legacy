@@ -265,54 +265,76 @@ async function processGroupedDetectionsStream (results, rowData, projection_para
 // Process the Export recordings report and send the email
 async function transformStream (results, rowData, dateByCondition, message) {
     return new Promise(function (resolve, reject) {
-        // Process csv file header
-        let datastream = results[0];
-        console.log(datastream)
-        let fields = results[1].map(function(f) { return f.name })
+        console.log('total results length', results.length)
+        let fields = [];
+        results.forEach(result => {
+            fields.push(...Object.keys(result).filter(f => !fields.includes(f)))
+        });
         const metaIndex = fields.indexOf('meta');
         if (metaIndex !== -1) {
             fields.splice(metaIndex, 1);
         }
-        let colOrder= { filename: -6,site: -5,time: -4, day: -4, month: -3, year: -2, hour: -1, date: 0 };
-        fields.sort(function(a, b){
-            const ca = colOrder[a] || 0, cb = colOrder[b] || 0;
-            return ca < cb ? -1 : (
-                ca > cb ?  1 : (
-                    a <  b ? -1 : (
-                    a >  b ?  1 :
-                    0
-            )));
-        });
+        let colOrder= { filename: -6, site: -5, time: -4, day: -4, month: -3, year: -2, hour: -1, date: 0 };
+        function sort (array) {
+            array.sort(function(a, b){
+                const ca = colOrder[a] || 0, cb = colOrder[b] || 0;
+                return ca < cb ? -1 : (
+                    ca > cb ?  1 : (
+                        a <  b ? -1 : (
+                        a >  b ?  1 :
+                        0
+                )));
+            });
+        }
+        sort(fields)
 
+        let datastream = new stream.Readable({objectMode: true});
         let _buf = []
 
+        for (let row of results) {
+            if (row.meta && row.filename) {
+                try {
+                    const parsedMeta = JSON.parse(row.meta);
+                    row.filename = parsedMeta && parsedMeta.filename? parsedMeta.filename :  row.filename;
+                } catch (e) {}
+            }
+            delete row.meta;
+            if (row.url) {
+                row.url = `${config('hosts').publicUrl}/api/project/${req.project.url}/recordings/download/${row.url}`;
+            }
+            // Fill a specific label for each cell without validations data.
+            fields.forEach(f => {
+                if (row[f] === undefined || row[f] === null) {
+                    row[f] = '---'}
+                }
+            )
+            // Sort data to follow the header
+            const sorted = Object.keys(row)
+                .sort(function(a, b){
+                    const ca = colOrder[a] || 0, cb = colOrder[b] || 0;
+                    return ca < cb ? -1 : (
+                        ca > cb ?  1 : (
+                            a <  b ? -1 : (
+                            a >  b ?  1 :
+                            0
+                    )));
+                })
+                .reduce(
+                    (obj, key) => ({
+                    ...obj,
+                    [key]: row[key]
+                    }),
+                    {}
+                )
+
+            datastream.push(sorted);
+        };
+        datastream.push(null);
+
         datastream.on('data', (d) => {
-            _buf.push(d)
+            _buf.push(Object.values(d))
         })
 
-        datastream
-            .pipe(new stream.Transform({
-                objectMode: true,
-                transform: function (row, encoding, callback) {
-                    if (row.meta && row.filename) {
-                        try {
-                            const parsedMeta = JSON.parse(row.meta);
-                            row.filename = parsedMeta && parsedMeta.filename? parsedMeta.filename :  row.filename;
-                        } catch (e) {}
-                        delete row.meta;
-                    }
-                    if (row.url) {
-                        row.url = `${config('hosts').publicUrl}/api/project/${req.project.url}/recordings/download/${row.url}`;
-                    }
-                    // Fill a specific label for each cell without validations data.
-                    fields.forEach(f => {
-                        if (row[f] === undefined || row[f] === null) {
-                            row[f] = '---'}
-                        }
-                    )
-                    callback();
-                }
-            }))
         datastream.on('end', async () => {
             csv_stringify(_buf, { header: true, columns: fields }, async (err, data) => {
                 const content = Buffer.from(data).toString('base64')
@@ -333,6 +355,7 @@ async function transformStream (results, rowData, dateByCondition, message) {
     })
 }
 
+// Send report to the user
 async function sendEmail (subject, title, rowData, content) {
     const message = {
         from_email: 'no-reply@rfcx.org',
@@ -354,7 +377,8 @@ async function sendEmail (subject, title, rowData, content) {
           message,
           async: true
         },
-        () => {
+        (res) => {
+          console.log('email status', res)
           resolve({ success: true })
         },
         (e) => {
