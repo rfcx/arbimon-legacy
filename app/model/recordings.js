@@ -1861,7 +1861,7 @@ var Recordings = {
                     let index = 0
                     const baseSql = summaryBuilders[builder].getSQL().replace(';', '')
                     async function getData () {
-                        let limit = 5000
+                        let limit = 8000
                         let offset = limit * index
                         const sql = `${baseSql} LIMIT ${limit} OFFSET ${offset};`
                         console.log('summaryBuilders offset', offset)
