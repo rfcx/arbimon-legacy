@@ -1536,7 +1536,11 @@ var Recordings = {
                 ]);
             }
 
-            builder.addConstraint("s.project_id = ?",[ parameters.project_id ]);
+            else {
+                builder.addConstraint("s.project_id = ?",[ parameters.project_id ])
+            }
+
+            builder.addConstraint("s.deleted_at is null")
 
             if(parameters.range) {
                 builder.addConstraint('r.datetime BETWEEN ? AND ?',[
@@ -1701,7 +1705,11 @@ var Recordings = {
                                         cls.species,
                                         cls.project,
                                     ]);
-                                    summaryBuilders[c].addProjection(`(CASE WHEN ${clsid}.present_review > 0 OR ${clsid}.present_aed > 0 THEN ${clsid}.present + ${clsid}.present_review + ${clsid}.present_aed ELSE ${clsid}.present END)` + " AS " + dbpool.escapeId("val<" + cls.species_name + "/" + cls.songtype_name + ">"));
+                                    summaryBuilders[c].addProjection(`(CASE WHEN (${clsid}.present_review > 0 OR ${clsid}.present_aed > 0) 
+                                        AND ${clsid}.present is null
+                                        THEN ${clsid}.present_review + ${clsid}.present_aed
+                                        ELSE ${clsid}.present + ${clsid}.present_review + ${clsid}.present_aed END)` + " AS " + dbpool.escapeId("val<" + cls.species_name + "/" + cls.songtype_name + ">")
+                                    );
                                 })
                             }
                         }
@@ -1783,7 +1791,11 @@ var Recordings = {
                                         cls.species,
                                         cls.project,
                                     ]);
-                                    summaryBuilders[c].addProjection(`(CASE WHEN ${clsid}.present_review > 0 OR ${clsid}.present_aed > 0 THEN ${clsid}.present + ${clsid}.present_review + ${clsid}.present_aed ELSE ${clsid}.present END)` + " AS " + dbpool.escapeId("val<" + cls.species_name + "/" + cls.songtype_name + ">"));
+                                    summaryBuilders[c].addProjection(`(CASE WHEN (${clsid}.present_review > 0 OR ${clsid}.present_aed > 0) 
+                                        AND ${clsid}.present is null
+                                        THEN ${clsid}.present_review + ${clsid}.present_aed
+                                        ELSE ${clsid}.present + ${clsid}.present_review + ${clsid}.present_aed END)` + " AS " + dbpool.escapeId("val<" + cls.species_name + "/" + cls.songtype_name + ">")
+                                    );
                                 })
                             }
                         }
