@@ -1518,7 +1518,7 @@ var Recordings = {
         }
     },
 
-    buildSearchQuery: function(searchParameters){
+    buildSearchQuery: function(searchParameters, filterImportedSites){
         var builder = new SQLBuilder();
         return Q.ninvoke(joi, 'validate', searchParameters, Recordings.SCHEMAS.searchFilters).then(function(parameters){
             var outputs = parameters.output instanceof Array ? parameters.output : [parameters.output];
@@ -1527,12 +1527,20 @@ var Recordings = {
 
             builder.addTable("recordings", "r");
             builder.addTable("JOIN sites", "s", "s.site_id = r.site_id");
-            builder.addTable("LEFT JOIN project_imported_sites", "pis", "s.site_id = pis.site_id AND pis.project_id = ?", parameters.project_id);
 
-            builder.addConstraint("(s.project_id = ? OR pis.project_id = ?)",[
-                parameters.project_id,
-                parameters.project_id
-            ]);
+            if (filterImportedSites) {
+                builder.addTable("LEFT JOIN project_imported_sites", "pis", "s.site_id = pis.site_id AND pis.project_id = ?", parameters.project_id);
+                builder.addConstraint("(s.project_id = ? OR pis.project_id = ?)",[
+                    parameters.project_id,
+                    parameters.project_id
+                ]);
+            }
+
+            else {
+                builder.addConstraint("s.project_id = ?",[ parameters.project_id ])
+            }
+
+            builder.addConstraint("s.deleted_at is null")
 
             if(parameters.range) {
                 builder.addConstraint('r.datetime BETWEEN ? AND ?',[
@@ -1697,7 +1705,11 @@ var Recordings = {
                                         cls.species,
                                         cls.project,
                                     ]);
-                                    summaryBuilders[c].addProjection(`(CASE WHEN ${clsid}.present_review > 0 OR ${clsid}.present_aed > 0 THEN ${clsid}.present + ${clsid}.present_review + ${clsid}.present_aed ELSE ${clsid}.present END)` + " AS " + dbpool.escapeId("val<" + cls.species_name + "/" + cls.songtype_name + ">"));
+                                    summaryBuilders[c].addProjection(`(CASE WHEN (${clsid}.present_review > 0 OR ${clsid}.present_aed > 0) 
+                                        AND ${clsid}.present is null
+                                        THEN ${clsid}.present_review + ${clsid}.present_aed
+                                        ELSE ${clsid}.present + ${clsid}.present_review + ${clsid}.present_aed END)` + " AS " + dbpool.escapeId("val<" + cls.species_name + "/" + cls.songtype_name + ">")
+                                    );
                                 })
                             }
                         }
@@ -1705,7 +1717,7 @@ var Recordings = {
                     promises.push(classPromise)
                 }
                 if (!summaryBuilders.length) {
-                    let builder = await this.buildSearchQuery(filters)
+                    let builder = await this.buildSearchQuery(filters, false)
                     summaryBuilders.push(builder);
                 }
                 for (let c in summaryBuilders) {
@@ -1765,7 +1777,7 @@ var Recordings = {
                             let index = 0;
                             for (let c in classesArray) {
                                 // Create a new builder for each parts of validations arrays.
-                                let builder = await this.buildSearchQuery(filters)
+                                let builder = await this.buildSearchQuery(filters, false)
                                 summaryBuilders.push(builder);
                                 classesArray[c].forEach(function(cls, idx){
                                     index++;
@@ -1779,7 +1791,11 @@ var Recordings = {
                                         cls.species,
                                         cls.project,
                                     ]);
-                                    summaryBuilders[c].addProjection(`(CASE WHEN ${clsid}.present_review > 0 OR ${clsid}.present_aed > 0 THEN ${clsid}.present + ${clsid}.present_review + ${clsid}.present_aed ELSE ${clsid}.present END)` + " AS " + dbpool.escapeId("val<" + cls.species_name + "/" + cls.songtype_name + ">"));
+                                    summaryBuilders[c].addProjection(`(CASE WHEN (${clsid}.present_review > 0 OR ${clsid}.present_aed > 0) 
+                                        AND ${clsid}.present is null
+                                        THEN ${clsid}.present_review + ${clsid}.present_aed
+                                        ELSE ${clsid}.present + ${clsid}.present_review + ${clsid}.present_aed END)` + " AS " + dbpool.escapeId("val<" + cls.species_name + "/" + cls.songtype_name + ">")
+                                    );
                                 })
                             }
                         }
@@ -1787,7 +1803,7 @@ var Recordings = {
                     promises.push(classPromise)
                 }
                 if (!summaryBuilders.length) {
-                    let builder = await this.buildSearchQuery(filters)
+                    let builder = await this.buildSearchQuery(filters, false)
                     summaryBuilders.push(builder);
                 }
                 for (let c in summaryBuilders) {
@@ -1854,21 +1870,24 @@ var Recordings = {
             }).then(async function() {
                 let results = [];
                 for (let builder in summaryBuilders) {
-                    const timeStart = moment.utc()
-                    console.log('timeStart', timeStart)
-                    console.log(summaryBuilders[builder].getSQL())
-                    let queryResult = await dbpool.streamQuery({
-                        sql: summaryBuilders[builder].getSQL(),
-                        typeCast: sqlutil.parseUtcDatetime,
-                    })
-                    const timeEnd = moment.utc()
-                    console.log('timeEnd', timeEnd)
-                    const diff = moment.duration(timeEnd.diff(timeStart));
-                    console.log('diff', diff)
-                    results = [...new Set(queryResult)];
-                    console.log('results', results.length)
+                    let index = 0
+                    const baseSql = summaryBuilders[builder].getSQL().replace(';', '')
+                    async function getData () {
+                        let limit = 8000
+                        let offset = limit * index
+                        const sql = `${baseSql} LIMIT ${limit} OFFSET ${offset};`
+                        console.log('summaryBuilders offset', offset)
+                        const queryResult = await dbpool.query({ sql, typecast: sqlutil.parseUtcDatetime })
+                        console.log('result length', queryResult.length)
+                        if (queryResult.length) {
+                            index++
+                            results = results.concat([...new Set(queryResult)]);
+                            await getData()
+                        }
+                    }
+                    await getData()
                 }
-                return Q.all(results);
+                return results
             })
     },
 
@@ -1906,7 +1925,7 @@ var Recordings = {
     /* fetch count of project recordings.
     */
     countProjectRecordings: function(filters){
-        return this.buildSearchQuery(filters).then(function(builder){
+        return this.buildSearchQuery(filters, true).then(function(builder){
             builder.addProjection.apply(builder, [
                 's.site_id', 's.name as site', 'pis.site_id IS NOT NULL as imported',
                 'COUNT(recording_id) as count'
@@ -1920,7 +1939,7 @@ var Recordings = {
     /* fetch count of project recordings.
     */
     deleteMatching: function(filters, project_id){
-        return this.buildSearchQuery(filters).then(function(builder){
+        return this.buildSearchQuery(filters, true).then(function(builder){
             builder.addProjection.apply(builder, [
                 'r.recording_id as id'
             ]);
