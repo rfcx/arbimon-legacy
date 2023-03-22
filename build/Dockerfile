@@ -30,7 +30,7 @@ COPY app/model/tags.js /app/app/model/tags.js
 COPY app/model/soundscape-composition.js /app/app/model/soundscape-composition.js
 COPY app/model/sites.js /app/app/model/sites.js
 COPY app/model/classifications.js /app/app/model/classifications.js
-CMD ["node", "NODE_OPTIONS=--max_old_space_size=4096", "jobs/arbimon-recording-export-job/index.js"]
+CMD ["node", "--max_old_space_size=4096", "jobs/arbimon-recording-export-job/index.js"]
 
 # ---
 
