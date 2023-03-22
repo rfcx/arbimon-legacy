@@ -1,5 +1,4 @@
 angular.module('a2.analysis', [
-    'a2.analysis.jobs',
     'a2.analysis.patternmatching',
     'a2.directive.audio-bar',
     'a2.analysis.random-forest-models',

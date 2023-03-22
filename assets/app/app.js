@@ -31,6 +31,7 @@ var a2 = angular.module('a2.app', [
     'a2.visualizer',
     'a2.analysis',
     'a2.citizen-scientist',
+    'a2.jobs',
     'a2.directive.sidenav-bar',
     'a2.settings',
     'a2.login',

@@ -1,12 +1,12 @@
-angular.module('a2.analysis.jobs', [
+angular.module('a2.jobs', [
     'a2.services',
     'a2.permissions',
 ])
 .config(function($stateProvider) {
-    $stateProvider.state('analysis.jobs', {
+    $stateProvider.state('jobs', {
         url: '/jobs',
         controller: 'StatusBarNavController',
-        templateUrl: '/app/analysis/jobs/index.html'
+        templateUrl: '/app/jobs/index.html'
     });
 })
 .controller('StatusBarNavController', function($scope, $http, $modal, $window, Project, JobsData, notify, a2UserPermit) {
@@ -32,34 +32,6 @@ angular.module('a2.analysis.jobs', [
         $scope.infoInfo = "";
         $scope.showInfo = false;
     };
-
-    // $scope.cancel = function(job) {
-    //     var jobId = job.job_id;
-    //     $scope.infoInfo = "Loading...";
-    //     $scope.showInfo = true;
-    //     if (job.percentage < 100) {
-    //         confirm('Cancel','cancel',cancelJob,jobId);
-    //     }
-    //     else {
-    //         cancelJob(jobId);
-    //     }
-    // };
-
-    // var cancelJob = function(jobId) {
-    //     $http.get('/api/project/' + Project.getUrl() + '/jobs/cancel/' + jobId)
-    //         .success(function(data) {
-    //             if (data.err) {
-    //                 notify.serverError();
-    //             }
-    //             else {
-    //                 JobsData.updateJobs();
-    //                 notify.log("Job canceled successfully");
-    //             }
-    //         })
-    //         .error(function() {
-    //             notify.serverError();
-    //         });
-    // };
 
     var hideJob = function(jobId, action) {
         $http.get('/api/project/' + Project.getUrl() + '/jobs/hide/' + jobId)
