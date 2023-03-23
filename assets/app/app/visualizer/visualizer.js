@@ -295,7 +295,9 @@ angular.module('a2.visualizer', [
         return $scope.layers;
     };
 
-    $scope.setVisObject = function(visobject, type, location){
+    $scope.setVisObject = function(visobject, type, location, here) {
+        if ($scope.isUploading) return
+        $scope.isUploading = true
         return $q.resolve().then((function(){
             if (visobject) {
                 $scope.visobject_location = location;
@@ -327,6 +329,7 @@ angular.module('a2.visualizer', [
             }
         }).bind(this)).then(function(){
             events.emit('visobject', $scope.visobject);
+            $scope.isUploading = false
         });
     };
 

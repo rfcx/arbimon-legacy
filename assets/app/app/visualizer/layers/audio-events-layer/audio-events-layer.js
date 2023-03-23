@@ -34,12 +34,20 @@ angular.module('a2.visualizer.layers.audio-events-layer', [
                 }
             }
         })
+        // Remove default/selected job from the audio events details page.
+        if (isJobsBoxes) {
+            $localStorage.setItem('analysis.audioEventJob', null);
+        }
     };
     self.hexToRGB = function(hex, opacity) {
         var r = parseInt(hex.slice(1, 3), 16),
             g = parseInt(hex.slice(3, 5), 16),
             b = parseInt(hex.slice(5, 7), 16);
         return 'rgba(' + r + ', ' + g + ', ' + b + ', ' + opacity + ')';
+    }
+
+    self.isHighlightTitle = function() {
+        return !isNaN($localStorage.getItem('analysis.audioEventJob'))
     }
 
     self.fetchAudioEvents = function() {
@@ -81,10 +89,6 @@ angular.module('a2.visualizer.layers.audio-events-layer', [
                             opacity: self.isAudioEventsPlaylist ? (Number(self.selectedAudioEventJob) === event.job_id ? 1 : 0) : 0 // Boxes not visible by default, except selected job from the audio events details page.
                         }
                     });
-                    // Remove selected job from the audio events details page.
-                    if (!isNaN(self.selectedAudioEventJob)) {
-                        $localStorage.setItem('analysis.audioEventJob', null);
-                    }
                     a2ClusteringJobs.getRoisDetails({rec_id: $scope.visobject.id}).then(function(clusteringEvents) {
                         if (clusteringEvents) {
                             // Collect clustering playlists for audio events layer.
