@@ -21,7 +21,6 @@ angular.module('a2.jobs', [
     $scope.showErrors = false;
     $scope.infoInfo = "Loading...";
     $scope.showInfo = true;
-    $scope.jobs = [];
     $scope.loading = {jobs: false}
     $scope.loading.jobs = true
     $scope.updateFlags = function() {
@@ -87,6 +86,18 @@ angular.module('a2.jobs', [
         JobsData.cancelTimer();
     });
 
+    $scope.showActiveJobs = function () {
+        return !$scope.loading.jobs && $scope.jobs !== undefined && $scope.jobs.length
+    }
+
+    $scope.showEmptyList = function () {
+        return !$scope.loading.jobs && $scope.jobs !== undefined && !$scope.jobs.length
+    }
+
+    $scope.showLoader = function () {
+        return $scope.jobs === undefined
+    }
+
     var confirm = function(titlen, action, cb, vl, message) {
             var modalInstance = $modal.open({
                 templateUrl: '/common/templates/pop-up.html',
@@ -144,7 +155,7 @@ angular.module('a2.jobs', [
     }
 })
 .service('JobsData', function($http, $interval, Project, $q) {
-    var jobs = [];
+    var jobs;
     var url = Project.getUrl();
     var intervalPromise;
 
