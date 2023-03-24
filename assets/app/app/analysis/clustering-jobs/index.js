@@ -363,6 +363,7 @@ angular.module('a2.analysis.clustering-jobs', [
             height: el ? el.offsetWidth - el.offsetWidth/3 : 800,
             width: el ? el.offsetWidth : 1390,
             showlegend: true,
+            dragmode: 'lasso',
             legend: {
                 title: { text: 'Clusters names', side: 'top', font: { size: 12 } },
                 x: 1,
@@ -376,10 +377,13 @@ angular.module('a2.analysis.clustering-jobs', [
             paper_bgcolor: '#232436',
             plot_bgcolor: '#232436',
             xaxis: {
-                color: 'white'
+                color: 'white',
+                title: 'Component 1',
+                side: 'top'
             },
             yaxis: {
-                color: 'white'
+                color: 'white',
+                title: 'Component 2',
             }
         }
 
