@@ -112,7 +112,7 @@ angular.module('a2.analysis.patternmatching', [
 
     $scope.isShowSearch = function () {
         return ($scope.patternmatchingsData && $scope.patternmatchingsData.length) || $scope.search.q.trim().length > 0
-      }
+    }
 
     $scope.resetPagination = function () {
         $scope.paginationSettings.page = 1
@@ -313,6 +313,7 @@ angular.module('a2.analysis.patternmatching', [
 
     exportPmReport: function ($event) {
         $event.stopPropagation();
+        if (a2UserPermit.isSuper()) return this.setupExportUrl()
         if ((a2UserPermit.all && !a2UserPermit.all.length) || !a2UserPermit.can('export report')) {
             return notify.log('You do not have permission to export Pattern Matching data');
         } else return this.setupExportUrl()

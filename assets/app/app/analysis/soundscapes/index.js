@@ -271,10 +271,14 @@ angular.module('a2.analysis.soundscapes', [
 
 
     this.exportSoundscape = function(options) {
+        if (a2UserPermit.isSuper()) return this.getExportUrl(options)
         if ((a2UserPermit.all && !a2UserPermit.all.length) || !a2UserPermit.can('export report')) {
             return notify.log('You do not have permission to export soundscape data');
         }
+        this.getExportUrl(options)
+    };
 
+    this.getExportUrl = function(options) {
         a2Soundscapes.getExportUrl(options).then(function(export_url){
             var a = $('<a></a>').attr('target', '_blank').attr('href', export_url).appendTo('body');
             $window.setTimeout(function(){
@@ -282,8 +286,7 @@ angular.module('a2.analysis.soundscapes', [
                 a.remove();
             }, 0);
         });
-
-    };
+    }
 
 })
 .controller('DeleteSoundscapeInstanceCtrl',function($scope, $modalInstance, a2Soundscapes, name, id, projectData) {

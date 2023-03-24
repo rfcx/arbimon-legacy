@@ -241,6 +241,7 @@ angular.module('a2.audiodata.training-sets', [
 
     this.exportTSReport = function ($event) {
         $event.stopPropagation();
+        if (a2UserPermit.isSuper()) return this.setupExportUrl();
         if ((a2UserPermit.all && !a2UserPermit.all.length) || !a2UserPermit.can('export report')) {
             return notify.log('You do not have permission to export Training Set data');
         } else return this.setupExportUrl()

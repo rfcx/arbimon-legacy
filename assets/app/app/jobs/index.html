@@ -1,68 +1,43 @@
 <div ng-controller="StatusBarNavController" data-ng-init="init()">
-    <div class="container-fluid">
-        <div class="row row-flex flex-space-center">
-            <div class="col-sm-10">
-                <div ng-show="jobs.length">
-                    <h3>Active Jobs</h3>
-                    <div class="row">
-                        <div class="col-sm-12">
-                            Show :
-                            <ul class="list-inline">
-                                <li ng-repeat="job_type in job_types.types">
-                                    <label>
-                                        <input type="checkbox" class="hidden"  ng-model="show[job_type.id]"/>
-                                        <i class="fa"
-                                            ng-class="show[job_type.id] ? 'fa-check-circle' : 'fa-circle-o'"
-                                            ng-style="{color : job_type.color}"></i>
-                                        {{ job_type.name }}
-                                    </label>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-
-
-                    <a2-table rows="jobs" search="search" selected="selected" no-checkbox>
-                        <field>
-                            <i class="fa fa-circle" ng-style="{ color: job_types.for[row.job_type_id].color}"></i>
-                        </field>
-                        <field title="Name" key="name" tdclass="widthtd hidelongtext">
-                            <span title="{{ row.name }}">{{ row.name }}</span>
-                        </field>
-                        <field title="Type" key="type">
-                            {{ row.type }}
-                        </field>
-                        <field title="Last update" key="last_update">
-                            {{ row.last_update | moment: 'lll' }}
-                        </field>
-                        <field title="State" key="state">
-                            <span ng-hide="row.state === 'processing'">{{ row.state }}</span>
-                            <div ng-show="row.state === 'processing'" class="progress progress-striped active" ng-style="{ 'max-width': 80 + '%' }">
-                                <div ng-style="{ 'background-color': job_types.for[row.job_type_id].color, width : row.percentage + '%' }"
-                                    aria-valuemax="100"
-                                    aria-valuemin="0"
-                                    aria-valuenow="{{row.percentage}}"
-                                    role="progressbar"
-                                    class="progress-bar">
-                                    {{ row.percentage }}%
-                                </div>
+    <div class="container-fluid row row row-flex flex-space-center">
+        <div class="col-sm-12 col-lg-11 padded-view-div">
+            <h3 ng-show="showActiveJobs()">Active Jobs</h3>
+            <h3 ng-show="showEmptyList()">No jobs in the last 90 day</h3>
+            <div><loader ng-show="showLoader()"></loader></div>
+            <div ng-show="showActiveJobs()">
+                <a2-table rows="jobs" search="search" selected="selected" no-checkbox>
+                    <field title="Name" key="name" tdclass="widthtd hidelongtext selectable">
+                        <a class="cs-pointer" ng-click="openJob(row)" title="{{ row.name }}">{{ row.name }}</a>
+                    </field>
+                    <field title="Type" key="type">
+                        <i class="fa fa-circle mr-2" ng-style="{ color: job_types.for[row.job_type_id].color}"></i>
+                        {{ row.type }}
+                    </field>
+                    <field title="Last update" key="last_update">
+                        {{ row.last_update | moment: 'lll' }}
+                    </field>
+                    <field title="State" key="state">
+                        <span ng-hide="isProcessing(row)">{{ row.state }}</span>
+                        <div ng-show="isProcessing(row)" class="progress progress-striped active mb-0" ng-style="{ 'max-width': 80 + '%' }">
+                            <div ng-style="{ 'background-color': 'gray', width : row.percentage + '%' }"
+                                aria-valuemax="100"
+                                aria-valuemin="0"
+                                aria-valuenow="{{row.percentage}}"
+                                role="progressbar"
+                                class="progress-bar">
+                                {{ row.percentage }}%
                             </div>
-                        </field>
-                        <field>
-                            <button class="btn btn-default btn-xs" ng-click="hide(row) | trackEvent:'Jobs':'hide job'">Hide</button>
-                        </field>
-
-                        <expand-select>
-                            <h4>{{selected.name}}</h4>
-                            <p class="">
-                                Type : {{selected.type}}
-                            </p>
-                        </expand-select>
-                    </a2-table>
-                </div>
-                <div ng-hide="jobs.length">
-                    <h3>No Active Jobs</h3>
-                </div>
+                        </div>
+                    </field>
+                    <field>
+                        <button ng-if="!isCompleted(row)" class="btn btn-default btn-xs" style="width: 70px;" ng-click="hide(row) | trackEvent:'Jobs':'hide job'">
+                            <span>{{ isWaiting(row) || isProcessing(row) ? 'Cancel' : 'Hide' }}</span>
+                        </button>
+                        <button ng-if="isCompleted(row)" class="btn btn-default btn-xs" style="width: 70px;" ng-click="openJob(row)">
+                            <span>Open</span>
+                        </button>
+                    </field>
+                </a2-table>
             </div>
         </div>
     </div>

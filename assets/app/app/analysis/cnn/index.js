@@ -316,6 +316,7 @@ angular.module('a2.analysis.cnn', [
 
     $scope.exportCnnReport = function($event) {
         $event.stopPropagation();
+        if (a2UserPermit.isSuper()) return setupExportUrl()
         if ((a2UserPermit.all && !a2UserPermit.all.length) || !a2UserPermit.can('export report')) {
             return notify.log('You do not have permission to export CNN data');
         } else return setupExportUrl()

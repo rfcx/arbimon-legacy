@@ -745,7 +745,7 @@ angular.module('a2.analysis.random-forest-models.models', [
     };
 
     $scope.isExport = function() {
-        return a2UserPermit.can('export report')
+        return a2UserPermit.can('export report') || a2UserPermit.isSuper()
     }
 
     $scope.getValidations = function() {

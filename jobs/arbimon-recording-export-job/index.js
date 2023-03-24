@@ -47,7 +47,7 @@ async function main () {
     if (projection_parameters && projection_parameters.species) {
         const data = await recordings.exportOccupancyModels(projection_parameters, filters)
         return processOccupancyModelStream(data, rowData, dateByCondition, message).then(async () => {
-            console.log('arbimon-recording-export job finished: occupancy models report')
+            console.log(`arbimon-recording-export job finished: occupancy models report for ${message}`)
         })
     }
     else if (projection_parameters && projection_parameters.grouped && projection_parameters.validation && !projection_parameters.species) {
@@ -71,13 +71,13 @@ async function main () {
         }
         const data = await recordings.groupedDetections(projection_parameters, filters)
         return processGroupedDetectionsStream(data, rowData, projection_parameters, allData, dateByCondition, message).then(async () => {
-            console.log('arbimon-recording-export job finished: grouped detections report')
+            console.log(`arbimon-recording-export job finished: grouped detections report for ${message}`)
         })
     }
 
     const data = await recordings.exportRecordingData(projection_parameters, filters)
     return transformStream(data, rowData, dateByCondition, message).then(async () => {
-        console.log('arbimon-recording-export job finished: export recordings report')
+        console.log(`arbimon-recording-export job finished: export recordings report for ${message}`)
     })
   } catch (e) {
     console.error(e)

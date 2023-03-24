@@ -32,29 +32,31 @@
                     {{row.playlist}}
                 </field>
                 <field>
-                    <a class="btn btn-default btn-xs" ui-sref="visualizer.view({type:'soundscape', idA:row.soundscape_id})"
-                    ><i class="fa fa-cubes"></i> View</a>
+                    <div class="row-flex flex-space-end">
+                        <a class="btn btn-default btn-xs mr-2" ui-sref="visualizer.view({type:'soundscape', idA:row.soundscape_id})"
+                        ><i class="fa fa-cubes"></i> View</a>
 
-                    <button class="btn btn-default btn-xs" ng-click="showDetails(row.soundscape_id) | trackEvent:'Analysis-Soundscapes-List':' show soundscapes details'"
-                    ><i class="fa fa-list-alt"></i> Show details</button>
+                        <button class="btn btn-default btn-xs mr-2" ng-click="showDetails(row.soundscape_id) | trackEvent:'Analysis-Soundscapes-List':' show soundscapes details'"
+                        ><i class="fa fa-list-alt"></i> Show details</button>
 
-                    <span class="btn-group" dropdown dropdown-append-to-body="true">
-                        <button class="btn btn-default btn-xs"
-                            ng-click="controller.exportSoundscape({soundscape:row}) | trackEvent:'Analysis-Soundscapes list':'export soundscape'"
-                        ><i class="fa fa-download"></i> Export</button>
-                        <button class="btn btn-default btn-xs" dropdown-toggle><i class="fa fa-caret-down"></i></button>
-                        <ul class="dropdown-menu" role="menu">
-                            <li><a ng-click="controller.exportSoundscape({soundscape:row}) | trackEvent:'Analysis-Soundscapes list':'export soundscape'">
-                                Export Matrix
-                            </a></li>
-                            <li><a ng-click="controller.exportSoundscape({soundscape:row, raw:true}) | trackEvent:'Analysis-Soundscapes list':'export soundscape raw'">
-                                Export Raw Data
-                            </a></li>
-                        </ul>
-                    </span>
+                        <span class="btn-group" dropdown dropdown-append-to-body="true">
+                            <button class="btn btn-default btn-xs"
+                                ng-click="controller.exportSoundscape({soundscape:row}) | trackEvent:'Analysis-Soundscapes list':'export soundscape'"
+                            ><i class="fa fa-download"></i> Export</button>
+                            <button class="btn btn-default btn-xs mr-2" dropdown-toggle><i class="fa fa-caret-down"></i></button>
+                            <ul class="dropdown-menu" role="menu">
+                                <li><a ng-click="controller.exportSoundscape({soundscape:row}) | trackEvent:'Analysis-Soundscapes list':'export soundscape'">
+                                    Export Matrix
+                                </a></li>
+                                <li><a ng-click="controller.exportSoundscape({soundscape:row, raw:true}) | trackEvent:'Analysis-Soundscapes list':'export soundscape raw'">
+                                    Export Raw Data
+                                </a></li>
+                            </ul>
+                        </span>
 
-                    <button class="btn btn-default btn-xs" ng-click="deleteSoundscape(row.soundscape_id,row.name) | trackEvent:'Analysis-Soundscapes list':'delete soundscape'"
-                    ><i class="fa fa-trash"></i> Delete</button>
+                        <button class="btn btn-default btn-xs" ng-click="deleteSoundscape(row.soundscape_id,row.name) | trackEvent:'Analysis-Soundscapes list':'delete soundscape'"
+                        ><i class="fa fa-trash"></i> Delete</button>
+                    </div>
                 </field>
             </a2-table>
         </div>

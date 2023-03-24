@@ -9,7 +9,7 @@ angular.module('a2.jobs', [
         templateUrl: '/app/jobs/index.html'
     });
 })
-.controller('StatusBarNavController', function($scope, $http, $modal, Project, JobsData, notify, a2UserPermit) {
+.controller('StatusBarNavController', function($scope, $http, $modal, $window, Project, JobsData, notify, a2UserPermit) {
     $scope.show = {};
     $scope.showClassifications = true;
     $scope.showTrainings = true;
@@ -21,8 +21,8 @@ angular.module('a2.jobs', [
     $scope.showErrors = false;
     $scope.infoInfo = "Loading...";
     $scope.showInfo = true;
-    $scope.jobs = [];
-
+    $scope.loading = {jobs: false}
+    $scope.loading.jobs = true
     $scope.updateFlags = function() {
         $scope.successInfo = "";
         $scope.showSuccess = false;
@@ -32,39 +32,12 @@ angular.module('a2.jobs', [
         $scope.showInfo = false;
     };
 
-    // $scope.cancel = function(job) {
-    //     var jobId = job.job_id;
-    //     $scope.infoInfo = "Loading...";
-    //     $scope.showInfo = true;
-    //     if (job.percentage < 100) {
-    //         confirm('Cancel','cancel',cancelJob,jobId);
-    //     }
-    //     else {
-    //         cancelJob(jobId);
-    //     }
-    // };
-
-    // var cancelJob = function(jobId) {
-    //     $http.get('/api/project/' + Project.getUrl() + '/jobs/cancel/' + jobId)
-    //         .success(function(data) {
-    //             if (data.err) {
-    //                 notify.serverError();
-    //             }
-    //             else {
-    //                 JobsData.updateJobs();
-    //                 notify.log("Job canceled successfully");
-    //             }
-    //         })
-    //         .error(function() {
-    //             notify.serverError();
-    //         });
-    // };
-
-    var hideJob = function(jobId) {
+    var hideJob = function(jobId, action) {
         $http.get('/api/project/' + Project.getUrl() + '/jobs/hide/' + jobId)
             .success(function(data) {
                     JobsData.updateJobs();
-                    notify.log("Job hidden successfully");
+                    const message = 'Job ' + action + ' successfully.'
+                    notify.log(message);
             })
             .error(function(data) {
                 if(data.error) {
@@ -76,15 +49,14 @@ angular.module('a2.jobs', [
             });
     };
 
-
     JobsData.getJobTypes().success(function(data) {
         var colors = ['#1482f8', '#df3627', '#40af3b', '#9f51bf', '#d37528', '#ffff00', '#5bc0de'];
         var job_types_id = [1, 2, 4, 6, 7, 8, 9];
-
+        
         var job_types = data.filter(function(type) {
             return job_types_id.includes(type.id);
         });
-
+        
         $scope.job_types = {};
         $scope.job_types.types = job_types;
         $scope.job_types.show = {};
@@ -96,13 +68,13 @@ angular.module('a2.jobs', [
         });
     });
 
-
     $scope.$watch(
         function() {
             return JobsData.getJobs();
         },
         function(new_jobs) {
             $scope.jobs = new_jobs;
+            $scope.loading.jobs = false
             JobsData.startTimer();
             $scope.infoInfo = "";
             $scope.showInfo = false;
@@ -114,11 +86,23 @@ angular.module('a2.jobs', [
         JobsData.cancelTimer();
     });
 
-    var confirm = function(titlen, action, cb, vl) {
+    $scope.showActiveJobs = function () {
+        return !$scope.loading.jobs && $scope.jobs !== undefined && $scope.jobs.length
+    }
+
+    $scope.showEmptyList = function () {
+        return !$scope.loading.jobs && $scope.jobs !== undefined && !$scope.jobs.length
+    }
+
+    $scope.showLoader = function () {
+        return $scope.jobs === undefined
+    }
+
+    var confirm = function(titlen, action, cb, vl, message) {
             var modalInstance = $modal.open({
                 templateUrl: '/common/templates/pop-up.html',
                 controller: function() {
-                    this.title = titlen+"running job";
+                    this.title = titlen + ' running job';
                     this.messages = ["This job has not finished yet. Are you sure?"];
                     this.btnOk = "Yes, "+action+" it";
                     this.btnCancel = "No";
@@ -132,36 +116,51 @@ angular.module('a2.jobs', [
             });
 
             modalInstance.result.then(function(ok) {
-                cb(vl);
+                cb(vl, message);
             });
     };
 
     $scope.hide = function(job) {
-        if(!a2UserPermit.can('manage project jobs')) {
-            notify.log("You do not have permission to hide jobs");
+        if (!a2UserPermit.can('manage project jobs')) {
+            notify.log('You do not have permission to hide or cancel jobs');
             return;
         }
 
-        var jobId = job.job_id;
+        const jobId = job.job_id;
 
         $scope.infoInfo = "Loading...";
         $scope.showInfo = true;
         if (job.percentage < 100) {
-            confirm('Hide', 'hide', hideJob, jobId);
+            confirm('Cancel', 'cancel', hideJob, jobId, 'canceled');
         }
         else {
-            hideJob(jobId);
+            hideJob(jobId, 'hidden');
         }
     };
 
+    $scope.isCompleted = function (row) {
+        return row.state === 'completed'
+    }
+
+    $scope.isProcessing = function (row) {
+        return row.state === 'processing'
+    }
+
+    $scope.isWaiting = function (row) {
+        return row.state === 'waiting'
+    }
+
+    $scope.openJob = function (row) {
+        $window.location.href = '/project/' + Project.getUrl() + '/analysis/' + row.url
+    }
 })
 .service('JobsData', function($http, $interval, Project, $q) {
-    var jobs = [];
+    var jobs;
     var url = Project.getUrl();
     var intervalPromise;
 
     updateJobs = function() {
-        $http.get('/api/project/' + url + '/jobs/progress')
+        $http.get('/api/project/' + url + '/jobs/progress', { params: { last3Months: true } })
             .success(function(data) {
                 data.forEach(item => {
                     if (item.job_type_id === 1 && item.completed === 0 && item.state === 'error') {
