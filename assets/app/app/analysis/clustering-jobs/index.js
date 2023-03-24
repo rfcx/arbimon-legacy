@@ -378,12 +378,12 @@ angular.module('a2.analysis.clustering-jobs', [
             plot_bgcolor: '#232436',
             xaxis: {
                 color: 'white',
-                title: 'Component 1',
+                title: 'Component 2',
                 side: 'top'
             },
             yaxis: {
                 color: 'white',
-                title: 'Component 2',
+                title: 'Component 1',
             }
         }
 
