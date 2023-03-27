@@ -426,11 +426,13 @@ angular.module('a2.analysis.cnn', [
     var byROIsbySpecies = function(dataIn, bySite) {
         dataOut = {};
         dataIn.forEach(function(element) {
-            var s = bySite? element.site : element.species_id;
+            var s = bySite? element.site : (element.species_id + '_' + element.songtype_id);
             if (!(s in dataOut)) {
                 dataOut[s] = {count: 0,
-                              species_id: s,
+                              species_id: element.species_id,
+                              songtype_id: element.songtype_id,
                               scientific_name: element.scientific_name,
+                              songtype: element.songtype,
                               rois: []};
                 if (bySite) dataOut[s].site = element.site;
             }
