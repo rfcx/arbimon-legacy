@@ -28,7 +28,7 @@ angular.module('a2.visualizer.layers.audio-events-layer', [
                 item.opacity = opacity === false ? 0 : 1;
                 if (isJobsBoxes) {
                     const index = Object.keys(self.audioEventJobs).findIndex(job => Number(job) === item.job_id);
-                    const color = colors[index]
+                    const color = colors[index] || colors[0]
                     item.borderColor = self.hexToRGB(color, 0.6)
                     item.backgroundColor = self.hexToRGB(color, 0.2)
                 }
