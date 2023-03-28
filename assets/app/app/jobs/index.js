@@ -158,8 +158,11 @@ angular.module('a2.jobs', [
     var jobs;
     var url = Project.getUrl();
     var intervalPromise;
+    var isProcessing = false;
 
     updateJobs = function() {
+        if (isProcessing) return
+        isProcessing = true;
         $http.get('/api/project/' + url + '/jobs/progress', { params: { last3Months: true } })
             .success(function(data) {
                 data.forEach(item => {
@@ -171,6 +174,7 @@ angular.module('a2.jobs', [
                     }
                 })
                 jobs = data;
+                isProcessing = false
             });
     };
     updateJobs();
@@ -210,7 +214,7 @@ angular.module('a2.jobs', [
                     else {
                         updateJobs();
                     }
-                }, 5000);
+                }, 10000);
             }
 
         },
