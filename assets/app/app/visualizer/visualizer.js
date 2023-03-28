@@ -295,7 +295,7 @@ angular.module('a2.visualizer', [
         return $scope.layers;
     };
 
-    $scope.setVisObject = function(visobject, type, location, here) {
+    $scope.setVisObject = function(visobject, type, location) {
         if ($scope.isUploading) return
         $scope.isUploading = true
         return $q.resolve().then((function(){
