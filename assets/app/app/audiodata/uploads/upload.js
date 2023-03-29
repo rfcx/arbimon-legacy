@@ -204,7 +204,7 @@ angular.module('a2.audiodata.uploads.upload', [
     }
 
     $scope.isLimitExceeded = function() {
-        return $scope.uploader.queue.length > 100
+        return $scope.uploader.queue.length > 1000
     }
 
     const randomString = Math.round(Math.random() * 100000000)
