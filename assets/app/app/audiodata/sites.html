@@ -54,7 +54,7 @@
             <field title="Altitude" key="alt">
                 {{ row.alt | number:2 }}
             </field>
-            <field title="Timezone" key="timezone" tdclass="timezone hidelongtext">
+            <field title="Timezone (STD)" key="timezone" tdclass="timezone hidelongtext">
                 <span title="{{ row.timezone }}">{{ row.utc }}</span>
             </field>
             <field title="Last updated" key="date" tdclass="date hidelongtext">
@@ -91,15 +91,6 @@
                     <label>Name:</label>
                     <input class="form-control" type="text" ng-model="temp.name" placeholder="Site name" required>
                 </div>
-                <!-- <div class="checkbox">
-                    <label>
-                        <input type="checkbox" ng-model="temp.published">
-                        publish site
-                        <i class="text-info fa fa-info-circle"
-                            tooltip-placement="right"
-                            tooltip="when this option is checked, the site recordings become available to use in other projects"></i>
-                    </label>
-                </div> -->
                 <div class="form-group">
                     <label>Location:</label>
                     <div class="input-group">
