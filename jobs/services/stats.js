@@ -6,20 +6,20 @@ const SLACK_TOKEN = process.env.SLACK_TOKEN;
 const SLACK_CHANNEL = process.env.SLACK_CHANNEL
 const nodeEnv = process.env.NODE_ENV === 'production' ? 'production' : 'staging'
 
-function combineStats (reportData) {
-  let text = `\n:white_check_mark: *${reportData}* Arbimon recordings were deleted | ${nodeEnv || '---'}`
+function combineStats (reportData, jobName) {
+  let text = `\n:white_check_mark: *${reportData}* Arbimon ${jobName} finished | ${nodeEnv || '---'}`
   return text
 }
 
-function combineErrorMessage (error) {
-    let text = `\n:x: *${error}* Arbimon export recording error | ${nodeEnv || '---'}`
-    return text
-  }
+function combineErrorMessage (error, jobName) {
+  let text = `\n:x: *${error}* Arbimon ${jobName} error | ${nodeEnv || '---'}`
+  return text
+}
 
-async function reportStatsToSlack (text) {
+async function reportStatsToSlack (text, jobName) {
   return await axios.post(SLACK_URL, {
     channel: SLACK_CHANNEL,
-    username: `Arbimon Recording Delete Job ${process.env.NODE_ENV}`,
+    username: `Arbimon ${jobName} ${process.env.NODE_ENV}`,
     icon_emoji: ':rocket:',
     mrkdwn: true,
     text
@@ -32,33 +32,33 @@ async function reportStatsToSlack (text) {
 }
 
 async function errorToSlack (text) {
-    return await axios.post(SLACK_URL, {
-      channel: SLACK_CHANNEL,
-      username: `Arbimon Export Recording Job ${process.env.NODE_ENV}`,
-      icon_emoji: ':fire:',
-      mrkdwn: true,
-      text
-    }, {
-      headers: {
-        authorization: `Bearer ${SLACK_TOKEN}`,
-        'Content-Type': 'application/json'
-      }
-    })
+  return await axios.post(SLACK_URL, {
+    channel: SLACK_CHANNEL,
+    username: `Arbimon ${jobName} ${process.env.NODE_ENV}`,
+    icon_emoji: ':fire:',
+    mrkdwn: true,
+    text
+  }, {
+    headers: {
+      authorization: `Bearer ${SLACK_TOKEN}`,
+      'Content-Type': 'application/json'
+    }
+  })
 }
 
-async function reportStats (reportData) {
-  const text = combineStats(reportData)
+async function reportStats (reportData, jobName) {
+  const text = combineStats(reportData, jobName)
   console.info(text)
   if (SLACK_REPORT_ENABLED) {
-    await reportStatsToSlack(text)
+    await reportStatsToSlack(text, jobName)
   }
 }
 
-async function errorMessage (error) {
-    const text = combineErrorMessage(error)
+async function errorMessage (error, jobName) {
+    const text = combineErrorMessage(error, jobName)
     console.info(text)
     if (SLACK_REPORT_ENABLED) {
-      await errorToSlack(text)
+      await errorToSlack(text, jobName)
     }
   }
 
