@@ -4,6 +4,7 @@ const router = express.Router();
 const csv_stringify = require("csv-stringify");
 const moment = require('moment');
 const model = require('../../../model');
+const dateHelper = require('../../../utils/date-helper')
 
 router.get('/', function(req, res, next) {
     res.type('json');
@@ -16,7 +17,7 @@ router.get('/', function(req, res, next) {
     }).then(function(rows) {
         for (let row of rows) {
             const isTimezone = row.timezone
-            const timezone = isTimezone ? moment().tz(row.timezone).format('ZZ') : '-0000' // UTC+07 , UTC+07:30, 'UTC-00'
+            const timezone = isTimezone ? dateHelper.getNonDlsDatetime(moment(), row.timezone, 'ZZ') : '-0000' // UTC+07 , UTC+07:30, 'UTC-00'
             const utc = `${timezone.slice(0, 3)}:${timezone.slice(3)}`
             const reg = /^(.\d*[\d:]*?)\.?:00*$/.exec(utc)
             row.utc = reg && reg[1] ? `UTC${reg[1]}` : `UTC${utc}`
