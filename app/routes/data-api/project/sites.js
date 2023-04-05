@@ -4,7 +4,6 @@ const router = express.Router();
 const csv_stringify = require("csv-stringify");
 const moment = require('moment');
 const model = require('../../../model');
-const dateHelper = require('../../../utils/date-helper')
 
 router.get('/', function(req, res, next) {
     res.type('json');

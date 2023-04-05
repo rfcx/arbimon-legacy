@@ -20,7 +20,7 @@ angular.module('a2.citizen-scientist.patternmatching', [
         templateUrl: '/app/citizen-scientist/patternmatching/list.html'
     });
 })
-.controller('CitizenScientistPatternMatchingCtrl' , function($scope, $filter, Project, ngTableParams, JobsData, a2Playlists, notify, $q, a2CitizenScientistService, a2PatternMatching, a2UserPermit, $state, $stateParams) {
+.controller('CitizenScientistPatternMatchingCtrl' , function($scope, $filter, Project, ngTableParams, a2Playlists, notify, $q, a2CitizenScientistService, a2PatternMatching, a2UserPermit, $state, $stateParams) {
     $scope.selectedPatternMatchingId = $stateParams.patternMatchingId;
 
     var initTable = function(p, c, s, f, t) {
