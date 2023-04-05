@@ -73,7 +73,6 @@ angular.module('a2.srv.project', [
                         return response.data;
                     });
             },
-            // TODO should rename getRecs to findRecs
             getRecs: function(query, callback) {
                 if(typeof query === "function") {
                     callback = query;
