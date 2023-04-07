@@ -1253,19 +1253,7 @@ var Recordings = {
             let steps=[];
 
             const select_clause = {
-                list: "SELECT r.recording_id AS id, \n"+
-                      "       SUBSTRING_INDEX(r.uri,'/',-1) as file, \n"+
-                      "       r.uri, \n"+
-                      "       r.datetime, \n"+
-                      "       r.datetime_utc, \n"+
-                      "       r.upload_time, \n"+
-                      "       r.duration, \n"+
-                      "       r.mic, \n"+
-                      "       r.recorder, \n"+
-                      "       r.version, \n"+
-                      "       r.sample_rate, \n"+
-                      "       r.meta, \n"+
-                      "       r.site_id \n",
+                list: "SELECT r.recording_id AS id \n",
 
                 date_range: "SELECT MIN(r.datetime) AS min_date, \n"+
                             "       MAX(r.datetime) AS max_date \n",
@@ -1283,7 +1271,7 @@ var Recordings = {
                 return site.site_id;
             })
 
-            if (!parameters.sites) {
+            if (!parameters.sites && !parameters.validations) {
                 constraints.push("r.site_id IN (?)");
                 data.push(siteIds);
             }
@@ -1340,6 +1328,8 @@ var Recordings = {
                 }
                 // Do not get deleted validations values in the filters result.
                 constraints.push('(rv.present IS NOT NULL OR rv.present_review > 0 OR rv.present_aed > 0)');
+                constraints.push('rv.project_id = ?');
+                data.push(params.project_id)
             }
 
             if(parameters.soundscape_composition) {
@@ -1426,6 +1416,32 @@ var Recordings = {
                         typeCast: sqlutil.parseUtcDatetime,
                     });
                 }));
+            }).then(async function (results) {
+                // Get recording data for the output='list'
+                const listIndex = outputs.findIndex(item => item === 'list')
+                if (outputs.includes('list') && results[listIndex][0].length && !outputs.includes('sql')) {
+                    const sql = `SELECT r.recording_id AS id,
+                        SUBSTRING_INDEX(r.uri,'/',-1) as file,
+                        r.uri,
+                        r.datetime,
+                        r.datetime_utc,
+                        r.upload_time,
+                        r.duration,
+                        r.mic,
+                        r.recorder,
+                        r.version,
+                        r.sample_rate,
+                        r.meta,
+                        r.site_id
+                        FROM recordings r WHERE r.recording_id IN (${results[listIndex][0].map(item => item.id)})
+                    `
+                    let queryResult = await dbpool.query({
+                        sql,
+                        typeCast: sqlutil.parseUtcDatetime
+                    })
+                    results[listIndex][0] = [...new Set(queryResult)];
+                }
+                return results
             }).then(function (results) {
                 if (sqlOnly) {
                     return results
