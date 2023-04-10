@@ -1,16 +1,11 @@
 /* jshint node:true */
 "use strict";
 
-const debug = require('debug')('arbimon2:model:projects');
 const util = require('util');
-const async = require('async');
 const joi = require('joi');
 const q = require('q');
-const sprintf = require("sprintf-js").sprintf;
-const AWS = require('aws-sdk');
 const request = require('request');
 const rp = util.promisify(request);
-const auth0Service = require('../model/auth0');
 const { ValidationError } = require('@rfcx/http-utils');
 
 const config = require('../config');
@@ -22,7 +17,6 @@ const queryHandler = dbpool.queryHandler;
 const APIError = require('../utils/apierror');
 const species = require('./species');
 const songtypes = require('./songtypes');
-const users = require('./users')
 const roles = require('./roles')
 
 const projectSchema = joi.object().keys({
@@ -537,8 +531,7 @@ var Projects = {
             classId = null;
         }
 
-        var params = [projectId];
-        var select_clause = [
+        let select_clause = [
             "pc.project_class_id as id",
             "pc.project_id as project",
             "pc.species_id as species",
@@ -547,16 +540,18 @@ var Projects = {
             "sp.scientific_name as species_name",
             "so.songtype as songtype_name"
         ];
-        var from_clause = [
+        let from_clause = [
             "project_classes AS pc",
             "JOIN species AS sp ON sp.species_id = pc.species_id",
             "JOIN songtypes AS so ON so.songtype_id = pc.songtype_id",
             "JOIN species_taxons AS st ON st.taxon_id = sp.taxon_id"
         ];
-        var where_clause = ['pc.project_id = ?'];
-        var groupby_clause = [];
+        let params = [];
+        let where_clause = [];
+        let groupby_clause = [];
 
-
+        where_clause.push('pc.project_id = ?')
+        params.push(projectId)
         if(classId) {
             where_clause.push("pc.project_class_id = ?");
             params.push(classId);
@@ -573,18 +568,18 @@ var Projects = {
             params.push(options.speciesId);
             params.push(options.songtypeId);
         }
-        if(options && options.countValidations) {
+        if (options && options.countValidations) {
             // Get count of present/absent values for the Recordings filter.
             select_clause.push(
                 "coalesce(SUM(CASE WHEN rv.present_review > 0 OR rv.present_aed > 0 THEN 1 ELSE rv.present END), 0) as vals_present",
                 "coalesce(SUM(CASE WHEN rv.present = 0 AND rv.present_review = 0 AND rv.present_aed = 0 THEN 1 ELSE 0 END), 0) as vals_absent"
             );
             from_clause.push(
-                "LEFT JOIN recording_validations AS rv ON (\n"+
-                "   rv.songtype_id = pc.songtype_id\n" +
-                "   AND rv.species_id = pc.species_id\n" +
-                "   AND rv.project_id = pc.project_id\n" +
-                ")"
+                `LEFT JOIN recording_validations AS rv ON (
+                    rv.songtype_id = pc.songtype_id
+                    AND rv.species_id = pc.species_id
+                    AND rv.project_id = pc.project_id
+                )`
             );
             groupby_clause.push("pc.species_id", "pc.songtype_id");
         }

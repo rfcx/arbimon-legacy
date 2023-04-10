@@ -28,7 +28,7 @@ angular.module('a2.audiodata.recordings', [
         params.output = output;
         params.limit = $scope.limitPerPage;
         params.offset = output.indexOf('list') >= 0 ? ($scope.currentPage-1) * $scope.limitPerPage : 0;
-        params.sortBy = 'site_id DESC, datetime DESC';
+        params.sortBy = 'r.site_id DESC, r.datetime DESC';
         if (params.range) {
             params.range.from = moment(params.range.from).format('YYYY-MM-DD') + 'T00:00:00.000Z';
             params.range.to = moment(params.range.to).format('YYYY-MM-DD') + 'T23:59:59.999Z';

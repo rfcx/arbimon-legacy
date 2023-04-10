@@ -302,7 +302,7 @@ var Playlists = {
                     }
                 } else {
                     data.params.project_id = data.project_id;
-                    data.params.sortBy = 'site_id, datetime'
+                    data.params.sortBy = 'r.site_id, r.datetime'
                     data.params.output = ['list', 'sql']
                     if (data.params.recIds) {
                         await this.addRecs(query, playlistId, data.params.recIds);
@@ -481,20 +481,20 @@ var Playlists = {
         });
     },
 
-    getRecordingsCount: async function (playlist_id, query) {
+    getRecordingsCount: async function (playlist_id, connection) {
         const q = 'SELECT COUNT(recording_id) as count FROM playlist_recordings WHERE playlist_recordings.playlist_id = ? GROUP BY playlist_id'
-        const con = query ? query : dbpool.query
+        const con = connection ? connection : dbpool.query
         const pl = (await con(q, [playlist_id]))[0]
         return pl ? pl.count : null
     },
 
-    refreshTotalRecs: async function(playlist_id, query) {
-        const total = await this.getRecordingsCount(playlist_id, query)
+    refreshTotalRecs: async function(playlist_id, connection) {
+        const total = await this.getRecordingsCount(playlist_id, connection)
         if (total === null) {
             return
         }
         const q = 'UPDATE playlists SET total_recordings = ? WHERE playlist_id = ?'
-        const con = query ? query : dbpool.query
+        const con = connection ? connection : dbpool.query
         return await con(q, [total, playlist_id])
     },
 };

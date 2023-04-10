@@ -1,13 +1,11 @@
-var express = require('express');
-var router = express.Router();
-var config = require('../../../config');
+const express = require('express');
+const router = express.Router();
+const config = require('../../../config');
 const request = require('request');
 const rfcxConfig = config('rfcx');
 
 router.get('/:site_id/assets', async function(req, res){
-
-    var url = `${rfcxConfig.deviceBaseUrl}/streams/${req.params.site_id}/assets`;
-
+    const url = `${rfcxConfig.deviceBaseUrl}/streams/${req.params.site_id}/assets`;
     request.get(url, {
         headers: {
         'Authorization': `Bearer ${req.session.idToken}`
@@ -17,9 +15,7 @@ router.get('/:site_id/assets', async function(req, res){
 });
 
 router.get('/:site_id/assets/:asset_id', async function(req, res){
-
-    var url = `${rfcxConfig.deviceBaseUrl}/assets/${req.params.asset_id}`;
-
+    const url = `${rfcxConfig.deviceBaseUrl}/assets/${req.params.asset_id}`;
     request.get(url, {
         headers: {
         'Authorization': `Bearer ${req.session.idToken}`

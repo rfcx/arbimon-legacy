@@ -425,6 +425,10 @@ angular.module('a2.audiodata.sites', [
         $scope.showAssetsCarousel = true;
     }
 
+    $scope.capitalizeFirstLetter = function(string) {
+        return string.charAt(0).toUpperCase() + string.slice(1);
+    }
+
     $scope.sel = function(site) {
         return $state.transitionTo($state.current.name, {site: site && site.id, show:$state.params.show}, {notify:false}).then(function(){
             $scope.images = [];
@@ -440,7 +444,8 @@ angular.module('a2.audiodata.sites', [
                                 $scope.images.push({
                                     id: i,
                                     src: src,
-                                    active: i === 0
+                                    active: i === 0,
+                                    label:  $scope.assets[i] &&  $scope.assets[i].meta &&  $scope.assets[i].meta.label ? $scope.capitalizeFirstLetter($scope.assets[i].meta.label) : 'Not labelled image'
                                 })
                             }
                         };

@@ -34,13 +34,14 @@ async function main () {
     }
 
     const message = `project = ${ rowData.name } [${ rowData.project_id }] ${ rowData.created_at }`
+    const jobName = 'Export Recording Job'
     try {
         filters = JSON.parse(rowData.filters)
         projection_parameters = JSON.parse(rowData.projection_parameters)
     } catch (error) {
         console.error('Error parse params', error)
         await updateExportRecordings(rowData, { error: JSON.stringify(error) })
-        await errorMessage(message)
+        await errorMessage(message, jobName)
         return
     }
 
@@ -177,7 +178,7 @@ async function processOccupancyModelStream (results, rowData, dateByCondition, m
                     resolve()
                 } catch(error) {
                     console.error('Error while sending occupancy-model email.', error)
-                    await errorMessage(message)
+                    await errorMessage(message, jobName)
                     await updateExportRecordings(rowData, { error: JSON.stringify(error) })
                     await recordings.closeConnection()
                     resolve()
@@ -253,7 +254,7 @@ async function processGroupedDetectionsStream (results, rowData, projection_para
                     resolve()
                 } catch(error) {
                     console.error('Error while sending grouped-detections-export email.', error)
-                    await errorMessage(message)
+                    await errorMessage(message, jobName)
                     await updateExportRecordings(rowData, { error: JSON.stringify(error) })
                     await recordings.closeConnection()
                     resolve()
@@ -346,7 +347,7 @@ async function transformStream (results, rowData, dateByCondition, message) {
                     resolve()
                 } catch(error) {
                     console.error('Error while sending export-recording email.', error)
-                    await errorMessage(message)
+                    await errorMessage(message, jobName)
                     await updateExportRecordings(rowData, { error: JSON.stringify(error) })
                     await recordings.closeConnection()
                     resolve()
