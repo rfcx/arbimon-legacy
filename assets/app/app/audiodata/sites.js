@@ -440,7 +440,8 @@ angular.module('a2.audiodata.sites', [
                                 $scope.images.push({
                                     id: i,
                                     src: src,
-                                    active: i === 0
+                                    active: i === 0,
+                                    label:  $scope.assets[i] &&  $scope.assets[i].meta &&  $scope.assets[i].meta.label ? $scope.assets[i].meta.label : 'Not labelled image'
                                 })
                             }
                         };

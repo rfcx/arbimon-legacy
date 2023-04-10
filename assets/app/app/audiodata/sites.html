@@ -203,7 +203,9 @@
         <ul class="tree">
             <li ng-repeat="image in images track by image.src" ng-click="showCarousel(image.id)"
                 style="width: 100px; height: 100px; background: url({{image.src}}) no-repeat center center;
-                background-size: contain; cursor: pointer;" data-toggle="modal" data-target="#carouselModal">
+                background-size: contain; cursor: pointer;" data-toggle="modal" data-target="#carouselModal"
+                class="btn btn-default roi-thumbnail"
+                popover-html="'{{image.label}}'" data-placement="bottom" popover-trigger="mouseenter" popover-append-to-body="true">
             </li>
         </ul>
         <!-- Carousel -->
@@ -218,6 +220,7 @@
                         <div class="carousel-inner" style="width: 100%; height: 100%;" role="listbox">
                             <div ng-repeat="image in images track by image.id" class="item" style="width: 100%; height: 100%;"
                                 ng-class="image.active ? 'active' : ''">
+                                <h3 class="popover-title">{{image.label}}</h3>
                                 <img class="d-block w-100" style="display: block; max-width: 100%; max-height: 100%; margin: 0 auto;" src="{{image.src}}" alt="">
                             </div>
                         </div>
