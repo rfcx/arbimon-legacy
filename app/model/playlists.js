@@ -312,10 +312,11 @@ var Playlists = {
                         console.log(testCreatingTime, sqlParts)
                         await query(`INSERT INTO playlist_recordings(recording_id, playlist_id) SELECT /*+ MAX_EXECUTION_TIME(360000) */ DISTINCT r.recording_id, ${playlistId} ${sqlParts[1]} ${sqlParts[2]}`)
                         const testInsertingTime = moment().format('YYYY-MM-DD HH:mm:ss')
-                        console.log('inserted', testInsertingTime)
+                        console.log('inserted', testInsertingTime, playlistId)
                     }
                 }
                 await this.refreshTotalRecs(playlistId, query)
+                console.log('refreshTotalRecs', playlistId)
                 await db.commit()
                 await db.release()
                 return playlistId
@@ -494,6 +495,7 @@ var Playlists = {
 
     refreshTotalRecs: async function(playlist_id, connection) {
         const total = await this.getRecordingsCount(playlist_id, connection)
+        console.log('total inserted', total)
         if (total === null) {
             return
         }
