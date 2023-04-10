@@ -4,7 +4,7 @@ var async = require('async');
 var q = require('q');
 var Joi   = require('joi');
 var util  = require('util');
-
+const moment = require('moment');
 
 var sqlutil = require('../utils/sqlutil');
 var dbpool = require('../utils/dbpool');
@@ -308,7 +308,11 @@ var Playlists = {
                         await this.addRecs(query, playlistId, data.params.recIds);
                     } else {
                         const sqlParts = await model.recordings.findProjectRecordings(data.params)
-                        await query(`INSERT INTO playlist_recordings(recording_id, playlist_id) SELECT DISTINCT r.recording_id, ${playlistId} ${sqlParts[1]} ${sqlParts[2]}`)
+                        const testCreatingTime = moment().format('YYYY-MM-DD HH:mm:ss')
+                        console.log(testCreatingTime, sqlParts)
+                        await query(`INSERT INTO playlist_recordings(recording_id, playlist_id) SELECT /*+ MAX_EXECUTION_TIME(360000) */ DISTINCT r.recording_id, ${playlistId} ${sqlParts[1]} ${sqlParts[2]}`)
+                        const testInsertingTime = moment().format('YYYY-MM-DD HH:mm:ss')
+                        console.log('inserted', testInsertingTime)
                     }
                 }
                 await this.refreshTotalRecs(playlistId, query)
