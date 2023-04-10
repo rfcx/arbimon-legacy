@@ -8,6 +8,7 @@ const projects = require('../../app/model/projects')
 const stream = require('stream');
 const csv_stringify = require('csv-stringify');
 const mandrill = require('mandrill-api/mandrill')
+const config = require('../../config');
 
 async function main () {
   try {
