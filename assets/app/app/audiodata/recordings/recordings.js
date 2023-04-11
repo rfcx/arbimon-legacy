@@ -142,8 +142,10 @@ angular.module('a2.audiodata.recordings', [
             backdrop: false
         });
 
-        modalInstance.result.then(function() {
-            notify.log('Playlist created');
+        modalInstance.result.then(function(data) {
+            if (data.message === 'Playlist created') {
+                notify.log(data.message);
+            }
         });
     };
 
@@ -295,7 +297,8 @@ angular.module('a2.audiodata.recordings', [
     };
 
 })
-.controller('SavePlaylistModalInstanceCtrl', function($scope, $modalInstance, a2Playlists, listParams) {
+.controller('SavePlaylistModalInstanceCtrl', function($scope, $modalInstance, a2Playlists, listParams, notify) {
+    var result
     $scope.savePlaylist = function(name) {
         $scope.isSavingPlaylist = true
         a2Playlists.create({
@@ -308,9 +311,19 @@ angular.module('a2.audiodata.recordings', [
                 $scope.errMess = data.error;
             }
             else {
-                $modalInstance.close();
+                result = data
+                $modalInstance.close({message: 'Playlist created'});
             }
         });
+        var timeout;
+        clearTimeout(timeout);
+        timeout = setTimeout(() => {
+            $scope.isSavingPlaylist = false
+            $modalInstance.close({message: 'Playlist creating'});
+            if (!$scope.errMess && !result) {
+                notify.log('Your playlist is being created. <br> Check it in the project playlists');
+            }
+        }, 60000)
     };
     $scope.changePlaylistName = function() {
         $scope.errMess = null;
