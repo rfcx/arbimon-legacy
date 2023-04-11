@@ -309,10 +309,10 @@ var Playlists = {
                     } else {
                         const sqlParts = await model.recordings.findProjectRecordings(data.params)
                         const testCreatingTime = moment().format('YYYY-MM-DD HH:mm:ss')
-                        console.log(testCreatingTime, sqlParts)
+                        console.log('Playlist: start insert', testCreatingTime)
                         await query(`INSERT INTO playlist_recordings(recording_id, playlist_id) SELECT /*+ MAX_EXECUTION_TIME(360000) */ DISTINCT r.recording_id, ${playlistId} ${sqlParts[1]} ${sqlParts[2]}`)
                         const testInsertingTime = moment().format('YYYY-MM-DD HH:mm:ss')
-                        console.log('inserted', testInsertingTime, playlistId)
+                        console.log('Playlist: inserted', testInsertingTime, playlistId);
                     }
                 }
                 await this.refreshTotalRecs(playlistId, query)
