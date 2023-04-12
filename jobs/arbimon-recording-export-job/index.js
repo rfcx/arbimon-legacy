@@ -8,7 +8,7 @@ const projects = require('../../app/model/projects')
 const stream = require('stream');
 const csv_stringify = require('csv-stringify');
 const mandrill = require('mandrill-api/mandrill')
-const config = require('../../config');
+const config_hosts = require('../../config/hosts');
 
 async function main () {
   try {
@@ -302,7 +302,7 @@ async function transformStream (results, rowData, dateByCondition, message) {
             }
             delete row.meta;
             if (row.url) {
-                row.url = `${config('hosts').publicUrl}/api/project/${req.project.url}/recordings/download/${row.url}`;
+                row.url = `${config_hosts.publicUrl}/api/project/${req.project.url}/recordings/download/${row.url}`;
             }
             // Fill a specific label for each cell without validations data.
             fields.forEach(f => {
