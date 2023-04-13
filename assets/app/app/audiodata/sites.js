@@ -445,7 +445,7 @@ angular.module('a2.audiodata.sites', [
                                     id: i,
                                     src: src,
                                     active: i === 0,
-                                    label:  $scope.assets[i] &&  $scope.assets[i].meta &&  $scope.assets[i].meta.label ? $scope.capitalizeFirstLetter($scope.assets[i].meta.label) : 'Not labelled image'
+                                    label:  $scope.assets[i] &&  $scope.assets[i].meta &&  $scope.assets[i].meta.label ? $scope.capitalizeFirstLetter($scope.assets[i].meta.label) : 'No label image'
                                 })
                             }
                         };
