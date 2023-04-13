@@ -17,6 +17,8 @@ var config = require('../config');
 var s3;
 var queryHandler = dbpool.queryHandler;
 
+const status = { WAITING: 0, CREATED: 20, FAILED: 30 }
+
 // exports
 var Playlists = {
     /** Finds playlists, given a (non-empty) query.
@@ -39,6 +41,8 @@ var Playlists = {
         if(!options){
             options = {};
         }
+
+        constraints.push(`PL.status = ${ status.CREATED }`)
 
         if (query.id) {
             constraints.push('PL.playlist_id = ?');
@@ -283,52 +287,41 @@ var Playlists = {
      * @param {Function} callback - callback function (optional)
      * @return {Promise} resolving to created playlists' insert_id
      */
-    create: async function(data, callback) {
-        let db
-        return dbpool.getConnection()
-            .then(async (connection) => {
-                db = connection
-                await db.beginTransaction()
-                const query = util.promisify(db.query).bind(db);
-                const playlistId = (await query(`INSERT INTO playlists(project_id, name, playlist_type_id) VALUES (?, ?, ?)`, [data.project_id, data.name, 1])).insertId
-                if (data.recIdsIncluded || data.aedIdsIncluded) {
-                    if (data.aedIdsIncluded) {
-                        await this.addRecs(query, playlistId, data.params);
-                    }
-                    else {
-                        const aedData = await model.ClusteringJobs.findRois({ aed: data.params });
-                        const recIds = aedData.map(aed => { return aed.recording_id });
-                        await this.addRecs(query, playlistId, recIds);
-                    }
-                } else {
-                    data.params.project_id = data.project_id;
-                    data.params.sortBy = 'r.site_id, r.datetime'
-                    data.params.output = ['list', 'sql']
-                    if (data.params.recIds) {
-                        await this.addRecs(query, playlistId, data.params.recIds);
-                    } else {
-                        const sqlParts = await model.recordings.findProjectRecordings(data.params)
-                        const testCreatingTime = moment().format('YYYY-MM-DD HH:mm:ss')
-                        console.log('Playlist: start insert', testCreatingTime)
-                        await query(`INSERT INTO playlist_recordings(recording_id, playlist_id) SELECT /*+ MAX_EXECUTION_TIME(360000) */ DISTINCT r.recording_id, ${playlistId} ${sqlParts[1]} ${sqlParts[2]}`)
-                        const testInsertingTime = moment().format('YYYY-MM-DD HH:mm:ss')
-                        console.log('Playlist: inserted', testInsertingTime, playlistId);
-                    }
-                }
-                await this.refreshTotalRecs(playlistId, query)
-                console.log('refreshTotalRecs', playlistId)
-                await db.commit()
-                await db.release()
-                return playlistId
-            })
-            .catch(async (err) => {
-                if (db) {
-                    await db.rollback()
-                    await db.release()
-                }
-                throw err
-            })
-            .nodeify(callback)
+    create: async function(data) {
+        const playlistId = (await dbpool.query(`INSERT INTO playlists(project_id, name, playlist_type_id, status) VALUES (?, ?, ?, ?)`,
+            [data.project_id, data.name, 1, status.WAITING])
+        ).insertId
+        if (data.recIdsIncluded || data.aedIdsIncluded) {
+            if (data.aedIdsIncluded) {
+                await this.addRecs(playlistId, data.params);
+            }
+            else {
+                const aedData = await model.ClusteringJobs.findRois({ aed: data.params });
+                const recIds = aedData.map(aed => { return aed.recording_id });
+                await this.addRecs(playlistId, recIds);
+            }
+        } else {
+            data.params.project_id = data.project_id;
+            data.params.sortBy = 'r.site_id, r.datetime'
+            data.params.output = ['list', 'sql']
+            if (data.params.recIds) {
+                await this.addRecs(playlistId, data.params.recIds);
+            } else {
+                const sqlParts = await model.recordings.findProjectRecordings(data.params)
+                const testCreatingTime = moment().format('YYYY-MM-DD HH:mm:ss')
+                console.log('Playlist: start insert', testCreatingTime)
+                await dbpool.query(`INSERT INTO playlist_recordings(recording_id, playlist_id) SELECT /*+ MAX_EXECUTION_TIME(360000) */ DISTINCT r.recording_id, ${playlistId} ${sqlParts[1]} ${sqlParts[2]}`)
+                    .catch(async err => {
+                        console.err('Error inserting in a playlist', err)
+                        const q = 'UPDATE playlists SET status = ? WHERE playlist_id = ?'
+                        await dbpool.query(q, [status.FAILED , playlistId])
+                    })
+                const testInsertingTime = moment().format('YYYY-MM-DD HH:mm:ss')
+                console.log('Playlist: inserted', testInsertingTime, playlistId);
+            }
+        }
+        await this.refreshTotalRecs(playlistId)
+        return playlistId
     },
 
     /** Adds recordings to a given playlist.
@@ -337,7 +330,7 @@ var Playlists = {
      * @param {Array} recIds - array of recording ids to add to playlist.
      * @return {Promise} resolved after the recordings are added to the playlist.
      */
-    addRecs: async function(query, playlistId, recIds) {
+    addRecs: async function(playlistId, recIds) {
         const chunkSize = 10000
         let splittedRecs = []
         if (recIds.length < chunkSize) {
@@ -348,7 +341,7 @@ var Playlists = {
             }
         }
         for (let arr of splittedRecs) {
-            await query("INSERT INTO playlist_recordings(playlist_id, recording_id) VALUES" + arr.map(recId => `(${playlistId}, ${recId})`).join(", "))
+            await dbpool.query("INSERT INTO playlist_recordings(playlist_id, recording_id) VALUES" + arr.map(recId => `(${playlistId}, ${recId})`).join(", "))
         }
     },
 
@@ -386,12 +379,12 @@ var Playlists = {
             }
 
             return dbpool.query(
-                "INSERT INTO playlists(project_id, name, playlist_type_id, metadata) \n"+
-                "VALUES (?, ?, ?, ?)", [
+                "INSERT INTO playlists(project_id, name, playlist_type_id, metadata, status) \n"+
+                "VALUES (?, ?, ?, ?, ?)", [
                     data.project, data.name, operation.type, JSON.stringify({
                         term1:data.term1,
                         term2:data.term2,
-                    })
+                    }), status.WAITING
                 ]).get('insertId').then(async function(newPlaylistId){
                     const result = await operation.eval(data.term1, data.term2, newPlaylistId);
                     await Playlists.refreshTotalRecs(newPlaylistId)
@@ -486,22 +479,20 @@ var Playlists = {
         });
     },
 
-    getRecordingsCount: async function (playlist_id, connection) {
+    getRecordingsCount: async function (playlist_id) {
         const q = 'SELECT COUNT(recording_id) as count FROM playlist_recordings WHERE playlist_recordings.playlist_id = ? GROUP BY playlist_id'
-        const con = connection ? connection : dbpool.query
-        const pl = (await con(q, [playlist_id]))[0]
+        const pl = (await dbpool.query(q, [playlist_id]))[0]
         return pl ? pl.count : null
     },
 
-    refreshTotalRecs: async function(playlist_id, connection) {
-        const total = await this.getRecordingsCount(playlist_id, connection)
+    refreshTotalRecs: async function(playlist_id) {
+        const total = await this.getRecordingsCount(playlist_id)
         console.log('total inserted', total)
         if (total === null) {
             return
         }
-        const q = 'UPDATE playlists SET total_recordings = ? WHERE playlist_id = ?'
-        const con = connection ? connection : dbpool.query
-        return await con(q, [total, playlist_id])
+        const q = 'UPDATE playlists SET total_recordings = ?, status = ? WHERE playlist_id = ?'
+        return await dbpool.query(q, [total, status.CREATED , playlist_id])
     },
 };
 

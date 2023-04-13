@@ -1,5 +1,35 @@
 # Arbimon Release Notes
 
+## v3.0.78 - April 13, 2023
+
+Resolved issues 🐞
+
+- Remove db transaction from creating a playlist function
+
+## v3.0.77 - April 11, 2023
+
+Enhancements ✨
+
+- Add labels to the sites images
+
+Resolved issues 🐞
+
+- Fix the problem with filtering big projects data
+- Remove slack notifications for the succeed jobs
+- Hotfix jobs page loading for a project with big count of jobs
+- Improve playlist message for a long response
+
+## v3.0.76 - April 01, 2023
+
+Enhancements ✨
+
+- Show a song type for the cnn species filter
+- Clustering/AED UI improvements
+
+Resolved issues 🐞
+
+- Show an error for zero-byte files
+
 ## v3.0.75 - March 10, 2023
 
 Resolved issues:
