@@ -122,13 +122,13 @@ var Recordings = {
                     if(m){
                         var site_id = m[1] | 0;
                         return Q.nfcall(queryHandler,
-                            "SELECT S.name\n" +
+                            "SELECT S.site_id\n" +
                             "FROM sites S\n" +
                             "WHERE S.site_id = " + site_id
                         ).then(function(query_results){
                             var data = query_results.shift();
                             if(data && data.length){
-                                parsedUrl.site = data[0].name;
+                                parsedUrl.site = data[0].site_id;
                             } else {
                                 parsedUrl.site = {no_match:true};
                             }
@@ -322,23 +322,19 @@ var Recordings = {
                         "R.sample_encoding";
         }
 
-        var group_by, query;
-        var constraints, data=[];
-        var steps=[];
-
+        let group_by, constraints, data=[];
+        let steps=[];
         return this.parseUrlQuery(recording_url).then(function(urlquery){
             if(urlquery.special){
                 limit_clause = " LIMIT 1";
-                order_clause = " ORDER BY S.name ASC, R.datetime " + (urlquery.special == 'first' ? 'ASC' : 'DESC');
+                order_clause = " ORDER BY S.site_id ASC, R.datetime " + (urlquery.special == 'first' ? 'ASC' : 'DESC');
             }
 
             constraints = sqlutil.compile_query_constraints(urlquery, fields);
             if (urlquery && urlquery.site) {
                 constraints.shift()
                 data.push(urlquery.site['='])
-                constraints.push('S.name = ? AND S.project_id = ?');
-                constraints.push('S.deleted_at is null');
-                data.push(project_id);
+                constraints.push('S.site_id = ?');
             }
             group_by = sqlutil.compute_groupby_constraints(urlquery, fields, options.group_by, {
                 count_only : options.count_only
@@ -560,7 +556,7 @@ var Recordings = {
 
         switch (type) {
             case 'spectro':
-                asset = 'rfull_g1_fspec_mtrue_d1023.255_wdolph_z120.png'
+                asset = 'rfull_g1_fspec_mtrue_d10286.255_wdolph_z120.png'
                 break;
             case 'audio':
                 asset = `r${isFrequency ? fmin + '.' + fmax : 'full'}_g${isGain ? options.gain : 1}_fmp3.mp3`
@@ -1250,27 +1246,14 @@ var Recordings = {
                     return parameters
                 })
         }).then(function (parameters) {
-            var siteData = parameters.siteData
-            var outputs = parameters.output instanceof Array ? parameters.output : [parameters.output];
-            var sqlOnly = outputs.length === 2 && outputs[0] === 'list' && outputs[1] === 'sql'
+            const siteData = parameters.siteData
+            const outputs = parameters.output instanceof Array ? parameters.output : [parameters.output];
+            const sqlOnly = outputs.length === 2 && outputs[0] === 'list' && outputs[1] === 'sql'
 
-            var projection=[];
-            var steps=[];
+            let steps=[];
 
-            var select_clause = {
-                list: "SELECT r.recording_id AS id, \n"+
-                      "       SUBSTRING_INDEX(r.uri,'/',-1) as file, \n"+
-                      "       r.uri, \n"+
-                      "       r.datetime, \n"+
-                      "       r.datetime_utc, \n"+
-                      "       r.upload_time, \n"+
-                      "       r.duration, \n"+
-                      "       r.mic, \n"+
-                      "       r.recorder, \n"+
-                      "       r.version, \n"+
-                      "       r.sample_rate, \n"+
-                      "       r.meta, \n"+
-                      "       r.site_id \n",
+            const select_clause = {
+                list: "SELECT r.recording_id AS id \n",
 
                 date_range: "SELECT MIN(r.datetime) AS min_date, \n"+
                             "       MAX(r.datetime) AS max_date \n",
@@ -1278,22 +1261,19 @@ var Recordings = {
                 count: "SELECT COUNT(r.recording_id) as count \n"
             };
 
-            var tables = [
+            const tables = [
                 "recordings AS r"
             ];
-            var constraints = [];
-            var data = [];
+            let constraints = [];
+            let data = [];
 
             const siteIds = Object.values(siteData).map(function(site){
                 return site.site_id;
             })
-            if (siteIds.length) {
-                if (!parameters.sites) {
-                    constraints.push("r.site_id IN (?)");
-                    data.push(siteIds);
-                }
-            } else {
-                constraints.push('1 = 2')
+
+            if (!parameters.sites && !parameters.validations) {
+                constraints.push("r.site_id IN (?)");
+                data.push(siteIds);
             }
 
             if(parameters.range) {
@@ -1301,11 +1281,11 @@ var Recordings = {
                 data.push(getUTC(parameters.range.from), getUTC(parameters.range.to));
             }
 
+            console.log(parameters.sites, parameters.sites_ids)
             if (parameters.sites) {
                 tables.push("JOIN sites AS s ON s.site_id = r.site_id");
-                constraints.push('s.name IN (?) AND s.project_id = ? AND s.deleted_at IS NULL');
-                data.push(parameters.sites);
-                data.push(parameters.project_id);
+                constraints.push('s.site_id IN (?)')
+                data.push(parameters.sites_ids);
             }
 
             if(parameters.years) {
@@ -1346,10 +1326,10 @@ var Recordings = {
                         constraints.push('CASE WHEN rv.present = 0 AND rv.present_review = 0 AND rv.present_aed = 0 THEN 1 ELSE 0 END');
                     }
                 }
-                constraints.push('rv.project_id = ?');
                 // Do not get deleted validations values in the filters result.
                 constraints.push('(rv.present IS NOT NULL OR rv.present_review > 0 OR rv.present_aed > 0)');
-                data.push(parameters.project_id);
+                constraints.push('rv.project_id = ?');
+                data.push(params.project_id)
             }
 
             if(parameters.soundscape_composition) {
@@ -1424,7 +1404,7 @@ var Recordings = {
                         where_clause
                     ];
                     if(output === 'list') {
-                        var sortBy = parameters.sortBy || 'datetime';
+                        var sortBy = parameters.sortBy || 'r.datetime';
                         var sortRev = parameters.sortRev ? 'DESC' : '';
                         query.push('ORDER BY ' + sortBy + ' ' + sortRev);
                         if(limit_clause){
@@ -1436,6 +1416,32 @@ var Recordings = {
                         typeCast: sqlutil.parseUtcDatetime,
                     });
                 }));
+            }).then(async function (results) {
+                // Get recording data for the output='list'
+                const listIndex = outputs.findIndex(item => item === 'list')
+                if (outputs.includes('list') && results[listIndex][0].length && !outputs.includes('sql')) {
+                    const sql = `SELECT r.recording_id AS id,
+                        SUBSTRING_INDEX(r.uri,'/',-1) as file,
+                        r.uri,
+                        r.datetime,
+                        r.datetime_utc,
+                        r.upload_time,
+                        r.duration,
+                        r.mic,
+                        r.recorder,
+                        r.version,
+                        r.sample_rate,
+                        r.meta,
+                        r.site_id
+                        FROM recordings r WHERE r.recording_id IN (${results[listIndex][0].map(item => item.id)})
+                    `
+                    let queryResult = await dbpool.query({
+                        sql,
+                        typeCast: sqlutil.parseUtcDatetime
+                    })
+                    results[listIndex][0] = [...new Set(queryResult)];
+                }
+                return results
             }).then(function (results) {
                 if (sqlOnly) {
                     return results
@@ -1483,6 +1489,7 @@ var Recordings = {
                 to: joi.date()
             }).and('from', 'to'),
             sites:  arrayOrSingle(joi.string()),
+            sites_ids:  arrayOrSingle(joi.number()),
             imported: joi.boolean(),
             years:  arrayOrSingle(joi.number()),
             months: arrayOrSingle(joi.number()),
@@ -1518,7 +1525,7 @@ var Recordings = {
         }
     },
 
-    buildSearchQuery: function(searchParameters){
+    buildSearchQuery: function(searchParameters, filterImportedSites){
         var builder = new SQLBuilder();
         return Q.ninvoke(joi, 'validate', searchParameters, Recordings.SCHEMAS.searchFilters).then(function(parameters){
             var outputs = parameters.output instanceof Array ? parameters.output : [parameters.output];
@@ -1527,12 +1534,20 @@ var Recordings = {
 
             builder.addTable("recordings", "r");
             builder.addTable("JOIN sites", "s", "s.site_id = r.site_id");
-            builder.addTable("LEFT JOIN project_imported_sites", "pis", "s.site_id = pis.site_id AND pis.project_id = ?", parameters.project_id);
 
-            builder.addConstraint("(s.project_id = ? OR pis.project_id = ?)",[
-                parameters.project_id,
-                parameters.project_id
-            ]);
+            if (filterImportedSites) {
+                builder.addTable("LEFT JOIN project_imported_sites", "pis", "s.site_id = pis.site_id AND pis.project_id = ?", parameters.project_id);
+                builder.addConstraint("(s.project_id = ? OR pis.project_id = ?)",[
+                    parameters.project_id,
+                    parameters.project_id
+                ]);
+            }
+
+            else {
+                builder.addConstraint("s.project_id = ?",[ parameters.project_id ])
+            }
+
+            builder.addConstraint("s.deleted_at is null")
 
             if(parameters.range) {
                 builder.addConstraint('r.datetime BETWEEN ? AND ?',[
@@ -1697,7 +1712,11 @@ var Recordings = {
                                         cls.species,
                                         cls.project,
                                     ]);
-                                    summaryBuilders[c].addProjection(`(CASE WHEN ${clsid}.present_review > 0 OR ${clsid}.present_aed > 0 THEN ${clsid}.present + ${clsid}.present_review + ${clsid}.present_aed ELSE ${clsid}.present END)` + " AS " + dbpool.escapeId("val<" + cls.species_name + "/" + cls.songtype_name + ">"));
+                                    summaryBuilders[c].addProjection(`(CASE WHEN (${clsid}.present_review > 0 OR ${clsid}.present_aed > 0) 
+                                        AND ${clsid}.present is null
+                                        THEN ${clsid}.present_review + ${clsid}.present_aed
+                                        ELSE ${clsid}.present + ${clsid}.present_review + ${clsid}.present_aed END)` + " AS " + dbpool.escapeId("val<" + cls.species_name + "/" + cls.songtype_name + ">")
+                                    );
                                 })
                             }
                         }
@@ -1705,7 +1724,7 @@ var Recordings = {
                     promises.push(classPromise)
                 }
                 if (!summaryBuilders.length) {
-                    let builder = await this.buildSearchQuery(filters)
+                    let builder = await this.buildSearchQuery(filters, false)
                     summaryBuilders.push(builder);
                 }
                 for (let c in summaryBuilders) {
@@ -1765,7 +1784,7 @@ var Recordings = {
                             let index = 0;
                             for (let c in classesArray) {
                                 // Create a new builder for each parts of validations arrays.
-                                let builder = await this.buildSearchQuery(filters)
+                                let builder = await this.buildSearchQuery(filters, false)
                                 summaryBuilders.push(builder);
                                 classesArray[c].forEach(function(cls, idx){
                                     index++;
@@ -1779,7 +1798,11 @@ var Recordings = {
                                         cls.species,
                                         cls.project,
                                     ]);
-                                    summaryBuilders[c].addProjection(`(CASE WHEN ${clsid}.present_review > 0 OR ${clsid}.present_aed > 0 THEN ${clsid}.present + ${clsid}.present_review + ${clsid}.present_aed ELSE ${clsid}.present END)` + " AS " + dbpool.escapeId("val<" + cls.species_name + "/" + cls.songtype_name + ">"));
+                                    summaryBuilders[c].addProjection(`(CASE WHEN (${clsid}.present_review > 0 OR ${clsid}.present_aed > 0) 
+                                        AND ${clsid}.present is null
+                                        THEN ${clsid}.present_review + ${clsid}.present_aed
+                                        ELSE ${clsid}.present + ${clsid}.present_review + ${clsid}.present_aed END)` + " AS " + dbpool.escapeId("val<" + cls.species_name + "/" + cls.songtype_name + ">")
+                                    );
                                 })
                             }
                         }
@@ -1787,7 +1810,7 @@ var Recordings = {
                     promises.push(classPromise)
                 }
                 if (!summaryBuilders.length) {
-                    let builder = await this.buildSearchQuery(filters)
+                    let builder = await this.buildSearchQuery(filters, false)
                     summaryBuilders.push(builder);
                 }
                 for (let c in summaryBuilders) {
@@ -1854,14 +1877,24 @@ var Recordings = {
             }).then(async function() {
                 let results = [];
                 for (let builder in summaryBuilders) {
-                    console.log(summaryBuilders[builder].getSQL())
-                    let queryResult = await dbpool.streamQuery({
-                        sql: summaryBuilders[builder].getSQL(),
-                        typeCast: sqlutil.parseUtcDatetime,
-                    })
-                    results = [...new Set(queryResult)];
+                    let index = 0
+                    const baseSql = summaryBuilders[builder].getSQL().replace(';', '')
+                    async function getData () {
+                        let limit = 8000
+                        let offset = limit * index
+                        const sql = `${baseSql} LIMIT ${limit} OFFSET ${offset};`
+                        console.log('summaryBuilders offset', offset)
+                        const queryResult = await dbpool.query({ sql, typecast: sqlutil.parseUtcDatetime })
+                        console.log('result length', queryResult.length)
+                        if (queryResult.length) {
+                            index++
+                            results = results.concat([...new Set(queryResult)]);
+                            await getData()
+                        }
+                    }
+                    await getData()
                 }
-                return Q.all(results);
+                return results
             })
     },
 
@@ -1899,7 +1932,7 @@ var Recordings = {
     /* fetch count of project recordings.
     */
     countProjectRecordings: function(filters){
-        return this.buildSearchQuery(filters).then(function(builder){
+        return this.buildSearchQuery(filters, true).then(function(builder){
             builder.addProjection.apply(builder, [
                 's.site_id', 's.name as site', 'pis.site_id IS NOT NULL as imported',
                 'COUNT(recording_id) as count'
@@ -1913,7 +1946,7 @@ var Recordings = {
     /* fetch count of project recordings.
     */
     deleteMatching: function(filters, project_id){
-        return this.buildSearchQuery(filters).then(function(builder){
+        return this.buildSearchQuery(filters, true).then(function(builder){
             builder.addProjection.apply(builder, [
                 'r.recording_id as id'
             ]);

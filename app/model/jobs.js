@@ -343,35 +343,11 @@ var Jobs = {
         return dbpool.query(sql, [])
             .then(async (jobs) => {
                 if (!project || !project.last3Months) return jobs
-                for (let job of jobs) {
-                    switch (job.job_type_id) {
-                        case 1:
-                            const modelData = await models.models.getModelId(job.job_id)
-                            job.url = `model/${ modelData && modelData.model_id ? modelData.model_id : '' }`
-                            break;
-                        case 2:
-                            job.url = `random-forest-models/classification`
-                            break;
-                        case 4:
-                            job.url = 'soundscapes'
-                            break;
-                        case 6:
-                            const pmData = await models.patternMatchings.getPmId(job.job_id)
-                            job.url = `patternmatching/${ pmData && pmData.pattern_matching_id ? pmData.pattern_matching_id : '' }`
-                            break;
-                        case 7:
-                            const cnnData = await models.CNN.getCnnId(job.job_id)
-                            job.url = `cnn/${ cnnData && cnnData.cnn_id ? cnnData.cnn_id : '' }`
-                            break;
-                        case 8:
-                            job.url = 'audio-event-detections-clustering'
-                            break;
-                        case 9:
-                            job.url = `clustering-jobs/${ job.job_id }`
-                            break;
-                    }
+                let proms = []
+                for (const chunk of [...Jobs.getChunks(jobs, 50)]) {
+                    chunk.forEach(job => proms.push(Jobs.getJobUrl(job)))
                 }
-                return jobs
+                return Promise.all(proms)
             })
             .then((jobs) => {
                 jobs.sort((a, b) => b.last_update - a.last_update)
@@ -383,6 +359,50 @@ var Jobs = {
                     })
                 return jobs
             }).nodeify(callback)
+    },
+
+    getChunks: function(arr, perChunk) {
+        const result = arr.reduce((resultArray, item, index) => {
+            const chunkIndex = Math.floor(index / perChunk)
+            if (!resultArray[chunkIndex]) {
+              resultArray[chunkIndex] = [] // start a new chunk
+            }
+            resultArray[chunkIndex].push(item)
+            return resultArray
+          }, [])
+        return result
+    },
+
+    getJobUrl: async function(job) {
+        return new Promise(async function (resolve, reject) {
+            switch (job.job_type_id) {
+                case 1:
+                    const modelData = await models.models.getModelId(job.job_id)
+                    job.url = `model/${ modelData && modelData.model_id ? modelData.model_id : '' }`
+                    break;
+                case 2:
+                    job.url = `random-forest-models/classification`
+                    break;
+                case 4:
+                    job.url = 'soundscapes'
+                    break;
+                case 6:
+                    const pmData = await models.patternMatchings.getPmId(job.job_id)
+                    job.url = `patternmatching/${pmData.deleted ? '' : (pmData && pmData.pattern_matching_id ? pmData.pattern_matching_id : '')}`
+                    break;
+                case 7:
+                    const cnnData = await models.CNN.getCnnId(job.job_id)
+                    job.url = `cnn/${ cnnData && cnnData.cnn_id ? cnnData.cnn_id : '' }`
+                    break;
+                case 8:
+                    job.url = 'audio-event-detections-clustering'
+                    break;
+                case 9:
+                    job.url = `clustering-jobs/${ job.job_id }`
+                    break;
+            }
+            return resolve(job)
+        })
     },
 
 

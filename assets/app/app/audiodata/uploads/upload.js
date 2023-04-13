@@ -54,6 +54,12 @@ angular.module('a2.audiodata.uploads.upload', [
 
             var item = $scope.uploader.queue[index];
 
+            if (!item.file.size) {
+                item.isError = true
+                item.errorMsg = "Error of the file size"
+                return
+            }
+
             var next = function() {
                 index++;
                 _verifyAndUpload();
@@ -198,7 +204,7 @@ angular.module('a2.audiodata.uploads.upload', [
     }
 
     $scope.isLimitExceeded = function() {
-        return $scope.uploader.queue.length > 100
+        return $scope.uploader.queue.length > 1000
     }
 
     const randomString = Math.round(Math.random() * 100000000)

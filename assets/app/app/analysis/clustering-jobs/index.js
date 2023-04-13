@@ -83,7 +83,7 @@ angular.module('a2.analysis.clustering-jobs', [
             if (data.create) {
                 JobsData.updateJobs();
                 $scope.showRefreshBtn = true;
-                notify.log("Your new clustering job is waiting to start processing.<br> Check its status on <b>Active Jobs</b>.");
+                notify.log("Your new clustering job is waiting to start processing.<br> Check its status on <b>Jobs</b>.");
             } else if (data.error) {
                 notify.error("Error: "+data.error);
             } else if (data.url) {
@@ -363,6 +363,7 @@ angular.module('a2.analysis.clustering-jobs', [
             height: el ? el.offsetWidth - el.offsetWidth/3 : 800,
             width: el ? el.offsetWidth : 1390,
             showlegend: true,
+            dragmode: 'lasso',
             legend: {
                 title: { text: 'Clusters names', side: 'top', font: { size: 12 } },
                 x: 1,
@@ -376,10 +377,13 @@ angular.module('a2.analysis.clustering-jobs', [
             paper_bgcolor: '#232436',
             plot_bgcolor: '#232436',
             xaxis: {
-                color: 'white'
+                color: 'white',
+                title: 'Component 2',
+                side: 'top'
             },
             yaxis: {
-                color: 'white'
+                color: 'white',
+                title: 'Component 1',
             }
         }
 
@@ -427,7 +431,35 @@ angular.module('a2.analysis.clustering-jobs', [
             }
             // To draw points
             Plotly.newPlot(el, data, $scope.layout, config);
-            // Click on a point.
+            dragLayer = document.getElementsByClassName('nsewdrag')[0]
+            $scope.xAxisRangeStart = $scope.layout.xaxis.range[0]
+            // Hover on plotly
+            el.on('plotly_hover', function(data){
+                if ($scope.layout.dragmode === 'lasso') {
+                    dragLayer.classList.add('lasso-cursor');
+                }
+            })
+            // Zoom on plotly
+            el.on('plotly_unhover', function(data){
+                dragLayer.classList.remove('lasso-cursor');
+            });
+            el.on('plotly_relayouting', function(data){
+                if (data['xaxis.range[0]'] > $scope.xAxisRangeStart) {
+                    dragLayer.classList.remove('zoom-out-cursor');
+                    dragLayer.classList.add('zoom-in-cursor');
+                    $scope.xAxisRangeStart = data['xaxis.range[0]']
+                }
+                if (data['xaxis.range[0]'] < $scope.xAxisRangeStart) {
+                    dragLayer.classList.remove('zoom-in-cursor');
+                    dragLayer.classList.add('zoom-out-cursor');
+                    $scope.xAxisRangeStart = data['xaxis.range[0]']
+                }
+            });
+            el.on('plotly_relayout', function(data){
+                dragLayer.classList.remove('zoom-out-cursor');
+                dragLayer.classList.remove('zoom-in-cursor');
+            });
+            // Click on a point
             el.on('plotly_click', function(data) {
                 console.log('plotly_click', data);
                 $("#plotly .select-outline").remove();
@@ -570,7 +602,9 @@ angular.module('a2.analysis.clustering-jobs', [
         }
         a2Playlists.create(opts,
         function(data) {
-            $window.location.href = '/project/'+Project.getUrl()+'/visualizer/playlist/' + data.playlist_id + '?clusters';
+            if (data && data.playlist_id) {
+                $window.location.href = '/project/'+Project.getUrl()+'/visualizer/playlist/' + data.playlist_id + '?clusters';
+            }
         }
     )};
 

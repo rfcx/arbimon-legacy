@@ -146,7 +146,7 @@ tags.resourceDefs.recording = {
      *  @returns {Promise} Promise resolving to fetched tags.
      */
     getForType: async function(options){
-        var tables = ['tags T', 'JOIN recording_tags RT ON RT.tag_id = T.tag_id'];
+        var tables = ['tags T', 'JOIN recording_tags RT ON RT.tag_id = T.tag_id', 'JOIN recordings r ON r.recording_id = RT.recording_id'];
         var constraints = [];
 
         if(options && options.project){

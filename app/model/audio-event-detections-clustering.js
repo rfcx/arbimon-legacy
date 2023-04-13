@@ -29,7 +29,9 @@ let AudioEventDetectionsClustering = {
 
         if (!options.playlist && options.dataExtended) {
             select.push("P.playlist_id, P.`name` as `playlist_name`");
+            select.push("PR.first_playlist_recording, PR.playlist_id as playlist_test");
             tables.push("JOIN playlists P ON JP.playlist_id = P.playlist_id");
+            tables.push("LEFT JOIN (SELECT playlist_id, MIN(recording_id) as first_playlist_recording FROM playlist_recordings GROUP BY playlist_id) PR ON P.playlist_id = PR.playlist_id");
         }
 
         if (options.user) {

@@ -37,9 +37,9 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
 
     $scope.loadAudioEventDetections();
 
-    $scope.onSelectedJob = function(playlist_id, job_id) {
+    $scope.onSelectedJob = function(playlist_id, job_id, first_playlist_recording) {
         $localStorage.setItem('analysis.audioEventJob',  job_id);
-        $window.location.href = '/project/'+Project.getUrl()+'/visualizer/playlist/'+playlist_id;
+        $window.location.href = '/project/' + Project.getUrl() + '/visualizer/playlist/' + playlist_id + '/' + first_playlist_recording;
     }
 
     $scope.createNewClusteringModel = function () {
@@ -58,7 +58,7 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
             if (data.create) {
                 JobsData.updateJobs();
                 $scope.showRefreshBtn = true
-                notify.log("Your new Audio Event Detection Clustering model is waiting to start processing.<br> Check its status on <b>Active Jobs</b>.");
+                notify.log("Your new Audio Event Detection Clustering model is waiting to start processing.<br> Check its status on <b>Jobs</b>.");
             } else if (data.error) {
                 notify.error("Error: "+data.error);
             } else if (data.url) {

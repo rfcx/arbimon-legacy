@@ -1,12 +1,12 @@
-angular.module('a2.analysis.jobs', [
+angular.module('a2.jobs', [
     'a2.services',
     'a2.permissions',
 ])
 .config(function($stateProvider) {
-    $stateProvider.state('analysis.jobs', {
+    $stateProvider.state('jobs', {
         url: '/jobs',
         controller: 'StatusBarNavController',
-        templateUrl: '/app/analysis/jobs/index.html'
+        templateUrl: '/app/jobs/index.html'
     });
 })
 .controller('StatusBarNavController', function($scope, $http, $modal, $window, Project, JobsData, notify, a2UserPermit) {
@@ -21,7 +21,6 @@ angular.module('a2.analysis.jobs', [
     $scope.showErrors = false;
     $scope.infoInfo = "Loading...";
     $scope.showInfo = true;
-    $scope.jobs = [];
     $scope.loading = {jobs: false}
     $scope.loading.jobs = true
     $scope.updateFlags = function() {
@@ -32,34 +31,6 @@ angular.module('a2.analysis.jobs', [
         $scope.infoInfo = "";
         $scope.showInfo = false;
     };
-
-    // $scope.cancel = function(job) {
-    //     var jobId = job.job_id;
-    //     $scope.infoInfo = "Loading...";
-    //     $scope.showInfo = true;
-    //     if (job.percentage < 100) {
-    //         confirm('Cancel','cancel',cancelJob,jobId);
-    //     }
-    //     else {
-    //         cancelJob(jobId);
-    //     }
-    // };
-
-    // var cancelJob = function(jobId) {
-    //     $http.get('/api/project/' + Project.getUrl() + '/jobs/cancel/' + jobId)
-    //         .success(function(data) {
-    //             if (data.err) {
-    //                 notify.serverError();
-    //             }
-    //             else {
-    //                 JobsData.updateJobs();
-    //                 notify.log("Job canceled successfully");
-    //             }
-    //         })
-    //         .error(function() {
-    //             notify.serverError();
-    //         });
-    // };
 
     var hideJob = function(jobId, action) {
         $http.get('/api/project/' + Project.getUrl() + '/jobs/hide/' + jobId)
@@ -114,6 +85,18 @@ angular.module('a2.analysis.jobs', [
     $scope.$on('$destroy', function() {
         JobsData.cancelTimer();
     });
+
+    $scope.showActiveJobs = function () {
+        return !$scope.loading.jobs && $scope.jobs !== undefined && $scope.jobs.length
+    }
+
+    $scope.showEmptyList = function () {
+        return !$scope.loading.jobs && $scope.jobs !== undefined && !$scope.jobs.length
+    }
+
+    $scope.showLoader = function () {
+        return $scope.jobs === undefined
+    }
 
     var confirm = function(titlen, action, cb, vl, message) {
             var modalInstance = $modal.open({
@@ -172,11 +155,14 @@ angular.module('a2.analysis.jobs', [
     }
 })
 .service('JobsData', function($http, $interval, Project, $q) {
-    var jobs = [];
+    var jobs;
     var url = Project.getUrl();
     var intervalPromise;
+    var isProcessing = false;
 
     updateJobs = function() {
+        if (isProcessing) return
+        isProcessing = true;
         $http.get('/api/project/' + url + '/jobs/progress', { params: { last3Months: true } })
             .success(function(data) {
                 data.forEach(item => {
@@ -188,6 +174,7 @@ angular.module('a2.analysis.jobs', [
                     }
                 })
                 jobs = data;
+                isProcessing = false
             });
     };
     updateJobs();
@@ -227,7 +214,7 @@ angular.module('a2.analysis.jobs', [
                     else {
                         updateJobs();
                     }
-                }, 5000);
+                }, 10000);
             }
 
         },

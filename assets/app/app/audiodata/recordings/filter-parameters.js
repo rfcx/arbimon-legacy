@@ -96,6 +96,7 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
         classes : [],
         presence : ['present', 'absent'],
         sites : [],
+        sites_ids : [],
         playlists : [],
         years : [],
         months : [],
@@ -115,6 +116,7 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
             return range;
         }},
         {name:"sites"                 , map: _1_get_value_mapper},
+        {name:"sites_ids"             , map: _1_get_id_mapper},
         {name:"hours"                 , map: _1_get_value_mapper},
         {name:"months"                , map: _1_get_value_mapper},
         {name:"years"                 , map: _1_get_value_mapper},
@@ -138,6 +140,10 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
             var value = (param && filterDef.map) ? filterDef.map(param) : param;
             if(value instanceof Array ? value.length : value){
                 filters[filterDef.name] = value;
+            }
+            if (value && filterDef.name === 'sites') {
+                const vals = filterDefs[2].map(param)
+                filters['sites_ids'] = vals;
             }
         });
 
@@ -168,8 +174,7 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
 
                 var getFilterOptions = function(filters, obj, level) {
                     var count = 0;
-                    var currentLevel = levelIds[level];
-
+                    const currentLevel = levelIds[level];
                     for(var child in obj) {
                         if(
                             Object.keys(filters).length &&
@@ -180,9 +185,12 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
                         }
 
                         var item = findObjectWith(lists[currentLevel], 'value', child);
-
                         if(!item) {
+                            const siteObj = currentLevel == 'sites' ? sites.find(site => site.name === child) : {}
                             item = { value: child, count: 0 };
+                            if (currentLevel == 'sites') {
+                                item.id = siteObj.id
+                            }
                             lists[currentLevel].push(item);
                         }
 
@@ -245,7 +253,7 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
 
     this.setRecStatsStatic = function (sites, bounds, options) {
         options.sites = sites.map(function (site) {
-            return { value: site.name, count: null }
+            return { value: site.name, count: null, id: site.id }
         })
         var years = []
         var maxYear = (bounds.max ? new Date(bounds.max) : new Date()).getFullYear()

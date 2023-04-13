@@ -137,7 +137,7 @@ angular.module('a2.analysis.patternmatching', [
             if (data.ok) {
                 JobsData.updateJobs();
                 $scope.loading.showRefreshBtn = true;
-                notify.log("Your new pattern matching is waiting to start processing.<br> Check its status on <b>Active Jobs</b>.");
+                notify.log("Your new pattern matching is waiting to start processing.<br> Check its status on <b>Jobs</b>.");
             } else if (data.error) {
                 notify.error("Error: "+data.error);
             } else if (data.url) {

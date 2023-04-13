@@ -1,5 +1,5 @@
 <div class="layer">
-    <h5 class="collapse-title" ng-click="layer.is_open = !layer.is_open  | trackEvent:'Visualizer-Audio-Events':'toggle layer'">
+    <h5 class="collapse-title" ng-init="layer.is_open = layer.audio_events.isHighlightTitle()" ng-click="layer.is_open = !layer.is_open  | trackEvent:'Visualizer-Audio-Events':'toggle layer'">
         <i class="fa" ng-class="layer.is_open ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
         Audio Events
     </h5>
@@ -10,20 +10,26 @@
                 <div ng-if="!layer.audio_events.audioEvents" class="row ng-cloak text-center py-2">
                     <i class="fa fa-spinner fa-spin" style="font-size: 16px;"></i>
                 </div>
-                <ul ng-if="layer.audio_events.audioEvents && layer.audio_events.audioEvents.length" class="ulnodeco px-2">
-                    <li ng-repeat="job in layer.audio_events.audioEventJobs" class="my-3">
-                        <div class="row-flex flex-direction-row no-text-wrap" style="position: relative">
-                            <span class="hidelongtext" style="width: 90%;" title="{{ row.name }}">
-                                {{ job.name }}
-                            </span>
-                            <button class="layer-btn" ng-click="job.visible = !job.visible; layer.audio_events.toggleAudioEvents(true, job.job_id, job.visible)" style="border: 0; background: transparent; position: absolute; top: -1; right: -12px;"
+                <div class="row-flex flex-direction-row">
+                    <ul ng-if="layer.audio_events.audioEvents && layer.audio_events.audioEvents.length" class="ulnodeco px-2" style="width: 90%">
+                        <li ng-repeat="job in layer.audio_events.audioEventJobs" class="my-3">
+                            <div class="row-flex flex-direction-row no-text-wrap" style="position: relative">
+                                <span class="hidelongtext" style="width: 90%;" title="{{ row.name }}">
+                                    {{ job.name }}
+                                </span>
+                            </div>
+                            <div class="mt-1 item-description" style="width: 90%;">{{ job.parameters | asCSV }}</div>
+                        </li>
+                    </ul>
+                    <ul ng-if="layer.audio_events.audioEvents && layer.audio_events.audioEvents.length" class="row-flex flex-space-evenly flex-direction-column ulnodeco px-2" style="width: 10%" ng-class="{'exclamation-border': layer.audio_events.isHighlightTitle()}">
+                        <li ng-repeat="job in layer.audio_events.audioEventJobs">
+                            <button class="layer-btn" ng-click="job.visible = !job.visible; layer.audio_events.toggleAudioEvents(true, job.job_id, job.visible)" style="border: 0; background: transparent;"
                                 ng-class="{'layer-btn_active': job.visible && job.count}">
                                 <i class="fa" ng-class="{'fa-eye': job.visible, 'fa-eye-slash': !job.visible}"></i>
                             </button>
-                        </div>
-                        <div class="mt-1 item-description" style="width: 90%;">{{ job.parameters | asCSV }}</div>
-                    </li>
-                </ul>
+                        </li>
+                    </ul>
+                </div>
                 <div ng-if="layer.audio_events.audioEvents && !layer.audio_events.audioEvents.length">
                     There are no audio events in this recording.
                 </div>
@@ -38,7 +44,7 @@
                         <span class="hidelongtext" style="width: 90%;" title="{{ row.playlist_name }}">
                             {{ row.playlist_name }}
                         </span>
-                        <button class="layer-btn" ng-click="row.visible = !row.visible; layer.audio_events.toggleAudioEvents(false, row.playlist_id, row.visible)" style="border: 0; background: transparent; position: absolute; top: -1; right: -12px;"
+                        <button class="layer-btn" ng-click="row.visible = !row.visible; layer.audio_events.toggleAudioEvents(false, row.playlist_id, row.visible)" style="border: 0; background: transparent; position: absolute; top: -1; right: 0px;"
                             ng-class="{'layer-btn_active': row.visible}">
                             <i class="fa" ng-class="{'fa-eye': row.visible, 'fa-eye-slash': !row.visible}"></i>
                         </button>

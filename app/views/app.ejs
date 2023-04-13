@@ -94,6 +94,14 @@
                             </li>
                         </ul>
                         <ul class="nav navbar-nav hide-tooltip-lg" ng-if="!citizenScientistUser">
+                            <li ui-sref-active="active">
+                                <a ui-sref="jobs" tooltip="Active Jobs" tooltip-placement="bottom">
+                                    <i class="visible-sm-inline visible-md-inline fa fa-cogs"></i>
+                                    <span class="visible-xs-inline visible-lg-inline">Jobs</span>
+                                </a>
+                            </li>
+                        </ul>
+                        <ul class="nav navbar-nav hide-tooltip-lg" ng-if="!citizenScientistUser">
                             <li ui-sref-active="open">
                                 <a ui-sref="settings" tooltip="Settings" tooltip-placement="bottom">
                                     <i class="visible-sm-inline visible-md-inline fa fa-wrench"></i>

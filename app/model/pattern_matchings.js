@@ -512,7 +512,7 @@ var PatternMatchings = {
     },
 
     getPmId: function (job_id) {
-        const sql = `SELECT pattern_matching_id FROM pattern_matchings WHERE job_id = ${job_id}`
+        const sql = `SELECT pattern_matching_id, deleted FROM pattern_matchings WHERE job_id = ${job_id}`
         return dbpool.query(sql).get(0);
     },
 
