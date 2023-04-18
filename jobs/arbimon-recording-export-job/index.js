@@ -8,6 +8,7 @@ const projects = require('../../app/model/projects')
 const stream = require('stream');
 const csv_stringify = require('csv-stringify');
 const mandrill = require('mandrill-api/mandrill')
+const { saveLatestData } = require('../services/storage')
 
 async function main () {
   try {
@@ -339,6 +340,11 @@ async function transformStream (results, rowData, dateByCondition, message) {
         datastream.on('end', async () => {
             csv_stringify(_buf, { header: true, columns: fields }, async (err, data) => {
                 const content = Buffer.from(data).toString('base64')
+                const contentSize = Buffer.byteLength(content)
+                if (contentSize && contentSize > 10240) {
+                    await saveLatestData('arbimon-exports', content, rowData.project_id, dateByCondition, 'export-recording')
+                    // TODO: get signed url
+                }
                 try {
                     await sendEmail('Export recording report [RFCx Arbimon]', 'export-recording.csv', rowData, content)
                     await updateExportRecordings(rowData, { processed_at: dateByCondition })
