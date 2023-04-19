@@ -893,7 +893,10 @@ angular.module('a2.analysis.clustering-jobs', [
                     sites[item.site_id].rois.push(item);
                 }
             })
-            $scope.rows = Object.values(sites);
+            const rows = Object.values(sites).map(site => {
+                return { id: site.id, site: site.site, rois: $scope.groupRoisBySpecies(site.rois) }
+            });
+            $scope.rows = rows
         } else if (data && $scope.selectedFilterData.value === 'per_cluster') {
             $scope.ids = {};
             if($scope.aedData.count > 1) {
@@ -902,13 +905,13 @@ angular.module('a2.analysis.clustering-jobs', [
                 grids.forEach((row, index) => {
                     $scope.ids[index] = {
                         cluster: row[0].cluster || row[0].name,
-                        rois: data.filter((a, i) => {return row[0].aed.includes(a.aed_id)})
+                        rois: $scope.groupRoisBySpecies(data, row[0].aed)
                     }
                 })
             } else {
                 $scope.ids[0] = {
                     cluster: $scope.gridData[0].cluster || $scope.gridData[0].name,
-                    rois: data
+                    rois: $scope.groupRoisBySpecies(data)
                 }
             }
             $scope.rows = Object.values($scope.ids);
@@ -923,6 +926,24 @@ angular.module('a2.analysis.clustering-jobs', [
                 rois: data
             });
         }
+    }
+
+    $scope.groupRoisBySpecies = function(data, aeds) {
+        const rois = aeds ? data.filter((a, i) => {return aeds.includes(a.aed_id)}) : data
+        var species = {};
+        rois.forEach((item) => {
+            const key = item.scientific_name ? item.scientific_name + '-' + item.songtype : 'Unvalidated ROIs'
+            if (!species[key]) {
+                species[key] = {
+                    key: key,
+                    rois: [item]
+                }
+            }
+            else {
+                species[key].rois.push(item);
+            }
+        })
+        return Object.values(species);
     }
 
     $scope.playRoiAudio = function(recId, aedId, $event) {
