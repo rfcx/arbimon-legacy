@@ -340,10 +340,11 @@ var Projects = {
         if (!db) {
             db = await dbpool.getConnection()
             await db.beginTransaction()
-            await db.commit();
         }
         try {
-            return await this.runProjectCreationQueue(db, project, owner_id, plan);
+            const result = await this.runProjectCreationQueue(db, project, owner_id, plan);
+            await db.commit()
+            return result
         } catch (e) {
             await db.rollback();
             await connection.release();
