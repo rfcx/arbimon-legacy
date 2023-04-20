@@ -340,6 +340,7 @@ var Projects = {
         if (!db) {
             db = await dbpool.getConnection()
             await db.beginTransaction()
+            await db.commit();
         }
         try {
             return await this.runProjectCreationQueue(db, project, owner_id, plan);
