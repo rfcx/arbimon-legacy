@@ -801,6 +801,56 @@ angular.module('a2.analysis.clustering-jobs', [
         id: []
     };
 
+    var isShiftKeyHolding = false
+
+    var getSelectedDetectionIds = function () {
+        var selectedDetectionIds = []
+        $scope.rows.forEach(row => {
+            row.species.forEach(cluster => {
+                cluster.rois.forEach(roi => {
+                    if (roi.selected === true) {
+                        selectedDetectionIds.push(roi.aed_id)
+                    }
+                })
+            })
+        })
+        return selectedDetectionIds
+    }
+
+    var getCombinedDetections = function () {
+        var combinedDetections = []
+        $scope.rows.forEach(row => {
+            row.species.forEach(cluster => {
+                combinedDetections = combinedDetections.concat(cluster.rois)
+            })
+        })
+        return combinedDetections
+    }
+
+
+    $scope.toggleDetection = (event) => {
+        isShiftKeyHolding = event.shiftKey
+        if (isShiftKeyHolding) {
+            const combinedDetections = getCombinedDetections()
+            const selectedDetectionIds = getSelectedDetectionIds()
+            const firstInx = combinedDetections.findIndex(d => d.aed_id === selectedDetectionIds[0])
+            const secondInx = combinedDetections.findIndex(det => det.aed_id === selectedDetectionIds[selectedDetectionIds.length-1])
+            const arrayOfIndx = [firstInx, secondInx].sort((a, b) => a - b)
+            const filteredDetections = combinedDetections.filter((_det, index) => index >= arrayOfIndx[0] && index <= arrayOfIndx[1])
+            const ids = filteredDetections.map(det => det.aed_id)
+            $scope.rows.forEach(row => {
+                row.species.forEach(cluster => {
+                    cluster.rois.forEach(roi => {
+                        if (ids.includes(roi.aed_id)) {
+                            roi.selected = true
+                        }
+                    })
+                })
+            })
+        }
+        $scope.selectedRois = getSelectedDetectionIds()
+    }
+
     if ($scope.gridContext && $scope.gridContext.aed) {
         $scope.gridData = []
         $scope.gridData.push($scope.gridContext)
@@ -886,14 +936,17 @@ angular.module('a2.analysis.clustering-jobs', [
                     sites[item.site_id] = {
                         id: item.site_id,
                         site: item.site,
-                        rois: [item]
+                        species: [item]
                     }
                 }
                 else {
-                    sites[item.site_id].rois.push(item);
+                    sites[item.site_id].species.push(item);
                 }
             })
-            $scope.rows = Object.values(sites);
+            const rows = Object.values(sites).map(site => {
+                return { id: site.id, site: site.site, species: $scope.groupRoisBySpecies(site.species) }
+            });
+            $scope.rows = rows
         } else if (data && $scope.selectedFilterData.value === 'per_cluster') {
             $scope.ids = {};
             if($scope.aedData.count > 1) {
@@ -902,13 +955,13 @@ angular.module('a2.analysis.clustering-jobs', [
                 grids.forEach((row, index) => {
                     $scope.ids[index] = {
                         cluster: row[0].cluster || row[0].name,
-                        rois: data.filter((a, i) => {return row[0].aed.includes(a.aed_id)})
+                        species: $scope.groupRoisBySpecies(data, row[0].aed)
                     }
                 })
             } else {
                 $scope.ids[0] = {
                     cluster: $scope.gridData[0].cluster || $scope.gridData[0].name,
-                    rois: data
+                    species: $scope.groupRoisBySpecies(data)
                 }
             }
             $scope.rows = Object.values($scope.ids);
@@ -920,9 +973,27 @@ angular.module('a2.analysis.clustering-jobs', [
             }
             $scope.rows = [];
             $scope.rows.push({
-                rois: data
+                species: [{ rois: data }]
             });
         }
+    }
+
+    $scope.groupRoisBySpecies = function(data, aeds) {
+        const rois = aeds ? data.filter((a, i) => {return aeds.includes(a.aed_id)}) : data
+        var species = {};
+        rois.forEach((item) => {
+            const key = item.scientific_name ? item.scientific_name + '-' + item.songtype : 'Unvalidated ROIs'
+            if (!species[key]) {
+                species[key] = {
+                    key: key,
+                    rois: [item]
+                }
+            }
+            else {
+                species[key].rois.push(item);
+            }
+        })
+        return Object.values(species);
     }
 
     $scope.playRoiAudio = function(recId, aedId, $event) {
@@ -938,17 +1009,6 @@ angular.module('a2.analysis.clustering-jobs', [
         var box = ['box', roi.time_min, roi.frequency_min, roi.time_max, roi.frequency_max].join(',');
         return roi ? '/project/' + projecturl + '/#/visualizer/rec/' + roi.recording_id + '?a=' + box : '';
     };
-
-    // Collect rois data which should be validated or include to the playlist through all pagination pages.
-    $scope.getSelectedRois = function(roi) {
-        if (!roi.selected) {
-            const index = $scope.selectedRois.findIndex(item => item === roi.aed_id);
-            $scope.selectedRois.splice(index, 1);
-            return;
-        }
-        if ($scope.selectedRois.includes(roi.aed_id)) return;
-        $scope.selectedRois.push(roi.aed_id);
-    }
 
     $scope.togglePopup = function() {
         $scope.isPopupOpened = !$scope.isPopupOpened;

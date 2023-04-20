@@ -109,37 +109,47 @@
             </div>
             <div ng-if="!loading && !infopanedata && rows && rows.length" class="row panel-body">
                 <span ng-repeat="row in rows">
-                    <div ng-if="row.site" class="h3" id="site-{row.id}}"><i class="fa fa-map-marker"></i> {{row.site}}</div>
-                    <div ng-if="row.cluster && row.rois.length" class="h3" id="cluster-{row.id}}">Cluster {{row.cluster}}</div>
-                    <span ng-repeat="roi in row.rois"
-                        class="btn btn-default roi-thumbnail {{roi.selected ? 'active' : ''}}"
-                        ng-click="roi.selected = !roi.selected; getSelectedRois(roi)"
-                        popover-html="'Frequency Max (Hz): {{(roi.frequency_max) || '(Missing)'}} <br>
-                                        Frequency Min (Hz): {{(roi.frequency_min) || 0}} <br>
-                                        Duration (s): {{(roi.time_max - roi.time_min).toFixed(2)}}'"
-                        popover-trigger="mouseenter"
-                        popover-append-to-body="true"
-                    >
-                        <input class="roi-btn-tl" type="checkbox" ng-model="roi.selected" ng-checked="selectedRois.includes(roi.aed_id)" ng-click="$event.stopPropagation(); getSelectedRois(roi)">
-                        <div class="roi-btn-tr navbar-title" ng-if="roi.validated === 1">
-                          <i class="fa val-1 fa-check-font"></i>
+                    <!-- Site name -->
+                    <div ng-if="row.site" class="h3" id="site-{{row.id}}"><i class="fa fa-map-marker"></i> {{row.site}}</div>
+                    <!-- Cluster name -->
+                    <div ng-if="row.cluster" class="h3" id="cluster-{{row.cluster}}">Cluster {{row.cluster}}</div>
+                    <div ng-repeat="cluster in row.species">
+                        <!-- Species name -->
+                        <div ng-if="row.cluster || row.site" class="h5 em" id="site-{{cluster.key}}">
+                            {{cluster.key}}
                         </div>
-                        <a class="roi-btn-bl" ng-href="{{getRoiVisualizerUrl(roi)}}" ng-click="$event.stopPropagation();">
-                            <i tooltip-placement="left"
-                                tooltip-append-to-body="true"
-                                tooltip="View in Visualizer"
-                                class="fa fa-cubes">
-                            </i>
-                        </a>
-                        <a class="roi-btn-br" ng-click="playRoiAudio(roi.recording_id, roi.aed_id, $event)">
-                            <i tooltip-placement="left"
-                                tooltip-append-to-body="true"
-                                tooltip="Play Audio"
-                                class="fa fa-play">
-                            </i>
-                        </a>
-                        <img ng-src="/api/project/{{projectUrl}}/clustering-jobs/asset?path={{roi.uri}}" class="roi-img" ng-class="{ 'full-size': !isSquareSize }"/>
-                    </span>
+                        <!-- ROIs -->
+                        <span ng-repeat="roi in cluster.rois"
+                            class="btn btn-default roi-thumbnail {{roi.selected ? 'active' : ''}}"
+                            ng-click="roi.selected = !roi.selected; toggleDetection($event)"
+                            popover-html="'Frequency Max (Hz): {{(roi.frequency_max) || '(Missing)'}} <br>
+                                            Frequency Min (Hz): {{(roi.frequency_min) || 0}} <br>
+                                            Duration (s): {{(roi.time_max - roi.time_min).toFixed(2)}} <br>
+                                            Species, songtype: {{ cluster.key }}'"
+                            popover-trigger="mouseenter"
+                            popover-append-to-body="true"
+                        >
+                            <input class="roi-btn-tl" type="checkbox" ng-model="roi.selected" ng-checked="selectedRois.includes(roi.aed_id)" ng-click="$event.stopPropagation(); getSelectedRois(roi)">
+                            <div class="roi-btn-tr navbar-title" ng-if="roi.validated === 1">
+                            <i class="fa val-1 fa-check-font"></i>
+                            </div>
+                            <a class="roi-btn-bl" ng-href="{{getRoiVisualizerUrl(roi)}}" ng-click="$event.stopPropagation();">
+                                <i tooltip-placement="left"
+                                    tooltip-append-to-body="true"
+                                    tooltip="View in Visualizer"
+                                    class="fa fa-cubes">
+                                </i>
+                            </a>
+                            <a class="roi-btn-br" ng-click="playRoiAudio(roi.recording_id, roi.aed_id, $event)">
+                                <i tooltip-placement="left"
+                                    tooltip-append-to-body="true"
+                                    tooltip="Play Audio"
+                                    class="fa fa-play">
+                                </i>
+                            </a>
+                            <img ng-src="/api/project/{{projectUrl}}/clustering-jobs/asset?path={{roi.uri}}" class="roi-img" ng-class="{ 'full-size': !isSquareSize }"/>
+                        </span>
+                    </div>
                 </span>
             </div>
             <div ng-if="paginationSettings.totalItems && (paginationSettings.totalItems > paginationSettings.limit)" class="row">
