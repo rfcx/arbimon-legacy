@@ -602,7 +602,9 @@ angular.module('a2.analysis.clustering-jobs', [
         }
         a2Playlists.create(opts,
         function(data) {
-            $window.location.href = '/project/'+Project.getUrl()+'/visualizer/playlist/' + data.playlist_id + '?clusters';
+            if (data && data.playlist_id) {
+                $window.location.href = '/project/'+Project.getUrl()+'/visualizer/playlist/' + data.playlist_id + '?clusters';
+            }
         }
     )};
 
