@@ -1,5 +1,11 @@
 # Arbimon Release Notes
 
+## v3.0.79 - April 22, 2023
+
+Enhancements ✨
+
+- Improve clusters' rois filtering & selection
+
 ## v3.0.78 - April 13, 2023
 
 Resolved issues 🐞

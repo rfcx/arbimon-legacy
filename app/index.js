@@ -6,7 +6,6 @@ var path = require('path');
 
 // packages 3rd party
 var express = require('express');
-var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var session = require('express-session');
@@ -16,6 +15,7 @@ var AWS = require('aws-sdk');
 var jwt = require('express-jwt');
 var paypal = require('paypal-rest-sdk');
 var config = require('./config');
+const logging = require('./utils/logging')
 const redisClient = require('./utils/redis')
 
 AWS.config.update({
@@ -56,18 +56,6 @@ if (app.get('env') === 'development') {
 // middleware
 // ------------------------------------------------------------------
 
-logger.token('tag', function(req, res){ return 'arbimon2:request'; });
-
-app.use(logger(
-    app.get('env') === 'production' ?
-    ':date[clf] :tag :remote-addr :method :url :status :response-time ms - :res[content-length] ":user-agent"' :
-    'dev', {
-    skip: function(req, res){
-        return /\/jobs\/progress/.test(req.originalUrl);
-    }
-}));
-
-
 app.use(function(req, res, next) {
     if(req.app.get('env') === 'production') {
         req.appHost = req.protocol +"://" + req.hostname;
@@ -101,6 +89,8 @@ app.use(express.static(www_root_path));
 if(app.get('env') === 'development') {
     app.use('/docs', express.static(path.join(__dirname, 'docs')));
 }
+
+app.use(logging)
 
 app.use('/', require('./routes/non-session'))
 
