@@ -28,6 +28,7 @@
     "express-jwt": "~3.4.0",
     "express-mysql-session": "^2.1.5",
     "express-session": "^1.17.1",
+    "express-winston": "^4.2.0",
     "gravatar": "~1.8.1",
     "jimp": "^0.16.1",
     "joi": "~9.0.4",
@@ -53,7 +54,8 @@
     "sha1-file": "^1.0.4",
     "sprintf-js": "~1.1.2",
     "tz-lookup": "^6.1.25",
-    "validator": "~5.7.0"
+    "validator": "~5.7.0",
+    "winston": "^3.8.2"
   },
   "devDependencies": {
     "@babel/core": "^7.13.15",
