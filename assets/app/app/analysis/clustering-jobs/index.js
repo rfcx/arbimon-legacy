@@ -1027,6 +1027,7 @@ angular.module('a2.analysis.clustering-jobs', [
                 species_id: $scope.selected.species.id,
                 songtype_id: $scope.selected.songtype.id
             }).then(data => {
+                console.info('Validation result', data)
                 // Unselect and mark boxes as validated without reloading the page
                 $scope.markBoxesAsValidated()
                 $scope.unselectBoxes()
@@ -1040,21 +1041,27 @@ angular.module('a2.analysis.clustering-jobs', [
     }
 
     $scope.markBoxesAsValidated = function() {
-      $scope.rows.forEach(row => {
-        var arr = row.rois.filter(roi => $scope.selectedRois.includes(roi.aed_id))
-        if (arr.length) {
-          arr.forEach(a => a.validated = 1)
-        }
-      })
+        $scope.rows.forEach(row => {
+            row.species.forEach(cluster => {
+                cluster.rois.forEach(roi => {
+                    if ($scope.selectedRois.includes(roi.aed_id)) {
+                        roi.validated = 1
+                    }
+                })
+            })
+        })
     }
 
     $scope.unselectBoxes = function() {
-      $scope.rows.forEach(row => {
-        var arr = row.rois.filter(roi => roi.selected)
-        if (arr.length) {
-          arr.forEach(a => a.selected = false)
-        }
-      })
+        $scope.rows.forEach(row => {
+            row.species.forEach(cluster => {
+                cluster.rois.forEach(roi => {
+                    if (roi.selected) {
+                        roi.selected = false
+                    }
+                })
+            })
+        })
     }
 
     Songtypes.get(function(songs) {
@@ -1083,6 +1090,19 @@ angular.module('a2.analysis.clustering-jobs', [
       this.scrolledPastHeader = scrollPos > headerTop;
     }
 
+    var getSelectedDetectionIds = function () {
+        $scope.rows.forEach(row => {
+            row.species.forEach(cluster => {
+                cluster.rois.forEach(roi => {
+                    if (roi.selected === true) {
+                        $scope.selectedRois.push(roi.aed_id)
+                    }
+                })
+            })
+        })
+        return $scope.selectedRois
+    }
+
     $scope.selectCluster = function (cluster) {
         const isSelected = cluster.selected
         cluster.rois = cluster.rois.map(roi => {
@@ -1090,20 +1110,6 @@ angular.module('a2.analysis.clustering-jobs', [
             return roi
         })
         $scope.selectedRois = getSelectedDetectionIds()
-    }
-
-    var getSelectedDetectionIds = function () {
-        var selectedDetectionIds = []
-        $scope.rows.forEach(row => {
-            row.species.forEach(cluster => {
-                cluster.rois.forEach(roi => {
-                    if (roi.selected === true) {
-                        selectedDetectionIds.push(roi.aed_id)
-                    }
-                })
-            })
-        })
-        return selectedDetectionIds
     }
 
     var getCombinedDetections = function () {

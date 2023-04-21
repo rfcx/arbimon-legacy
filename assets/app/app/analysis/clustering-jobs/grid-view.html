@@ -130,8 +130,8 @@
                             popover-trigger="mouseenter"
                             popover-append-to-body="true"
                         >
-                            <!-- ng-click="$event.stopPropagation(); getSelectedRois(roi)" -->
-                            <input class="roi-btn-tl" type="checkbox" ng-model="roi.selected" ng-checked="selectedRois.includes(roi.aed_id)">
+                            <input class="roi-btn-tl" type="checkbox" ng-model="roi.selected" ng-checked="selectedRois.includes(roi.aed_id)"
+                                ng-click="$event.stopPropagation(); toggleDetection($event)">
                             <div class="roi-btn-tr navbar-title" ng-if="roi.validated === 1">
                             <i class="fa val-1 fa-check-font"></i>
                             </div>
