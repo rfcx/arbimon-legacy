@@ -793,63 +793,18 @@ angular.module('a2.analysis.clustering-jobs', [
     };
 
     $scope.selectedFilterData = $scope.lists.search[1];
-
+    
     $scope.playlistData = {};
-
+    
     $scope.aedData = {
         count: 0,
         id: []
     };
 
-    var isShiftKeyHolding = false
-
-    var getSelectedDetectionIds = function () {
-        var selectedDetectionIds = []
-        $scope.rows.forEach(row => {
-            row.species.forEach(cluster => {
-                cluster.rois.forEach(roi => {
-                    if (roi.selected === true) {
-                        selectedDetectionIds.push(roi.aed_id)
-                    }
-                })
-            })
-        })
-        return selectedDetectionIds
-    }
-
-    var getCombinedDetections = function () {
-        var combinedDetections = []
-        $scope.rows.forEach(row => {
-            row.species.forEach(cluster => {
-                combinedDetections = combinedDetections.concat(cluster.rois)
-            })
-        })
-        return combinedDetections
-    }
-
-
-    $scope.toggleDetection = (event) => {
-        isShiftKeyHolding = event.shiftKey
-        if (isShiftKeyHolding) {
-            const combinedDetections = getCombinedDetections()
-            const selectedDetectionIds = getSelectedDetectionIds()
-            const firstInx = combinedDetections.findIndex(d => d.aed_id === selectedDetectionIds[0])
-            const secondInx = combinedDetections.findIndex(det => det.aed_id === selectedDetectionIds[selectedDetectionIds.length-1])
-            const arrayOfIndx = [firstInx, secondInx].sort((a, b) => a - b)
-            const filteredDetections = combinedDetections.filter((_det, index) => index >= arrayOfIndx[0] && index <= arrayOfIndx[1])
-            const ids = filteredDetections.map(det => det.aed_id)
-            $scope.rows.forEach(row => {
-                row.species.forEach(cluster => {
-                    cluster.rois.forEach(roi => {
-                        if (ids.includes(roi.aed_id)) {
-                            roi.selected = true
-                        }
-                    })
-                })
-            })
-        }
-        $scope.selectedRois = getSelectedDetectionIds()
-    }
+    $scope.speciesLoading = false;
+    $scope.selected = { species: null, songtype: null };
+    var timeout;
+    var isShiftKeyHolding = false;
 
     if ($scope.gridContext && $scope.gridContext.aed) {
         $scope.gridData = []
@@ -1053,10 +1008,6 @@ angular.module('a2.analysis.clustering-jobs', [
         }
     };
 
-    $scope.speciesLoading = false;
-    $scope.selected = { species: null, songtype: null };
-    var timeout;
-
     $scope.isValidationAccessible = function() {
         return a2UserPermit.can('manage AED and Clustering job')
     }
@@ -1130,6 +1081,63 @@ angular.module('a2.analysis.clustering-jobs', [
 
       this.headerTop = headerTop | 0;
       this.scrolledPastHeader = scrollPos > headerTop;
+    }
+
+    $scope.selectCluster = function (cluster) {
+        const isSelected = cluster.selected
+        cluster.rois = cluster.rois.map(roi => {
+            roi.selected = isSelected === true ? true : false
+            return roi
+        })
+        $scope.selectedRois = getSelectedDetectionIds()
+    }
+
+    var getSelectedDetectionIds = function () {
+        var selectedDetectionIds = []
+        $scope.rows.forEach(row => {
+            row.species.forEach(cluster => {
+                cluster.rois.forEach(roi => {
+                    if (roi.selected === true) {
+                        selectedDetectionIds.push(roi.aed_id)
+                    }
+                })
+            })
+        })
+        return selectedDetectionIds
+    }
+
+    var getCombinedDetections = function () {
+        var combinedDetections = []
+        $scope.rows.forEach(row => {
+            row.species.forEach(cluster => {
+                combinedDetections = combinedDetections.concat(cluster.rois)
+            })
+        })
+        return combinedDetections
+    }
+
+    // Selection with a shift key
+    $scope.toggleDetection = function (event) {
+        isShiftKeyHolding = event.shiftKey
+        if (isShiftKeyHolding) {
+            const combinedDetections = getCombinedDetections()
+            const selectedDetectionIds = getSelectedDetectionIds()
+            const firstInx = combinedDetections.findIndex(d => d.aed_id === selectedDetectionIds[0])
+            const secondInx = combinedDetections.findIndex(det => det.aed_id === selectedDetectionIds[selectedDetectionIds.length-1])
+            const arrayOfIndx = [firstInx, secondInx].sort((a, b) => a - b)
+            const filteredDetections = combinedDetections.filter((_det, index) => index >= arrayOfIndx[0] && index <= arrayOfIndx[1])
+            const ids = filteredDetections.map(det => det.aed_id)
+            $scope.rows.forEach(row => {
+                row.species.forEach(cluster => {
+                    cluster.rois.forEach(roi => {
+                        if (ids.includes(roi.aed_id)) {
+                            roi.selected = true
+                        }
+                    })
+                })
+            })
+        }
+        $scope.selectedRois = getSelectedDetectionIds()
     }
 
 })

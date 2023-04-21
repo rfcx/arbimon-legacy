@@ -115,8 +115,9 @@
                     <div ng-if="row.cluster" class="h3" id="cluster-{{row.cluster}}">Cluster {{row.cluster}}</div>
                     <div ng-repeat="cluster in row.species">
                         <!-- Species name -->
-                        <div ng-if="row.cluster || row.site" class="h5 em" id="site-{{cluster.key}}">
-                            {{cluster.key}}
+                        <div ng-if="row.cluster || row.site" class="h5 em row-flex flex-self-align-bottom" id="site-{{cluster.key}}">
+                            <span>{{cluster.key}}</span>
+                            <input id="input-{{cluster.key}}" type="checkbox" class="ml-3 flex-self-align-bottom" ng-model="cluster.selected" ng-change="selectCluster(cluster)"></label>
                         </div>
                         <!-- ROIs -->
                         <span ng-repeat="roi in cluster.rois"
@@ -129,7 +130,8 @@
                             popover-trigger="mouseenter"
                             popover-append-to-body="true"
                         >
-                            <input class="roi-btn-tl" type="checkbox" ng-model="roi.selected" ng-checked="selectedRois.includes(roi.aed_id)" ng-click="$event.stopPropagation(); getSelectedRois(roi)">
+                            <!-- ng-click="$event.stopPropagation(); getSelectedRois(roi)" -->
+                            <input class="roi-btn-tl" type="checkbox" ng-model="roi.selected" ng-checked="selectedRois.includes(roi.aed_id)">
                             <div class="roi-btn-tr navbar-title" ng-if="roi.validated === 1">
                             <i class="fa val-1 fa-check-font"></i>
                             </div>
