@@ -909,12 +909,14 @@ angular.module('a2.analysis.clustering-jobs', [
                 $scope.gridData.forEach((row) => { grids.push([row]) })
                 grids.forEach((row, index) => {
                     $scope.ids[index] = {
+                        id: row[0].cluster || row[0].name,
                         cluster: row[0].cluster || row[0].name,
                         species: $scope.groupRoisBySpecies(data, row[0].aed)
                     }
                 })
             } else {
                 $scope.ids[0] = {
+                    id: $scope.gridData[0].cluster || $scope.gridData[0].name,
                     cluster: $scope.gridData[0].cluster || $scope.gridData[0].name,
                     species: $scope.groupRoisBySpecies(data)
                 }
@@ -1144,6 +1146,31 @@ angular.module('a2.analysis.clustering-jobs', [
             })
         }
         $scope.selectedRois = getSelectedDetectionIds()
+        $scope.updateInputState()
     }
 
+    // Set cluster's input state
+    $scope.updateInputState = function () {
+        const inputs = document.querySelectorAll("[id^='inputCluster_']");
+        var index = 0
+        console.log(inputs)
+        $scope.rows.forEach(row => {
+            row.species.forEach(cluster => {
+                const selectedRois = cluster.rois.filter(roi => roi.selected)
+                if (!selectedRois.length) {
+                    inputs[index].checked = false
+                    inputs[index].indeterminate = false
+                }
+                else if (selectedRois.length === cluster.rois.length) {
+                    inputs[index].indeterminate = false
+                    inputs[index].checked = true
+                }
+                else {
+                    inputs[index].checked = false
+                    inputs[index].indeterminate = true
+                }
+                index++
+            })
+        })
+    }
 })
