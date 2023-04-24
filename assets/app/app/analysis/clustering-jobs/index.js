@@ -1096,8 +1096,12 @@ angular.module('a2.analysis.clustering-jobs', [
         $scope.rows.forEach(row => {
             row.species.forEach(cluster => {
                 cluster.rois.forEach(roi => {
-                    if (roi.selected === true) {
+                    if (roi.selected === true && !$scope.selectedRois.includes(roi.aed_id)) {
                         $scope.selectedRois.push(roi.aed_id)
+                    }
+                    if (roi.selected === false && $scope.selectedRois.includes(roi.aed_id)) {
+                        const index = $scope.selectedRois.findIndex(item => item === roi.aed_id)
+                        $scope.selectedRois.splice(index, 1)
                     }
                 })
             })
