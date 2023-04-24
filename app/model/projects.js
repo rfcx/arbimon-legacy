@@ -335,6 +335,8 @@ var Projects = {
         project.storage_usage = 0;
         project.processing_usage = 0;
         project.pattern_matching_enabled = 1;
+        project.aed_enabled = 1;
+        project.clustering_enabled = 1;
         project.reports_enabled = 1;
 
         if (!db) {
