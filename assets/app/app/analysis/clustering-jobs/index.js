@@ -1112,6 +1112,7 @@ angular.module('a2.analysis.clustering-jobs', [
             return roi
         })
         $scope.selectedRois = getSelectedDetectionIds()
+        $scope.updateInputState()
     }
 
     var getCombinedDetections = function () {
@@ -1153,7 +1154,6 @@ angular.module('a2.analysis.clustering-jobs', [
     $scope.updateInputState = function () {
         const inputs = document.querySelectorAll("[id^='inputCluster_']");
         var index = 0
-        console.log(inputs)
         $scope.rows.forEach(row => {
             row.species.forEach(cluster => {
                 const selectedRois = cluster.rois.filter(roi => roi.selected)

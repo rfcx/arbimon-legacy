@@ -117,7 +117,7 @@
                         <!-- Species name -->
                         <div ng-if="row.cluster || row.site" class="h5 em row-flex flex-self-align-bottom">
                             <span>{{cluster.key}}</span>
-                            <input id="inputCluster_{{row.id}}_{{cluster.key}}" type="checkbox" class="ml-3 flex-self-align-bottom" ng-model="cluster.selected" ng-change="selectCluster(cluster);"></label>
+                            <input id="inputCluster_{{row.id}}_{{cluster.key}}" type="checkbox" class="ml-3 flex-self-align-bottom" ng-model="cluster.selected" ng-click="selectCluster(cluster);"></label>
                         </div>
                         <!-- ROIs -->
                         <span ng-repeat="roi in cluster.rois"
