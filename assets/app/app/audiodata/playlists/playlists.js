@@ -104,6 +104,7 @@ angular.module('a2.audiodata.playlists', [
                 return pl.id;
             });
 
+            $scope.loading = true;
             a2Playlists.remove(playlistIds, function(data) {
                 if(data.error)
                     return notify.error(data.error);
