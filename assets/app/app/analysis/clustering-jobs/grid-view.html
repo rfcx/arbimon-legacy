@@ -110,9 +110,9 @@
             <div ng-if="!loading && !infopanedata && rows && rows.length" class="row panel-body">
                 <span ng-repeat="row in rows">
                     <!-- Site name -->
-                    <div ng-if="row.site" class="h3" id="site-{{row.id}}"><i class="fa fa-map-marker"></i> {{row.site}}</div>
+                    <div ng-if="row.site && row.species && row.species.length" class="h3" id="site-{{row.id}}"><i class="fa fa-map-marker"></i>{{row.site}}</div>
                     <!-- Cluster name -->
-                    <div ng-if="row.cluster" class="h3" id="cluster-{{row.cluster}}">Cluster {{row.cluster}}</div>
+                    <div ng-if="row.cluster && row.species && row.species.length" class="h3" id="cluster-{{row.cluster}}">Cluster {{row.cluster}}</div>
                     <div ng-repeat="cluster in row.species">
                         <!-- Species name -->
                         <div ng-if="row.cluster || row.site" class="h5 em row-flex flex-self-align-bottom">

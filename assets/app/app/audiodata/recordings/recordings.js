@@ -349,4 +349,31 @@ angular.module('a2.audiodata.recordings', [
         $scope.errMess = null;
     }
 })
-;
+.directive("customSrc", function() {
+    return {
+      link: function(scope, element, attrs) {
+        var img, loadImage;
+        img = null;
+
+        loadImage = function() {
+
+          element[0].src = '';
+
+          img = new Image();
+          img.src = attrs.customSrc;
+
+          img.onload = function() {
+            element[0].src = attrs.customSrc;
+          };
+        };
+
+        scope.$watch((function() {
+          return attrs.customSrc;
+        }), function(newVal, oldVal) {
+          if (oldVal !== newVal) {
+            loadImage();
+          }
+        });
+      }
+    };
+});
