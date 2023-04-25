@@ -34,5 +34,5 @@ spec:
                 requests:
                   memory: '500Mi'
                 limits:
-                  memory: '1000Mi'
+                  memory: '2000Mi'
           restartPolicy: Never
