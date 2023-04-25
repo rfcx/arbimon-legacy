@@ -1077,7 +1077,7 @@ angular.module('a2.analysis.clustering-jobs', [
             row.species.forEach(cluster => {
                 cluster.rois.forEach(roi => {
                     if ($scope.selectedRois.includes(roi.aed_id)) {
-                        roi.selected = 1
+                        roi.selected = true
                     }
                 })
             })
@@ -1169,7 +1169,10 @@ angular.module('a2.analysis.clustering-jobs', [
             })
         }
         $scope.selectedRois = getSelectedDetectionIds()
-        $scope.updateInputState()
+        clearTimeout(timeout);
+        timeout = setTimeout(() => {
+            $scope.updateInputState()
+        }, 100)
     }
 
     // Set cluster's input state
