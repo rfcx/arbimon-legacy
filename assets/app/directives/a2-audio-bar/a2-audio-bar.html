@@ -24,7 +24,7 @@
                 </div>
             </div>
             <div class="col-sm-12 center-block">
-                <div class="btn-toolbar">
+                <div class="btn-toolbar row-flex flex-align-middle">
                     <div class="btn-group">
                         <button class="btn btn-default btn-sm"
                                 ng-disabled="!controller.audio_player.has_recording"
@@ -65,6 +65,7 @@
                             </div>
                         </div>
                     </div>
+                    <i ng-if="controller.audio_player.getCurrentTime() === 0" class="fa fa-spinner fa-spin mx-3" style="font-size: 18px"></i>
                 </div>
             </div>
         </div>

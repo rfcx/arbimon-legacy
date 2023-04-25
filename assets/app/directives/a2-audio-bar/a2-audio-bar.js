@@ -35,7 +35,7 @@ angular.module('a2.directive.audio-bar', [
         this.audio_player = new a2AudioPlayer($scope);
         this.expanded = false;
         this.collapseTimeoutInterval = 5000;
-
+        this.loading = false
         this.audio_player.setGain($localStorage.getItem('a2-audio-param-gain') || 1);
 
         this.deregHandlers = [];
