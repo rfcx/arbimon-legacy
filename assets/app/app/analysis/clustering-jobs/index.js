@@ -828,7 +828,13 @@ angular.module('a2.analysis.clustering-jobs', [
 
     $scope.onSearchChanged = function(item) {
         $scope.selectedFilterData = item;
-        $scope.getRoisDetails();
+        $scope.getRoisDetails().then(() => {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => {
+                $scope.markBoxesAsSelected()
+                $scope.updateInputState()
+            }, 100)
+        })
     }
 
     $scope.setCurrentPage = function() {
@@ -867,7 +873,7 @@ angular.module('a2.analysis.clustering-jobs', [
             $scope.loading = false;
             $scope.allRois = groupedData
             $scope.isRoisLoading = false;
-            $scope.getRoisDetailsSegment()
+            $scope.getRoisDetailsSegment();
         }).catch(err => {
             console.log(err);
             $scope.getStatusForEmptyData();
@@ -1066,6 +1072,18 @@ angular.module('a2.analysis.clustering-jobs', [
         })
     }
 
+    $scope.markBoxesAsSelected = function() {
+        $scope.rows.forEach(row => {
+            row.species.forEach(cluster => {
+                cluster.rois.forEach(roi => {
+                    if ($scope.selectedRois.includes(roi.aed_id)) {
+                        roi.selected = 1
+                    }
+                })
+            })
+        })
+    }
+
     Songtypes.get(function(songs) {
         $scope.songtypes = songs;
     });
@@ -1157,6 +1175,7 @@ angular.module('a2.analysis.clustering-jobs', [
     // Set cluster's input state
     $scope.updateInputState = function () {
         const inputs = document.querySelectorAll("[id^='inputCluster_']");
+        if (!inputs.length) return
         var index = 0
         $scope.rows.forEach(row => {
             row.species.forEach(cluster => {
