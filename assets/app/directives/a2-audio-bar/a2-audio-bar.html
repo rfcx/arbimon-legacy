@@ -3,7 +3,7 @@
         <i class="fa" ng-class="controller.expanded ? 'fa-angle-up' : 'fa-angle-down'"></i>
     </button>
     <div class="a2-audio-bar-content">
-        <div class="col-sm-8 no-pad-r">
+        <div class="col-sm-8 no-pad-r mr-3">
             <div class="audio-seek-bar clickable"
                  ng-click="controller.seekPercent(($event|mouseEventContainerPercent).x)"
                  ng-show="controller.audio_player.resource"
@@ -65,17 +65,17 @@
                             </div>
                         </div>
                     </div>
-                    <i ng-if="controller.audio_player.getCurrentTime() === 0" class="fa fa-spinner fa-spin mx-3" style="font-size: 18px"></i>
                 </div>
             </div>
         </div>
     </div>
-    <div class="col-sm-4">
-        <div ng-if="controller.audio_player.resource">
+    <div class="row-flex flex-direction-row">
+        <div class="row-flex flex-direction-column pr-3" ng-if="controller.audio_player.resource">
             {{ controller.audio_player.getCurrentTime() | number:2 }} s
             <div class="text-center">
                 <i class="fa fa-sm fa-play"></i>
             </div>
         </div>
+        <div><i ng-if="controller.audio_player.getCurrentTime() === 0" class="fa fa-spinner fa-spin" style="font-size: 18px"></i></div>
     </div>
 </div>
