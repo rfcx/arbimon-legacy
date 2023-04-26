@@ -272,10 +272,12 @@ router.post('/:patternMatching/remove', function(req, res, next) {
         }
     }).then(function(){
         return model.patternMatchings.delete(patternMatchingId | 0);
-    }).then(async function(){
+    }).then(async function() {
         res.json({ok: true});
         const userId = req.session.user.id
         await model.patternMatchings.unvalidateRois(patternMatchingId, userId, projectId)
+        const jobData = await model.patternMatchings.getPMjobId(patternMatchingId)
+        await model.jobs.hideAsync(jobData.job_id)
     }).catch(next);
 });
 

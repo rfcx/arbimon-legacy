@@ -134,32 +134,27 @@ router.post('/project/:projectUrl/models/savethreshold', function(req, res, next
 
 router.get('/project/:projectUrl/models/:mid/delete', function(req, res, next) {
     res.type('json');
-    model.projects.findByUrl(req.params.projectUrl,
-        function(err, rows)
-        {
-            if(err) return next(err);
+    model.projects.findByUrl(req.params.projectUrl, function(err, rows) {
+        if(err) return next(err);
 
-            if(!rows.length){
-                res.status(404).json({ error: "project not found"});
-                return;
-            }
-
-            var project_id = rows[0].project_id;
-
-            if(!req.haveAccess(project_id, "manage models and classification")) {
-                return res.json({ error: "you dont have permission to 'manage models and classification'" });
-            }
-
-            model.models.delete(req.params.mid,
-                function(err, row)
-                {
-                    if(err) return next(err);
-                    var rows = "Deleted model";
-                    res.json(rows);
-                }
-            );
+        if(!rows.length){
+            res.status(404).json({ error: "project not found"});
+            return;
         }
-    );
+
+        const project_id = rows[0].project_id;
+
+        if(!req.haveAccess(project_id, "manage models and classification")) {
+            return res.json({ error: "you dont have permission to 'manage models and classification'" });
+        }
+        const model_id = req.params.mid
+        model.models.delete(model_id, async function(err, row) {
+            if(err) return next(err);
+            res.json('Model deleted');
+            const jobData = model.models.getModelJobId(model_id)
+            await model.jobs.hideAsync(jobData.job_id)
+        });
+    });
 });
 
 router.get('/project/:projectUrl/models/:modelId/validation-list', function(req, res, next) {
