@@ -10,6 +10,7 @@ const sqlutil = require('../utils/sqlutil');
 const queryHandler = dbpool.queryHandler;
 const { capitalize } = require('../utils/string')
 const models = require('./index')
+const util  = require('util');
 
 
 // TODO define jobs as module that are require, and user db identifier field to
@@ -236,9 +237,13 @@ var Jobs = {
      *  @param {Function} callback - callback to return after setting the flag.
      */
     hide: function(jId, callback) {
-        var q = "update `jobs` set `hidden`  = 1 where `job_id` = ?";
-
+        const q = "update `jobs` set `hidden`  = 1 where `job_id` = ?";
         queryHandler(q, [jId], callback);
+    },
+
+    hideAsync: function(jId) {
+        let hideJob = util.promisify(this.hide)
+        return hideJob(jId)
     },
 
     /** Sets the cancel_requestted flag for the given job id.
@@ -318,10 +323,10 @@ var Jobs = {
             if (project.id) {
                 constraints.push('J.project_id = ' + (project.id|0));
             }
-            if (project.last3Months) {
-                const dateByCondition = moment.utc().subtract(3, 'months').format('YYYY-MM-DD HH:mm:ss')
-                constraints.push(`J.date_created > '${dateByCondition}'`);
-            }
+            // if (project.last3Months) {
+            //     const dateByCondition = moment.utc().subtract(3, 'months').format('YYYY-MM-DD HH:mm:ss')
+            //     constraints.push(`J.date_created > '${dateByCondition}'`);
+            // }
             else if(project.url) {
                 constraints.push('P.url = ' + dbpool.escape(project.url));
                 tables.push('JOIN projects P ON J.project_id = P.project_id');
