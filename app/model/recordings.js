@@ -1270,6 +1270,14 @@ var Recordings = {
             const siteIds = Object.values(siteData).map(function(site){
                 return site.site_id;
             })
+            console.log(outputs)
+            if (!siteIds.length && outputs.includes('list')) {
+                return {
+                    count: 0,
+                    date_range: {},
+                    list: []
+                }
+            }
 
             if (!parameters.sites && !parameters.validations) {
                 constraints.push("r.site_id IN (?)");

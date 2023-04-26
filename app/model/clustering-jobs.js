@@ -97,7 +97,10 @@ let ClusteringJobs = {
         );
 
         if (options.aed) {
+            tables.push("LEFT JOIN species sp ON sp.species_id = A.species_id");
+            tables.push("LEFT JOIN songtypes sgt ON sgt.songtype_id = A.songtype_id");
             constraints.push('A.aed_id IN (' + dbpool.escape(options.aed) + ')');
+            select.push("A.species_id, A.songtype_id, sgt.songtype, sp.scientific_name")
         }
 
         if (options.perSite) {
