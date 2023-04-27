@@ -1303,6 +1303,11 @@ fieldset[disabled] .btn {
   font-style: italic;
 }
 
+input[type=checkbox]:indeterminate {
+  accent-color: blue !important;
+  color: #ffffff !important;
+}
+
 .help-wrapper {
   position: relative;
   min-height: 65vh;
@@ -1625,6 +1630,13 @@ a.ui-select-choices-row-inner {
       border-color: @gray-medium;
       color: @text-color;
   }
+}
+
+.recording-img {
+    background-color: @gray-medium;
+    border-color: @gray-medium;
+    width: 420px;
+    height: 153px;
 }
 
 img.outlined {

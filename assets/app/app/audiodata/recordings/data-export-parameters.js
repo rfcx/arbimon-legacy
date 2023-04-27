@@ -176,7 +176,11 @@ angular.module('a2.audiodata.recordings.data-export-parameters', [
     };
 
     this.isDisabled = function() {
-        return this.selected && this.selected[1] && this.selected[1].length && this.selected[1].length > 100
+        return this.selected && this.selected[1] && this.selected[1].length && this.selected[1].length > 20
+    };
+
+    this.isRecordingEmpty = function() {
+        return this.selected && this.selected[0] && this.selected[0].length === 0
     };
 
     this.exportData = function(){

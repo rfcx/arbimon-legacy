@@ -20,7 +20,7 @@
     <div class="row">
         <div class="col-sm-12">
             <div class="nav nav-pills nav-stacked visobj-list" role="menu" a2-scroll="onScroll($event, $controller)" a2-infinite-scroll-distance="10">
-                <div class="visobj-list-item" ng-show="browser.loading.times || browser.lovo.loading">
+                <div class="visobj-list-item" ng-show="browser.loading.times || (browser.lovo.loading && !browser.lovo.list.length)">
                     <i class="fa fa-spinner fa-spin"></i>
                     Loading {{browser.type.vobject_type | plural}}
                 </div>

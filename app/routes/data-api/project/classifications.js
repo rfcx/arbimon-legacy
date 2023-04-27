@@ -74,9 +74,10 @@ router.get('/:classiId/delete', function(req, res) {
             err: "You dont have permission to 'manage models and classification'"
         });
     }
-
-    model.classifications.delete(req.params.classiId, function(err, data) {
-        res.json(data);
+    const job_id = req.params.classiId
+    model.classifications.delete(job_id, async function(err, data) {
+        res.json(data)
+        await model.jobs.hideAsync(job_id)
     });
 });
 

@@ -258,8 +258,7 @@ router.post('/new/', function(req, res, next) {
 router.post('/:cnn/remove', function(req, res, next) {
     res.type('json');
 
-    var project_id = req.project.project_id;
-
+    const job_id = req.params.cnn
     q.resolve().then(function(){
         /*
         if(!req.haveAccess(project_id, "manage pattern matchings")){
@@ -269,9 +268,10 @@ router.post('/:cnn/remove', function(req, res, next) {
         }
         */
     }).then(function(){
-        return model.CNN.delete(req.params.cnn | 0);
-    }).then(function(){
+        return model.CNN.delete(job_id | 0);
+    }).then(async function(){
         res.json({ok: true});
+        await model.jobs.hideAsync(job_id)
     }).catch(next);
 });
 

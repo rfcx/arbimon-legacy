@@ -1,35 +1,17 @@
 /* jshint node:true */
 "use strict";
 
-// 3rd party dependencies
-var debug = require('debug')('arbimon2:model:pattern_matchings');
-var async = require('async');
-var joi = require('joi');
-var jimp = require('jimp');
-var AWS = require('aws-sdk');
-var q = require('q');
-
-// local dependencies
-var config       = require('../config');
-var APIError = require('../utils/apierror');
-var tmpfilecache = require('../utils/tmpfilecache');
-var sqlutil      = require('../utils/sqlutil');
-var SQLBuilder   = require('../utils/sqlbuilder');
-var dbpool       = require('../utils/dbpool');
-var Recordings   = require('./recordings');
-var Projects     = require('./projects');
-var Templates     = require('./templates');
+const joi = require('joi');
+const AWS = require('aws-sdk');
+const q = require('q');
+const config = require('../config');
+const sqlutil = require('../utils/sqlutil');
+const SQLBuilder = require('../utils/sqlbuilder');
+const dbpool = require('../utils/dbpool');
+const Recordings = require('./recordings');
+const Templates = require('./templates');
 const models = require("./index");
-// local variables
-var s3;
-var lambda = new AWS.Lambda();
-var queryHandler = dbpool.queryHandler;
-const fileHelper = require('../utils/file-helper')
-
-function arrayOrSingle(x){
-    return joi.alternatives(x, joi.array().items(x));
-}
-
+const lambda = new AWS.Lambda();
 
 // exports
 var PatternMatchings = {
@@ -524,6 +506,12 @@ var PatternMatchings = {
         return dbpool.query(
             "UPDATE pattern_matchings SET deleted=1, playlist_id=NULL, citizen_scientist=0, cs_expert=0 WHERE pattern_matching_id = ?", [patternMatchingId]
         );
+    },
+
+    getPMjobId: function (patternMatchingId) {
+        return dbpool.query(
+            "SELECT job_id FROM pattern_matchings WHERE pattern_matching_id = ?", [patternMatchingId]
+        ).get(0);
     },
 
     getPresentRois: function (patternMatchingId) {

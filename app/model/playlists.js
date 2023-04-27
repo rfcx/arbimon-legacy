@@ -298,7 +298,7 @@ var Playlists = {
             else {
                 const aedData = await model.ClusteringJobs.findRois({ aed: data.params });
                 const recIds = aedData.map(aed => { return aed.recording_id });
-                await this.addRecs(playlistId, recIds);
+                await this.addRecs(playlistId, [...new Set(recIds)]);
             }
         } else {
             data.params.project_id = data.project_id;
