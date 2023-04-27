@@ -31,7 +31,7 @@ async function reportStatsToSlack (text, jobName) {
   })
 }
 
-async function errorToSlack (text) {
+async function errorToSlack (text, jobName) {
   return await axios.post(SLACK_URL, {
     channel: SLACK_CHANNEL,
     username: `Arbimon ${jobName} ${process.env.NODE_ENV}`,
