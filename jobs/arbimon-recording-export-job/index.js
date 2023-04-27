@@ -48,7 +48,7 @@ async function main () {
     // Process the Occupancy model report.
     if (projection_parameters && projection_parameters.species) {
         const data = await recordings.exportOccupancyModels(projection_parameters, filters)
-        return processOccupancyModelStream(data, rowData, dateByCondition, message).then(async () => {
+        return processOccupancyModelStream(data, rowData, dateByCondition, message, jobName).then(async () => {
             console.log(`arbimon-recording-export job finished: occupancy models report for ${message}`)
         })
     }
@@ -72,13 +72,13 @@ async function main () {
             })
         }
         const data = await recordings.groupedDetections(projection_parameters, filters)
-        return processGroupedDetectionsStream(data, rowData, projection_parameters, allData, dateByCondition, message).then(async () => {
+        return processGroupedDetectionsStream(data, rowData, projection_parameters, allData, dateByCondition, message, jobName).then(async () => {
             console.log(`arbimon-recording-export job finished: grouped detections report for ${message}`)
         })
     }
 
     const data = await recordings.exportRecordingData(projection_parameters, filters)
-    return transformStream(data, rowData, dateByCondition, message).then(async () => {
+    return transformStream(data, rowData, dateByCondition, message, jobName).then(async () => {
         console.log(`arbimon-recording-export job finished: export recordings report for ${message}`)
     })
   } catch (e) {
@@ -87,7 +87,7 @@ async function main () {
 }
 
 // Process the Occupancy model report and send the email
-async function processOccupancyModelStream (results, rowData, dateByCondition, message) {
+async function processOccupancyModelStream (results, rowData, dateByCondition, message, jobName) {
     return new Promise(async function (resolve, reject) {
         let sitesData = await recordings.getCountSitesRecPerDates(rowData.project_id);
         let allSites = sitesData.map(item => { return item.site }).filter((v, i, s) => s.indexOf(v) === i);
@@ -189,7 +189,7 @@ async function processOccupancyModelStream (results, rowData, dateByCondition, m
 }
 
 // Combine grouped detections report and send the email
-async function processGroupedDetectionsStream (results, rowData, projection_parameters, allData, dateByCondition, message) {
+async function processGroupedDetectionsStream (results, rowData, projection_parameters, allData, dateByCondition, message, jobName) {
     return new Promise(async function (resolve, reject) {
         let gKey = projection_parameters.grouped;
 
@@ -265,7 +265,7 @@ async function processGroupedDetectionsStream (results, rowData, projection_para
 }
 
 // Process the Export recordings report and send the email
-async function transformStream (results, rowData, dateByCondition, message) {
+async function transformStream (results, rowData, dateByCondition, message, jobName) {
     return new Promise(function (resolve, reject) {
         console.log('total results length', results.length)
         let fields = [];
@@ -393,4 +393,5 @@ async function sendEmail (subject, title, rowData, content) {
 main()
     .finally(() => {
         db.closeAll()
+        process.exit(0)
     })
