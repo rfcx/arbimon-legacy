@@ -151,7 +151,7 @@ router.get('/project/:projectUrl/models/:mid/delete', function(req, res, next) {
         model.models.delete(model_id, async function(err, row) {
             if(err) return next(err);
             res.json('Model deleted');
-            const jobData = model.models.getModelJobId(model_id)
+            const jobData = await model.models.getModelJobId(model_id)
             await model.jobs.hideAsync(jobData.job_id)
         });
     });
