@@ -1,7 +1,7 @@
 <div class="panel panel-dropdown">
     <ul class="list-group mb-2">
         <li class="list-group-item" ng-repeat="parameter_set in controller.parameter_set_list">
-            <div ng-hide="(parameter_set.identifier === 'species' || parameter_set.identifier === 'grouped') && !controller.isSuper">
+            <div ng-hide="(parameter_set.identifier === 'species' || parameter_set.identifier === 'grouped') && !controller.isRfcx()">
                 <hr class="my-3" ng-if="(parameter_set.identifier === 'species' || parameter_set.identifier === 'grouped')" />
                 {{parameter_set.title}}
             </div>
@@ -23,7 +23,7 @@
             </div>
             <div v-if="parameter_set.identifier === 'recording'"><error-message ng-if="controller.isRecordingEmpty() && parameter_set.identifier === 'recording'" message="'At least 1 recording field is required'"></error-message></div>
             <div v-if="parameter_set.identifier === 'validation'"><error-message ng-if="controller.isDisabled() && parameter_set.identifier === 'validation'" message="'Maximum 20 species/song types'"></error-message></div>
-            <div class="pt-1" ng-init="parameter_set.index=$index" ng-if="(parameter_set.identifier === 'species' || parameter_set.identifier === 'grouped') && controller.isSuper">
+            <div class="pt-1" ng-init="parameter_set.index=$index" ng-if="(parameter_set.identifier === 'species' || parameter_set.identifier === 'grouped') && controller.isRfcx()">
                 <ui-select ng-model="controller.selected[parameter_set.index]" on-select="controller.onSelected($item)" theme="bootstrap" style="width:300px;">
                     <ui-select-match placeholder="{{parameter_set.identifier === 'species'? 'Select species...' : 'Detections grouped by...'}}">
                         <span tooltip="{{$item.tooltip}}" tooltip-append-to-body="true">{{controller.selected[parameter_set.index].caption}}</span>
