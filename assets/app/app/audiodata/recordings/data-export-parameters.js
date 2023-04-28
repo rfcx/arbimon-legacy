@@ -109,7 +109,7 @@ angular.module('a2.audiodata.recordings.data-export-parameters', [
 .controller('recordingDataExportParametersController', function(
     $q,
     $injector,
-    $scope,
+    notify,
     recordingDataFieldTypes,
     a2UserPermit
 ){
@@ -160,6 +160,11 @@ angular.module('a2.audiodata.recordings.data-export-parameters', [
     };
 
     this.isSuper = a2UserPermit.isSuper();
+    this.isRfcxUser = a2UserPermit.isRfcx();
+
+    this.isRfcx = function () {
+        return this.isRfcxUser || this.isSuper
+    },
 
     this.checkSelectedValue = function(selected) {
         return selected && selected.find(function(row){ return row.value === -1 });
@@ -184,6 +189,10 @@ angular.module('a2.audiodata.recordings.data-export-parameters', [
     };
 
     this.exportData = function(){
+        if (this.isRecordingEmpty()) {
+            notify.log('At least 1 recording field is required');
+            return;
+        }
         var selected = this.selected;
         // if (selected[1] && selected[1].find(function(row){ return row.value === -1 })) {
         //     selected[1] = this.lists[1].filter(function(item) { if (item.value !== -1) { return item } });
