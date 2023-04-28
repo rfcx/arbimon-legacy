@@ -323,10 +323,10 @@ var Jobs = {
             if (project.id) {
                 constraints.push('J.project_id = ' + (project.id|0));
             }
-            // if (project.last3Months) {
-            //     const dateByCondition = moment.utc().subtract(3, 'months').format('YYYY-MM-DD HH:mm:ss')
-            //     constraints.push(`J.date_created > '${dateByCondition}'`);
-            // }
+            if (project.last3Months) {
+                const dateByCondition = moment.utc().subtract(3, 'months').format('YYYY-MM-DD HH:mm:ss')
+                constraints.push(`J.date_created > '${dateByCondition}'`);
+            }
             else if(project.url) {
                 constraints.push('P.url = ' + dbpool.escape(project.url));
                 tables.push('JOIN projects P ON J.project_id = P.project_id');
