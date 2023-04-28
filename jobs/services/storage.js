@@ -8,7 +8,7 @@ async function uploadObjToFile (bucket, filename, buf) {
                 Bucket: bucket,
                 Key: filename,
                 Body: buf,
-                ContentType: 'application/json',
+                ContentType: 'text/csv',
             }, (putErr, data) => {
                 if (putErr) {
                     console.error('putErr', putErr)
@@ -28,11 +28,30 @@ function combineFilename (timeStart, project, reportType) {
 }
 
 async function saveLatestData (bucket, buf, project, timeStart, reportType) {
-  const filename = combineFilename(timeStart, project, reportType)
-  await uploadObjToFile(bucket, filename, buf)
+  const filePath = combineFilename(timeStart, project, reportType)
+  await uploadObjToFile(bucket, filePath, buf)
+  return filePath
 }
 
+async function getSignedUrl (bucket, filePath, contentType) {
+  const params = {
+    Bucket: bucket,
+    Key: filePath,
+    Expires: 60 * 60 * 24, // 24 hours
+    ContentType: contentType
+  }
+  return (new Promise((resolve, reject) => {
+    s3.getSignedUrl('putObject', params, (err, data) => {
+      if (err) {
+        reject(err)
+      } else {
+        resolve(data)
+      }
+    })
+  }))
+}
 
 module.exports = {
+  getSignedUrl,
   saveLatestData,
 }
