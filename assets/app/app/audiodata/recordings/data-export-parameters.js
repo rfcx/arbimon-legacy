@@ -26,7 +26,7 @@ angular.module('a2.audiodata.recordings.data-export-parameters', [
 })
 .service('recordingDataFieldTypes', function(){
     return [
-        {   title:'Recording Data',
+        {   title:'Recording fields',
             identifier:'recording',
             placeholder: 'filename, site, ...',
             list:[
