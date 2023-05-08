@@ -9,6 +9,8 @@ const stream = require('stream');
 const csv_stringify = require('csv-stringify');
 const mandrill = require('mandrill-api/mandrill')
 const config_hosts = require('../../config/hosts');
+const { getSignedUrl, saveLatestData } = require('../services/storage')
+const S3_BUCKET_ARBIMON = process.env.S3_BUCKET_ARBIMON
 
 async function main () {
   try {
@@ -172,7 +174,7 @@ async function processOccupancyModelStream (results, rowData, dateByCondition, m
             csv_stringify(_buf, { header: true, columns: fields }, async (err, data) => {
                 const content = Buffer.from(data).toString('base64')
                 try {
-                    await sendEmail('Export occypancy model report [RFCx Arbimon]', 'occupancy-model.csv', rowData, content)
+                    await sendEmail('Export occypancy model report [RFCx Arbimon]', 'occupancy-model.csv', rowData, content, false)
                     await updateExportRecordings(rowData, { processed_at: dateByCondition })
                     await recordings.closeConnection()
                     resolve()
@@ -248,7 +250,7 @@ async function processGroupedDetectionsStream (results, rowData, projection_para
             csv_stringify(_buf, { header: true, columns: fields }, async (err, data) => {
                 const content = Buffer.from(data).toString('base64')
                 try {
-                    await sendEmail('Export grouped detections [RFCx Arbimon]', 'grouped-detections-export.csv', rowData, content)
+                    await sendEmail('Export grouped detections [RFCx Arbimon]', 'grouped-detections-export.csv', rowData, content, false)
                     await updateExportRecordings(rowData, { processed_at: dateByCondition })
                     await recordings.closeConnection()
                     resolve()
@@ -340,8 +342,17 @@ async function transformStream (results, rowData, dateByCondition, message, jobN
         datastream.on('end', async () => {
             csv_stringify(_buf, { header: true, columns: fields }, async (err, data) => {
                 const content = Buffer.from(data).toString('base64')
+                const contentSize = Buffer.byteLength(content)
+                const isBigContent = true // contentSize && contentSize > 10240 // 10MB
+                if (isBigContent) {
+                    const filePath = await saveLatestData(S3_BUCKET_ARBIMON, data, rowData.project_id, dateByCondition, 'export-recording')
+                    const url = await getSignedUrl(S3_BUCKET_ARBIMON, filePath, 'text/csv')
+                    await sendEmail('Export recording report [RFCx Arbimon]', null, rowData, url, true)
+                }
                 try {
-                    await sendEmail('Export recording report [RFCx Arbimon]', 'export-recording.csv', rowData, content)
+                    if (!isBigContent) {
+                        await sendEmail('Export recording report [RFCx Arbimon]', 'export-recording.csv', rowData, content, false)
+                    }
                     await updateExportRecordings(rowData, { processed_at: dateByCondition })
                     await recordings.closeConnection()
                     resolve()
@@ -358,14 +369,19 @@ async function transformStream (results, rowData, dateByCondition, message, jobN
 }
 
 // Send report to the user
-async function sendEmail (subject, title, rowData, content) {
-    const message = {
+async function sendEmail (subject, title, rowData, content, isHtml) {
+    let message = {
         from_email: 'no-reply@rfcx.org',
         to: [{
             email: rowData.user_email
         }],
-        subject: subject,
-        attachments: [{
+        subject: subject
+    }
+    if (isHtml) {
+        const htmlMessage = `<span style="color:black;margin-right:5px">Your export report for the project "${rowData.name}" has been completed </span> <button style="background:#31984f;border-color:#31984f;padding: 6px 12px;border-radius:4px;cursor: pointer"> <a style="text-decoration:none;color:#e9e6e3" href="${content}">Download report</a> </button>`
+        message.html = htmlMessage
+    } else {
+        message.attachments = [{
             type: 'text/csv',
             name: title,
             content: content
