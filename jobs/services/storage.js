@@ -37,11 +37,10 @@ async function getSignedUrl (bucket, filePath, contentType) {
   const params = {
     Bucket: bucket,
     Key: filePath,
-    Expires: 60 * 60 * 24, // 24 hours
-    ContentType: contentType
+    Expires: 60 * 60 * 24 // 24 hours
   }
   return (new Promise((resolve, reject) => {
-    s3.getSignedUrl('putObject', params, (err, data) => {
+    s3.getSignedUrl('getObject', params, (err, data) => {
       if (err) {
         reject(err)
       } else {
