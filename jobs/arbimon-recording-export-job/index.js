@@ -8,6 +8,7 @@ const projects = require('../../app/model/projects')
 const stream = require('stream');
 const csv_stringify = require('csv-stringify');
 const mandrill = require('mandrill-api/mandrill')
+const config_hosts = require('../../config/hosts');
 const { getSignedUrl, saveLatestData } = require('../services/storage')
 const S3_BUCKET_ARBIMON = process.env.S3_BUCKET_ARBIMON
 
@@ -303,7 +304,7 @@ async function transformStream (results, rowData, dateByCondition, message, jobN
             }
             delete row.meta;
             if (row.url) {
-                row.url = `${config('hosts').publicUrl}/api/project/${req.project.url}/recordings/download/${row.url}`;
+                row.url = `${config_hosts.publicUrl}/api/project/${req.project.url}/recordings/download/${row.url}`;
             }
             // Fill a specific label for each cell without validations data.
             fields.forEach(f => {
