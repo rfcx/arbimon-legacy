@@ -121,6 +121,7 @@ router.get('/recordings-export', function(req, res, next) {
     const userEmail = filters.userEmail
     delete filters.userEmail
     const userId = req.session.user.id;
+    projection.projectUrl = req.project.url
     model.recordings.writeExportParams(projection, filters, userId, userEmail).then(function(data) {
         res.json({ success: true })
     }).catch(next);

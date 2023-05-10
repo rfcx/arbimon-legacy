@@ -1530,6 +1530,7 @@ var Recordings = {
             soundscapeComposition:  arrayOrSingle(joi.number()),
             tag:  arrayOrSingle(joi.number()),
             grouped: joi.string(),
+            projectUrl: joi.string()
         }
     },
 

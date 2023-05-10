@@ -35,6 +35,8 @@ async function main () {
         return
     }
 
+    console.log(`\n\n project = ${ rowData.name }`)
+
     const message = `project = ${ rowData.name } [${ rowData.project_id }] ${ rowData.created_at }`
     const jobName = 'Export Recording Job'
     try {
@@ -80,7 +82,7 @@ async function main () {
     }
 
     const data = await recordings.exportRecordingData(projection_parameters, filters)
-    return transformStream(data, rowData, dateByCondition, message, jobName).then(async () => {
+    return transformStream(data, rowData, dateByCondition, message, jobName, projection_parameters.projectUrl).then(async () => {
         console.log(`arbimon-recording-export job finished: export recordings report for ${message}`)
     })
   } catch (e) {
@@ -267,7 +269,7 @@ async function processGroupedDetectionsStream (results, rowData, projection_para
 }
 
 // Process the Export recordings report and send the email
-async function transformStream (results, rowData, dateByCondition, message, jobName) {
+async function transformStream (results, rowData, dateByCondition, message, jobName, projectUrl) {
     return new Promise(function (resolve, reject) {
         console.log('total results length', results.length)
         let fields = [];
@@ -304,7 +306,7 @@ async function transformStream (results, rowData, dateByCondition, message, jobN
             }
             delete row.meta;
             if (row.url) {
-                row.url = `${config_hosts.publicUrl}/api/project/${req.project.url}/recordings/download/${row.url}`;
+                row.url = `${config_hosts.publicUrl}/api/project/${projectUrl}/recordings/download/${row.url}`;
             }
             // Fill a specific label for each cell without validations data.
             fields.forEach(f => {
