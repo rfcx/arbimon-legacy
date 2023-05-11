@@ -345,7 +345,7 @@ async function transformStream (results, rowData, dateByCondition, message, jobN
             csv_stringify(_buf, { header: true, columns: fields }, async (err, data) => {
                 const content = Buffer.from(data).toString('base64')
                 const contentSize = Buffer.byteLength(content)
-                const isBigContent = true // contentSize && contentSize > 10240 // 10MB
+                const isBigContent = contentSize && contentSize > 10240 // 10MB
                 if (isBigContent) {
                     const filePath = await saveLatestData(S3_BUCKET_ARBIMON, data, rowData.project_id, dateByCondition, 'export-recording')
                     const url = await getSignedUrl(S3_BUCKET_ARBIMON, filePath, 'text/csv')
