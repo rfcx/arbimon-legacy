@@ -10,6 +10,7 @@ const sqlutil = require('../utils/sqlutil');
 const queryHandler = dbpool.queryHandler;
 const { capitalize } = require('../utils/string')
 const models = require('./index')
+const util  = require('util');
 
 
 // TODO define jobs as module that are require, and user db identifier field to
@@ -236,9 +237,13 @@ var Jobs = {
      *  @param {Function} callback - callback to return after setting the flag.
      */
     hide: function(jId, callback) {
-        var q = "update `jobs` set `hidden`  = 1 where `job_id` = ?";
-
+        const q = "update `jobs` set `hidden`  = 1 where `job_id` = ?";
         queryHandler(q, [jId], callback);
+    },
+
+    hideAsync: function(jId) {
+        let hideJob = util.promisify(this.hide)
+        return hideJob(jId)
     },
 
     /** Sets the cancel_requestted flag for the given job id.

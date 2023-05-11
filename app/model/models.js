@@ -61,6 +61,13 @@ module.exports = {
             WHERE jpt.job_id = ${job_id}`
         return dbpool.query(sql).get(0);
     },
+
+    getModelJobId: function (model_id) {
+        const sql = `SELECT jpt.job_id FROM job_params_training jpt
+            JOIN models m ON jpt.trained_model_id = m.model_id
+            WHERE m.model_id = ${model_id}`
+        return dbpool.query(sql).get(0);
+    },
     
     details: function(model_id, callback) {
         var q = "SELECT ms.`json_stats` as json, \n"+

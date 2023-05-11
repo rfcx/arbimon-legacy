@@ -166,6 +166,7 @@ router.post('/:aedJobId/remove', function(req, res, next) {
     res.type('json');
 
     const project_id = req.project.project_id;
+    const job_id = req.params.aedJobId
 
     q.resolve().then(function(){
         if(!req.haveAccess(project_id, 'manage AED and Clustering job')){
@@ -174,9 +175,10 @@ router.post('/:aedJobId/remove', function(req, res, next) {
             });
         }
     }).then(function(){
-        return model.AudioEventDetectionsClustering.delete(req.params.aedJobId);
-    }).then(function(){
+        return model.AudioEventDetectionsClustering.delete(job_id);
+    }).then(async function(){
         res.json({ ok: true });
+        await model.jobs.hideAsync(job_id)
     }).catch(next);
 });
 
