@@ -380,7 +380,8 @@ async function sendEmail (subject, title, rowData, content, isHtml) {
         subject: subject
     }
     if (isHtml) {
-        const htmlMessage = `<span style="color:black;margin-right:5px">Your export report for the project "${rowData.name}" has been completed </span> <button style="background:#31984f;border-color:#31984f;padding: 6px 12px;border-radius:4px;cursor: pointer"> <a style="text-decoration:none;color:#e9e6e3" href="${content}">Download report</a> </button>`
+        const htmlMessage = `<span style="color:black;margin-right:5px">Your export report for the project "${rowData.name}" has been completed </span> <button style="background:#31984f;border-color:#31984f;padding: 6px 12px;border-radius:4px;cursor: pointer"> <a style="text-decoration:none;color:#e9e6e3" href="${content}">Download report</a> </button><br>
+          <span style="color:black">Or copy the following link into your browser: ${content}</span>`
         message.html = htmlMessage
     } else {
         message.attachments = [{
