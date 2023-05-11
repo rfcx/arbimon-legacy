@@ -826,6 +826,13 @@ angular.module('a2.analysis.clustering-jobs', [
         console.log(err);
     });
 
+    $scope.getExportUrl = function() {
+        a2PatternMatching.getExportUrl({
+            jobId: $scope.clusteringJobId,
+            aed: encodeURIComponent($scope.aedData.id)
+        });
+    }
+
     $scope.onSearchChanged = function(item) {
         $scope.selectedFilterData = item;
         $scope.getRoisDetails().then(() => {

@@ -2,7 +2,7 @@ angular.module('a2.srv.clustering-jobs', [
     'a2.srv.project',
     'humane'
 ])
-.factory('a2ClusteringJobs', function($http, Project, notify) {
+.factory('a2ClusteringJobs', function($http, Project, notify, $httpParamSerializer) {
 
     return {
         list: function(opts) {
@@ -70,7 +70,11 @@ angular.module('a2.srv.clustering-jobs', [
             return $http.post('/api/project/' + Project.getUrl() + '/clustering-jobs/' + clusteringJobId + '/remove').then(function(response){
                 return response.data;
             }).catch(notify.serverError);
-        }
+        },
+        getExportUrl: function(opts) {
+            var serializedParams = $httpParamSerializer(opts);
+            return '/api/project/' + Project.getUrl() + '/clustering-jobs/' + opts.jobId + '/rois-details.csv' + (serializedParams.length ? '?'+serializedParams : '');
+        },
     };
 })
 ;
