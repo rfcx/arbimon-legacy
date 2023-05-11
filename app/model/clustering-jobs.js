@@ -96,6 +96,9 @@ let ClusteringJobs = {
             "A.aed_id, A.time_min, A.time_max, A.frequency_min, A.frequency_max, A.recording_id, A.uri_image as 'uri', IF (A.species_id IS NULL, NULL, 1) AS 'validated'"
         );
 
+        tables.push("JOIN job_params_audio_event_clustering C ON A.job_id = C.audio_event_detection_job_id");
+        select.push('C.parameters')
+
         if (options.aed) {
             tables.push("LEFT JOIN species sp ON sp.species_id = A.species_id");
             tables.push("LEFT JOIN songtypes sgt ON sgt.songtype_id = A.songtype_id");
@@ -111,7 +114,6 @@ let ClusteringJobs = {
 
         if (options.perDate) {
             select.push('C.`date_created`');
-            tables.push("JOIN job_params_audio_event_clustering C ON A.job_id = C.audio_event_detection_job_id");
             groupby.push('A.aed_id');
         }
 
@@ -123,7 +125,13 @@ let ClusteringJobs = {
             "FROM " + tables.join("\n") + "\n" +
             "WHERE " + constraints.join(" AND ")+ "\n" +
             (groupby.length ? ("\nGROUP BY " + groupby.join(",\n    ")) : "")
-        )
+        ).then((rows) => {
+            console.log(rows.length)
+            rows.forEach(_r => {
+                _r.parameters = JSON.parse(_r.parameters) ?? ''
+            })
+            return rows
+        })
     },
 
     getClusteringPlaylist: async function(recId) {

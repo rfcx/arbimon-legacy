@@ -126,7 +126,8 @@
                             popover-html="'Frequency Max (Hz): {{(roi.frequency_max) || '(Missing)'}} <br>
                                             Frequency Min (Hz): {{(roi.frequency_min) || 0}} <br>
                                             Duration (s): {{(roi.time_max - roi.time_min).toFixed(2)}} <br>
-                                            Species, songtype: {{ cluster.key }}'"
+                                            Species, songtype: {{ cluster.key }} <br>
+                                            Min. Points: {{roi.parameters['Min. Points']}}, Distance Threshold: {{roi.parameters['Distance Threshold']}}, Max. Cluster Size: {{roi.parameters['Max. Cluster Size']}} '"
                             popover-trigger="mouseenter"
                             popover-append-to-body="true"
                         >
