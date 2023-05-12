@@ -67,8 +67,7 @@ router.post('/update', function(req, res, next) {
     if (site.project && site.project.project_id !== project.project_id) {
         site.project_id = site.project.project_id;
     }
-
-    model.sites.exists(site.name, project.project_id, async function(err, exists) {
+    model.sites.exists(site.name, site.project_id || project.project_id, async function(err, exists) {
         if(err) return next(err);
 
         if(exists)
