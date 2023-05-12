@@ -38,7 +38,7 @@ router.post('/create', function(req, res, next) {
         if(err) return next(err);
 
         if(exists)
-            return res.json({ error: 'site with same name already exists'});
+            return res.json({ error: 'Site with same name already exists'});
 
         site.project_id = project.project_id;
 
@@ -68,10 +68,17 @@ router.post('/update', function(req, res, next) {
         site.project_id = site.project.project_id;
     }
 
-    model.sites.updateSite(site, req.session.idToken).then(function() {
-        res.json({ message: 'Site updated' });
-        model.projects.updateProjectLocation(project.project_id, site.lat, site.lon)
-    }).catch(next);
+    model.sites.exists(site.name, project.project_id, async function(err, exists) {
+        if(err) return next(err);
+
+        if(exists)
+            return res.json({ error: 'Site with same name already exists'});
+
+        model.sites.updateSite(site, req.session.idToken).then(function() {
+            res.json({ message: 'Site updated' });
+            model.projects.updateProjectLocation(project.project_id, site.lat, site.lon)
+        }).catch(next);
+    })
 });
 
 router.post('/delete', function(req, res, next) {
