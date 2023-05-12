@@ -46,6 +46,10 @@ angular.module('a2.srv.clustering-jobs', [
                 return response.data;
             }).catch(notify.serverError);
         },
+        getExportUrl: function(opts) {
+            var serializedParams = $httpParamSerializer(opts);
+            return '/api/project/' + Project.getUrl() + '/clustering-jobs/' + opts.jobId + '/rois-details.csv' + (serializedParams.length ? '?'+serializedParams : '');
+        },
         getAudioUrlFor: function(recId, aedId) {
             return '/api/project/' + Project.getUrl() + '/clustering-jobs/' + recId + '/audio/' + aedId;
         },
@@ -70,10 +74,6 @@ angular.module('a2.srv.clustering-jobs', [
             return $http.post('/api/project/' + Project.getUrl() + '/clustering-jobs/' + clusteringJobId + '/remove').then(function(response){
                 return response.data;
             }).catch(notify.serverError);
-        },
-        getExportUrl: function(opts) {
-            var serializedParams = $httpParamSerializer(opts);
-            return '/api/project/' + Project.getUrl() + '/clustering-jobs/' + opts.jobId + '/rois-details.csv' + (serializedParams.length ? '?'+serializedParams : '');
         },
     };
 })

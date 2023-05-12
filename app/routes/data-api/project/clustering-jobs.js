@@ -8,6 +8,7 @@ const model = require('../../../model');
 const AWS = require('aws-sdk');
 const s3 = new AWS.S3();
 const config = require('../../../config');
+const csv_stringify = require("csv-stringify");
 const q = require('q');
 const fs = require('fs');
 
@@ -60,6 +61,24 @@ router.post('/:job_id/rois-details', function(req, res, next) {
                 res.json(result);
             }
             else res.json(data);
+        }).catch(next);
+});
+
+router.get('/:job_id/rois-details.csv', function(req, res, next) {
+    res.type('text/csv');
+    let params = req.query
+    params.project_id = req.project.project_id | 0;
+    params.exportReport = true
+
+    return model.ClusteringJobs.findRois(params)
+        .then(async function(results){
+            const datastream = results[0];
+            const fields = results[1].map(function(f){return f.name});
+
+        datastream
+            .pipe(csv_stringify({header:true, columns:fields}))
+            .pipe(res);
+
         }).catch(next);
 });
 

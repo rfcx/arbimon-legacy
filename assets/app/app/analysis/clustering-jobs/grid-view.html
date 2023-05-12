@@ -101,14 +101,13 @@
                                 </ui-select-choices>
                             </ui-select>
                         </div>
-                        <div class="export-url pull-right">
-                            <a class="btn btn-default"
-                            ng-href="{{ getExportUrl() }}"
+                        <div class="export-url btn-group btn-group-margin row-flex flex-self-align-bottom">
+                            <button class="btn btn-default"
                             ng-click="exportReport($event) | trackEvent:'Grid View':'export'"
                             tooltip="Export Clustering ROIs Data">
-                            <i class="fa fa-download"></i>
-                        </a>
-                    </div>
+                                <i class="fa fa-download"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

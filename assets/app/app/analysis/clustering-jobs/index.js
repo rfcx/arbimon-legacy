@@ -768,7 +768,7 @@ angular.module('a2.analysis.clustering-jobs', [
         templateUrl: '/app/analysis/clustering-jobs/grid-view.html'
     };
 })
-.controller('GridViewCtrl' , function($scope, $http, a2UserPermit, a2ClusteringJobs, a2AudioBarService, a2AudioEventDetectionsClustering, Project, Songtypes, a2Playlists, notify) {
+.controller('GridViewCtrl' , function($scope, $http, a2UserPermit, a2ClusteringJobs, a2AudioBarService, a2AudioEventDetectionsClustering, Project, Songtypes, a2Playlists, notify, $downloadResource) {
     $scope.loading = true;
     $scope.isSquareSize = false
     $scope.infopanedata = '';
@@ -826,13 +826,6 @@ angular.module('a2.analysis.clustering-jobs', [
         console.log(err);
     });
 
-    $scope.getExportUrl = function() {
-        a2PatternMatching.getExportUrl({
-            jobId: $scope.clusteringJobId,
-            aed: encodeURIComponent($scope.aedData.id)
-        });
-    }
-
     $scope.onSearchChanged = function(item) {
         $scope.selectedFilterData = item;
         $scope.getRoisDetails().then(() => {
@@ -888,6 +881,26 @@ angular.module('a2.analysis.clustering-jobs', [
     }
 
     $scope.getRoisDetails();
+
+    $scope.exportReport = function() {
+        if(!a2UserPermit.can('manage AED and Clustering job')) {
+            notify.error('You do not have permission to download Clustering details');
+            return;
+        }
+        var params = {
+            jobId: $scope.clusteringJobId,
+            aed: $scope.aedData.id, // encodeURIComponent($scope.aedData.id)
+            search: $scope.selectedFilterData.value
+        }
+        if ($scope.selectedFilterData.value == 'per_site')  {
+            params.perSite = true;
+        }
+        else if ($scope.selectedFilterData.value == 'per_date') {
+            params.perDate = true;
+        }
+        else params.all = true;
+        $downloadResource(a2ClusteringJobs.getExportUrl(params));
+    }
 
     $scope.getStatusForEmptyData = function() {
         $scope.loading = false;

@@ -6,7 +6,6 @@ const AWS = require('aws-sdk');
 const q = require('q');
 const dbpool = require('../utils/dbpool');
 const Recordings = require('./recordings');
-const APIError = require('../utils/apierror');
 const config = require('../config');
 const k8sConfig = config('k8s');
 const jsonTemplates = require('../utils/json-templates');
@@ -120,13 +119,16 @@ let ClusteringJobs = {
         if (options.rec_id) {
             constraints.push('A.recording_id = ' + dbpool.escape(options.rec_id));
         }
-        return dbpool.query(
-            "SELECT " + select.join(",\n    ") + "\n" +
-            "FROM " + tables.join("\n") + "\n" +
-            "WHERE " + constraints.join(" AND ")+ "\n" +
-            (groupby.length ? ("\nGROUP BY " + groupby.join(",\n    ")) : "")
-        ).then((rows) => {
-            console.log(rows.length)
+
+        const sql = "SELECT " + select.join(",\n    ") + "\n" +
+        "FROM " + tables.join("\n") + "\n" +
+        "WHERE " + constraints.join(" AND ")+ "\n" +
+        (groupby.length ? ("\nGROUP BY " + groupby.join(",\n    ")) : "")
+
+        if (options.exportReport) {
+            return dbpool.streamQuery(sql)
+        }
+        return dbpool.query(sql).then((rows) => {
             rows.forEach(_r => {
                 _r.parameters = JSON.parse(_r.parameters) ?? ''
             })
