@@ -1,10 +1,18 @@
 # Arbimon Test Notes
 Test Notes are used to list what pages / components / features / user flows are affected by each update.
 
+## v3.0.80
+
+- Check for duplicate stream name when creating/updating or moving stream to another project
+  - Try to create stream with existing name in the projet - app should return an error
+  - Try to rename existing stream to existing name in the project - app should return an error
+  - Try to move existing stream to another project where there is another stream with the same name - app should return an error
+  - Try to move existing stream with a different name + rename it to another project where there is another stream with the same name - app should return an error
+
 ## v3.0.69
 
 - Improve web-uploader to be able upload long recordings
-  - The user can upload long recordings. 
+  - The user can upload long recordings.
 
 
 ## v3.0.68
