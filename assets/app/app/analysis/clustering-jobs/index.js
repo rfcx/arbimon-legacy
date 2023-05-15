@@ -32,6 +32,7 @@ angular.module('a2.analysis.clustering-jobs', [
             templateUrl: '/app/analysis/clustering-jobs/list.html'
         });
 })
+//------------------- Clustering List page ---------------
 .controller('ClusteringJobsModelCtrl' , function($scope, $state, $stateParams, a2ClusteringJobs, JobsData, notify, $location, $modal, a2UserPermit) {
     $scope.selectedClusteringJobId = $stateParams.clusteringJobId;
     $scope.showViewGridPage = false;
@@ -141,6 +142,8 @@ angular.module('a2.analysis.clustering-jobs', [
         };
     }
 )
+
+//------------------- Clustering Details page ---------------
 
 .directive('a2ClusteringDetails', function(){
     return {
@@ -755,6 +758,9 @@ angular.module('a2.analysis.clustering-jobs', [
     });
     this.initialize();
 })
+
+//------------------- Gid View page ---------------
+
 .directive('a2GridView', function() {
     return {
         restrict : 'E',
@@ -768,7 +774,29 @@ angular.module('a2.analysis.clustering-jobs', [
         templateUrl: '/app/analysis/clustering-jobs/grid-view.html'
     };
 })
-.controller('GridViewCtrl' , function($scope, $http, a2UserPermit, a2ClusteringJobs, a2AudioBarService, a2AudioEventDetectionsClustering, Project, Songtypes, a2Playlists, notify, $downloadResource) {
+
+.controller('ExportReportModalCtrl', function($scope, $modalInstance, a2ClusteringJobs, data) {
+    $scope.userEmail = data.userEmail
+    $scope.accessExportReport = function(email) {
+        data.userEmail = email
+        $scope.isExporting = true
+        $scope.errMess = ''
+        a2ClusteringJobs.exportClusteringROIs(data).then(data => {
+            $scope.isExporting = false
+            if (data.error) {
+                $scope.errMess = data.error;
+            }
+            else {
+                $modalInstance.close();
+            }
+        })
+    }
+    $scope.changedUserEmail = function() {
+        $scope.errMess = null;
+    }
+})
+
+.controller('GridViewCtrl' , function($scope, $http, a2UserPermit, a2ClusteringJobs, a2AudioBarService, a2AudioEventDetectionsClustering, Project, Songtypes, a2Playlists, notify, $modal) {
     $scope.loading = true;
     $scope.isSquareSize = false
     $scope.infopanedata = '';
@@ -857,12 +885,13 @@ angular.module('a2.analysis.clustering-jobs', [
             search: $scope.selectedFilterData.value
         }).then(function(data) {
             const groupedData = []
-            Object.values($scope.gridData).forEach(value => {
-                Object.entries(value).forEach(entry => {
+            Object.values($scope.gridData).forEach(cluster => {
+                Object.entries(cluster).forEach(entry => {
                     if(entry[0] == "aed") {
                         entry[1].forEach(id => {
                             const matched = data.find(aed => aed.aed_id === id)
                             if (matched) {
+                                matched.cluster = cluster.name
                                 groupedData.push(matched)
                             }
                         })
@@ -889,8 +918,9 @@ angular.module('a2.analysis.clustering-jobs', [
         }
         var params = {
             jobId: $scope.clusteringJobId,
-            aed: $scope.aedData.id, // encodeURIComponent($scope.aedData.id)
-            search: $scope.selectedFilterData.value
+            aed: $scope.aedData.id,
+            search: $scope.selectedFilterData.value,
+            userEmail: a2UserPermit.getUserEmail() || ''
         }
         if ($scope.selectedFilterData.value == 'per_site')  {
             params.perSite = true;
@@ -899,8 +929,24 @@ angular.module('a2.analysis.clustering-jobs', [
             params.perDate = true;
         }
         else params.all = true;
-        $downloadResource(a2ClusteringJobs.getExportUrl(params));
+        $scope.openExportPopup(params)
     }
+
+    $scope.openExportPopup = function(listParams) {
+        const modalInstance = $modal.open({
+            controller: 'ExportReportModalCtrl',
+            templateUrl: '/app/analysis/clustering-jobs/export-report.html',
+            resolve: {
+                data: function() {
+                    return listParams
+                }
+            },
+            backdrop: false
+        });
+        modalInstance.result.then(function() {
+            notify.log('Your report export request is processing <br> and will be sent by email.');
+        });
+    };
 
     $scope.getStatusForEmptyData = function() {
         $scope.loading = false;

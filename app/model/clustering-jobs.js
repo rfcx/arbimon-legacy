@@ -126,7 +126,7 @@ let ClusteringJobs = {
         (groupby.length ? ("\nGROUP BY " + groupby.join(",\n    ")) : "")
 
         if (options.exportReport) {
-            return dbpool.streamQuery(sql)
+            return dbpool.query(sql)
         }
         return dbpool.query(sql).then((rows) => {
             rows.forEach(_r => {

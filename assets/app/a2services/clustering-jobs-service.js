@@ -46,9 +46,14 @@ angular.module('a2.srv.clustering-jobs', [
                 return response.data;
             }).catch(notify.serverError);
         },
-        getExportUrl: function(opts) {
-            var serializedParams = $httpParamSerializer(opts);
-            return '/api/project/' + Project.getUrl() + '/clustering-jobs/' + opts.jobId + '/rois-details.csv' + (serializedParams.length ? '?'+serializedParams : '');
+        exportClusteringROIs: function(opts) {
+            const config = {
+                params: opts
+            };
+            return $http.post('/api/project/' + Project.getUrl() + '/clustering-jobs/' + opts.jobId + '/rois-export', config)
+                .then(function(response){
+                    return response.data;
+                }).catch(notify.serverError);
         },
         getAudioUrlFor: function(recId, aedId) {
             return '/api/project/' + Project.getUrl() + '/clustering-jobs/' + recId + '/audio/' + aedId;

@@ -64,24 +64,6 @@ router.post('/:job_id/rois-details', function(req, res, next) {
         }).catch(next);
 });
 
-router.get('/:job_id/rois-details.csv', function(req, res, next) {
-    res.type('text/csv');
-    let params = req.query
-    params.project_id = req.project.project_id | 0;
-    params.exportReport = true
-
-    return model.ClusteringJobs.findRois(params)
-        .then(async function(results){
-            const datastream = results[0];
-            const fields = results[1].map(function(f){return f.name});
-
-        datastream
-            .pipe(csv_stringify({header:true, columns:fields}))
-            .pipe(res);
-
-        }).catch(next);
-});
-
 router.get('/:recId/audio/:aedId', function(req, res, next) {
     model.ClusteringJobs.getRoiAudioFile({ recId: req.params.recId, aedId: req.params.aedId, gain: req.query.gain }).then(function(roiAudio) {
         if(!roiAudio){
@@ -126,6 +108,24 @@ router.get('/audio-event-detections', function(req, res, next) {
     })
     .then(function(data){
         res.json(data);
+    }).catch(next);
+});
+
+router.post('/:job_id/rois-export', function(req, res, next) {
+    res.type('json');
+    const bodyParams = req.body.params
+    const userEmail = bodyParams.userEmail
+    const userId = req.session.user.id
+    const projection = {
+        projectUrl: req.project.url,
+        aed: bodyParams.aed,
+        search: bodyParams.search
+    }
+    const filters = {
+        project_id: req.project.project_id
+    }
+    model.recordings.writeExportParams(projection, filters, userId, userEmail).then(function(data) {
+        res.json({ success: true })
     }).catch(next);
 });
 

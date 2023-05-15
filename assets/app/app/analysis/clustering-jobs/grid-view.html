@@ -19,6 +19,7 @@
                         <br>Date: {{ job_details.timestamp | moment : 'lll' }}
                         <br>Number of audio events clustered: {{ aedData.id.length || 'no data' }}
                         <br>Number of clusters detected: {{ aedData.count || 'no data' }}
+                        <br>Min. Points: {{ job_details.parameters['Min. Points'] || 'no data' }}, Distance Threshold: {{ job_details.parameters['Distance Threshold'] || 'no data' }}, Max. Cluster Size: {{ job_details.parameters['Max. Cluster Size'] || 'no data' }}
                     </div>
                     <div class="col-sm-8 row-flex flex-space-end panel-body pb-0 pr-0 clusters-filter-right">
                         <div class="row-flex flex-space-between flex-self-align-bottom mr-1">
@@ -134,7 +135,7 @@
                                             Frequency Min (Hz): {{(roi.frequency_min) || 0}} <br>
                                             Duration (s): {{(roi.time_max - roi.time_min).toFixed(2)}} <br>
                                             Species, songtype: {{ cluster.key }} <br>
-                                            Min. Points: {{roi.parameters['Min. Points']}}, Distance Threshold: {{roi.parameters['Distance Threshold']}}, Max. Cluster Size: {{roi.parameters['Max. Cluster Size']}} '"
+                                            Cluster: {{ roi.cluster }} '"
                             popover-trigger="mouseenter"
                             popover-append-to-body="true"
                         >
