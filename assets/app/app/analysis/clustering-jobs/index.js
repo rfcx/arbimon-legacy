@@ -816,7 +816,8 @@ angular.module('a2.analysis.clustering-jobs', [
             {value:'all', text:'All', description: 'Show all matched rois.'},
             {value:'per_cluster', text:'Sort per Cluster', description: 'Show all rois ranked per Cluster.'},
             {value:'per_site', text:'Sort per Site', description: 'Show all rois ranked per Site.'},
-            {value:'per_date', text:'Sort per Date', description: 'Show all rois sorted per Date.'}
+            {value:'per_date', text:'Sort per Date', description: 'Show all rois sorted per Date.'},
+            {value:'per_species', text:'Sort per Species', description: 'Show all rois sorted per Species.'}
         ]
     };
 
@@ -1009,6 +1010,24 @@ angular.module('a2.analysis.clustering-jobs', [
                 }
             }
             $scope.rows = Object.values($scope.ids);
+        } else if (data && $scope.selectedFilterData.value === 'per_species') {
+            var speciesObj = {};
+            data.forEach((roi) => {
+                if (!speciesObj[roi.species_id]) {
+                    speciesObj[roi.species_id] = {
+                        id: roi.species_id,
+                        speciesName: roi.scientific_name,
+                        species: [roi]
+                    }
+                }
+                else {
+                    speciesObj[roi.species_id].species.push(roi);
+                }
+            })
+            const rows = Object.values(speciesObj).map(row => {
+                return { id: row.id, speciesName: row.speciesName || 'Unvalidated ROIs', species: $scope.groupRoisBySpecies(row.species) }
+            });
+            $scope.rows = rows
         } else {
             if ($scope.selectedFilterData.value === 'per_date') {
                 data.sort(function(a, b) {

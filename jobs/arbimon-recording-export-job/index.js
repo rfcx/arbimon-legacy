@@ -128,19 +128,19 @@ async function processClusteringStream (cluster, results, rowData, dateByConditi
                 const contentSize = Buffer.byteLength(content)
                 const isBigContent = contentSize && contentSize > 10240 // 10MB
                 if (isBigContent) {
-                    const filePath = await saveLatestData(S3_BUCKET_ARBIMON, data, rowData.project_id, dateByCondition, 'export-recording')
+                    const filePath = await saveLatestData(S3_BUCKET_ARBIMON, data, rowData.project_id, dateByCondition, 'clustering-rois-export')
                     const url = await getSignedUrl(S3_BUCKET_ARBIMON, filePath, 'text/csv')
-                    await sendEmail('Export recording report [RFCx Arbimon]', null, rowData, url, true)
+                    await sendEmail('Export Clustering ROIs report [RFCx Arbimon]', null, rowData, url, true)
                 }
                 try {
                     if (!isBigContent) {
-                        await sendEmail('Export recording report [RFCx Arbimon]', 'export-recording.csv', rowData, content, false)
+                        await sendEmail('Export Clustering ROIs [RFCx Arbimon]', 'clustering-rois-export.csv', rowData, content, false)
                     }
                     await updateExportRecordings(rowData, { processed_at: dateByCondition })
                     await recordings.closeConnection()
                     resolve()
                 } catch(error) {
-                    console.error('Error while sending export-recording email.', error)
+                    console.error('Error while sending clustering-rois-export email', error)
                     await errorMessage(message, jobName)
                     await updateExportRecordings(rowData, { error: JSON.stringify(error) })
                     await recordings.closeConnection()
