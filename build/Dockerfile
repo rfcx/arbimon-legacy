@@ -12,7 +12,6 @@ CMD ["node", "jobs/arbimon-recording-delete-job/index.js"]
 
 # -- arbimon-recording-export-job --
 FROM build as arbimon-recording-export-job
-RUN NODE_OPTIONS=--max_old_space_size=8192
 RUN mkdir -p /config
 COPY config/ /app/config
 RUN mkdir -p /app
@@ -20,6 +19,8 @@ COPY app/config.js /app/app/config.js
 RUN mkdir -p /app/utils
 COPY app/utils /app/app/utils
 RUN mkdir -p /app/model
+RUN mkdir -p /app/k8s/job
+COPY app/k8s/job/index.js /app/app/k8s/job/index.js
 COPY app/model/recordings.js /app/app/model/recordings.js
 COPY app/model/clustering-jobs.js /app/app/model/clustering-jobs.js
 COPY app/model/projects.js /app/app/model/projects.js
