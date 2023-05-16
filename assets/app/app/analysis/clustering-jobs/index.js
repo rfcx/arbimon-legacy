@@ -903,6 +903,7 @@ angular.module('a2.analysis.clustering-jobs', [
             $scope.allRois = groupedData
             $scope.isRoisLoading = false;
             $scope.getRoisDetailsSegment();
+            $scope.combineRoisPerCluster();
         }).catch(err => {
             console.log(err);
             $scope.getStatusForEmptyData();
@@ -910,6 +911,19 @@ angular.module('a2.analysis.clustering-jobs', [
     }
 
     $scope.getRoisDetails();
+
+    $scope.combineRoisPerCluster = function() {
+        $scope.roisPerCluster = {};
+        $scope.allRois.forEach((roi) => {
+            if (!$scope.roisPerCluster[roi.cluster]) {
+                $scope.roisPerCluster[roi.cluster] = [roi.aed_id]
+            }
+            else {
+                $scope.roisPerCluster[roi.cluster].push(roi.aed_id);
+            }
+        })
+    }
+
 
     $scope.exportReport = function() {
         if(!a2UserPermit.can('manage AED and Clustering job')) {
@@ -919,6 +933,7 @@ angular.module('a2.analysis.clustering-jobs', [
         var params = {
             jobId: $scope.clusteringJobId,
             aed: $scope.aedData.id,
+            cluster: $scope.roisPerCluster,
             search: $scope.selectedFilterData.value,
             userEmail: a2UserPermit.getUserEmail() || ''
         }

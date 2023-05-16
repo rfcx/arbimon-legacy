@@ -119,6 +119,7 @@ router.post('/:job_id/rois-export', function(req, res, next) {
     const projection = {
         projectUrl: req.project.url,
         aed: bodyParams.aed,
+        cluster: bodyParams.cluster,
         search: bodyParams.search
     }
     const filters = {

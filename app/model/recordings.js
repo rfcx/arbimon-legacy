@@ -1532,6 +1532,7 @@ var Recordings = {
             grouped: joi.string(),
             projectUrl: joi.string(),
             aed: arrayOrSingle(joi.number()),
+            cluster: joi.object(),
             search: joi.string()
         }
     },

@@ -56,7 +56,7 @@ async function main () {
         params.project_id = filters.project_id
         params.exportReport = true
         const data = await clusterings.findRois(params)
-        return processClusteringStream(data, rowData, dateByCondition, message, jobName).then(async () => {
+        return processClusteringStream(params.cluster, data, rowData, dateByCondition, message, jobName).then(async () => {
             console.log(`arbimon-recording-export job finished: clustering report for ${message}`)
         })
     }
@@ -102,19 +102,24 @@ async function main () {
 }
 
 // Process Clustering report and send the email
-async function processClusteringStream (results, rowData, dateByCondition, message, jobName) {
+async function processClusteringStream (cluster, results, rowData, dateByCondition, message, jobName) {
     return new Promise(function (resolve, reject) {
         console.log('total results length', results.length)
         let _buf = []
         let fields = [];
         fields.push(...Object.keys(results[0]))
+        fields.push('cluster')
         let datastream = new stream.Readable({objectMode: true});
         results.forEach(result => {
-            console.log('datastream.push', result)
             datastream.push(result)
         });
         datastream.push(null);
         datastream.on('data', (d) => {
+            for (let row in cluster) {
+                if (cluster[row].includes(d.aed_id)) {
+                    d.cluster = row
+                }
+            }
             _buf.push(Object.values(d))
         })
         datastream.on('end', async () => {
