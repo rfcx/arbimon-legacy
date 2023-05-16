@@ -1,5 +1,11 @@
 # Arbimon Release Notes
 
+## v3.0.80 - May 12, 2023
+
+Enhancements ✨
+
+- Check for duplicate stream name when creating/updating or moving stream to another project
+
 ## v3.0.79 - April 22, 2023
 
 Enhancements ✨
