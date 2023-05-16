@@ -8,6 +8,7 @@ const model = require('../../../model');
 const AWS = require('aws-sdk');
 const s3 = new AWS.S3();
 const config = require('../../../config');
+const csv_stringify = require("csv-stringify");
 const q = require('q');
 const fs = require('fs');
 
@@ -107,6 +108,25 @@ router.get('/audio-event-detections', function(req, res, next) {
     })
     .then(function(data){
         res.json(data);
+    }).catch(next);
+});
+
+router.post('/:job_id/rois-export', function(req, res, next) {
+    res.type('json');
+    const bodyParams = req.body.params
+    const userEmail = bodyParams.userEmail
+    const userId = req.session.user.id
+    const projection = {
+        projectUrl: req.project.url,
+        aed: bodyParams.aed,
+        cluster: bodyParams.cluster,
+        search: bodyParams.search
+    }
+    const filters = {
+        project_id: req.project.project_id
+    }
+    model.recordings.writeExportParams(projection, filters, userId, userEmail).then(function(data) {
+        res.json({ success: true })
     }).catch(next);
 });
 

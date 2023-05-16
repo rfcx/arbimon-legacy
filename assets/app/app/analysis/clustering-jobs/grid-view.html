@@ -19,6 +19,7 @@
                         <br>Date: {{ job_details.timestamp | moment : 'lll' }}
                         <br>Number of audio events clustered: {{ aedData.id.length || 'no data' }}
                         <br>Number of clusters detected: {{ aedData.count || 'no data' }}
+                        <br>Min. Points: {{ job_details.parameters['Min. Points'] || 'no data' }}, Distance Threshold: {{ job_details.parameters['Distance Threshold'] || 'no data' }}, Max. Cluster Size: {{ job_details.parameters['Max. Cluster Size'] || 'no data' }}
                     </div>
                     <div class="col-sm-8 row-flex flex-space-end panel-body pb-0 pr-0 clusters-filter-right">
                         <div class="row-flex flex-space-between flex-self-align-bottom mr-1">
@@ -101,6 +102,13 @@
                                 </ui-select-choices>
                             </ui-select>
                         </div>
+                        <div class="export-url btn-group btn-group-margin row-flex flex-self-align-bottom">
+                            <button class="btn btn-default"
+                            ng-click="exportReport($event) | trackEvent:'Grid View':'export'"
+                            tooltip="Export Clustering ROIs Data">
+                                <i class="fa fa-download"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -110,7 +118,9 @@
             <div ng-if="!loading && !infopanedata && rows && rows.length" class="row panel-body">
                 <span ng-repeat="row in rows">
                     <!-- Site name -->
-                    <div ng-if="row.site && row.species && row.species.length" class="h3" id="site-{{row.id}}"><i class="fa fa-map-marker"></i>{{row.site}}</div>
+                    <div ng-if="row.site && row.species && row.species.length" class="h3" id="site-{{row.id}}"><i class="fa fa-map-marker mr-1"></i>{{row.site}}</div>
+                    <!-- Species name -->
+                    <div ng-if="row.speciesName && row.speciesName && row.species.length" class="h3" id="site-{{row.id}}">{{row.speciesName}}</div>
                     <!-- Cluster name -->
                     <div ng-if="row.cluster && row.species && row.species.length" class="h3" id="cluster-{{row.cluster}}">Cluster {{row.cluster}}</div>
                     <div ng-repeat="cluster in row.species">
@@ -126,7 +136,8 @@
                             popover-html="'Frequency Max (Hz): {{(roi.frequency_max) || '(Missing)'}} <br>
                                             Frequency Min (Hz): {{(roi.frequency_min) || 0}} <br>
                                             Duration (s): {{(roi.time_max - roi.time_min).toFixed(2)}} <br>
-                                            Species, songtype: {{ cluster.key }}'"
+                                            Species, songtype: {{ cluster.key }} <br>
+                                            Cluster: {{ roi.cluster }} '"
                             popover-trigger="mouseenter"
                             popover-append-to-body="true"
                         >

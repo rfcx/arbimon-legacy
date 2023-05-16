@@ -32,7 +32,8 @@ angular.module('a2.analysis.clustering-jobs', [
             templateUrl: '/app/analysis/clustering-jobs/list.html'
         });
 })
-.controller('ClusteringJobsModelCtrl' , function($scope, $state, $stateParams, a2ClusteringJobs, JobsData, notify, $location, $modal, a2UserPermit) {
+//------------------- Clustering List page ---------------
+.controller('ClusteringJobsModelCtrl' , function($scope, $state, $stateParams, a2ClusteringJobs, JobsData, notify, $location, $modal, a2UserPermit, $localStorage) {
     $scope.selectedClusteringJobId = $stateParams.clusteringJobId;
     $scope.showViewGridPage = false;
     $scope.loadClusteringJobs = function() {
@@ -51,9 +52,14 @@ angular.module('a2.analysis.clustering-jobs', [
     if (!$scope.selectedClusteringJobId) {
         $scope.loadClusteringJobs();
     }
-    if ($stateParams.gridContext) {
+
+    // Parse grid view data if it exists
+    const gridContext = JSON.parse($localStorage.getItem('analysis.gridContext'));
+    if ($stateParams.gridContext || (gridContext && $state.current.name === 'analysis.grid-view')) {
         $scope.showViewGridPage = true;
-        $scope.gridContext = $stateParams.gridContext;
+        $scope.gridContext = $stateParams.gridContext? $stateParams.gridContext : gridContext;
+    } else {
+        $localStorage.setItem('analysis.gridContext', null);
     }
 
     $scope.selectItem = function(clusteringJob) {
@@ -141,6 +147,8 @@ angular.module('a2.analysis.clustering-jobs', [
         };
     }
 )
+
+//------------------- Clustering Details page ---------------
 
 .directive('a2ClusteringDetails', function(){
     return {
@@ -755,6 +763,9 @@ angular.module('a2.analysis.clustering-jobs', [
     });
     this.initialize();
 })
+
+//------------------- Gid View page ---------------
+
 .directive('a2GridView', function() {
     return {
         restrict : 'E',
@@ -768,7 +779,29 @@ angular.module('a2.analysis.clustering-jobs', [
         templateUrl: '/app/analysis/clustering-jobs/grid-view.html'
     };
 })
-.controller('GridViewCtrl' , function($scope, $http, a2UserPermit, a2ClusteringJobs, a2AudioBarService, a2AudioEventDetectionsClustering, Project, Songtypes, a2Playlists, notify) {
+
+.controller('ExportReportModalCtrl', function($scope, $modalInstance, a2ClusteringJobs, data) {
+    $scope.userEmail = data.userEmail
+    $scope.accessExportReport = function(email) {
+        data.userEmail = email
+        $scope.isExporting = true
+        $scope.errMess = ''
+        a2ClusteringJobs.exportClusteringROIs(data).then(data => {
+            $scope.isExporting = false
+            if (data.error) {
+                $scope.errMess = data.error;
+            }
+            else {
+                $modalInstance.close();
+            }
+        })
+    }
+    $scope.changedUserEmail = function() {
+        $scope.errMess = null;
+    }
+})
+
+.controller('GridViewCtrl' , function($scope, $http, a2UserPermit, a2ClusteringJobs, a2AudioBarService, a2AudioEventDetectionsClustering, Project, Songtypes, a2Playlists, notify, $modal, $localStorage) {
     $scope.loading = true;
     $scope.isSquareSize = false
     $scope.infopanedata = '';
@@ -788,7 +821,8 @@ angular.module('a2.analysis.clustering-jobs', [
             {value:'all', text:'All', description: 'Show all matched rois.'},
             {value:'per_cluster', text:'Sort per Cluster', description: 'Show all rois ranked per Cluster.'},
             {value:'per_site', text:'Sort per Site', description: 'Show all rois ranked per Site.'},
-            {value:'per_date', text:'Sort per Date', description: 'Show all rois sorted per Date.'}
+            {value:'per_date', text:'Sort per Date', description: 'Show all rois sorted per Date.'},
+            {value:'per_species', text:'Sort per Species', description: 'Show all rois sorted per Species.'}
         ]
     };
 
@@ -819,6 +853,8 @@ angular.module('a2.analysis.clustering-jobs', [
             data.aed.forEach(i => $scope.aedData.id.push(i));
         });
     }
+
+    $localStorage.setItem('analysis.gridContext',  JSON.stringify($scope.gridContext));
 
     a2ClusteringJobs.getJobDetails($scope.clusteringJobId).then(function(data) {
         if (data) $scope.job_details = data;
@@ -857,12 +893,13 @@ angular.module('a2.analysis.clustering-jobs', [
             search: $scope.selectedFilterData.value
         }).then(function(data) {
             const groupedData = []
-            Object.values($scope.gridData).forEach(value => {
-                Object.entries(value).forEach(entry => {
+            Object.values($scope.gridData).forEach(cluster => {
+                Object.entries(cluster).forEach(entry => {
                     if(entry[0] == "aed") {
                         entry[1].forEach(id => {
                             const matched = data.find(aed => aed.aed_id === id)
                             if (matched) {
+                                matched.cluster = cluster.name
                                 groupedData.push(matched)
                             }
                         })
@@ -874,6 +911,7 @@ angular.module('a2.analysis.clustering-jobs', [
             $scope.allRois = groupedData
             $scope.isRoisLoading = false;
             $scope.getRoisDetailsSegment();
+            $scope.combineRoisPerCluster();
         }).catch(err => {
             console.log(err);
             $scope.getStatusForEmptyData();
@@ -881,6 +919,57 @@ angular.module('a2.analysis.clustering-jobs', [
     }
 
     $scope.getRoisDetails();
+
+    $scope.combineRoisPerCluster = function() {
+        $scope.roisPerCluster = {};
+        $scope.allRois.forEach((roi) => {
+            if (!$scope.roisPerCluster[roi.cluster]) {
+                $scope.roisPerCluster[roi.cluster] = [roi.aed_id]
+            }
+            else {
+                $scope.roisPerCluster[roi.cluster].push(roi.aed_id);
+            }
+        })
+    }
+
+
+    $scope.exportReport = function() {
+        if(!a2UserPermit.can('manage AED and Clustering job')) {
+            notify.error('You do not have permission to download Clustering details');
+            return;
+        }
+        var params = {
+            jobId: $scope.clusteringJobId,
+            aed: $scope.aedData.id,
+            cluster: $scope.roisPerCluster,
+            search: $scope.selectedFilterData.value,
+            userEmail: a2UserPermit.getUserEmail() || ''
+        }
+        if ($scope.selectedFilterData.value == 'per_site')  {
+            params.perSite = true;
+        }
+        else if ($scope.selectedFilterData.value == 'per_date') {
+            params.perDate = true;
+        }
+        else params.all = true;
+        $scope.openExportPopup(params)
+    }
+
+    $scope.openExportPopup = function(listParams) {
+        const modalInstance = $modal.open({
+            controller: 'ExportReportModalCtrl',
+            templateUrl: '/app/analysis/clustering-jobs/export-report.html',
+            resolve: {
+                data: function() {
+                    return listParams
+                }
+            },
+            backdrop: false
+        });
+        modalInstance.result.then(function() {
+            notify.log('Your report export request is processing <br> and will be sent by email.');
+        });
+    };
 
     $scope.getStatusForEmptyData = function() {
         $scope.loading = false;
@@ -928,6 +1017,24 @@ angular.module('a2.analysis.clustering-jobs', [
                 }
             }
             $scope.rows = Object.values($scope.ids);
+        } else if (data && $scope.selectedFilterData.value === 'per_species') {
+            var speciesObj = {};
+            data.forEach((roi) => {
+                if (!speciesObj[roi.species_id]) {
+                    speciesObj[roi.species_id] = {
+                        id: roi.species_id,
+                        speciesName: roi.scientific_name,
+                        species: [roi]
+                    }
+                }
+                else {
+                    speciesObj[roi.species_id].species.push(roi);
+                }
+            })
+            const rows = Object.values(speciesObj).map(row => {
+                return { id: row.id, speciesName: row.speciesName || 'Unvalidated ROIs', species: $scope.groupRoisBySpecies(row.species) }
+            });
+            $scope.rows = rows
         } else {
             if ($scope.selectedFilterData.value === 'per_date') {
                 data.sort(function(a, b) {

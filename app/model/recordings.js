@@ -1521,16 +1521,19 @@ var Recordings = {
             output:  arrayOrSingle(joi.string().valid('count','list','date_range','sql')).default('list')
         },
         exportProjections: {
-            recording:arrayOrSingle(joi.string().valid(
+            recording: arrayOrSingle(joi.string().valid(
                 'filename', 'site', 'day', 'hour', 'url'
             )),
             species: arrayOrSingle(joi.number()),
-            validation:  arrayOrSingle(joi.number()),
-            classification:  arrayOrSingle(joi.number()),
-            soundscapeComposition:  arrayOrSingle(joi.number()),
+            validation: arrayOrSingle(joi.number()),
+            classification: arrayOrSingle(joi.number()),
+            soundscapeComposition: arrayOrSingle(joi.number()),
             tag:  arrayOrSingle(joi.number()),
             grouped: joi.string(),
-            projectUrl: joi.string()
+            projectUrl: joi.string(),
+            aed: arrayOrSingle(joi.number()),
+            cluster: joi.object(),
+            search: joi.string()
         }
     },
 

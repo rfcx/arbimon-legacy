@@ -4,6 +4,7 @@ const moment = require('moment')
 const { getExportRecordingsRow, updateExportRecordings, getCountConnections } = require('../services/recordings')
 const { errorMessage } = require('../services/stats')
 const recordings = require('../../app/model/recordings')
+const clusterings = require('../../app/model/clustering-jobs')
 const projects = require('../../app/model/projects')
 const stream = require('stream');
 const csv_stringify = require('csv-stringify');
@@ -49,8 +50,18 @@ async function main () {
         return
     }
 
-    // Process the Occupancy model report.
-    if (projection_parameters && projection_parameters.species) {
+    if (projection_parameters && projection_parameters.aed) {
+        // Process the Clustering report
+        let params = projection_parameters
+        params.project_id = filters.project_id
+        params.exportReport = true
+        const data = await clusterings.findRois(params)
+        return processClusteringStream(params.cluster, data, rowData, dateByCondition, message, jobName).then(async () => {
+            console.log(`arbimon-recording-export job finished: clustering report for ${message}`)
+        })
+    }
+    else if (projection_parameters && projection_parameters.species) {
+        // Process the Occupancy model report
         const data = await recordings.exportOccupancyModels(projection_parameters, filters)
         return processOccupancyModelStream(data, rowData, dateByCondition, message, jobName).then(async () => {
             console.log(`arbimon-recording-export job finished: occupancy models report for ${message}`)
@@ -88,6 +99,57 @@ async function main () {
   } catch (e) {
     console.error(e)
   }
+}
+
+// Process Clustering report and send the email
+async function processClusteringStream (cluster, results, rowData, dateByCondition, message, jobName) {
+    return new Promise(function (resolve, reject) {
+        console.log('total results length', results.length)
+        let _buf = []
+        let fields = [];
+        fields.push(...Object.keys(results[0]))
+        fields.push('cluster')
+        let datastream = new stream.Readable({objectMode: true});
+        results.forEach(result => {
+            datastream.push(result)
+        });
+        datastream.push(null);
+        datastream.on('data', (d) => {
+            for (let row in cluster) {
+                if (cluster[row].includes(d.aed_id)) {
+                    d.cluster = row
+                }
+            }
+            _buf.push(Object.values(d))
+        })
+        datastream.on('end', async () => {
+            csv_stringify(_buf, { header: true, columns: fields }, async (err, data) => {
+                const content = Buffer.from(data).toString('base64')
+                const contentSize = Buffer.byteLength(content)
+                const isBigContent = contentSize && contentSize > 10240 // 10MB
+                if (isBigContent) {
+                    const filePath = await saveLatestData(S3_BUCKET_ARBIMON, data, rowData.project_id, dateByCondition, 'clustering-rois-export')
+                    const url = await getSignedUrl(S3_BUCKET_ARBIMON, filePath, 'text/csv')
+                    await sendEmail('Export Clustering ROIs report [RFCx Arbimon]', null, rowData, url, true)
+                }
+                try {
+                    if (!isBigContent) {
+                        await sendEmail('Export Clustering ROIs [RFCx Arbimon]', 'clustering-rois-export.csv', rowData, content, false)
+                    }
+                    await updateExportRecordings(rowData, { processed_at: dateByCondition })
+                    await recordings.closeConnection()
+                    resolve()
+                } catch(error) {
+                    console.error('Error while sending clustering-rois-export email', error)
+                    await errorMessage(message, jobName)
+                    await updateExportRecordings(rowData, { error: JSON.stringify(error) })
+                    await recordings.closeConnection()
+                    resolve()
+                }
+            })
+        })
+
+    })
 }
 
 // Process the Occupancy model report and send the email
