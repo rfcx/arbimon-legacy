@@ -33,7 +33,7 @@ angular.module('a2.analysis.clustering-jobs', [
         });
 })
 //------------------- Clustering List page ---------------
-.controller('ClusteringJobsModelCtrl' , function($scope, $state, $stateParams, a2ClusteringJobs, JobsData, notify, $location, $modal, a2UserPermit) {
+.controller('ClusteringJobsModelCtrl' , function($scope, $state, $stateParams, a2ClusteringJobs, JobsData, notify, $location, $modal, a2UserPermit, $localStorage) {
     $scope.selectedClusteringJobId = $stateParams.clusteringJobId;
     $scope.showViewGridPage = false;
     $scope.loadClusteringJobs = function() {
@@ -52,9 +52,14 @@ angular.module('a2.analysis.clustering-jobs', [
     if (!$scope.selectedClusteringJobId) {
         $scope.loadClusteringJobs();
     }
-    if ($stateParams.gridContext) {
+
+    // Parse grid view data if it exists
+    const gridContext = JSON.parse($localStorage.getItem('analysis.gridContext'));
+    if ($stateParams.gridContext || (gridContext && $state.current.name === 'analysis.grid-view')) {
         $scope.showViewGridPage = true;
-        $scope.gridContext = $stateParams.gridContext;
+        $scope.gridContext = $stateParams.gridContext? $stateParams.gridContext : gridContext;
+    } else {
+        $localStorage.setItem('analysis.gridContext', null);
     }
 
     $scope.selectItem = function(clusteringJob) {
@@ -796,7 +801,7 @@ angular.module('a2.analysis.clustering-jobs', [
     }
 })
 
-.controller('GridViewCtrl' , function($scope, $http, a2UserPermit, a2ClusteringJobs, a2AudioBarService, a2AudioEventDetectionsClustering, Project, Songtypes, a2Playlists, notify, $modal) {
+.controller('GridViewCtrl' , function($scope, $http, a2UserPermit, a2ClusteringJobs, a2AudioBarService, a2AudioEventDetectionsClustering, Project, Songtypes, a2Playlists, notify, $modal, $localStorage) {
     $scope.loading = true;
     $scope.isSquareSize = false
     $scope.infopanedata = '';
@@ -848,6 +853,8 @@ angular.module('a2.analysis.clustering-jobs', [
             data.aed.forEach(i => $scope.aedData.id.push(i));
         });
     }
+
+    $localStorage.setItem('analysis.gridContext',  JSON.stringify($scope.gridContext));
 
     a2ClusteringJobs.getJobDetails($scope.clusteringJobId).then(function(data) {
         if (data) $scope.job_details = data;
