@@ -54,7 +54,7 @@ angular.module('a2.audiodata.uploads.upload', [
 
             var item = $scope.uploader.queue[index];
 
-            if (!item.file.size) {
+            if (item.file && !item.file.size) {
                 item.isError = true
                 item.errorMsg = "Error of the file size"
                 return

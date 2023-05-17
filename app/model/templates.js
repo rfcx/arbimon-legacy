@@ -224,7 +224,7 @@ var Templates = {
                     query, [
                     data.name, null,
                     data.project, data.recording, data.species, data.songtype,
-                    data.x1, data.y1, data.x2, data.y2, data.source_project_id? data.source_project_id : null, data.user_id,
+                    data.x1, data.y1, data.x2, data.y2, data.source_project_id ? data.source_project_id : null, data.user_id,
                     data.name,  data.project, data.recording, data.species
                 ]
             ).then(result => {
@@ -300,32 +300,56 @@ var Templates = {
      * @param {Object} template - template, as returned by findOne
      */
     createTemplateImage : function (template){
-        var s3key = 'project_'+template.project+'/templates/'+template.id+'.png';
+        const s3key = 'project_'+template.project+'/templates/'+template.id+'.png';
         template.uri = 'https://' + config('aws').bucketName + '.s3.' + config('aws').region + '.amazonaws.com/' + s3key;
-        var roi_file = tmpfilecache.key2File(s3key);
-        var rec_data;
-        var rec_stats;
-        var spec_data;
+        let rec_data, rec_stats, spec_data, isLegacy;
 
         return Recordings.findByUrlMatch(template.recording, 0, {limit:1})
         .then(data => rec_data = data[0])
-        .then(rec_data => Promise.all([
-            q.ninvoke(Recordings, 'fetchInfo', rec_data).then(data => rec_stats = data),
-            q.ninvoke(Recordings, 'fetchSpectrogramFile', rec_data).then(data => spec_data = data),
-        ])).then(
-            () => jimp.read(spec_data.path)
-        ).then((spectrogram) => {
-            debug('crop_roi');
-            var px2sec = rec_data.duration/spectrogram.bitmap.width;
-            var max_freq = rec_data.sample_rate/2;
-            var px2hz  = max_freq/spectrogram.bitmap.height;
+        .then((rec_data) => {
+            isLegacy = Recordings.isLegacy(rec_data)
+            if (isLegacy) {
+                return Promise.all([
+                    q.ninvoke(Recordings, 'fetchInfo', rec_data).then(data => rec_stats = data),
+                    q.ninvoke(Recordings, 'fetchSpectrogramFile', rec_data).then(data => spec_data = data)
+                ])
+            }
+            const opts = {
+                uri: rec_data.uri,
+                external_id: rec_data.external_id,
+                datetime: rec_data.datetime,
+                datetime_utc: rec_data.datetime_utc,
+                template: true
+            }
+            const filter = {
+                maxFreq: Math.max(template.y1, template.y2),
+                minFreq: Math.min(template.y1, template.y2),
+                trim: {
+                    from: Math.min(template.x1, template.x2),
+                    to: Math.max(template.x1, template.x2)
+                }
+            }
+            return q.ninvoke(Recordings, 'fetchTemplateFile', opts, filter)
+        }).then(data => {
+            if (data && data.path) {
+                spec_data = data
+            }
+        }).then(() => jimp.read(spec_data.path))
+          .then((spectrogram) => {
+            if (isLegacy) {
+                var px2sec = rec_data.duration/spectrogram.bitmap.width;
+                var max_freq = rec_data.sample_rate/2;
+                var px2hz  = max_freq/spectrogram.bitmap.height;
 
-            var left = Math.floor(template.x1/px2sec);
-            var top = spectrogram.bitmap.height-Math.floor(template.y2/px2hz);
-            var right = Math.floor(template.x2/px2sec);
-            var bottom = spectrogram.bitmap.height-Math.floor(template.y1/px2hz);
+                var left = Math.floor(template.x1/px2sec);
+                var top = spectrogram.bitmap.height-Math.floor(template.y2/px2hz);
+                var right = Math.floor(template.x2/px2sec);
+                var bottom = spectrogram.bitmap.height-Math.floor(template.y1/px2hz);
 
-            var roi = spectrogram.clone().crop(left, top, right - left, bottom - top);
+                var roi = spectrogram.clone().crop(left, top, right - left, bottom - top);
+                return roi.getBufferAsync(jimp.MIME_PNG);
+            }
+            var roi = spectrogram.clone()
             return roi.getBufferAsync(jimp.MIME_PNG);
         }).then((roiBuffer) => {
             debug('store_in_bucket' + JSON.stringify({
