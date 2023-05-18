@@ -94,7 +94,7 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags'])
             
             $scope.validate = function(val) {
                 if(!a2UserPermit.can('validate species')) {
-                    notify.log('You do not have permission to validate species');
+                    notify.error('You do not have permission to validate species');
                     return;
                 }
                 

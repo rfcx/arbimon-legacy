@@ -66,7 +66,7 @@ var a2 = angular.module('a2.app', [
         }
         else if(allowed === false){
             e.preventDefault();
-            notify.log('You do not have access to this section');
+            notify.error('You do not have access to this section');
         }
     });
 })

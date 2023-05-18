@@ -42,7 +42,7 @@ angular.module('a2.citizen-scientist.admin.settings', [
             }).bind(this))
             .catch((function () {
                 this.saving = false;
-                notify.log("An error occured.");
+                notify.error("An error occured.");
             }).bind(this));
     };
 

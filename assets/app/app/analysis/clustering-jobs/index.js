@@ -75,7 +75,7 @@ angular.module('a2.analysis.clustering-jobs', [
 
     $scope.createNewClusteringJob = function () {
         if(!a2UserPermit.can('manage AED and Clustering job')) {
-            notify.log('You do not have permission to create Clustering job');
+            notify.error('You do not have permission to create Clustering job');
             return;
         }
 
@@ -605,7 +605,7 @@ angular.module('a2.analysis.clustering-jobs', [
 
     $scope.savePlaylist = function(opts) {
         if(!a2UserPermit.can('manage AED and Clustering job')) {
-            notify.log('You do not have permission to manage AED and Clustering job');
+            notify.error('You do not have permission to manage AED and Clustering job');
             return;
         }
         a2Playlists.create(opts,
@@ -1129,7 +1129,7 @@ angular.module('a2.analysis.clustering-jobs', [
 
     $scope.setValidation = function() {
         if(!a2UserPermit.can('manage AED and Clustering job')) {
-            notify.log('You do not have permission to manage AED and Clustering job');
+            notify.error('You do not have permission to manage AED and Clustering job');
             return;
         }
         $scope.speciesLoading = true;

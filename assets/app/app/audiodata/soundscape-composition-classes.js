@@ -33,7 +33,7 @@ angular.module('a2.audiodata.soundscape-composition-classes', [
         if(className){
 
             if(!a2UserPermit.can("manage project species")) {
-                notify.log("You do not have permission to add soundscape composition classes");
+                notify.error("You do not have permission to add soundscape composition classes");
                 return;
             }
 
@@ -51,7 +51,7 @@ angular.module('a2.audiodata.soundscape-composition-classes', [
         }
 
         if(!a2UserPermit.can("manage project species")) {
-            notify.log("You do not have permission to remove soundscape composition classes");
+            notify.error("You do not have permission to remove soundscape composition classes");
             return;
         }
 
@@ -70,7 +70,7 @@ angular.module('a2.audiodata.soundscape-composition-classes', [
     this.add = function() {
 
         if(!a2UserPermit.can("manage project species")) {
-            notify.log("You do not have permission to add species");
+            notify.error("You do not have permission to add species");
             return;
         }
 
@@ -110,7 +110,7 @@ angular.module('a2.audiodata.soundscape-composition-classes', [
             return;
 
         if(!a2UserPermit.can("manage project species")) {
-            notify.log("You do not have permission to remove species");
+            notify.error("You do not have permission to remove species");
             return;
         }
 

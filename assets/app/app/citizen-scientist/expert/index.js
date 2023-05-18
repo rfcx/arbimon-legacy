@@ -320,7 +320,7 @@ angular.module('a2.citizen-scientist.expert', [
 
     validate: function(validation, rois){
         if(!a2UserPermit.can('validate pattern matchings')) {
-            notify.log('You do not have permission to validate the matched rois.');
+            notify.error('You do not have permission to validate the matched rois.');
             return;
         }
 

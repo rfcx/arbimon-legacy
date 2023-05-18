@@ -83,7 +83,7 @@ angular.module('a2.audiodata.templates', [
         },
         deleteTemplate: function(templateId){
             if(!a2UserPermit.can('manage templates')) {
-                notify.log('You do not have permission to delete templates');
+                notify.error('You do not have permission to delete templates');
                 return;
             }
 

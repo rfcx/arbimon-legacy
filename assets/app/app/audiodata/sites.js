@@ -115,7 +115,7 @@ angular.module('a2.audiodata.sites', [
 
     $scope.importSite = function() {
         if(!a2UserPermit.can('manage project sites')) {
-            notify.log("You do not have permission to add sites");
+            notify.error("You do not have permission to add sites");
             return;
         }
 
@@ -128,7 +128,7 @@ angular.module('a2.audiodata.sites', [
             // Check the file is valid
             const sites = parseSitesFromCsv(response);
             if (!sites) {
-                notify.log("Wrong format of csv file")
+                notify.error("Wrong format of csv file")
                 return
             }
 
@@ -206,7 +206,7 @@ angular.module('a2.audiodata.sites', [
     $scope.exportSites = function() {
         if (a2UserPermit.isSuper()) return $downloadResource(Project.getSitesExportUrl());
         if ((a2UserPermit.all && !a2UserPermit.all.length) || !a2UserPermit.can('export report')) {
-            return notify.log('You do not have permission to export sites')
+            return notify.error('You do not have permission to export sites')
         } else $downloadResource(Project.getSitesExportUrl());
     };
 
@@ -282,7 +282,7 @@ angular.module('a2.audiodata.sites', [
             return;
 
         if(!a2UserPermit.can('delete site')) {
-            notify.log("You do not have permission to remove sites");
+            notify.error("You do not have permission to remove sites");
             return;
         }
 
@@ -345,7 +345,7 @@ angular.module('a2.audiodata.sites', [
     $scope.create = function() {
 
         if(!a2UserPermit.can('manage project sites')) {
-            notify.log("You do not have permission to add sites");
+            notify.error("You do not have permission to add sites");
             return;
         }
 
@@ -382,7 +382,7 @@ angular.module('a2.audiodata.sites', [
         if(!$scope.selected) return;
 
         if(!a2UserPermit.can('manage project sites')) {
-            notify.log("You do not have permission to edit sites");
+            notify.error("You do not have permission to edit sites");
             return;
         }
 

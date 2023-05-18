@@ -140,7 +140,7 @@ angular.module('a2.analysis.soundscapes', [
 
     $scope.deleteSoundscape = function (id, name) {
         if(!a2UserPermit.can('manage soundscapes')) {
-            notify.log('You do not have permission to delete soundscapes');
+            notify.error('You do not have permission to delete soundscapes');
             return;
         }
 
@@ -195,7 +195,7 @@ angular.module('a2.analysis.soundscapes', [
 
     $scope.createNewSoundscape = function () {
         if(!a2UserPermit.can('manage soundscapes')) {
-            notify.log('You do not have permission to create soundscapes');
+            notify.error('You do not have permission to create soundscapes');
             return;
         }
 
@@ -273,7 +273,7 @@ angular.module('a2.analysis.soundscapes', [
     this.exportSoundscape = function(options) {
         if (a2UserPermit.isSuper()) return this.getExportUrl(options)
         if ((a2UserPermit.all && !a2UserPermit.all.length) || !a2UserPermit.can('export report')) {
-            return notify.log('You do not have permission to export soundscape data');
+            return notify.error('You do not have permission to export soundscape data');
         }
         this.getExportUrl(options)
     };
