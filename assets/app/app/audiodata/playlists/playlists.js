@@ -30,7 +30,7 @@ angular.module('a2.audiodata.playlists', [
 
     this.operate = function(expression){
         if(!a2UserPermit.can('manage playlists')) {
-            notify.log('You do not have permission to combine playlists');
+            notify.error('You do not have permission to combine playlists');
             return;
         }
 
@@ -49,7 +49,7 @@ angular.module('a2.audiodata.playlists', [
         }
 
         if(!a2UserPermit.can('manage playlists')) {
-            notify.log('You do not have permission to edit playlists');
+            notify.error('You do not have permission to edit playlists');
             return;
         }
 
@@ -76,7 +76,7 @@ angular.module('a2.audiodata.playlists', [
             return;
 
         if(!a2UserPermit.can('manage playlists')) {
-            notify.log('You do not have permission to delete playlists');
+            notify.error('You do not have permission to delete playlists');
             return;
         }
 

@@ -23,7 +23,7 @@ var a2 = angular.module('a2.visualizer-app', [
 
         if(!allowed) { // if permissions have not loaded go dashboard
             e.preventDefault();
-            notify.log('You do not have access to this section');
+            notify.error('You do not have access to this section');
         }
     });
 })

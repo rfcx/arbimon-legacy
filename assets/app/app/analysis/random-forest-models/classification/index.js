@@ -135,7 +135,7 @@ angular.module('a2.analysis.random-forest-models.classification', [
 
     $scope.createNewClassification = function () {
         if(!a2UserPermit.can('manage models and classification')) {
-            notify.log('You do not have permission to create classifications');
+            notify.error('You do not have permission to create classifications');
             return;
         }
 
@@ -199,7 +199,7 @@ angular.module('a2.analysis.random-forest-models.classification', [
 
     $scope.deleteClassification = function(id,name) {
         if(!a2UserPermit.can('manage models and classification')) {
-            notify.log('You do not have permission to delete classifications');
+            notify.error('You do not have permission to delete classifications');
             return;
         }
 

@@ -97,10 +97,10 @@ angular.module('a2.register' , [
             notify.error($scope.passResult.msg);
         }
         else if($scope.usernameErr) {
-            notify.log($scope.usernameErr);
+            notify.error($scope.usernameErr);
         }
         else if($scope.emailErr) {
-            notify.log($scope.emailErr);
+            notify.error($scope.emailErr);
         }
         else if(!$scope.terms_accepted) {
             notify.log('To register you must agree with our terms of service');

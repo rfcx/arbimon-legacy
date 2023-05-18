@@ -108,8 +108,7 @@
                             </div>
                         </td>
                         <td>
-                            <span ng-if="item.isUploading"><i class="fa fa-cloud-upload"></i> Uploading</span>
-                            <span ng-if="item.isSuccess"><i class="fa fa-cloud-upload"></i> Uploading</span>
+                            <span ng-if="item.isUploading || item.isSuccess"><i class="fa fa-cloud-upload"></i> Uploading</span>
                             <span ng-if="item.isUploaded && !item.isError "><i class="fa fa-check"></i> Success</span>
                             <span ng-if="item.isError">
                                 Error

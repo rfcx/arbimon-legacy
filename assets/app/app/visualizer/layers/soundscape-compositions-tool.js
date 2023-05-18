@@ -68,7 +68,7 @@ angular.module('a2.visualizer.layers.soundscape-composition-tool', [
 
     this.annotate = function(val, classId) {
         if(!a2UserPermit.can('validate species')) {
-            notify.log('You do not have permission to add soundscape composition annotations.');
+            notify.error('You do not have permission to add soundscape composition annotations.');
             return;
         }
 

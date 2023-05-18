@@ -561,6 +561,9 @@ var Recordings = {
             case 'audio':
                 asset = `r${isFrequency ? fmin + '.' + fmax : 'full'}_g${isGain ? options.gain : 1}_fmp3.mp3`
                 break;
+            case 'template':
+                asset = `r${fmin}.${fmax}_g1_fspec_mtrue_d125.125_wdolph_z120.png`
+                break;
         }
 
         const recordingDatetime = recording.datetime_utc ? recording.datetime_utc : recording.datetime
@@ -734,6 +737,18 @@ var Recordings = {
                         res.pipe(fs.createWriteStream(cache_miss.file).on('close', function () { cache_miss.retry_get() }))
                     })
                 }
+            });
+        }, callback);
+    },
+
+    fetchTemplateFile: function (recording, options, callback) {
+        var template_key = recording.uri.replace(audioFilePattern, '.png');
+        tmpfilecache.fetch(template_key, function(cache_miss){
+            Recordings.fetchRecordingFile(recording, async function(err, recording_path){
+                if(err) { callback(err); return; }
+                Recordings.getAssetFileFromMediaAPI(recording, 'template', options).then(res => {
+                    res.pipe(fs.createWriteStream(cache_miss.file).on('close', function () { cache_miss.retry_get() }))
+                })
             });
         }, callback);
     },

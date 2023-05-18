@@ -69,7 +69,7 @@ angular.module('a2.visualizer.layers.soundscapes.regions', [
         }
         
         if(!a2UserPermit.can('manage soundscapes')) {
-            notify.log('You do not have permission to annotate soundscapes');
+            notify.error('You do not have permission to annotate soundscapes');
             return;
         }
         
