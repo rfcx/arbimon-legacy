@@ -435,7 +435,7 @@ async function transformStream (results, rowData, dateByCondition, message, jobN
 // Send report to the user
 async function sendEmail (subject, title, rowData, content, isHtml) {
     let message = {
-        from_email: 'no-reply@rfcx.org',
+        from_email: 'no-reply@arbimon.org',
         to: [{
             email: rowData.user_email
         }],
