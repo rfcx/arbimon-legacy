@@ -184,6 +184,7 @@ angular.module('visualizer-spectrogram', [
                 var scalex = layout.l.scale.x;
 
                 d3_x_axis.style('height', 100);
+                d3_x_axis.style('scale', 'none');
                 d3_x_axis.append("rect").attr({
                     class : 'bg',
                     x : 0, y : 1,
@@ -202,6 +203,7 @@ angular.module('visualizer-spectrogram', [
                 var scaley = layout.l.scale.y;
 
                 d3_y_axis.style('width', 61);
+                d3_y_axis.style('scale', 'none');
                 d3_y_axis.append("rect").attr({
                     class : 'bg',
                     x : 0, y : 0,
