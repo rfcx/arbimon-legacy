@@ -285,7 +285,7 @@ var Templates = {
             const filter = {
                 maxFreq: Math.max(template.y1, template.y2),
                 minFreq: Math.min(template.y1, template.y2),
-                gain: options.gain || 15,
+                gain: options.gain || 1,
                 trim: {
                     from: Math.min(template.x1, template.x2),
                     to: Math.max(template.x1, template.x2)
