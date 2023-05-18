@@ -107,8 +107,7 @@ angular.module('visualizer-services', ['a2.services'])
                 return !l.display || l.display.sidebar !== false;
             },
             display_spectrogram: function(l) {
-                return true
-                // return !l.display || (l && l.display && l.display.spectrogram !== false)
+                return !l.display || (l && l.display && l.display.spectrogram !== false)
             }
         };
 
