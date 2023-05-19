@@ -383,19 +383,28 @@ router.post('/validate/:oneRecUrl?', function(req, res, next) {
 
 router.post('/delete', function(req, res, next) {
     res.type('json');
+    const recs = req.body.recs
+    let playlists
     if(!req.haveAccess(req.project.project_id, "manage project recordings")) {
         return res.json({ error: "you dont have permission to manage project recordings" });
     }
-
-    if(!req.body.recs) {
+    if(!recs) {
         return res.json({ error: 'missing arguments' });
     }
-
-    model.recordings.delete(req.body.recs, req.project.project_id, function(err, result) {
-        if(err) return next(err);
-
-        res.json(result);
+    const recIds = recs.map(function(rec) {
+        return rec.id
     });
+    return model.playlists.findRecordingsPlaylists(recIds).then(function(result) {
+        playlists = result
+        model.recordings.delete(recs, req.project.project_id, async function(err, result) {
+            if(err) return next(err);
+
+            res.json(result);
+            for (let playlist of playlists) {
+                await model.playlists.refreshTotalRecs(playlist.playlist_id)
+            }
+        });
+    })
 });
 
 

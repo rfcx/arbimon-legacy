@@ -494,6 +494,11 @@ var Playlists = {
         const q = 'UPDATE playlists SET total_recordings = ?, status = ? WHERE playlist_id = ?'
         return await dbpool.query(q, [total, status.CREATED , playlist_id])
     },
+
+    findRecordingsPlaylists: function(recIds) {
+        const sql = `SELECT DISTINCT(playlist_id) FROM arbimon2.playlist_recordings WHERE recording_id in (${recIds})`
+        return dbpool.query(sql)
+    }
 };
 
 module.exports = Playlists;
