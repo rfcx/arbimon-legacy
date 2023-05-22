@@ -1,28 +1,17 @@
 /* jshint node:true */
 "use strict";
 
-// native dependencies
-var util = require('util');
+const debug = require('debug')('arbimon2:model:templates');
+const jimp = require('jimp');
+const AWS = require('aws-sdk');
+const fs = require('fs')
+const joi = require('joi');
+const q = require('q');
+const config = require('../config');
+const dbpool = require('../utils/dbpool');
+const Recordings = require('./recordings');
 
-// 3rd party dependencies
-var debug = require('debug')('arbimon2:model:templates');
-var async = require('async');
-var jimp = require('jimp');
-var AWS = require('aws-sdk');
-var joi = require('joi');
-var q = require('q');
-
-// local dependencies
-var config       = require('../config');
-var tmpfilecache = require('../utils/tmpfilecache');
-var dbpool       = require('../utils/dbpool');
-
-var Recordings = require('./recordings');
-const fileHelper = require('../utils/file-helper')
-
-// local variables
-var s3;
-
+let s3;
 
 // exports
 var Templates = {
@@ -352,11 +341,6 @@ var Templates = {
             var roi = spectrogram.clone()
             return roi.getBufferAsync(jimp.MIME_PNG);
         }).then((roiBuffer) => {
-            debug('store_in_bucket' + JSON.stringify({
-                Bucket: config('aws').bucketName,
-                Key: s3key,
-                ACL: 'public-read',
-            }));
             if(!s3){
                 s3 = new AWS.S3();
             }
@@ -367,7 +351,12 @@ var Templates = {
                 Body: roiBuffer
             }).promise();
         }).then(() => {
-            debug('update_roi_data');
+            if (spec_data && spec_data.path) {
+                fs.unlink(spec_data.path, function (err) {
+                    if (err) console.error('Error deleting the template file.', err);
+                    console.info('Template file deleted.');
+                })
+            }
             return dbpool.query(dbpool.format(
                 "UPDATE templates \n"+
                 "SET uri = ? \n"+
@@ -375,7 +364,6 @@ var Templates = {
                 s3key, template.id
             ]));
         }).then(() => {
-            debug('return_updated_roi');
             return template;
         });
     },

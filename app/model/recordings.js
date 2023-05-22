@@ -562,7 +562,7 @@ var Recordings = {
                 asset = `r${isFrequency ? fmin + '.' + fmax : 'full'}_g${isGain ? options.gain : 1}_fmp3.mp3`
                 break;
             case 'template':
-                asset = `r${fmin}.${fmax}_g1_fspec_mtrue_d125.125_wdolph_z120.png`
+                asset = `r${fmin}.${fmax}_g1_fspec_mtrue_d400.400_wdolph_z120.png`
                 break;
         }
 
@@ -742,7 +742,7 @@ var Recordings = {
     },
 
     fetchTemplateFile: function (recording, options, callback) {
-        var template_key = recording.uri.replace(audioFilePattern, '.png');
+        const template_key = recording.uri.replace(audioFilePattern, '.png');
         tmpfilecache.fetch(template_key, function(cache_miss){
             Recordings.fetchRecordingFile(recording, async function(err, recording_path){
                 if(err) { callback(err); return; }
