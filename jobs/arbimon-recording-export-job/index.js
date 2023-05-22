@@ -437,16 +437,17 @@ async function transformStream (results, rowData, dateByCondition, message, jobN
 
 // Send report to the user
 async function sendEmail (subject, title, rowData, content, isSignedUrl) {
-    const htmlMessage = `<span style="color:black;">Hello,</span> <br>
-      <p style="color:black;">Thanks so much for using Arbimon! Your export report for the project "${rowData.name}" has been completed.
-        If you have any questions about Arbimon, check out our <a href="https://support.rfcx.org/">support documentation</a> or
+    const textHeader = `<p style="color:black;margin-top:0">Hello,</p>
+      <p style="color:black;">Thanks so much for using Arbimon! Your export report for the project "${rowData.name}" has been completed.`
+    const textExpires = ` Please note that this link will expire in 7 days.`
+    const textSupport = ` If you have any questions about Arbimon, check out our <a href="https://support.rfcx.org/">support documentation</a> or
         reach out to us by clicking the <span style="color:green;font-size: 16px;">&#63;</span> icon, on the bottom right of any Arbimon page.
-      </p>
-      <p style="color:black;">
+      </p>`
+    const textFooter = `<p style="color:black;">
         <span>Wishing you much success!</span> <br>
         <span> - The Arbimon Team </span>
-      </p><br>
-    `
+      </p>`
+
     let message = {
         from_email: 'no-reply@arbimon.org',
         to: [{
@@ -455,15 +456,14 @@ async function sendEmail (subject, title, rowData, content, isSignedUrl) {
         subject: subject
     }
     if (isSignedUrl) {
-        message.html = htmlMessage + `<button style="background:#31984f;border-color:#31984f;padding: 6px 12px;border-radius:4px;cursor:pointer;margin: 10px 0"> <a style="text-decoration:none;color:#e9e6e3" href="${content}">Download report</a> </button> <br>
-        <span style="color:black;">Or copy the following link into your browser: ${content}.</span>`
+        message.html = textHeader + textExpires + textSupport + `<button style="background:#31984f;border-color:#31984f;padding: 6px 12px;border-radius:4px;cursor:pointer;margin: 10px 0"> <a style="text-decoration:none;color:#e9e6e3" href="${content}">Download report</a> </button>` + textFooter
     } else {
         message.attachments = [{
             type: 'text/csv',
             name: title,
             content: content
         }]
-        message.html = htmlMessage
+        message.html = textHeader + textSupport + textFooter
     }
     return new Promise(function (resolve, reject) {
       const mandrillClient = new mandrill.Mandrill(process.env.MANDRILL_KEY)
