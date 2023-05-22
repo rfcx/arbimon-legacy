@@ -97,7 +97,7 @@ var Soundscapes = {
                 " UNIX_TIMESTAMP( S.`date_created` )*1000 as date , "+
                 " CONCAT(CONCAT(UCASE(LEFT( U.`firstname` , 1)), SUBSTRING( U.`firstname` , 2))  ,' ',CONCAT(UCASE(LEFT( U.`lastname` , 1)), SUBSTRING( U.`lastname` , 2))) user " +
                 " FROM `soundscapes` S ,`users` U , `playlists` P  " +
-                " WHERE S.`project_id` = "+dbpool.escape(project)+" and S.`user_id` = U.`user_id` and P.`playlist_id`  =S.`playlist_id` " +
+                " WHERE S.`project_id` = "+dbpool.escape(project)+" and S.`user_id` = U.`user_id` and P.`playlist_id` = S.`playlist_id` and S.uri is not null" +
                 " ORDER BY S.`date_created` DESC";
 
         queryHandler(q, callback);
