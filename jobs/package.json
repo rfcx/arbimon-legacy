@@ -40,6 +40,8 @@
     "sha1-file": "^1.0.4",
     "tz-lookup": "^6.1.25",
     "jimp": "^0.16.1",
-    "csv-stringify": "~1.1.2"
+    "csv-stringify": "~1.1.2",
+    "json-templates": "^4.1.0",
+    "kubernetes-client": "^9.0.0"
   }
 }

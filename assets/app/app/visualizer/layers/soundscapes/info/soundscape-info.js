@@ -46,7 +46,7 @@ angular.module('a2.visualizer.layers.soundscapes.info', [
     
     this.edit_visual_scale = function(soundscape){
         if(!a2UserPermit.can('manage soundscapes')) {
-            notify.log('You do not have permission to edit soundscapes');
+            notify.error('You do not have permission to edit soundscapes');
             return;
         }
         

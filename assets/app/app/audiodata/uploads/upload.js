@@ -43,7 +43,7 @@ angular.module('a2.audiodata.uploads.upload', [
 
     $scope.verifyAndUpload = function() {
         if(!a2UserPermit.can('manage project recordings')) {
-            notify.log("You do not have permission to upload recordings");
+            notify.error("You do not have permission to upload recordings");
             return;
         }
 
@@ -54,7 +54,7 @@ angular.module('a2.audiodata.uploads.upload', [
 
             var item = $scope.uploader.queue[index];
 
-            if (!item.file.size) {
+            if (item.file && !item.file.size) {
                 item.isError = true
                 item.errorMsg = "Error of the file size"
                 return

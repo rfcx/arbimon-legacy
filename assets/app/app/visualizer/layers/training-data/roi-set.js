@@ -78,7 +78,7 @@ angular.module('a2.visualizer.layers.training-sets.roi_set', [
         },
         submit: function(){ 
             if(!a2UserPermit.can('manage training sets')) {
-                notify.log('You do not have permission to add ROIs to training set');
+                notify.error('You do not have permission to add ROIs to training set');
                 return;
             }
             

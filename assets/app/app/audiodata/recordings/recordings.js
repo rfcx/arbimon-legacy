@@ -105,12 +105,12 @@ angular.module('a2.audiodata.recordings', [
         }
 
         if ($scope.totalRecs == 0) {
-            notify.log('You can\'t create playlist with 0 recording');
+            notify.error('You can\'t create playlist with 0 recording');
             return;
         }
 
         if (!a2UserPermit.can('manage playlists')) {
-            notify.log('You do not have permission to create playlists');
+            notify.error('You do not have permission to create playlists');
             return;
         }
 
@@ -151,7 +151,7 @@ angular.module('a2.audiodata.recordings', [
 
     this.deleteRecordings = function() {
         if (!a2UserPermit.can('manage project recordings')) {
-            notify.log('You do not have permission to delete recordings');
+            notify.error('You do not have permission to delete recordings');
             return;
         }
 
@@ -201,7 +201,7 @@ angular.module('a2.audiodata.recordings', [
         var filters = $scope.params;
 
         if(!a2UserPermit.can('manage project recordings')) {
-            notify.log('You do not have permission to delete recordings');
+            notify.error('You do not have permission to delete recordings');
             return;
         }
 
@@ -273,7 +273,7 @@ angular.module('a2.audiodata.recordings', [
     this.exportRecordings = function(listParams) {
         if (a2UserPermit.isSuper()) return this.openExportPopup(listParams)
         if ((a2UserPermit.all && !a2UserPermit.all.length) || !a2UserPermit.can('export report')) {
-            return notify.log('You do not have permission to export data');
+            return notify.error('You do not have permission to export data');
         }
         this.openExportPopup(listParams)
     };

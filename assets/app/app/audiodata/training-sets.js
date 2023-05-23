@@ -128,7 +128,7 @@ angular.module('a2.audiodata.training-sets', [
 
     this.removeRoi = function(roiId) {
         if(!a2UserPermit.can('manage training sets')) {
-            notify.log('You do not have permission to edit training sets');
+            notify.error('You do not have permission to edit training sets');
             return;
         }
 
@@ -185,7 +185,7 @@ angular.module('a2.audiodata.training-sets', [
 
     this.addNewTrainingSet = function() {
         if(!a2UserPermit.can('manage training sets')) {
-            notify.log('You do not have permission to create training sets');
+            notify.error('You do not have permission to create training sets');
             return;
         }
 
@@ -243,7 +243,7 @@ angular.module('a2.audiodata.training-sets', [
         $event.stopPropagation();
         if (a2UserPermit.isSuper()) return this.setupExportUrl();
         if ((a2UserPermit.all && !a2UserPermit.all.length) || !a2UserPermit.can('export report')) {
-            return notify.log('You do not have permission to export Training Set data');
+            return notify.error('You do not have permission to export Training Set data');
         } else return this.setupExportUrl()
     };
 
@@ -255,7 +255,7 @@ angular.module('a2.audiodata.training-sets', [
 
     this.editSelectedTrainingSet = function(){
         if(!a2UserPermit.can('manage training sets')) {
-            notify.log('You do not have permission to edit training sets');
+            notify.error('You do not have permission to edit training sets');
             return;
         }
 
@@ -306,7 +306,7 @@ angular.module('a2.audiodata.training-sets', [
         }
 
         if(!a2UserPermit.can('manage training sets')) {
-            notify.log('You do not have permission to edit training sets');
+            notify.error('You do not have permission to edit training sets');
             return;
         }
 

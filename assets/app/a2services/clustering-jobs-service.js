@@ -2,7 +2,7 @@ angular.module('a2.srv.clustering-jobs', [
     'a2.srv.project',
     'humane'
 ])
-.factory('a2ClusteringJobs', function($http, Project, notify) {
+.factory('a2ClusteringJobs', function($http, Project, notify, $httpParamSerializer) {
 
     return {
         list: function(opts) {
@@ -46,6 +46,15 @@ angular.module('a2.srv.clustering-jobs', [
                 return response.data;
             }).catch(notify.serverError);
         },
+        exportClusteringROIs: function(opts) {
+            const config = {
+                params: opts
+            };
+            return $http.post('/api/project/' + Project.getUrl() + '/clustering-jobs/' + opts.jobId + '/rois-export', config)
+                .then(function(response){
+                    return response.data;
+                }).catch(notify.serverError);
+        },
         getAudioUrlFor: function(recId, aedId) {
             return '/api/project/' + Project.getUrl() + '/clustering-jobs/' + recId + '/audio/' + aedId;
         },
@@ -70,7 +79,7 @@ angular.module('a2.srv.clustering-jobs', [
             return $http.post('/api/project/' + Project.getUrl() + '/clustering-jobs/' + clusteringJobId + '/remove').then(function(response){
                 return response.data;
             }).catch(notify.serverError);
-        }
+        },
     };
 })
 ;

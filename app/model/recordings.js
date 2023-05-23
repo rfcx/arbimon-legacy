@@ -561,6 +561,9 @@ var Recordings = {
             case 'audio':
                 asset = `r${isFrequency ? fmin + '.' + fmax : 'full'}_g${isGain ? options.gain : 1}_fmp3.mp3`
                 break;
+            case 'template':
+                asset = `r${fmin}.${fmax}_g1_fspec_mtrue_d400.400_wdolph_z120.png`
+                break;
         }
 
         const recordingDatetime = recording.datetime_utc ? recording.datetime_utc : recording.datetime
@@ -734,6 +737,18 @@ var Recordings = {
                         res.pipe(fs.createWriteStream(cache_miss.file).on('close', function () { cache_miss.retry_get() }))
                     })
                 }
+            });
+        }, callback);
+    },
+
+    fetchTemplateFile: function (recording, options, callback) {
+        const template_key = recording.uri.replace(audioFilePattern, '.png');
+        tmpfilecache.fetch(template_key, function(cache_miss){
+            Recordings.fetchRecordingFile(recording, async function(err, recording_path){
+                if(err) { callback(err); return; }
+                Recordings.getAssetFileFromMediaAPI(recording, 'template', options).then(res => {
+                    res.pipe(fs.createWriteStream(cache_miss.file).on('close', function () { cache_miss.retry_get() }))
+                })
             });
         }, callback);
     },
@@ -1521,16 +1536,19 @@ var Recordings = {
             output:  arrayOrSingle(joi.string().valid('count','list','date_range','sql')).default('list')
         },
         exportProjections: {
-            recording:arrayOrSingle(joi.string().valid(
+            recording: arrayOrSingle(joi.string().valid(
                 'filename', 'site', 'day', 'hour', 'url'
             )),
             species: arrayOrSingle(joi.number()),
-            validation:  arrayOrSingle(joi.number()),
-            classification:  arrayOrSingle(joi.number()),
-            soundscapeComposition:  arrayOrSingle(joi.number()),
+            validation: arrayOrSingle(joi.number()),
+            classification: arrayOrSingle(joi.number()),
+            soundscapeComposition: arrayOrSingle(joi.number()),
             tag:  arrayOrSingle(joi.number()),
             grouped: joi.string(),
-            projectUrl: joi.string()
+            projectUrl: joi.string(),
+            aed: arrayOrSingle(joi.number()),
+            cluster: joi.object(),
+            search: joi.string()
         }
     },
 

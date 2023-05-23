@@ -97,7 +97,7 @@ angular.module('a2.analysis.cnn', [
     $scope.createNewCNN = function () {
         // TODO: add in real cnn permissions
         if(!a2UserPermit.can('manage cnns')) {
-            notify.log('You do not have permission to create cnn jobs.');
+            notify.error('You do not have permission to create cnn jobs.');
             return;
         }
 
@@ -123,7 +123,7 @@ angular.module('a2.analysis.cnn', [
         $event.stopPropagation();
 
         if(!a2UserPermit.can('manage cnns')) {
-            notify.log('You do not have permission to delete cnns.');
+            notify.error('You do not have permission to delete cnns.');
             return;
         }
 
@@ -318,7 +318,7 @@ angular.module('a2.analysis.cnn', [
         $event.stopPropagation();
         if (a2UserPermit.isSuper()) return setupExportUrl()
         if ((a2UserPermit.all && !a2UserPermit.all.length) || !a2UserPermit.can('export report')) {
-            return notify.log('You do not have permission to export CNN data');
+            return notify.error('You do not have permission to export CNN data');
         } else return setupExportUrl()
     }
 

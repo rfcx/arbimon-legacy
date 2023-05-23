@@ -6,7 +6,6 @@ const AWS = require('aws-sdk');
 const q = require('q');
 const dbpool = require('../utils/dbpool');
 const Recordings = require('./recordings');
-const APIError = require('../utils/apierror');
 const config = require('../config');
 const k8sConfig = config('k8s');
 const jsonTemplates = require('../utils/json-templates');
@@ -110,20 +109,24 @@ let ClusteringJobs = {
         }
 
         if (options.perDate) {
-            select.push('C.`date_created`');
             tables.push("JOIN job_params_audio_event_clustering C ON A.job_id = C.audio_event_detection_job_id");
+            select.push('C.`date_created`');
             groupby.push('A.aed_id');
         }
 
         if (options.rec_id) {
             constraints.push('A.recording_id = ' + dbpool.escape(options.rec_id));
         }
-        return dbpool.query(
-            "SELECT " + select.join(",\n    ") + "\n" +
-            "FROM " + tables.join("\n") + "\n" +
-            "WHERE " + constraints.join(" AND ")+ "\n" +
-            (groupby.length ? ("\nGROUP BY " + groupby.join(",\n    ")) : "")
-        )
+
+        const sql = "SELECT " + select.join(",\n    ") + "\n" +
+        "FROM " + tables.join("\n") + "\n" +
+        "WHERE " + constraints.join(" AND ")+ "\n" +
+        (groupby.length ? ("\nGROUP BY " + groupby.join(",\n    ")) : "")
+
+        if (options.exportReport) {
+            return dbpool.query(sql)
+        }
+        return dbpool.query(sql)
     },
 
     getClusteringPlaylist: async function(recId) {
@@ -172,7 +175,7 @@ let ClusteringJobs = {
             }, {
                 maxFreq: rec.frequency_max,
                 minFreq: rec.frequency_min,
-                gain: options.gain || 15,
+                gain: options.gain || 1,
                 trim: {
                     from: rec.time_min,
                     to: rec.time_max

@@ -40,7 +40,7 @@ angular.module('a2.visualizer.layers.training-sets', [
 
     self.add_new_tset = function(){
         if(!a2UserPermit.can('manage training sets')) {
-            notify.log('You do not have permission to create training sets');
+            notify.error('You do not have permission to create training sets');
             return;
         }
 

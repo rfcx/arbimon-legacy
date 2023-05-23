@@ -90,7 +90,7 @@ angular.module('a2.login', [
             controllerAs: 'popup'
         }).result.then(function() {
             if(!modalData.authorized){
-                notify.log("Login authorization canceled.");
+                notify.error("Login authorization canceled.");
             } else {
                 $http.post('/oauth-login' + $window.location.search, angular.extend({}, oauthData, {
                     authorize : 1,
