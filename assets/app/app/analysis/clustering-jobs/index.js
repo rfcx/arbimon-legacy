@@ -823,8 +823,14 @@ angular.module('a2.analysis.clustering-jobs', [
             {value:'per_site', text:'Sort per Site', description: 'Show all rois ranked per Site.'},
             {value:'per_date', text:'Sort per Date', description: 'Show all rois sorted per Date.'},
             {value:'per_species', text:'Sort per Species', description: 'Show all rois sorted per Species.'}
-        ]
+        ],
+        validation: [
+            { class:"fa val-1", text: 'Present', value: 1},
+            { class:"fa val-0", text: 'Not Present', value: 0 },
+            { class:"fa val-null", text: 'Clear', value: -1 },
+        ],
     };
+    $scope.validation = { status: $scope.lists.validation[2] };
 
     $scope.selectedFilterData = $scope.lists.search[1];
     
@@ -1128,39 +1134,54 @@ angular.module('a2.analysis.clustering-jobs', [
     }
 
     $scope.setValidation = function() {
-        if(!a2UserPermit.can('manage AED and Clustering job')) {
+        if (!a2UserPermit.can('manage AED and Clustering job')) {
             notify.error('You do not have permission to manage AED and Clustering job');
             return;
         }
+        if ($scope.validation.status.value === 1 && !$scope.selected.species) {
+            notify.error('Please select Species and Song type <br> to validate ROIs with the Present validation');
+            return;
+        }
+        if ($scope.validation.status.value === 0 && !$scope.selected.species) {
+            notify.error('Please select Species and Song type <br> to validate ROIs with the Absent validation');
+            return;
+        }
         $scope.speciesLoading = true;
+        var opts = {
+            aed: $scope.selectedRois,
+            validated: $scope.validation.status.value,
+        }
+        if ($scope.selected.species && $scope.selected.songtype) {
+            opts.species_name = $scope.selected.species.scientific_name
+            opts.songtype_name = $scope.selected.songtype.name
+            opts.species_id = $scope.selected.species.id
+            opts.songtype_id = $scope.selected.songtype.id
+        }
         clearTimeout(timeout);
         timeout = setTimeout(() => {
-            a2AudioEventDetectionsClustering.validate({
-                aed: $scope.selectedRois,
-                species_name: $scope.selected.species.scientific_name,
-                songtype_name: $scope.selected.songtype.name,
-                species_id: $scope.selected.species.id,
-                songtype_id: $scope.selected.songtype.id
-            }).then(data => {
+            a2AudioEventDetectionsClustering.validate(opts).then(data => {
                 console.info('Validation result', data)
-                // Unselect and mark boxes as validated without reloading the page
-                $scope.markBoxesAsValidated()
+                // Unselect and mark boxes with current validation without reloading the page
+                $scope.markBoxesWithCurrentValidation()
                 $scope.unselectBoxes()
                 $scope.selectedRois = []
-                notify.log('Audio event detections are validated as ' + $scope.selected.species.scientific_name + ' ' + $scope.selected.songtype.name);
+                if ($scope.validation.status.value === 1) {
+                    notify.log('Audio event detections are validated as ' + $scope.selected.species.scientific_name + ' ' + $scope.selected.songtype.name);
+                }
                 $scope.selected = { species: null, songtype: null };
+                $scope.updateInputState()
             }).finally(() => {
                 $scope.speciesLoading = false;
             })
         }, 500)
     }
 
-    $scope.markBoxesAsValidated = function() {
+    $scope.markBoxesWithCurrentValidation = function() {
         $scope.rows.forEach(row => {
             row.species.forEach(cluster => {
                 cluster.rois.forEach(roi => {
                     if ($scope.selectedRois.includes(roi.aed_id)) {
-                        roi.validated = 1
+                        roi.validated = $scope.validation.status.value
                     }
                 })
             })

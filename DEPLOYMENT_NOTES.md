@@ -1,5 +1,9 @@
 # Arbimon Deployment Notes
 
+## v3.0.81 - April 13, 2023
+
+- Run 042-add-validated-to-audio-event-detections-clustering.sql on the production db
+
 ## v3.0.78 - April 13, 2023
 
 - Run 041-add-status-to-playlists-table.sql on the production db

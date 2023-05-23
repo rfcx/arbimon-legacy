@@ -110,19 +110,22 @@ let AudioEventDetectionsClustering = {
         ]) : Promise.resolve();
     },
 
-    validateDetections(aed, speciesId, songtypeId) {
-        return aed.length ? dbpool.query(
-            'UPDATE audio_event_detections_clustering\n' +
-            'SET species_id = ?, songtype_id = ?\n' +
-            'WHERE aed_id IN (?)', [
-            speciesId,
-            songtypeId,
-            aed
-        ]) : Promise.resolve();
+    validateDetections(aed, speciesId, songtypeId, validated) {
+        const q = `UPDATE audio_event_detections_clustering
+            SET species_id = ${speciesId}, songtype_id = ${songtypeId}, validated = ${validated}
+            WHERE aed_id IN (${aed})`
+        return dbpool.query(q)
+    },
+
+    getAedValidation: async function(opts) {
+        const q = `SELECT COUNT(aed_id) as count FROM audio_event_detections_clustering
+            WHERE recording_id=${opts.recordingId} AND species_id=${opts.speciesId} AND songtype_id=${opts.songtypeId} AND validated=1`;
+        return dbpool.query(q);
     },
 
     updatePresentAedCount: async function(opts) {
-        const q = `UPDATE recording_validations SET present_aed = present_aed ${opts.validate ? '+' : '-'} 1
+        const [aedValidation] = await this.getAedValidation(opts)
+        const q = `UPDATE recording_validations SET present_aed = ${aedValidation.count}
             WHERE project_id=${opts.projectId} AND recording_id IN (${opts.recordingId}) AND species_id=${opts.speciesId} AND songtype_id=${opts.songtypeId}`;
         return dbpool.query(q);
     },
