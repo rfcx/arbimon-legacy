@@ -31,6 +31,7 @@ const rfcxConfig = config('rfcx');
 const moment = require('moment');
 const auth0Service = require('./auth0');
 const request = require('request');
+const rp = util.promisify(request);
 
 // local variables
 let s3, s3RFCx;
@@ -1006,6 +1007,12 @@ var Recordings = {
             WHERE project_id=${projectId} AND species_id=${cl.speciesId} AND songtype_id=${cl.songtypeId}`;
             dbpool.query(q);
         }
+    },
+
+    resetRecValidationByRecordingId: async function(projectId, recIds) {
+        const q = `UPDATE recording_validations SET present = NULL, present_review = 0, present_aed = 0
+        WHERE project_id=${projectId} AND recording_id IN (${recIds})`;
+        return dbpool.query(q);
     },
 
     addRecordingValidation: async function(opts) {
@@ -1992,6 +1999,29 @@ var Recordings = {
             WHERE r.recording_id IN (${recs})
             AND s.project_id = ${project_id}`
         return query(q);
+    },
+
+    deleteInCoreAPI: async function(recs, idToken) {
+        if (!recs.length) return
+        const segments = recs.map(rec => rec.segment_id)
+        const body = {
+            segments
+        }
+        const options = {
+            method: 'DELETE',
+            url: `${rfcxConfig.apiBaseUrl}/internal/arbimon/segment`,
+            headers: {
+                'content-type': 'application/json',
+                Authorization: idToken,
+                source: 'arbimon'
+            },
+            body: JSON.stringify(body)
+        }
+        return rp(options).then((response) => {
+            if (response.statusCode !== 204) {
+                throw new Error('Failed to delete recordings');
+            }
+        })
     },
 
     deleteRecordingsFromS3: async function(rows) {
