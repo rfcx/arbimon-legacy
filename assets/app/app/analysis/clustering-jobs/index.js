@@ -1169,7 +1169,8 @@ angular.module('a2.analysis.clustering-jobs', [
                     notify.log('Audio event detections are validated as ' + $scope.selected.species.scientific_name + ' ' + $scope.selected.songtype.name);
                 }
                 $scope.selected = { species: null, songtype: null };
-                $scope.updateInputState()
+                $scope.updateInputState();
+                $scope.getRoisDetails();
             }).finally(() => {
                 $scope.speciesLoading = false;
             })
