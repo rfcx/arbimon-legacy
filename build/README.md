@@ -18,7 +18,7 @@ Requires Docker.
 
 2.  Run the app
     ```
-    docker run -it --env-file .env --rm arbimon
+    docker run -it -p 3000:3000 --env-file .env --rm arbimon
     ```
 
 

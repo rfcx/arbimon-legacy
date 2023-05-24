@@ -20,7 +20,8 @@ RUN mkdir -p /app/utils
 COPY app/utils /app/app/utils
 RUN mkdir -p /app/model
 RUN mkdir -p /app/k8s/job
-COPY app/k8s/job/index.js /app/app/k8s/job/index.js
+COPY app/k8s/job /app/app/k8s/job
+COPY app/k8s/index.js /app/app/k8s/index.js
 COPY app/model/recordings.js /app/app/model/recordings.js
 COPY app/model/clustering-jobs.js /app/app/model/clustering-jobs.js
 COPY app/model/projects.js /app/app/model/projects.js

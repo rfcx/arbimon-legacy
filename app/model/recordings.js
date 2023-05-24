@@ -743,7 +743,7 @@ var Recordings = {
     },
 
     fetchTemplateFile: function (recording, options, callback) {
-        var template_key = recording.uri.replace(audioFilePattern, '.png');
+        const template_key = recording.uri.replace(audioFilePattern, '.png');
         tmpfilecache.fetch(template_key, function(cache_miss){
             Recordings.fetchRecordingFile(recording, async function(err, recording_path){
                 if(err) { callback(err); return; }
@@ -1912,14 +1912,15 @@ var Recordings = {
                 let results = [];
                 for (let builder in summaryBuilders) {
                     let index = 0
+                    // ADD /*+ MAX_EXECUTION_TIME(180000) */
                     const baseSql = summaryBuilders[builder].getSQL().replace(';', '')
                     async function getData () {
-                        let limit = 8000
+                        let limit = 10000
                         let offset = limit * index
                         const sql = `${baseSql} LIMIT ${limit} OFFSET ${offset};`
-                        console.log('summaryBuilders offset', offset)
+                        console.log('sql next offset', offset)
                         const queryResult = await dbpool.query({ sql, typecast: sqlutil.parseUtcDatetime })
-                        console.log('result length', queryResult.length)
+                        console.log('final result length', queryResult.length)
                         if (queryResult.length) {
                             index++
                             results = results.concat([...new Set(queryResult)]);

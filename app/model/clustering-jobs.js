@@ -175,7 +175,7 @@ let ClusteringJobs = {
             }, {
                 maxFreq: rec.frequency_max,
                 minFreq: rec.frequency_min,
-                gain: options.gain || 15,
+                gain: options.gain || 1,
                 trim: {
                     from: rec.time_min,
                     to: rec.time_max
