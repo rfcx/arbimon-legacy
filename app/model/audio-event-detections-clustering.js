@@ -102,9 +102,9 @@ let AudioEventDetectionsClustering = {
         ))
     },
 
-    getDetectionsById: function (aed) {
+    getDetectionsByIds: function (aed) {
         return aed.length ? dbpool.query(
-            'SELECT aed_id, recording_id, species_id, songtype_id FROM audio_event_detections_clustering\n' +
+            'SELECT aed_id, recording_id, species_id, songtype_id, validated FROM audio_event_detections_clustering\n' +
             'WHERE aed_id IN (?)', [
             aed
         ]) : Promise.resolve();

@@ -62,7 +62,7 @@ router.post('/validate', function(req, res, next) {
 
     return converter.validate()
         .then(async (params) => {
-            let opts = {
+            const opts = {
                 projectId: req.project.project_id,
                 speciesId: params.species_id || null,
                 songtypeId: params.songtype_id || null
@@ -70,8 +70,15 @@ router.post('/validate', function(req, res, next) {
             const validated = JSON.parse(params.validated) === -1 ? null : JSON.parse(params.validated)
             for (let d of params.aed) {
                 // get existing aed row
-                const [aedRow] = await model.AudioEventDetectionsClustering.getDetectionsById([d]);
-                await model.AudioEventDetectionsClustering.validateDetections(params.aed, opts.speciesId, opts.songtypeId, validated);
+                const [aedRow] = await model.AudioEventDetectionsClustering.getDetectionsByIds([d]);
+                await model.AudioEventDetectionsClustering.validateDetections([d], opts.speciesId, opts.songtypeId, validated);
+                // get existing recording validation for species in params
+                if (opts.speciesId && opts.songtypeId) {
+                    const recValidation = await model.recordings.getRecordingValidation({ ...opts, recordingId: aedRow.recording_id });
+                    if (!recValidation.length) {
+                        await model.recordings.addRecordingValidation({ ...opts, recordingId: aedRow.recording_id, userId })
+                    }
+                }
                 await model.AudioEventDetectionsClustering.updatePresentAedCount({
                     ...opts,
                     speciesId: opts.speciesId || aedRow.species_id,
@@ -106,7 +113,7 @@ router.post('/unvalidate', function(req, res, next) {
         .then(async (params) => {
             for (let d of params.aed) {
                 // Get existing aed row
-                const [aedRow] = await model.AudioEventDetectionsClustering.getDetectionsById([d]);
+                const [aedRow] = await model.AudioEventDetectionsClustering.getDetectionsByIds([d]);
                 // If aed box is validated decrease or remove the old present_aed count from the recording_validations first
                 if (aedRow.species_id && aedRow.songtype_id) {
                     const params = {
