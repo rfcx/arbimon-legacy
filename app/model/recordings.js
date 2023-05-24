@@ -563,7 +563,7 @@ var Recordings = {
                 asset = `r${isFrequency ? fmin + '.' + fmax : 'full'}_g${isGain ? options.gain : 1}_fmp3.mp3`
                 break;
             case 'template':
-                asset = `r${fmin}.${fmax}_g1_fspec_mtrue_d125.125_wdolph_z120.png`
+                asset = `r${fmin}.${fmax}_g1_fspec_mtrue_d400.400_wdolph_z120.png`
                 break;
         }
 

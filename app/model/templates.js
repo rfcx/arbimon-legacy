@@ -337,26 +337,21 @@ var Templates = {
         }).then(() => jimp.read(spec_data.path))
           .then((spectrogram) => {
             if (isLegacy) {
-                var px2sec = rec_data.duration/spectrogram.bitmap.width;
-                var max_freq = rec_data.sample_rate/2;
-                var px2hz  = max_freq/spectrogram.bitmap.height;
+                const px2sec = rec_data.duration/spectrogram.bitmap.width;
+                const max_freq = rec_data.sample_rate/2;
+                const px2hz  = max_freq/spectrogram.bitmap.height;
 
-                var left = Math.floor(template.x1/px2sec);
-                var top = spectrogram.bitmap.height-Math.floor(template.y2/px2hz);
-                var right = Math.floor(template.x2/px2sec);
-                var bottom = spectrogram.bitmap.height-Math.floor(template.y1/px2hz);
+                const left = Math.floor(template.x1/px2sec);
+                const top = spectrogram.bitmap.height-Math.floor(template.y2/px2hz);
+                const right = Math.floor(template.x2/px2sec);
+                const bottom = spectrogram.bitmap.height-Math.floor(template.y1/px2hz);
 
-                var roi = spectrogram.clone().crop(left, top, right - left, bottom - top);
+                const roi = spectrogram.clone().crop(left, top, right - left, bottom - top);
                 return roi.getBufferAsync(jimp.MIME_PNG);
             }
-            var roi = spectrogram.clone()
+            const roi = spectrogram.clone()
             return roi.getBufferAsync(jimp.MIME_PNG);
         }).then((roiBuffer) => {
-            debug('store_in_bucket' + JSON.stringify({
-                Bucket: config('aws').bucketName,
-                Key: s3key,
-                ACL: 'public-read',
-            }));
             if(!s3){
                 s3 = new AWS.S3();
             }
@@ -367,7 +362,6 @@ var Templates = {
                 Body: roiBuffer
             }).promise();
         }).then(() => {
-            debug('update_roi_data');
             return dbpool.query(dbpool.format(
                 "UPDATE templates \n"+
                 "SET uri = ? \n"+
@@ -375,7 +369,6 @@ var Templates = {
                 s3key, template.id
             ]));
         }).then(() => {
-            debug('return_updated_roi');
             return template;
         });
     },

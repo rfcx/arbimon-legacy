@@ -436,74 +436,79 @@ TrainingSets.types.roi_set = {
         debug('create_data_image');
         var s3key = 'project_'+training_set.project+'/training_sets/'+training_set.id+'/'+rdata.id+'.png';
         rdata.uri = 'https://' + config('aws').bucketName + '.s3.' + config('aws').region + '.amazonaws.com/' + s3key;
-        var roi_file = tmpfilecache.key2File(s3key);
-        var rec_data;
-        var rec_stats;
-        var spec_data;
+        let rec_data, rec_stats, spec_data, isLegacy;
 
-        async.waterfall([
-            function find_recording(next){
-                Recordings.findByUrlMatch(rdata.recording,0, {limit:1}, next);
-            },
-            function get_recording(data, next){
-                rec_data = data[0];
-                Recordings.fetchInfo(rec_data, next);
-            },
-            function fetch_spectrogram(data, next){
-                rec_stats = data;
-                Recordings.fetchSpectrogramFile(rec_data, next);
-            },
-            function get_spectrogram(data, next){
-                debug('get_spectrogram');
-                spec_data = data;
-                jimp.read(spec_data.path, next);
-            },
-            function crop_roi(spectrogram, next){
-                debug('crop_roi');
-                var px2sec = rec_data.duration/spectrogram.bitmap.width;
-                var max_freq = rec_data.sample_rate/2;
-                var px2hz  = max_freq/spectrogram.bitmap.height;
-
-                var left = Math.floor(rdata.x1/px2sec);
-                var top = spectrogram.bitmap.height-Math.floor(rdata.y2/px2hz);
-                var right = Math.ceil(rdata.x2/px2sec);
-                var bottom = spectrogram.bitmap.height-Math.floor(rdata.y1/px2hz);
-
-                try {
-                    var roi = spectrogram.clone().crop(left, top, right - left, bottom - top);
-                    roi.getBuffer(jimp.MIME_PNG, next);
-                } catch(err){
-                    next(err);
-                }
-            },
-            function store_in_bucket(roiBuffer, next) {
-                debug('store_in_bucket');
-                // var next = arguments[arguments.length-1];
-                if(!s3){
-                    s3 = new AWS.S3();
-                }
-                s3.putObject({
-                    Bucket: config('aws').bucketName,
-                    Key: s3key,
-                    ACL: 'public-read',
-                    Body: roiBuffer
-                }, next);
-            },
-            function update_roi_data() {
-                debug('update_roi_data');
-                var next = arguments[arguments.length-1];
-
-                var q = "UPDATE training_set_roi_set_data \n"+
-                        "SET uri = ? \n"+
-                        "WHERE roi_set_data_id = ?";
-                dbpool.queryHandler(dbpool.format(q, [s3key, rdata.id]), next);
-            },
-            function return_updated_roi(){
-                debug('return_updated_roi');
-                var next = arguments[arguments.length-1];
-                next(null, rdata);
+        return Recordings.findByUrlMatch(rdata.recording, 0, {limit:1})
+        .then(data => rec_data = data[0])
+        .then((rec_data) => {
+            isLegacy = Recordings.isLegacy(rec_data)
+            if (isLegacy) {
+                return Promise.all([
+                    q.ninvoke(Recordings, 'fetchInfo', rec_data).then(data => rec_stats = data),
+                    q.ninvoke(Recordings, 'fetchSpectrogramFile', rec_data).then(data => spec_data = data)
+                ])
             }
-        ], callback);
+            const opts = {
+                uri: rec_data.uri,
+                external_id: rec_data.external_id,
+                datetime: rec_data.datetime,
+                datetime_utc: rec_data.datetime_utc,
+                template: true
+            }
+            const filter = {
+                maxFreq: Math.max(rdata.y1, rdata.y2),
+                minFreq: Math.min(rdata.y1, rdata.y2),
+                trim: {
+                    from: Math.min(rdata.x1, rdata.x2),
+                    to: Math.max(rdata.x1, rdata.x2)
+                }
+            }
+            return q.ninvoke(Recordings, 'fetchTemplateFile', opts, filter)
+        }).then(data => {
+            if (data && data.path) {
+                spec_data = data
+            }
+        }).then(() => jimp.read(spec_data.path))
+          .then((spectrogram) => {
+            if (isLegacy) {
+                const px2sec = rec_data.duration/spectrogram.bitmap.width;
+                const max_freq = rec_data.sample_rate/2;
+                const px2hz  = max_freq/spectrogram.bitmap.height;
+
+                const left = Math.floor(rdata.x1/px2sec);
+                const top = spectrogram.bitmap.height-Math.floor(rdata.y2/px2hz);
+                const right = Math.ceil(rdata.x2/px2sec);
+                const bottom = spectrogram.bitmap.height-Math.floor(rdata.y1/px2hz);
+
+                const roi = spectrogram.clone().crop(left, top, right - left, bottom - top);
+                return roi.getBufferAsync(jimp.MIME_PNG);
+            }
+            const roi = spectrogram.clone()
+            return roi.getBufferAsync(jimp.MIME_PNG);
+        }).then((roiBuffer) => {
+            if(!s3){
+                s3 = new AWS.S3();
+            }
+            return s3.putObject({
+                Bucket: config('aws').bucketName,
+                Key: s3key,
+                ACL: 'public-read',
+                Body: roiBuffer
+            }).promise();
+        }).then(() => {
+            if (spec_data && spec_data.path) {
+                fs.unlink(spec_data.path, function (err) {
+                    if (err) console.error('Error deleting the template file.', err);
+                    console.info('Template file deleted.');
+                })
+            }
+            const q = "UPDATE training_set_roi_set_data \n"+
+                    "SET uri = ? \n"+
+                    "WHERE roi_set_data_id = ?";
+            return dbpool.query(dbpool.format(q, [s3key, rdata.id]));
+        }).then(() => {
+            callback(null, rdata);
+        });
     },
 
     fetch_data_image : function (training_set, data_id, callback){
