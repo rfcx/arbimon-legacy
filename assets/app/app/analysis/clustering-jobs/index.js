@@ -928,13 +928,8 @@ angular.module('a2.analysis.clustering-jobs', [
 
     $scope.combineRoisPerCluster = function() {
         $scope.roisPerCluster = {};
-        $scope.allRois.forEach((roi) => {
-            if (!$scope.roisPerCluster[roi.cluster]) {
-                $scope.roisPerCluster[roi.cluster] = [roi.aed_id]
-            }
-            else {
-                $scope.roisPerCluster[roi.cluster].push(roi.aed_id);
-            }
+        $scope.gridData.forEach((cluster) => {
+            $scope.roisPerCluster[cluster.name] = cluster.aed;
         })
     }
 
@@ -1151,11 +1146,12 @@ angular.module('a2.analysis.clustering-jobs', [
             aed: $scope.selectedRois,
             validated: $scope.validation.status.value,
         }
+        const isClearValidation = $scope.validation.status.value === -1
         if ($scope.selected.species && $scope.selected.songtype) {
-            opts.species_name = $scope.selected.species.scientific_name
-            opts.songtype_name = $scope.selected.songtype.name
-            opts.species_id = $scope.selected.species.id
-            opts.songtype_id = $scope.selected.songtype.id
+            opts.species_name = isClearValidation ? null : $scope.selected.species.scientific_name
+            opts.songtype_name = isClearValidation ? null : $scope.selected.songtype.name
+            opts.species_id = isClearValidation ? null : $scope.selected.species.id
+            opts.songtype_id = isClearValidation ? null : $scope.selected.songtype.id
         }
         clearTimeout(timeout);
         timeout = setTimeout(() => {
