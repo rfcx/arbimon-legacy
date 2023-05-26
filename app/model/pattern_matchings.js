@@ -709,7 +709,7 @@ var PatternMatchings = {
     getRoiAudioFile(patternMatching, roiId, options){
         options = options || {};
         return dbpool.query(
-            "SELECT PMR.x1, PMR.x2, PMR.y1, PMR.y2, PMR.uri as imgUri, R.uri as recUri,\n" +
+            "SELECT PMR.x1, PMR.x2, PMR.y1, PMR.y2, PMR.uri as imgUri, R.sample_rate, R.uri as recUri,\n" +
                 "R.site_id as recSiteId, R.datetime, R.datetime_utc, S.external_id\n" +
             "FROM pattern_matching_rois PMR\n" +
             "JOIN recordings R ON PMR.recording_id = R.recording_id\n" +
@@ -721,6 +721,7 @@ var PatternMatchings = {
             if(!pmr){
                 return;
             }
+            const freq_max = pmr.sample_rate ? (pmr.sample_rate / 2) : pmr.y2
             const opts = {
                 uri: pmr.recUri,
                 site_id: pmr.recSiteId,
@@ -729,8 +730,8 @@ var PatternMatchings = {
                 datetime_utc: pmr.datetime_utc
             }
             const filter = {
-                maxFreq: Math.max(pmr.y1, pmr.y2),
-                minFreq: Math.min(pmr.y1, pmr.y2),
+                maxFreq: Math.max(pmr.y1, freq_max),
+                minFreq: Math.min(pmr.y1, freq_max),
                 gain: options.gain || 1,
                 trim: {
                     from: Math.min(pmr.x1, pmr.x2),

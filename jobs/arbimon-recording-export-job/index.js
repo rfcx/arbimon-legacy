@@ -444,7 +444,6 @@ async function sendEmail (subject, title, rowData, content, isSignedUrl) {
         reach out to us by clicking the <span style="color:green;font-size: 16px;">&#63;</span> icon, on the bottom right of any Arbimon page.
       </p>`
     const textFooter = `<p style="color:black;">
-        <span>Wishing you much success!</span> <br>
         <span> - The Arbimon Team </span>
       </p>`
 

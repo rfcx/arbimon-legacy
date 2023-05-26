@@ -22,92 +22,109 @@
                         <br>Min. Points: {{ job_details.parameters['Min. Points'] || 'no data' }}, Distance Threshold: {{ job_details.parameters['Distance Threshold'] || 'no data' }}, Max. Cluster Size: {{ job_details.parameters['Max. Cluster Size'] || 'no data' }}
                     </div>
                     <div class="col-sm-8 row-flex flex-space-end panel-body pb-0 pr-0 clusters-filter-right">
-                        <div class="row-flex flex-space-between flex-self-align-bottom mr-1">
-                            <div class="input-group row-flex species-typeahead mr-2">
-                                <span class="input-group-addon" style="width: 90px; padding: 9px 12px;">Validate as:</span>
-                                <input class="form-control" style="width: 150px;"
-                                    type="text"
-                                    placeholder="Type Species"
-                                    ng-model="selected.species"
-                                    ng-disabled="!selectedRois.length || !isValidationAccessible"
-                                    typeahead="species as species.scientific_name for species in searchSpecies($viewValue)"
-                                    typeahead-editable="false"
-                                    typeahead-min-length="3"
-                                    typeahead-wait-ms="500"
-                                    typeahead-no-results="noResults"
-                                    typeahead-loading="speciesLoading"
-                                >
-                                <span class="input-group-btn">
-                                    <button class="btn btn-default">
-                                        <i ng-show="speciesLoading" class="fa fa-spinner fa-spin"></i>
-                                        <i ng-show="!speciesLoading" class="fa fa-search"></i>
-                                    </button>
-                                </span>
-                            </div>
-                            <ui-select ng-disabled="!selected.species" ng-model="selected.songtype" style="width: 150px;" theme="bootstrap">
-                                <ui-select-match placeholder="Songtype" style="width: 150px;">
-                                    {{selected.songtype.name}}
-                                </ui-select-match>
-                                <ui-select-choices repeat="$item in songtypes | filter:$select.selected.species">
-                                    {{$item.name}}
-                                </ui-select-choices>
-                            </ui-select>
-                            <button class="btn btn-default ml-2" type="button" tooltip="Validate" ng-click="setValidation()">
-                                <i class="fa fa-check"></i>
-                            </button>
-                        </div>
-                        <div class="btn-group btn-group-margin row-flex flex-self-align-bottom mr-1">
-                            <div class="inline-block no-wrap" style="position: relative;">
-                                <button class="btn btn-default" type="button" tooltip="Save to playlist" ng-click="togglePopup()">
-                                    <i class="fa fa-music"></i>
-                                </button>
-                                <div class="popover right create-template" style="display: block;" ng-if="isPopupOpened">
-                                    <div class="arrow"></div>
-                                    <h3 class="popover-title">
-                                        Create Playlist
-                                    </h3>
-                                    <div class="popover-content">
-                                        <div class="mb-2">
-                                            <label for="name">Name</label>
-                                            <input to="name" type="text" class="form-control" ng-model="playlistData.playlistName" placeholder="Playlist name"/>
-                                        </div>
-                                        <button id="submit-btn" class="btn btn-sm btn-default"
-                                            ng-click="savePlaylist()" ng-disabled="!!isSavingPlaylist || !isPlaylistDataValid()">
-                                            <i class="fa text-success" ng-class="{'fa-plus' : !isSavingPlaylist , 'fa-spinner fa-spin': isSavingPlaylist }"></i>
-                                            Create Playlist
+                        <div class="row-flex flex-space-between flex-self-align-bottom flex-direction-column">
+                            <div class="row-flex flex-direction-row">
+                                <div class="btn-group btn-group-margin input-group row-flex flex-direction-row">
+                                    <span class="input-group-addon" title="Please select species and song type to validate ROIs" style="width: 90px; padding: 9px 12px;">Select:</span>
+                                    <input class="form-control" style="width: 150px;"
+                                        type="text"
+                                        placeholder="Type Species"
+                                        ng-model="selected.species"
+                                        ng-disabled="!selectedRois.length || !isValidationAccessible"
+                                        typeahead="species as species.scientific_name for species in searchSpecies($viewValue)"
+                                        typeahead-editable="false"
+                                        typeahead-min-length="3"
+                                        typeahead-wait-ms="500"
+                                        typeahead-no-results="noResults"
+                                        typeahead-loading="speciesLoading"
+                                    >
+                                    <span class="input-group-btn">
+                                        <button class="btn btn-default" title="Please select species and song type to validate ROIs">
+                                            <i ng-show="speciesLoading" class="fa fa-spinner fa-spin"></i>
+                                            <i ng-show="!speciesLoading" class="fa fa-search"></i>
                                         </button>
-                                        <button class="btn btn-sm btn-default"
-                                            ng-click="closePopup()">
-                                            <i class="fa fa-ban text-danger"></i>
-                                            Cancel
+                                    </span>
+                                </div>
+                                <div class="btn-group btn-group-margin">
+                                    <ui-select ng-disabled="!selected.species" ng-model="selected.songtype" style="width: 150px;" theme="bootstrap">
+                                        <ui-select-match placeholder="Songtype" style="width: 150px;">
+                                            {{selected.songtype.name}}
+                                        </ui-select-match>
+                                        <ui-select-choices repeat="$item in songtypes | filter:$select.selected.species">
+                                            {{$item.name}}
+                                        </ui-select-choices>
+                                    </ui-select>
+                                </div>
+                                <div class="btn-group btn-group-margin">
+                                    <button class="btn btn-default not-active" >Validate as:</button>
+                                    <ui-select ng-model="validation.status" class="btn-group-item border-left-radius" theme="bootstrap">
+                                        <ui-select-match  class="right-corners">
+                                            <i ng-class="$select.selected.class"></i> {{$select.selected.text}}
+                                        </ui-select-match>
+                                        <ui-select-choices repeat="$item in lists.validation | filter:$select.search">
+                                            <i ng-class="$item.class"></i> {{$item.text}}
+                                        </ui-select-choices>
+                                    </ui-select>
+                                </div>
+                                <div class="btn-group btn-group-margin">
+                                    <button class="btn btn-primary" ng-click="setValidation()" ng-disabled="!selectedRois.length">Submit</button>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="btn-group btn-group-margin row-flex flex-direction-row">
+                                    <div class="btn-group row-flex flex-self-align-bottom mr-2" style="position: relative;">
+                                        <button class="btn btn-default" type="button" tooltip="Save to playlist" ng-click="togglePopup()">
+                                            <i class="fa fa-music"></i>
+                                        </button>
+                                        <div class="popover right create-template" style="display: block;" ng-if="isPopupOpened">
+                                            <div class="arrow"></div>
+                                            <h3 class="popover-title">
+                                                Create Playlist
+                                            </h3>
+                                            <div class="popover-content">
+                                                <div class="mb-2">
+                                                    <label for="name">Name</label>
+                                                    <input to="name" type="text" class="form-control" ng-model="playlistData.playlistName" placeholder="Playlist name"/>
+                                                </div>
+                                                <button id="submit-btn" class="btn btn-sm btn-default"
+                                                    ng-click="savePlaylist()" ng-disabled="!!isSavingPlaylist || !isPlaylistDataValid()">
+                                                    <i class="fa text-success" ng-class="{'fa-plus' : !isSavingPlaylist , 'fa-spinner fa-spin': isSavingPlaylist }"></i>
+                                                    Create Playlist
+                                                </button>
+                                                <button class="btn btn-sm btn-default"
+                                                    ng-click="closePopup()">
+                                                    <i class="fa fa-ban text-danger"></i>
+                                                    Cancel
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="btn-group row-flex flex-self-align-bottom mr-2">
+                                        <button class="btn btn-default" type="button" tooltip="Switch to square images" ng-click="toggleBoxSize()">
+                                            <i class="fa fa-th"></i>
+                                        </button>
+                                    </div>
+                                    <div class="btn-group row-flex flex-self-align-bottom">
+                                        <button class="btn btn-default not-active" ><i class="fa fa-search"></i></button>
+                                        <ui-select ng-model="selectedFilterData" theme="bootstrap" class="btn-group-item border-left-radius" on-select="onSearchChanged($select.selected)">
+                                            <ui-select-match class="right-corners">
+                                                <i ng-class="$select.selected.class"></i>{{$select.selected.text}}
+                                            </ui-select-match>
+                                            <ui-select-choices repeat="$item in lists.search | filter:$select.search">
+                                                <i ng-class="$item.class"></i> {{$item.text}}
+                                                <div class="item-description">{{$item.description}}</div>
+                                            </ui-select-choices>
+                                        </ui-select>
+                                    </div>
+                                    <div class="export-url btn-group-margin row-flex flex-self-align-bottom">
+                                        <button class="btn btn-default"
+                                        ng-click="exportReport($event) | trackEvent:'Grid View':'export'"
+                                        tooltip="Export Clustering ROIs Data">
+                                            <i class="fa fa-download"></i>
                                         </button>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="btn-group btn-group-margin row-flex flex-self-align-bottom mr-1">
-                            <button class="btn btn-default" type="button" tooltip="Switch to square images" ng-click="toggleBoxSize()">
-                                <i class="fa fa-th"></i>
-                            </button>
-                        </div>
-                        <div class="btn-group btn-group-margin row-flex flex-self-align-bottom">
-                            <button class="btn btn-default not-active" ><i class="fa fa-search"></i></button>
-                            <ui-select ng-model="selectedFilterData" theme="bootstrap" class="btn-group-item border-left-radius" on-select="onSearchChanged($select.selected)">
-                                <ui-select-match class="right-corners">
-                                    <i ng-class="$select.selected.class"></i>{{$select.selected.text}}
-                                </ui-select-match>
-                                <ui-select-choices repeat="$item in lists.search | filter:$select.search">
-                                    <i ng-class="$item.class"></i> {{$item.text}}
-                                    <div class="item-description">{{$item.description}}</div>
-                                </ui-select-choices>
-                            </ui-select>
-                        </div>
-                        <div class="export-url btn-group btn-group-margin row-flex flex-self-align-bottom">
-                            <button class="btn btn-default"
-                            ng-click="exportReport($event) | trackEvent:'Grid View':'export'"
-                            tooltip="Export Clustering ROIs Data">
-                                <i class="fa fa-download"></i>
-                            </button>
                         </div>
                     </div>
                 </div>
@@ -143,8 +160,8 @@
                         >
                             <input class="roi-btn-tl" type="checkbox" ng-model="roi.selected" ng-checked="selectedRois.includes(roi.aed_id)"
                                 ng-click="$event.stopPropagation(); toggleDetection($event)">
-                            <div class="roi-btn-tr navbar-title" ng-if="roi.validated === 1">
-                            <i class="fa val-1 fa-check-font"></i>
+                            <div class="roi-btn-tr navbar-title" ng-if="roi.validated !== -1">
+                                <i class="fa val-{{roi.validated}}"></i>
                             </div>
                             <a class="roi-btn-bl" ng-href="{{getRoiVisualizerUrl(roi)}}" ng-click="$event.stopPropagation();">
                                 <i tooltip-placement="left"
