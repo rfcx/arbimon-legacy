@@ -579,7 +579,8 @@ var Recordings = {
         const end = momentEnd.format(dateFormat)
         const attr = `${recording.external_id}_t${start}Z.${end}Z_${asset}`
         const token = await auth0Service.getToken();
-
+        // TODO: remove after testing on the prod side
+        console.log('attr', attr)
         const params = {
             method: 'GET',
             url: `${rfcxConfig.mediaBaseUrl}/internal/assets/streams/${attr}`,
