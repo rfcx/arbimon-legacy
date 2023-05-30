@@ -233,7 +233,10 @@ angular.module('a2.audiodata.recordings', [
                 controllerAs: 'popup'
             }).result;
         }).then(function() {
-            return $http.post('/api/project/'+Project.getUrl()+'/recordings/delete-matching', filters);
+            return $http.post('/api/project/'+Project.getUrl()+'/recordings/delete-matching', filters)
+                .error(function(error) {
+                    return notify.error('Some of the analysis jobs are related to deleted recordings');
+                });
         }).then((function(response){
             if(response.data.error){
                 return notify.error(response.data.error);
