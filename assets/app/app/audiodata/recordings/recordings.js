@@ -210,6 +210,7 @@ angular.module('a2.audiodata.recordings', [
             var messages = [], importedCount = 0, importedSites = [];
             messages.push("Any analysis results on these recordings will be deleted.");
             messages.push("Are you sure you want to delete:");
+            console.log(recCount)
             recCount.forEach(function(entry) {
                 var s = entry.count > 1 ? 's' : '';
                 if(!entry.imported){
