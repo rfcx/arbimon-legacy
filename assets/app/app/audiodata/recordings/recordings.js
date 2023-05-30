@@ -208,7 +208,7 @@ angular.module('a2.audiodata.recordings', [
 
         return Project.getRecCounts(filters).then(function(recCount) {
             var messages = [], importedCount = 0, importedSites = [];
-            messages.push("You are about to delete: ");
+            messages.push("Any analysis results on these recordings will also be delete. Are you sure?");
             recCount.forEach(function(entry) {
                 var s = entry.count > 1 ? 's' : '';
                 if(!entry.imported){
@@ -218,7 +218,6 @@ angular.module('a2.audiodata.recordings', [
                     importedSites.push('"' + entry.site + '"');
                 }
             });
-            messages.push("Are you sure?");
             if(importedCount){
                 messages.push("(The filters matched " + importedCount + " recordings wich come from " + importedSites.join(", ") + ". You cannot delete these from your project, they can only be removed from their original project.)");
             }
@@ -235,7 +234,7 @@ angular.module('a2.audiodata.recordings', [
         }).then(function() {
             return $http.post('/api/project/'+Project.getUrl()+'/recordings/delete-matching', filters)
                 .error(function(error) {
-                    return notify.error('Any recordings related to other analysis jobs cannot be deleted');
+                    return notify.error(error);
                 });
         }).then((function(response){
             if(response.data.error){

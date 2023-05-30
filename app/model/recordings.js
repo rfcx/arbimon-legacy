@@ -1797,8 +1797,8 @@ var Recordings = {
         let summaryBuilders = [];
         return Q.ninvoke(joi, 'validate', projection, Recordings.SCHEMAS.exportProjections)
             .then(async (all) => {
-                var projection_parameters = all;
-                var promises=[];
+                let projection_parameters = all;
+                let promises=[];
                 if (projection_parameters.recording.includes('day')) {
                     projection_parameters.recording.push('month');
                     projection_parameters.recording.push('year');
@@ -2060,6 +2060,21 @@ var Recordings = {
         return query(q);
     },
 
+    deleteRecordingInAnalyses: async function(recIds) {
+        let promises=[
+            dbpool.query(`DELETE FROM audio_event_detections_clustering WHERE recording_id in (${recIds})`),
+            dbpool.query(`DELETE FROM classification_results WHERE recording_id in (${recIds})`),
+            dbpool.query(`DELETE FROM cnn_results_presence WHERE recording_id in (${recIds})`),
+            dbpool.query(`DELETE FROM cnn_results_rois WHERE recording_id in (${recIds})`),
+            dbpool.query(`DELETE FROM pattern_matching_rois WHERE recording_id in (${recIds})`),
+            dbpool.query(`DELETE FROM soundscape_region_tags WHERE recording_id in (${recIds})`),
+            dbpool.query(`DELETE FROM templates WHERE recording_id in (${recIds})`),
+            dbpool.query(`DELETE FROM training_set_roi_set_data WHERE recording_id in (${recIds})`)
+        ];
+        console.log('recIds', recIds)
+        return Q.all(promises);
+    },
+
     insertToRecordingsDeleted: async function(rows, query) {
         // Remove multiple rows
         const q = `INSERT INTO recordings_deleted (recording_id, site_id, datetime, duration, deleted_at)
@@ -2096,7 +2111,7 @@ var Recordings = {
                         msg: 'No recordings were deleted'
                     }
                 }
-
+                await this.deleteRecordingInAnalyses(recIds)
                 await this.deleteRecordingsFromArbimon(recIds, query)
                 await this.deleteRecordingsFromS3(rows)
 
