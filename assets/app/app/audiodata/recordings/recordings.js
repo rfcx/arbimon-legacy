@@ -22,6 +22,7 @@ angular.module('a2.audiodata.recordings', [
     $downloadResource
 ) {
     $scope.selectedRecId = []
+    $scope.checkedRec = []
     this.getSearchParameters = function(output){
         var params = angular.merge({}, $scope.params);
         output = output || ['list'];
@@ -127,7 +128,7 @@ angular.module('a2.audiodata.recordings', [
             listParams.range.to = moment(listParams.range.to).format('YYYY-MM-DD') + 'T23:59:59.999Z';
         }
 
-        if ($scope.checked && $scope.checked.length) {
+        if ($scope.selectedRecId && $scope.selectedRecId.length) {
             listParams.recIds = $scope.selectedRecId;
         }
 
@@ -155,7 +156,7 @@ angular.module('a2.audiodata.recordings', [
             return;
         }
 
-        const recs = $scope.checked.filter(function(rec){
+        const recs = $scope.checkedRec.filter(function(rec){
             return !rec.imported;
         });
 
@@ -197,7 +198,7 @@ angular.module('a2.audiodata.recordings', [
         }).bind(this));
     };
 
-    this.deleteMatchingRecordings = function() {
+    this.deleteAllRecordings = function() {
         var filters = $scope.params;
 
         if(!a2UserPermit.can('manage project recordings')) {
@@ -232,7 +233,10 @@ angular.module('a2.audiodata.recordings', [
                 controllerAs: 'popup'
             }).result;
         }).then(function() {
-            return $http.post('/api/project/'+Project.getUrl()+'/recordings/delete-matching', filters);
+            return $http.post('/api/project/'+Project.getUrl()+'/recordings/delete-matching', filters)
+                .error(function(error) {
+                    return notify.error('Any recordings related to other analysis jobs cannot be deleted');
+                });
         }).then((function(response){
             if(response.data.error){
                 return notify.error(response.data.error);
@@ -255,10 +259,12 @@ angular.module('a2.audiodata.recordings', [
         if (!rec.checked) {
             const index = $scope.selectedRecId.findIndex(rec => rec === rec.id);
             $scope.selectedRecId.splice(index, 1);
+            $scope.checkedRec.splice(index, 1);
             return;
         }
         if ($scope.selectedRecId.includes(rec.id)) return;
         $scope.selectedRecId.push(rec.id);
+        $scope.checkedRec.push(rec);
     }
 
     this.setCurrentPage = function(currentPage){

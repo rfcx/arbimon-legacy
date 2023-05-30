@@ -1133,11 +1133,11 @@ angular.module('a2.analysis.clustering-jobs', [
             notify.error('You do not have permission to manage AED and Clustering job');
             return;
         }
-        if ($scope.validation.status.value === 1 && !$scope.selected.species) {
+        if ($scope.validation.status.value === 1 && (!$scope.selected.species || !$scope.selected.songtype)) {
             notify.error('Please select Species and Song type <br> to validate ROIs with the Present validation');
             return;
         }
-        if ($scope.validation.status.value === 0 && !$scope.selected.species) {
+        if ($scope.validation.status.value === 0 && (!$scope.selected.species || !$scope.selected.songtype)) {
             notify.error('Please select Species and Song type <br> to validate ROIs with the Absent validation');
             return;
         }
@@ -1147,12 +1147,10 @@ angular.module('a2.analysis.clustering-jobs', [
             validated: $scope.validation.status.value,
         }
         const isClearValidation = $scope.validation.status.value === -1
-        if ($scope.selected.species && $scope.selected.songtype) {
-            opts.species_name = isClearValidation ? null : $scope.selected.species.scientific_name
-            opts.songtype_name = isClearValidation ? null : $scope.selected.songtype.name
-            opts.species_id = isClearValidation ? null : $scope.selected.species.id
-            opts.songtype_id = isClearValidation ? null : $scope.selected.songtype.id
-        }
+        opts.species_name = isClearValidation ? null : $scope.selected.species.scientific_name
+        opts.songtype_name = isClearValidation ? null : $scope.selected.songtype.name
+        opts.species_id = isClearValidation ? null : $scope.selected.species.id
+        opts.songtype_id = isClearValidation ? null : $scope.selected.songtype.id
         clearTimeout(timeout);
         timeout = setTimeout(() => {
             a2AudioEventDetectionsClustering.validate(opts).then(data => {
