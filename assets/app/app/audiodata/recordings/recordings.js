@@ -205,6 +205,10 @@ angular.module('a2.audiodata.recordings', [
             notify.error('You do not have permission to delete recordings');
             return;
         }
+        if (!$scope.recs.length) {
+            notify.error('Recordings not found');
+            return;
+        }
 
         return Project.getRecCounts(filters).then(function(recCount) {
             var messages = [], importedCount = 0, importedSites = [];

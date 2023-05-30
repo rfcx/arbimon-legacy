@@ -1281,7 +1281,7 @@ var Recordings = {
                 date_range: "SELECT MIN(r.datetime) AS min_date, \n"+
                             "       MAX(r.datetime) AS max_date \n",
 
-                count: "SELECT COUNT(r.recording_id) as count \n"
+                count: "SELECT COUNT(DISTINCT(r.recording_id)) as count \n"
             };
 
             const tables = [
@@ -1628,9 +1628,17 @@ var Recordings = {
 
                 builder.addConstraint('pc.project_class_id IN (?)', [parameters.validations]);
 
-                if(parameters.presence && !(parameters.presence instanceof Array && parameters.presence.length >= 2)){
-                    builder.addConstraint('rv.present = ?', [parameters.presence == 'present' ? '1' : '0']);
+                // filter recordings by present/absent validations values
+                if(parameters.presence){
+                    if (parameters.presence === 'present') {
+                        builder.addConstraint('CASE WHEN rv.present_review > 0 OR rv.present_aed > 0 THEN 1 ELSE rv.present END');
+                    }
+                    else {
+                        builder.addConstraint('CASE WHEN rv.present = 0 AND rv.present_review = 0 AND rv.present_aed = 0 THEN 1 ELSE 0 END');
+                    }
                 }
+                // do not get deleted validations values in the filters result
+                builder.addConstraint('(rv.present IS NOT NULL OR rv.present_review > 0 OR rv.present_aed > 0)');
             }
 
             if(parameters.soundscape_composition) {
@@ -1971,7 +1979,7 @@ var Recordings = {
         return this.buildSearchQuery(filters, true).then(function(builder){
             builder.addProjection.apply(builder, [
                 's.site_id', 's.name as site', 'pis.site_id IS NOT NULL as imported',
-                'COUNT(r.recording_id) as count'
+                'COUNT(DISTINCT(r.recording_id)) as count'
             ]);
             delete builder.orderBy;
             builder.setGroupBy('s.site_id');
