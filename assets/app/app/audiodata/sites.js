@@ -22,9 +22,10 @@ angular.module('a2.audiodata.sites', [
       }
     }
   }])
-.controller('SitesCtrl', function($scope, $state, Project, $modal, notify, a2Sites, $window, $controller, $q, a2UserPermit, a2GoogleMapsLoader, $downloadResource) {
+.controller('SitesCtrl', function($scope, $state, $filter, Project, $modal, notify, a2Sites, $window, $controller, $q, a2UserPermit, a2GoogleMapsLoader, $downloadResource) {
     $scope.loading = true;
     $scope.markers = [];
+    $scope.search = ''
 
     Project.getInfo(function(info){
         $scope.project = info;
@@ -84,8 +85,16 @@ angular.module('a2.audiodata.sites', [
         });
     });
 
+    $scope.onFilterChanged = function() {
+        const sites = $filter('filter')($scope.originalSites, function (i) {
+            return i.name.toLowerCase().includes($scope.search.toLowerCase())
+        })
+        $scope.sites = sites
+    }
+
     $scope.sortByLastUpdated = function(sites) {
         $scope.sites = sites.sort(function(a, b) { return (a.updated_at < b.updated_at) ? 1 : -1;});
+        $scope.originalSites = $scope.sites
     }
 
     // Sets the map on all markers in the array
