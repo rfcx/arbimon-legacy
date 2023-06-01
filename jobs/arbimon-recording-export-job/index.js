@@ -154,7 +154,7 @@ async function processClusteringStream (cluster, results, rowData, currentTime, 
                 const isBigContent = contentSize && contentSize > 10240 // 10MB
                 if (isBigContent) {
                     const filePath = await saveLatestData(S3_BUCKET_ARBIMON, data, rowData.project_id, currentTime, 'clustering-rois-export')
-                    const url = await getSignedUrl(S3_BUCKET_ARBIMON, filePath, 'text/csv')
+                    const url = await getSignedUrl({ Bucket: S3_BUCKET_ARBIMON, Key: filePath }, { clientType: 'rfcx' })
                     await sendEmail('Arbimon export completed', null, rowData, url, true)
                 }
                 try {
