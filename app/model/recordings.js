@@ -1629,16 +1629,15 @@ var Recordings = {
                 builder.addConstraint('pc.project_class_id IN (?)', [parameters.validations]);
 
                 // filter recordings by present/absent validations values
-                if(parameters.presence){
-                    if (parameters.presence === 'present') {
-                        builder.addConstraint('CASE WHEN rv.present_review > 0 OR rv.present_aed > 0 THEN 1 ELSE rv.present END');
-                    }
-                    else {
-                        builder.addConstraint('CASE WHEN rv.present = 0 AND rv.present_review = 0 AND rv.present_aed = 0 THEN 1 ELSE 0 END');
+                if (parameters.presence && parameters.presence.length) {
+                    if (parameters.presence[0] === 'present') {
+                        builder.addConstraint('rv.present = 1 OR rv.present_review > 0 OR rv.present_aed > 0');
+                    } else if (parameters.presence[0] === 'absent') {
+                        builder.addConstraint('rv.present = 0 AND rv.present_review = 0 AND rv.present_aed = 0');
                     }
                 }
-                // do not get deleted validations values in the filters result
-                builder.addConstraint('(rv.present IS NOT NULL OR rv.present_review > 0 OR rv.present_aed > 0)');
+                // exclude deleted validations from filters result
+                builder.addConstraint('rv.present IS NOT NULL OR rv.present_review > 0 OR rv.present_aed > 0');
             }
 
             if(parameters.soundscape_composition) {
