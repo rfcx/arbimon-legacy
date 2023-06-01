@@ -1301,8 +1301,7 @@ var Recordings = {
                     list: []
                 }
             }
-
-            if (!parameters.sites && !parameters.validations) {
+            if (!parameters.sites) {
                 constraints.push("r.site_id IN (?)");
                 data.push(siteIds);
             }
