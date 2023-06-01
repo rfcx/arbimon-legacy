@@ -1517,6 +1517,7 @@ var Recordings = {
             limit:  joi.number(),
             offset: joi.number(),
             sortBy: joi.string(),
+            sortByMult: arrayOrSingle(arrayOrSingle(joi.string())),
             sortRev: joi.boolean(),
             output:  arrayOrSingle(joi.string().valid('count','list','date_range','sql')).default('list')
         },
@@ -1652,7 +1653,11 @@ var Recordings = {
                 }
             }
 
-            builder.setOrderBy(parameters.sortBy || 'site', !parameters.sortRev);
+            if (parameters.sortByMult) {
+                builder.setOrderByMult(parameters.sortByMult);
+            } else {
+                builder.setOrderBy(parameters.sortBy || 'site', !parameters.sortRev);
+            }
 
             if(parameters.limit){
                 builder.setLimit(parameters.offset || 0, parameters.limit);
@@ -1724,7 +1729,7 @@ var Recordings = {
                                         cls.species,
                                         cls.project,
                                     ]);
-                                    summaryBuilders[c].addProjection(`(CASE WHEN (${clsid}.present_review > 0 OR ${clsid}.present_aed > 0) 
+                                    summaryBuilders[c].addProjection(`(CASE WHEN (${clsid}.present_review > 0 OR ${clsid}.present_aed > 0)
                                         AND ${clsid}.present is null
                                         THEN ${clsid}.present_review + ${clsid}.present_aed
                                         ELSE ${clsid}.present + ${clsid}.present_review + ${clsid}.present_aed END)` + " AS " + dbpool.escapeId("val<" + cls.species_name + "/" + cls.songtype_name + ">")
@@ -1770,53 +1775,53 @@ var Recordings = {
 
     },
 
-    exportRecordingData: async function(projection, filters) {
+    chunkClasses: function(classes) {
+        return classes.reduce((resultArray, item, index) => {
+            const chunkIndex = Math.floor(index/20);
+            if (!resultArray[chunkIndex]) {
+                resultArray[chunkIndex] = [];
+            }
+            resultArray[chunkIndex].push(item);
+            return resultArray;
+        }, []);
+    },
+
+    exportRecordingData: async function(projection, filters, cb) {
         let summaryBuilders = [];
         return Q.ninvoke(joi, 'validate', projection, Recordings.SCHEMAS.exportProjections)
             .then(async (all) => {
-                var projection_parameters = all;
-                var promises=[];
+                var projection_parameters = all
+                var promises = []
                 if (projection_parameters.recording.includes('day')) {
-                    projection_parameters.recording.push('month');
-                    projection_parameters.recording.push('year');
-                    projection_parameters.recording.push('date');
+                    projection_parameters.recording.push(...['month', 'year', 'date'])
                 }
                 if (projection_parameters.validation) {
-                    let classPromise = await projectModel.getProjectClasses(null,null,{noProject:true, ids:projection_parameters.validation}).then(async (classes) => {
-                        if (classes && classes.length) {
-                            // Divide the results of the validations if the count more than 50 tables.
-                            let classesArray = classes.reduce((resultArray, item, index) => {
-                                const chunkIndex = Math.floor(index/20);
-                                if (!resultArray[chunkIndex]) {
-                                    resultArray[chunkIndex] = [];
-                                }
-                                resultArray[chunkIndex].push(item);
-                                return resultArray;
-                            }, []);
-                            let index = 0;
-                            for (let c in classesArray) {
-                                // Create a new builder for each parts of validations arrays.
-                                let builder = await this.buildSearchQuery(filters, false)
-                                summaryBuilders.push(builder);
-                                classesArray[c].forEach(function(cls, idx){
-                                    index++;
-                                    let clsid = "p_PVAL_" + index;
-                                    summaryBuilders[c].addTable("LEFT JOIN recording_validations", clsid,
-                                        "r.recording_id = " + clsid + ".recording_id " +
-                                        "AND " + clsid + ".songtype_id = ? " +
-                                        "AND " + clsid + ".species_id = ? " +
-                                        "AND " + clsid + ".project_id = ? ", [
-                                        cls.songtype,
-                                        cls.species,
-                                        cls.project,
-                                    ]);
-                                    summaryBuilders[c].addProjection(`(CASE WHEN (${clsid}.present_review > 0 OR ${clsid}.present_aed > 0) 
-                                        AND ${clsid}.present is null
-                                        THEN ${clsid}.present_review + ${clsid}.present_aed
-                                        ELSE ${clsid}.present + ${clsid}.present_review + ${clsid}.present_aed END)` + " AS " + dbpool.escapeId("val<" + cls.species_name + "/" + cls.songtype_name + ">")
-                                    );
-                                })
-                            }
+                    let classPromise = await projectModel.getProjectClasses(null,null,{ noProject: true, ids: projection_parameters.validation }).then(async (classes) => {
+                        // Divide the results of the validations if the count more than 50 tables.
+                        let classesArray = this.chunkClasses(classes)
+                        let index = 0;
+                        for (let c in classesArray) {
+                            // Create a new builder for each parts of validations arrays.
+                            let builder = await this.buildSearchQuery({ ...filters, sortByMult: [['s.name', 'ASC'], ['r.datetime', 'ASC']] }, false)
+                            summaryBuilders.push(builder);
+                            classesArray[c].forEach(function(cls){
+                                index++;
+                                let clsid = "p_PVAL_" + index;
+                                summaryBuilders[c].addTable("LEFT JOIN recording_validations", clsid,
+                                    "r.recording_id = " + clsid + ".recording_id " +
+                                    "AND " + clsid + ".songtype_id = ? " +
+                                    "AND " + clsid + ".species_id = ? " +
+                                    "AND " + clsid + ".project_id = ? ", [
+                                    cls.songtype,
+                                    cls.species,
+                                    cls.project,
+                                ]);
+                                summaryBuilders[c].addProjection(`(CASE WHEN (${clsid}.present_review > 0 OR ${clsid}.present_aed > 0)
+                                    AND ${clsid}.present is null
+                                    THEN ${clsid}.present_review + ${clsid}.present_aed
+                                    ELSE ${clsid}.present + ${clsid}.present_review + ${clsid}.present_aed END)` + " AS " + dbpool.escapeId("val<" + cls.species_name + "/" + cls.songtype_name + ">")
+                                );
+                            })
                         }
                     })
                     promises.push(classPromise)
@@ -1887,26 +1892,26 @@ var Recordings = {
                 }
                 return Q.all(promises);
             }).then(async function() {
-                let results = [];
-                for (let builder in summaryBuilders) {
-                    let index = 0
-                    const baseSql = summaryBuilders[builder].getSQL().replace(';', '')
-                    async function getData () {
-                        let limit = 8000
-                        let offset = limit * index
-                        const sql = `${baseSql} LIMIT ${limit} OFFSET ${offset};`
-                        console.log('summaryBuilders offset', offset)
+                const chunkSize = 100
+                let index = 0
+                async function getData () {
+                    let results = [];
+                    for (let builder in summaryBuilders) {
+                        const baseSql = summaryBuilders[builder].getSQL().replace(';', '')
+                        const sql = `${baseSql} LIMIT ${chunkSize} OFFSET ${chunkSize * index};`
                         const queryResult = await dbpool.query({ sql, typecast: sqlutil.parseUtcDatetime })
-                        console.log('result length', queryResult.length)
-                        if (queryResult.length) {
-                            index++
-                            results = results.concat([...new Set(queryResult)]);
-                            await getData()
-                        }
+                        results.push(...queryResult)
                     }
-                    await getData()
+                    if (results.length) {
+                        cb(null, results)
+                        index++
+                        results = null
+                        await getData()
+                    } else {
+                        cb(null, null)
+                    }
                 }
-                return results
+                await getData()
             })
     },
 

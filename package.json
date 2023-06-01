@@ -14,7 +14,7 @@
   "dependencies": {
     "@rfcx/http-utils": "^1.0.2",
     "async": "~2.6.3",
-    "aws-sdk": "^2.885.0",
+    "aws-sdk": "^2.1388.0",
     "body-parser": "^1.19.0",
     "bufferpack": "~0.0.6",
     "connect-busboy": "~0.0.2",
