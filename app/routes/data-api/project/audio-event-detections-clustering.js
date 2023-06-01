@@ -53,78 +53,53 @@ router.post('/validate', function(req, res, next) {
     res.type('json');
     const userId = req.session.user.id
     const converter = new Converter(req.body, {});
-    converter.convert('species_id').toInt();
-    converter.convert('songtype_id').toInt();
-    converter.convert('species_name').toString();
-    converter.convert('songtype_name').toString();
+    converter.convert('species_id').optional().toInt();
+    converter.convert('songtype_id').optional().toInt();
+    converter.convert('species_name').optional().toString();
+    converter.convert('songtype_name').optional().toString();
     converter.convert('aed').toArray();
+    converter.convert('validated').toString();
 
     return converter.validate()
         .then(async (params) => {
-            let opts = {
+            const opts = {
                 projectId: req.project.project_id,
-                speciesId: params.species_id,
-                songtypeId: params.songtype_id
+                speciesId: params.species_id || null,
+                songtypeId: params.songtype_id || null
             }
+            const validated = JSON.parse(params.validated) === -1 ? null : JSON.parse(params.validated)
             for (let d of params.aed) {
-                // Get existing aed row.
-                const aedRow = await model.AudioEventDetectionsClustering.getDetectionsById([d]);
-                // Check new species/songtype in the recording_validations
-                let newValidation = await model.recordings.getRecordingValidation({ ...opts, recordingId: aedRow[0].recording_id });
-                // If aed box is validated
-                if (aedRow[0].species_id && aedRow[0].songtype_id) {
-                    // If species/songtype are diffrent - decrease or remove the old present_aed count from the recording_validations
-                    // If species/songtype are the same do nothing!
-                    if (aedRow[0].species_id !== opts.speciesId || aedRow[0].songtype_id !== opts.songtypeId) {
-                        const params = {
-                            projectId: opts.projectId,
-                            speciesId: aedRow[0].species_id,
-                            songtypeId: aedRow[0].songtype_id,
-                            recordingId: aedRow[0].recording_id
-                        }
-                        let oldValidation = await model.recordings.getRecordingValidation(params);
-                        if (oldValidation[0].present_aed > 1) {
-                            await model.AudioEventDetectionsClustering.updatePresentAedCount({ ...params, validate: false })
-                        }
-                        if (oldValidation[0].present_aed === 1 && oldValidation[0].present_review === 0 && oldValidation[0].present === null) {
-                            await model.AudioEventDetectionsClustering.deletePresentAedCount(params)
-                        }
-                        // if species/songtype exists - increase a count of validations in the present_aed column
-                        // if species/songtype is new - add a new row to the recording_validations
-                        if (newValidation.length) {
-                            await model.AudioEventDetectionsClustering.updatePresentAedCount({ ...opts, recordingId: aedRow[0].recording_id, validate: true });
-                        }
-                        else {
-                            await model.recordings.addRecordingValidation({ ...opts, recordingId: aedRow[0].recording_id, userId })
-                            await model.AudioEventDetectionsClustering.updatePresentAedCount({ ...opts, recordingId: aedRow[0].recording_id, validate: true });
-                        }
+                // get existing aed row
+                const [aedRow] = await model.AudioEventDetectionsClustering.getDetectionsByIds([d]);
+                await model.AudioEventDetectionsClustering.validateDetections([d], opts.speciesId, opts.songtypeId, validated);
+                // get existing recording validation for species in params
+                if (opts.speciesId && opts.songtypeId) {
+                    const recValidation = await model.recordings.getRecordingValidation({ ...opts, recordingId: aedRow.recording_id });
+                    if (!recValidation.length) {
+                        await model.recordings.addRecordingValidation({ ...opts, recordingId: aedRow.recording_id, userId })
                     }
                 }
-                else {
-                    // if species/songtype exists - increase a count of validations in the present_aed column
-                    // if species/songtype is new - add a new row to the recording_validations
-                    if (newValidation.length) {
-                        await model.AudioEventDetectionsClustering.updatePresentAedCount({ ...opts, recordingId: aedRow[0].recording_id, validate: true });
-                    }
-                    else {
-                        await model.recordings.addRecordingValidation({ ...opts, recordingId: aedRow[0].recording_id, userId })
-                        await model.AudioEventDetectionsClustering.updatePresentAedCount({ ...opts, recordingId: aedRow[0].recording_id, validate: true });
-                    }
-                }
-            }
-            await model.AudioEventDetectionsClustering.validateDetections(params.aed, opts.speciesId, opts.songtypeId)
-            let existingClass = await model.projects.getProjectClassesAsync(opts.projectId, null, { speciesId: opts.speciesId, songtypeId: opts.songtypeId });
-            // Add a new class to the project
-            if (!existingClass.length) {
-                const projectClass = {
-                    project_id: opts.projectId,
-                    species: params.species_name,
-                    songtype: params.songtype_name
-                };
-                model.projects.insertClass(projectClass, function(err, result){
-                    if(err) return next(err);
+                await model.AudioEventDetectionsClustering.updatePresentAedCount({
+                    ...opts,
+                    speciesId: opts.speciesId || aedRow.species_id,
+                    songtypeId: opts.songtypeId || aedRow.songtype_id,
+                    recordingId: aedRow.recording_id
                 });
-            };
+            }
+            if (validated === 1) {
+                let existingClass = await model.projects.getProjectClassesAsync(opts.projectId, null, { speciesId: opts.speciesId, songtypeId: opts.songtypeId });
+                // add a new class to the project
+                if (!existingClass.length) {
+                    const projectClass = {
+                        project_id: opts.projectId,
+                        species: params.species_name,
+                        songtype: params.songtype_name
+                    };
+                    model.projects.insertClass(projectClass, function(err, result){
+                        if(err) return next(err);
+                    });
+                };
+            }
             res.sendStatus(200)
         })
         .catch(httpErrorHandler(req, res, 'Failed audio event detections validation'))
@@ -138,7 +113,7 @@ router.post('/unvalidate', function(req, res, next) {
         .then(async (params) => {
             for (let d of params.aed) {
                 // Get existing aed row
-                const [aedRow] = await model.AudioEventDetectionsClustering.getDetectionsById([d]);
+                const [aedRow] = await model.AudioEventDetectionsClustering.getDetectionsByIds([d]);
                 // If aed box is validated decrease or remove the old present_aed count from the recording_validations first
                 if (aedRow.species_id && aedRow.songtype_id) {
                     const params = {

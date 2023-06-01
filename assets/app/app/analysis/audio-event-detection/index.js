@@ -31,7 +31,7 @@ angular.module('a2.analysis.audio-event-detection', [
 
     this.new = function () {
         if(!a2UserPermit.can('manage soundscapes')) {
-            notify.log('You do not have permission to create audio event detections.');
+            notify.error('You do not have permission to create audio event detections.');
             return;
         }
         

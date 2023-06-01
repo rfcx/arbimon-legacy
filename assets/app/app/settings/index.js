@@ -85,7 +85,7 @@ angular.module('a2.settings',[
 
     $scope.deleteProject = function() {
         if(!a2UserPermit.can('delete project')) {
-            notify.log('You do not have permission to delete this project');
+            notify.error('You do not have permission to delete this project');
             return;
         }
 

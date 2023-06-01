@@ -102,11 +102,7 @@ var cache = {
     },
 
     fetch: function(key, oncachemiss, callback){
-        debug('fetch file: %s', key);
-        debug(filesProcessing);
-
         if(filesProcessing[key]) {
-            debug('waiting for file: %s', key);
             return filesProcessing[key].nodeify(callback);
         }
         this.get(key, function(err, data){

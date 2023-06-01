@@ -22,6 +22,7 @@ angular.module('a2.audiodata.recordings', [
     $downloadResource
 ) {
     $scope.selectedRecId = []
+    $scope.checkedRec = []
     this.getSearchParameters = function(output){
         var params = angular.merge({}, $scope.params);
         output = output || ['list'];
@@ -105,12 +106,12 @@ angular.module('a2.audiodata.recordings', [
         }
 
         if ($scope.totalRecs == 0) {
-            notify.log('You can\'t create playlist with 0 recording');
+            notify.error('You can\'t create playlist with 0 recording');
             return;
         }
 
         if (!a2UserPermit.can('manage playlists')) {
-            notify.log('You do not have permission to create playlists');
+            notify.error('You do not have permission to create playlists');
             return;
         }
 
@@ -127,7 +128,7 @@ angular.module('a2.audiodata.recordings', [
             listParams.range.to = moment(listParams.range.to).format('YYYY-MM-DD') + 'T23:59:59.999Z';
         }
 
-        if ($scope.checked && $scope.checked.length) {
+        if ($scope.selectedRecId && $scope.selectedRecId.length) {
             listParams.recIds = $scope.selectedRecId;
         }
 
@@ -151,11 +152,11 @@ angular.module('a2.audiodata.recordings', [
 
     this.deleteRecordings = function() {
         if (!a2UserPermit.can('manage project recordings')) {
-            notify.log('You do not have permission to delete recordings');
+            notify.error('You do not have permission to delete recordings');
             return;
         }
 
-        const recs = $scope.checked.filter(function(rec){
+        const recs = $scope.checkedRec.filter(function(rec){
             return !rec.imported;
         });
 
@@ -197,17 +198,23 @@ angular.module('a2.audiodata.recordings', [
         }).bind(this));
     };
 
-    this.deleteMatchingRecordings = function() {
+    this.deleteAllRecordings = function() {
         var filters = $scope.params;
 
         if(!a2UserPermit.can('manage project recordings')) {
-            notify.log('You do not have permission to delete recordings');
+            notify.error('You do not have permission to delete recordings');
+            return;
+        }
+        if (!$scope.recs.length) {
+            notify.error('Recordings not found');
             return;
         }
 
         return Project.getRecCounts(filters).then(function(recCount) {
             var messages = [], importedCount = 0, importedSites = [];
-            messages.push("You are about to delete: ");
+            messages.push("Any analysis results on these recordings will be deleted.");
+            messages.push("Are you sure you want to delete:");
+            console.log(recCount)
             recCount.forEach(function(entry) {
                 var s = entry.count > 1 ? 's' : '';
                 if(!entry.imported){
@@ -217,7 +224,6 @@ angular.module('a2.audiodata.recordings', [
                     importedSites.push('"' + entry.site + '"');
                 }
             });
-            messages.push("Are you sure?");
             if(importedCount){
                 messages.push("(The filters matched " + importedCount + " recordings wich come from " + importedSites.join(", ") + ". You cannot delete these from your project, they can only be removed from their original project.)");
             }
@@ -232,7 +238,10 @@ angular.module('a2.audiodata.recordings', [
                 controllerAs: 'popup'
             }).result;
         }).then(function() {
-            return $http.post('/api/project/'+Project.getUrl()+'/recordings/delete-matching', filters);
+            return $http.post('/api/project/'+Project.getUrl()+'/recordings/delete-matching', filters)
+                .error(function(error) {
+                    return notify.error(error);
+                });
         }).then((function(response){
             if(response.data.error){
                 return notify.error(response.data.error);
@@ -255,10 +264,12 @@ angular.module('a2.audiodata.recordings', [
         if (!rec.checked) {
             const index = $scope.selectedRecId.findIndex(rec => rec === rec.id);
             $scope.selectedRecId.splice(index, 1);
+            $scope.checkedRec.splice(index, 1);
             return;
         }
         if ($scope.selectedRecId.includes(rec.id)) return;
         $scope.selectedRecId.push(rec.id);
+        $scope.checkedRec.push(rec);
     }
 
     this.setCurrentPage = function(currentPage){
@@ -273,7 +284,7 @@ angular.module('a2.audiodata.recordings', [
     this.exportRecordings = function(listParams) {
         if (a2UserPermit.isSuper()) return this.openExportPopup(listParams)
         if ((a2UserPermit.all && !a2UserPermit.all.length) || !a2UserPermit.can('export report')) {
-            return notify.log('You do not have permission to export data');
+            return notify.error('You do not have permission to export data');
         }
         this.openExportPopup(listParams)
     };

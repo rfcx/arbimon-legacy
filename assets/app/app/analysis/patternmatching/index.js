@@ -61,7 +61,7 @@ angular.module('a2.analysis.patternmatching', [
         $event.stopPropagation();
 
         if(!a2UserPermit.can('manage pattern matchings')) {
-            notify.log('You do not have permission to edit pattern matchings');
+            notify.error('You do not have permission to edit pattern matchings');
             return;
         }
         $scope.pmName = patternMatching.name
@@ -123,7 +123,7 @@ angular.module('a2.analysis.patternmatching', [
 
     $scope.createNewPatternMatching = function () {
         if(!a2UserPermit.can('manage pattern matchings')) {
-            notify.log('You do not have permission to create pattern matchings');
+            notify.error('You do not have permission to create pattern matchings');
             return;
         }
 
@@ -150,7 +150,7 @@ angular.module('a2.analysis.patternmatching', [
         $event.stopPropagation();
 
         if(!a2UserPermit.can('manage pattern matchings')) {
-            notify.log('You do not have permission to delete pattern matchings');
+            notify.error('You do not have permission to delete pattern matchings');
             return;
         }
 
@@ -287,7 +287,7 @@ angular.module('a2.analysis.patternmatching', [
         $event.stopPropagation();
 
         if(!a2UserPermit.can('manage pattern matchings')) {
-            notify.log('You do not have permission to edit pattern matchings');
+            notify.error('You do not have permission to edit pattern matchings');
             return;
         }
         $scope.pmName = patternMatching.name
@@ -315,7 +315,7 @@ angular.module('a2.analysis.patternmatching', [
         $event.stopPropagation();
         if (a2UserPermit.isSuper()) return this.setupExportUrl()
         if ((a2UserPermit.all && !a2UserPermit.all.length) || !a2UserPermit.can('export report')) {
-            return notify.log('You do not have permission to export Pattern Matching data');
+            return notify.error('You do not have permission to export Pattern Matching data');
         } else return this.setupExportUrl()
     },
 
@@ -599,7 +599,7 @@ angular.module('a2.analysis.patternmatching', [
 
     validate: function(validation, rois){
         if(!a2UserPermit.can('validate pattern matchings')) {
-            notify.log('You do not have permission to validate the matched rois.');
+            notify.error('You do not have permission to validate the matched rois.');
             return;
         }
 
@@ -706,7 +706,7 @@ angular.module('a2.analysis.patternmatching', [
         },
         ok: function () {
             if (self.data.playlist.count === 0) {
-                return notify.log('Note: The playlist should not be empty.');
+                return notify.error('Note: The playlist should not be empty.');
             }
             self.isSaving = true;
             return a2PatternMatching.create({

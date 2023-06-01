@@ -288,7 +288,7 @@ angular.module('a2.citizen-scientist.patternmatching', [
 
     validate: function(validation, rois){
         if(!a2UserPermit.can('use citizen scientist interface')) {
-            notify.log('You do not have permission to validate the matched rois.');
+            notify.error('You do not have permission to validate the matched rois.');
             return;
         }
 

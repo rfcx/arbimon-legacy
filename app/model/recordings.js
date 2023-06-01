@@ -31,6 +31,7 @@ const rfcxConfig = config('rfcx');
 const moment = require('moment');
 const auth0Service = require('./auth0');
 const request = require('request');
+const rp = util.promisify(request);
 
 // local variables
 let s3, s3RFCx;
@@ -561,6 +562,9 @@ var Recordings = {
             case 'audio':
                 asset = `r${isFrequency ? fmin + '.' + fmax : 'full'}_g${isGain ? options.gain : 1}_fmp3.mp3`
                 break;
+            case 'template':
+                asset = `r${fmin}.${fmax}_g1_fspec_mtrue_d400.400_wdolph_z120.png`
+                break;
         }
 
         const recordingDatetime = recording.datetime_utc ? recording.datetime_utc : recording.datetime
@@ -575,7 +579,8 @@ var Recordings = {
         const end = momentEnd.format(dateFormat)
         const attr = `${recording.external_id}_t${start}Z.${end}Z_${asset}`
         const token = await auth0Service.getToken();
-
+        // TODO: remove after testing on the prod side
+        console.log('attr', attr)
         const params = {
             method: 'GET',
             url: `${rfcxConfig.mediaBaseUrl}/internal/assets/streams/${attr}`,
@@ -734,6 +739,18 @@ var Recordings = {
                         res.pipe(fs.createWriteStream(cache_miss.file).on('close', function () { cache_miss.retry_get() }))
                     })
                 }
+            });
+        }, callback);
+    },
+
+    fetchTemplateFile: function (recording, options, callback) {
+        const template_key = recording.uri.replace(audioFilePattern, '.png');
+        tmpfilecache.fetch(template_key, function(cache_miss){
+            Recordings.fetchRecordingFile(recording, async function(err, recording_path){
+                if(err) { callback(err); return; }
+                Recordings.getAssetFileFromMediaAPI(recording, 'template', options).then(res => {
+                    res.pipe(fs.createWriteStream(cache_miss.file).on('close', function () { cache_miss.retry_get() }))
+                })
             });
         }, callback);
     },
@@ -991,6 +1008,12 @@ var Recordings = {
             WHERE project_id=${projectId} AND species_id=${cl.speciesId} AND songtype_id=${cl.songtypeId}`;
             dbpool.query(q);
         }
+    },
+
+    resetRecValidationByRecordingId: async function(projectId, recIds) {
+        const q = `UPDATE recording_validations SET present = NULL, present_review = 0, present_aed = 0
+        WHERE project_id=${projectId} AND recording_id IN (${recIds})`;
+        return dbpool.query(q);
     },
 
     addRecordingValidation: async function(opts) {
@@ -1258,7 +1281,7 @@ var Recordings = {
                 date_range: "SELECT MIN(r.datetime) AS min_date, \n"+
                             "       MAX(r.datetime) AS max_date \n",
 
-                count: "SELECT COUNT(r.recording_id) as count \n"
+                count: "SELECT COUNT(DISTINCT(r.recording_id)) as count \n"
             };
 
             const tables = [
@@ -1278,8 +1301,7 @@ var Recordings = {
                     list: []
                 }
             }
-
-            if (!parameters.sites && !parameters.validations) {
+            if (!parameters.sites) {
                 constraints.push("r.site_id IN (?)");
                 data.push(siteIds);
             }
@@ -1606,9 +1628,17 @@ var Recordings = {
 
                 builder.addConstraint('pc.project_class_id IN (?)', [parameters.validations]);
 
-                if(parameters.presence && !(parameters.presence instanceof Array && parameters.presence.length >= 2)){
-                    builder.addConstraint('rv.present = ?', [parameters.presence == 'present' ? '1' : '0']);
+                // filter recordings by present/absent validations values
+                if(parameters.presence){
+                    if (parameters.presence === 'present') {
+                        builder.addConstraint('CASE WHEN rv.present_review > 0 OR rv.present_aed > 0 THEN 1 ELSE rv.present END');
+                    }
+                    else {
+                        builder.addConstraint('CASE WHEN rv.present = 0 AND rv.present_review = 0 AND rv.present_aed = 0 THEN 1 ELSE 0 END');
+                    }
                 }
+                // do not get deleted validations values in the filters result
+                builder.addConstraint('(rv.present IS NOT NULL OR rv.present_review > 0 OR rv.present_aed > 0)');
             }
 
             if(parameters.soundscape_composition) {
@@ -1952,7 +1982,7 @@ var Recordings = {
         return this.buildSearchQuery(filters, true).then(function(builder){
             builder.addProjection.apply(builder, [
                 's.site_id', 's.name as site', 'pis.site_id IS NOT NULL as imported',
-                'COUNT(recording_id) as count'
+                'COUNT(DISTINCT(r.recording_id)) as count'
             ]);
             delete builder.orderBy;
             builder.setGroupBy('s.site_id');
@@ -1982,6 +2012,29 @@ var Recordings = {
             WHERE r.recording_id IN (${recs})
             AND s.project_id = ${project_id}`
         return query(q);
+    },
+
+    deleteInCoreAPI: async function(recs, idToken) {
+        if (!recs.length) return
+        const segments = recs.map(rec => rec.segment_id)
+        const body = {
+            segments
+        }
+        const options = {
+            method: 'DELETE',
+            url: `${rfcxConfig.apiBaseUrl}/internal/arbimon/segment`,
+            headers: {
+                'content-type': 'application/json',
+                Authorization: idToken,
+                source: 'arbimon'
+            },
+            body: JSON.stringify(body)
+        }
+        return rp(options).then((response) => {
+            if (response.statusCode !== 204) {
+                throw new Error('Failed to delete recordings');
+            }
+        })
     },
 
     deleteRecordingsFromS3: async function(rows) {
@@ -2016,6 +2069,21 @@ var Recordings = {
         const q = `DELETE FROM recordings
             WHERE recording_id IN (${recIds})`
         return query(q);
+    },
+
+    deleteRecordingInAnalyses: async function(recIds) {
+        let promises=[
+            dbpool.query(`DELETE FROM audio_event_detections_clustering WHERE recording_id in (${recIds})`),
+            dbpool.query(`DELETE FROM classification_results WHERE recording_id in (${recIds})`),
+            dbpool.query(`DELETE FROM cnn_results_presence WHERE recording_id in (${recIds})`),
+            dbpool.query(`DELETE FROM cnn_results_rois WHERE recording_id in (${recIds})`),
+            dbpool.query(`DELETE FROM pattern_matching_rois WHERE recording_id in (${recIds})`),
+            dbpool.query(`DELETE FROM soundscape_region_tags WHERE recording_id in (${recIds})`),
+            dbpool.query(`DELETE FROM templates WHERE recording_id in (${recIds})`),
+            dbpool.query(`DELETE FROM training_set_roi_set_data WHERE recording_id in (${recIds})`)
+        ];
+        console.log('recIds', recIds)
+        return Q.all(promises);
     },
 
     insertToRecordingsDeleted: async function(rows, query) {
@@ -2054,7 +2122,7 @@ var Recordings = {
                         msg: 'No recordings were deleted'
                     }
                 }
-
+                await this.deleteRecordingInAnalyses(recIds)
                 await this.deleteRecordingsFromArbimon(recIds, query)
                 await this.deleteRecordingsFromS3(rows)
 

@@ -22,9 +22,10 @@ angular.module('a2.audiodata.sites', [
       }
     }
   }])
-.controller('SitesCtrl', function($scope, $state, Project, $modal, notify, a2Sites, $window, $controller, $q, a2UserPermit, a2GoogleMapsLoader, $downloadResource) {
+.controller('SitesCtrl', function($scope, $state, $filter, Project, $modal, notify, a2Sites, $window, $controller, $q, a2UserPermit, a2GoogleMapsLoader, $downloadResource) {
     $scope.loading = true;
     $scope.markers = [];
+    $scope.search = ''
 
     Project.getInfo(function(info){
         $scope.project = info;
@@ -84,8 +85,16 @@ angular.module('a2.audiodata.sites', [
         });
     });
 
+    $scope.onFilterChanged = function() {
+        const sites = $filter('filter')($scope.originalSites, function (i) {
+            return i.name.toLowerCase().includes($scope.search.toLowerCase())
+        })
+        $scope.sites = sites
+    }
+
     $scope.sortByLastUpdated = function(sites) {
         $scope.sites = sites.sort(function(a, b) { return (a.updated_at < b.updated_at) ? 1 : -1;});
+        $scope.originalSites = $scope.sites
     }
 
     // Sets the map on all markers in the array
@@ -115,7 +124,7 @@ angular.module('a2.audiodata.sites', [
 
     $scope.importSite = function() {
         if(!a2UserPermit.can('manage project sites')) {
-            notify.log("You do not have permission to add sites");
+            notify.error("You do not have permission to add sites");
             return;
         }
 
@@ -128,7 +137,7 @@ angular.module('a2.audiodata.sites', [
             // Check the file is valid
             const sites = parseSitesFromCsv(response);
             if (!sites) {
-                notify.log("Wrong format of csv file")
+                notify.error("Wrong format of csv file")
                 return
             }
 
@@ -206,7 +215,7 @@ angular.module('a2.audiodata.sites', [
     $scope.exportSites = function() {
         if (a2UserPermit.isSuper()) return $downloadResource(Project.getSitesExportUrl());
         if ((a2UserPermit.all && !a2UserPermit.all.length) || !a2UserPermit.can('export report')) {
-            return notify.log('You do not have permission to export sites')
+            return notify.error('You do not have permission to export sites')
         } else $downloadResource(Project.getSitesExportUrl());
     };
 
@@ -282,7 +291,7 @@ angular.module('a2.audiodata.sites', [
             return;
 
         if(!a2UserPermit.can('delete site')) {
-            notify.log("You do not have permission to remove sites");
+            notify.error("You do not have permission to remove sites");
             return;
         }
 
@@ -345,7 +354,7 @@ angular.module('a2.audiodata.sites', [
     $scope.create = function() {
 
         if(!a2UserPermit.can('manage project sites')) {
-            notify.log("You do not have permission to add sites");
+            notify.error("You do not have permission to add sites");
             return;
         }
 
@@ -382,7 +391,7 @@ angular.module('a2.audiodata.sites', [
         if(!$scope.selected) return;
 
         if(!a2UserPermit.can('manage project sites')) {
-            notify.log("You do not have permission to edit sites");
+            notify.error("You do not have permission to edit sites");
             return;
         }
 

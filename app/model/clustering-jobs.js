@@ -92,7 +92,7 @@ let ClusteringJobs = {
             options = {};
         }
         select.push(
-            "A.aed_id, A.time_min, A.time_max, A.frequency_min, A.frequency_max, A.recording_id, A.uri_image as 'uri', IF (A.species_id IS NULL, NULL, 1) AS 'validated'"
+            "A.aed_id, A.time_min, A.time_max, A.frequency_min, A.frequency_max, A.recording_id, A.uri_image as 'uri', A.validated"
         );
 
         if (options.aed) {
@@ -175,7 +175,7 @@ let ClusteringJobs = {
             }, {
                 maxFreq: rec.frequency_max,
                 minFreq: rec.frequency_min,
-                gain: options.gain || 15,
+                gain: options.gain || 1,
                 trim: {
                     from: rec.time_min,
                     to: rec.time_max

@@ -21,7 +21,7 @@ angular.module('a2.audiodata.species', [
     $scope.add = function() {
 
         if(!a2UserPermit.can("manage project species")) {
-            notify.log("You do not have permission to add species");
+            notify.error("You do not have permission to add species");
             return;
         }
 
@@ -61,7 +61,7 @@ angular.module('a2.audiodata.species', [
             return;
 
         if(!a2UserPermit.can("manage project species")) {
-            notify.log("You do not have permission to remove species");
+            notify.error("You do not have permission to remove species");
             return;
         }
 

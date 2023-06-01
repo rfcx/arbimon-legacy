@@ -78,7 +78,7 @@ angular.module('a2.visualizer.layers.templates', [
         },
         submit: function(){
             if(!a2UserPermit.can('manage templates')) {
-                notify.log('You do not have permission to add a template');
+                notify.error('You do not have permission to add a template');
                 return;
             }
 

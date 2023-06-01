@@ -32,12 +32,16 @@
                 <i class="fa fa-trash"></i> Delete <i class="fa fa-caret-down"></i></button>
             </button>
             <ul class="dropdown-form dropdown-menu" role="menu">
-                <li><a ng-click="controller.deleteRecordings()"
-                    ng-class="{ disabled: !checked || !checked.length }"
-                >Checked recordings</a></li>
-                <li><a ng-click="controller.deleteMatchingRecordings()"
-                    ng-class="{ disabled: !checked || !checked.length }"
-                >All filtered recordings</a></li>
+                <li class="cs-pointer" ng-class="{ disabled: !checkedRec.length }">
+                    <a ng-click="controller.deleteRecordings()">
+                        Checked recordings
+                    </a>
+                </li>
+                <li class="cs-pointer" ng-class="{ disabled: !recs.length }">
+                    <a ng-click="controller.deleteAllRecordings()">
+                        All filtered recordings
+                    </a>
+                </li>
             </ul>
         </div>
     </div>
@@ -107,6 +111,6 @@
 </div>
 <div class="jumbotron" ng-show="(!recs || !recs.length) && !loading">
     <h3 class="text-center">
-        This project does not have any recordings
+        Recordings not found
     </h3>
 </div>

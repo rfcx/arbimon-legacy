@@ -4,7 +4,7 @@
 
 <div class="row">
     <div class="col-md-push-6 col-md-6 toolbar">
-        <input class="form-control" type="text" placeholder="Search" ng-model="search">
+        <input class="form-control" type="text" placeholder="Search by name" ng-model="search" ng-change="onFilterChanged()">
     </div>
     <div class="col-md-6 col-md-pull-6 toolbar">
         <button class="btn btn-default"
@@ -31,7 +31,7 @@
 </div>
 <div class="row sites">
     <div ng-class="editing || creating ? 'visible-md-block visible-lg-block' : '' ">
-        <a2-table rows="sites" on-select="sel(row)" data-checked="checked" search="search" no-checkbox>
+        <a2-table rows="sites" on-select="sel(row)" data-checked="checked" no-checkbox>
             <field title="Name" key="name" tdclass="name hidelongtext">
                 <span title="{{ row.name }}">{{ row.name }}</span>
                 <span class="a2-badge" title="ARBIMON ONLY" ng-if="!row.external_id">ARBIMON ONLY</span>
@@ -51,7 +51,7 @@
             <field title="Longitude" key="lon">
                 {{ row.lon | number:3 }}
             </field>
-            <field title="Altitude" key="alt">
+            <field title="Elevation" key="alt">
                 {{ row.alt | number:2 }}
             </field>
             <field title="Timezone" key="timezone" tdclass="timezone hidelongtext">
@@ -118,12 +118,12 @@
                 </div>
                 <div class="form-group">
                     <div class="input-group">
-                        <span class="input-group-addon">Alt</span>
+                        <span class="input-group-addon">El</span>
                         <input class="form-control"
                             name="alt"
                             type="text"
                             ng-model="temp.alt"
-                            placeholder="Altitude"
+                            placeholder="Elevation"
                             pattern="^-?\d+\.?\d*$"
                             required>
                     </div>
