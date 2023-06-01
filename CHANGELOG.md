@@ -1,5 +1,11 @@
 # Arbimon Release Notes
 
+## v3.0.81 - Jun 1, 2023
+
+Enhancements ✨
+
+- Improve RAM usage in recordings-export job
+
 ## v3.0.80 - May 12, 2023
 
 Enhancements ✨
