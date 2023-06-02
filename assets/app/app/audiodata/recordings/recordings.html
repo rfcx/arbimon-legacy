@@ -32,7 +32,7 @@
                 <i class="fa fa-trash"></i> Delete <i class="fa fa-caret-down"></i></button>
             </button>
             <ul class="dropdown-form dropdown-menu" role="menu">
-                <li class="cs-pointer" ng-class="{ disabled: !checkedRec.length }">
+                <li class="cs-pointer" ng-class="{ disabled: controller.isDisableDeleteRecs() }">
                     <a ng-click="controller.deleteRecordings()">
                         Checked recordings
                     </a>

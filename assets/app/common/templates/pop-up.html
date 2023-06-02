@@ -1,6 +1,10 @@
 <div class="modal-header" ng-bind-html="popup.title"></div>
 <div class="modal-body">
     <p ng-repeat="msg in popup.messages" ng-bind-html="msg"></p>
+    <ul ng-if="popup.list && popup.list.length">
+        <li ng-repeat="row in popup.list" ng-bind-html="row"></li>
+    </ul>
+    <p ng-if="popup.note" class="em" ng-bind-html="popup.note"></p>
 </div>
 <div class="modal-footer">
     <button class="btn btn-danger" ng-click="$close(true)  | trackEvent:'PopUp':'clicked ok'">{{ popup.btnOk }}</button>
