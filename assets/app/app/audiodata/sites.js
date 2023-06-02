@@ -86,10 +86,25 @@ angular.module('a2.audiodata.sites', [
     });
 
     $scope.onFilterChanged = function() {
-        const sites = $filter('filter')($scope.originalSites, function (i) {
-            return i.name.toLowerCase().includes($scope.search.toLowerCase())
+        $scope.sites = $scope.sortByKeywordArray($scope.originalSites, $scope.search)
+    }
+
+    $scope.sortByKeywordArray = function (array, keyword) {
+        if (array && !array.length) return []
+        return array.filter(item => {
+          // Filter results by doing case insensitive match on name
+          return item.name.toLowerCase().includes(keyword.toLowerCase())
+        }).sort((a, b) => {
+          // Sort results by matching name with keyword position in name
+          if (a.name.toLowerCase().indexOf(keyword.toLowerCase()) > b.name.toLowerCase().indexOf(keyword.toLowerCase())) {
+            return 1
+          } else if (a.name.toLowerCase().indexOf(keyword.toLowerCase()) < b.name.toLowerCase().indexOf(keyword.toLowerCase())) {
+            return -1
+          } else {
+            if (a.name > b.name) return 1
+            else return -1
+          }
         })
-        $scope.sites = sites
     }
 
     $scope.sortByLastUpdated = function(sites) {
