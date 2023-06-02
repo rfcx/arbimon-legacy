@@ -830,8 +830,8 @@ var Sites = {
     getRecordingValidationBySiteId: async function(siteIds) {
         const q = `SELECT rv.recording_validation_id
             FROM recording_validations rv
-            JOIN sites s ON s.project_id  = rv.project_id
-            WHERE s.site_id in (${siteIds});`;
+            JOIN recordings r ON r.recording_id = rv.recording_id
+            WHERE r.site_id in (${siteIds})`
         return dbpool.query(q);
     },
 
