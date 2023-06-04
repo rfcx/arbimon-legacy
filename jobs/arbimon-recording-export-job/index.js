@@ -9,9 +9,11 @@ const projects = require('../../app/model/projects')
 const stream = require('stream');
 const csv_stringify = require('csv-stringify');
 const mandrill = require('mandrill-api/mandrill')
-const config_hosts = require('../../config/hosts');
-const { getSignedUrl, saveLatestData } = require('../services/storage')
+const fs = require('fs')
+const { saveLatestData, combineFilename } = require('../services/storage')
 const S3_BUCKET_ARBIMON = process.env.S3_BUCKET_ARBIMON
+const recordingsExport = require('./recordings')
+const { uploadAsStream, getSignedUrl } = require('../../app/utils/storage')
 
 async function main () {
   try {
@@ -24,10 +26,10 @@ async function main () {
     }
 
     let filters, projection_parameters
-    const dateByCondition = moment.utc().format('YYYY-MM-DD HH:mm:ss')
+    const currentTime = moment.utc().format('YYYY-MM-DD HH:mm:ss')
     const limit = 1
     const [rowData] =  await getExportRecordingsRow({
-        dateByCondition,
+        currentTime,
         limit
     })
 
@@ -56,14 +58,14 @@ async function main () {
         params.project_id = filters.project_id
         params.exportReport = true
         const data = await clusterings.findRois(params)
-        return processClusteringStream(params.cluster, data, rowData, dateByCondition, message, jobName, projection_parameters.projectUrl).then(async () => {
+        return processClusteringStream(params.cluster, data, rowData, currentTime, message, jobName, projection_parameters.projectUrl).then(async () => {
             console.log(`arbimon-recording-export job finished: clustering report for ${message}`)
         })
     }
     else if (projection_parameters && projection_parameters.species) {
         // Process the Occupancy model report
         const data = await recordings.exportOccupancyModels(projection_parameters, filters)
-        return processOccupancyModelStream(data, rowData, dateByCondition, message, jobName).then(async () => {
+        return processOccupancyModelStream(data, rowData, currentTime, message, jobName).then(async () => {
             console.log(`arbimon-recording-export job finished: occupancy models report for ${message}`)
         })
     }
@@ -87,22 +89,42 @@ async function main () {
             })
         }
         const data = await recordings.groupedDetections(projection_parameters, filters)
-        return processGroupedDetectionsStream(data, rowData, projection_parameters, allData, dateByCondition, message, jobName).then(async () => {
+        return processGroupedDetectionsStream(data, rowData, projection_parameters, allData, currentTime, message, jobName).then(async () => {
             console.log(`arbimon-recording-export job finished: grouped detections report for ${message}`)
         })
+    } else {
+        return new Promise((resolve, reject) => {
+            recordingsExport.collectData(projection_parameters, filters, async (err, filePath) => {
+                if (err) {
+                    console.error('arbimon-recording-export job error', err)
+                    fs.unlink(filePath, () => {})
+                    reject(err)
+                }
+                console.log('arbimon-recording-export job: uploading file to S3')
+                const url = await saveFile(filePath, currentTime, rowData.project_id)
+                console.log('arbimon-recording-export job: file is accessible by url', url)
+                await sendEmail('Export recording report [RFCx Arbimon]', 'export-recording.csv', rowData, url, true)
+                await updateExportRecordings(rowData, { processed_at: currentTime })
+                await recordings.closeConnection()
+                fs.unlink(filePath, () => {})
+                console.log(`arbimon-recording-export job finished: export recordings report for ${message}`)
+                resolve()
+            })
+        })
     }
-
-    const data = await recordings.exportRecordingData(projection_parameters, filters)
-    return transformStream(data, rowData, dateByCondition, message, jobName, projection_parameters.projectUrl).then(async () => {
-        console.log(`arbimon-recording-export job finished: export recordings report for ${message}`)
-    })
   } catch (e) {
     console.error(e)
   }
 }
 
+async function saveFile (filePath, currentTime, projectId) {
+    const s3FileKey = combineFilename(currentTime, projectId, 'export-recording')
+    await uploadAsStream({ filePath, Bucket: S3_BUCKET_ARBIMON, Key: s3FileKey, ContentType: 'text/csv' }, { clientType: 'rfcx' })
+    return await getSignedUrl({ Bucket: S3_BUCKET_ARBIMON, Key: s3FileKey }, { clientType: 'rfcx' })
+}
+
 // Process Clustering report and send the email
-async function processClusteringStream (cluster, results, rowData, dateByCondition, message, jobName, projectUrl) {
+async function processClusteringStream (cluster, results, rowData, currentTime, message, jobName, projectUrl) {
     return new Promise(function (resolve, reject) {
         console.log('total results length', results.length)
         let _buf = []
@@ -131,15 +153,15 @@ async function processClusteringStream (cluster, results, rowData, dateByConditi
                 const contentSize = Buffer.byteLength(content)
                 const isBigContent = contentSize && contentSize > 10240 // 10MB
                 if (isBigContent) {
-                    const filePath = await saveLatestData(S3_BUCKET_ARBIMON, data, rowData.project_id, dateByCondition, 'clustering-rois-export')
-                    const url = await getSignedUrl(S3_BUCKET_ARBIMON, filePath, 'text/csv')
+                    const filePath = await saveLatestData(S3_BUCKET_ARBIMON, data, rowData.project_id, currentTime, 'clustering-rois-export')
+                    const url = await getSignedUrl({ Bucket: S3_BUCKET_ARBIMON, Key: filePath }, { clientType: 'rfcx' })
                     await sendEmail('Arbimon export completed', null, rowData, url, true)
                 }
                 try {
                     if (!isBigContent) {
                         await sendEmail('Arbimon export completed', 'clustering-rois-export.csv', rowData, content, false)
                     }
-                    await updateExportRecordings(rowData, { processed_at: dateByCondition })
+                    await updateExportRecordings(rowData, { processed_at: currentTime })
                     await recordings.closeConnection()
                     resolve()
                 } catch(error) {
@@ -156,7 +178,7 @@ async function processClusteringStream (cluster, results, rowData, dateByConditi
 }
 
 // Process the Occupancy model report and send the email
-async function processOccupancyModelStream (results, rowData, dateByCondition, message, jobName) {
+async function processOccupancyModelStream (results, rowData, currentTime, message, jobName) {
     return new Promise(async function (resolve, reject) {
         let sitesData = await recordings.getCountSitesRecPerDates(rowData.project_id);
         let allSites = sitesData.map(item => { return item.site }).filter((v, i, s) => s.indexOf(v) === i);
@@ -242,7 +264,7 @@ async function processOccupancyModelStream (results, rowData, dateByCondition, m
                 const content = Buffer.from(data).toString('base64')
                 try {
                     await sendEmail('Arbimon export completed', 'occupancy-model.csv', rowData, content, false)
-                    await updateExportRecordings(rowData, { processed_at: dateByCondition })
+                    await updateExportRecordings(rowData, { processed_at: currentTime })
                     await recordings.closeConnection()
                     resolve()
                 } catch(error) {
@@ -258,7 +280,7 @@ async function processOccupancyModelStream (results, rowData, dateByCondition, m
 }
 
 // Combine grouped detections report and send the email
-async function processGroupedDetectionsStream (results, rowData, projection_parameters, allData, dateByCondition, message, jobName) {
+async function processGroupedDetectionsStream (results, rowData, projection_parameters, allData, currentTime, message, jobName) {
     return new Promise(async function (resolve, reject) {
         let gKey = projection_parameters.grouped;
 
@@ -318,113 +340,11 @@ async function processGroupedDetectionsStream (results, rowData, projection_para
                 const content = Buffer.from(data).toString('base64')
                 try {
                     await sendEmail('Arbimon export completed', 'grouped-detections-export.csv', rowData, content, false)
-                    await updateExportRecordings(rowData, { processed_at: dateByCondition })
+                    await updateExportRecordings(rowData, { processed_at: currentTime })
                     await recordings.closeConnection()
                     resolve()
                 } catch(error) {
                     console.error('Error while sending grouped-detections-export email.', error)
-                    await errorMessage(message, jobName)
-                    await updateExportRecordings(rowData, { error: JSON.stringify(error) })
-                    await recordings.closeConnection()
-                    resolve()
-                }
-            })
-        })
-    })
-}
-
-// Process the Export recordings report and send the email
-async function transformStream (results, rowData, dateByCondition, message, jobName, projectUrl) {
-    return new Promise(function (resolve, reject) {
-        console.log('total results length', results.length)
-        let fields = [];
-        results.forEach(result => {
-            fields.push(...Object.keys(result).filter(f => !fields.includes(f)))
-        });
-        const metaIndex = fields.indexOf('meta');
-        if (metaIndex !== -1) {
-            fields.splice(metaIndex, 1);
-        }
-        let colOrder= { filename: -6, site: -5, time: -4, day: -4, month: -3, year: -2, hour: -1, date: 0 };
-        function sort (array) {
-            array.sort(function(a, b){
-                const ca = colOrder[a] || 0, cb = colOrder[b] || 0;
-                return ca < cb ? -1 : (
-                    ca > cb ?  1 : (
-                        a <  b ? -1 : (
-                        a >  b ?  1 :
-                        0
-                )));
-            });
-        }
-        sort(fields)
-
-        let datastream = new stream.Readable({objectMode: true});
-        let _buf = []
-
-        for (let row of results) {
-            if (row.meta && row.filename) {
-                try {
-                    const parsedMeta = JSON.parse(row.meta);
-                    row.filename = parsedMeta && parsedMeta.filename? parsedMeta.filename :  row.filename;
-                } catch (e) {}
-            }
-            delete row.meta;
-            if (row.url) {
-                row.url = `${config_hosts.publicUrl}/api/project/${projectUrl}/recordings/download/${row.url}`;
-            }
-            // Fill a specific label for each cell without validations data.
-            fields.forEach(f => {
-                if (row[f] === undefined || row[f] === null) {
-                    row[f] = '---'}
-                }
-            )
-            // Sort data to follow the header
-            const sorted = Object.keys(row)
-                .sort(function(a, b){
-                    const ca = colOrder[a] || 0, cb = colOrder[b] || 0;
-                    return ca < cb ? -1 : (
-                        ca > cb ?  1 : (
-                            a <  b ? -1 : (
-                            a >  b ?  1 :
-                            0
-                    )));
-                })
-                .reduce(
-                    (obj, key) => ({
-                    ...obj,
-                    [key]: row[key]
-                    }),
-                    {}
-                )
-
-            datastream.push(sorted);
-        };
-        datastream.push(null);
-
-        datastream.on('data', (d) => {
-            _buf.push(Object.values(d))
-        })
-
-        datastream.on('end', async () => {
-            csv_stringify(_buf, { header: true, columns: fields }, async (err, data) => {
-                const content = Buffer.from(data).toString('base64')
-                const contentSize = Buffer.byteLength(content)
-                const isBigContent = contentSize && contentSize > 10240 // 10MB
-                if (isBigContent) {
-                    const filePath = await saveLatestData(S3_BUCKET_ARBIMON, data, rowData.project_id, dateByCondition, 'export-recording')
-                    const url = await getSignedUrl(S3_BUCKET_ARBIMON, filePath, 'text/csv')
-                    await sendEmail('Arbimon export completed', null, rowData, url, true)
-                }
-                try {
-                    if (!isBigContent) {
-                        await sendEmail('Arbimon export completed', 'export-recording.csv', rowData, content, false)
-                    }
-                    await updateExportRecordings(rowData, { processed_at: dateByCondition })
-                    await recordings.closeConnection()
-                    resolve()
-                } catch(error) {
-                    console.error('Error while sending export-recording email.', error)
                     await errorMessage(message, jobName)
                     await updateExportRecordings(rowData, { error: JSON.stringify(error) })
                     await recordings.closeConnection()

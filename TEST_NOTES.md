@@ -1,6 +1,13 @@
 # Arbimon Test Notes
 Test Notes are used to list what pages / components / features / user flows are affected by each update.
 
+## v3.0.81
+
+- Improve RAM usage in recordings-export job
+  - Run small and very big recording export job with different parameters. Check that it works and csv results are correct.
+  - Run other types of export job and see that they are unaffected.
+  - Check other parts of the Arbimon app to see that they are unaffected (Visualizer, etc)
+
 ## v3.0.80
 
 - Check for duplicate stream name when creating/updating or moving stream to another project
