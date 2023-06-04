@@ -174,7 +174,7 @@ angular.module('a2.audiodata.recordings', [
         }, {});
 
         const messages = [], list = [];
-        messages.push('Are you sure you want to delete the follow?');
+        messages.push('Are you sure you want to delete the following?');
         Object.keys(recCount).forEach(function(site, index) {
             const s = recCount[site] > 1 ? 's' : '';
             if(index < 4){
@@ -222,7 +222,7 @@ angular.module('a2.audiodata.recordings', [
 
         return Project.getRecCounts(filters).then(function(recCount) {
             var messages = [], importedCount = 0, importedSites = [], list = [];
-            messages.push('Are you sure you want to delete the follow?');
+            messages.push('Are you sure you want to delete the following?');
             recCount.forEach(function(entry, index) {
                 var s = entry.count > 1 ? 's' : '';
                 if(!entry.imported && index < 4){
