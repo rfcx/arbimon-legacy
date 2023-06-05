@@ -14,7 +14,7 @@ angular.module('a2.audiodata.templates', [
         templateUrl: '/app/audiodata/templates/templates.html'
     });
 })
-.controller('TemplatesCtrl', function($scope, a2Templates, Project, $q, a2UserPermit, notify, $modal, $window, a2AudioBarService) {
+.controller('TemplatesCtrl', function($scope, a2Templates, Project, $localStorage, a2UserPermit, notify, $modal, $window, a2AudioBarService) {
     var self = this;
     Object.assign(this, {
         initialize: function(){
@@ -152,6 +152,7 @@ angular.module('a2.audiodata.templates', [
                 $event.preventDefault();
                 $event.stopPropagation();
             };
+            $localStorage.setItem('a2-audio-param-gain', JSON.stringify(2));
             a2AudioBarService.loadUrl(a2Templates.getAudioUrlFor(template), true);
         }
     });
