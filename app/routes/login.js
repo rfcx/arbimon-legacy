@@ -110,7 +110,8 @@ router.get('/api/email_available', function(req, res, next) {
 router.get('/login', function(req, res) {
     res.type('html');
     if(req.session) {
-        if(req.session.loggedIn) return res.redirect('/projects');
+        if(req.session.loggedIn) return res.redirect('/');
+        // res.redirect('/projects');
     }
     res.redirect('/');
 });

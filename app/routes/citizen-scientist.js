@@ -49,7 +49,8 @@ router.get('/:projecturl?/', function(req, res, next) {
                 // if not authorized to see project send 404
                 return next();
             } else {
-                return res.redirect('/project/' + project.url + '/');
+                // return res.redirect('/project/' + project.url + '/');
+                return res.redirect('/');
             }
         }).catch(next);
     }

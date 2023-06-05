@@ -73,7 +73,8 @@ router.get('/projects/:externalId', async (req, res) => {
     res.type('html');
     try {
         const project = await model.projects.find({external_id: req.params.externalId}).get(0);
-        return res.redirect(`/project/${project.url}/dashboard`);
+        // return res.redirect(`/project/${project.url}/dashboard`);
+        return res.redirect('/');
       }
       catch (e) {
         return res.redirect('/');
