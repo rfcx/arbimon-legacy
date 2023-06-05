@@ -33,24 +33,7 @@ async function saveLatestData (bucket, buf, project, timeStart, reportType) {
   return filePath
 }
 
-async function getSignedUrl (bucket, filePath, contentType) {
-  const params = {
-    Bucket: bucket,
-    Key: filePath,
-    Expires: 60 * 60 * 24 * 7 // 7 days
-  }
-  return (new Promise((resolve, reject) => {
-    s3.getSignedUrl('getObject', params, (err, data) => {
-      if (err) {
-        reject(err)
-      } else {
-        resolve(data)
-      }
-    })
-  }))
-}
-
 module.exports = {
-  getSignedUrl,
+  combineFilename,
   saveLatestData,
 }

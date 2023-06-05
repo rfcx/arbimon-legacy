@@ -47,6 +47,10 @@ SQLBuilder.prototype = {
         this.orderBy=[[term, isAscending]];
     },
 
+    setOrderByMult: function(arr){
+        this.orderBy=arr;
+    },
+
     setGroupBy: function(term, isAscending){
         this.groupBy=[[term, isAscending]];
     },
