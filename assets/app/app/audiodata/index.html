@@ -1,5 +1,5 @@
 <div>
-    <warning-banner ng-show="project.disabled" message="project.is_partner ? 2 : 1"></warning-banner>
+    <warning-banner ng-show="showErrorBanner" message="project.is_partner ? 2 : 1"></warning-banner>
     <a2-sidenav-bar name="audiodata" enabled="('audiodata' | includedByState)">
         <li ui-sref="audiodata.sites"    ui-sref-active="active"><a>Sites</a></li>
         <li ui-sref="audiodata.uploads.upload" ng-class=" ('audiodata.uploads' | includedByState) ? 'active' : ''"><a>Uploads</a></li>

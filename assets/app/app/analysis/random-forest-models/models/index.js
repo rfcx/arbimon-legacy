@@ -38,6 +38,7 @@ angular.module('a2.analysis.random-forest-models.models', [
 
     Project.getInfo(function(data) {
         $scope.projectData = data;
+        $scope.isProjectDisabled = data.disabled === 1;
     });
 
     var initTable = function(p,c,s,f,t) {

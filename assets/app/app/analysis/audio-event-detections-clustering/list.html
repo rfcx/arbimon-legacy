@@ -6,7 +6,8 @@
             <a class="btn btn-sm btn-default ml-2"
                 tooltip="Create New Audio Event Detection job"
                 tooltip-placement="right"
-                ng-click="createNewClusteringModel() | trackEvent:'Analysis-ClusteringModel-List':'Create new Audio Event Detection'" >
+                ng-click="createNewClusteringModel() | trackEvent:'Analysis-ClusteringModel-List':'Create new Audio Event Detection'"
+                ng-class="{'row-disabled': isProjectDisabled }">
                 <i class="fa fa-plus mr-1" ></i> New Job
             </a>
         </h3>
@@ -21,7 +22,8 @@
             <a class="btn btn-sm btn-default"
                 tooltip="Create New Audio Event Detection job"
                 tooltip-placement="top"
-                ng-click="createNewClusteringModel() | trackEvent:'Analysis-ClusteringModel-List':'Create new Audio Event Detection'" >
+                ng-click="createNewClusteringModel() | trackEvent:'Analysis-ClusteringModel-List':'Create new Audio Event Detection'"
+                ng-class="{'row-disabled': isProjectDisabled }">
                 <i class="fa fa-plus mr-1" ></i> New Job
             </a>
             <p class="mt-3 mb-0">Learn more:</p>

@@ -45,12 +45,11 @@ angular.module('a2.settings',[
         }
 
         $scope.project = info;
+        $scope.showErrorBanner = $scope.project && $scope.project.disabled && a2UserPermit.isProjectMember()
     });
 
     Project.getUsage().success(function(usage) {
         $scope.minUsage = usage.min_usage;
-        console.log(usage);
-        console.log($scope.minUsage);
     });
 
     $scope.save = function() {

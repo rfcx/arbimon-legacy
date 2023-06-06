@@ -6,7 +6,8 @@
             <a class="btn btn-sm btn-default ml-2"
                 tooltip="Create CNN"
                 tooltip-placement="right"
-                ng-click="createNewCNN() | trackEvent:'Analysis-CNN-List':'Create new CNN'" >
+                ng-click="createNewCNN() | trackEvent:'Analysis-CNN-List':'Create new CNN'"
+                ng-class="{'row-disabled': isProjectDisabled }">
                 <i class="fa fa-plus mr-1" ></i> New CNN Analysis
             </a>
         </h3>
@@ -59,7 +60,7 @@
 
             <div class="jumbotron" ng-show="(!cnnOriginal || !cnnOriginal.length > 0) && !loading">
                 <h3>{{ infopanedata }}
-                    <a ng-click="createNewCNN()">
+                    <a ng-click="createNewCNN()" ng-class="{'row-disabled': isProjectDisabled }">
                         Create a cnn
                     </a>
                 </h3>

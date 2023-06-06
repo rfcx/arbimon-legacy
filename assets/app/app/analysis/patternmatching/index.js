@@ -23,7 +23,7 @@ angular.module('a2.analysis.patternmatching', [
         templateUrl: '/app/analysis/patternmatching/list.html'
     });
 })
-.controller('PatternMatchingCtrl' , function($scope, $modal, JobsData, $location, notify, $q, a2PatternMatching, a2UserPermit, $state, $stateParams) {
+.controller('PatternMatchingCtrl' , function($scope, $modal, JobsData, $location, notify, $q, a2PatternMatching, a2UserPermit, $state, $stateParams, Project) {
     $scope.selectedPatternMatchingId = $stateParams.patternMatchingId;
     $scope.loading = { rows: false, showRefreshBtn: false };
     $scope.paginationSettings = {
@@ -35,6 +35,14 @@ angular.module('a2.analysis.patternmatching', [
     }
     $scope.search = { q: '' };
     var timeout;
+
+    $scope.getProjectData = function () {
+        Project.getInfo(function(info){
+            $scope.isProjectDisabled = info.disabled === 1;
+        })
+    },
+
+    $scope.getProjectData()
 
     $scope.getTemplateVisualizerUrl = function(template){
         var box = ['box', template.x1, template.y1, template.x2, template.y2].join(',');

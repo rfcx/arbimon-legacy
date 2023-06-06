@@ -28,7 +28,13 @@ angular.module('a2.analysis.cnn', [
     // this debug line for sanity between servers... Will remove TODO
     console.log("CNN Version 1.0");
     $scope.selectedCNNId = $stateParams.cnnId;
+    $scope.getProjectData = function () {
+        Project.getInfo(function(info){
+            $scope.isProjectDisabled = info.disabled === 1;
+        })
+    },
 
+    $scope.getProjectData()
     var initTable = function(p, c, s, f, t) {
         var sortBy = {};
         var acsDesc = 'desc';

@@ -25,10 +25,12 @@ angular.module('a2.analysis', [
     });
 }).controller('AnalysisIndexCtrl', function(
     $scope,
-    Project
+    Project,
+    a2UserPermit
 ){
     Project.getInfo(function(info){
         $scope.project = info;
+        $scope.showErrorBanner = $scope.project && $scope.project.disabled && a2UserPermit.isProjectMember()
     });
 })
 ;
