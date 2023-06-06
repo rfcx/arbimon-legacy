@@ -221,6 +221,7 @@ angular.module('a2.analysis.patternmatching', [
         this.projecturl = Project.getUrl();
         this.fetchDetails()
             .then(function() {
+                this.getProjectData()
                 return this.loadSitesList();
             }.bind(this))
             .then(function() {
@@ -254,6 +255,12 @@ angular.module('a2.analysis.patternmatching', [
             { class:"fa val-0", text: "Not Present", value: 0 },
             { class:"fa val-null", text: "Clear", value: null },
         ],
+    },
+
+    getProjectData: function() {
+        Project.getInfo(function(info){
+            $scope.isProjectDisabled = info.disabled === 1;
+        })
     },
 
     fetchDetails: function() {

@@ -23,17 +23,21 @@
                     <field tdclass="is-v-middle" tdclass="spectrogram-img">
                         <div class="roi-thumbnail" >
                             <img ng-src="{{row.uri}}" class="roi-img is-small"/>
-                            <a class="roi-btn-bl cs-pointer" ng-click="controller.playTemplateAudio(row, $event)">
+                            <a class="roi-btn-bl cs-pointer" ng-click="controller.playTemplateAudio(row, $event)"
+                                title="{{ isProjectDisabled ? 'Unable to listen to your recordings due to corrupted data' : 'Play Audio' }}"
+                            >
                                 <i tooltip-placement="left"
                                     tooltip-append-to-body="true"
-                                    tooltip="Play Audio"
+                                    ng-class="{'row-disabled': isProjectDisabled}"
                                     class="fa fa-play">
                                 </i>
                             </a>
-                            <a class="roi-btn-br" ng-href="{{controller.getTemplateVisualizerUrl(row)}}">
+                            <a class="roi-btn-br" ng-href="{{controller.getTemplateVisualizerUrl(row)}}"
+                                title="{{ isProjectDisabled ? 'Unable to visualize your recordings due to corrupted data' : 'View in Visualizer' }}"
+                            >
                                 <i tooltip-placement="left"
                                     tooltip-append-to-body="true"
-                                    tooltip="View in Visualizer"
+                                    ng-class="{'row-disabled': isProjectDisabled }"
                                     class="fa fa-cubes">
                                 </i>
                             </a>
