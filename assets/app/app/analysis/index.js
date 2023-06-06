@@ -24,7 +24,11 @@ angular.module('a2.analysis', [
         sticky: true,
     });
 }).controller('AnalysisIndexCtrl', function(
-    a2APIService,
-    $scope
-){})
+    $scope,
+    Project
+){
+    Project.getInfo(function(info){
+        $scope.project = info;
+    });
+})
 ;

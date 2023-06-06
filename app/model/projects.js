@@ -133,6 +133,7 @@ var Projects = {
                           "   p.citizen_scientist_enabled, \n"+
                           "   p.pattern_matching_enabled, \n"+
                           "   p.reports_enabled, \n"+
+                          "   p.disabled, \n"+
                           "   p.cnn_enabled, \n"+
                           "   pp.duration_period AS plan_period \n";
             joinExtra   += "JOIN project_plans AS pp ON pp.plan_id = p.current_plan \n";

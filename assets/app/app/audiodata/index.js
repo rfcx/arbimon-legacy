@@ -40,5 +40,12 @@ angular.module('a2.audiodata', [
         controller: 'TrainingSetsCtrl as controller',
         templateUrl: '/app/audiodata/training-sets.html'
     });
+}).controller('AudiodataIndexCtrl', function(
+    $scope,
+    Project
+){
+    Project.getInfo(function(info){
+        $scope.project = info;
+    });
 })
 ;
