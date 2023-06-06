@@ -26,7 +26,7 @@ angular.module('a2.app.dashboard',[
     Project.getInfo(function(info){
         $scope.project = info;
         $scope.isSpeciesLoading = true
-        $scope.showErrorBanner = $scope.project && $scope.project.disabled && a2UserPermit.isAuthorized()
+        $scope.showErrorBanner = $scope.project && $scope.project.disabled && a2UserPermit.isProjectMember()
 
         Project.getProjectTotalSpecies(info.project_id, function(data) {
             $scope.speciesQty = data || 0;
