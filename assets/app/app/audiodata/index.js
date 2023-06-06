@@ -19,6 +19,7 @@ angular.module('a2.audiodata', [
         url: '/audiodata',
         views: {
             'audiodata': {
+                controller: 'AudiodataIndexCtrl as controller',
                 templateUrl: '/app/audiodata/index.html'
             }
         },
