@@ -6,7 +6,8 @@ angular.module('a2.app.dashboard',[
     'ct.ui.router.extras',
     'a2.forms',
     'humane',
-    'a2.googlemaps'
+    'a2.googlemaps',
+    'a2.directive.error-banner-message'
 ])
 .config(function($stateProvider, $urlRouterProvider) {
     $stateProvider.state('dashboard', {

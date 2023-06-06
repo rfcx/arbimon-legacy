@@ -50,7 +50,7 @@ router.param('projectUrl', function(req, res, next, project_url){
         // Allow the navigation to the Visualizer page for citizen scientist users
         if (permissionsMap['use citizen scientist interface'] &&
             (req.inAppUrl && !req.inAppUrl.startsWith('visualizer'))) {
-                return res.redirect('/'); // res.redirect('/citizen-scientist/' + project.project_id + '/');
+                return res.redirect('/citizen-scientist/' + project.project_id + '/');
         }
 
         var project = rows[0];
