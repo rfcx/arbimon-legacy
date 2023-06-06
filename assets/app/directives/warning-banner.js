@@ -1,9 +1,9 @@
-angular.module('a2.directive.error-banner-message', [])
-.directive('errorBannerMessage', function($http, $window) {
-    var message = '';
+angular.module('a2.directive.warning-banner', [])
+.directive('warningBanner', function($http, $window) {
+    var message = 0;
 
     return {
-        templateUrl: '/directives/error-banner-message.html',
+        templateUrl: '/directives/warning-banner.html',
         restrict: 'E',
         replace: true,
         scope: {
