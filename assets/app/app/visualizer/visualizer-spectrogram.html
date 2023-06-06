@@ -12,6 +12,13 @@
         </div>
     </div>
 
+    <div a2-visualizer-spectrogram-affixed="{'align-h':.5, 'align-v':.5, container:'viewport'}"
+        ng-show="visobject.isDisabled"
+    >
+        <span class="glyphicon glyphicon-ban-circle fa-check-font" aria-hidden="true"></span>
+        <span class="pl-2 fa-check-font">Unavailable</span>
+    </div>
+
     <div class="zoom-control-group ghost-like"
         a2-visualizer-spectrogram-affixed="{top:3, right:3, container:'viewport'}"
         ng-if="visobject && visobject.zoomable"
@@ -40,7 +47,7 @@
         </div>
     </div>
 
-    <div class="spectrogram-container" ng-show="visobject" ng-class="{'container-color': convertedScale < 24}">
+    <div class="spectrogram-container" style="position:relative" ng-show="visobject" ng-class="{'container-color': convertedScale < 24, 'muted-layer': visobject.isDisabled}">
         <a2-visualizer-spectrogram-layer
             ng-repeat="layer in layers | filter: canDisplayInSpectrogram"
             ng-show="isSpectrogramVisible(layer)"
