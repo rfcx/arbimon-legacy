@@ -1,7 +1,7 @@
 <div>
     <div class="container-fluid">
         <div class="row">
-            <error-banner-message ng-show="project && project.disabled"></error-banner-message>
+            <error-banner-message ng-show="showErrorBanner"></error-banner-message>
             <div class="col-md-12">
                 <loader ng-hide="!loading"></loader>
                 <div ng-hide="loading">

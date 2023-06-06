@@ -16,6 +16,9 @@ angular.module('a2.permissions', [
         isRfcx: function(){
             return permit.rfcxUser;
         },
+        isAuthorized: function(){
+            return permit.isAuthorized;
+        },
         getUserEmail: function() {
             return permit.userEmail;
         },

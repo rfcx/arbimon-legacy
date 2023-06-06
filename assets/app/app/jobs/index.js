@@ -34,7 +34,7 @@ angular.module('a2.jobs', [
 
     Project.getInfo(function(info){
         $scope.project = info;
-        console.log($scope.project)
+        $scope.showErrorBanner = $scope.project && $scope.project.disabled && a2UserPermit.isAuthorized()
     });
 
     var hideJob = function(jobId, action) {

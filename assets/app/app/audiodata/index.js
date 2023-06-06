@@ -43,10 +43,12 @@ angular.module('a2.audiodata', [
     });
 }).controller('AudiodataIndexCtrl', function(
     $scope,
-    Project
+    Project,
+    a2UserPermit
 ){
     Project.getInfo(function(info){
         $scope.project = info;
+        $scope.showErrorBanner = $scope.project && $scope.project.disabled && a2UserPermit.isAuthorized()
     });
 })
 ;
