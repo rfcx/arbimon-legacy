@@ -33,9 +33,16 @@ angular.module('a2.analysis.clustering-jobs', [
         });
 })
 //------------------- Clustering List page ---------------
-.controller('ClusteringJobsModelCtrl' , function($scope, $state, $stateParams, a2ClusteringJobs, JobsData, notify, $location, $modal, a2UserPermit, $localStorage) {
+.controller('ClusteringJobsModelCtrl' , function($scope, $state, $stateParams, a2ClusteringJobs, JobsData, notify, $location, $modal, a2UserPermit, $localStorage, Project) {
     $scope.selectedClusteringJobId = $stateParams.clusteringJobId;
     $scope.showViewGridPage = false;
+    $scope.getProjectData = function () {
+        Project.getInfo(function(info){
+            $scope.isProjectDisabled = info.disabled === 1;
+        })
+    },
+
+    $scope.getProjectData()
     $scope.loadClusteringJobs = function() {
         $scope.loading = true;
         $scope.showRefreshBtn = false;

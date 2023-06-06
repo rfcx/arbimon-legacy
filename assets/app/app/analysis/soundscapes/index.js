@@ -41,6 +41,7 @@ angular.module('a2.analysis.soundscapes', [
         $scope.projectData = data;
         $scope.pid = data.project_id;
         $scope.url = data.url;
+        $scope.isProjectDisabled = data.disabled === 1;
     });
 
     a2Playlists.getList().then(function(data) {

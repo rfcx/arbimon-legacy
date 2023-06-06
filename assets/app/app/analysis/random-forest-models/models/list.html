@@ -5,7 +5,8 @@
             <a class="btn btn-sm btn-default"
                 tooltip="Create New Model"
                 tooltip-placement="right"
-                ng-click="newModel() | trackEvent:'Analysis-Model list':'new model'" >
+                ng-click="newModel() | trackEvent:'Analysis-Model list':'new model'"
+                ng-class="{'row-disabled': isProjectDisabled }">
                 <i class="fa fa-plus" ></i>
             </a>
         </h3>
@@ -44,7 +45,7 @@
         </div>
         <div class="jumbotron" ng-show="(!modelsDataOrig || !modelsDataOrig.length > 0) && !loading">
             <h3>{{ infopanedata }}
-                <a ng-click="newModel() | trackEvent:'Analysis-Model list':'new model'">
+                <a ng-click="newModel() | trackEvent:'Analysis-Model list':'new model'" ng-class="{'row-disabled': isProjectDisabled }">
                     Create a model
                 </a>
             </h3>
