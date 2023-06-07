@@ -28,6 +28,10 @@ angular.module('a2.visobjects.recording', [
         this.extra  = extra;
         this.max_freq = this.sampling_rate / 2;
         this.span = scaleCache && scaleCache.originalScale ? this.max_freq : (this.max_freq > 24000 ? this.max_freq : 24000);
+        if (!data) {
+            this.span = 44100/2
+            this.duration = 60
+        }
         this.domain = {
             x : {
                 from : 0,
@@ -44,6 +48,7 @@ angular.module('a2.visobjects.recording', [
                 tick_format : khz_format
             }
         };
+        if (!data) return
         // set it to the scope
         this.tiles.set.forEach((function(tile){
             if (!!data.legacy) {
@@ -62,7 +67,10 @@ angular.module('a2.visobjects.recording', [
     ];
     recording.fetch = function(visobject){
         var d = $q.defer();
-        Project.getRecordingInfo(visobject.id, function(data){
+        Project.getRecordingInfo(visobject.id, function(err, data){
+            if (err) {
+                visobject.isDisabled = true
+            }
             visobject = new recording(data, visobject.extra);
             d.resolve(visobject);
         });

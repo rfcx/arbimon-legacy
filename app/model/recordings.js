@@ -735,8 +735,10 @@ var Recordings = {
                         cache_miss.retry_get();
                     });
                 } else {
-                    Recordings.getAssetFileFromMediaAPI(recording, 'spectro').then(res => {
-                        res.pipe(fs.createWriteStream(cache_miss.file).on('close', function () { cache_miss.retry_get() }))
+                    Recordings.getAssetFileFromMediaAPI(recording, 'spectro').then((err, res) => {
+                        if (err) {
+                            return callback('Unavailable')
+                        } else res.pipe(fs.createWriteStream(cache_miss.file).on('close', function () { cache_miss.retry_get() }))
                     })
                 }
             });
