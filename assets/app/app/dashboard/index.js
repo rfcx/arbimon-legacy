@@ -7,7 +7,7 @@ angular.module('a2.app.dashboard',[
     'a2.forms',
     'humane',
     'a2.googlemaps',
-    'a2.directive.error-banner-message'
+    'a2.directive.warning-banner'
 ])
 .config(function($stateProvider, $urlRouterProvider) {
     $stateProvider.state('dashboard', {
