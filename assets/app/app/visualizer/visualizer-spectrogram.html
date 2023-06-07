@@ -47,7 +47,7 @@
         </div>
     </div>
 
-    <div class="spectrogram-container" style="position:relative" ng-show="visobject" ng-class="{'container-color': convertedScale < 24, 'muted-layer': visobject.isDisabled}">
+    <div class="spectrogram-container" ng-show="visobject" ng-class="{'container-color': convertedScale < 24, 'muted-layer': visobject.isDisabled}">
         <a2-visualizer-spectrogram-layer
             ng-repeat="layer in layers | filter: canDisplayInSpectrogram"
             ng-show="isSpectrogramVisible(layer)"
