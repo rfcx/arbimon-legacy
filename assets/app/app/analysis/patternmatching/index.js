@@ -701,7 +701,7 @@ angular.module('a2.analysis.patternmatching', [
             self.loading.templates = true;
             return a2Templates.getList().then((function(templates){
                 self.loading = false;
-                self.list.templates = templates;
+                self.list.templates = templates.filter(t => !t.disabled);
             }.bind(this))).catch((function(err){
                 self.loading = false;
                 self.list.templates = [];

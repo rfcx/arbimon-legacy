@@ -31,14 +31,8 @@ angular.module('a2.audiodata.templates', [
             }
             this.projecturl = Project.getUrl();
             this.search = { q: '' };
-            this.getProjectData()
             this.getList();
             this.timeout;
-        },
-        getProjectData: function() {
-            Project.getInfo(function(info){
-                $scope.isProjectDisabled = info.disabled === 1;
-            })
         },
         goToSourceProject: function(projectId) {
             if (!projectId) return;
