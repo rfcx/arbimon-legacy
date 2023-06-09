@@ -48,7 +48,10 @@ angular.module('a2.visobjects.recording', [
                 tick_format : khz_format
             }
         };
-        if (!data) return
+        if (!this.tiles) {
+            this.isDisabled = true
+            return
+        }
         // set it to the scope
         this.tiles.set.forEach((function(tile){
             if (!!data.legacy) {
@@ -67,9 +70,10 @@ angular.module('a2.visobjects.recording', [
     ];
     recording.fetch = function(visobject){
         var d = $q.defer();
-        Project.getRecordingInfo(visobject.id, function(err, data){
-            if (err) {
+        Project.getRecordingInfo(visobject.id, function(data){
+            if (data === 'Server error') {
                 visobject.isDisabled = true
+                data = {}
             }
             visobject = new recording(data, visobject.extra);
             d.resolve(visobject);
