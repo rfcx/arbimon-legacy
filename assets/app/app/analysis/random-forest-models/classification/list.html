@@ -5,8 +5,7 @@
             <a class="btn btn-sm btn-default"
                 tooltip="Create New Classification"
                 tooltip-placement="right"
-                ng-click="createNewClassification() | trackEvent:'Analysis-Classification-List':'Create new classification'"
-                ng-class="{'row-disabled': isProjectDisabled }">
+                ng-click="createNewClassification() | trackEvent:'Analysis-Classification-List':'Create new classification'">
                 <i class="fa fa-plus" ></i>
             </a>
         </h3>
@@ -49,8 +48,7 @@
         <div class="jumbotron" ng-show="(!classificationsOriginal || !classificationsOriginal.length > 0) && !loading">
             <h3>
                 {{ infopanedata }}
-                <a ng-click="createNewClassification() | trackEvent:'Analysis-Classification-List':'Create new classification'"
-                    ng-class="{'row-disabled': isProjectDisabled }">
+                <a ng-click="createNewClassification() | trackEvent:'Analysis-Classification-List':'Create new classification'">
                     Classify recordings
                 </a>
             </h3>

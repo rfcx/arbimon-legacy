@@ -15,13 +15,6 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
         })
 })
 .controller('AudioEventDetectionsClusteringModelCtrl' , function($scope, $modal, $location, JobsData, notify, a2AudioEventDetectionsClustering, Project, $localStorage, $window, a2UserPermit) {
-    $scope.getProjectData = function () {
-        Project.getInfo(function(info){
-            $scope.isProjectDisabled = info.disabled === 1;
-        })
-    },
-
-    $scope.getProjectData()
 
     $scope.loadAudioEventDetections = function() {
         $scope.loading = true;

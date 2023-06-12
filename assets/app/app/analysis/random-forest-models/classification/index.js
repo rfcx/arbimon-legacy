@@ -27,14 +27,6 @@ angular.module('a2.analysis.random-forest-models.classification', [
             filter:f
         };
 
-        $scope.getProjectData = function () {
-            Project.getInfo(function(info){
-                $scope.isProjectDisabled = info.disabled === 1;
-            })
-        },
-
-        $scope.getProjectData()
-
         $scope.tableParams = new ngTableParams(tableConfig, {
             total: t,
             getData: function ($defer, params) {

@@ -36,14 +36,6 @@ angular.module('a2.analysis.patternmatching', [
     $scope.search = { q: '' };
     var timeout;
 
-    $scope.getProjectData = function () {
-        Project.getInfo(function(info){
-            $scope.isProjectDisabled = info.disabled === 1;
-        })
-    },
-
-    $scope.getProjectData()
-
     $scope.getTemplateVisualizerUrl = function(template){
         var box = ['box', template.x1, template.y1, template.x2, template.y2].join(',');
         return template ? "/project/"+template.source_project_uri+"/visualizer/rec/"+template.recording+"?a="+box : '';
