@@ -329,10 +329,6 @@ angular.module('a2.visualizer', [
             }
         }).bind(this)).then(function(){
             events.emit('visobject', $scope.visobject);
-            Project.getInfo(function(info){
-                if (!$scope.visobject) return null;
-                return $scope.visobject.isDisabled = info.disabled === 1
-            })
             $scope.isUploading = false
         });
     };

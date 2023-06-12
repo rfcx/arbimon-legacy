@@ -380,6 +380,9 @@ angular.module('a2.audiodata.recordings', [
           img.onload = function() {
             element[0].src = attrs.customSrc;
           };
+          img.onerror = function() {
+            element[0].src = 'https://rfcx-web-static.s3.eu-west-1.amazonaws.com/arbimon/unavaliable.png'
+          }
         };
 
         scope.$watch((function() {
