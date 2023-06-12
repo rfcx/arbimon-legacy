@@ -800,20 +800,22 @@ var Sites = {
         })
     },
 
-    removeSite: async function(site_id, project_id, idToken) {
+    removeSite: async function(siteIds, project_id, idToken) {
         let db;
         return dbpool.getConnection()
             .then(async (connection) => {
                 db = connection;
                 await db.beginTransaction();
-                const validationIds = await this.getRecordingValidationBySiteId(site_id)
-                if (validationIds.length) {
-                    await this.resetRecValidationById(project_id, validationIds.map(v => v.recording_validation_id))
+                for (let site_id of siteIds) {
+                    const validationIds = await this.getRecordingValidationBySiteId(site_id)
+                    if (validationIds.length) {
+                        await this.resetRecValidationById(project_id, validationIds.map(v => v.recording_validation_id))
+                    }
+                    await this.removeFromProjectAsync(site_id, project_id, db);
+                    if (rfcxConfig.coreAPIEnabled) {
+                        await this.deleteInCoreAPI(site_id, idToken)
+                    };
                 }
-                await this.removeFromProjectAsync(site_id, project_id, db);
-                if (rfcxConfig.coreAPIEnabled) {
-                    await this.deleteInCoreAPI(site_id, idToken)
-                };
                 await db.commit();
                 await db.release();
             })

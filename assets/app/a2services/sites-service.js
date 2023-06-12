@@ -34,9 +34,9 @@ angular.module('a2.srv.sites', [
             .error(notify.serverError);
         },
 
-        delete: function(site, callback) {
+        delete: function(sites, callback) {
             $http.post('/api/project/'+ Project.getUrl() +'/sites/delete', {
-                site: site
+                sites: sites
             })
             .success(callback)
             .error(notify.serverError);

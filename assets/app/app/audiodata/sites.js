@@ -22,7 +22,7 @@ angular.module('a2.audiodata.sites', [
       }
     }
   }])
-.controller('SitesCtrl', function($scope, $state, $filter, Project, $modal, notify, a2Sites, $window, $controller, $q, a2UserPermit, a2GoogleMapsLoader, $downloadResource) {
+.controller('SitesCtrl', function($scope, $state, $anchorScroll, Project, $modal, notify, a2Sites, $window, $controller, $q, a2UserPermit, a2GoogleMapsLoader, $downloadResource) {
     $scope.loading = true;
     $scope.markers = [];
     $scope.search = ''
@@ -60,30 +60,47 @@ angular.module('a2.audiodata.sites', [
                 mapTypeId: google.maps.MapTypeId.SATELLITE,
                 zoom: 8, minZoom: 2
             });
-
-            var bounds = new google.maps.LatLngBounds();
-
-            angular.forEach($scope.sites, function(site) {
-                if (site.lat > 85 || site.lat < -85 || site.lon > 180 || site.lon < -180) {
-                    return;
-                }
-                var position = new google.maps.LatLng(site.lat, site.lon);
-                var marker = new google.maps.Marker({
-                    position: position,
-                    title: site.name
-                });
-
-                $scope.markers.push(marker);
-                bounds.extend(position);
-            });
-
-            $scope.map.fitBounds(bounds);
-
-            if ($scope.markers.length) {
-                $scope.setMapOnAll($scope.map);
-            };
+            $scope.fitBounds()
         });
     });
+
+    $scope.fitBounds = function() {
+        const bounds = new google.maps.LatLngBounds();
+
+        angular.forEach($scope.sites, function(site) {
+            if (site.lat > 85 || site.lat < -85 || site.lon > 180 || site.lon < -180) {
+                return;
+            }
+            const position = new google.maps.LatLng(site.lat, site.lon);
+            const marker = new google.maps.Marker({
+                position: position,
+                title: site.name
+            });
+            marker.addListener("click", () => {
+                $scope.sel(site)
+                $scope.scrollTo(site.id)
+            });
+            $scope.markers.push(marker);
+            bounds.extend(position);
+        });
+
+        $scope.map.fitBounds(bounds);
+
+        if ($scope.markers.length) {
+            $scope.setMapOnAll($scope.map);
+        };
+    }
+
+    $scope.scrollTo = function(id) {
+        const bookmark = 'site-' + id;
+        $anchorScroll.yOffset = 60;
+        console.log(id, $anchorScroll, bookmark)
+        $anchorScroll(bookmark)
+    }
+
+    $scope.scrollMap = function($event, $controller) {
+        return $scope.show.map && $scope.editing === false && $scope.creating === false && $scope.sites.length > 21
+    },
 
     $scope.onFilterChanged = function() {
         $scope.sites = $scope.sortByKeywordArray($scope.originalSites, $scope.search)
@@ -302,8 +319,10 @@ angular.module('a2.audiodata.sites', [
     };
 
     $scope.del = function() {
-        if(!$scope.selected)
+        if (!$scope.selected) {
+            notify.log('Please select site to remove');
             return;
+        }
 
         if(!a2UserPermit.can('delete site')) {
             notify.error("You do not have permission to remove sites");
@@ -314,18 +333,17 @@ angular.module('a2.audiodata.sites', [
             templateUrl: '/common/templates/pop-up.html',
             controller: function() {
                 this.messages = [
-                    "You are about to delete: ",
-                    $scope.selected.name,
-                    "Are you sure?"
+                    "Are you sure you would like to remove the following site?",
+                    $scope.selected.name
                 ];
-                this.btnOk = "Yes, do it!";
-                this.btnCancel = "No";
+                this.btnOk = "Delete";
+                this.btnCancel = "Cancel";
             },
             controllerAs: 'popup'
         });
 
         modalInstance.result.then(function() {
-            a2Sites.delete($scope.selected, function(data) {
+            a2Sites.delete([$scope.selected.id], function(data) {
                 if(data.error)
                     return notify.error(data.error);
 
@@ -333,6 +351,43 @@ angular.module('a2.audiodata.sites', [
                     $scope.sortByLastUpdated(sites);
                 });
                 notify.log('Site removed');
+            });
+        });
+    };
+
+    $scope.delAllEmptySites = function() {
+        if(!a2UserPermit.can('manage project settings')) {
+            notify.error("You do not have permission to remove sites");
+            return;
+        }
+        var list = [], siteIds = [];
+        $scope.sites.forEach(function(site) {
+            if (site.rec_count === 0 && !list.includes(site.name)) {
+                list.push(site.name)
+                siteIds.push(site.id)
+            }
+        })
+        console.log(list, siteIds)
+        var modalInstance = $modal.open({
+            templateUrl: '/common/templates/pop-up.html',
+            controller: function() {
+                this.messages = ["Are you sure you would like to remove the following sites?"];
+                this.list = list;
+                this.btnOk = "Delete";
+                this.btnCancel = "Cancel";
+            },
+            controllerAs: 'popup'
+        });
+
+        modalInstance.result.then(function() {
+            a2Sites.delete(siteIds, function(data) {
+                if(data.error)
+                    return notify.error(data.error);
+
+                Project.getSites({ count: true, logs: true }, function(sites) {
+                    $scope.sortByLastUpdated(sites);
+                });
+                notify.log('Empty sites removed');
             });
         });
     };
@@ -479,45 +534,13 @@ angular.module('a2.audiodata.sites', [
             }
 
             $scope.clearMarkers()
-
+            $scope.fitBounds()
             if ($scope.selected) {
                 a2GoogleMapsLoader.then(function(google) {
                     var position = new google.maps.LatLng($scope.selected.lat, $scope.selected.lon);
-                    if(!$scope.marker) {
-                        $scope.marker = new google.maps.Marker({
-                            position: position,
-                            title: $scope.selected.name
-                        });
-                        $scope.marker.setMap($scope.map);
-                    }
-                    else {
-                        $scope.marker.setDraggable(false);
-                        $scope.marker.setPosition(position);
-                        $scope.marker.setTitle($scope.selected.name);
-                    }
                     $scope.map.panTo(position);
+                    $scope.map.setZoom(6)
                 });
-            } else {
-                var bounds = new google.maps.LatLngBounds();
-                angular.forEach($scope.sites, function(site) {
-                    if (site.lat > 85 || site.lat < -85 || site.lon > 180 || site.lon < -180) {
-                        return;
-                    }
-                    var position = new google.maps.LatLng(site.lat, site.lon);
-                    var marker = new google.maps.Marker({
-                        position: position,
-                        title: site.name
-                    });
-
-                    $scope.markers.push(marker);
-                    bounds.extend(position);
-                });
-
-                $scope.map.fitBounds(bounds);
-
-                if ($scope.markers.length) {
-                    $scope.setMapOnAll($scope.map);
-                };
             }
         });
     };

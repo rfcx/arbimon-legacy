@@ -82,15 +82,15 @@ router.post('/update', function(req, res, next) {
 
 router.post('/delete', function(req, res, next) {
     res.type('json');
-    var project = req.project;
-    var site = req.body.site;
+    const project = req.project;
+    const sites = req.body.sites;
 
     if(!req.haveAccess(project.project_id, "delete site")) {
         return res.json({ error: "you do not have permission to remove sites" });
     }
 
-    model.sites.removeSite(site.id, project.project_id, req.session.idToken).then(function() {
-        res.json({ message: 'Site removed' });
+    model.sites.removeSite(sites, project.project_id, req.session.idToken).then(function() {
+        res.json({ message: 'Removed' });
     }).catch(next);
 });
 
