@@ -351,7 +351,7 @@ var Projects = {
             return result
         } catch (e) {
             await db.rollback();
-            await connection.release();
+            await db.release();
         }
     },
 
