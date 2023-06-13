@@ -90,7 +90,7 @@
 <div class="col-md-5">
     <ul class="nav nav-tabs">
         <li class="ng-isolate-scope" ng-class="{active:show.map}">
-            <a ng-click="set_show('map')" href="">
+            <a id="mapHeader" ng-click="set_show('map')" href="">
                 <i ng-class="editing ? 'fa fa-pencil' : (creating ? 'fa fa-plus' : 'fa fa-map')"></i>
                 {{editing ? 'Edit Site' : (creating ? 'New Site' : 'Location')}}
             </a>
@@ -208,7 +208,7 @@
             <c3-chart-display data="status_controller.chart.data" axes="status_controller.chart.axes"></c3-chart-display>
         </div>
     </div>
-    <div ng-show="show.map" class="panel" ng-class="{'map-position': scrollMap()}">
+    <div ng-show="show.map" class="panel" ng-class="{'map-position': scrollMap()}" ng-style="{top: getMapHeaderTop()}">
         <div class="map" id="map-site"></div>
     </div>
     <div ng-if="images && images.length">

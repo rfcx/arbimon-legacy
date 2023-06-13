@@ -25,7 +25,9 @@ angular.module('a2.audiodata.sites', [
 .controller('SitesCtrl', function($scope, $state, $anchorScroll, Project, $modal, notify, a2Sites, $window, $controller, $q, a2UserPermit, a2GoogleMapsLoader, $downloadResource) {
     $scope.loading = true;
     $scope.markers = [];
-    $scope.search = ''
+    $scope.search = '';
+    $scope.editing = false;
+    $scope.creating = false;
 
     Project.getInfo(function(info){
         $scope.project = info;
@@ -98,8 +100,14 @@ angular.module('a2.audiodata.sites', [
         $anchorScroll(bookmark)
     }
 
+    $scope.getMapHeaderTop = function() {
+        const mapHeader = $window.document.getElementById('mapHeader')
+        const rect = mapHeader.getBoundingClientRect();
+        return (rect.top + 51) + 'px' || 122 + 'px'
+    }
+
     $scope.scrollMap = function($event, $controller) {
-        return $scope.show.map && $scope.editing === false && $scope.creating === false && $scope.sites.length > 21
+        return $scope.show.map && $scope.editing === false && $scope.creating === false && $scope.sites && $scope.sites.length > 15
     },
 
     $scope.onFilterChanged = function() {
