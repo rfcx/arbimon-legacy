@@ -154,6 +154,10 @@ angular.module('a2.audiodata.recordings', [
         });
     };
 
+    this.isDisableDeleteRecs = function() {
+        return !$scope.checkedRec.length && !$scope.checked
+    }
+
     this.deleteRecordings = function() {
         if (!a2UserPermit.can('manage project recordings')) {
             notify.error('You do not have permission to delete recordings');
@@ -173,20 +177,26 @@ angular.module('a2.audiodata.recordings', [
             return _;
         }, {});
 
-        const messages = [];
-        messages.push("You are about to delete: ");
-        messages.push.apply(messages, Object.keys(recCount).map(function(site) {
+        const messages = [], list = [];
+        messages.push('Are you sure you want to delete the following?');
+        Object.keys(recCount).forEach(function(site, index) {
             const s = recCount[site] > 1 ? 's' : '';
-            return recCount[site] + ' recording'+s+' from "' + site + '"';
-        }));
-        messages.push("Are you sure?");
+            if(index < 4){
+                list.push(recCount[site] + ' recording'+s+' from "' + site + '"');
+            }
+        });
+        if (Object.keys(recCount).length > 3) {
+            list.push('& 100 recordings from 5 other sites')
+        }
 
         return $modal.open({
             templateUrl: '/common/templates/pop-up.html',
             controller: function() {
                 this.messages = messages;
-                this.btnOk =  "Yes";
-                this.btnCancel =  "No, cancel";
+                this.list = list;
+                this.note = 'Note: analysis results on these recordings will also be deleted';
+                this.btnOk =  "Delete";
+                this.btnCancel =  "Cancel";
             },
             controllerAs: 'popup'
         }).result.then(function() {
@@ -215,19 +225,21 @@ angular.module('a2.audiodata.recordings', [
         }
 
         return Project.getRecCounts(filters).then(function(recCount) {
-            var messages = [], importedCount = 0, importedSites = [];
-            messages.push("Any analysis results on these recordings will be deleted.");
-            messages.push("Are you sure you want to delete:");
-            console.log(recCount)
-            recCount.forEach(function(entry) {
+            var messages = [], importedCount = 0, importedSites = [], list = [];
+            messages.push('Are you sure you want to delete the following?');
+            recCount.forEach(function(entry, index) {
                 var s = entry.count > 1 ? 's' : '';
-                if(!entry.imported){
-                    messages.push(entry.count + ' recording'+s+' from "' + entry.site + '"');
-                } else {
+                if(!entry.imported && index < 4){
+                    list.push(entry.count + ' recording'+s+' from "' + entry.site + '"');
+                } else if (entry.imported) {
                     importedCount += entry.count;
                     importedSites.push('"' + entry.site + '"');
                 }
             });
+            if (recCount.length > 3) {
+                const msg = '& 100 recordings from ' + (recCount.length - 3) + ' other sites'
+                list.push(msg)
+            }
             if(importedCount){
                 messages.push("(The filters matched " + importedCount + " recordings wich come from " + importedSites.join(", ") + ". You cannot delete these from your project, they can only be removed from their original project.)");
             }
@@ -236,8 +248,10 @@ angular.module('a2.audiodata.recordings', [
                 templateUrl: '/common/templates/pop-up.html',
                 controller: function() {
                     this.messages = messages;
-                    this.btnOk =  "Yes";
-                    this.btnCancel =  "No, cancel";
+                    this.list = list;
+                    this.note = 'Note: analysis results on these recordings will also be deleted';
+                    this.btnOk =  "Delete";
+                    this.btnCancel =  "Cancel";
                 },
                 controllerAs: 'popup'
             }).result;
@@ -264,9 +278,22 @@ angular.module('a2.audiodata.recordings', [
 
     this.searchRecs(['count', 'date_range', 'list']);
 
+    $scope.$watch('checked', function() {
+        $scope.combineCheckedRecordings()
+    });
+
+    $scope.combineCheckedRecordings = function() {
+        $scope.recs.forEach(rec =>{
+            if (rec.checked && !$scope.selectedRecId.includes(rec.id)) {
+                $scope.selectedRecId.push(rec.id);
+                $scope.checkedRec.push(rec);
+            }
+        })
+    }
+
     $scope.selectRec = function(rec) {
         if (!rec.checked) {
-            const index = $scope.selectedRecId.findIndex(rec => rec === rec.id);
+            const index = $scope.selectedRecId.findIndex(id => id === rec.id);
             $scope.selectedRecId.splice(index, 1);
             $scope.checkedRec.splice(index, 1);
             return;

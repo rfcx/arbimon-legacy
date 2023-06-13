@@ -22,9 +22,10 @@ angular.module('a2.audiodata.sites', [
       }
     }
   }])
-.controller('SitesCtrl', function($scope, $state, Project, $modal, notify, a2Sites, $window, $controller, $q, a2UserPermit, a2GoogleMapsLoader, $downloadResource) {
+.controller('SitesCtrl', function($scope, $state, $filter, Project, $modal, notify, a2Sites, $window, $controller, $q, a2UserPermit, a2GoogleMapsLoader, $downloadResource) {
     $scope.loading = true;
     $scope.markers = [];
+    $scope.search = ''
 
     Project.getInfo(function(info){
         $scope.project = info;
@@ -84,8 +85,31 @@ angular.module('a2.audiodata.sites', [
         });
     });
 
+    $scope.onFilterChanged = function() {
+        $scope.sites = $scope.sortByKeywordArray($scope.originalSites, $scope.search)
+    }
+
+    $scope.sortByKeywordArray = function (array, keyword) {
+        if (array && !array.length) return []
+        return array.filter(item => {
+          // Filter results by doing case insensitive match on name
+          return item.name.toLowerCase().includes(keyword.toLowerCase())
+        }).sort((a, b) => {
+          // Sort results by matching name with keyword position in name
+          if (a.name.toLowerCase().indexOf(keyword.toLowerCase()) > b.name.toLowerCase().indexOf(keyword.toLowerCase())) {
+            return 1
+          } else if (a.name.toLowerCase().indexOf(keyword.toLowerCase()) < b.name.toLowerCase().indexOf(keyword.toLowerCase())) {
+            return -1
+          } else {
+            if (a.name > b.name) return 1
+            else return -1
+          }
+        })
+    }
+
     $scope.sortByLastUpdated = function(sites) {
         $scope.sites = sites.sort(function(a, b) { return (a.updated_at < b.updated_at) ? 1 : -1;});
+        $scope.originalSites = $scope.sites
     }
 
     // Sets the map on all markers in the array

@@ -233,7 +233,7 @@ angular.module('a2.visualizer.layers.recording-tags', ['a2.srv.tags'])
         scope:{
             tag:'='
         },
-        template:'<span class="fa fa-tag">' +
+        template:'<span class="fa fa-tag no-text-wrap">' +
             '{{tag.tag}}' +
         '</span>'
     };

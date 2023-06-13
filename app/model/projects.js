@@ -992,9 +992,10 @@ var Projects = {
     },
 
     validationsCount: function(project_id, callback) {
-        var q = "SELECT count(*) AS count \n"+
+        const q = "SELECT count(*) AS count \n"+
                 "FROM recording_validations AS rv\n"+
-                "WHERE rv.project_id = " + dbpool.escape(project_id);
+                "WHERE rv.project_id = " + dbpool.escape(project_id) + " \n"+
+                "AND rv.present is not null OR rv.present_review > 0 OR rv.present_aed > 0";
         queryHandler(q, callback);
     },
 

@@ -806,6 +806,10 @@ var Sites = {
             .then(async (connection) => {
                 db = connection;
                 await db.beginTransaction();
+                const validationIds = await this.getRecordingValidationBySiteId(site_id)
+                if (validationIds.length) {
+                    await this.resetRecValidationById(project_id, validationIds.map(v => v.recording_validation_id))
+                }
                 await this.removeFromProjectAsync(site_id, project_id, db);
                 if (rfcxConfig.coreAPIEnabled) {
                     await this.deleteInCoreAPI(site_id, idToken)
@@ -821,6 +825,20 @@ var Sites = {
                 }
                 throw new Error('Failed to delete site');
             })
+    },
+
+    getRecordingValidationBySiteId: async function(siteIds) {
+        const q = `SELECT rv.recording_validation_id
+            FROM recording_validations rv
+            JOIN recordings r ON r.recording_id = rv.recording_id
+            WHERE r.site_id in (${siteIds})`
+        return dbpool.query(q);
+    },
+
+    resetRecValidationById: async function(projectId, validationIds) {
+        const q = `UPDATE recording_validations SET present = NULL, present_review = 0, present_aed = 0
+        WHERE project_id=${projectId} AND recording_validation_id IN (${validationIds})`;
+        return dbpool.query(q);
     },
 
     deleteInCoreAPI: async function(site_id, idToken) {
