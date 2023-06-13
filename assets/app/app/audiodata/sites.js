@@ -64,6 +64,9 @@ angular.module('a2.audiodata.sites', [
             });
             $scope.fitBounds()
         });
+
+        const mapHeader = $window.document.getElementById('mapHeader')
+        $scope.mapHeaderTop = mapHeader.getBoundingClientRect();
     });
 
     $scope.fitBounds = function() {
@@ -101,9 +104,7 @@ angular.module('a2.audiodata.sites', [
     }
 
     $scope.getMapHeaderTop = function() {
-        const mapHeader = $window.document.getElementById('mapHeader')
-        const rect = mapHeader.getBoundingClientRect();
-        return (rect.top + 51) + 'px' || 122 + 'px'
+        return ($scope.mapHeaderTop + 51) + 'px' || 122 + 'px'
     }
 
     $scope.scrollMap = function($event, $controller) {
