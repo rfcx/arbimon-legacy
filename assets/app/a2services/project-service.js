@@ -171,6 +171,9 @@ angular.module('a2.srv.project', [
                 $http.get('/api/project/'+url+'/recordings/info/'+rec_id)
                     .success(function(data) {
                         callback(data);
+                    })
+                    .error(function(err) {
+                        callback(err);
                     });
             },
             getNextRecording: function(rec_id, callback) {

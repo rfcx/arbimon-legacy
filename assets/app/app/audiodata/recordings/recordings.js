@@ -37,6 +37,10 @@ angular.module('a2.audiodata.recordings', [
         return params;
     };
 
+    Project.getInfo(function(info){
+        return $scope.isDisabled = info.disabled === 1
+    })
+
     this.searchRecs = function(output) {
         $scope.loading = true;
         output = output || ['list'];
@@ -403,6 +407,9 @@ angular.module('a2.audiodata.recordings', [
           img.onload = function() {
             element[0].src = attrs.customSrc;
           };
+          img.onerror = function() {
+            element[0].src = 'https://rfcx-web-static.s3.eu-west-1.amazonaws.com/arbimon/unavaliable.png'
+          }
         };
 
         scope.$watch((function() {

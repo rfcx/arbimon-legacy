@@ -5,13 +5,16 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - $PWD:/app
+      - $PWD/app:/app/app
+      - $PWD/assets:/app/assets
+      - $PWD/config:/app/config
     environment:
       - NODE_ENV=development
       - DB_HOST=mysql
       - DB_DATABASE=arbimon2
       - DB_USER=admin
       - DB_PASSWORD=admin-secret
+      - REDIS_URL=redis://redis:6379
     command: ["./node_modules/.bin/gulp", "watch"]
   mysql:
     image: "mariadb:10.4"
@@ -25,5 +28,12 @@ services:
       - MYSQL_DATABASE=arbimon2
       - MYSQL_USER=admin
       - MYSQL_PASSWORD=admin-secret
+  redis:
+    image: redis:6.2-alpine
+    ports:
+      - '6379:6379'
+    volumes: 
+      - data-redis:/data
 volumes:
   data-mysql:
+  data-redis:

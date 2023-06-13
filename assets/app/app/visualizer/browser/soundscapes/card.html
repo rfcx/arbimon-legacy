@@ -3,8 +3,14 @@
         {{ visobj.caption || visobj.name }}
         <span ng-show="visobj.caption2" class="pull-right">{{visobj.caption2}}</span>
     </div>
-    <div class="thumbnail-viewer" ng-class="{'has-vaxis': visobj.vaxis}">
+    <div class="thumbnail-viewer" ng-class="{'has-vaxis': visobj.vaxis, 'muted-layer': visobj.isDisabled, 'muted-layer-thumbnail': visobj.isDisabled}">
+        <div ng-if="visobj.isDisabled" class="muted-layer-message" style="left: 30%;" >
+            <span class="glyphicon glyphicon-ban-circle fa-check-font" aria-hidden="true"></span>
+            <span class="pl-2 fa-check-font">Unavailable</span>
+        </div>
         <axis type="v" class="v-axis" data="visobj.vaxis" ng-if="visobj.vaxis"></axis>
-        <div class="img-holder" ng-class="'visobj-'+browser.lovo.object_type"><img ng-src="{{visobj.thumbnail | a2UpdatedUrl}}"></div>
+        <div class="img-holder" ng-class="'visobj-'+browser.lovo.object_type">
+            <img ng-src="{{visobj.thumbnail | a2UpdatedUrl}}" on-error-src="https://rfcx-web-static.s3.eu-west-1.amazonaws.com/arbimon/unavaliable.png" />
+        </div>
     </div>
 </div>

@@ -16,7 +16,7 @@ angular.module('a2.browser_soundscapes', [
         template   : '/app/visualizer/browser/soundscapes/soundscapes.html'
     });
 })
-.controller('a2BrowserSoundscapesController', function(a2Browser, a2Soundscapes, a2ArrayLOVO, a2UrlUpdate, $timeout, $q){
+.controller('a2BrowserSoundscapesController', function(a2Browser, a2Soundscapes, a2ArrayLOVO, a2UrlUpdate, Project, $q){
     var self = this;
     this.soundscapes = [];
     this.active=false;

@@ -16,6 +16,12 @@ angular.module('a2.permissions', [
         isRfcx: function(){
             return permit.rfcxUser;
         },
+        isAuthorized: function(){
+            return permit.isAuthorized;
+        },
+        isProjectMember: function() {
+            return permit.isAuthorized && ((permit.permissions && permit.permissions.length > 0) || permit.super || permit.rfcxUser) ;
+        },
         getUserEmail: function() {
             return permit.userEmail;
         },

@@ -5,6 +5,8 @@
     </div>
     <div class="thumbnail-viewer" ng-class="{'has-vaxis': visobj.vaxis}">
         <axis type="v" class="v-axis" data="visobj.vaxis" ng-if="visobj.vaxis"></axis>
-        <div class="img-holder" ng-class="'visobj-'+browser.lovo.object_type"><img ng-src="{{visobj.thumbnail | a2UpdatedUrl}}"></div>
+        <div class="img-holder" ng-class="'visobj-'+browser.lovo.object_type">
+            <img ng-src="{{visobj.thumbnail | a2UpdatedUrl}}" on-error-src="https://rfcx-web-static.s3.eu-west-1.amazonaws.com/arbimon/unavaliable.png" />
+        </div>
     </div>
 </div>
