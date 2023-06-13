@@ -16,7 +16,7 @@ angular.module('a2.browser_soundscapes', [
         template   : '/app/visualizer/browser/soundscapes/soundscapes.html'
     });
 })
-.controller('a2BrowserSoundscapesController', function(a2Browser, a2Soundscapes, a2ArrayLOVO, a2UrlUpdate, $timeout, $q){
+.controller('a2BrowserSoundscapesController', function(a2Browser, a2Soundscapes, a2ArrayLOVO, a2UrlUpdate, Project, $q){
     var self = this;
     this.soundscapes = [];
     this.active=false;
@@ -26,6 +26,9 @@ angular.module('a2.browser_soundscapes', [
     this.soundscape = null;
     this.lovo = null;
     this.auto = {};
+    Project.getInfo(function(info){
+        return this.isDisabled = info.disabled === 1
+    })
     this.activate = function(){
         var defer = $q.defer();
 
@@ -33,6 +36,7 @@ angular.module('a2.browser_soundscapes', [
             self.loading.soundscapes = false;
             self.soundscapes = soundscapes;
             self.soundscapes.forEach(function(soundscape){
+                soundscape.isDisabled = this.isDisabled
                 a2UrlUpdate.update(soundscape.thumbnail);
                 soundscape.caption2 = soundscape.normalized ? 'normalized' : ('scale:' + (soundscape.visual_max_value !== null ? soundscape.visual_max_value : soundscape.max_value));
             });

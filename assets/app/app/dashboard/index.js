@@ -6,7 +6,8 @@ angular.module('a2.app.dashboard',[
     'ct.ui.router.extras',
     'a2.forms',
     'humane',
-    'a2.googlemaps'
+    'a2.googlemaps',
+    'a2.directive.warning-banner'
 ])
 .config(function($stateProvider, $urlRouterProvider) {
     $stateProvider.state('dashboard', {
@@ -15,7 +16,7 @@ angular.module('a2.app.dashboard',[
         templateUrl: '/app/dashboard/index.html',
     });
 })
-.controller('SummaryCtrl', function($scope, Project, a2Templates, a2GoogleMapsLoader, a2TrainingSets, $timeout, notify, $window, $compile, $templateFetch, a2PatternMatching) {
+.controller('SummaryCtrl', function($scope, Project, a2Templates, a2GoogleMapsLoader, a2UserPermit, $timeout, notify, $window, $compile, $templateFetch, a2PatternMatching) {
     $scope.loading = 5;
 
     var done = function() {
@@ -25,6 +26,7 @@ angular.module('a2.app.dashboard',[
     Project.getInfo(function(info){
         $scope.project = info;
         $scope.isSpeciesLoading = true
+        $scope.showErrorBanner = $scope.project && $scope.project.disabled && a2UserPermit.isProjectMember()
 
         Project.getProjectTotalSpecies(info.project_id, function(data) {
             $scope.speciesQty = data || 0;

@@ -19,6 +19,7 @@ angular.module('a2.audiodata', [
         url: '/audiodata',
         views: {
             'audiodata': {
+                controller: 'AudiodataIndexCtrl as controller',
                 templateUrl: '/app/audiodata/index.html'
             }
         },
@@ -39,6 +40,15 @@ angular.module('a2.audiodata', [
         url: '/training-sets?set&show',
         controller: 'TrainingSetsCtrl as controller',
         templateUrl: '/app/audiodata/training-sets.html'
+    });
+}).controller('AudiodataIndexCtrl', function(
+    $scope,
+    Project,
+    a2UserPermit
+){
+    Project.getInfo(function(info){
+        $scope.project = info;
+        $scope.showErrorBanner = $scope.project && $scope.project.disabled && a2UserPermit.isProjectMember()
     });
 })
 ;

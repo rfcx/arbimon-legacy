@@ -35,7 +35,6 @@ router.get('/:projecturl?/', function(req, res, next) {
     res.type('html');
     var project_url = req.params.projecturl;
     var project_id = req.query.id;
-
     if(project_id && !project_url){
         var project;
         return model.projects.find({ id: project_id, publicTemplates: true }).get(0).then(function(_project) {
@@ -117,8 +116,10 @@ router.get('/:projecturl?/', function(req, res, next) {
                         aed: !!project.aed_enabled,
                         clustering: !!project.clustering_enabled,
                         reports_enabled: !!project.reports_enabled,
+                        disabled: !!project.disabled,
                     },
                     super: !!req.session.user.isSuper,
+                    isAuthorized: !req.session.isAnonymousGuest,
                     rfcxUser: !!req.session.user && !!req.session.user.email && !!req.session.user.email.includes('rfcx.org'),
                     userEmail: !!req.session.user && !!req.session.user.email ? req.session.user.email : '',
                     permissions: rows.map(function(perm) { return perm.name; }),

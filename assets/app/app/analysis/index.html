@@ -1,4 +1,5 @@
 <div>
+    <warning-banner ng-if="showErrorBanner" message="1"></warning-banner>
     <a2-sidenav-bar name="analysis" enabled="('analysis' | includedByState)">
         <li ui-sref="analysis.patternmatching" ng-class="{active: $state.includes('analysis.patternmatching-details') || $state.includes('analysis.patternmatching')}" ng-if="userPermit.has('pattern_matching')"><a>Pattern Matching</a></li>
         <li ui-sref="analysis.disabled-patternmatching" ui-sref-active="active" class="disabled" ng-if="!userPermit.has('pattern_matching')"><a>Pattern Matching</a></li>

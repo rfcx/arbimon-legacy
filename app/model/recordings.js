@@ -579,7 +579,6 @@ var Recordings = {
         const end = momentEnd.format(dateFormat)
         const attr = `${recording.external_id}_t${start}Z.${end}Z_${asset}`
         const token = await auth0Service.getToken();
-        // TODO: remove after testing on the prod side
         console.log('attr', attr)
         const params = {
             method: 'GET',
@@ -735,7 +734,7 @@ var Recordings = {
                         cache_miss.retry_get();
                     });
                 } else {
-                    Recordings.getAssetFileFromMediaAPI(recording, 'spectro').then(res => {
+                    Recordings.getAssetFileFromMediaAPI(recording, 'spectro').then((res) => {
                         res.pipe(fs.createWriteStream(cache_miss.file).on('close', function () { cache_miss.retry_get() }))
                     })
                 }

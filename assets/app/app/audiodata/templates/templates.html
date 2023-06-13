@@ -21,19 +21,28 @@
                 <loader ng-if="controller.loading"></loader>
                 <a2-table ng-if="!controller.loading" search="search" rows="controller.templates" no-checkbox>
                     <field tdclass="is-v-middle" tdclass="spectrogram-img">
-                        <div class="roi-thumbnail" >
+                        <div class="roi-thumbnail" ng-style="{'opacity': row.disabled ? 0.6 : 1}">
+                            <div ng-if="row.disabled" class="muted-layer-message" style="left: 10%; top: 30%"
+                                tooltip="Unable to visualize your template due to corrupted data"
+                            >
+                                <span class="glyphicon glyphicon-ban-circle fa-xs" style="color: white;" aria-hidden="true"></span>
+                                <span class="pl-1 fa-xs" style="color: white;">Unavailable</span>
+                            </div>
                             <img ng-src="{{row.uri}}" class="roi-img is-small"/>
-                            <a class="roi-btn-bl cs-pointer" ng-click="controller.playTemplateAudio(row, $event)">
+                            <a class="roi-btn-bl cs-pointer" ng-click="controller.playTemplateAudio(row, $event)"
+                                ng-class="{'row-disabled': row.disabled}"
+                            >
                                 <i tooltip-placement="left"
                                     tooltip-append-to-body="true"
-                                    tooltip="Play Audio"
                                     class="fa fa-play">
                                 </i>
                             </a>
-                            <a class="roi-btn-br" ng-href="{{controller.getTemplateVisualizerUrl(row)}}">
+                            <a class="roi-btn-br" ng-href="{{controller.getTemplateVisualizerUrl(row)}}"
+                                title="{{ row.disabled ? 'Unable to visualize your template due to corrupted data' : 'View in Visualizer' }}"
+                            >
                                 <i tooltip-placement="left"
                                     tooltip-append-to-body="true"
-                                    tooltip="View in Visualizer"
+                                    ng-class="{'row-disabled': row.disabled }"
                                     class="fa fa-cubes">
                                 </i>
                             </a>

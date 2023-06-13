@@ -32,6 +32,11 @@ angular.module('a2.jobs', [
         $scope.showInfo = false;
     };
 
+    Project.getInfo(function(info){
+        $scope.project = info;
+        $scope.showErrorBanner = $scope.project && $scope.project.disabled && a2UserPermit.isProjectMember()
+    });
+
     var hideJob = function(jobId, action) {
         $http.get('/api/project/' + Project.getUrl() + '/jobs/hide/' + jobId)
             .success(function(data) {

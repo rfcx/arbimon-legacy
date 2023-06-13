@@ -13,7 +13,7 @@ angular.module('a2.browser_recordings_by_playlist', [
         template   : '/app/visualizer/browser/recordings/by-playlist/recordings-by-playlist.html'
     });
 })
-.service('a2PlaylistLOVO', function($q, makeClass, a2Playlists, a2Pager, $state, $localStorage){
+.service('a2PlaylistLOVO', function($q, makeClass, a2Playlists, a2Pager, $state, $localStorage, Project){
     return makeClass({
         static: {
             PageSize : 10,
@@ -79,9 +79,13 @@ angular.module('a2.browser_recordings_by_playlist', [
                 }
             };
             self.loading = true;
+            Project.getInfo(function(info){
+                return this.isDisabled = info.disabled === 1
+            })
             a2Playlists.getData(self.playlist.id, opts, function(recordings){
                 self.list = recordings;
                 recordings.forEach(function(recording){
+                    recording.isDisabled = this.isDisabled
                     recording.caption = [recording.site, moment.utc(recording.datetime).format('lll')].join(', ');
                     recording.vaxis = {
                         font:'7px', color:'#333333',

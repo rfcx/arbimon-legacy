@@ -5,7 +5,7 @@
                 <div class="bar" ng-style="{width: ((100*audio_player.getCurrentTime()/visobject.duration) | round)+'%'}"></div>
             </div>
             <div class="center-block">
-                <div class="btn-toolbar" >
+                <div class="btn-toolbar" ng-class="{'row-disabled': visobject.isDisabled }">
                     <div class="btn-group ml-1">
                         <button class="btn btn-default btn-sm"
                             ng-disabled="!audio_player.has_recording"

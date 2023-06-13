@@ -23,7 +23,7 @@ angular.module('a2.analysis.patternmatching', [
         templateUrl: '/app/analysis/patternmatching/list.html'
     });
 })
-.controller('PatternMatchingCtrl' , function($scope, $modal, JobsData, $location, notify, $q, a2PatternMatching, a2UserPermit, $state, $stateParams) {
+.controller('PatternMatchingCtrl' , function($scope, $modal, JobsData, $location, notify, $q, a2PatternMatching, a2UserPermit, $state, $stateParams, Project) {
     $scope.selectedPatternMatchingId = $stateParams.patternMatchingId;
     $scope.loading = { rows: false, showRefreshBtn: false };
     $scope.paginationSettings = {
@@ -221,6 +221,7 @@ angular.module('a2.analysis.patternmatching', [
         this.projecturl = Project.getUrl();
         this.fetchDetails()
             .then(function() {
+                this.getProjectData()
                 return this.loadSitesList();
             }.bind(this))
             .then(function() {
@@ -254,6 +255,12 @@ angular.module('a2.analysis.patternmatching', [
             { class:"fa val-0", text: "Not Present", value: 0 },
             { class:"fa val-null", text: "Clear", value: null },
         ],
+    },
+
+    getProjectData: function() {
+        Project.getInfo(function(info){
+            $scope.isProjectDisabled = info.disabled === 1;
+        })
     },
 
     fetchDetails: function() {
@@ -686,7 +693,7 @@ angular.module('a2.analysis.patternmatching', [
             self.loading.templates = true;
             return a2Templates.getList().then((function(templates){
                 self.loading = false;
-                self.list.templates = templates;
+                self.list.templates = templates.filter(t => !t.disabled);
             }.bind(this))).catch((function(err){
                 self.loading = false;
                 self.list.templates = [];

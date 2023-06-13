@@ -36,7 +36,8 @@ var Templates = {
             "CONCAT('https://"+config('aws').bucketName+".s3."+config('aws').region+".amazonaws.com/', T.`uri`) as `uri`",
             "T.`x1`", "T.`y1`", "T.`x2`", "T.`y2`",
             "T.`date_created`",
-            "T.user_id"
+            "T.user_id",
+            "T.disabled"
         ];
 
         if (options.id) {

@@ -103,6 +103,7 @@ router.get('/:projecturl?/', function(req, res, next) {
                     features:{
                         pattern_matching: !!project.pattern_matching_enabled,
                         citizen_scientist: !!project.citizen_scientist_enabled,
+                        disabled: !!project.disabled,
                     },
                     super: !!req.session.user.isSuper,
                     permissions: rows.map(function(perm) { return perm.name; }),
