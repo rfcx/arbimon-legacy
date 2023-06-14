@@ -65,6 +65,7 @@ async function main () {
     else if (projection_parameters && projection_parameters.species) {
         // Process the Occupancy model report
         const data = await recordings.exportOccupancyModels(projection_parameters, filters)
+        rowData.species_name = filters.species_name || projection_parameters.species
         return processOccupancyModelStream(data, rowData, currentTime, message, jobName).then(async () => {
             console.log(`arbimon-recording-export job finished: occupancy models report for ${message}`)
         })
@@ -263,7 +264,8 @@ async function processOccupancyModelStream (results, rowData, currentTime, messa
             csv_stringify(_buf, { header: true, columns: fields }, async (err, data) => {
                 const content = Buffer.from(data).toString('base64')
                 try {
-                    await sendEmail('Arbimon export completed', 'occupancy-model.csv', rowData, content, false)
+                    const title = 'occupancy-model-' + rowData.species_name + '.csv'
+                    await sendEmail('Arbimon export completed', title, rowData, content, false)
                     await updateExportRecordings(rowData, { processed_at: currentTime })
                     await recordings.closeConnection()
                     resolve()
