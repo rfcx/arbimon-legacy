@@ -3,7 +3,6 @@ var config = require('../config');
 var sqlutil = require('./sqlutil');
 var q = require('q');
 var showQueriesInConsole = true;
-
 var dbpool = {
     pool: undefined,
     getPool: function(){
@@ -36,7 +35,6 @@ var dbpool = {
         var release_fn = connection.release;
         connection.$_qd_enabled_$ = true;
         connection.query = function(sql, values, cb) {
-            var sql_txt = sql.sql || sql;
             if (values instanceof Function) {
                 cb = values;
                 values = undefined;
@@ -60,6 +58,7 @@ var dbpool = {
 
     getConnection : function(callback){
         return q.ninvoke(dbpool.getPool(), 'getConnection').then(function (connection){
+            dbpool.enable_query_debugging(connection);
             return connection;
         }).catch(function (err){
             console.error('connection error:', err);
