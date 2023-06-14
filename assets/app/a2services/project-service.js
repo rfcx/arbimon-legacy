@@ -95,7 +95,7 @@ angular.module('a2.srv.project', [
                 }
                 return a2APIService.get('/recordings/search-count', {params:query || {}});
             },
-            getRecordingData: function(filters, projection, ){
+            getRecordingData: function(filters, projection){
                 if (filters.tags) {
                     filters.tags = filters.tags.flat();
                 }
