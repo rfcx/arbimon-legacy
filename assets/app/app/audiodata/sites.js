@@ -370,13 +370,17 @@ angular.module('a2.audiodata.sites', [
             return;
         }
         var list = [], siteIds = [];
-        $scope.sites.forEach(function(site) {
+        $scope.sites.forEach(function(site, index) {
             if (site.rec_count === 0 && !list.includes(site.name)) {
                 list.push(site.name)
                 siteIds.push(site.id)
             }
         })
-        console.log(list, siteIds)
+        if (list.length > 3) {
+            const msg = '& ' + (list.length - 3) + ' other sites'
+            list = list.slice(0, 3)
+            list.push(msg)
+        }
         var modalInstance = $modal.open({
             templateUrl: '/common/templates/pop-up.html',
             controller: function() {

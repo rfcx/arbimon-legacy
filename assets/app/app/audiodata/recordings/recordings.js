@@ -169,7 +169,7 @@ angular.module('a2.audiodata.recordings', [
         });
 
         if (!recs || !recs.length){
-            return notify.log('Recordings from imported sites can not be deleted');
+            return notify.log('There are not any recordings to delete');
         }
 
         const recCount = recs.reduce(function(_, rec){
@@ -181,12 +181,19 @@ angular.module('a2.audiodata.recordings', [
         messages.push('Are you sure you want to delete the following?');
         Object.keys(recCount).forEach(function(site, index) {
             const s = recCount[site] > 1 ? 's' : '';
-            if(index < 4){
+            if(index < 3){
                 list.push(recCount[site] + ' recording'+s+' from "' + site + '"');
             }
         });
         if (Object.keys(recCount).length > 3) {
-            list.push('& 100 recordings from 5 other sites')
+            let count = 0
+            Object.keys(recCount).forEach(function(site, index) {
+                if (index >= 3) {
+                    count = count + recCount[site]
+                }
+            });
+            const msg = '& ' + count + ' recordings from ' + (Object.keys(recCount).length - 3) + ' sites'
+            list.push(msg)
         }
 
         return $modal.open({
@@ -229,7 +236,7 @@ angular.module('a2.audiodata.recordings', [
             messages.push('Are you sure you want to delete the following?');
             recCount.forEach(function(entry, index) {
                 var s = entry.count > 1 ? 's' : '';
-                if(!entry.imported && index < 4){
+                if(!entry.imported && index < 3){
                     list.push(entry.count + ' recording'+s+' from "' + entry.site + '"');
                 } else if (entry.imported) {
                     importedCount += entry.count;
@@ -237,7 +244,13 @@ angular.module('a2.audiodata.recordings', [
                 }
             });
             if (recCount.length > 3) {
-                const msg = '& 100 recordings from ' + (recCount.length - 3) + ' other sites'
+                let count = 0
+                recCount.forEach(function(entry, index) {
+                    if (index >= 3){
+                        count = count + entry.count
+                    }
+                });
+                const msg = '& ' + count + ' recordings from other sites'
                 list.push(msg)
             }
             if(importedCount){
