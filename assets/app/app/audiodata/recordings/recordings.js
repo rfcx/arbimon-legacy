@@ -192,7 +192,7 @@ angular.module('a2.audiodata.recordings', [
                     count = count + recCount[site]
                 }
             });
-            const msg = '& ' + count + ' recordings from ' + (Object.keys(recCount).length - 3) + ' sites'
+            const msg = '& ' + count + ' recordings from ' + (Object.keys(recCount).length - 3) + ' other sites'
             list.push(msg)
         }
 
@@ -250,7 +250,7 @@ angular.module('a2.audiodata.recordings', [
                         count = count + entry.count
                     }
                 });
-                const msg = '& ' + count + ' recordings from other sites'
+                const msg = '& ' + count + ' recordings from ' + (recCount.length - 3) + ' other sites'
                 list.push(msg)
             }
             if(importedCount){
