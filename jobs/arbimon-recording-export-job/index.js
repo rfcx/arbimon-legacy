@@ -9,6 +9,7 @@ const projects = require('../../app/model/projects')
 const stream = require('stream');
 const csv_stringify = require('csv-stringify');
 const mandrill = require('mandrill-api/mandrill')
+const config_hosts = require('../../config/hosts');
 const fs = require('fs')
 const { saveLatestData, combineFilename } = require('../services/storage')
 const S3_BUCKET_ARBIMON = process.env.S3_BUCKET_ARBIMON
