@@ -376,6 +376,10 @@ angular.module('a2.audiodata.sites', [
                 siteIds.push(site.id)
             }
         })
+        if (!list.length) {
+            notify.log("There is no empty site in your project");
+            return;
+        }
         if (list.length > 3) {
             const msg = '& ' + (list.length - 3) + ' other sites'
             list = list.slice(0, 3)
