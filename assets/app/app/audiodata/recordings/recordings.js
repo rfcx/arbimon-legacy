@@ -186,7 +186,7 @@ angular.module('a2.audiodata.recordings', [
             }
         });
         if (Object.keys(recCount).length > 3) {
-            let count = 0
+            var count = 0
             Object.keys(recCount).forEach(function(site, index) {
                 if (index >= 3) {
                     count = count + recCount[site]
@@ -244,7 +244,7 @@ angular.module('a2.audiodata.recordings', [
                 }
             });
             if (recCount.length > 3) {
-                let count = 0
+                var count = 0
                 recCount.forEach(function(entry, index) {
                     if (index >= 3){
                         count = count + entry.count
@@ -326,7 +326,9 @@ angular.module('a2.audiodata.recordings', [
     };
 
     this.exportRecordings = function(listParams) {
-        if (a2UserPermit.isSuper()) return this.openExportPopup(listParams)
+        if (a2UserPermit.isSuper()) {
+            return this.openExportPopup(listParams)
+        }
         if ((a2UserPermit.all && !a2UserPermit.all.length) || !a2UserPermit.can('export report')) {
             return notify.error('You do not have permission to export data');
         }
