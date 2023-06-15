@@ -1589,7 +1589,10 @@ var Recordings = {
                 ]);
             }
 
-            if(parameters.sites) {
+            if (parameters.sites_ids) {
+                builder.addConstraint('s.site_id IN (?)', [parameters.sites_ids]);
+            }
+            else if(parameters.sites) {
                 builder.addConstraint('s.name IN (?)', [parameters.sites]);
             }
 
