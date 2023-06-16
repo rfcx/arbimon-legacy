@@ -67,11 +67,12 @@ router.post('/update', function(req, res, next) {
     if (site.project && site.project.project_id !== project.project_id) {
         site.project_id = site.project.project_id;
     }
-    model.sites.exists(site.name, site.project_id || project.project_id, async function(err, exists) {
+    model.sites.find({ name: site.name, project_id: site.project_id || project.project_id }, async function(err, result) {
         if(err) return next(err);
 
-        if(exists)
+        if (result.length && result[0].id ==! site.id) {
             return res.json({ error: 'Site with same name already exists'});
+        }
 
         model.sites.updateSite(site, req.session.idToken).then(function() {
             res.json({ message: 'Site updated' });
