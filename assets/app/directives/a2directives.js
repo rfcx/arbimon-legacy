@@ -901,7 +901,6 @@ angular.module('a2.directives', [
     }
 
     var makeChart = function(element, data, axes){
-        console.log("c3ChartDisplay link: makeChart = function(element, data, axes){");
         var celem = element.find('div');
         if(!data || !axes){
             celem.remove();
@@ -929,7 +928,6 @@ angular.module('a2.directives', [
         link: function (scope, element, attrs) {
             var chart;
             scope.$watch('axes', function(o,n){
-                console.log("scope.$watch('axes', function(o,n){",o,n);
                 if(!chart || o != n) chart = makeChart(element, scope.data, scope.axes, chart);
             });
             scope.$watch('data', function(o,n){

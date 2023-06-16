@@ -2,7 +2,7 @@
     <div class="col-md-7">
 
 
-<div class="row">
+<div class="row" a2-scroll="onScroll($event, $controller)" a2-scroll-on="window">
     <div class="col-md-push-6 col-md-6 toolbar">
         <input class="form-control" type="text" placeholder="Search by name" ng-model="search" ng-change="onFilterChanged()">
     </div>
@@ -85,7 +85,6 @@
         </div>
     </div>
 </div>
-
 </div>
 <div class="col-md-5">
     <ul class="nav nav-tabs">
@@ -208,8 +207,8 @@
             <c3-chart-display data="status_controller.chart.data" axes="status_controller.chart.axes"></c3-chart-display>
         </div>
     </div>
-    <div ng-show="show.map" class="panel" ng-class="{'map-position': scrollMap()}" ng-style="{top: getMapHeaderTop()}">
-        <div class="map" id="map-site"></div>
+    <div ng-show="show.map" class="panel" ng-class="{'map-position': scrollMap(), 'map-position-static': scrolledPastHeader}" ng-style="{top: getMapHeaderTop()}">
+        <div class="map" id="mapSite"></div>
     </div>
     <div ng-if="images && images.length">
         <ul class="tree">

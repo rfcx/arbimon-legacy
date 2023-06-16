@@ -31,7 +31,6 @@ angular.module('a2.googlemaps',[])
             apiKey = key;
         },
         $get: function($window, $q){
-            console.log("$get: function($window, $q){");
             if(!defer){
                 defer = $q.defer();
                 loadScript($window, $q);

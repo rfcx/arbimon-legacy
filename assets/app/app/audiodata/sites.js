@@ -56,17 +56,16 @@ angular.module('a2.audiodata.sites', [
                 });
             }
         }
-        a2GoogleMapsLoader.then(function(google){
-            $scope.map = new google.maps.Map($window.document.getElementById('map-site'), {
+        a2GoogleMapsLoader.then(function(google) {
+            $scope.map = new google.maps.Map($window.document.getElementById('mapSite'), {
                 center: { lat: 0, lng: 0},
                 mapTypeId: google.maps.MapTypeId.SATELLITE,
                 zoom: 8, minZoom: 2
             });
             $scope.fitBounds()
         });
-
-        const mapHeader = $window.document.getElementById('mapHeader')
-        $scope.mapHeaderTop = mapHeader.getBoundingClientRect();
+        $scope.mapHeader = $window.document.getElementById('mapHeader')
+        $scope.mapHeaderPosition = mapHeader.getBoundingClientRect();
     });
 
     $scope.fitBounds = function() {
@@ -76,11 +75,37 @@ angular.module('a2.audiodata.sites', [
             if (site.lat > 85 || site.lat < -85 || site.lon > 180 || site.lon < -180) {
                 return;
             }
+            var marker
             const position = new google.maps.LatLng(site.lat, site.lon);
-            const marker = new google.maps.Marker({
-                position: position,
-                title: site.name
-            });
+            // set custop pin to selected site
+            if ($scope.selected && ($scope.selected.id === site.id)) {
+                marker = new google.maps.Marker({
+                    position: position,
+                    title: site.name,
+                    icon: {
+                        url: 'http://icons.iconarchive.com/icons/paomedia/small-n-flat/48/map-marker-icon.png',
+                    }
+                });
+            }
+            else {
+                marker = new google.maps.Marker({
+                    position: position,
+                    title: site.name
+                });
+            }
+            // add draggable layer for an editig site
+            if ($scope.editing) {
+                marker.setDraggable(true);
+                $scope.map.panTo(position);
+                $scope.map.setZoom(8)
+
+                google.maps.event.addListener(marker, 'dragend', function(position) {
+                    $scope.$apply(function () {
+                        $scope.temp.lat = position.latLng.lat();
+                        $scope.temp.lon = position.latLng.lng();
+                    });
+                });
+            }
             marker.addListener("click", () => {
                 $scope.sel(site)
                 $scope.scrollTo(site.id)
@@ -103,12 +128,28 @@ angular.module('a2.audiodata.sites', [
         $anchorScroll(bookmark)
     }
 
+    $scope.onScroll = function($event, $controller){
+        this.scrollElement = $controller.scrollElement;
+        this.scrollPos = $controller.scrollElement.scrollY;
+        $scope.scrollPos = this.scrollPos
+        $scope.scrolledPastHeader = this.scrollPos < 600;
+    }
+
     $scope.getMapHeaderTop = function() {
-        return ($scope.mapHeaderTop + 51) + 'px' || 122 + 'px'
+        // calculate top offset for the map
+        const defaultOffset = '122px'
+        if ($scope.mapHeaderPosition) {
+            const topOffset = $scope.mapHeaderPosition.top + $scope.mapHeader.offsetHeigh
+            return topOffset < 1 ? defaultOffset : topOffset
+        }
+        else return defaultOffset
     }
 
     $scope.scrollMap = function($event, $controller) {
-        return $scope.show.map && $scope.editing === false && $scope.creating === false && $scope.sites && $scope.sites.length > 15
+        return $scope.show.map && $scope.editing === false
+            && $scope.creating === false
+            && $scope.sites && $scope.sites.length > 15
+            && $scope.scrollPos
     },
 
     $scope.onFilterChanged = function() {
@@ -497,15 +538,11 @@ angular.module('a2.audiodata.sites', [
         Project.getInfo(function(data) {
             $scope.temp.project = data;
         });
-        $scope.marker.setDraggable(true);
-
-        google.maps.event.addListener($scope.marker, 'dragend', function(position) {
-            $scope.$apply(function () {
-                $scope.temp.lat = position.latLng.lat();
-                $scope.temp.lon = position.latLng.lng();
-            });
-        });
         $scope.editing = true;
+
+        // rebuild map pins
+        $scope.deleteMarkers()
+        $scope.fitBounds()
     };
 
     $scope.onSelect = function($item) {
@@ -549,14 +586,15 @@ angular.module('a2.audiodata.sites', [
                         console.log('\nerr', err);
                     });
             }
-
-            $scope.clearMarkers()
+            // rebuild map pins
+            $scope.deleteMarkers()
             $scope.fitBounds()
+            // zoom in to the selected pin
             if ($scope.selected) {
                 a2GoogleMapsLoader.then(function(google) {
                     var position = new google.maps.LatLng($scope.selected.lat, $scope.selected.lon);
                     $scope.map.panTo(position);
-                    $scope.map.setZoom(6)
+                    $scope.map.setZoom(8)
                 });
             }
         });
