@@ -13,21 +13,19 @@
                     <div class="roi-thumbnail" >
                         <img ng-src="{{controller.patternMatching.template.uri}}" class="roi-img"/>
                         <a class="roi-btn-bl" ng-href="{{controller.getTemplateVisualizerUrl(controller.patternMatching.template)}}" ng-click="$event.stopPropagation();"
-                            tooltip="{{ isProjectDisabled ? 'Unable to visualize your recordings due to corrupted data' : 'View in Visualizer' }}"
+                            tooltip="View in Visualizer"
                         >
                             <i tooltip-placement="left"
                                 tooltip-append-to-body="true"
-                                class="fa fa-cubes"
-                                ng-class="{'row-disabled': isProjectDisabled }">
+                                class="fa fa-cubes">
                             </i>
                         </a>
                         <a class="roi-btn-br" ng-click="controller.playTemplateAudio();$event.stopPropagation();"
-                            tooltip="{{ isProjectDisabled ? 'Unable to listen to your recordings due to corrupted data' : 'Play Audio' }}"
+                            tooltip="Play Audio"
                         >
                             <i tooltip-placement="left"
                                 tooltip-append-to-body="true"
-                                class="fa fa-play cs-pointer"
-                                ng-class="{'row-disabled': isProjectDisabled}">
+                                class="fa fa-play cs-pointer">
                             </i>
                         </a>
                         <div class="roi-btn-b outside text-sm">
@@ -177,20 +175,18 @@
                         <i class="fa val-{{roi.validated}}"></i>
                     </div>
                     <a class="roi-btn-bl" ng-href="{{controller.getRoiVisualizerUrl(roi)}}" ng-click="$event.stopPropagation();"
-                        title="{{ isProjectDisabled ? 'Unable to visualize your recordings due to corrupted data' : 'View in Visualizer' }}"
+                        title="View in Visualizer"
                     >
                         <i tooltip-placement="left"
                             tooltip-append-to-body="true"
-                            ng-class="{'row-disabled': isProjectDisabled }"
                             class="fa fa-cubes">
                         </i>
                     </a>
                     <a class="roi-btn-br" ng-click="controller.playRoiAudio(roi, $event)"
-                        title="{{ isProjectDisabled ? 'Unable to listen to your recordings due to corrupted data' : 'Play Audio' }}"
+                        title="Play Audio"
                     >
                         <i tooltip-placement="left"
                             tooltip-append-to-body="true"
-                            ng-class="{'row-disabled': isProjectDisabled}"
                             class="fa fa-play">
                         </i>
                     </a>
