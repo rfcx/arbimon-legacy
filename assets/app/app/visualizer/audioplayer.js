@@ -249,6 +249,7 @@ angular.module('a2.visualizer.audio-player', [])
         }).bind(this), (function(error) {
             this.error = true;
             console.warn(error);
+            return notify.error('Unable to listen to your recordings due to corrupted data');
         }).bind(this));
 
     };
