@@ -931,7 +931,6 @@ angular.module('a2.directives', [
                 if(!chart || o != n) chart = makeChart(element, scope.data, scope.axes, chart);
             });
             scope.$watch('data', function(o,n){
-                console.log("scope.$watch('data', function(o,n){",o,n);
                 if(!chart || o != n){
                     chart = makeChart(element, scope.data, scope.axes, chart);
                 } else if(chart){

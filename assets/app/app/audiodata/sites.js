@@ -94,7 +94,8 @@ angular.module('a2.audiodata.sites', [
                 });
             }
             // add draggable layer for an editig site
-            if ($scope.editing) {
+            if (($scope.editing || $scope.creating) && ($scope.temp && $scope.temp.id === site.id)) {
+                console.log($scope.temp.id, site.id, $scope.temp.id === site.id)
                 marker.setDraggable(true);
                 $scope.map.panTo(position);
                 $scope.map.setZoom(8)
@@ -124,7 +125,7 @@ angular.module('a2.audiodata.sites', [
     $scope.scrollTo = function(id) {
         const bookmark = 'site-' + id;
         $anchorScroll.yOffset = 60;
-        console.log(id, $anchorScroll, bookmark)
+        console.log(bookmark);
         $anchorScroll(bookmark)
     }
 
@@ -360,6 +361,9 @@ angular.module('a2.audiodata.sites', [
 
             Project.getSites({ count: true, logs: true }, function(sites) {
                 $scope.sortByLastUpdated(sites);
+                // rebuild map pins
+                $scope.deleteMarkers()
+                $scope.fitBounds()
             });
 
             var message = (action == "update") ? "Site updated" : "Site created";
@@ -399,6 +403,9 @@ angular.module('a2.audiodata.sites', [
 
                 Project.getSites({ count: true, logs: true }, function(sites) {
                     $scope.sortByLastUpdated(sites);
+                    // rebuild map pins
+                    $scope.deleteMarkers()
+                    $scope.fitBounds()
                 });
                 notify.log('Site removed');
             });
@@ -444,6 +451,9 @@ angular.module('a2.audiodata.sites', [
 
                 Project.getSites({ count: true, logs: true }, function(sites) {
                     $scope.sortByLastUpdated(sites);
+                    // rebuild map pins
+                    $scope.deleteMarkers()
+                    $scope.fitBounds()
                 });
                 notify.log('Empty sites removed');
             });
@@ -480,49 +490,24 @@ angular.module('a2.audiodata.sites', [
     };
 
     $scope.create = function() {
-
         if(!a2UserPermit.can('manage project sites')) {
             notify.error("You do not have permission to add sites");
             return;
         }
-
         $scope.temp = {};
         $scope.set_show('map');
-
-        a2GoogleMapsLoader.then(function(google){
-            if(!$scope.marker) {
-                    $scope.marker = new google.maps.Marker({
-                        position: $scope.map.getCenter(),
-                        title: 'New Site Location'
-                    });
-                    $scope.marker.setMap($scope.map);
-            }
-            else {
-                $scope.marker.setPosition($scope.map.getCenter());
-            }
-
-            $scope.marker.setDraggable(true);
-            $scope.creating = true;
-
-            google.maps.event.addListener($scope.marker, 'dragend', function(position) {
-                $scope.$apply(function () {
-                    $scope.temp.lat = position.latLng.lat();
-                    $scope.temp.lon = position.latLng.lng();
-                });
-            });
-        });
-
         $scope.creating = true;
+        // rebuild map pins
+        $scope.deleteMarkers()
+        $scope.fitBounds()
     };
 
     $scope.edit = function() {
         if(!$scope.selected) return;
-
         if(!a2UserPermit.can('manage project sites')) {
             notify.error("You do not have permission to edit sites");
             return;
         }
-
         $scope.set_show('map');
         $scope.temp = angular.copy($scope.selected);
         $scope.temp.published = ($scope.temp.published === 1);
@@ -539,7 +524,6 @@ angular.module('a2.audiodata.sites', [
             $scope.temp.project = data;
         });
         $scope.editing = true;
-
         // rebuild map pins
         $scope.deleteMarkers()
         $scope.fitBounds()
