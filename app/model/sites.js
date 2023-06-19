@@ -881,6 +881,10 @@ var Sites = {
         queryHandler(q, callback);
     },
 
+    countProjectSites: function(projectId) {
+        return dbpool.query(`SELECT COUNT(site_id) AS count FROM sites WHERE project_id = ${dbpool.escape(projectId)} AND deleted_at is null`).get(0).get('count');
+    },
+
     countSitesToday: function(callback) {
         var q = 'SELECT count(*) AS count \n'+
                 'FROM `sites` \n' +

@@ -98,6 +98,8 @@ router.get('/:projectUrl/info/source-project', function(req, res, next) {
 
 });
 
+// Home page metrics
+
 router.get('/projects-count', function(req, res, next) {
     res.type('json');
     const key = { 'project-count': 'project-count' }
@@ -120,6 +122,71 @@ router.get('/recordings-count', function(req, res, next) {
     res.type('json');
     const key = { 'recording-count': 'recording-count' }
     getCachedMetrics(req, res, key, null, next);
+});
+
+// Dasboard page metrics
+
+router.get('/species-count', function(req, res, next) {
+    res.type('json');
+    let p = req.query.project_id? req.query.project_id : req.project.project_id;
+    const key = { 'project-species-count': `project-${p}-species` }
+    getCachedMetrics(req, res, key, p, next);
+});
+
+router.get('/sites-count', function(req, res, next) {
+    res.type('json');
+    let p = req.query.project_id? req.query.project_id : req.project.project_id;
+    const key = { 'project-site-count': `project-${p}-site` }
+    getCachedMetrics(req, res, key, p, next);
+});
+
+router.get('/playlist-count', function(req, res, next) {
+    res.type('json');
+    let p = req.query.project_id? req.query.project_id : req.project.project_id;
+    const key = { 'project-playlist-count': `project-${p}-playlist` }
+    getCachedMetrics(req, res, key, p, next);
+});
+
+router.get('/pm-job-count', function(req, res, next) {
+    res.type('json');
+    let p = req.query.project_id? req.query.project_id : req.project.project_id;
+    const key = { 'project-pm-job-count': `project-${p}-pm-job` }
+    getCachedMetrics(req, res, key, p, next);
+});
+
+router.get('/rfm-classif-job-count', function(req, res, next) {
+    res.type('json');
+    let p = req.query.project_id? req.query.project_id : req.project.project_id;
+    const key = { 'project-rfm-classif-job-count': `project-${p}-rfm-classif-job` }
+    getCachedMetrics(req, res, key, p, next);
+});
+
+router.get('/rfm-training-job-count', function(req, res, next) {
+    res.type('json');
+    let p = req.query.project_id? req.query.project_id : req.project.project_id;
+    const key = { 'project-rfm-training-job-count': `project-${p}-rfm-training-job` }
+    getCachedMetrics(req, res, key, p, next);
+});
+
+router.get('/aed-job-count', function(req, res, next) {
+    res.type('json');
+    let p = req.query.project_id? req.query.project_id : req.project.project_id;
+    const key = { 'project-aed-job-count': `project-${p}-aed-job` }
+    getCachedMetrics(req, res, key, p, next);
+});
+
+router.get('/clustering-job-count', function(req, res, next) {
+    res.type('json');
+    let p = req.query.project_id? req.query.project_id : req.project.project_id;
+    const key = { 'project-clustering-job-count': `project-${p}-clustering-job` }
+    getCachedMetrics(req, res, key, p, next);
+});
+
+router.get('/soundscape-job-count', function(req, res, next) {
+    res.type('json');
+    let p = req.query.project_id? req.query.project_id : req.project.project_id;
+    const key = { 'project-soundscape-job-count': `project-${p}-soundscape-job` }
+    getCachedMetrics(req, res, key, p, next);
 });
 
 router.post('/:projectUrl/info/update', function(req, res, next) {

@@ -137,7 +137,7 @@ angular.module('a2.home', [
                         project.recCount = count;
                         project.isLoading = false;
                     })
-                    $http.get('/api/project/' + project.url + '/recordings/species-count').success(function(count) {
+                    $http.get('/api/project/' + project.url + '/species-count').success(function(count) {
                         project.speciesCount = count || 0;
                         project.isLoading = false;
                     })

@@ -314,6 +314,10 @@ var Classifications = {
 
         queryHandler(q, callback);
     },
+
+    totalRfmClassificationJobs: function(projectId) {
+        return dbpool.query(`SELECT COUNT(model_id) AS count FROM models WHERE project_id = ${dbpool.escape(projectId)} AND deleted = 0`).get(0).get('count');
+    },
 };
 
 

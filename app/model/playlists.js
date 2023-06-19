@@ -498,7 +498,11 @@ var Playlists = {
     findRecordingsPlaylists: function(recIds) {
         const sql = `SELECT DISTINCT(playlist_id) FROM arbimon2.playlist_recordings WHERE recording_id in (${recIds})`
         return dbpool.query(sql)
-    }
+    },
+
+    countProjectPlaylists: function(projectId) {
+        return dbpool.query(`SELECT COUNT(playlist_id) AS count FROM playlists WHERE project_id = ${dbpool.escape(projectId)} AND status = ${ status.CREATED }`).get(0).get('count');
+    },
 };
 
 module.exports = Playlists;

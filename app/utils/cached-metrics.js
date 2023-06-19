@@ -1,7 +1,7 @@
 var model = require('../model');
 const moment = require('moment');
 
-const getCountForSelectedMetric = async function(key, params) {
+const getCountForSelectedMetric = async function(key, projectId) {
     let count
     switch (key) {
         case 'project-count':
@@ -11,16 +11,40 @@ const getCountForSelectedMetric = async function(key, params) {
             count = await model.jobs.countAnalysesExecuted()
             break;
         case 'species-count':
-            count = await model.recordings.countAllSpecies()
+            count = await model.species.countAllSpecies()
             break;
         case 'recording-count':
             count = await model.recordings.countAllRecordings()
             break;
         case 'project-species-count':
-            count = await model.recordings.countProjectSpecies(params)
+            count = await model.species.countProjectSpecies(projectId)
             break;
         case 'project-recording-count':
-            count = await model.projects.totalRecordings(params)
+            count = await model.projects.totalRecordings(projectId)
+            break;
+        case 'project-site-count':
+            count = await model.sites.countProjectSites(projectId)
+            break;
+        case 'project-playlist-count':
+            count = await model.playlists.countProjectPlaylists(projectId)
+            break;
+        case 'project-pm-job-count':
+            count = await model.patternMatchings.totalPatternMatchings(projectId)
+            break;
+        case 'project-rfm-classif-job-count':
+            count = await model.classifications.totalRfmClassificationJobs(projectId)
+            break;
+        case 'project-rfm-training-job-count':
+            count = await model.trainingSets.totalRfmTrainingJobs(projectId)
+            break;
+        case 'project-aed-job-count':
+            count = await model.AudioEventDetectionsClustering.totalAedJobs(projectId)
+            break;
+        case 'project-clustering-job-count':
+            count = await model.ClusteringJobs.totalClusteringJobs(projectId)
+            break;
+        case 'project-soundscape-job-count':
+            count = await model.soundscapes.totalSoundscapeJobs(projectId)
             break;
     }
     return count || 0

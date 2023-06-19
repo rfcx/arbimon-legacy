@@ -621,8 +621,6 @@ var Soundscapes = {
         });
     },
 
-
-
     __compute_thumbnail_path : function(soundscape, callback){
         soundscape.thumbnail = 'https://' + config('aws').bucketName + '.s3.' + config('aws').region + '.amazonaws.com/' + soundscape.uri;
         callback();
@@ -633,6 +631,12 @@ var Soundscapes = {
             region.tags = tags;
             callback();
         });
+    },
+
+    totalSoundscapeJobs: function(projectId) {
+        return dbpool.query(`SELECT COUNT(soundscape_id) AS count
+            FROM soundscapes
+            WHERE project_id = ${dbpool.escape(projectId)} AND uri is not null`).get(0).get('count');
     },
 
 };
