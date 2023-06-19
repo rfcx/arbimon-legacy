@@ -361,6 +361,11 @@ angular.module('a2.audiodata.sites', [
 
             Project.getSites({ count: true, logs: true }, function(sites) {
                 $scope.sortByLastUpdated(sites);
+                $scope.sel(action === 'create' ? $scope.temp : tempObj).then(function(){
+                    if(p.show){
+                        $scope.set_show(p.show, p.show_path);
+                    }
+                });
                 // rebuild map pins
                 $scope.deleteMarkers()
                 $scope.fitBounds()
