@@ -1036,16 +1036,15 @@ var Projects = {
     },
 
     // this includes recordings processing
-    totalRecordings: function(project_id) {
-        var q = "SELECT count(recording_id) as count \n" +
+    totalRecordings: function(projectId) {
+        const q = "SELECT count(recording_id) as count \n" +
                 "FROM recordings AS r JOIN sites AS s ON s.site_id = r.site_id AND s.deleted_at is null \n"+
-                "WHERE s.project_id = " + dbpool.escape(project_id);
-
+                "WHERE s.project_id = " + dbpool.escape(projectId);
         return dbpool.query(q).get(0).get('count');
     },
 
     recordingsMinMaxDates: function (project_id, callback) {
-        let q = `SELECT min(r.datetime) as min, max(r.datetime) as max FROM recordings r
+        const q = `SELECT min(r.datetime) as min, max(r.datetime) as max FROM recordings r
             JOIN sites s ON r.site_id = s.site_id WHERE s.project_id = ` + dbpool.escape(project_id)
         queryHandler(q, callback);
     },

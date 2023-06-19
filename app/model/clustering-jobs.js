@@ -295,6 +295,14 @@ let ClusteringJobs = {
             })
         ).nodeify(callback);
     },
+
+    totalClusteringJobs: function(projectId) {
+        return dbpool.query(`SELECT COUNT(jpaec.job_id) AS count
+            FROM job_params_audio_event_clustering jpaec
+            JOIN jobs j ON j.job_id = jpaec.job_id
+            WHERE jpaec.project_id = ${dbpool.escape(projectId)} AND jpaec.deleted = 0 AND j.state = "completed"'`).get(0).get('count');
+    },
+
 };
 
 module.exports = ClusteringJobs;

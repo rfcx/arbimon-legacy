@@ -94,6 +94,10 @@ var TrainingSets = {
         }).nodeify(callback);
     },
 
+    totalRfmTrainingJobs: function(projectId) {
+        return dbpool.query(`SELECT COUNT(training_set_id) AS count FROM training_sets WHERE project_id = ${dbpool.escape(projectId)} AND removed = 0`).get(0).get('count');
+    },
+
     /** Finds training sets, given a (non-empty) query.
      * @param {Object} data
      * @param {Object} data.project id of the project associated to this training set.

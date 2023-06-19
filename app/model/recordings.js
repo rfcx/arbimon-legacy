@@ -1960,16 +1960,6 @@ var Recordings = {
         return queryResult;
     },
 
-    countProjectSpecies: function(project_id) {
-        return dbpool.query(`SELECT COUNT(DISTINCT species_id) AS count FROM recording_validations WHERE project_id = ${dbpool.escape(project_id)} AND (present = 1 OR present_review > 0 OR present_aed > 0)`).get(0).get('count');
-    },
-
-    countAllSpecies: function() {
-        const q = 'SELECT COUNT(DISTINCT species_id) AS count FROM recording_validations WHERE present = 1 OR present_review > 0 OR present_aed > 0'
-
-        return dbpool.query(q).get(0).get('count')
-    },
-
     countAllRecordings: function() {
         const q = 'SELECT count(*) AS count FROM recordings'
 

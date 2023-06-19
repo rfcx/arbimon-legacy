@@ -128,7 +128,7 @@ angular.module('a2.srv.project', [
                 });
             },
             getProjectTotalSpecies: function(projectId, callback) {
-                $http.get('/api/project/' + url + '/recordings/species-count', {project_id: projectId})
+                $http.get('/api/project/' + url + '/species-count', {project_id: projectId})
                     .success(function(count) {
                         callback(count);
                     });

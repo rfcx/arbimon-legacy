@@ -123,6 +123,13 @@ let AudioEventDetectionsClustering = {
         return dbpool.query(q);
     },
 
+    totalAedJobs: function(projectId) {
+        return dbpool.query(`SELECT COUNT(jpaed.job_id) AS count
+            FROM job_params_audio_event_detection_clustering jpaed
+            JOIN jobs j ON j.job_id = jpaed.job_id
+            WHERE jpaed.project_id = ${dbpool.escape(projectId)} AND jpaed.deleted = 0 AND j.state = "completed"'`).get(0).get('count');
+    },
+
     updatePresentAedCount: async function(opts) {
         const [aedValidation] = await this.getAedValidation(opts)
         const q = `UPDATE recording_validations SET present_aed = ${aedValidation.count}
