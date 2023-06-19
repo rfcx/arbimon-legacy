@@ -95,7 +95,6 @@ angular.module('a2.audiodata.sites', [
             }
             // add draggable layer for an editig site
             if (($scope.editing || $scope.creating) && ($scope.temp && $scope.temp.id === site.id)) {
-                console.log($scope.temp.id, site.id, $scope.temp.id === site.id)
                 marker.setDraggable(true);
                 $scope.map.panTo(position);
                 $scope.map.setZoom(8)

@@ -244,12 +244,12 @@ angular.module('a2.visualizer.audio-player', [])
                 this.canPlay = true;
             }).bind(this));
             this.audio.addEventListener('error', (function(err) {
+                this.canPlay = false;
                 console.log(err)
             }).bind(this));
         }).bind(this), (function(error) {
             this.error = true;
-            console.warn(error);
-            return notify.error('Unable to listen to your recordings due to corrupted data');
+            console.log('Unable to listen to your recordings due to corrupted data');
         }).bind(this));
 
     };
