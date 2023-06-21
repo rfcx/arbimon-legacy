@@ -17,6 +17,7 @@ var paypal = require('paypal-rest-sdk');
 var config = require('./config');
 const logging = require('./utils/logging')
 const redisClient = require('./utils/redis')
+const cors = require('cors')
 
 AWS.config.update({
     accessKeyId: config('aws').accessKeyId,
@@ -73,6 +74,7 @@ app.use(jwt({
 }));
 
 app.use(cookieParser());
+app.use(cors())
 app.use(busboy({
     limits: {
         fileSize: 1073741824, // 1GB

@@ -143,7 +143,7 @@ router.get('/:projectUrl/sites-count', function(req, res, next) {
 router.get('/:projectUrl/playlist-count', function(req, res, next) {
     res.type('json');
     let p = req.query.project_id? req.query.project_id : req.project.project_id;
-    const key = { 'project-playlist-count': `project-${p}-playlist` }
+    const key = { 'project-playlist-count': `project-${p}-pl` }
     getCachedMetrics(req, res, key, p, next);
 });
 
@@ -157,14 +157,14 @@ router.get('/:projectUrl/pm-job-count', function(req, res, next) {
 router.get('/:projectUrl/rfm-classif-job-count', function(req, res, next) {
     res.type('json');
     let p = req.query.project_id? req.query.project_id : req.project.project_id;
-    const key = { 'project-rfm-classif-job-count': `project-${p}-rfm-classif-job` }
+    const key = { 'project-rfm-classif-job-count': `project-${p}-rfm-cl` }
     getCachedMetrics(req, res, key, p, next);
 });
 
 router.get('/:projectUrl/rfm-training-job-count', function(req, res, next) {
     res.type('json');
     let p = req.query.project_id? req.query.project_id : req.project.project_id;
-    const key = { 'project-rfm-training-job-count': `project-${p}-rfm-training-job` }
+    const key = { 'project-rfm-training-job-count': `project-${p}-rfm-tr` }
     getCachedMetrics(req, res, key, p, next);
 });
 
@@ -178,14 +178,14 @@ router.get('/:projectUrl/aed-job-count', function(req, res, next) {
 router.get('/:projectUrl/clustering-job-count', function(req, res, next) {
     res.type('json');
     let p = req.query.project_id? req.query.project_id : req.project.project_id;
-    const key = { 'project-clustering-job-count': `project-${p}-clustering-job` }
+    const key = { 'project-clustering-job-count': `project-${p}-cluster` }
     getCachedMetrics(req, res, key, p, next);
 });
 
 router.get('/:projectUrl/soundscape-job-count', function(req, res, next) {
     res.type('json');
     let p = req.query.project_id? req.query.project_id : req.project.project_id;
-    const key = { 'project-soundscape-job-count': `project-${p}-soundscape-job` }
+    const key = { 'project-soundscape-job-count': `project-${p}-soundsc` }
     getCachedMetrics(req, res, key, p, next);
 });
 
