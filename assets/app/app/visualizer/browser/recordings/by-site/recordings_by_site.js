@@ -62,13 +62,9 @@ angular.module('a2.browser_recordings_by_site', [
                 opts.recording_id = recording_id;
             };
             this.loading = true;
-            Project.getInfo(function(info){
-                return this.isDisabled = info.disabled === 1
-            })
             Project.getRecordings(key, opts,(function(recordings){
                 recordings = $filter('orderBy')(recordings, 'datetime');
                 recordings.forEach(function(recording) {
-                    recording.isDisabled = this.isDisabled
                     recording.caption = [recording.site, moment.utc(recording.datetime).format('lll')].join(', ');
                     recording.vaxis = {
                         font:'7px', color:'#333333',

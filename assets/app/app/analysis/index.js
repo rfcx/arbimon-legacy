@@ -30,7 +30,6 @@ angular.module('a2.analysis', [
 ){
     Project.getInfo(function(info){
         $scope.project = info;
-        $scope.showErrorBanner = $scope.project && $scope.project.disabled && a2UserPermit.isProjectMember()
     });
 })
 ;
