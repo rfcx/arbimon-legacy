@@ -37,10 +37,6 @@ angular.module('a2.audiodata.recordings', [
         return params;
     };
 
-    Project.getInfo(function(info){
-        return $scope.isDisabled = info.disabled === 1
-    })
-
     this.searchRecs = function(output) {
         $scope.loading = true;
         output = output || ['list'];
