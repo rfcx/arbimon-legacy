@@ -56,7 +56,7 @@
                             <% } %>
                             <li tooltip-placement="bottom" tooltip="<%=  project.name  %>">
                                 <a class="text-overflow navbar-link" style="cursor: default">
-                                    <span><%=  project.name  %></span>
+                                    <span data-external-id="<%= project.external_id %>"><%=  project.name  %></span>
                                 </a>
                             </li>
                             <li ui-sref-active="active" ng-if="!citizenScientistUser">
