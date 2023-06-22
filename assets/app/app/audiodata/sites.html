@@ -45,7 +45,7 @@
     <div ng-class="editing || creating ? 'visible-md-block visible-lg-block' : '' ">
         <a2-table rows="sites" on-select="sel(row)" data-checked="checked" no-checkbox>
             <field title="Name" key="name" tdclass="name hidelongtext">
-                <span id="site-{{row.id}}" title="{{ row.name }}">{{ row.name }}</span>
+                <span id="site-{{row.id}}" data-external-id="{{ row.external_id }}" title="{{ row.name }}">{{ row.name }}</span>
                 <span class="a2-badge" title="ARBIMON ONLY" ng-if="!row.external_id">ARBIMON ONLY</span>
             </field>
             <ng-container ng-if="!row.imported && (row.has_logs || row.token_created_on)">
