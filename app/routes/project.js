@@ -128,7 +128,8 @@ router.get('/:projecturl?/', function(req, res, next) {
 
                 req.project = {
                     id: project.project_id,
-                    name: project.name
+                    name: project.name,
+                    external_id: project.external_id
                 };
 
                 var appAbsUrl = req.appHost + req.originalUrl;
