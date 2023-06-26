@@ -356,7 +356,7 @@ var Soundscapes = {
                     var name = soundscape.name + ', ' + region.name + ' recordings sample';
                     return db.promisedQuery(
                         "INSERT INTO playlists(project_id, name, playlist_type_id, uri, status) \n" +
-                        " VALUES (?, ?, ?, ?)",[
+                        " VALUES (?, ?, ?, ?, ?)",[
                         soundscape.project, name, Soundscapes.PLAYLIST_TYPE, null, 20
                     ]).then(function(results){
                         region.playlist = results.insertId;
