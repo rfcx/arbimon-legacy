@@ -10,6 +10,7 @@ const request = require('request');
 const { promisify } = require('util');
 const rp = promisify(request);
 const fs = require('fs');
+const SongMeterFileInfo = require('../utils/song-meter-file-info');
 
 // model for uploads processing status in status bar
 module.exports = {
@@ -92,9 +93,33 @@ module.exports = {
         queryHandler(q, callback);
     },
 
+    extractSongMeterFileInfo: async function(file) {
+        if (file.extension !== 'wav') return new SongMeterFileInfo('')
+        try {
+          const metadata = await fileHelper.readGuanMetadata(file.path)
+          return new SongMeterFileInfo(metadata || '')
+        } catch (e) {
+          console.error('Read file info error', e)
+          return new SongMeterFileInfo('')
+        }
+    },
+
     uploadFile: async function(data, idToken, callback) {
         const { originalFilename, filePath, fileExt, streamId, timestamp } = data
-        const uploadOptions = { originalFilename, filePath, streamId, timestamp }
+        let uploadFilePath = filePath
+        let uploadFileExt = fileExt
+        if (fileExt === 'wav') {
+            try {
+                const songMeterFileInfo = await this.extractSongMeterFileInfo({path: filePath, extension: fileExt})
+                const metadata = songMeterFileInfo.metadata ? {comment: songMeterFileInfo.formattedMetadata, artist: songMeterFileInfo.model} : null
+                const uploadFile = await fileHelper.convert(filePath, metadata)
+                uploadFilePath = uploadFile.path
+                uploadFileExt = 'flac'
+            } catch (error) {
+                console.error('error', error)
+            }
+        }
+        const uploadOptions = { originalFilename, uploadFilePath, streamId, timestamp }
         return this.requestUploadUrl(uploadOptions, idToken)
             .then(async (data) => {
                 if (!data) {
@@ -102,7 +127,7 @@ module.exports = {
                     return;
                 }
                 const { url, uploadId } = data
-                this.performUpload(url, filePath, fileExt).then((data) => {
+                this.performUpload(url, uploadFilePath, fileExt).then((data) => {
                     console.info('Perform upload status', data.statusCode)
                 })
                 callback(undefined, uploadId)
@@ -111,9 +136,10 @@ module.exports = {
     },
 
     requestUploadUrl: async function(data, idToken) {
-        const { originalFilename, filePath, streamId, timestamp } = data
+        const { originalFilename, uploadFilePath, streamId, timestamp } = data
         const errorMessage = 'Failed to upload recording'
-        const sha1 = fileHelper.getCheckSum(filePath)
+        const sha1 = fileHelper.getCheckSum(uploadFilePath)
+        console.log('\n\n-------sha1------', sha1)
         const body = { filename: originalFilename, checksum: sha1, stream: streamId, timestamp: timestamp }
         const options = {
             method: 'POST',

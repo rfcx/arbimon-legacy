@@ -12,6 +12,8 @@
     "postinstall": "node_modules/.bin/bower i --allow-root"
   },
   "dependencies": {
+    "@ffmpeg-installer/ffmpeg": "^1.0.20",
+    "@ffprobe-installer/ffprobe": "^1.0.12",
     "@rfcx/http-utils": "^1.0.2",
     "async": "~2.6.3",
     "aws-sdk": "^2.1388.0",
@@ -52,8 +54,10 @@
     "q": "^1.5.1",
     "redis": "^4.6.4",
     "request": "^2.88.0",
+    "riff-file": "^1.0.3",
     "sha1-file": "^1.0.4",
     "sprintf-js": "~1.1.2",
+    "fluent-ffmpeg": "^2.1.2",
     "tz-lookup": "^6.1.25",
     "validator": "~5.7.0",
     "winston": "^3.8.2"

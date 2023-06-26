@@ -1,6 +1,11 @@
 const sha1File = require('sha1-file')
 const fs = require('fs')
 const moment = require('moment-timezone')
+const audioService = require('./audio')
+const path = require('path')
+const { RIFFFile } = require('riff-file')
+const audioFilePattern = /\.(wav|flac|opus)$/i;
+const { unpackString } = require('byte-data')
 
 const fileHelper = {
     getExtension: function(fileName) {
@@ -27,6 +32,18 @@ const fileHelper = {
     },
     formattedTzOffsetFromTimezoneName: function(timezoneName) {
         return this.getMomentFromTimezoneName(timezoneName).format('zZ')
+    },
+    /** Function to read SongMeter metadata in GUAN format */
+    readGuanMetadata: function(filePath) {
+        const wavFile = fs.readFileSync(filePath)
+        const riff = new RIFFFile()
+        riff.setSignature(wavFile)
+        const guanChunk = riff.findChunk('guan')
+        return guanChunk ? unpackString(wavFile, guanChunk.chunkData.start, guanChunk.end) : null
+    },
+    convert: async function(filePath, metadata) {
+        const flacFilePath = filePath.replace(audioFilePattern, '.flac');
+        return audioService.convert(filePath, flacFilePath, metadata)
     }
 }
 
