@@ -860,6 +860,20 @@ var Sites = {
         })
     },
 
+    getDeployedDate: async function(streamIds, idToken) {
+        const options = {
+            method: 'GET',
+            url: `${rfcxConfig.deviceBaseUrl}/deployments?streamIds=${streamIds}`,
+            headers: {
+                'content-type': 'application/json',
+                Authorization: `Bearer ${idToken}`,
+            }
+        }
+        return rp(options).then((response) => {
+            return response.body
+        })
+    },
+
     setExternalId: function (siteId, externalId, connection) {
         return (connection? connection.query : dbpool.query)(`UPDATE sites SET external_id = "${externalId}" WHERE site_id = ${siteId}`, [])
     },

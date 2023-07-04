@@ -69,7 +69,7 @@
             <field title="Timezone" key="timezone" tdclass="timezone hidelongtext">
                 <span title="{{ row.timezone }}">{{ row.utc }}</span>
             </field>
-            <field title="Last updated" key="date" tdclass="date hidelongtext">
+            <field title="Updated" key="date" tdclass="date hidelongtext">
                 <span title="{{ row.updated_at | moment : 'lll' : row.timezone }}">
                     {{ row.updated_at | moment : 'lll' : row.timezone }}
                 </span>
