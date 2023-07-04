@@ -21,7 +21,7 @@ angular.module('c3-charts', [])
                     type : attrs.type,
                 }
             });
-            
+
             scope.$watch('columns', function() {
                 if(scope.columns) {
                     scope.chart.load({
