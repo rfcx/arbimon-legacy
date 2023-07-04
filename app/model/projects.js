@@ -964,7 +964,7 @@ var Projects = {
     validationsStats: function(projectUrl, speciesId, songtypeId, callback) {
         var q = "SELECT coalesce(SUM(CASE WHEN present_review > 0 OR present_aed > 0 THEN 1 ELSE present END), 0) AS present, \n"+
                 "coalesce(SUM(CASE WHEN present = 0 AND present_review = 0 AND present_aed = 0 THEN 1 ELSE 0 END), 0) AS absent, \n"+
-                "COUNT(*) AS total \n"+
+                "(coalesce(SUM(CASE WHEN present_review > 0 OR present_aed > 0 THEN 1 ELSE present END), 0)+coalesce(SUM(CASE WHEN present = 0 AND present_review = 0 AND present_aed = 0 THEN 1 ELSE 0 END), 0)) AS total \n"+
                 "FROM `recording_validations` rv, `projects` p \n"+
                 "WHERE rv.`project_id` = p.`project_id` \n"+
                 "AND p.`url` = ? \n"+
