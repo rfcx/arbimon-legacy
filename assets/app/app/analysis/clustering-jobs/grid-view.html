@@ -182,7 +182,7 @@
                     </div>
                 </span>
             </div>
-            <div ng-if="paginationSettings.totalItems && (paginationSettings.totalItems > paginationSettings.limit)" class="row">
+            <div ng-if="showPagination()" class="row">
                 <div class="col-sm-12 text-center">
                     <pagination total-items="paginationSettings.totalItems"
                         ng-model="paginationSettings.page"

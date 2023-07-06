@@ -891,18 +891,35 @@ angular.module('a2.analysis.clustering-jobs', [
         $scope.getRoisDetails();
     };
 
+    $scope.showPagination = function () {
+        if ($scope.selectedFilterData.value === 'per_cluster') {
+            return $scope.paginationSettings.totalItems && ($scope.gridData.length && $scope.gridData.length > 1)
+        } else {
+            return $scope.paginationSettings.totalItems && ($scope.paginationSettings.totalItems > $scope.paginationSettings.limit)
+        }
+    }
+
     $scope.getRoisDetails = function() {
         if (!$scope.aedData.id.length) {
             return $scope.getStatusForEmptyData();
         }
         $scope.rows = [];
+        var aedData
         $scope.isRoisLoading = true;
-        $scope.paginationSettings.totalItems = $scope.aedData.id.length;
+        if ($scope.selectedFilterData.value === 'per_cluster') {
+            aedData = $scope.gridData[$scope.paginationSettings.page-1].aed;
+            $scope.paginationSettings.totalItems = $scope.gridData.length;
+            $scope.paginationSettings.limit = 1;
+        } else {
+            aedData = $scope.aedData.id.filter((id, i, a) => {
+                return (i >= ($scope.paginationSettings.offset * $scope.paginationSettings.limit)) && (i < ($scope.paginationSettings.page * $scope.paginationSettings.limit))
+            })
+            $scope.paginationSettings.totalItems = $scope.aedData.id.length;
+            $scope.paginationSettings.limit = 100;
+        }
         return a2ClusteringJobs.getRoisDetails({
             jobId: $scope.clusteringJobId,
-            aed: $scope.aedData.id.filter((id, i, a) => {
-                return (i >= ($scope.paginationSettings.offset * $scope.paginationSettings.limit)) && (i < ($scope.paginationSettings.page * $scope.paginationSettings.limit))
-            }),
+            aed: aedData,
             search: $scope.selectedFilterData.value
         }).then(function(data) {
             const groupedData = []
@@ -919,7 +936,13 @@ angular.module('a2.analysis.clustering-jobs', [
                     }
                 })
             })
-            $scope.paginationSettings.totalPages = Math.ceil($scope.paginationSettings.totalItems / $scope.paginationSettings.limit);
+            if ($scope.selectedFilterData.value === 'per_cluster') {
+                $scope.paginationSettings.totalPages = $scope.gridData.length;
+                $scope.paginationSettings.limit = 1;
+            } else {
+                $scope.paginationSettings.totalPages = Math.ceil($scope.paginationSettings.totalItems / $scope.paginationSettings.limit);
+                $scope.paginationSettings.limit = 100;
+            }
             $scope.loading = false;
             $scope.allRois = groupedData
             $scope.isRoisLoading = false;
