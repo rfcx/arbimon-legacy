@@ -911,11 +911,11 @@ angular.module('a2.analysis.clustering-jobs', [
             $scope.paginationSettings.totalItems = $scope.gridData.length;
             $scope.paginationSettings.limit = 1;
         } else {
+            $scope.paginationSettings.limit = 100;
+            $scope.paginationSettings.totalItems = $scope.aedData.id.length;
             aedData = $scope.aedData.id.filter((id, i, a) => {
                 return (i >= ($scope.paginationSettings.offset * $scope.paginationSettings.limit)) && (i < ($scope.paginationSettings.page * $scope.paginationSettings.limit))
             })
-            $scope.paginationSettings.totalItems = $scope.aedData.id.length;
-            $scope.paginationSettings.limit = 100;
         }
         return a2ClusteringJobs.getRoisDetails({
             jobId: $scope.clusteringJobId,

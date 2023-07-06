@@ -153,7 +153,8 @@
                             popover-html="'Frequency Max (Hz): {{(roi.frequency_max) || '(Missing)'}} <br>
                                             Frequency Min (Hz): {{(roi.frequency_min) || 0}} <br>
                                             Duration (s): {{(roi.time_max - roi.time_min).toFixed(2)}} <br>
-                                            Species, songtype: {{ cluster.key }} <br>
+                                            Date Created: {{ roi.date_created ? (roi.date_created | moment : 'lll') : 'Available in Sort per Date filter'}} <br>
+                                            Species, songtype: {{ cluster.key ? cluster.key : roi.scientific_name? roi.scientific_name + ' - ' + roi.songtype : 'no data' }} <br>
                                             Cluster: {{ roi.cluster }} '"
                             popover-trigger="mouseenter"
                             popover-append-to-body="true"
