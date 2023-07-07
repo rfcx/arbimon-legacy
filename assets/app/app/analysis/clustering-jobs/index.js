@@ -877,7 +877,7 @@ angular.module('a2.analysis.clustering-jobs', [
 
     $scope.onSearchChanged = function(item) {
         $scope.selectedFilterData = item;
-        $scope.getRoisDetails().then(() => {
+        $scope.getRoisDetails(true).then(() => {
             clearTimeout(timeout);
             timeout = setTimeout(() => {
                 $scope.markBoxesAsSelected()
@@ -899,13 +899,17 @@ angular.module('a2.analysis.clustering-jobs', [
         }
     }
 
-    $scope.getRoisDetails = function() {
+    $scope.getRoisDetails = function(isFilterChanged) {
         if (!$scope.aedData.id.length) {
             return $scope.getStatusForEmptyData();
         }
         $scope.rows = [];
         var aedData
         $scope.isRoisLoading = true;
+        if (isFilterChanged) {
+            $scope.paginationSettings.page = 1;
+            $scope.paginationSettings.offset = 0;
+        }
         if ($scope.selectedFilterData.value === 'per_cluster') {
             aedData = $scope.gridData[$scope.paginationSettings.page-1].aed;
             $scope.paginationSettings.totalItems = $scope.gridData.length;
