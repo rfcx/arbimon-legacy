@@ -84,6 +84,25 @@ router.post('/recordings/create', verifyToken(), hasRole(['systemUser']), async 
 
 })
 
+router.post('/recordings/delete', verifyToken(), hasRole(['systemUser']), async function(req, res) {
+  try {
+    const converter = new ArrayConverter(req.body)
+    converter.convert('site_external_id').toString();
+    converter.convert('uri').toString();
+
+    await converter.validate();
+    const siteExternalId = converter.transformedArray[0].site_external_id
+    var site = await model.sites.find({ external_id: siteExternalId }).get(0);
+    if (!site) {
+      throw new EmptyResultError('Site with given external_id not found.');
+    }
+    await model.recordings.deleteBySiteAndUris(site.site_id, converter.transformedArray.map(r => r.uri));
+    res.sendStatus(204)
+  } catch (e) {
+    httpErrorHandler(req, res, 'Failed deleting recordings')(e);
+  }
+})
+
 router.get('/recordings/:attr', async function(req, res) {
   const token = await auth0Service.getToken();
   const apiUrl = `${rfcxConfig.mediaBaseUrl}/internal/assets/streams/${req.params.attr}`;

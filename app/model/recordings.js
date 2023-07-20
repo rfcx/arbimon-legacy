@@ -2055,6 +2055,14 @@ var Recordings = {
         });
     },
 
+    deleteBySiteAndUris: async function (site_id, uris) {
+        if (!site_id || !uris || !uris.length) {
+            return
+        }
+        const q = `DELETE FROM recordings WHERE site_id = ? AND uri IN (?)`
+        return dbpool.query(q, [site_id, uris])
+    },
+
     deleteRecordingsFromArbimon: async function(recIds, query) {
         // Remove multiple rows
         const q = `DELETE FROM recordings
