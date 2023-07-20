@@ -222,6 +222,20 @@ var PatternMatchings = {
         return dbpool.query(q).get(0).get('count');
     },
 
+    totalPMSpeciesDetected: async function(project_id) {
+        const q = `SELECT COUNT(DISTINCT species_id) as count
+            FROM pattern_matchings
+            WHERE project_id = ${dbpool.escape(project_id)} and deleted = 0`;
+        return dbpool.query(q).get(0).get('count');
+    },
+
+    totalPMTemplates: async function(project_id) {
+        const q = `SELECT COUNT(DISTINCT template_id) as count
+            FROM pattern_matchings
+            WHERE project_id = ${dbpool.escape(project_id)} and deleted = 0`;
+        return dbpool.query(q).get(0).get('count');
+    },
+
     SEARCH_ROIS_SCHEMA : {
         patternMatching: joi.number().required(),
         site: joi.string(),
