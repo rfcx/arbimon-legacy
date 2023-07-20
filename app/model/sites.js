@@ -860,10 +860,10 @@ var Sites = {
         })
     },
 
-    getDeployedDate: async function(streamIds, idToken) {
+    getDeployedData: async function(projectId, idToken) {
         const options = {
             method: 'GET',
-            url: `${rfcxConfig.deviceBaseUrl}/deployments?streamIds=${streamIds}`,
+            url: `${rfcxConfig.deviceBaseUrl}/deployments?projectIds=${projectId}`,
             headers: {
                 'content-type': 'application/json',
                 Authorization: `Bearer ${idToken}`,

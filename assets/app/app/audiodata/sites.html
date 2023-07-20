@@ -74,6 +74,11 @@
                     {{ row.updated_at | moment : 'lll' : row.timezone }}
                 </span>
             </field>
+            <field title="Deployed" key="deployed" tdclass="date hidelongtext">
+                <span title="{{ row.deployment }}">
+                    {{ row.deployment }}
+                </span>
+            </field>
         </a2-table>
         <div class="jumbotron" ng-show="(!sites || !sites.length > 0) && !loading">
             <h3 class="text-center">

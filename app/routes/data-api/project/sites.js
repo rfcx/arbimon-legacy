@@ -13,13 +13,29 @@ router.get('/', function(req, res, next) {
             has_logs: !!req.query.logs
         },
         utcDiff: !!req.query.utcDiff
-    }).then(function(rows) {
+    }).then(async function(rows) {
+        let deploymentData, deploymentBySite = {}
+        if (req.query.deployment) {
+            try {
+                deploymentData = await model.sites.getDeployedData(req.project.external_id, req.session.idToken)
+                deploymentData = JSON.parse(deploymentData)
+                if (deploymentData && deploymentData.length) {
+                    deploymentData.forEach(data => { return deploymentBySite[data.streamId] = {
+                        streamId: data.streamId,
+                        deployedAt: data.deployedAt
+                    }})
+                }
+            } catch (e) {}
+        }
         for (let row of rows) {
             const isTimezone = row.timezone
             const timezone = isTimezone ? moment().tz(row.timezone).format('ZZ') : '-0000' // UTC+07 , UTC+07:30, 'UTC-00'
             const utc = `${timezone.slice(0, 3)}:${timezone.slice(3)}`
             const reg = /^(.\d*[\d:]*?)\.?:00*$/.exec(utc)
             row.utc = reg && reg[1] ? `UTC${reg[1]}` : `UTC${utc}`
+            if (deploymentBySite && deploymentBySite[row.external_id]) {
+                row.deployment = deploymentBySite[row.external_id].deployedAt ? moment.tz(deploymentBySite[row.external_id].deployedAt, row.timezone).format('YYYY/MM/DD HH:mm') : 'no data'
+            } else row.deployment = 'no data'
         }
         res.json(rows);
     }).catch(next);

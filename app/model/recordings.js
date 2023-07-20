@@ -1590,6 +1590,7 @@ var Recordings = {
             }
 
             if (parameters.sites_ids) {
+                if (Array.isArray(parameters.sites_ids) && !parameters.sites_ids.length) return
                 builder.addConstraint('s.site_id IN (?)', [parameters.sites_ids]);
             }
             else if(parameters.sites) {
