@@ -101,7 +101,10 @@ var dbpool = {
                 });
             } else {
                 var startTime = new Date().getTime();
-                connection.query(query, options, function(err, rows, fields) {
+                let c = connection.query(query, options, function(err, rows, fields) {
+                    if (c && !process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
+                        console.log('=== SQL QUERY\n', c.sql.replace(/\n/g, ' '), '\n===')
+                    }
                     connection.release();
                     callback(err, rows, fields);
                 });
