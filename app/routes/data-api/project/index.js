@@ -147,10 +147,17 @@ router.get('/:projectUrl/playlist-count', function(req, res, next) {
     getCachedMetrics(req, res, key, p, next);
 });
 
-router.get('/:projectUrl/pm-job-count', function(req, res, next) {
+router.get('/:projectUrl/pm-species-detected', function(req, res, next) {
     res.type('json');
     let p = req.query.project_id? req.query.project_id : req.project.project_id;
-    const key = { 'project-pm-job-count': `project-${p}-pm-job` }
+    const key = { 'project-pm-sp-count': `project-${p}-pm-sp` }
+    getCachedMetrics(req, res, key, p, next);
+});
+
+router.get('/:projectUrl/pm-template-count', function(req, res, next) {
+    res.type('json');
+    let p = req.query.project_id? req.query.project_id : req.project.project_id;
+    const key = { 'project-pm-t-count': `project-${p}-pm-t` }
     getCachedMetrics(req, res, key, p, next);
 });
 

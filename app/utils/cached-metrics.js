@@ -28,8 +28,11 @@ const getCountForSelectedMetric = async function(key, projectId) {
         case 'project-playlist-count':
             count = await model.playlists.countProjectPlaylists(projectId)
             break;
-        case 'project-pm-job-count':
-            count = await model.patternMatchings.totalPatternMatchings(projectId)
+        case 'project-pm-sp-count':
+            count = await model.patternMatchings.totalPMSpeciesDetected(projectId)
+            break;
+        case 'project-pm-t-count':
+            count = await model.patternMatchings.totalPMTemplates(projectId)
             break;
         case 'project-rfm-classif-job-count':
             count = await model.classifications.totalRfmClassificationJobs(projectId)
