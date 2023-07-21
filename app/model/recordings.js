@@ -81,6 +81,24 @@ var Recordings = {
         hour   : { subject: 'HOUR(R.datetime)',   project: true,  level:5, next: 'minute', prev:'day'  },
         minute : { subject: 'MINUTE(R.datetime)', project: true,  level:6,                 prev:'hour' }
     },
+    recordingInsertSchema: {
+        site_id:         joi.number().required(),
+        uri:             joi.string().required(),
+        datetime:        joi.string().required(),
+        mic:             joi.optional(),
+        recorder:        joi.optional(),
+        version:         joi.optional(),
+        sample_rate:     joi.number(),
+        precision:       joi.number(),
+        duration:        joi.number(),
+        samples:         joi.number(),
+        file_size:       joi.number(),
+        bit_rate:        joi.string(),
+        sample_encoding: joi.string(),
+        upload_time:     joi.string(),
+        datetime_utc:    joi.string(),
+        meta:  joi.optional(),
+    },
     parseUrl: function(recording_url){
         var patternFound = false, resolved = false;
         var deferred = Q.defer();
@@ -1036,27 +1054,7 @@ var Recordings = {
     },
 
     insert: function(recording, callback) {
-
-        var schema = {
-            site_id:         joi.number().required(),
-            uri:             joi.string().required(),
-            datetime:        joi.date().required(),
-            mic:             joi.optional(),
-            recorder:        joi.optional(),
-            version:         joi.optional(),
-            sample_rate:     joi.number(),
-            precision:       joi.number(),
-            duration:        joi.number(),
-            samples:         joi.number(),
-            file_size:       joi.number(),
-            bit_rate:        joi.string(),
-            sample_encoding: joi.string(),
-            upload_time:     joi.date(),
-            datetime_utc:    joi.date(),
-            meta:  joi.optional(),
-        };
-
-        joi.validate(recording, schema, { stripUnknown: true }, function(err, rec) {
+        joi.validate(recording, Recordings.recordingInsertSchema, { stripUnknown: true }, function(err, rec) {
             if(err) return callback(err);
 
             queryHandler('INSERT INTO recordings (\n' +
@@ -1071,6 +1069,27 @@ var Recordings = {
 
     insertAsync: function(recording) {
         let insert = util.promisify(this.insert)
+        return insert(recording)
+    },
+
+    insertBatch: function(recordings, callback) {
+        const array = joi.array().items(Recordings.recordingInsertSchema)
+        array.validate(recordings, function(err, recs) {
+            const data = recs.map((rec) => {
+                return [rec.site_id, rec.uri, rec.datetime, rec.mic || '(not specified)', rec.recorder || '(not specified)', rec.version || '(not specified)', rec.sample_rate,
+                rec.precision, rec.duration, rec.samples, rec.file_size, rec.bit_rate, rec.sample_encoding, rec.upload_time, rec.datetime_utc, rec.meta]
+            })
+            if(err) return callback(err);
+
+            queryHandler('INSERT INTO recordings (\n' +
+                '`site_id`, `uri`, `datetime`, `mic`, `recorder`, `version`, `sample_rate`, \n'+
+                '`precision`, `duration`, `samples`, `file_size`, `bit_rate`, `sample_encoding`, `upload_time`, `datetime_utc`, `meta`\n' +
+            ') VALUES ?;', [data], callback);
+        });
+    },
+
+    insertBatchAsync: function(recording) {
+        let insert = util.promisify(this.insertBatch)
         return insert(recording)
     },
 
