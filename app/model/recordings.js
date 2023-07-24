@@ -1417,24 +1417,24 @@ var Recordings = {
 
             return Q.all(steps).then(function(){
 
-                var from_clause  = "FROM " + tables.join('\n');
-                var where_clause = dbpool.format("WHERE " + constraints.join('\n AND '), data);
-                var order_clause = 'ORDER BY ' + dbpool.escapeId(parameters.sortBy || 'datetime') + ' ' + (parameters.sortRev ? 'DESC' : '');
-                var limit_clause = (parameters.limit) ? dbpool.escape(parameters.offset || 0) + ', ' + dbpool.escape(parameters.limit) : '';
+                let from_clause  = "FROM " + tables.join('\n');
+                let where_clause = dbpool.format("WHERE " + constraints.join('\n AND '), data);
+                let order_clause = 'ORDER BY ' + dbpool.escapeId(parameters.sortBy || 'datetime') + ' ' + (parameters.sortRev ? 'DESC' : '');
+                let limit_clause = (parameters.limit) ? dbpool.escape(parameters.offset || 0) + ', ' + dbpool.escape(parameters.limit) : '';
 
                 if (sqlOnly) {
                     return [select_clause.list, from_clause, where_clause]
                 }
 
                 return Q.all(outputs.map(function(output){
-                    var query=[
+                    let query=[
                         select_clause[output],
                         from_clause,
                         where_clause
                     ];
                     if(output === 'list') {
-                        var sortBy = parameters.sortBy || 'r.datetime';
-                        var sortRev = parameters.sortRev ? 'DESC' : '';
+                        const sortBy = parameters.sortBy || 'r.datetime';
+                        const sortRev = parameters.sortRev ? 'DESC' : '';
                         query.push('ORDER BY ' + sortBy + ' ' + sortRev);
                         if(limit_clause){
                             query.push("LIMIT " + limit_clause);
@@ -1463,6 +1463,7 @@ var Recordings = {
                         r.meta,
                         r.site_id
                         FROM recordings r WHERE r.recording_id IN (${results[listIndex][0].map(item => item.id)})
+                        ORDER BY r.site_id DESC, r.datetime DESC
                     `
                     let queryResult = await dbpool.query({
                         sql,
