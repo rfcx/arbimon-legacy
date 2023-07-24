@@ -81,6 +81,24 @@ var Recordings = {
         hour   : { subject: 'HOUR(R.datetime)',   project: true,  level:5, next: 'minute', prev:'day'  },
         minute : { subject: 'MINUTE(R.datetime)', project: true,  level:6,                 prev:'hour' }
     },
+    recordingInsertSchema: {
+        site_id:         joi.number().required(),
+        uri:             joi.string().required(),
+        datetime:        joi.string().required(),
+        mic:             joi.optional(),
+        recorder:        joi.optional(),
+        version:         joi.optional(),
+        sample_rate:     joi.number(),
+        precision:       joi.number(),
+        duration:        joi.number(),
+        samples:         joi.number(),
+        file_size:       joi.number(),
+        bit_rate:        joi.string(),
+        sample_encoding: joi.string(),
+        upload_time:     joi.string(),
+        datetime_utc:    joi.string(),
+        meta:  joi.optional(),
+    },
     parseUrl: function(recording_url){
         var patternFound = false, resolved = false;
         var deferred = Q.defer();
@@ -1036,27 +1054,7 @@ var Recordings = {
     },
 
     insert: function(recording, callback) {
-
-        var schema = {
-            site_id:         joi.number().required(),
-            uri:             joi.string().required(),
-            datetime:        joi.date().required(),
-            mic:             joi.optional(),
-            recorder:        joi.optional(),
-            version:         joi.optional(),
-            sample_rate:     joi.number(),
-            precision:       joi.number(),
-            duration:        joi.number(),
-            samples:         joi.number(),
-            file_size:       joi.number(),
-            bit_rate:        joi.string(),
-            sample_encoding: joi.string(),
-            upload_time:     joi.date(),
-            datetime_utc:    joi.date(),
-            meta:  joi.optional(),
-        };
-
-        joi.validate(recording, schema, { stripUnknown: true }, function(err, rec) {
+        joi.validate(recording, Recordings.recordingInsertSchema, { stripUnknown: true }, function(err, rec) {
             if(err) return callback(err);
 
             queryHandler('INSERT INTO recordings (\n' +
@@ -1071,6 +1069,27 @@ var Recordings = {
 
     insertAsync: function(recording) {
         let insert = util.promisify(this.insert)
+        return insert(recording)
+    },
+
+    insertBatch: function(recordings, callback) {
+        const array = joi.array().items(Recordings.recordingInsertSchema)
+        array.validate(recordings, function(err, recs) {
+            const data = recs.map((rec) => {
+                return [rec.site_id, rec.uri, rec.datetime, rec.mic || '(not specified)', rec.recorder || '(not specified)', rec.version || '(not specified)', rec.sample_rate,
+                rec.precision, rec.duration, rec.samples, rec.file_size, rec.bit_rate, rec.sample_encoding, rec.upload_time, rec.datetime_utc, rec.meta]
+            })
+            if(err) return callback(err);
+
+            queryHandler('INSERT INTO recordings (\n' +
+                '`site_id`, `uri`, `datetime`, `mic`, `recorder`, `version`, `sample_rate`, \n'+
+                '`precision`, `duration`, `samples`, `file_size`, `bit_rate`, `sample_encoding`, `upload_time`, `datetime_utc`, `meta`\n' +
+            ') VALUES ?;', [data], callback);
+        });
+    },
+
+    insertBatchAsync: function(recording) {
+        let insert = util.promisify(this.insertBatch)
         return insert(recording)
     },
 
@@ -1417,24 +1436,24 @@ var Recordings = {
 
             return Q.all(steps).then(function(){
 
-                var from_clause  = "FROM " + tables.join('\n');
-                var where_clause = dbpool.format("WHERE " + constraints.join('\n AND '), data);
-                var order_clause = 'ORDER BY ' + dbpool.escapeId(parameters.sortBy || 'datetime') + ' ' + (parameters.sortRev ? 'DESC' : '');
-                var limit_clause = (parameters.limit) ? dbpool.escape(parameters.offset || 0) + ', ' + dbpool.escape(parameters.limit) : '';
+                let from_clause  = "FROM " + tables.join('\n');
+                let where_clause = dbpool.format("WHERE " + constraints.join('\n AND '), data);
+                let order_clause = 'ORDER BY ' + dbpool.escapeId(parameters.sortBy || 'datetime') + ' ' + (parameters.sortRev ? 'DESC' : '');
+                let limit_clause = (parameters.limit) ? dbpool.escape(parameters.offset || 0) + ', ' + dbpool.escape(parameters.limit) : '';
 
                 if (sqlOnly) {
                     return [select_clause.list, from_clause, where_clause]
                 }
 
                 return Q.all(outputs.map(function(output){
-                    var query=[
+                    let query=[
                         select_clause[output],
                         from_clause,
                         where_clause
                     ];
                     if(output === 'list') {
-                        var sortBy = parameters.sortBy || 'r.datetime';
-                        var sortRev = parameters.sortRev ? 'DESC' : '';
+                        const sortBy = parameters.sortBy || 'r.datetime';
+                        const sortRev = parameters.sortRev ? 'DESC' : '';
                         query.push('ORDER BY ' + sortBy + ' ' + sortRev);
                         if(limit_clause){
                             query.push("LIMIT " + limit_clause);
@@ -1463,6 +1482,7 @@ var Recordings = {
                         r.meta,
                         r.site_id
                         FROM recordings r WHERE r.recording_id IN (${results[listIndex][0].map(item => item.id)})
+                        ORDER BY r.site_id DESC, r.datetime DESC
                     `
                     let queryResult = await dbpool.query({
                         sql,
@@ -2053,6 +2073,14 @@ var Recordings = {
             }
             console.info(data);
         });
+    },
+
+    deleteBySiteAndUris: async function (site_id, uris) {
+        if (!site_id || !uris || !uris.length) {
+            return
+        }
+        const q = `DELETE FROM recordings WHERE site_id = ? AND uri IN (?)`
+        return dbpool.query(q, [site_id, uris])
     },
 
     deleteRecordingsFromArbimon: async function(recIds, query) {
