@@ -39,11 +39,12 @@ router.post('/recordings/create', verifyToken(), hasRole(['systemUser']), async 
     if (!site) {
       throw new EmptyResultError('Site with given external_id not found.');
     }
-    for (let data of converter.transformedArray) {
+    const timezone = await model.sites.getSiteTimezoneAsync(site.site_id);
+    const recordings = converter.transformedArray.map((data) => {
       var recordingData = {
         site_id: site.site_id,
         uri: data.uri,
-        datetime_utc: data.datetime.format('YYYY-MM-DD HH:mm:ss.SSS'), // We get datetime in UTC from Core API. Required format to avoid timezone issues in joi
+        datetime_utc: data.datetime.toISOString(),
         mic: data.mic,
         recorder: data.recorder,
         version: data.sver,
@@ -54,7 +55,7 @@ router.post('/recordings/create', verifyToken(), hasRole(['systemUser']), async 
         file_size: data.file_size,
         bit_rate: data.bit_rate,
         sample_encoding: data.sample_encoding,
-        upload_time: new Date(),
+        upload_time: moment.utc().toISOString(),
         meta: data.meta
       };
       const parsedData = data.meta ? JSON.parse(data.meta) : null;
@@ -71,17 +72,36 @@ router.post('/recordings/create', verifyToken(), hasRole(['systemUser']), async 
         recordingData.recorder = 'Song Meter';
       }
       const datetimeUtc = data.datetime;
-      const timezone = await model.sites.getSiteTimezoneAsync(recordingData.site_id);
       const format = 'YYYY-MM-DD HH:mm:ss';
       const datetimeLocal = datetimeUtc ? moment.tz(datetimeUtc, timezone).format(format) : null;
       recordingData.datetime = datetimeLocal ? datetimeLocal : moment.utc(datetimeUtc).format(format);
-      await model.recordings.insertAsync(recordingData);
-    }
+      return recordingData
+    })
+    await model.recordings.insertBatchAsync(recordings);
     res.sendStatus(201);
   } catch (e) {
     httpErrorHandler(req, res, 'Failed creating a recording')(e);
   }
 
+})
+
+router.post('/recordings/delete', verifyToken(), hasRole(['systemUser']), async function(req, res) {
+  try {
+    const converter = new ArrayConverter(req.body)
+    converter.convert('site_external_id').toString();
+    converter.convert('uri').toString();
+
+    await converter.validate();
+    const siteExternalId = converter.transformedArray[0].site_external_id
+    var site = await model.sites.find({ external_id: siteExternalId }).get(0);
+    if (!site) {
+      throw new EmptyResultError('Site with given external_id not found.');
+    }
+    await model.recordings.deleteBySiteAndUris(site.site_id, converter.transformedArray.map(r => r.uri));
+    res.sendStatus(204)
+  } catch (e) {
+    httpErrorHandler(req, res, 'Failed deleting recordings')(e);
+  }
 })
 
 router.get('/recordings/:attr', async function(req, res) {
