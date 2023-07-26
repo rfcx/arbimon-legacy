@@ -66,11 +66,14 @@
             <field title="Site" key="site" tdclass="hidelongtext widthtd">
                 <span title="{{ row.site }}">{{ row.site }}</span>
             </field>
-            <field title="Recorded Time" key="datetime" >{{ (row.datetime | momentUtc : 'YYYY-MM-DD HH:mm:ss') }}</field>
+            <field title="Recorded Time" key="datetime" >
+                <span title="{{row.utc}}">
+                    {{ (row.datetime | momentUtc : 'YYYY-MM-DD HH:mm:ss') }}</field>
+                </span>
             <field title="Filename" key="file" tdclass="hidelongtext widthtd">
               <span title="{{ row.filename? row.filename : row.file }}">{{ row.filename? row.filename : row.file }}</span>
             </field>
-            <field title="Uploaded Time" key="upload_time" >{{ (row.upload_time | momentTz : 'YYYY-MM-DD HH:mm:ss' : row.timezone) }}</field>
+            <field title="Uploaded" key="upload_time" >{{ (row.upload_time | momentTz : 'YYYY-MM-DD' : row.timezone) }}</field>
             <field title="Recorder" key="recorder">{{ row.recorder }}</field>
             <field title="Comments" key="comments" tdclass="comments hidelongtext seconds-div-center widthtd">
                 <span ng-if="row.comments && ['AudioMoth', 'Song Meter', 'SongMeter'].includes(row.recorder)" title="{{row.comments}}">{{row.comments}}</span>

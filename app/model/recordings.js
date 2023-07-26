@@ -1506,6 +1506,8 @@ var Recordings = {
                             _1.legacy = Recordings.isLegacy(_1)
                             _1.site_external_id = siteData[_1.site_id].external_id;
                             _1.timezone = siteData[_1.site_id].timezone;
+                            const hoursDiff = moment(_1.datetime).diff(moment(_1.datetime_utc), 'hours')
+                            _1.utc = `UTC${hoursDiff > 0 ? '+' + hoursDiff : hoursDiff}`
                             _1.imported = siteData[_1.site_id].project_id !== parameters.project_id;
                             _1.comments = _1.meta ? Recordings.__parse_comments_data(_1.meta) : null;
                             if (_1.comments && _1.recorder === "Unknown") {
