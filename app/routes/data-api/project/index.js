@@ -168,6 +168,13 @@ router.get('/:projectUrl/rfm-classif-job-count', function(req, res, next) {
     getCachedMetrics(req, res, key, p, next);
 });
 
+router.get('/:projectUrl/rfm-species-detected', function(req, res, next) {
+    res.type('json');
+    let p = req.query.project_id? req.query.project_id : req.project.project_id;
+    const key = { 'project-rfm-sp-count': `project-${p}-rfm-sp` }
+    getCachedMetrics(req, res, key, p, next);
+});
+
 router.get('/:projectUrl/rfm-training-job-count', function(req, res, next) {
     res.type('json');
     let p = req.query.project_id? req.query.project_id : req.project.project_id;
@@ -185,7 +192,14 @@ router.get('/:projectUrl/aed-job-count', function(req, res, next) {
 router.get('/:projectUrl/clustering-job-count', function(req, res, next) {
     res.type('json');
     let p = req.query.project_id? req.query.project_id : req.project.project_id;
-    const key = { 'project-clustering-job-count': `project-${p}-cluster` }
+    const key = { 'project-clustering-job-count': `project-${p}-clust-job` }
+    getCachedMetrics(req, res, key, p, next);
+});
+
+router.get('/:projectUrl/clustering-species-detected', function(req, res, next) {
+    res.type('json');
+    let p = req.query.project_id? req.query.project_id : req.project.project_id;
+    const key = { 'project-clustering-sp-count': `project-${p}-clust-sp` }
     getCachedMetrics(req, res, key, p, next);
 });
 

@@ -37,6 +37,9 @@ const getCountForSelectedMetric = async function(key, projectId) {
         case 'project-rfm-classif-job-count':
             count = await model.classifications.totalRfmClassificationJobs(projectId)
             break;
+        case 'project-rfm-sp-count':
+            count = await model.classifications.totalRfmSpeciesDetected(projectId)
+            break;
         case 'project-rfm-training-job-count':
             count = await model.trainingSets.totalRfmTrainingJobs(projectId)
             break;
@@ -45,6 +48,9 @@ const getCountForSelectedMetric = async function(key, projectId) {
             break;
         case 'project-clustering-job-count':
             count = await model.ClusteringJobs.totalClusteringJobs(projectId)
+            break;
+        case 'project-clustering-sp-count':
+            count = await model.ClusteringJobs.totalClusteringSpeciesDetected(projectId)
             break;
         case 'project-soundscape-job-count':
             count = await model.soundscapes.totalSoundscapeJobs(projectId)
