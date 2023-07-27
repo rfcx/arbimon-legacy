@@ -318,6 +318,12 @@ var Classifications = {
     totalRfmClassificationJobs: function(projectId) {
         return dbpool.query(`SELECT COUNT(model_id) AS count FROM models WHERE project_id = ${dbpool.escape(projectId)} AND deleted = 0`).get(0).get('count');
     },
+
+    totalRfmSpeciesDetected: function(projectId) {
+        return dbpool.query(`SELECT COUNT(species_id) AS count FROM model_classes mc
+            JOIN models m on m.model_id = mc.model_id
+            WHERE m.project_id = ${dbpool.escape(projectId)} AND m.deleted = 0`).get(0).get('count');
+    },
 };
 
 

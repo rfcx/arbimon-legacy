@@ -222,6 +222,14 @@ let ClusteringJobs = {
         return dbpool.query(q);
     },
 
+    totalClusteringSpeciesDetected: async function(projectId) {
+        const q = `SELECT COUNT(DISTINCT aedc.species_id) as count
+            FROM audio_event_detections_clustering aedc
+            JOIN job_params_audio_event_detection_clustering jpeac on jpeac.job_id = aedc.job_id 
+            WHERE jpeac.project_id = ${dbpool.escape(projectId)} and aedc.validated = 1`;
+        return dbpool.query(q).get(0).get('count');
+    },
+
     JOB_SCHEMA : joi.object().keys({
         project_id: joi.number().integer(),
         user_id: joi.number().integer(),
