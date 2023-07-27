@@ -192,14 +192,14 @@ router.get('/:projectUrl/aed-job-count', function(req, res, next) {
 router.get('/:projectUrl/clustering-job-count', function(req, res, next) {
     res.type('json');
     let p = req.query.project_id? req.query.project_id : req.project.project_id;
-    const key = { 'project-clustering-job-count': `project-${p}-clust-job` }
+    const key = { 'project-clustering-job-count': `project-${p}-cl-job` }
     getCachedMetrics(req, res, key, p, next);
 });
 
 router.get('/:projectUrl/clustering-species-detected', function(req, res, next) {
     res.type('json');
     let p = req.query.project_id? req.query.project_id : req.project.project_id;
-    const key = { 'project-clustering-sp-count': `project-${p}-clust-sp` }
+    const key = { 'project-clustering-sp-count': `project-${p}-cl-sp` }
     getCachedMetrics(req, res, key, p, next);
 });
 
