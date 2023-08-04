@@ -2,7 +2,6 @@
  * Bootstrap variables
 */
 @import "variables.less";
-// @import "../../bower_components/bootstrap/less/mixins.less";
 /**
  * app variables
  */
@@ -75,6 +74,7 @@
  * general styles
 */
 @import "branding.less";
+@import "main.less";
 
 b, strong {
   font-weight: 900;
@@ -1803,11 +1803,11 @@ img.outlined {
 
   &:after {
     content: " ";
-    background: @val-color-1;
+    background: @frequency;
     width: 100%;
-    height: 3px;
+    height: 1px;
     position: absolute;
-    bottom: 0;
+    bottom: 10px;
     left: 0;
   }
 }
@@ -1952,16 +1952,6 @@ search-bar {
 
 .navbar-brand {
   padding: 8px 15px;
-  font-size: 16px;
-
-  img {
-    height: 3.5rem;
-  }
-}
-
-.navbar-title {
-  font-size: 16px;
-  font-weight: 700;
 }
 
 .replace-icon {
