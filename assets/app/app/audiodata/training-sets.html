@@ -66,7 +66,7 @@
                         }}
                     </h3>
                 </div>
-                <div>
+                <div class="mt-2">
                     <div class="clearfix form-group">
                         <label class="col-sm-3 control-label">Name</label>
                         <div class="col-sm-9" ng-if="!controller.selected.trainingSet.edit">
@@ -137,18 +137,19 @@
                                 </div>
 
                                 <div class="btn-group">
-                                    <button type="button" class="btn btn-default" ng-click="controller.setDetailedView(true)"
+                                    <button type="button" class="btn btn-default btn-sm" ng-click="controller.setDetailedView(true)"
                                         tooltip="Detail view" tooltip-append-to-body="true">
                                         <i class="fa fa-search"></i>
                                     </button>
-                                    <button type="button" class="btn btn-default" ng-click="controller.setDetailedView(false)"
+                                    <button type="button" class="btn btn-default btn-sm" ng-click="controller.setDetailedView(false)"
                                         tooltip="Gallery view" tooltip-append-to-body="true">
                                         <i class="fa fa-th"></i>
                                     </button>
                                 </div>
 
                                 <div class="btn-group">
-                                    <a class="btn btn-default"
+                                    <a class="btn btn-default btn-sm"
+                                        style="border-radius: 9999px;"
                                         ng-href="{{controller.selected.trainingSet.export_url}}"
                                         ng-click="controller.exportTSReport($event) | trackEvent:'Audiodata-Training Sets':'export training set'"
                                         tooltip="Export Training Set Data">
