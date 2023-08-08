@@ -2,6 +2,7 @@
     <div class="col-sm-12 toolbar">
         <div class="btn-group">
             <button class="btn btn-default"
+                style="border-radius: 9999px;"
                 ng-click="controller.edit() | trackEvent:'Audiodata-playlists':'edit clicked'"
                 tooltip="Edit Name"
                 tooltip-trigger="mouseenter">
@@ -11,6 +12,7 @@
         </div>
         <div class="btn-group padding-left">
             <button class="btn btn-default"
+                style="border-radius: 9999px;"
                 ng-click="del() | trackEvent:'Audiodata-playlists':'del clicked'"
                 tooltip="Delete"
                 tooltip-trigger="mouseenter">
@@ -20,6 +22,7 @@
         </div>
         <div class="btn-group padding-left">
             <button class="btn btn-default"
+                style="border-radius: 9999px;"
                 ng-click="create('/audiodata/recordings') | trackEvent:'Audiodata-Recordings':'createPlaylist'"
                 tooltip="Create New Playlist"
                 tooltip-trigger="mouseenter" ng-disabled="loading">

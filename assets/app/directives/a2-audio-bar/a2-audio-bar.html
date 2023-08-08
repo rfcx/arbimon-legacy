@@ -26,13 +26,15 @@
             <div class="col-sm-12 center-block">
                 <div class="btn-toolbar row-flex flex-align-middle">
                     <div class="btn-group">
-                        <button class="btn btn-default btn-sm"
+                        <button class="btn btn-default btn-xs controls-border"
+                                style="padding: 5px 10px"
                                 ng-disabled="!controller.audio_player.has_recording"
                                 ng-click="controller[controller.audio_player.is_playing ? 'pause' : 'play']()">
                             <i class="fa"
                                ng-class="{'fa-play':!controller.audio_player.is_playing, 'fa-pause':controller.audio_player.is_playing}"></i>
                         </button>
-                        <button class="btn btn-default btn-sm"
+                        <button class="btn btn-default btn-xs controls-border"
+                                style="padding: 5px 10px"
                                 ng-disabled="!controller.audio_player.has_recording"
                                 ng-click="controller.stop()">
 
