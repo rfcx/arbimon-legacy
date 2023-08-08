@@ -52,14 +52,14 @@
             </div>
             <div class="row">
                 <div class="col-sm-6">
-                    <label for="minFrequency">Min</label>
+                    <label for="minFrequency">min</label>
                     <i class="fa fa-info-circle ml-2"
                         tooltip="The minimum frequency of sound events to detect (kHz)">
                     </i>
                     <input id="minFrequency" class="form-control" ng-class="{'red-border': controller.showFrequencyWarning() || controller.isNotDefined(controller.data.params.minFrequency)}" style="text-align:left;" min="0" step="1" max="23" ng-model="controller.data.params.minFrequency" type="number"/>
                 </div>
                 <div class="col-sm-6">
-                    <label for="maxFrequency">Max</label>
+                    <label for="maxFrequency">max</label>
                     <i class="fa fa-info-circle ml-2"
                         tooltip="The maximum frequency of sound events to detect (kHz)">
                     </i>

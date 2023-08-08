@@ -1,0 +1,343 @@
+/*
+ * https://www.figma.com/file/sP3kZZDOiOd5hqTZCkXH0x/RFCx%2FArbimon-Design-Library?type=design&node-id=1846%3A9636&mode=design&t=Fp0xjfu9wQz3wggK-1
+*/
+
+// Additional screens aren't included to `variables.less`
+
+@screen-xl: 1280px;
+@screen-2xl: 1536px;
+
+//## Font, line-height, and color for body text, headings, and more
+
+@border-frequency: @frequency;
+
+// Extended font
+@font-face {
+  font-family: 'ABCFavoritExtended';
+  font-display: auto;
+  font-weight: 400; // Medium
+  src:
+    url("/assets/fonts/ABCFavoritExtended-Medium.woff") format("woff"), /* Modern Browsers */
+    url("/assets/fonts/ABCFavoritExtendedVariable.ttf")  format("truetype"); /* Safari, Android, iOS */
+}
+
+// // Expanded font
+@font-face {
+  font-family: 'ABCFavoritExpanded';
+  font-display: auto;
+  font-weight: 400;
+  src:
+    url("/assets/fonts/ABCFavoritExpanded-Medium.woff") format("woff"), /* Modern Browsers */
+    url("/assets/fonts/ABCFavoritExpandedVariable.ttf")  format("truetype"); /* Safari, Android, iOS */
+}
+
+@font-family-header: 'ABCFavoritExpanded';
+
+@font-size-xxs: 12px;
+@font-size-sm: 13px;
+@font-size-base: 16px;
+@font-size-lg: 20px;
+@font-size-xl: 20px;
+@font-size-2xl: 24px;
+@font-size-3xl: 32px;
+@font-size-4xl: 40px;
+@font-size-5xl: 52px;
+
+@line-height-xxs: 14px;
+@line-height-sm: 16px;
+@line-height-base: 24px;
+@line-height-lg: 28px;
+@line-height-xl: 24px;
+@line-height-2xl: 32px;
+@line-height-3xl: 40px;
+@line-height-4xl: 48px;
+@line-height-5xl: 60px;
+
+
+h1,
+h2 {
+  font-family: @font-family-header;
+  font-weight: 400;
+}
+
+h3 {
+  font-weight: 400;
+}
+
+h1 {
+  @media (max-width: @screen-xs) {
+    font-size: @font-size-2xl;
+    line-height: @line-height-2xl;
+  }
+  @media (min-width: @screen-xs) and (max-width: @screen-sm) {
+    font-size: @font-size-2xl;
+    line-height: @line-height-2xl;
+  }
+  @media (min-width: @screen-sm) and (max-width: @screen-md) {
+    font-size: @font-size-2xl;
+    line-height: @line-height-2xl;
+  }
+  @media (min-width: @screen-md) and (max-width: @screen-lg) {
+    font-size: @font-size-3xl;
+    line-height: @line-height-3xl;
+  }
+  @media (min-width: @screen-lg) and (max-width: @screen-2xl) {
+    font-size: @font-size-4xl;
+    line-height: @line-height-4xl;
+  }
+  @media (min-width: @screen-2xl) {
+    font-size: @font-size-4xl;
+    line-height: @line-height-4xl;
+  }
+}
+
+h2 {
+  @media (max-width: @screen-xs) {
+    font-size: @font-size-xl;
+    line-height: @line-height-xl;
+  }
+  @media (min-width: @screen-xs) and (max-width: @screen-sm) {
+    font-size: @font-size-xl;
+    line-height: @line-height-xl;
+  }
+  @media (min-width: @screen-sm) and (max-width: @screen-md) {
+    font-size: @font-size-xl;
+    line-height: @line-height-xl;
+  }
+  @media (min-width: @screen-md) and (max-width: @screen-lg) {
+    font-size: @font-size-2xl;
+    line-height: @line-height-2xl;
+  }
+  @media (min-width: @screen-lg) and (max-width: @screen-2xl) {
+    font-size: @font-size-3xl;
+    line-height: @line-height-3xl;
+  }
+  @media (min-width: @screen-2xl) {
+    font-size: @font-size-3xl;
+    line-height: @line-height-3xl;
+  }
+}
+
+h3 {
+  @media (max-width: @screen-xs) {
+    font-size: @font-size-lg;
+    line-height: @line-height-lg;
+  }
+  @media (min-width: @screen-xs) and (max-width: @screen-sm) {
+    font-size: @font-size-lg;
+    line-height: @line-height-lg;
+  }
+  @media (min-width: @screen-sm) and (max-width: @screen-md) {
+    font-size: @font-size-lg;
+    line-height: @line-height-lg;
+  }
+  @media (min-width: @screen-md) and (max-width: @screen-lg) {
+    font-size: @font-size-xl;
+    line-height: @line-height-xl;
+  }
+  @media (min-width: @screen-lg) and (max-width: @screen-2xl) {
+    font-size: @font-size-2xl;
+    line-height: @line-height-2xl;
+  }
+  @media (min-width: @screen-2xl) {
+    font-size: @font-size-2xl;
+    line-height: @line-height-2xl;
+  }
+}
+
+h4 {
+  @media (max-width: @screen-xs) {
+    font-size: @font-size-base;
+    line-height: @line-height-base;
+  }
+  @media (min-width: @screen-xs) and (max-width: @screen-sm) {
+    font-size: @font-size-base;
+    line-height: @line-height-base;
+  }
+  @media (min-width: @screen-sm) and (max-width: @screen-md) {
+    font-size: @font-size-base;
+    line-height: @line-height-base;
+  }
+  @media (min-width: @screen-md) and (max-width: @screen-lg) {
+    font-size: @font-size-lg;
+    line-height: @line-height-lg;
+  }
+  @media (min-width: @screen-lg) and (max-width: @screen-2xl) {
+    font-size: @font-size-xl;
+    line-height: @line-height-xl;
+  }
+  @media (min-width: @screen-2xl) {
+    font-size: @font-size-xl;
+    line-height: @line-height-xl;
+  }
+}
+
+h5 {
+  @media (max-width: @screen-xs) {
+    font-size: @font-size-base;
+    line-height: @line-height-base;
+  }
+  @media (min-width: @screen-xs) and (max-width: @screen-sm) {
+    font-size: @font-size-base;
+    line-height: @line-height-base;
+  }
+  @media (min-width: @screen-sm) and (max-width: @screen-md) {
+    font-size: @font-size-base;
+    line-height: @line-height-base;
+  }
+  @media (min-width: @screen-md) and (max-width: @screen-lg) {
+    font-size: @font-size-base;
+    line-height: @line-height-base;
+  }
+  @media (min-width: @screen-lg) and (max-width: @screen-2xl) {
+    font-size: @font-size-base;
+    line-height: @line-height-base;
+  }
+  @media (min-width: @screen-2xl) {
+    font-size: @font-size-base;
+    line-height: @line-height-base;
+  }
+}
+
+.text-frequency {
+  color: @frequency
+}
+
+.text-flamingo {
+  color: @flamingo
+}
+
+.text-insight {
+  color: @insight
+}
+
+.font-size-base {
+  font-size: @font-size-base
+}
+
+// Container
+
+.container {
+  @media (max-width: @screen-xs) {
+    max-width: @screen-sm !important;
+  }
+  @media (min-width: @screen-sm) {
+    width: 700px;
+  }
+  @media (min-width: 800px) {
+    width: 700px;
+  }
+  @media (min-width: @screen-md) {
+    width: 750px;
+  }
+  @media (min-width: 1200px) {
+    width: 970px !important;
+  }
+  @media (min-width: @screen-lg) {
+    width: 970px !important;
+  }
+  @media (min-width: @screen-xl) {
+    width: 1170px !important;
+  }
+  .row {
+    @media (max-width: 800px) {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+  }
+}
+
+// Navbar
+.navbar {
+  border-left: none 0px;
+  border-top: none 0px;;
+  border-right: none 0px;
+  border-bottom: 4px solid @border-frequency !important;
+  margin-bottom: 0;
+}
+
+.navbar-title {
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 24px;
+  font-family: 'ABCFavoritExtended';
+  color: @insight;
+  white-space: nowrap;
+  text-transform: uppercase;
+  align-self: center;
+}
+
+.navbar-logo {
+  height: 24px;
+  @media (min-width: @screen-sm) {
+    height: 36px;
+  }
+}
+
+.visible-xs-inline {
+  @media (max-width: 767px){
+    display: inline !important;
+  }
+}
+.visible-md-inline {
+  @media (min-width: 992px) and (max-width: 1231px){
+    display: inline !important;
+  }
+}
+.visible-lg-inline {
+  @media (min-width: 1024px) {
+    display: none !important;
+  }
+  @media (min-width: 1231px) {
+    display: inline !important;
+  }
+}
+
+// Buttons, imputs
+
+.btn {
+  border-radius: 9999px;
+  padding: 8px 20px;
+  font-family: 'ABCFavoritExtended';
+  font-size: @font-size-base;
+  line-height: @line-height-base;
+}
+
+.btn-sm {
+  padding: 4px 20px;
+}
+
+.btn-xs {
+  padding: 1px 20px;
+}
+
+.border-cloud {
+  border-color: @cloud;
+}
+
+.ui-select-toggle {
+  border-radius: 4px;
+}
+
+.controls-border {
+  border-radius: 4px;
+}
+
+.input-btn {
+  line-height: 19px;
+  border-color: @cloud;
+  color: @insight;
+  border-radius: 4px;
+  border-bottom-left-radius: 0;
+  border-top-left-radius: 0;
+}
+
+#beacon-container {
+  button {
+    background-color: @palm !important;
+  }
+}
+
+#beacon-container .frame-content button {
+  background-color: @palm !important;
+}

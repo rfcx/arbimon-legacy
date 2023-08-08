@@ -7,7 +7,7 @@
             <div class="center-block">
                 <div class="btn-toolbar" ng-class="{'row-disabled': visobject.isDisabled }">
                     <div class="btn-group ml-1">
-                        <button class="btn btn-default btn-sm"
+                        <button class="btn btn-default btn-sm controls-border"
                             ng-disabled="!audio_player.has_recording"
                             ng-click="audio_player.prev_recording() | trackEvent:'Visualizer-RecordingLayer':'AudioControl prev rec'" >
 
@@ -15,13 +15,13 @@
                         </button>
                     </div>
                     <div class="btn-group ml-1">
-                        <button class="btn btn-default btn-sm"
+                        <button class="btn btn-default btn-sm controls-border"
                             ng-disabled="!audio_player.has_recording"
                             ng-click="audio_player[audio_player.is_playing ? 'pause' : 'play']()  | trackEvent:'Visualizer-RecordingLayer':'AudioControl start play'" >
 
                             <i class="fa" ng-class="{'fa-play':!audio_player.is_playing, 'fa-pause':audio_player.is_playing}"></i>
                         </button>
-                        <button class="btn btn-default btn-sm"
+                        <button class="btn btn-default btn-sm controls-border"
                             ng-disabled="!audio_player.has_recording"
                             ng-click="audio_player.stop() | trackEvent:'Visualizer-RecordingLayer':'AudioControl stop play'" >
 
@@ -29,16 +29,16 @@
                         </button>
                     </div>
                     <div class="btn-group ml-1">
-                        <button class="btn btn-default btn-sm"
+                        <button class="btn btn-default btn-sm controls-border"
                             ng-disabled="!audio_player.has_recording"
                             ng-click="audio_player.next_recording() | trackEvent:'Visualizer-RecordingLayer':'AudioControl next rec'" >
 
                             <i class="fa fa-step-forward" ></i>
                         </button>
                     </div>
-                    <div class="btn-group ml-1">
+                    <div class="btn-group ml-1 mt-1">
                         <div class="btn-group dropdown" dropdown dropdown-append-to-body role="group">
-                            <button class="btn btn-sm btn-default dropdown-toggle" dropdown-toggle ng-disabled="!audio_player.has_recording" >
+                            <button class="btn btn-sm btn-default dropdown-toggle controls-border" dropdown-toggle ng-disabled="!audio_player.has_recording" >
                                 <i class="fa fa-fw-1" ng-class="audio_player.resource.audio.volume > .75 ? 'fa-volume-up' : audio_player.resource.audio.volume > .25 ? 'fa-volume-down' : 'fa-volume-off'" ></i>
                                 <span class="fa-concat-sup" ng-if="audio_player.gain > 1">x{{audio_player.gain}}</span>
                                 <span class="fa fa-caret-down fa-concat-sub"></span>
@@ -57,15 +57,15 @@
                                 </div>
                             </div>
                         </div>
-                        <button class="btn btn-sm btn-default" ng-class="audio_player.freq_filter ? 'active' : ''" ng-click="layer.controller.openFreqFilterModal()" ng-disabled="!audio_player.has_recording"
+                        <button class="btn btn-sm btn-default controls-border" ng-class="audio_player.freq_filter ? 'active' : ''" ng-click="layer.controller.openFreqFilterModal()" ng-disabled="!audio_player.has_recording"
                             tooltip="Frequency filter"
                         >
                             <i class="fa fa-filter" ></i>
                             <span class="fa fa-ellipsis-h fa-concat-sub"></span>
                         </button>
                     </div>
-                    <div class="btn-group ml-1">
-                        <button class="btn btn-default btn-sm"
+                    <div class="btn-group ml-1 mt-1">
+                        <button class="btn btn-default btn-sm controls-border"
                             ng-disabled="!audio_player.has_recording"
                             ng-click="audio_player.download(visobject) | trackEvent:'Visualizer-RecordingLayer':'AudioControl download rec'"
                             tooltip="Download recording" >
@@ -73,7 +73,7 @@
                         </button>
                     </div>
                     <div ng-show="audio_player.clustersData" class="btn-group ml-1" style="position: relative;">
-                        <button class="btn btn-default btn-sm"
+                        <button class="btn btn-default btn-sm controls-border"
                             tooltip="Save to playlist"
                             ng-click="audio_player.togglePopup() | trackEvent:'Visualizer-RecordingLayer':'AudioControl save playlist'" >
                             <i class="fa fa-plus"></i>

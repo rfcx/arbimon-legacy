@@ -10,7 +10,7 @@
             <input class="form-control input-sm" step="0.001" max="1" min="0" type="number" ng-model="threshold" />
         </div>
     </div>
-    <div class="row no-gutter">
+    <div class="row no-gutter mt-2">
         <div class="col-sm-4">&nbsp;</div>
         <div class="col-sm-7">
             <ui-select ng-model="amplitudeReference" theme="bootstrap" ng-change="setAmplitudeReference(amplitudeReference)">
@@ -24,7 +24,7 @@
         </div>
     </div>
     <br />
-    <div class="row no-gutter thresholdtext no-bold v-center"
+    <div class="row no-gutter thresholdtext no-bold v-center row-flex flex-align-middle"
         tooltip="If the frequency difference of two successive peaks is less than this threshold, then the peak of highest amplitude will be kept only."
         tooltip-append-to-body="true" 
     >
@@ -34,7 +34,7 @@
         <div class="col-sm-5">
             <input class="form-control input-sm" type="number" max="1000" min="0" ng-model="bandwidth" />
         </div>
-        <div class="col-sm-2">
+        <div class="col-sm-2 text-center">
             Hz
         </div>
     </div>
