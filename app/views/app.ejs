@@ -24,7 +24,7 @@
                         </button>
                         <a href="/" class="navbar-brand navbar-brand-center">
                             <img src="/images/favicon/arbimon-logo.svg" class="mr-3 navbar-logo" alt="Arbimon Logo">
-                            <span class="navbar-title">Arbimon</span>
+                            <span class="navbar-title visible-xs-inline visible-sm-inline visible-lg-inline">Arbimon</span>
                         </a>
                         <% if (!user || user.isAnonymousGuest) { %>
                         <div ng-click="toggleSearch = !toggleSearch;" class="search-nav-mobile search-nav-mobile-offset">
@@ -113,7 +113,7 @@
                         <ul class="nav navbar-nav hide-tooltip-lg" ng-if="reportsEnabled">
                             <li>
                                 <a ng-href="{{getUrlFor('reports')}}" tooltip="Insights" tooltip-placement="bottom">
-                                    <span>Insights</span>
+                                    <span class="visible-xs-inline visible-lg-inline">Insights</span>
                                     <i class="ml-1 fa fa-external-link"></i>
                                 </a>
                             </li>

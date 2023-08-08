@@ -19,27 +19,27 @@
                         <div class="row mb-5 flex-align-middle row-flex flex-space-between summary-stats-wrapper">
                             <div class="summary-desc">
                                 <h1 class="text-frequency">Arbimon <span class="font-size-base">by Rainforest Connection®</span></h1>
-                                <h3 style="text-align: left; margin-bottom: 30px; margin-top: 14px;">
+                                <h3 style="text-align: left; margin-bottom: 50px; margin-top: 14px;">
                                     Upload and analyze an unlimited amount of audio from your AudioMoth, Song Meter,
                                     or other recording device, with our free cloud-based analytical tool.
                                 </h3>
                                 <div class="button-group">
                                     <% if (user && user.isAnonymousGuest) { %>
-                                        <a class="btn btn-lg btn-primary" href="<%- auth0UniversalLoginUrl %>&screen_hint=signup" ng-click="isEmpty=1 | trackEvent:'Home':'Sing up to rfcx'">Start Analyzing Now</a>
-                                        <a class="btn btn-lg btn-default" href="https://rfcx.org/ecoacoustics" ng-click="isEmpty=1 | trackEvent:'Home':'Navigate to Ecoacoustics page'">Learn More</a>
+                                        <a class="btn btn-lg btn-primary mb-3" href="<%- auth0UniversalLoginUrl %>&screen_hint=signup" ng-click="isEmpty=1 | trackEvent:'Home':'Sing up to rfcx'">Start analyzing</a>
+                                        <a class="btn btn-lg btn-default mb-3" href="https://rfcx.org/ecoacoustics" ng-click="isEmpty=1 | trackEvent:'Home':'Navigate to Ecoacoustics page'">Learn more about our work</a>
                                     <% } else {%>
-                                        <a class="btn btn-lg btn-primary" href="/projects" ng-click="isEmpty=1 | trackEvent:'Home':'Navigate to My Projects'">Start Analyzing Now</a>
-                                        <a class="btn btn-lg btn-default" href="https://rfcx.org/ecoacoustics" ng-click="isEmpty=1 | trackEvent:'Home':'Navigate to Ecoacoustics page'">Learn More</a>
+                                        <a class="btn btn-lg btn-primary mb-3" href="/projects" ng-click="isEmpty=1 | trackEvent:'Home':'Navigate to My Projects'">Start analyzing</a>
+                                        <a class="btn btn-lg btn-default mb-3" href="https://rfcx.org/ecoacoustics" ng-click="isEmpty=1 | trackEvent:'Home':'Navigate to Ecoacoustics page'">Learn more about our work</a>
                                     <% } %>
                                 </div>
                             </div>
                             <div class="summary-stats" style="margin-top: 48px" ng-view>
                                 <div class="summary-stats-row row-flex flex-space-between" style="flex-wrap: wrap;" ng-if="list_summary_data && list_summary_data.length && summary_data">
                                     <div class="text-center" style="width: 50%;" ng-repeat="data in list_summary_data">
-                                        <p ng-init="data.index=$index" class="summary-font-size" style="margin: 22px 0 0">
+                                        <h1 ng-init="data.index=$index" style="margin: 22px 0 0">
                                             <i ng-show="summaryDataLoading" class="fa fa-spinner fa-spin summary-font-size"></i>
-                                            <span class="hide" title="{{data.description}}" ng-class="{'show': !summaryDataLoading}">{{ summary_data[data.index] | number }}</span>
-                                        </p>
+                                            <h1 class="hide text-flamingo" title="{{data.description}}" ng-class="{'show': !summaryDataLoading}">{{ controller.valueShortScale(summary_data[data.index]) }}</h1>
+                                        </h1>
                                         <h3 class="hide" ng-class="{'show': data.title}" title="{{data.description}}" style="line-height: 1.6; margin-top: 0; margin-bottom: 0;">
                                             {{ data.title }}
                                         </h3>

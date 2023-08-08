@@ -294,7 +294,7 @@ b, strong {
   height: 100%;
   float: left;
   border-radius: 0 6px 6px 0;
-  background-color: @gray-dark;
+  background-color: @moss;
 
   li {
     padding: 0;
@@ -329,12 +329,12 @@ b, strong {
 
   a:hover,
   a:active {
-    background-color: @gray;
+    background-color: @pitch;
   }
 
   a.active, li.active > a {
-    background-color: @gray;
-	  border-right: 4px solid @brand-primary;
+    background-color: @echo;
+	border-right: 4px solid @brand-primary;
   }
 
   @media (max-width: @grid-float-breakpoint) {
@@ -433,7 +433,7 @@ textarea.fixed-width {
   color:@gray-dark
 }
 .text-dim {
-  color: @gray-light;
+  color: @util-gray-01;
 }
 
 .border{
@@ -689,7 +689,7 @@ textarea.fixed-width {
     vertical-align: super;
     font-size: 10pt;
     font-weight: 700;
-    background-color: green;
+    background-color: @palm;
     padding: 2px 6px;
     border-radius: 100px;
 }
@@ -968,16 +968,6 @@ a2-draw-peak-threshold {
   font-weight: bold;
 }
 
-.summary-font-size {
-  font-size: 36px;
-  @media (min-width: @screen-sm) and (max-width: @screen-md) {
-    font-size: 28px;
-  }
-  @media (max-width: @screen-xs) {
-    font-size: 22px;
-  }
-}
-
 // -> deleteclassification.html
 .centeredloder {
   width: 100%;
@@ -1000,7 +990,7 @@ a2-draw-peak-threshold {
 }
 
 // hides tooltips on large screens
-@media (min-width: 1231px) {
+@media (min-width: 1024px) {
   .hide-tooltip-lg .tooltip,
   .hide-tooltip-lg.tooltip {
     display: none !important;
@@ -1442,7 +1432,7 @@ a.ui-select-choices-row-inner {
   }
   .container {
     max-width: 27%;
-    border: dashed 1px @gray-light;
+    border: dashed 1px @util-gray-01;
     @media (max-width: @screen-lg-desktop) {
       max-width: 50%;
     }
@@ -1587,7 +1577,7 @@ a.ui-select-choices-row-inner {
 
 .js-plotly-plot .plotly .modebar-btn {
   path {
-    fill: @gray-light !important;
+    fill: @util-gray-01 !important;
   }
   &.active {
     path {
@@ -1609,7 +1599,7 @@ a.ui-select-choices-row-inner {
 
 /* END: Override ng-table style */
 .border-default {
-  border: 1px solid @gray-light;
+  border: 1px solid @util-gray-01;
 
   &:hover,
   &.active {
@@ -1626,7 +1616,7 @@ a.ui-select-choices-row-inner {
 }
 
 ::placeholder {
-  color: #999 !important;
+  color: @util-gray-01 !important;
 }
 
 .panel-body {
@@ -1674,21 +1664,21 @@ a.ui-select-choices-row-inner {
   &:hover,
   &:active,
   &:focus {
-      background-color: @gray-medium;
-      border-color: @gray-medium;
+      background-color: @util-gray-01;
+      border-color: @util-gray-01;
       color: @text-color;
   }
 }
 
 .recording-img {
-    background-color: @gray-medium;
-    border-color: @gray-medium;
+    background-color: @util-gray-01;
+    border-color: @util-gray-01;
     width: 420px;
     height: 153px;
 }
 
 img.outlined {
-  border: 3px solid @gray-light;
+  border: 3px solid @util-gray-01;
 }
 
 .ui-select-match-text {
@@ -1725,7 +1715,7 @@ img.outlined {
 }
 
 .homepage {
-  margin-top: 50px;
+  margin-top: 60px;
   & > .row {
     & > .col-md-12 {
       max-width: 1280px;
@@ -1758,7 +1748,7 @@ img.outlined {
 .hr-line{
   margin: 20px 100px 20px 100px;
   border: 0;
-  border-top: 1px solid #45485d;
+  border-top: 1px solid @moss;
 }
 
 .footer-page {
@@ -1845,7 +1835,7 @@ img.outlined {
   @media (max-width: 767px) {
     display: none !important;
   }
-  @media (max-width: @container-md) {
+  @media (max-width: 1170px) {
     padding: 11px 13px 9px 5px;
   }
 }
@@ -1915,11 +1905,11 @@ search-bar {
     padding: 15px 5px !important;
     max-width: 114px !important;
   }
-  @media (min-width: 780px) and (max-width: 1230px) {
+  @media (min-width: 780px) and (max-width: 1023px) {
     padding: 15px 5px !important;
     max-width: 125px !important;
   }
-  @media (min-width: 1231px) and (max-width: 1372px) {
+  @media (min-width: 1024px) and (max-width: 1372px) {
     padding: 15px 5px !important;
     max-width: 118px !important;
   }

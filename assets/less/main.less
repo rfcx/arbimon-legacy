@@ -190,20 +190,70 @@ h5 {
     line-height: @line-height-base;
   }
   @media (min-width: @screen-lg) and (max-width: @screen-2xl) {
-    font-size: @font-size-lg;
-    line-height: @line-height-lg;
+    font-size: @font-size-base;
+    line-height: @line-height-base;
   }
   @media (min-width: @screen-2xl) {
-    font-size: @font-size-lg;
-    line-height: @line-height-lg;
+    font-size: @font-size-base;
+    line-height: @line-height-base;
   }
 }
 
+.text-frequency {
+  color: @frequency
+}
+
+.text-flamingo {
+  color: @flamingo
+}
+
+.text-insight {
+  color: @insight
+}
+
+.font-size-base {
+  font-size: @font-size-base
+}
+
+// Container
+
+.container {
+  @media (max-width: @screen-xs) {
+    max-width: @screen-sm !important;
+  }
+  @media (min-width: @screen-sm) {
+    width: 700px;
+  }
+  @media (min-width: 800px) {
+    width: 700px;
+  }
+  @media (min-width: @screen-md) {
+    width: 750px;
+  }
+  @media (min-width: 1200px) {
+    width: 970px !important;
+  }
+  @media (min-width: @screen-lg) {
+    width: 970px !important;
+  }
+  @media (min-width: @screen-xl) {
+    width: 1170px !important;
+  }
+  .row {
+    @media (max-width: 800px) {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+  }
+}
+
+// Navbar
 .navbar {
   border-left: none 0px;
   border-top: none 0px;;
   border-right: none 0px;
   border-bottom: 4px solid @border-frequency !important;
+  margin-bottom: 0;
 }
 
 .navbar-title {
@@ -224,10 +274,70 @@ h5 {
   }
 }
 
-.text-frequency {
-  color: @frequency
+.visible-xs-inline {
+  @media (max-width: 767px){
+    display: inline !important;
+  }
+}
+.visible-md-inline {
+  @media (min-width: 992px) and (max-width: 1231px){
+    display: inline !important;
+  }
+}
+.visible-lg-inline {
+  @media (min-width: 1024px) {
+    display: none !important;
+  }
+  @media (min-width: 1231px) {
+    display: inline !important;
+  }
 }
 
-.font-size-base {
-  font-size: @font-size-base
+// Buttons, imputs
+
+.btn {
+  border-radius: 9999px;
+  padding: 8px 20px;
+  font-family: 'ABCFavoritExtended';
+  font-size: @font-size-base;
+  line-height: @line-height-base;
+}
+
+.btn-sm {
+  padding: 4px 20px;
+}
+
+.btn-xs {
+  padding: 1px 20px;
+}
+
+.border-cloud {
+  border-color: @cloud;
+}
+
+.ui-select-toggle {
+  border-radius: 4px;
+}
+
+.controls-border {
+  border-radius: 4px;
+}
+
+.input-btn {
+  line-height: 19px;
+  border-color: @cloud;
+  color: @insight;
+  border-radius: 4px;
+  border-bottom-left-radius: 0;
+  border-top-left-radius: 0;
+}
+
+#beacon-container {
+  button {
+    background-color: @palm !important;
+  }
+}
+
+#beacon-container .frame-content button {
+  background-color: @palm !important;
 }
