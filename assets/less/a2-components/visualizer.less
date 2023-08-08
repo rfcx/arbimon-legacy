@@ -68,6 +68,7 @@
     width: 100%;
     height: 100%;
     z-index: 1000;
+    border: 1px solid @util-gray-02;
     @media (min-width: @screen-md-min) {
         > .thumb{
             display: none;
@@ -140,7 +141,7 @@
 @layer-padding-left: 15px;
 @layer-padding-right: 40px;
 @layer-padding-v: 10px;
-@layer-zebra-even: @gray-darkest;
+@layer-zebra-even: @moss;
 @layer-zebra-odd: @gray-dark;
 @layer-selection: #e7e7e7;
 @layer-bg: @val-color-default; //#f8f8f8;
@@ -269,7 +270,7 @@
     > svg {
         z-index:10;
         > .bg{
-            fill: @gray-darkest;
+            fill: @moss;
         }
         > .axis {
             fill: @text-color;
@@ -299,7 +300,7 @@
 
     > .mask-panel, > .a2-visualizer-spectrogram-affixed.mask-panel{
         z-index: 5;
-        background: @gray-darkest;
+        background: @echo;
     }
 
 
@@ -655,7 +656,7 @@
         }
     }
     &.horizontal{
-        width:200px;
+        width:260px;
         > .btn{
             margin-left:0;
             margin-right:0;
@@ -719,15 +720,15 @@
 
     > .zoom-control{
         &.horizontal{
-            top:0; left:0;
+            top:0; left:-44px;
         }
         &.vertical{
-            top:25px; right:0;
+            top:28px; right:0;
         }
     }
     > .btns{
-        top   : 214px;
-        right : 0px;
+        top   : 224px;
+        right : 31px;
         width : 22px;
         > .btn{
             margin-bottom:4px;

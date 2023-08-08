@@ -180,6 +180,12 @@ angular.module('a2.home', [
         $scope.isAnonymousGuest = data.isAnonymousGuest;
         this.loadProjectList();
     }).bind(this));
+
+    this.valueShortScale = function(value) {
+        const formattedNumber = numeral(value).format('0.0a')
+        const firstDecimalDigit = (x) => x.split('.')[1].slice(0, 1)
+        return firstDecimalDigit(formattedNumber) === '0' ? formattedNumber.replace('.0', '') : formattedNumber
+    }
 })
 
 ;
