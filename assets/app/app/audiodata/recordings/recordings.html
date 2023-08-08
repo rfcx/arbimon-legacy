@@ -50,10 +50,10 @@
     <div ng-if="totalRecs !== undefined" class="col-sm-4 reclist-total text-left">{{ totalRecs }} Recordings</div>
     <div class="col-sm-4 reclist-pagelimit text-right">
         <div class="btn-group">
-            <button class="btn btn-default btn-sm" ng-model="limitPerPage" ng-change="controller.setLimitPerPage(limitPerPage)" btn-radio="10" ng-disabled="loading">10</button>
-            <button class="btn btn-default btn-sm" ng-model="limitPerPage" ng-change="controller.setLimitPerPage(limitPerPage)" btn-radio="25" ng-disabled="loading">25</button>
-            <button class="btn btn-default btn-sm" ng-model="limitPerPage" ng-change="controller.setLimitPerPage(limitPerPage)" btn-radio="50" ng-disabled="loading">50</button>
-            <button class="btn btn-default btn-sm" ng-model="limitPerPage" ng-change="controller.setLimitPerPage(limitPerPage)" btn-radio="100" ng-disabled="loading">100</button>
+            <button class="btn btn-default" ng-model="limitPerPage" ng-change="controller.setLimitPerPage(limitPerPage)" btn-radio="10" ng-disabled="loading">10</button>
+            <button class="btn btn-default" ng-model="limitPerPage" ng-change="controller.setLimitPerPage(limitPerPage)" btn-radio="25" ng-disabled="loading">25</button>
+            <button class="btn btn-default" ng-model="limitPerPage" ng-change="controller.setLimitPerPage(limitPerPage)" btn-radio="50" ng-disabled="loading">50</button>
+            <button class="btn btn-default" ng-model="limitPerPage" ng-change="controller.setLimitPerPage(limitPerPage)" btn-radio="100" ng-disabled="loading">100</button>
         </div>
         <button class="btn btn-default btn-sm" tooltip="Reload list" ng-click="controller.reloadList()" ng-disabled="loading">
             <i class="fa fa-refresh"></i>
