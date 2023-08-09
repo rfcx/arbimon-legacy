@@ -319,14 +319,17 @@ h5 {
   border-color: @cloud;
 }
 
-.border-frequency {
-  border-color: @frequency;
-}
-
 .ui-select-toggle {
   border-radius: 4px;
   border-color: @cloud;
   color: @insight !important;
+}
+
+.border-frequency {
+  border-color: @frequency;
+  .ui-select-toggle {
+    border-color: @frequency !important;
+  }
 }
 
 .control-btn {
