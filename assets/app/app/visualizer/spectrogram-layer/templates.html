@@ -22,7 +22,7 @@
     ng-mousemove="($event.buttons == 1) && layer.templates.editor.add_tracer_point(pointer)"
     ng-mouseup  ="($event.which == 1) && layer.templates.editor.add_point(pointer)">
 
-    <div a2-visualizer-spectrogram-affixed data-affix-top="20" class="text-dark-gray pl-5">
+    <div a2-visualizer-spectrogram-affixed data-affix-top="24" class="text-dark-gray pl-5">
         Click to create a template from this recording.
         <div ng-show="layer.templates.editor.roi && !layer.templates.editor.roi.id"
             a2-global-keyup="($event.which == 27) && layer.templates.editor.reset()">
