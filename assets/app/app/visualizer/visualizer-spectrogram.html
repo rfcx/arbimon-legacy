@@ -26,17 +26,17 @@
         <a2-zoom-control level="layout.scale.zoom.x" horizontal="true"></a2-zoom-control>
         <a2-zoom-control level="layout.scale.zoom.y"></a2-zoom-control>
         <div class="btns">
-            <button class="btn btn-default btn-xs"
+            <button class="btn btn-default btn-xs zoom-btn"
                 ng-class="click2zoom.active ? 'active' : ''"
                 a2-global-keyup="($event.which == 90) && visobject.zoomable && click2zoom.toggle_active()"
                 ng-click="click2zoom.toggle_active('in')">
                     <i class="fa fa-search-plus"></i>
             </button>
-            <button class="btn btn-default btn-xs top-right-2"
+            <button class="btn btn-default btn-xs top-right-2 zoom-btn"
                 ng-click="click2zoom.zoom_out()">
                     <i class="fa fa-search-minus"></i>
             </button>
-            <button class="btn btn-default btn-xs top-right-2"
+            <button class="btn btn-default btn-xs top-right-2 zoom-btn"
                 a2-global-keyup="($event.which == 82) && visobject.zoomable && click2zoom.reset()"
                 ng-click="click2zoom.zoom_reset()">
                 <span class="fa-stack fa-xs">
