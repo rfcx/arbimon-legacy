@@ -25,7 +25,7 @@
                         <div class="row-flex flex-space-between flex-self-align-bottom flex-direction-column">
                             <div class="row-flex flex-direction-row">
                                 <div class="btn-group btn-group-margin input-group row-flex flex-direction-row">
-                                    <span class="btn btn-default control-border not-active" title="Please select species and song type to validate ROIs" style="width: 90px; padding: 9px 12px;">Select:</span>
+                                    <span class="btn btn-default control-border not-active" title="Please select species and song type to validate ROIs" style="width: 90px;">Select:</span>
                                     <input class="form-control" style="width: 150px;"
                                         type="text"
                                         placeholder="Type Species"
@@ -58,7 +58,7 @@
                                 <div class="btn-group btn-group-margin">
                                     <button class="btn btn-default control-border not-active" >Validate as:</button>
                                     <ui-select ng-model="validation.status" class="btn-group-item border-left-radius control-border" theme="bootstrap">
-                                        <ui-select-match  class="right-corners border-frequency">
+                                        <ui-select-match  class="right-corners">
                                             <i ng-class="$select.selected.class"></i> {{$select.selected.text}}
                                         </ui-select-match>
                                         <ui-select-choices repeat="$item in lists.validation | filter:$select.search">
@@ -107,7 +107,7 @@
                                     <div class="btn-group row-flex flex-self-align-bottom">
                                         <button class="btn btn-default not-active" ><i class="fa fa-search"></i></button>
                                         <ui-select ng-model="selectedFilterData" theme="bootstrap" class="btn-group-item border-left-radius" on-select="onSearchChanged($select.selected)">
-                                            <ui-select-match class="right-corners border-frequency">
+                                            <ui-select-match class="right-corners">
                                                 <i ng-class="$select.selected.class"></i>{{$select.selected.text}}
                                             </ui-select-match>
                                             <ui-select-choices repeat="$item in lists.search | filter:$select.search">

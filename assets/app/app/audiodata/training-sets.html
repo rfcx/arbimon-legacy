@@ -7,13 +7,13 @@
                     tooltip="Create Training Set">
                     <i class="fa fa-plus"></i>
                 </button>
-                <button class="btn btn-default"
+                <button class="btn btn-default ml-3"
                     ng-click="controller.editSelectedTrainingSet() | trackEvent:'Audiodata-Training Sets':'edit training set'"
                     ng-disabled="!controller.selected.trainingSet"
                     tooltip="Edit Training Set">
                     <i class="fa fa-pencil"></i>
                 </button>
-                <button class="btn btn-default"
+                <button class="btn btn-default ml-3"
                     ng-click="controller.deleteSelectedTrainingSet() | trackEvent:'Audiodata-Training Sets':'delete training set'"
                     ng-disabled="!controller.selected.trainingSet"
                     tooltip="Remove Training Set">
@@ -149,7 +149,6 @@
 
                                 <div class="btn-group">
                                     <a class="btn btn-default btn-sm"
-                                        style="border-radius: 9999px;"
                                         ng-href="{{controller.selected.trainingSet.export_url}}"
                                         ng-click="controller.exportTSReport($event) | trackEvent:'Audiodata-Training Sets':'export training set'"
                                         tooltip="Export Training Set Data">

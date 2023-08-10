@@ -610,6 +610,11 @@ textarea.fixed-width {
 }
 
 .sites .a2-table {
+  th {
+    font-size: 14px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+  }
   margin-left: 15px;
   margin-right: 15px;
   td.name,
@@ -1789,16 +1794,16 @@ img.outlined {
 .navbar-default .navbar-nav>.active>a,
 .navbar-default .navbar-nav>.open>a {
   background: transparent;
-
-  &:after {
-    content: " ";
-    background: @frequency;
-    width: 100%;
-    height: 1px;
-    position: absolute;
-    bottom: 10px;
-    left: 0;
-  }
+  color: @frequency;
+//   &:after {
+//     content: " ";
+//     background: @frequency;
+//     width: 100%;
+//     height: 1px;
+//     position: absolute;
+//     bottom: 10px;
+//     left: 0;
+//   }
 }
 
 .navbar-tab-bottom-hide a{

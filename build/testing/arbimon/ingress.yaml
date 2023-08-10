@@ -1,0 +1,35 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/limit-rpm: "120"
+    nginx.ingress.kubernetes.io/proxy-body-size: "200m"
+  name: arbimon-ingress
+  namespace: testing
+  labels:
+    app: arbimon
+spec:
+  rules:
+    - host: testing-arbimon.rfcx.org
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              serviceName: biodiversity-website-service
+              servicePort: 80
+          - path: /featured
+            pathType: Prefix
+            backend:
+              serviceName: biodiversity-website-service
+              servicePort: 80
+          - path: /contact
+            pathType: Prefix
+            backend:
+              serviceName: biodiversity-website-service
+              servicePort: 80
+          - path: /*
+            pathType: Prefix
+            backend:
+              serviceName: arbimon-service
+              servicePort: 80

@@ -87,6 +87,15 @@ app.use(bodyParser.urlencoded({
     limit: '50mb'
 }));
 
+// app.use(function (req, res, next) {
+//     if (req.url == '/') {
+//       req.url = '/index.html';
+//     } else if (['/contact', '/featured'].includes(req.url)) {
+//       req.url += '.html'
+//     }
+//     next();
+// });
+
 app.use(express.static(www_root_path));
 if(app.get('env') === 'development') {
     app.use('/docs', express.static(path.join(__dirname, 'docs')));

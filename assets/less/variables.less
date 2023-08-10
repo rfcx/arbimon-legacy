@@ -53,7 +53,7 @@
 //** Background color for `<body>`.
 @body-bg: @echo;
 //** Global text color on `<body>`.
-@text-color: #e9e6e3;
+@text-color: @insight;
 
 //** Global textual link color.
 @link-color: #fff;
@@ -67,15 +67,16 @@
 //
 //## Font, line-height, and color for body text, headings, and more.
 
-@font-family-sans-serif: 'Poppins', 'ui-sans-serif', 'system-ui', '-apple-system', 'system-ui', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'Noto Sans', 'sans-serif', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji', sans-serif;
-// Lato, sans-serif
-@font-family-serif: @font-family-sans-serif;
+// @font-family-sans-serif: 'Poppins', 'ui-sans-serif', 'system-ui', '-apple-system', 'system-ui', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'Noto Sans', 'sans-serif', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji', sans-serif;
+@font-family-sans-serif: Lato, sans-serif;
+@font-family-serif: Georgia, "Times New Roman", Times, serif;
+
 //** Default monospace fonts for `<code>`, `<kbd>`, and `<pre>`.
 @font-family-monospace: SFMono-Regular, Menlo, Monaco, Consolas,
   "Liberation Mono", "Courier New", monospace;
 @font-family-base: @font-family-sans-serif;
 
-@font-size-base: 16px;
+@font-size-base: 14px;
 @font-size-large: ceil((@font-size-base * 1.25)); // ~18px
 @font-size-small: ceil((@font-size-base * 0.85)); // ~12px
 
@@ -167,9 +168,9 @@
 
 @btn-font-weight: normal;
 
-@btn-default-color: @frequency;
-@btn-default-bg: @echo;
-@btn-default-border: @frequency;
+@btn-default-color: @cloud;
+@btn-default-bg: @util-gray-02;
+@btn-default-border: @util-gray-02;
 
 @btn-primary-color: @echo;
 @btn-primary-bg: @brand-primary;
@@ -203,14 +204,14 @@
 //##
 
 //** `<input>` background color
-@input-bg: @pitch;
+@input-bg: @util-gray-02;
 //** `<input disabled>` background color
 @input-bg-disabled: #292d49;
 
 //** Text color for `<input>`s
 @input-color: @insight;
 //** `<input>` border color
-@input-border: @cloud;
+@input-border: @util-gray-02;
 
 // TODO: Rename `@input-border-radius` to `@input-border-radius-base` in v4
 //** Default `.form-control` border radius
@@ -387,7 +388,7 @@
 @navbar-collapse-max-height: 340px;
 
 @navbar-default-color: @text-color;
-@navbar-default-bg: @echo;
+@navbar-default-bg: @pitch;
 @navbar-default-border: @frequency;
 
 // Navbar links
@@ -781,7 +782,7 @@
 @badge-color: #fff;
 //** Linked badge text color on hover
 @badge-link-hover-color: #fff;
-@badge-bg: @gray;
+@badge-bg: @util-gray-02;
 
 //** Badge text color in active nav link
 @badge-active-color: @brand-primary;
