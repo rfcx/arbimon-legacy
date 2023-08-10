@@ -36,7 +36,7 @@
                             <i class="fa fa-step-forward" ></i>
                         </button>
                     </div>
-                    <div class="btn-group ml-1 mt-1">
+                    <div class="btn-group">
                         <div class="btn-group dropdown" dropdown dropdown-append-to-body role="group">
                             <button class="btn btn-sm btn-default dropdown-toggle control-border" dropdown-toggle ng-disabled="!audio_player.has_recording" >
                                 <i class="fa fa-fw-1" ng-class="audio_player.resource.audio.volume > .75 ? 'fa-volume-up' : audio_player.resource.audio.volume > .25 ? 'fa-volume-down' : 'fa-volume-off'" ></i>
@@ -64,7 +64,7 @@
                             <span class="fa fa-ellipsis-h fa-concat-sub"></span>
                         </button>
                     </div>
-                    <div class="btn-group ml-1 mt-1">
+                    <div class="btn-group">
                         <button class="btn btn-default btn-sm control-border"
                             ng-disabled="!audio_player.has_recording"
                             ng-click="audio_player.download(visobject) | trackEvent:'Visualizer-RecordingLayer':'AudioControl download rec'"

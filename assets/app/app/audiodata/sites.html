@@ -7,22 +7,22 @@
         <input class="form-control" type="text" placeholder="Search by name" ng-model="search" ng-change="onFilterChanged()">
     </div>
     <div class="col-md-6 col-md-pull-6 toolbar">
-        <button class="btn btn-default mb-1"
+        <button class="btn btn-default mr-1 mb-1"
             ng-click="create() | trackEvent:'Dashboard-sites':'add site'">
             Create
         </button>
-        <button class="btn btn-default mb-1"
+        <button class="btn btn-default mr-1 mb-1"
             ng-click="edit() | trackEvent:'Dashboard-sites':'edit site'"
             ng-disabled="!selected || selected.imported">
             Edit
         </button>
-        <button class="btn btn-default btn-file mb-1" ng-click="importSite()">
+        <button class="btn btn-default btn-file mr-1 mb-1" ng-click="importSite()">
             Import
         </button>
-        <button class="btn btn-default btn-file mb-1" ng-click="exportSites()">
+        <button class="btn btn-default btn-file mr-1 mb-1" ng-click="exportSites()">
             Export Sites
         </button>
-        <div class="btn-group mb-1" dropdown dropdown-append-to-body="true" a2-auto-close-on-outside-click>
+        <div class="btn-group mr-1 mb-1" dropdown dropdown-append-to-body="true" a2-auto-close-on-outside-click>
             <button class="btn btn-default" dropdown-toggle>
                 <i class="fa fa-trash"></i> Delete <i class="fa fa-caret-down"></i></button>
             </button>

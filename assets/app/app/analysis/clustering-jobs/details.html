@@ -11,7 +11,7 @@
             <div class="col-sm-6 row-flex flex-space-end panel-body pr-0 pb-0">
                 <div class="flex-self-align-bottom btn-group-margin">
                     <div class="btn-group">
-                        <button class="btn btn-sm btn-default" ng-class="audio_player.freq_filter ? 'active' : ''" ng-click="openFreqFilterModal()" ng-disabled="!frequencyFilter && !frequencyFilter.min && !frequencyFilter.max"
+                        <button class="btn btn-default" ng-class="audio_player.freq_filter ? 'active' : ''" ng-click="openFreqFilterModal()" ng-disabled="!frequencyFilter && !frequencyFilter.min && !frequencyFilter.max"
                             title="Cluster audio frequency filter">
                             <i class="fa fa-filter" ></i>
                             <span class="fa fa-ellipsis-h fa-concat-sub"></span>
@@ -26,7 +26,7 @@
                         <i class="fa fa-minus"></i>
                     </button>
                     <div style="padding:0;">
-                        <input type="number" class="form-control hide-input-arrow border-frequency" style="text-align:center; width: 80px" ng-change="selectCluster()" ng-model="selectedCluster" min="1" max="layout.shapes.length">
+                        <input type="number" class="form-control hide-input-arrow" style="text-align:center; width: 80px" ng-change="selectCluster()" ng-model="selectedCluster" min="1" max="layout.shapes.length">
                     </div>
                     <button class="btn btn-default btn-sm" style="border-top-left-radius: 0; border-bottom-left-radius: 0;" type="button" ng-click="incrementClusters()">
                         <i class="fa fa-plus"></i>

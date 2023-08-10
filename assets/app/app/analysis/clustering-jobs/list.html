@@ -3,18 +3,18 @@
         <h3>
             Clustering Jobs
             <span class="beta-badge">BETA</span>
-            <a class="btn btn-sm btn-default ml-2"
+            <a class="btn btn-sm btn-default ml-3"
                 tooltip="Create New Clustering job"
                 tooltip-placement="right"
                 ng-click="createNewClusteringJob() | trackEvent:'Analysis-ClusteringModel-List':'Create new Clustering Job'">
-                <i class="fa fa-plus mr-1" ></i> New Job
+                <i class="fa fa-plus"></i> New Job
             </a>
         </h3>
         <button ng-if="showRefreshBtn"
-            class="btn btn-default pull-right"
+            class="btn btn-default pull-right btn-sm"
             tooltip="Refresh list"
             ng-click="loadClusteringJobs()">
-                <i class="fa fa-refresh"></i>
+                <i class="fa fa-refresh"></i> Refresh List
         </button>
         <loader ng-if="loading"></loader>
         <div ng-show="!loading && clusteringJobsData && !clusteringJobsData.length" class="help-wrapper col-sm-12 row-flex flex-direction-column flex-space-center flex-align-middle" style="text-align: center;">
