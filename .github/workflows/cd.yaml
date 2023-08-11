@@ -5,7 +5,7 @@ on:
     branches:
       - master
       - staging
-      - testing
+      - develop
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 jobs:
 

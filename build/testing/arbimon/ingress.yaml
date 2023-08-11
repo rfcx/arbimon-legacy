@@ -4,8 +4,6 @@ metadata:
   annotations:
     nginx.ingress.kubernetes.io/limit-rpm: "120"
     nginx.ingress.kubernetes.io/proxy-body-size: "200m"
-    kubernetes.io/ingress.class: nginx
-    nginx.ingress.kubernetes.io/use-regex: 'true'
   name: arbimon-ingress
   namespace: testing
   labels:
@@ -15,33 +13,6 @@ spec:
     - host: testing-arbimon.rfcx.org
       http:
         paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              serviceName: biodiversity-website-service
-              servicePort: 80
-          - path: /featured
-            pathType: Prefix
-            backend:
-              serviceName: biodiversity-website-service
-              servicePort: 80
-          - path: /contact
-            pathType: Prefix
-            backend:
-              serviceName: biodiversity-website-service
-              servicePort: 80
-          - path: /includes/(.*)
-            pathType: ImplementationSpecific
-            backend:
-              serviceName: arbimon-service
-              servicePort: 80
-          - path: /projects
-            pathType: ImplementationSpecific
-            backend:
-              serviceName: arbimon-service
-              servicePort: 80
-          - path: /project/(.*)
-            pathType: ImplementationSpecific
-            backend:
+          - backend:
               serviceName: arbimon-service
               servicePort: 80
