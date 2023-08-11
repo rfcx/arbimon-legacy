@@ -10,9 +10,46 @@ metadata:
     app: arbimon
 spec:
   rules:
-    - host: testing-arbimon.rfcx.org
+    - host: dev.arbimon.org
       http:
         paths:
-          - backend:
+          - path: /api(/|$)(.*)
+            pathType: Prefix
+            backend:
               serviceName: arbimon-service
+              servicePort: 80
+          - path: /includes/(.*)
+            pathType: Prefix
+            backend:
+              serviceName: arbimon-service
+              servicePort: 80
+          - path: /fonts/(.*)
+            pathType: Prefix
+            backend:
+              serviceName: arbimon-service
+              servicePort: 80
+          - path: /images/(.*)
+            pathType: Prefix
+            backend:
+              serviceName: arbimon-service
+              servicePort: 80
+          - path: /projects
+            pathType: Prefix
+            backend:
+              serviceName: arbimon-service
+              servicePort: 80
+          - path: /project/(.*)
+            pathType: Prefix
+            backend:
+              serviceName: arbimon-service
+              servicePort: 80
+          - path: /my-projects
+            pathType: Prefix
+            backend:
+              serviceName: arbimon-service
+              servicePort: 80
+          - path: /(.*)
+            pathType: Prefix
+            backend:
+              serviceName: biodiversity-website-service
               servicePort: 80
