@@ -82,7 +82,7 @@ var Templates = {
             tables.push('JOIN recordings R ON T.recording_id = R.recording_id');
             tables.push('JOIN sites S ON R.site_id = S.site_id');
             tables.push('JOIN projects P ON S.project_id = P.project_id');
-            select.push('P.url as source_project_uri');
+            select.push('P.url as source_project_uri, R.uri as recUri');
         }
 
         if (options.projectTemplates || options.publicTemplates) {

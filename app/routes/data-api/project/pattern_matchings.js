@@ -5,10 +5,10 @@ var q = require('q');
 var express = require('express');
 var router = express.Router();
 var model = require('../../../model');
-var pokeDaMonkey = require('../../../utils/monkey');
 var csv_stringify = require("csv-stringify");
 const dayInMs = 24 * 60 * 60 * 1000;
 const fs = require('fs');
+const path = require('path');
 
 let cachedData = {
     counts: { }
@@ -187,8 +187,11 @@ router.get('/:patternMatching/:jobName?', function(req, res, next) {
     }).catch(next);
 });
 
-router.get('/:patternMatching/audio/:roiId', function(req, res, next) {
-    model.patternMatchings.getRoiAudioFile(req.params.patternMatching, req.params.roiId, { gain: req.query.gain }).then(function(roiAudio) {
+router.get('/:patternMatching/audio/:roiUrl', function(req, res, next) {
+    const roiUrl = req.params.roiUrl;
+    const ext = path.extname(roiUrl)
+    const roiId = path.basename(roiUrl, ext);
+    model.patternMatchings.getRoiAudioFile(req.params.patternMatching, roiId, { gain: req.query.gain }).then(function(roiAudio) {
         if (!roiAudio){
             res.sendStatus(404);
         } if (roiAudio.path.includes('/internal')) {

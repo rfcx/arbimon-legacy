@@ -41,7 +41,8 @@ router.post('/recordings/create', verifyToken(), hasRole(['systemUser']), async 
     }
     const timezone = await model.sites.getSiteTimezoneAsync(site.site_id);
     const recordings = converter.transformedArray.map((data) => {
-      const meta = data.meta.replace(/'/g, "\\'")
+      const meta = data.meta.replace(/'/g, "\\'");
+      console.log('\n\n------meta----', data.meta, meta)
       let recordingData = {
         site_id: site.site_id,
         uri: data.uri,

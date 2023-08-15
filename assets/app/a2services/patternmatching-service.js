@@ -49,7 +49,7 @@ angular.module('a2.srv.patternmatching', [
             return '/api/project/' + Project.getUrl() + '/pattern-matchings/' + params.patternMatching + '/' + params.jobName + '.csv';
         },
         getAudioUrlFor: function(roi){
-            return '/api/project/' + Project.getUrl() + '/pattern-matchings/' + roi.pattern_matching_id + '/audio/' + roi.id;
+            return '/api/project/' + Project.getUrl() + '/pattern-matchings/' + roi.pattern_matching_id + '/audio/' + roi.id + roi.recExt;
         },
         validateRois: function(patternMatchingId, rois, validation, cls) {
             return $http.post('/api/project/' + Project.getUrl() + '/pattern-matchings/' + patternMatchingId + '/validate', {

@@ -50,7 +50,7 @@ angular.module('a2.srv.templates', ['a2.srv.project'])
         },
 
         getAudioUrlFor: function(template){
-            return '/api/project/' + Project.getUrl() + '/templates/' + template.id + '/audio';
+            return '/api/project/' + Project.getUrl() + '/templates/audio/' + template.id + template.recExt;
         },
 
         delete: function(templateId) {

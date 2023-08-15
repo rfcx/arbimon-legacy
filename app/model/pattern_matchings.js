@@ -12,6 +12,7 @@ const Recordings = require('./recordings');
 const Templates = require('./templates');
 const models = require("./index");
 const lambda = new AWS.Lambda();
+const path = require('path');
 
 // exports
 var PatternMatchings = {
@@ -102,7 +103,14 @@ var PatternMatchings = {
                     return _;
                 }, {});
                 return Templates.find({idIn: Object.keys(idmap), sourceProjectUri: true, showSpecies: true}).then(templates => {
-                    templates.forEach((template) => idmap[template.id].forEach(row => row.template = template));
+                    templates.forEach((template) => idmap[template.id].forEach(row => {
+                        if (template.recUri) {
+                            const ext = path.extname(template.recUri);
+                            template.recExt = ext;
+                        }
+                        row.template = template
+
+                    }));
                     return rows;
                 });
             });
@@ -596,7 +604,8 @@ var PatternMatchings = {
             // Fill the original filename from the meta column.
             for (let _1 of results) {
                 _1.meta = _1.meta ? PatternMatchings.__parse_meta_data(_1.meta) : null;
-                _1.recording = _1.meta && _1.meta.filename? _1.meta.filename :  _1.recording;
+                _1.recExt = path.extname(_1.recording);
+                _1.recording = _1.meta && _1.meta.filename? _1.meta.filename : _1.recording;
             }
             return results;
         });
