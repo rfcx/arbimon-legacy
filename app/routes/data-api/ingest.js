@@ -60,7 +60,7 @@ router.post('/recordings/create', verifyToken(), hasRole(['systemUser']), async 
         upload_time: moment.utc().toISOString(),
         meta: meta
       };
-      const parsedData = data.meta ? JSON.parse(data.meta) : null;
+      const parsedData = recordingData.meta ? JSON.parse(recordingData.meta) : null;
 			const artist = parsedData && parsedData.ARTIST ? parsedData.ARTIST : parsedData.artist
       const comment = parsedData && parsedData.comment
 			const isAudioMoth = artist && artist.includes('AudioMoth')
