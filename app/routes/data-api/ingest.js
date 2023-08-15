@@ -41,8 +41,8 @@ router.post('/recordings/create', verifyToken(), hasRole(['systemUser']), async 
     }
     const timezone = await model.sites.getSiteTimezoneAsync(site.site_id);
     const recordings = converter.transformedArray.map((data) => {
-      const meta = data.meta.replace(/'/g, "\\'");
-      console.log('\n\n------meta----', data.meta, meta)
+      const metaData = data.meta.replace(/'/g, "\\'");
+      console.log('\n\n------meta----', metaData)
       let recordingData = {
         site_id: site.site_id,
         uri: data.uri,
@@ -58,9 +58,9 @@ router.post('/recordings/create', verifyToken(), hasRole(['systemUser']), async 
         bit_rate: data.bit_rate,
         sample_encoding: data.sample_encoding,
         upload_time: moment.utc().toISOString(),
-        meta: meta
+        meta: metaData
       };
-      const parsedData = recordingData.meta ? JSON.parse(recordingData.meta) : null;
+      const parsedData = data.meta ? JSON.parse(data.meta) : null;
 			const artist = parsedData && parsedData.ARTIST ? parsedData.ARTIST : parsedData.artist
       const comment = parsedData && parsedData.comment
 			const isAudioMoth = artist && artist.includes('AudioMoth')
