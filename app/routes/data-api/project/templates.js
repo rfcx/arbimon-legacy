@@ -40,24 +40,12 @@ router.get('/', function(req, res, next) {
     }
     if (req.query.limit) {
         model.templates.findWithPagination(params).then(function(data) {
-            data.list.forEach(template => {
-                if (template.recUri) {
-                    const ext = path.extname(template.recUri);
-                    template.recExt = ext;
-                }
-            })
             res.json(data);
             return null;
         }).catch(next);
     }
     else {
         model.templates.find(params).then(function(data) {
-            data.forEach(template => {
-                if (template.recUri) {
-                    const ext = path.extname(template.recUri);
-                    template.recExt = ext;
-                }
-            })
             res.json(data);
             return null;
         }).catch(next);

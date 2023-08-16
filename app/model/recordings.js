@@ -1076,7 +1076,6 @@ var Recordings = {
         const array = joi.array().items(Recordings.recordingInsertSchema)
         array.validate(recordings, function(err, recs) {
             const data = recs.map((rec) => {
-                console.log('---meta to insert---', rec.meta)
                 return [rec.site_id, rec.uri, rec.datetime, rec.mic || '(not specified)', rec.recorder || '(not specified)', rec.version || '(not specified)', rec.sample_rate,
                 rec.precision, rec.duration, rec.samples, rec.file_size, rec.bit_rate, rec.sample_encoding, rec.upload_time, rec.datetime_utc, rec.meta]
             })
