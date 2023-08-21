@@ -148,6 +148,11 @@ var Sites = {
                 site.timezone = 'UTC';
             }
         }
+
+        if (site.name !== undefined) {
+            site['updated_at'] = moment.utc(new Date()).format();
+        }
+
         if (site.lat !== undefined || site.lon !== undefined || site.alt !== undefined) {
             site['updated_at'] = moment.utc(new Date()).format();
         }
