@@ -14,7 +14,7 @@ npm-debug.log
 bower_components
 
 # grunt build files
-public/assets
+public/includes
 
 #komodo specific files
 a2.komodoproject

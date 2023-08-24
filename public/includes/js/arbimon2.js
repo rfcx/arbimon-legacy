@@ -2314,594 +2314,6 @@ angular.module('a2.filter.time-from-now', []).filter('timeFromNow', function () 
     return moment(input).fromNow();
   };
 });
-angular.module('a2.orders.change-project-plan', ['a2.orders.order-utils', 'a2.orders.orders', 'ui.bootstrap', 'humane', 'a2.directives', 'a2.services']).controller('ChangeProjectPlanCtrl', ["$scope", "orderData", "Project", "$window", "a2order", "$modalInstance", "notify", "a2orderUtils", function ($scope, orderData, Project, $window, a2order, $modalInstance, notify, a2orderUtils) {
-  $scope.today = new Date();
-  console.log(orderData);
-  $scope.recorderQty = orderData.recorderQty;
-  a2orderUtils.getOrdersContact().then(function (response) {
-    $scope.ordersContact = response.data;
-  });
-  a2orderUtils.paymentsStatus().then(function (response) {
-    $scope.autoPaymentsEnabled = response.data.payments_enable;
-  });
-  Project.getInfo(function (info) {
-    $scope.project = info;
-    $scope.currentPlan = {
-      storage: info.storage_limit,
-      processing: info.processing_limit,
-      duration: info.plan_period,
-      tier: info.tier,
-      activation: info.plan_activated,
-      creation: info.plan_created
-    };
-
-    if ($scope.currentPlan.activation && $scope.currentPlan.duration) {
-      var due = new Date($scope.currentPlan.activation);
-      due.setFullYear(due.getFullYear() + $scope.currentPlan.duration);
-      $scope.currentPlan.due = due;
-    }
-
-    if ($scope.currentPlan.due && $scope.currentPlan.due < $scope.today) {
-      $scope.mode = 'renew';
-    } else if ($scope.currentPlan.duration) {
-      $scope.mode = 'upgrade';
-    } else {
-      $scope.mode = 'new';
-    }
-
-    $scope.project.plan = orderData.project && orderData.project.plan || {};
-    Project.getUsage().success(function (usage) {
-      $scope.minUsage = usage.min_usage;
-    });
-  });
-
-  $scope.upgrade = function () {
-    if (!$scope.autoPaymentsEnabled) {
-      return notify.log('Payments are unavailable');
-    }
-
-    if ($scope.mode == 'renew') {
-      if ($scope.project.plan.storage < $scope.minUsage) {
-        notify.error('Please select a plan with more capacity or delete recordings from the project');
-        return;
-      }
-    } else {
-      if ($scope.currentPlan.storage && $scope.project.plan.storage - $scope.currentPlan.storage <= 0) {
-        notify.error('To upgrade select a plan with more capacity than the current');
-        return;
-      }
-    }
-
-    orderData = {
-      action: 'update-project',
-      project: $scope.project,
-      recorderQty: $scope.recorderQty,
-      mode: $scope.mode
-    };
-
-    if ($scope.recorderQty > 0 && $scope.project.plan.tier == 'paid') {
-      a2order.enterShippingAddress(orderData);
-    } else {
-      a2order.reviewOrder(orderData);
-    }
-
-    $modalInstance.dismiss();
-  };
-}]);
-angular.module('a2.orders.create-project', ['a2.orders.orders', 'a2.orders.order-utils', 'a2.orders.plan-selection', 'a2.orders.project-order-service', 'ui.bootstrap', 'humane']).controller('CreateProjectCtrl', ["$scope", "$http", "$modalInstance", "$modal", "notify", "a2order", "orderData", "a2orderUtils", "ProjectOrderService", function ($scope, $http, $modalInstance, $modal, notify, a2order, orderData, a2orderUtils, ProjectOrderService) {
-  $scope.project = orderData.project;
-  $scope.recorderQty = orderData.recorderQty;
-  a2orderUtils.getOrdersContact().then(function (response) {
-    $scope.ordersContact = response.data;
-  });
-  a2orderUtils.paymentsStatus().then(function (response) {
-    $scope.autoPaymentsEnabled = response.data.payments_enable;
-  });
-
-  $scope.create = function () {
-    console.log($scope.isValid);
-
-    if (!$scope.isValid) {
-      return;
-    }
-
-    return ProjectOrderService.makeOrder('create-project', $scope.project, $scope.recorderQty, {
-      autoPaymentsEnabled: $scope.autoPaymentsEnabled
-    }).then(function (order) {
-      console.log(order); // if user added recorders to paid order show shipping address form
-
-      if (order.hasCoupon || !order.isPaidProject) {
-        return ProjectOrderService.placeOrder(order.data).then(function () {
-          return $modalInstance.close();
-        });
-      } else if (order.isPaidProject && order.data.recorderQty > 0) {
-        a2order.enterShippingAddress(order.data);
-        $modalInstance.dismiss();
-      } else {
-        a2order.reviewOrder(order.data);
-        $modalInstance.dismiss();
-      }
-    });
-  };
-}]);
-angular.module('a2.orders.order-summary', ['a2.orders.orders', 'a2.orders.order-utils', 'a2.orders.project-order-service', 'ui.bootstrap', 'humane']).controller('OrderSummaryCtrl', ["$scope", "$http", "$modalInstance", "orderData", "notify", "$window", "a2order", "a2orderUtils", "ProjectOrderService", function ($scope, $http, $modalInstance, orderData, notify, $window, a2order, a2orderUtils, ProjectOrderService) {
-  if (orderData.address) {
-    $scope.address = orderData.address;
-  }
-
-  $scope.type = orderData.mode == 'upgrade' ? 'upgrade' : 'new';
-  $scope.info = a2orderUtils.info;
-  $scope.shipping = orderData.shipping || 0;
-  $scope.project = orderData.project;
-  $scope.plan = orderData.project.plan;
-  $scope.recorderQty = orderData.recorderQty || 0;
-
-  $scope.changeItems = function () {
-    if (orderData.action == 'create-project') {
-      a2order.createProject(orderData);
-    } else {
-      a2order.changePlan(orderData);
-    }
-
-    $modalInstance.dismiss();
-  };
-
-  $scope.editAddress = function () {
-    a2order.enterShippingAddress(orderData);
-    $modalInstance.dismiss();
-  };
-
-  $scope.submit = function () {
-    $scope.waiting = true;
-    console.log(orderData);
-    return ProjectOrderService.placeOrder(orderData).then(function (data) {
-      console.log(data);
-
-      if (data.message) {
-        // if free project notify project was created
-        $modalInstance.close();
-      } else if (data.approvalUrl) {
-        // else redirect to paypal
-        $window.location.assign(data.approvalUrl);
-      }
-
-      $scope.waiting = false;
-    }).catch(function (err) {
-      $scope.waiting = false;
-    });
-  };
-}]);
-angular.module('a2.orders.order-utils', []).service('a2orderUtils', ["$http", function ($http) {
-  return {
-    /**
-        receives a plan activation date and duration period, and calculates 
-        how many month are left until the plan is due
-        @param [Date] acticationDate
-        @param [Number] period
-    */
-    monthsUntilDue: function (acticationDate, period) {
-      var d = new Date(acticationDate);
-      var totalMonths = period * 12;
-      var today = new Date();
-      var currentMonth;
-
-      for (var i = 0; i <= totalMonths; i++) {
-        var month = new Date(d.getFullYear(), d.getMonth() + i, d.getDate());
-
-        if (today <= month) {
-          currentMonth = i - 1;
-          break;
-        }
-      }
-
-      return totalMonths - currentMonth;
-    },
-    paymentsStatus: function () {
-      return $http.get('/api/orders/payments-status', {
-        cache: true
-      });
-    },
-    checkCouponCode: function (code, project) {
-      return $http.post('/api/orders/check-coupon', {
-        hash: code,
-        project: project
-      }).then(function (response) {
-        return response.data;
-      });
-    },
-    getOrdersContact: function () {
-      return $http.get('/api/orders/contact', {
-        cache: true
-      });
-    },
-    info: {
-      recorder: {
-        name: 'Arbimon Recorder',
-        description: "includes an Android device preset for acoustic monitoring, " + "waterproof case(IP67), microphone, 6500mAh lithium-ion battery " + "and USB charger",
-        priceWithPlan: 125,
-        priceNoPlan: 300
-      },
-      plan: {
-        new: {
-          name: "Project data plan",
-          description: function (plan) {
-            return "includes storage for " + plan.storage + " minutes of audio " + "and capacity to process " + plan.processing + " minutes of audio " + "per year, for a term of " + plan.duration + " year(s)";
-          }
-        },
-        upgrade: {
-          name: "Project data plan upgrade",
-          description: function (plan) {
-            return "upgrade your plan storage to " + plan.storage + " minutes of audio " + "and capacity to process " + plan.processing + " minutes of audio " + "per year, until this plan due";
-          }
-        }
-      }
-    }
-  };
-}]);
-angular.module('a2.orders.orders', ['a2.orders.create-project', 'a2.orders.change-project-plan', 'a2.orders.shipping-form', 'a2.orders.order-summary', 'ui.bootstrap']).service('a2order', ["$modal", function ($modal) {
-  var formOpener = function (orderData, view) {
-    var modalOptions = {
-      resolve: {
-        orderData: function () {
-          return orderData;
-        }
-      },
-      backdrop: 'static',
-      templateUrl: view.templateUrl,
-      controller: view.controller
-    };
-    return $modal.open(modalOptions);
-  };
-
-  return {
-    createProject: function (orderData) {
-      var modalInstance = formOpener(orderData, {
-        templateUrl: '/orders/create-project.html',
-        controller: 'CreateProjectCtrl'
-      });
-      return modalInstance;
-    },
-    changePlan: function (orderData) {
-      var modalInstance = formOpener(orderData, {
-        templateUrl: '/orders/change-plan.html',
-        controller: 'ChangeProjectPlanCtrl'
-      });
-      return modalInstance;
-    },
-    enterShippingAddress: function (orderData) {
-      var modalInstance = formOpener(orderData, {
-        templateUrl: '/orders/shipping-address.html',
-        controller: 'ShippingFormCtrl'
-      });
-      return modalInstance;
-    },
-    reviewOrder: function (orderData) {
-      var modalInstance = formOpener(orderData, {
-        templateUrl: '/orders/order-summary.html',
-        controller: 'OrderSummaryCtrl'
-      });
-      return modalInstance;
-    }
-  };
-}]);
-angular.module('a2.orders.directives.plan-capacity', ['a2.orders.plan-selection', 'countries-list', 'ui.bootstrap', 'humane', 'a2.directives', 'a2.services']).directive('planCapacity', function () {
-  return {
-    restrict: 'E',
-    scope: {
-      'disabled': '=',
-      'minutes': '='
-    },
-    templateUrl: '/orders/plan-capacity.html',
-    link: function (scope, element, attrs) {
-      if (!attrs.enabled) {
-        scope.enabled = true;
-      }
-    }
-  };
-});
-angular.module('a2.orders.plan-selection', ['countries-list', 'ui.bootstrap', 'humane', 'a2.orders.directives.plan-capacity', 'a2.orders.directives.tier-select', 'a2.directives', 'a2.services']).controller('PlanSelectionCtrl', ["$scope", "a2orderUtils", function ($scope, a2orderUtils) {
-  const freePlan = {
-    // Changes must be matched in app/model/projects.js
-    tier: 'free',
-    cost: 0,
-    storage: 100000,
-    processing: 10000000
-  };
-  this.coupon = {
-    code: '',
-    validation: null
-  };
-
-  this.checkCouponCode = function () {
-    if (this.coupon.code) {
-      this.coupon.validation = {
-        class: 'fa fa-spinner fa-spin'
-      };
-      delete this.coupon.payload;
-      delete $scope.plan.coupon;
-      return a2orderUtils.checkCouponCode(this.coupon.code, this.project).then(function (code) {
-        if (code.valid) {
-          $scope.plan.coupon = code;
-          this.coupon.payload = code.payload;
-          this.coupon.validation = {
-            valid: true,
-            class: 'fa fa-check text-success'
-          };
-        } else {
-          this.coupon.validation = {
-            valid: false,
-            class: 'fa fa-times text-danger'
-          };
-        }
-      }.bind(this), function () {
-        this.coupon.validation = {
-          valid: false,
-          class: 'fa fa-times text-danger'
-        };
-      }.bind(this));
-    } else {
-      delete this.coupon.validation;
-    }
-  };
-
-  $scope.plan = freePlan;
-  $scope.recorderOptions = 0;
-  $scope.planMinutes = $scope.planMinutes || freePlan.storage;
-  $scope.planYears = $scope.planYears || 1;
-  $scope.upgradeOnly = false;
-  $scope.recorderQty = $scope.recorderQty || 0;
-  console.log($scope.plan);
-  this.hasCouponCode = false;
-  this.planData = {
-    yearOptions: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-  };
-  $scope.$watch('currentPlan', function () {
-    if (!$scope.currentPlan) return;
-    var due = new Date($scope.currentPlan.activation);
-    due.setFullYear(due.getFullYear() + $scope.currentPlan.duration);
-    $scope.planYears = $scope.currentPlan.duration || 1;
-    $scope.planMinutes = $scope.currentPlan.storage >= freePlan.storage ? $scope.currentPlan.storage : freePlan.storage;
-
-    if ($scope.currentPlan.tier == 'paid' && (!$scope.currentPlan.activation || new Date() < due)) {
-      $scope.upgradeOnly = true;
-      $scope.plan.tier = 'paid';
-    }
-  });
-  $scope.$watch('plan', function (value) {
-    if ($scope.plan) {
-      if ($scope.plan.storage) $scope.planMinutes = $scope.plan.storage;
-      if ($scope.plan.duration) $scope.planYears = $scope.plan.duration;
-    }
-  });
-  $scope.$watch('plan.tier', function (value) {
-    if (!$scope.plan) return;
-
-    if ($scope.plan.tier == 'paid') {
-      $scope.plan.cost = $scope.planMinutes * 0.03 * $scope.planYears;
-      $scope.plan.storage = +$scope.planMinutes;
-      $scope.plan.processing = $scope.planMinutes * 100;
-      $scope.plan.duration = $scope.planYears;
-      console.log($scope.plan);
-    } else if ($scope.plan.tier == 'free') {
-      $scope.plan.cost = freePlan.cost;
-      $scope.plan.storage = freePlan.storage;
-      $scope.plan.processing = freePlan.processing;
-      $scope.plan.duration = undefined;
-    }
-  });
-
-  var updatePlan = function () {
-    $scope.plan = $scope.plan || {};
-
-    if ($scope.upgradeOnly) {
-      if ($scope.currentPlan.storage > $scope.planMinutes) {
-        $scope.planMinutes = $scope.currentPlan.storage;
-      }
-
-      var planStarts = $scope.currentPlan.activation || $scope.currentPlan.creation;
-      var monthsLeft = a2orderUtils.monthsUntilDue(planStarts, $scope.currentPlan.duration);
-      console.log('planStarts', planStarts);
-      console.log('monthsLeft', monthsLeft);
-      $scope.plan.cost = ($scope.planMinutes - $scope.currentPlan.storage) * monthsLeft * (0.03 / 12);
-      $scope.plan.storage = +$scope.planMinutes;
-      $scope.plan.processing = $scope.planMinutes * 100;
-      $scope.plan.duration = $scope.planYears;
-    } else {
-      if ($scope.usage && $scope.usage > $scope.planMinutes) {
-        $scope.planMinutes = Math.ceil($scope.usage / 5000) * 5000;
-      }
-
-      $scope.plan.cost = $scope.planMinutes * $scope.planYears * 0.03;
-      $scope.plan.storage = +$scope.planMinutes;
-      $scope.plan.processing = $scope.planMinutes * 100;
-      $scope.plan.duration = $scope.planYears;
-      var recorderCap = Math.floor($scope.planMinutes / 10000) * $scope.planYears;
-      $scope.recorderQty = $scope.recorderQty || 0;
-
-      if ($scope.recorderQty > recorderCap) {
-        $scope.recorderQty = recorderCap;
-      }
-
-      $scope.recorderOptions = new Array(recorderCap + 1);
-    }
-  };
-
-  this.updatePlan = updatePlan;
-  $scope.$watch('planMinutes', updatePlan);
-  $scope.$watch('planYears', updatePlan);
-}]).directive('planSelect', function () {
-  return {
-    restrict: 'E',
-    scope: {
-      'project': '=',
-      'plan': '=',
-      'recorderQty': '=',
-      'availablePlans': '=',
-      'ordersContact': '=',
-      'autoPaymentsEnabled': '=',
-      'currentPlan': '=?',
-      'usage': '=?'
-    },
-    templateUrl: '/orders/select-plan.html',
-    controller: 'PlanSelectionCtrl as controller',
-    link: function (scope, element, attrs, controller) {
-      scope.$watch('project', function (project) {
-        controller.project = project;
-      });
-    }
-  };
-});
-angular.module('a2.orders.process-order', []).controller('ProcessOrderCtrl', ["$scope", "$http", "$window", "$location", function ($scope, $http, $window, $location) {
-  var reOrderId = /\/process-order\/([\w\-\d]+)/;
-  var result = reOrderId.exec($window.location.pathname);
-  var orderId = result !== null ? result[1] : '';
-  console.log('orderId:', orderId);
-  $scope.processing = true;
-  $http.post('/api/orders/process/' + orderId + $window.location.search).success(function (data) {
-    console.log('data', data);
-    $scope.invoice = {
-      items: data.invoice.item_list.items,
-      amount: data.invoice.amount,
-      number: data.orderNumber,
-      user: data.user
-    };
-
-    if (data.invoice.item_list.shipping_address) {
-      $scope.invoice.address = data.invoice.item_list.shipping_address;
-    }
-
-    $scope.action = data.action;
-    $scope.processing = false;
-    $scope.success = true;
-  }).error(function (data, status) {
-    if (status == 404) {
-      $scope.notFound = true;
-    } else if (status == 400 && data.error == 'APPROVAL_NEEDED') {
-      $scope.needApproval = true;
-      $scope.approvalLink = data.approvalLink;
-    } else if (status == 400 && data.error == 'ALREADY_PROCESSED') {
-      $scope.alreadyProcessed = true;
-    } else {
-      $scope.errorOcurred = true;
-    }
-
-    $scope.processing = false;
-  });
-}]);
-angular.module('a2.orders.project-order-service', ['humane']).factory("ProjectOrderService", ["$q", "$filter", "$http", "notify", function ($q, $filter, $http, notify) {
-  var currencyFilter = $filter('currency');
-  var ProjectOrderService = {
-    placeOrder: function (orderData) {
-      if (!/(create|update)-project/.test(orderData.action)) {
-        return $q.reject("Invalid action " + orderData.action);
-      }
-
-      var data = angular.merge({}, orderData);
-      delete data.action;
-      return $http.post('/api/orders/' + orderData.action, orderData).then(function (response) {
-        var data = response.data; // notify any succesfull messages
-
-        if (data.message) {
-          notify.log(data.message);
-        }
-
-        return data;
-      }).catch(function (response) {
-        var err = response.data;
-        console.log("err", err);
-        console.log("err resp", response);
-
-        if (err) {
-          if (err.freeProjectLimit) {
-            notify.error('You already have own a free project, ' + 'the limit is one per user.');
-          } else if (err.nameExists) {
-            notify.error('Name <b>' + orderData.project.name + '</b> not available.');
-          } else if (err.urlExists) {
-            notify.error('URL <b>' + orderData.project.url + '</b> is taken, choose another one.');
-          } else {
-            notify.serverError();
-          }
-        }
-
-        throw err;
-      });
-    },
-    makeOrder: function (action, project, recorderQty, settings) {
-      console.log("makeOrder", action, project, recorderQty, settings);
-
-      if (!project || !project.plan) {
-        return $q.reject(new Error('You need to select a plan'));
-      }
-
-      var isPaidProject = project.plan.tier == 'paid';
-      var coupon = project.plan.coupon && project.plan.coupon.valid ? project.plan.coupon : undefined;
-      settings.recorderCost = settings.recorderCost || 125;
-      settings.projectCostLimit = settings.projectCostLimit || 10000;
-
-      if (coupon) {
-        project = angular.merge({}, project);
-        delete project.plan;
-      } else if (isPaidProject) {
-        if (!settings.autoPaymentsEnabled) {
-          return $q.reject(new Error('Payments are unavailable'));
-        } // don't process orders over $10,000
-
-
-        if (project.plan.cost + recorderQty * settings.recorderCost > settings.projectCostLimit) {
-          return $q.reject(new Error('Cannot process order greater than ' + currencyFilter(settings.projectCostLimit)));
-        }
-      }
-
-      return $q.resolve({
-        hasCoupon: !!coupon,
-        isPaidProject: isPaidProject,
-        data: {
-          action: action,
-          coupon: coupon ? coupon.hash : undefined,
-          project: project,
-          recorderQty: recorderQty
-        }
-      });
-    }
-  };
-  return ProjectOrderService;
-}]);
-angular.module('a2.orders.shipping-form', ['a2.orders.orders', 'countries-list', 'ui.bootstrap']).controller('ShippingFormCtrl', ["$scope", "$http", "$modalInstance", "$modal", "orderData", "countries", "a2order", function ($scope, $http, $modalInstance, $modal, orderData, countries, a2order) {
-  if (!orderData.address) {
-    $http.get('/api/user/address').success(function (data) {
-      $scope.address = data.address || {};
-    });
-  } else {
-    $scope.address = orderData.address;
-  }
-
-  countries.get(function (data) {
-    $scope.countries = data;
-  });
-
-  $scope.verify = function () {
-    // TODO this method should validate form and call server to get shipping cost
-    $http.post('/api/orders/calculate-shipping', {
-      address: $scope.address,
-      recorderQty: orderData.recorderQty
-    }).success(function (data) {
-      orderData.shipping = data.shipping_cost;
-      orderData.address = data.address;
-      a2order.reviewOrder(orderData);
-      $modalInstance.dismiss();
-    });
-  };
-}]);
-angular.module('a2.orders.directives.tier-select', []).directive('tierSelect', function () {
-  return {
-    restrict: 'E',
-    scope: {
-      'tier': '=',
-      'disableFree': '='
-    },
-    templateUrl: '/orders/tier-select.html'
-  };
-});
 angular.module('a2.directive.a2-auto-close-on-outside-click', []).directive('a2AutoCloseOnOutsideClick', ["$document", "$rootScope", function ($document, $rootScope) {
   function getElementPath(element) {
     var ancestors = [];
@@ -4719,7 +4131,7 @@ angular.module('a2.forms', ['templates-arbimon2']).run(["$window", function ($wi
   var loadZXCVBN = function () {
     var a, b;
     b = $window.document.createElement("script");
-    b.src = "/includes/zxcvbn/zxcvbn.js";
+    b.src = "/assets/zxcvbn/zxcvbn.js";
     b.type = "text/javascript";
     b.async = !0;
     a = $window.document.getElementsByTagName("script")[0];
@@ -6056,6 +5468,594 @@ angular.module('a2.url-update-service', []).factory('a2UrlUpdate', function () {
     return a2UrlUpdate.get(url);
   };
 }]);
+angular.module('a2.orders.change-project-plan', ['a2.orders.order-utils', 'a2.orders.orders', 'ui.bootstrap', 'humane', 'a2.directives', 'a2.services']).controller('ChangeProjectPlanCtrl', ["$scope", "orderData", "Project", "$window", "a2order", "$modalInstance", "notify", "a2orderUtils", function ($scope, orderData, Project, $window, a2order, $modalInstance, notify, a2orderUtils) {
+  $scope.today = new Date();
+  console.log(orderData);
+  $scope.recorderQty = orderData.recorderQty;
+  a2orderUtils.getOrdersContact().then(function (response) {
+    $scope.ordersContact = response.data;
+  });
+  a2orderUtils.paymentsStatus().then(function (response) {
+    $scope.autoPaymentsEnabled = response.data.payments_enable;
+  });
+  Project.getInfo(function (info) {
+    $scope.project = info;
+    $scope.currentPlan = {
+      storage: info.storage_limit,
+      processing: info.processing_limit,
+      duration: info.plan_period,
+      tier: info.tier,
+      activation: info.plan_activated,
+      creation: info.plan_created
+    };
+
+    if ($scope.currentPlan.activation && $scope.currentPlan.duration) {
+      var due = new Date($scope.currentPlan.activation);
+      due.setFullYear(due.getFullYear() + $scope.currentPlan.duration);
+      $scope.currentPlan.due = due;
+    }
+
+    if ($scope.currentPlan.due && $scope.currentPlan.due < $scope.today) {
+      $scope.mode = 'renew';
+    } else if ($scope.currentPlan.duration) {
+      $scope.mode = 'upgrade';
+    } else {
+      $scope.mode = 'new';
+    }
+
+    $scope.project.plan = orderData.project && orderData.project.plan || {};
+    Project.getUsage().success(function (usage) {
+      $scope.minUsage = usage.min_usage;
+    });
+  });
+
+  $scope.upgrade = function () {
+    if (!$scope.autoPaymentsEnabled) {
+      return notify.log('Payments are unavailable');
+    }
+
+    if ($scope.mode == 'renew') {
+      if ($scope.project.plan.storage < $scope.minUsage) {
+        notify.error('Please select a plan with more capacity or delete recordings from the project');
+        return;
+      }
+    } else {
+      if ($scope.currentPlan.storage && $scope.project.plan.storage - $scope.currentPlan.storage <= 0) {
+        notify.error('To upgrade select a plan with more capacity than the current');
+        return;
+      }
+    }
+
+    orderData = {
+      action: 'update-project',
+      project: $scope.project,
+      recorderQty: $scope.recorderQty,
+      mode: $scope.mode
+    };
+
+    if ($scope.recorderQty > 0 && $scope.project.plan.tier == 'paid') {
+      a2order.enterShippingAddress(orderData);
+    } else {
+      a2order.reviewOrder(orderData);
+    }
+
+    $modalInstance.dismiss();
+  };
+}]);
+angular.module('a2.orders.create-project', ['a2.orders.orders', 'a2.orders.order-utils', 'a2.orders.plan-selection', 'a2.orders.project-order-service', 'ui.bootstrap', 'humane']).controller('CreateProjectCtrl', ["$scope", "$http", "$modalInstance", "$modal", "notify", "a2order", "orderData", "a2orderUtils", "ProjectOrderService", function ($scope, $http, $modalInstance, $modal, notify, a2order, orderData, a2orderUtils, ProjectOrderService) {
+  $scope.project = orderData.project;
+  $scope.recorderQty = orderData.recorderQty;
+  a2orderUtils.getOrdersContact().then(function (response) {
+    $scope.ordersContact = response.data;
+  });
+  a2orderUtils.paymentsStatus().then(function (response) {
+    $scope.autoPaymentsEnabled = response.data.payments_enable;
+  });
+
+  $scope.create = function () {
+    console.log($scope.isValid);
+
+    if (!$scope.isValid) {
+      return;
+    }
+
+    return ProjectOrderService.makeOrder('create-project', $scope.project, $scope.recorderQty, {
+      autoPaymentsEnabled: $scope.autoPaymentsEnabled
+    }).then(function (order) {
+      console.log(order); // if user added recorders to paid order show shipping address form
+
+      if (order.hasCoupon || !order.isPaidProject) {
+        return ProjectOrderService.placeOrder(order.data).then(function () {
+          return $modalInstance.close();
+        });
+      } else if (order.isPaidProject && order.data.recorderQty > 0) {
+        a2order.enterShippingAddress(order.data);
+        $modalInstance.dismiss();
+      } else {
+        a2order.reviewOrder(order.data);
+        $modalInstance.dismiss();
+      }
+    });
+  };
+}]);
+angular.module('a2.orders.order-summary', ['a2.orders.orders', 'a2.orders.order-utils', 'a2.orders.project-order-service', 'ui.bootstrap', 'humane']).controller('OrderSummaryCtrl', ["$scope", "$http", "$modalInstance", "orderData", "notify", "$window", "a2order", "a2orderUtils", "ProjectOrderService", function ($scope, $http, $modalInstance, orderData, notify, $window, a2order, a2orderUtils, ProjectOrderService) {
+  if (orderData.address) {
+    $scope.address = orderData.address;
+  }
+
+  $scope.type = orderData.mode == 'upgrade' ? 'upgrade' : 'new';
+  $scope.info = a2orderUtils.info;
+  $scope.shipping = orderData.shipping || 0;
+  $scope.project = orderData.project;
+  $scope.plan = orderData.project.plan;
+  $scope.recorderQty = orderData.recorderQty || 0;
+
+  $scope.changeItems = function () {
+    if (orderData.action == 'create-project') {
+      a2order.createProject(orderData);
+    } else {
+      a2order.changePlan(orderData);
+    }
+
+    $modalInstance.dismiss();
+  };
+
+  $scope.editAddress = function () {
+    a2order.enterShippingAddress(orderData);
+    $modalInstance.dismiss();
+  };
+
+  $scope.submit = function () {
+    $scope.waiting = true;
+    console.log(orderData);
+    return ProjectOrderService.placeOrder(orderData).then(function (data) {
+      console.log(data);
+
+      if (data.message) {
+        // if free project notify project was created
+        $modalInstance.close();
+      } else if (data.approvalUrl) {
+        // else redirect to paypal
+        $window.location.assign(data.approvalUrl);
+      }
+
+      $scope.waiting = false;
+    }).catch(function (err) {
+      $scope.waiting = false;
+    });
+  };
+}]);
+angular.module('a2.orders.order-utils', []).service('a2orderUtils', ["$http", function ($http) {
+  return {
+    /**
+        receives a plan activation date and duration period, and calculates 
+        how many month are left until the plan is due
+        @param [Date] acticationDate
+        @param [Number] period
+    */
+    monthsUntilDue: function (acticationDate, period) {
+      var d = new Date(acticationDate);
+      var totalMonths = period * 12;
+      var today = new Date();
+      var currentMonth;
+
+      for (var i = 0; i <= totalMonths; i++) {
+        var month = new Date(d.getFullYear(), d.getMonth() + i, d.getDate());
+
+        if (today <= month) {
+          currentMonth = i - 1;
+          break;
+        }
+      }
+
+      return totalMonths - currentMonth;
+    },
+    paymentsStatus: function () {
+      return $http.get('/api/orders/payments-status', {
+        cache: true
+      });
+    },
+    checkCouponCode: function (code, project) {
+      return $http.post('/api/orders/check-coupon', {
+        hash: code,
+        project: project
+      }).then(function (response) {
+        return response.data;
+      });
+    },
+    getOrdersContact: function () {
+      return $http.get('/api/orders/contact', {
+        cache: true
+      });
+    },
+    info: {
+      recorder: {
+        name: 'Arbimon Recorder',
+        description: "includes an Android device preset for acoustic monitoring, " + "waterproof case(IP67), microphone, 6500mAh lithium-ion battery " + "and USB charger",
+        priceWithPlan: 125,
+        priceNoPlan: 300
+      },
+      plan: {
+        new: {
+          name: "Project data plan",
+          description: function (plan) {
+            return "includes storage for " + plan.storage + " minutes of audio " + "and capacity to process " + plan.processing + " minutes of audio " + "per year, for a term of " + plan.duration + " year(s)";
+          }
+        },
+        upgrade: {
+          name: "Project data plan upgrade",
+          description: function (plan) {
+            return "upgrade your plan storage to " + plan.storage + " minutes of audio " + "and capacity to process " + plan.processing + " minutes of audio " + "per year, until this plan due";
+          }
+        }
+      }
+    }
+  };
+}]);
+angular.module('a2.orders.orders', ['a2.orders.create-project', 'a2.orders.change-project-plan', 'a2.orders.shipping-form', 'a2.orders.order-summary', 'ui.bootstrap']).service('a2order', ["$modal", function ($modal) {
+  var formOpener = function (orderData, view) {
+    var modalOptions = {
+      resolve: {
+        orderData: function () {
+          return orderData;
+        }
+      },
+      backdrop: 'static',
+      templateUrl: view.templateUrl,
+      controller: view.controller
+    };
+    return $modal.open(modalOptions);
+  };
+
+  return {
+    createProject: function (orderData) {
+      var modalInstance = formOpener(orderData, {
+        templateUrl: '/orders/create-project.html',
+        controller: 'CreateProjectCtrl'
+      });
+      return modalInstance;
+    },
+    changePlan: function (orderData) {
+      var modalInstance = formOpener(orderData, {
+        templateUrl: '/orders/change-plan.html',
+        controller: 'ChangeProjectPlanCtrl'
+      });
+      return modalInstance;
+    },
+    enterShippingAddress: function (orderData) {
+      var modalInstance = formOpener(orderData, {
+        templateUrl: '/orders/shipping-address.html',
+        controller: 'ShippingFormCtrl'
+      });
+      return modalInstance;
+    },
+    reviewOrder: function (orderData) {
+      var modalInstance = formOpener(orderData, {
+        templateUrl: '/orders/order-summary.html',
+        controller: 'OrderSummaryCtrl'
+      });
+      return modalInstance;
+    }
+  };
+}]);
+angular.module('a2.orders.directives.plan-capacity', ['a2.orders.plan-selection', 'countries-list', 'ui.bootstrap', 'humane', 'a2.directives', 'a2.services']).directive('planCapacity', function () {
+  return {
+    restrict: 'E',
+    scope: {
+      'disabled': '=',
+      'minutes': '='
+    },
+    templateUrl: '/orders/plan-capacity.html',
+    link: function (scope, element, attrs) {
+      if (!attrs.enabled) {
+        scope.enabled = true;
+      }
+    }
+  };
+});
+angular.module('a2.orders.plan-selection', ['countries-list', 'ui.bootstrap', 'humane', 'a2.orders.directives.plan-capacity', 'a2.orders.directives.tier-select', 'a2.directives', 'a2.services']).controller('PlanSelectionCtrl', ["$scope", "a2orderUtils", function ($scope, a2orderUtils) {
+  const freePlan = {
+    // Changes must be matched in app/model/projects.js
+    tier: 'free',
+    cost: 0,
+    storage: 100000,
+    processing: 10000000
+  };
+  this.coupon = {
+    code: '',
+    validation: null
+  };
+
+  this.checkCouponCode = function () {
+    if (this.coupon.code) {
+      this.coupon.validation = {
+        class: 'fa fa-spinner fa-spin'
+      };
+      delete this.coupon.payload;
+      delete $scope.plan.coupon;
+      return a2orderUtils.checkCouponCode(this.coupon.code, this.project).then(function (code) {
+        if (code.valid) {
+          $scope.plan.coupon = code;
+          this.coupon.payload = code.payload;
+          this.coupon.validation = {
+            valid: true,
+            class: 'fa fa-check text-success'
+          };
+        } else {
+          this.coupon.validation = {
+            valid: false,
+            class: 'fa fa-times text-danger'
+          };
+        }
+      }.bind(this), function () {
+        this.coupon.validation = {
+          valid: false,
+          class: 'fa fa-times text-danger'
+        };
+      }.bind(this));
+    } else {
+      delete this.coupon.validation;
+    }
+  };
+
+  $scope.plan = freePlan;
+  $scope.recorderOptions = 0;
+  $scope.planMinutes = $scope.planMinutes || freePlan.storage;
+  $scope.planYears = $scope.planYears || 1;
+  $scope.upgradeOnly = false;
+  $scope.recorderQty = $scope.recorderQty || 0;
+  console.log($scope.plan);
+  this.hasCouponCode = false;
+  this.planData = {
+    yearOptions: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+  };
+  $scope.$watch('currentPlan', function () {
+    if (!$scope.currentPlan) return;
+    var due = new Date($scope.currentPlan.activation);
+    due.setFullYear(due.getFullYear() + $scope.currentPlan.duration);
+    $scope.planYears = $scope.currentPlan.duration || 1;
+    $scope.planMinutes = $scope.currentPlan.storage >= freePlan.storage ? $scope.currentPlan.storage : freePlan.storage;
+
+    if ($scope.currentPlan.tier == 'paid' && (!$scope.currentPlan.activation || new Date() < due)) {
+      $scope.upgradeOnly = true;
+      $scope.plan.tier = 'paid';
+    }
+  });
+  $scope.$watch('plan', function (value) {
+    if ($scope.plan) {
+      if ($scope.plan.storage) $scope.planMinutes = $scope.plan.storage;
+      if ($scope.plan.duration) $scope.planYears = $scope.plan.duration;
+    }
+  });
+  $scope.$watch('plan.tier', function (value) {
+    if (!$scope.plan) return;
+
+    if ($scope.plan.tier == 'paid') {
+      $scope.plan.cost = $scope.planMinutes * 0.03 * $scope.planYears;
+      $scope.plan.storage = +$scope.planMinutes;
+      $scope.plan.processing = $scope.planMinutes * 100;
+      $scope.plan.duration = $scope.planYears;
+      console.log($scope.plan);
+    } else if ($scope.plan.tier == 'free') {
+      $scope.plan.cost = freePlan.cost;
+      $scope.plan.storage = freePlan.storage;
+      $scope.plan.processing = freePlan.processing;
+      $scope.plan.duration = undefined;
+    }
+  });
+
+  var updatePlan = function () {
+    $scope.plan = $scope.plan || {};
+
+    if ($scope.upgradeOnly) {
+      if ($scope.currentPlan.storage > $scope.planMinutes) {
+        $scope.planMinutes = $scope.currentPlan.storage;
+      }
+
+      var planStarts = $scope.currentPlan.activation || $scope.currentPlan.creation;
+      var monthsLeft = a2orderUtils.monthsUntilDue(planStarts, $scope.currentPlan.duration);
+      console.log('planStarts', planStarts);
+      console.log('monthsLeft', monthsLeft);
+      $scope.plan.cost = ($scope.planMinutes - $scope.currentPlan.storage) * monthsLeft * (0.03 / 12);
+      $scope.plan.storage = +$scope.planMinutes;
+      $scope.plan.processing = $scope.planMinutes * 100;
+      $scope.plan.duration = $scope.planYears;
+    } else {
+      if ($scope.usage && $scope.usage > $scope.planMinutes) {
+        $scope.planMinutes = Math.ceil($scope.usage / 5000) * 5000;
+      }
+
+      $scope.plan.cost = $scope.planMinutes * $scope.planYears * 0.03;
+      $scope.plan.storage = +$scope.planMinutes;
+      $scope.plan.processing = $scope.planMinutes * 100;
+      $scope.plan.duration = $scope.planYears;
+      var recorderCap = Math.floor($scope.planMinutes / 10000) * $scope.planYears;
+      $scope.recorderQty = $scope.recorderQty || 0;
+
+      if ($scope.recorderQty > recorderCap) {
+        $scope.recorderQty = recorderCap;
+      }
+
+      $scope.recorderOptions = new Array(recorderCap + 1);
+    }
+  };
+
+  this.updatePlan = updatePlan;
+  $scope.$watch('planMinutes', updatePlan);
+  $scope.$watch('planYears', updatePlan);
+}]).directive('planSelect', function () {
+  return {
+    restrict: 'E',
+    scope: {
+      'project': '=',
+      'plan': '=',
+      'recorderQty': '=',
+      'availablePlans': '=',
+      'ordersContact': '=',
+      'autoPaymentsEnabled': '=',
+      'currentPlan': '=?',
+      'usage': '=?'
+    },
+    templateUrl: '/orders/select-plan.html',
+    controller: 'PlanSelectionCtrl as controller',
+    link: function (scope, element, attrs, controller) {
+      scope.$watch('project', function (project) {
+        controller.project = project;
+      });
+    }
+  };
+});
+angular.module('a2.orders.process-order', []).controller('ProcessOrderCtrl', ["$scope", "$http", "$window", "$location", function ($scope, $http, $window, $location) {
+  var reOrderId = /\/process-order\/([\w\-\d]+)/;
+  var result = reOrderId.exec($window.location.pathname);
+  var orderId = result !== null ? result[1] : '';
+  console.log('orderId:', orderId);
+  $scope.processing = true;
+  $http.post('/api/orders/process/' + orderId + $window.location.search).success(function (data) {
+    console.log('data', data);
+    $scope.invoice = {
+      items: data.invoice.item_list.items,
+      amount: data.invoice.amount,
+      number: data.orderNumber,
+      user: data.user
+    };
+
+    if (data.invoice.item_list.shipping_address) {
+      $scope.invoice.address = data.invoice.item_list.shipping_address;
+    }
+
+    $scope.action = data.action;
+    $scope.processing = false;
+    $scope.success = true;
+  }).error(function (data, status) {
+    if (status == 404) {
+      $scope.notFound = true;
+    } else if (status == 400 && data.error == 'APPROVAL_NEEDED') {
+      $scope.needApproval = true;
+      $scope.approvalLink = data.approvalLink;
+    } else if (status == 400 && data.error == 'ALREADY_PROCESSED') {
+      $scope.alreadyProcessed = true;
+    } else {
+      $scope.errorOcurred = true;
+    }
+
+    $scope.processing = false;
+  });
+}]);
+angular.module('a2.orders.project-order-service', ['humane']).factory("ProjectOrderService", ["$q", "$filter", "$http", "notify", function ($q, $filter, $http, notify) {
+  var currencyFilter = $filter('currency');
+  var ProjectOrderService = {
+    placeOrder: function (orderData) {
+      if (!/(create|update)-project/.test(orderData.action)) {
+        return $q.reject("Invalid action " + orderData.action);
+      }
+
+      var data = angular.merge({}, orderData);
+      delete data.action;
+      return $http.post('/api/orders/' + orderData.action, orderData).then(function (response) {
+        var data = response.data; // notify any succesfull messages
+
+        if (data.message) {
+          notify.log(data.message);
+        }
+
+        return data;
+      }).catch(function (response) {
+        var err = response.data;
+        console.log("err", err);
+        console.log("err resp", response);
+
+        if (err) {
+          if (err.freeProjectLimit) {
+            notify.error('You already have own a free project, ' + 'the limit is one per user.');
+          } else if (err.nameExists) {
+            notify.error('Name <b>' + orderData.project.name + '</b> not available.');
+          } else if (err.urlExists) {
+            notify.error('URL <b>' + orderData.project.url + '</b> is taken, choose another one.');
+          } else {
+            notify.serverError();
+          }
+        }
+
+        throw err;
+      });
+    },
+    makeOrder: function (action, project, recorderQty, settings) {
+      console.log("makeOrder", action, project, recorderQty, settings);
+
+      if (!project || !project.plan) {
+        return $q.reject(new Error('You need to select a plan'));
+      }
+
+      var isPaidProject = project.plan.tier == 'paid';
+      var coupon = project.plan.coupon && project.plan.coupon.valid ? project.plan.coupon : undefined;
+      settings.recorderCost = settings.recorderCost || 125;
+      settings.projectCostLimit = settings.projectCostLimit || 10000;
+
+      if (coupon) {
+        project = angular.merge({}, project);
+        delete project.plan;
+      } else if (isPaidProject) {
+        if (!settings.autoPaymentsEnabled) {
+          return $q.reject(new Error('Payments are unavailable'));
+        } // don't process orders over $10,000
+
+
+        if (project.plan.cost + recorderQty * settings.recorderCost > settings.projectCostLimit) {
+          return $q.reject(new Error('Cannot process order greater than ' + currencyFilter(settings.projectCostLimit)));
+        }
+      }
+
+      return $q.resolve({
+        hasCoupon: !!coupon,
+        isPaidProject: isPaidProject,
+        data: {
+          action: action,
+          coupon: coupon ? coupon.hash : undefined,
+          project: project,
+          recorderQty: recorderQty
+        }
+      });
+    }
+  };
+  return ProjectOrderService;
+}]);
+angular.module('a2.orders.shipping-form', ['a2.orders.orders', 'countries-list', 'ui.bootstrap']).controller('ShippingFormCtrl', ["$scope", "$http", "$modalInstance", "$modal", "orderData", "countries", "a2order", function ($scope, $http, $modalInstance, $modal, orderData, countries, a2order) {
+  if (!orderData.address) {
+    $http.get('/api/user/address').success(function (data) {
+      $scope.address = data.address || {};
+    });
+  } else {
+    $scope.address = orderData.address;
+  }
+
+  countries.get(function (data) {
+    $scope.countries = data;
+  });
+
+  $scope.verify = function () {
+    // TODO this method should validate form and call server to get shipping cost
+    $http.post('/api/orders/calculate-shipping', {
+      address: $scope.address,
+      recorderQty: orderData.recorderQty
+    }).success(function (data) {
+      orderData.shipping = data.shipping_cost;
+      orderData.address = data.address;
+      a2order.reviewOrder(orderData);
+      $modalInstance.dismiss();
+    });
+  };
+}]);
+angular.module('a2.orders.directives.tier-select', []).directive('tierSelect', function () {
+  return {
+    restrict: 'E',
+    scope: {
+      'tier': '=',
+      'disableFree': '='
+    },
+    templateUrl: '/orders/tier-select.html'
+  };
+});
 angular.module('a2.utils.external-api-loader', ['a2.utils.global-anonymous-function']).provider('externalApiLoader', function () {
   var externalApiLoaderProvider = {
     apis: {},
@@ -6300,6 +6300,288 @@ angular.module('a2.admin.jobs', ['ui.router', 'templates-arbimon2']).config(["$s
     $scope.job_types = jobTypes;
   });
   $scope.findJobs();
+}]);
+angular.module('a2.admin.users.list', ['ui.router', 'ui.bootstrap', 'a2.utils', 'a2.services', 'templates-arbimon2', 'humane', 'ui.select']) // .config(function($stateProvider, $urlRouterProvider) {
+//     $stateProvider
+//         .state('users.list', {
+//             url: '',
+//             controller:'AdminUsersListCtrl',
+//             templateUrl: '/admin/users/list.html'
+//         });
+// 
+// })
+// .controller('AdminUsersCtrl', function($scope, $http) {
+//     $http.get('/admin/users')
+//         .success(function(data) {
+//             $scope.users = data;
+//         });
+// })
+.service('AdminUsersListService', ["$http", function ($http) {
+  return {
+    getList: function () {
+      return $http.get('/admin/users').then(function (response) {
+        return response.data;
+      });
+    }
+  };
+}]);
+angular.module('a2.admin.projects.codes', ['ui.router', 'a2.directives', 'ui.bootstrap', 'a2.utils', 'a2.services', 'templates-arbimon2', 'humane', 'ui.select', 'a2.admin.projects.list', 'a2.admin.users.list']).config(["$stateProvider", "$urlRouterProvider", function ($stateProvider, $urlRouterProvider) {
+  $stateProvider.state('projects.codes', {
+    url: '/codes',
+    controller: 'AdminProjectsCodesCtrl as controller',
+    templateUrl: '/admin/projects/codes.html'
+  });
+}]).controller('AdminProjectsCodesCtrl', ["$modal", "notify", "LoaderFactory", "AdminProjectsCodesService", function ($modal, notify, LoaderFactory, AdminProjectsCodesService) {
+  var loader = LoaderFactory.newInstance();
+  this.loader = loader;
+
+  this.createNewCode = function () {
+    return $modal.open({
+      templateUrl: '/admin/projects/new-code-modal.html',
+      resolve: {
+        projectsList: ["AdminProjectsListService", function (AdminProjectsListService) {
+          return AdminProjectsListService.getList();
+        }],
+        usersList: ["AdminUsersListService", function (AdminUsersListService) {
+          return AdminUsersListService.getList();
+        }]
+      },
+      controller: ["projectsList", "usersList", function (projectsList, usersList) {
+        this.projectsList = projectsList;
+        this.usersList = usersList;
+        this.data = {
+          lockToUser: undefined,
+          lockProject: undefined,
+          duration: 1,
+          recordings: 10000,
+          processing: 1000000,
+          tieProcessingWithRecordings: true
+        };
+
+        this.computeProcessingAmount = function () {
+          if (this.data.tieProcessingWithRecordings) {
+            this.data.processing = this.data.recordings * 100;
+          }
+        };
+
+        this.processingCountChanged = function () {
+          this.data.tieProcessingWithRecordings = false;
+        };
+      }],
+      controllerAs: 'popup'
+    }).result.then(AdminProjectsCodesService.createNewCode).then(function () {
+      loader.load(this, 'codes', AdminProjectsCodesService.loadCodes());
+    }.bind(this));
+  };
+
+  this.showHash = function (code) {
+    return $modal.open({
+      templateUrl: '/admin/projects/view-hash.html',
+      resolve: {
+        code: function () {
+          return code;
+        }
+      },
+      controller: ["code", function (code) {
+        this.code = code;
+      }],
+      controllerAs: 'popup'
+    });
+  }; // editSelectedCode
+  // deleteSelectedCode
+
+
+  loader.load(this, 'codes', AdminProjectsCodesService.loadCodes());
+}]).service('AdminProjectsCodesService', ["$http", function ($http) {
+  return {
+    loadCodes: function () {
+      return $http.get('/admin/projects/codes').then(function (response) {
+        return response.data;
+      });
+    },
+    createNewCode: function (data) {
+      console.log("createNewCode", data);
+      return $http.post('/admin/projects/codes', {
+        user: data.lockToUser && data.lockToUser.id,
+        project: data.lockProject && data.lockProject.id,
+        recordings: data.recordings,
+        duration: data.duration,
+        processing: data.processing
+      }).then(function (data) {
+        return data.response;
+      });
+    }
+  };
+}]).factory('LoaderFactory', ["$q", function ($q) {
+  function Loader() {
+    this.loading = {};
+  }
+
+  Loader.prototype = {
+    load: function (valueStore, key, promise) {
+      this.loading[key] = true;
+      return promise.then(function (value) {
+        this.loading[key] = false;
+
+        if (valueStore) {
+          valueStore[key] = value;
+        }
+
+        return value;
+      }.bind(this), function (err) {
+        this.loading[key] = false;
+        throw err;
+      }.bind(this));
+    }
+  };
+  return {
+    newInstance: function () {
+      return new Loader();
+    }
+  };
+}]);
+angular.module('a2.admin.projects', ['ui.router', 'templates-arbimon2', 'a2.admin.projects.list', 'a2.admin.projects.codes']).config(["$stateProvider", "$urlRouterProvider", function ($stateProvider, $urlRouterProvider) {
+  $urlRouterProvider.otherwise("/dashboard");
+  $stateProvider.state('projects', {
+    url: '/projects',
+    abstract: true,
+    templateUrl: '/admin/projects/index.html'
+  });
+}]);
+angular.module('a2.admin.projects.list', ['ui.router', 'ui.bootstrap', 'a2.utils', 'a2.services', 'templates-arbimon2', 'a2.orders.directives.tier-select', 'humane', 'ui.select']).config(["$stateProvider", "$urlRouterProvider", function ($stateProvider, $urlRouterProvider) {
+  $stateProvider.state('projects.list', {
+    url: '',
+    controller: 'AdminProjectsListCtrl as controller',
+    templateUrl: '/admin/projects/list.html'
+  }).state('projects.list.detail', {
+    url: '/:url',
+    views: {
+      'detail': {
+        templateUrl: '/admin/projects/list-detail.html',
+        controller: 'AdminProjectsListDetailCtrl as controller'
+      }
+    }
+  });
+}]).controller('AdminProjectsListCtrl', ["$scope", "$state", "AdminProjectsListService", function ($scope, $state, AdminProjectsListService) {
+  this.initialize = function () {
+    AdminProjectsListService.getList().then(function (data) {
+      this.projects = data;
+
+      if ($state.params.url) {
+        var url = $state.params.url;
+        this.selected = this.projects.reduce(function (_, project) {
+          return project.url == url ? project : _;
+        }, null);
+      }
+    }.bind(this));
+  };
+
+  this.select = function (project) {
+    return $state.go('projects.list.detail', {
+      url: project.url
+    });
+  };
+
+  this.notifyProjectUpdated = function (project) {
+    var projectObject = this.projects.reduce(function (_, p, $index) {
+      return p.project_id == project.project_id ? project : _;
+    }, null);
+    angular.merge(projectObject, project);
+  };
+
+  this.initialize();
+}]).controller('AdminProjectsListDetailCtrl', ["$scope", "$state", "$q", "notify", "AdminProjectsListService", function ($scope, $state, $q, notify, AdminProjectsListService) {
+  this.initialize = function () {
+    console.log("$state", $state);
+    this.setProject({
+      url: $state.params.url
+    });
+  };
+
+  this.setProject = function (projectData) {
+    return $q.all([AdminProjectsListService.getProjectInfo(projectData), AdminProjectsListService.getProjectSites(projectData), AdminProjectsListService.getProjectRecordingCount(projectData)]).then(function (all) {
+      this.project = all[0];
+      this.project.is_enabled = this.project.is_enabled | 0;
+      this.sites = all[1];
+      this.recCount = all[2];
+    }.bind(this));
+  };
+
+  this.close = function () {
+    $state.go('projects.list');
+  };
+
+  this.save = function () {
+    return AdminProjectsListService.updateProject(this.project).then(function (project) {
+      this.project = project;
+      notify.log("Project " + project.name + " info updated.");
+    }.bind(this)).catch(function (err) {
+      notify.error(err);
+    });
+  };
+
+  this.handleAedToggle = function () {
+    this.project.clustering_enabled = this.project.aed_enabled;
+  };
+
+  this.initialize();
+}]).service('AdminProjectsListService', ["$http", function ($http) {
+  return {
+    getList: function () {
+      return $http.get('/admin/projects').then(function (response) {
+        return response.data;
+      });
+    },
+    getProjectInfo: function (project) {
+      return $http.get('/api/project/' + project.url + '/info').then(function (response) {
+        var data = response.data;
+        data.is_enabled = !!data.is_enabled;
+        return data;
+      });
+    },
+    getProjectSites: function (project) {
+      return $http.get('/api/project/' + project.url + '/sites').then(function (response) {
+        return response.data;
+      });
+    },
+    getProjectRecordingCount: function (project) {
+      return $http.get('/api/project/' + project.url + '/recordings/count').then(function (response) {
+        return response.data.count;
+      });
+    },
+    updateProject: function (project) {
+      var projectData = {
+        project_id: project.project_id,
+        name: project.name,
+        url: project.url,
+        description: project.description,
+        project_type_id: project.project_type_id,
+        is_private: project.is_private,
+        is_enabled: project.is_enabled,
+        current_plan: project.current_plan,
+        storage_usage: project.storage_usage,
+        processing_usage: project.processing_usage,
+        citizen_scientist_enabled: !!project.citizen_scientist_enabled,
+        cnn_enabled: !!project.cnn_enabled,
+        pattern_matching_enabled: !!project.pattern_matching_enabled,
+        aed_enabled: !!project.aed_enabled,
+        clustering_enabled: !!project.clustering_enabled,
+        reports_enabled: !!project.reports_enabled,
+        plan: {
+          tier: project.tier,
+          storage: project.storage_limit,
+          processing: project.processing_limit,
+          activation: project.plan_activated,
+          duration_period: project.plan_period
+        }
+      };
+      return $http.put('/admin/projects/' + project.project_id, {
+        project: projectData
+      }).then(function (response) {
+        return response.data;
+      });
+    }
+  };
 }]);
 angular.module('a2.admin.dashboard.data-service', []).service('AdminDashboardDataService', ["$q", function ($q) {
   return {
@@ -6694,508 +6976,6 @@ angular.module('a2.admin.dashboard.plotter-controller', ['templates-arbimon2', '
 
   $q.when().then(this.refresh_logs.bind(this));
 }]);
-angular.module('a2.admin.users.list', ['ui.router', 'ui.bootstrap', 'a2.utils', 'a2.services', 'templates-arbimon2', 'humane', 'ui.select']) // .config(function($stateProvider, $urlRouterProvider) {
-//     $stateProvider
-//         .state('users.list', {
-//             url: '',
-//             controller:'AdminUsersListCtrl',
-//             templateUrl: '/admin/users/list.html'
-//         });
-// 
-// })
-// .controller('AdminUsersCtrl', function($scope, $http) {
-//     $http.get('/admin/users')
-//         .success(function(data) {
-//             $scope.users = data;
-//         });
-// })
-.service('AdminUsersListService', ["$http", function ($http) {
-  return {
-    getList: function () {
-      return $http.get('/admin/users').then(function (response) {
-        return response.data;
-      });
-    }
-  };
-}]);
-angular.module('a2.admin.projects.codes', ['ui.router', 'a2.directives', 'ui.bootstrap', 'a2.utils', 'a2.services', 'templates-arbimon2', 'humane', 'ui.select', 'a2.admin.projects.list', 'a2.admin.users.list']).config(["$stateProvider", "$urlRouterProvider", function ($stateProvider, $urlRouterProvider) {
-  $stateProvider.state('projects.codes', {
-    url: '/codes',
-    controller: 'AdminProjectsCodesCtrl as controller',
-    templateUrl: '/admin/projects/codes.html'
-  });
-}]).controller('AdminProjectsCodesCtrl', ["$modal", "notify", "LoaderFactory", "AdminProjectsCodesService", function ($modal, notify, LoaderFactory, AdminProjectsCodesService) {
-  var loader = LoaderFactory.newInstance();
-  this.loader = loader;
-
-  this.createNewCode = function () {
-    return $modal.open({
-      templateUrl: '/admin/projects/new-code-modal.html',
-      resolve: {
-        projectsList: ["AdminProjectsListService", function (AdminProjectsListService) {
-          return AdminProjectsListService.getList();
-        }],
-        usersList: ["AdminUsersListService", function (AdminUsersListService) {
-          return AdminUsersListService.getList();
-        }]
-      },
-      controller: ["projectsList", "usersList", function (projectsList, usersList) {
-        this.projectsList = projectsList;
-        this.usersList = usersList;
-        this.data = {
-          lockToUser: undefined,
-          lockProject: undefined,
-          duration: 1,
-          recordings: 10000,
-          processing: 1000000,
-          tieProcessingWithRecordings: true
-        };
-
-        this.computeProcessingAmount = function () {
-          if (this.data.tieProcessingWithRecordings) {
-            this.data.processing = this.data.recordings * 100;
-          }
-        };
-
-        this.processingCountChanged = function () {
-          this.data.tieProcessingWithRecordings = false;
-        };
-      }],
-      controllerAs: 'popup'
-    }).result.then(AdminProjectsCodesService.createNewCode).then(function () {
-      loader.load(this, 'codes', AdminProjectsCodesService.loadCodes());
-    }.bind(this));
-  };
-
-  this.showHash = function (code) {
-    return $modal.open({
-      templateUrl: '/admin/projects/view-hash.html',
-      resolve: {
-        code: function () {
-          return code;
-        }
-      },
-      controller: ["code", function (code) {
-        this.code = code;
-      }],
-      controllerAs: 'popup'
-    });
-  }; // editSelectedCode
-  // deleteSelectedCode
-
-
-  loader.load(this, 'codes', AdminProjectsCodesService.loadCodes());
-}]).service('AdminProjectsCodesService', ["$http", function ($http) {
-  return {
-    loadCodes: function () {
-      return $http.get('/admin/projects/codes').then(function (response) {
-        return response.data;
-      });
-    },
-    createNewCode: function (data) {
-      console.log("createNewCode", data);
-      return $http.post('/admin/projects/codes', {
-        user: data.lockToUser && data.lockToUser.id,
-        project: data.lockProject && data.lockProject.id,
-        recordings: data.recordings,
-        duration: data.duration,
-        processing: data.processing
-      }).then(function (data) {
-        return data.response;
-      });
-    }
-  };
-}]).factory('LoaderFactory', ["$q", function ($q) {
-  function Loader() {
-    this.loading = {};
-  }
-
-  Loader.prototype = {
-    load: function (valueStore, key, promise) {
-      this.loading[key] = true;
-      return promise.then(function (value) {
-        this.loading[key] = false;
-
-        if (valueStore) {
-          valueStore[key] = value;
-        }
-
-        return value;
-      }.bind(this), function (err) {
-        this.loading[key] = false;
-        throw err;
-      }.bind(this));
-    }
-  };
-  return {
-    newInstance: function () {
-      return new Loader();
-    }
-  };
-}]);
-angular.module('a2.admin.projects', ['ui.router', 'templates-arbimon2', 'a2.admin.projects.list', 'a2.admin.projects.codes']).config(["$stateProvider", "$urlRouterProvider", function ($stateProvider, $urlRouterProvider) {
-  $urlRouterProvider.otherwise("/dashboard");
-  $stateProvider.state('projects', {
-    url: '/projects',
-    abstract: true,
-    templateUrl: '/admin/projects/index.html'
-  });
-}]);
-angular.module('a2.admin.projects.list', ['ui.router', 'ui.bootstrap', 'a2.utils', 'a2.services', 'templates-arbimon2', 'a2.orders.directives.tier-select', 'humane', 'ui.select']).config(["$stateProvider", "$urlRouterProvider", function ($stateProvider, $urlRouterProvider) {
-  $stateProvider.state('projects.list', {
-    url: '',
-    controller: 'AdminProjectsListCtrl as controller',
-    templateUrl: '/admin/projects/list.html'
-  }).state('projects.list.detail', {
-    url: '/:url',
-    views: {
-      'detail': {
-        templateUrl: '/admin/projects/list-detail.html',
-        controller: 'AdminProjectsListDetailCtrl as controller'
-      }
-    }
-  });
-}]).controller('AdminProjectsListCtrl', ["$scope", "$state", "AdminProjectsListService", function ($scope, $state, AdminProjectsListService) {
-  this.initialize = function () {
-    AdminProjectsListService.getList().then(function (data) {
-      this.projects = data;
-
-      if ($state.params.url) {
-        var url = $state.params.url;
-        this.selected = this.projects.reduce(function (_, project) {
-          return project.url == url ? project : _;
-        }, null);
-      }
-    }.bind(this));
-  };
-
-  this.select = function (project) {
-    return $state.go('projects.list.detail', {
-      url: project.url
-    });
-  };
-
-  this.notifyProjectUpdated = function (project) {
-    var projectObject = this.projects.reduce(function (_, p, $index) {
-      return p.project_id == project.project_id ? project : _;
-    }, null);
-    angular.merge(projectObject, project);
-  };
-
-  this.initialize();
-}]).controller('AdminProjectsListDetailCtrl', ["$scope", "$state", "$q", "notify", "AdminProjectsListService", function ($scope, $state, $q, notify, AdminProjectsListService) {
-  this.initialize = function () {
-    console.log("$state", $state);
-    this.setProject({
-      url: $state.params.url
-    });
-  };
-
-  this.setProject = function (projectData) {
-    return $q.all([AdminProjectsListService.getProjectInfo(projectData), AdminProjectsListService.getProjectSites(projectData), AdminProjectsListService.getProjectRecordingCount(projectData)]).then(function (all) {
-      this.project = all[0];
-      this.project.is_enabled = this.project.is_enabled | 0;
-      this.sites = all[1];
-      this.recCount = all[2];
-    }.bind(this));
-  };
-
-  this.close = function () {
-    $state.go('projects.list');
-  };
-
-  this.save = function () {
-    return AdminProjectsListService.updateProject(this.project).then(function (project) {
-      this.project = project;
-      notify.log("Project " + project.name + " info updated.");
-    }.bind(this)).catch(function (err) {
-      notify.error(err);
-    });
-  };
-
-  this.handleAedToggle = function () {
-    this.project.clustering_enabled = this.project.aed_enabled;
-  };
-
-  this.initialize();
-}]).service('AdminProjectsListService', ["$http", function ($http) {
-  return {
-    getList: function () {
-      return $http.get('/admin/projects').then(function (response) {
-        return response.data;
-      });
-    },
-    getProjectInfo: function (project) {
-      return $http.get('/api/project/' + project.url + '/info').then(function (response) {
-        var data = response.data;
-        data.is_enabled = !!data.is_enabled;
-        return data;
-      });
-    },
-    getProjectSites: function (project) {
-      return $http.get('/api/project/' + project.url + '/sites').then(function (response) {
-        return response.data;
-      });
-    },
-    getProjectRecordingCount: function (project) {
-      return $http.get('/api/project/' + project.url + '/recordings/count').then(function (response) {
-        return response.data.count;
-      });
-    },
-    updateProject: function (project) {
-      var projectData = {
-        project_id: project.project_id,
-        name: project.name,
-        url: project.url,
-        description: project.description,
-        project_type_id: project.project_type_id,
-        is_private: project.is_private,
-        is_enabled: project.is_enabled,
-        current_plan: project.current_plan,
-        storage_usage: project.storage_usage,
-        processing_usage: project.processing_usage,
-        citizen_scientist_enabled: !!project.citizen_scientist_enabled,
-        cnn_enabled: !!project.cnn_enabled,
-        pattern_matching_enabled: !!project.pattern_matching_enabled,
-        aed_enabled: !!project.aed_enabled,
-        clustering_enabled: !!project.clustering_enabled,
-        reports_enabled: !!project.reports_enabled,
-        plan: {
-          tier: project.tier,
-          storage: project.storage_limit,
-          processing: project.processing_limit,
-          activation: project.plan_activated,
-          duration_period: project.plan_period
-        }
-      };
-      return $http.put('/admin/projects/' + project.project_id, {
-        project: projectData
-      }).then(function (response) {
-        return response.data;
-      });
-    }
-  };
-}]);
-/**
- * @ngdoc overview
- * @name a2-sidenav
- * @description
- * Directive for specifying a sidenav bar.
- * this bar specifies a list of links that can be added
- * whenever a corresponding sidenavbar anchor resides
- */
-angular.module('a2.directive.audio-bar', ['a2.utils', 'a2.srv.local-storage', 'a2.visualizer.audio-player']).directive('a2AudioBar', ["a2SidenavBarService", "$parse", function (a2SidenavBarService, $parse) {
-  return {
-    restrict: 'E',
-    templateUrl: '/directives/a2-audio-bar/a2-audio-bar.html',
-    scope: {},
-    replace: true,
-    controller: 'a2AudioBarCtrl as controller'
-  };
-}]).factory('a2AudioBarService', ["$rootScope", function ($rootScope) {
-  return {
-    loadUrl: function (url, play) {
-      $rootScope.$broadcast('a2-audio-load-url', {
-        url: url,
-        play: play
-      });
-    }
-  };
-}]).controller('a2AudioBarCtrl', ["$scope", "$filter", "a2AudioPlayer", "$timeout", "$q", "$localStorage", function ($scope, $filter, a2AudioPlayer, $timeout, $q, $localStorage) {
-  Object.assign(this, {
-    initialize: function () {
-      this.audio_player = new a2AudioPlayer($scope);
-      this.expanded = false;
-      this.collapseTimeoutInterval = 6000;
-      this.loading = false;
-      this.audio_player.setGain($localStorage.getItem('a2-audio-param-gain') || 1);
-      this.deregHandlers = [];
-      this.deregHandlers.push($scope.$on('a2-audio-load-url', this.onLoadUrl.bind(this)));
-      this.deregHandlers.push($scope.$on('$destroy', this.onDestroy.bind(this)));
-    },
-    onLoadUrl: function (event, options) {
-      this.loadUrl(options);
-    },
-    onDestroy: function () {
-      (this.deregHandlers || []).forEach(function (fn) {
-        fn();
-      });
-    },
-    setCollapseTimer: function () {
-      if (this.collapseTimer) {
-        $timeout.cancel(this.collapseTimer);
-      }
-
-      if (this.collapseTimeoutInterval) {
-        this.collapseTimer = $timeout(function () {
-          this.expanded = false;
-        }.bind(this), this.collapseTimeoutInterval);
-      }
-    },
-    seekPercent: function (percent) {
-      return this.audio_player.setCurrentTime(percent * this.audio_player.resource.duration);
-    },
-    setGain: function (gain) {
-      this.setCollapseTimer();
-      $localStorage.setItem('a2-audio-param-gain', gain);
-      return this.audio_player.setGain(gain);
-    },
-    play: function () {
-      this.setCollapseTimer();
-      return this.audio_player.play();
-    },
-    pause: function () {
-      this.setCollapseTimer();
-      return this.audio_player.pause();
-    },
-    stop: function () {
-      this.setCollapseTimer();
-      return this.audio_player.stop();
-    },
-    toggleExpanded: function () {
-      this.expanded = !this.expanded;
-
-      if (this.expanded) {
-        this.setCollapseTimer();
-      }
-    },
-    loadUrl: function (options) {
-      options = options || {};
-      const url = options.url;
-      const play = options.play || options.play === undefined;
-
-      if (!url) {
-        return $q.resolve();
-      }
-
-      this.loading = true;
-      this.expanded = true;
-      return this.audio_player.load(url).then(function () {
-        this.loading = false;
-
-        if (play) {
-          return this.play();
-        }
-      }.bind(this)).catch(function (e) {
-        this.loading = false;
-        this.error = e;
-        console.error(e);
-      }.bind(this));
-    }
-  });
-  this.initialize(this);
-}]);
-angular.module('arbimon.directive.a2-switch', []).directive('a2Switch', function () {
-  return {
-    restict: 'E',
-    templateUrl: '/directives/a2-switch/template.html',
-    require: 'ngModel',
-    scope: {
-      onText: '@',
-      offText: '@',
-      disabled: '='
-    },
-    link: function (scope, element, attrs, ngModelCtrl) {
-      scope.toggle = function (event) {
-        scope.value = !scope.value;
-        ngModelCtrl.$setViewValue(scope.value, event && event.type);
-      };
-
-      ngModelCtrl.$render = function () {
-        scope.value = !!ngModelCtrl.$viewValue;
-      };
-    }
-  };
-});
-angular.module('a2.utils.facebook-login-button', ['a2.utils', 'a2.utils.global-anonymous-function', 'a2.utils.external-api-loader', 'a2.injected.data']).config(["externalApiLoaderProvider", function (externalApiLoaderProvider) {
-  externalApiLoaderProvider.addApi('facebook', {
-    url: "//connect.facebook.net/en_US/sdk.js",
-    namespace: 'FB',
-    onload: ["a2InjectedData", function (a2InjectedData) {
-      this.module.init(a2InjectedData.facebook_api);
-    }]
-  });
-}]).directive('a2FacebookLoginButton', ["$window", "$q", "$timeout", "a2InjectedData", "externalApiLoader", function ($window, $q, $timeout, a2InjectedData, externalApiLoader) {
-  return {
-    restrict: 'E',
-    templateUrl: '/directives/external/facebook-login-button.html',
-    scope: {
-      onSignedIn: '&?',
-      onError: '&?'
-    },
-    link: function (scope, element, attrs) {
-      element.children('.btn-facebook-login').addClass(element[0].className);
-      element[0].className = '';
-
-      scope.signIn = function () {
-        externalApiLoader.load('facebook').then(function (FB) {
-          FB.login(function (response) {
-            if (response.status === 'connected') {
-              console.log(response);
-              scope.onSignedIn({
-                user: response
-              });
-            } else if (response.status === 'not_authorized') {} else {}
-          }, {
-            scope: 'public_profile,email'
-          });
-        });
-      };
-    }
-  };
-}]);
-angular.module('a2.utils.google-login-button', ['a2.utils', 'a2.utils.q-promisify', 'a2.utils.global-anonymous-function', 'a2.utils.external-api-loader', 'a2.injected.data']).config(["externalApiLoaderProvider", function (externalApiLoaderProvider) {
-  externalApiLoaderProvider.addApi('google-api', {
-    url: "https://apis.google.com/js/client.js",
-    namespace: 'gapi',
-    jsonpCallback: 'onload'
-  });
-  externalApiLoaderProvider.addApi('google-api/auth2', {
-    parent: 'google-api',
-    loader: ["$qPromisify", function ($qPromisify) {
-      return $qPromisify.invoke(this.parent.module, 'load', 'auth2');
-    }],
-    onload: ["a2InjectedData", function (a2InjectedData) {
-      var auth2 = this.module.init({
-        client_id: a2InjectedData.google_oauth_client,
-        cookiepolicy: 'single_host_origin'
-      });
-      return auth2.then(function () {
-        this.module.auth2 = auth2;
-      }.bind(this));
-    }],
-    getCachedModule: function () {
-      return this.parent && this.parent.module && this.parent.module.auth2;
-    }
-  });
-}]).directive('a2GoogleLoginButton', ["$window", "$q", "$timeout", "globalAnonymousFunction", "a2InjectedData", "externalApiLoader", function ($window, $q, $timeout, globalAnonymousFunction, a2InjectedData, externalApiLoader) {
-  return {
-    restrict: 'E',
-    templateUrl: '/directives/external/google-login-button.html',
-    scope: {
-      onSignedIn: '&?',
-      onError: '&?'
-    },
-    link: function (scope, element, attrs) {
-      element.children('.btn-google-login').addClass(element[0].className);
-      element[0].className = '';
-
-      scope.signIn = function () {
-        externalApiLoader.load('google-api/auth2').then(function (auth2) {
-          auth2.auth2.signIn().then(function (user) {
-            scope.onSignedIn({
-              user: user
-            });
-          }, function (error) {
-            scope.onError({
-              error: error
-            });
-          });
-        });
-      };
-    }
-  };
-}]);
 angular.module('a2.analysis', ['a2.analysis.patternmatching', 'a2.directive.audio-bar', 'a2.analysis.random-forest-models', 'a2.analysis.cnn', 'a2.analysis.soundscapes', 'a2.analysis.audio-event-detection', 'a2.analysis.audio-event-detections-clustering', 'a2.analysis.clustering-jobs', 'ui.router', 'ct.ui.router.extras', 'a2.srv.api']).config(["$stateProvider", "$urlRouterProvider", function ($stateProvider, $urlRouterProvider) {
   $urlRouterProvider.when("/analysis", "/analysis/patternmatching", "/analysis/clustering-jobs");
   $stateProvider.state('analysis', {
@@ -7212,6 +6992,19 @@ angular.module('a2.analysis', ['a2.analysis.patternmatching', 'a2.directive.audi
 }]).controller('AnalysisIndexCtrl', ["$scope", "Project", "a2UserPermit", function ($scope, Project, a2UserPermit) {
   Project.getInfo(function (info) {
     $scope.project = info;
+  });
+}]);
+angular.module('a2.citizen-scientist', ['a2.citizen-scientist.my-stats', 'a2.directive.audio-bar', 'a2.citizen-scientist.patternmatching', 'a2.citizen-scientist.expert', 'a2.citizen-scientist.admin', 'ui.router', 'ct.ui.router.extras']).config(["$stateProvider", "$urlRouterProvider", function ($stateProvider, $urlRouterProvider) {
+  $urlRouterProvider.when("/citizen-scientist", "/citizen-scientist/patternmatching/");
+  $stateProvider.state('citizen-scientist', {
+    url: '/citizen-scientist',
+    views: {
+      'citizen-scientist': {
+        templateUrl: '/app/citizen-scientist/index.html'
+      }
+    },
+    deepStateRedirect: true,
+    sticky: true
   });
 }]);
 angular.module('a2.audiodata', ['ui.router', 'ct.ui.router.extras', 'a2.directive.sidenav-bar', 'a2.directive.audio-bar', 'a2.audiodata.sites', 'a2.audiodata.species', 'a2.audiodata.uploads', 'a2.audiodata.recordings', 'a2.audiodata.training-sets', 'a2.audiodata.playlists', 'a2.audiodata.templates', 'a2.audiodata.soundscape-composition-classes']).config(["$stateProvider", "$urlRouterProvider", function ($stateProvider, $urlRouterProvider) {
@@ -9083,19 +8876,6 @@ angular.module('a2.jobs', ['a2.services', 'a2.permissions']).config(["$stateProv
       $interval.cancel(intervalPromise);
     }
   };
-}]);
-angular.module('a2.citizen-scientist', ['a2.citizen-scientist.my-stats', 'a2.directive.audio-bar', 'a2.citizen-scientist.patternmatching', 'a2.citizen-scientist.expert', 'a2.citizen-scientist.admin', 'ui.router', 'ct.ui.router.extras']).config(["$stateProvider", "$urlRouterProvider", function ($stateProvider, $urlRouterProvider) {
-  $urlRouterProvider.when("/citizen-scientist", "/citizen-scientist/patternmatching/");
-  $stateProvider.state('citizen-scientist', {
-    url: '/citizen-scientist',
-    views: {
-      'citizen-scientist': {
-        templateUrl: '/app/citizen-scientist/index.html'
-      }
-    },
-    deepStateRedirect: true,
-    sticky: true
-  });
 }]);
 angular.module('a2.app.dashboard', ['a2.services', 'a2.directives', 'ui.bootstrap', 'ui.router', 'ct.ui.router.extras', 'a2.forms', 'humane', 'a2.googlemaps', 'a2.directive.warning-banner']).config(["$stateProvider", "$urlRouterProvider", function ($stateProvider, $urlRouterProvider) {
   $stateProvider.state('dashboard', {
@@ -11515,1278 +11295,225 @@ angular.module('a2-visualizer-spectrogram-click2zoom', ['a2.classy']).service('a
     }
   };
 });
-angular.module('a2.analysis.audio-event-detection', ['a2.filter.as-csv', 'a2.filter.time-from-now', 'a2.srv.resolve', 'a2.srv.open-modal', 'a2.service.audio-event-detection', 'a2.analysis.audio-event-detection.new-modal']).config(["$stateProvider", "$urlRouterProvider", function ($stateProvider, $urlRouterProvider) {
-  $stateProvider.state('analysis.audio-event-detection', {
-    url: '/audio-event-detection',
-    controller: 'AudioEventDetectionAnalysisStateCtrl as controller',
-    templateUrl: '/app/analysis/audio-event-detection/index.html'
-  });
-}]).controller('AudioEventDetectionAnalysisStateCtrl', ["$q", "$promisedResolve", "$openModal", "a2UserPermit", function ($q, $promisedResolve, $openModal, a2UserPermit) {
-  this.initialize = function () {
-    return this.reload();
-  };
-
-  this.reload = function () {
-    this.loading = true;
-    return $promisedResolve({
-      audioEventDetectionsList: ["AudioEventDetectionService", function (AudioEventDetectionService) {
-        return AudioEventDetectionService.getList();
-      }]
-    }, this).then(function () {
-      this.loading = false;
-    }.bind(this));
-  };
-
-  this.new = function () {
-    if (!a2UserPermit.can('manage soundscapes')) {
-      notify.error('You do not have permission to create audio event detections.');
-      return;
-    }
-
-    return $openModal('audio-event-detection.new-modal', {
-      resolve: {
-        onSubmit: ["AudioEventDetectionService", function (AudioEventDetectionService) {
-          return AudioEventDetectionService.new;
-        }]
-      }
-    });
-  };
-
-  this.initialize();
-}]);
-angular.module('a2.analysis.audio-event-detection.new-modal', ['a2.srv.open-modal', 'a2.srv.resolve', 'a2.srv.playlists', 'humane', 'a2.directive.require-non-empty', 'a2.service.audio-event-detection']).config(["$openModalProvider", function ($openModalProvider) {
-  $openModalProvider.define('audio-event-detection.new-modal', {
-    templateUrl: '/app/analysis/audio-event-detection/new-modal.html',
-    controllerAs: 'controller',
-    controller: 'NewAudioEventDetectionModalCtrl',
-    resolve: {
-      onSubmit: function () {
-        return null;
-      }
-    }
-  });
-}]).constant('AudioEventDetectionParametersEditTemplateUrls', {
-  fltr: '/app/analysis/audio-event-detection/algorithm-fltr-edit-parameters.html'
-}).controller('NewAudioEventDetectionModalCtrl', ["$q", "$modalInstance", "$promisedResolve", "$parse", "notify", "AudioEventDetectionParametersEditTemplateUrls", "onSubmit", function ($q, $modalInstance, $promisedResolve, $parse, notify, AudioEventDetectionParametersEditTemplateUrls, onSubmit) {
-  this.playlists = [];
-  this.algorithmsList = [];
-  this.statisticsList = [];
-  var getDefaultName = $parse("[" + "(playlist.name || '[Playlist]'), " + "(algorithm.name || '[Algorithm]'), " + "(parameters ? '(' + (parameters  | asCSV) + ')' : ''), " + "(date | moment:'ll')" + "] | asCSV:' / '");
-
-  this.initialize = function () {
-    return this.reload().then(function () {
-      this.aed = {
-        algorithm: this.algorithmsList[0],
-        statistics: this.statisticsList.slice(),
-        playlist: null,
-        date: new Date()
-      };
-      this.notifyAedAlgorithmChanged();
-    }.bind(this));
-  };
-
-  this.reload = function () {
-    this.loading = true;
-    return $promisedResolve({
-      playlists: ["a2Playlists", function (a2Playlists) {
-        return a2Playlists.getList();
-      }],
-      algorithmsList: function (AudioEventDetectionService) {
-        return AudioEventDetectionService.getAlgorithmsList();
-      },
-      statisticsList: function (AudioEventDetectionService) {
-        return AudioEventDetectionService.getStatisticsList();
-      }
-    }, this).then(function () {
-      this.loading = false;
-    }.bind(this));
-  };
-
-  this.notifyAedAlgorithmChanged = function () {
-    var algorithm = this.aed.algorithm || {};
-    this.aed.parameters = algorithm.defaults || {};
-    this.algorithmParametersTemplate = AudioEventDetectionParametersEditTemplateUrls[algorithm.name];
-    this.recomputeDefaultName();
-  };
-
-  this.recomputeDefaultName = function () {
-    this.aed.defaultName = getDefaultName(this.aed);
-  };
-
-  this.ok = function () {
-    return $q.resolve().then(function () {
-      return onSubmit && onSubmit(this.aed);
-    }.bind(this)).then(function () {
-      return $modalInstance.close(this.aed);
-    }.bind(this)).catch(function (error) {
-      notify.error(error);
-    });
-  };
-
-  this.cancel = function () {
-    $modalInstance.dismiss('cancel');
-  };
-
-  this.initialize();
-}]);
-angular.module('a2.analysis.audio-event-detections-clustering', ['ui.bootstrap', 'a2.srv.audio-event-detections-clustering', 'a2.services', 'a2.permissions', 'humane', 'a2.directive.error-message']).config(["$stateProvider", function ($stateProvider) {
-  $stateProvider.state('analysis.audio-event-detections-clustering', {
-    url: '/audio-event-detections-clustering',
-    controller: 'AudioEventDetectionsClusteringModelCtrl',
-    templateUrl: '/app/analysis/audio-event-detections-clustering/list.html'
-  });
-}]).controller('AudioEventDetectionsClusteringModelCtrl', ["$scope", "$modal", "$location", "JobsData", "notify", "a2AudioEventDetectionsClustering", "Project", "$localStorage", "$window", "a2UserPermit", function ($scope, $modal, $location, JobsData, notify, a2AudioEventDetectionsClustering, Project, $localStorage, $window, a2UserPermit) {
-  $scope.loadAudioEventDetections = function () {
-    $scope.loading = true;
-    $scope.showRefreshBtn = false;
-    $scope.projectUrl = Project.getUrl();
-    return a2AudioEventDetectionsClustering.list({
-      user: true,
-      dataExtended: true,
-      completed: true,
-      aedCount: true
-    }).then(function (data) {
-      $scope.audioEventDetectionsOriginal = data;
-      $scope.audioEventDetectionsData = data;
-      $scope.loading = false;
-
-      if (data && data.length) {
-        $scope.showRefreshBtn = true;
-      }
-    });
-  };
-
-  $scope.loadAudioEventDetections();
-
-  $scope.onSelectedJob = function (playlist_id, job_id, first_playlist_recording) {
-    $localStorage.setItem('analysis.audioEventJob', job_id);
-    $window.location.href = '/project/' + Project.getUrl() + '/visualizer/playlist/' + playlist_id + '/' + first_playlist_recording;
-  };
-
-  $scope.createNewClusteringModel = function () {
-    if (!a2UserPermit.can('manage AED and Clustering job')) {
-      notify.error('You do not have permission to create <br> Audio Event Detection job');
-      return;
-    }
-
-    var modalInstance = $modal.open({
-      templateUrl: '/app/analysis/audio-event-detections-clustering/new-audio-event-detection-clustering.html',
-      controller: 'CreateNewAudioEventDetectionClusteringCtrl as controller'
-    });
-    modalInstance.result.then(function (result) {
-      data = result;
-
-      if (data.create) {
-        JobsData.updateJobs();
-        $scope.showRefreshBtn = true;
-        notify.log("Your new Audio Event Detection Clustering model is waiting to start processing.<br> Check its status on <b>Jobs</b>.");
-      } else if (data.error) {
-        notify.error("Error: " + data.error);
-      } else if (data.url) {
-        $location.path(data.url);
-      }
-    });
-  };
-
-  $scope.deleteAedJob = function (aedJob, $event) {
-    $event.stopPropagation();
-
-    if (!a2UserPermit.can('manage AED and Clustering job')) {
-      notify.error('You do not have permission to delete <br> Audio Event Detection job');
-      return;
-    }
-
-    var modalInstance = $modal.open({
-      templateUrl: '/app/analysis/audio-event-detections-clustering/delete-audio-event-detection-clustering-job.html',
-      controller: 'DeleteAedJobCtrl as controller',
-      resolve: {
-        aedJob: function () {
-          return aedJob;
-        }
-      }
-    });
-    modalInstance.result.then(function (ret) {
-      if (ret.err) {
-        notify.error('Error: ' + ret.err);
-      } else {
-        const modArr = angular.copy($scope.audioEventDetectionsOriginal);
-        const indx = modArr.findIndex(function (item) {
-          return item.job_id === aedJob.job_id;
-        });
-
-        if (indx > -1) {
-          $scope.audioEventDetectionsOriginal.splice(indx, 1);
-          notify.log('Audio Event Detection Job deleted successfully');
-        }
-      }
-    });
-  };
-}]).controller('DeleteAedJobCtrl', ["$scope", "$modalInstance", "a2AudioEventDetectionsClustering", "aedJob", function ($scope, $modalInstance, a2AudioEventDetectionsClustering, aedJob) {
-  this.aedJob = aedJob;
-  $scope.deletingloader = false;
-
-  $scope.ok = function () {
-    $scope.deletingloader = true;
-    a2AudioEventDetectionsClustering.delete(aedJob.job_id).then(function (data) {
-      $modalInstance.close(data);
-    });
-  };
-
-  $scope.cancel = function () {
-    $modalInstance.dismiss('cancel');
-  };
-}]).controller('CreateNewAudioEventDetectionClusteringCtrl', ["$modalInstance", "a2AudioEventDetectionsClustering", "a2Playlists", "a2UserPermit", "notify", function ($modalInstance, a2AudioEventDetectionsClustering, a2Playlists, a2UserPermit, notify) {
-  Object.assign(this, {
-    initialize: function () {
-      this.loading = {
-        playlists: false
-      };
-      this.details = {
-        show: false
-      };
-      var list = this.list = {};
-      this.data = {
-        name: null,
-        playlist: null,
-        params: {
-          areaThreshold: 1,
-          amplitudeThreshold: 1,
-          durationThreshold: 0.2,
-          bandwidthThreshold: 0.5,
-          filterSize: 10,
-          minFrequency: 0,
-          maxFrequency: 24
-        }
-      };
-      this.isRfcxUser = a2UserPermit.isRfcx();
-      this.isSuper = a2UserPermit.isSuper();
-      this.errorJobLimit = false;
-      this.loading.playlists = true;
-      a2Playlists.getList({
-        filterPlaylistLimit: true
-      }).then(function (playlists) {
-        this.loading.playlists = false;
-        list.playlists = playlists;
-      }.bind(this));
-    },
-    isRfcx: function () {
-      return this.isRfcxUser || this.isSuper;
-    },
-    checkLimit: function (count) {
-      return count > 10000 && !this.isRfcx();
-    },
-    toggleDetails: function () {
-      this.details.show = !this.details.show;
-    },
-    newJob: function () {
-      try {
-        return a2AudioEventDetectionsClustering.create({
-          playlist_id: this.data.playlist.id,
-          name: this.data.name,
-          params: this.data.params
-        }).then(function (clusteringModel) {
-          $modalInstance.close({
-            create: true,
-            clusteringModel: clusteringModel
-          });
-        }).catch(notify.serverError);
-      } catch (error) {
-        console.error('a2AudioEventDetectionsClustering.create error: ' + error);
-      }
-    },
-    create: function () {
-      var _this = this;
-
-      this.errorJobLimit = false;
-      if (this.isRfcx()) return this.newJob();
-      return a2AudioEventDetectionsClustering.count().then(function (data) {
-        if (_this.checkLimit(data.totalRecordings)) {
-          _this.errorJobLimit = true;
-          return;
-        } else _this.newJob();
-      });
-    },
-    cancel: function (url) {
-      $modalInstance.close({
-        cancel: true,
-        url: url
-      });
-    },
-    isJobValid: function () {
-      return this.data && this.data.name && this.data.name.length > 3 && this.data.playlist && !this.isNotDefined(this.data.params.maxFrequency) && !this.isNotDefined(this.data.params.minFrequency);
-    },
-    showNameWarning: function () {
-      return this.data && this.data.name && this.data.name.length > 1 && this.data.name.length < 4;
-    },
-    showPlaylistLimitWarning: function () {
-      if (!this.data && !this.data.playlist) return;
-      return this.data && this.data.playlist && this.data.playlist.count > 2000 && !this.isRfcx();
-    },
-    showFrequencyWarning: function () {
-      return this.data.params.maxFrequency <= this.data.params.minFrequency;
-    },
-    isNotDefined: function (item) {
-      return item === undefined || item === null;
-    }
-  });
-  this.initialize();
-}]);
-angular.module('a2.analysis.cnn', ['ui.bootstrap', 'a2.directive.audio-bar', 'a2.srv.cnn', 'a2.services', 'a2.permissions', 'humane', 'c3-charts']).config(["$stateProvider", "$urlRouterProvider", function ($stateProvider, $urlRouterProvider) {
-  $stateProvider.state('analysis.disabled-cnn', {
-    url: '/disabled/cnn',
-    templateUrl: '/app/analysis/cnn/disabled.html'
-  }).state('analysis.cnn', {
-    url: '/cnn/',
-    controller: 'CNNCtrl',
-    templateUrl: '/app/analysis/cnn/list.html'
-  }).state('analysis.cnn-details', {
-    url: '/cnn/:cnnId',
-    ///:detailType/',
-    controller: 'CNNCtrl',
-    templateUrl: '/app/analysis/cnn/list.html'
-  });
-}]).controller('CNNCtrl', ["$scope", "$modal", "$filter", "$location", "Project", "ngTableParams", "JobsData", "a2CNN", "a2Playlists", "notify", "$q", "a2UserPermit", "$state", "$stateParams", function ($scope, $modal, $filter, $location, Project, ngTableParams, JobsData, a2CNN, a2Playlists, notify, $q, a2UserPermit, $state, $stateParams) {
-  // this debug line for sanity between servers... Will remove TODO
-  console.log("CNN Version 1.0");
-  $scope.selectedCNNId = $stateParams.cnnId;
-
-  var initTable = function (p, c, s, f, t) {
-    var sortBy = {};
-    var acsDesc = 'desc';
-
-    if (s[0] == '+') {
-      acsDesc = 'asc';
-    }
-
-    sortBy[s.substring(1)] = acsDesc;
-    var tableConfig = {
-      page: p,
-      count: c,
-      sorting: sortBy,
-      filter: f
-    };
-    $scope.tableParams = new ngTableParams(tableConfig, {
-      total: t,
-      getData: function ($defer, params) {
-        $scope.infopanedata = "";
-        var filteredData = params.filter() ? $filter('filter')($scope.cnnOriginal, params.filter()) : $scope.cnnOriginal;
-        var orderedData = params.sorting() ? $filter('orderBy')(filteredData, params.orderBy()) : $scope.cnnOriginal;
-        params.total(orderedData.length);
-        $defer.resolve(orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count()));
-
-        if (orderedData.length < 1) {
-          $scope.infopanedata = "No cnn searches found.";
-        }
-
-        $scope.cnnsData = orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count());
-      }
-    });
-  };
-
-  $scope.loadCNNs = function () {
-    $scope.loading = true;
-    $scope.infoInfo = "Loading...";
-    $scope.showInfo = true;
-    return a2CNN.list().then(function (data) {
-      $scope.cnnOriginal = data;
-      $scope.cnnsData = data;
-      $scope.infoInfo = "";
-      $scope.showInfo = false;
-      $scope.loading = false;
-      $scope.infopanedata = "";
-
-      if (data.length > 0) {
-        if (!$scope.tableParams) {
-          initTable(1, 10, "-timestamp", {}, data.length);
-        } else {
-          $scope.tableParams.reload();
-        }
-      } else {
-        $scope.infopanedata = "No cnns found.";
-      }
-    });
-  };
-
-  if (!$scope.selectedCNNId) {
-    $scope.loadCNNs();
-  }
-
-  $scope.createNewCNN = function () {
-    // TODO: add in real cnn permissions
-    if (!a2UserPermit.can('manage cnns')) {
-      notify.error('You do not have permission to create cnn jobs.');
-      return;
-    }
-
-    var modalInstance = $modal.open({
-      templateUrl: '/app/analysis/cnn/createnewcnn.html',
-      controller: 'CreateNewCNNInstanceCtrl as controller'
-    });
-    modalInstance.result.then(function (result) {
-      data = result;
-
-      if (data.ok) {
-        JobsData.updateJobs();
-        notify.log("Your new cnn is waiting to start processing.<br> Check its status on <b>Jobs</b>.");
-      } else if (data.error) {
-        notify.error("Error: " + data.error);
-      } else if (data.url) {
-        $location.path(data.url);
-      }
-    });
-  };
-
-  $scope.deleteCNN = function (cnn, $event) {
-    $event.stopPropagation();
-
-    if (!a2UserPermit.can('manage cnns')) {
-      notify.error('You do not have permission to delete cnns.');
-      return;
-    }
-
-    var modalInstance = $modal.open({
-      templateUrl: '/app/analysis/cnn/deletecnn.html',
-      controller: 'DeleteCNNInstanceCtrl as controller',
-      resolve: {
-        cnn: function () {
-          return cnn;
-        }
-      }
-    });
-    modalInstance.result.then(function (ret) {
-      if (ret.err) {
-        notify.error("Error: " + ret.err);
-      } else {
-        notify.log("CNN: (" + cnn.name + ") deleted successfully");
-        $scope.loadCNNs();
-        /*
-        var index = -1;
-        var modArr = angular.copy($scope.cnnOriginal);
-        for (var i = 0; i < modArr.length; i++) {
-            if (modArr[i].job_id === cnn.job_id) {
-                index = i;
-                break;
-            }
-        }
-        if (index > -1) {
-            $scope.cnnOriginal.splice(index, 1);
-            notify.log("CNN deleted successfully");
-        }
-        */
-      }
-    });
-  };
-
-  $scope.selectItem = function (cnnId) {
-    if (!cnnId) {
-      $state.go('analysis.cnn', {});
-    } else {
-      $state.go('analysis.cnn-details', {
-        cnnId: cnnId //detailType: 'all'
-
-      });
-    }
-  };
-
-  $scope.setDetailedView = function (detailedView) {
-    $scope.detailedView = detailedView;
-    $state.transitionTo($state.current.name, {
-      patternMatchingId: $scope.selectedPatternMatchingId,
-      show: detailedView ? "detail" : "gallery"
-    }, {
-      notify: false
-    });
-  };
-}]).controller('DeleteCNNInstanceCtrl', ["$scope", "$modalInstance", "a2CNN", "cnn", "Project", function ($scope, $modalInstance, a2CNN, cnn, Project) {
-  this.cnn = cnn;
-  $scope.project_name = Project.getUrl();
-  $scope.deletingloader = false;
-
-  $scope.ok = function () {
-    $scope.deletingloader = true;
-    a2CNN.delete(cnn.job_id).then(function (data) {
-      $modalInstance.close(data);
-    });
-  };
-
-  $scope.cancel = function () {
-    $modalInstance.dismiss('cancel');
-  };
-}]).controller('CreateNewCNNInstanceCtrl', ["$scope", "$modalInstance", "a2PatternMatching", "a2Templates", "a2Playlists", "a2CNN", "notify", function ($scope, $modalInstance, a2PatternMatching, a2Templates, a2Playlists, a2CNN, notify) {
-  Object.assign(this, {
-    initialize: function () {
-      this.loading = {
-        playlists: false,
-        models: false
-      };
-      var list = this.list = {};
-      list.lambdas = [{
-        'name': 'call_id_testing:1 - create fake data',
-        'key': "new_cnn_job_test1"
-      }, {
-        'name': 'function_id_driver - test real function',
-        'key': "new_cnn_job_v1"
-      }];
-      this.data = {
-        name: null,
-        playlist: null,
-        model: null,
-        lambda: list.lambdas[0],
-        params: {}
-      };
-      this.loading.models = true;
-      a2CNN.listModels().then(function (models) {
-        this.loading.models = false;
-        list.models = models;
-      }.bind(this));
-      this.loading.playlists = true;
-      a2Playlists.getList().then(function (playlists) {
-        this.loading.playlists = false;
-        list.playlists = playlists;
-      }.bind(this));
-    },
-    ok: function () {
-      try {
-        return a2CNN.create({
-          playlist_id: this.data.playlist.id,
-          cnn_id: this.data.model.id,
-          name: this.data.name,
-          lambda: this.data.lambda.key,
-          params: this.data.params
-        }).then(function (cnn) {
-          $modalInstance.close({
-            ok: true,
-            cnn: cnn
-          });
-        }).catch(notify.serverError);
-      } catch (error) {
-        console.error("a2CNN.create error: " + error);
-      }
-    },
-    cancel: function (url) {
-      $modalInstance.close({
-        cancel: true,
-        url: url
-      });
-    }
-  });
-  this.initialize();
-}]).directive('a2CnnDetails', function () {
+/**
+ * @ngdoc overview
+ * @name a2-sidenav
+ * @description
+ * Directive for specifying a sidenav bar.
+ * this bar specifies a list of links that can be added
+ * whenever a corresponding sidenavbar anchor resides
+ */
+angular.module('a2.directive.audio-bar', ['a2.utils', 'a2.srv.local-storage', 'a2.visualizer.audio-player']).directive('a2AudioBar', ["a2SidenavBarService", "$parse", function (a2SidenavBarService, $parse) {
   return {
     restrict: 'E',
+    templateUrl: '/directives/a2-audio-bar/a2-audio-bar.html',
+    scope: {},
     replace: true,
-    scope: {
-      cnnId: '=',
-      detailedView: '=',
-      onSetDetailedView: '&',
-      onGoBack: '&'
+    controller: 'a2AudioBarCtrl as controller'
+  };
+}]).factory('a2AudioBarService', ["$rootScope", function ($rootScope) {
+  return {
+    loadUrl: function (url, play) {
+      $rootScope.$broadcast('a2-audio-load-url', {
+        url: url,
+        play: play
+      });
+    }
+  };
+}]).controller('a2AudioBarCtrl', ["$scope", "$filter", "a2AudioPlayer", "$timeout", "$q", "$localStorage", function ($scope, $filter, a2AudioPlayer, $timeout, $q, $localStorage) {
+  Object.assign(this, {
+    initialize: function () {
+      this.audio_player = new a2AudioPlayer($scope);
+      this.expanded = false;
+      this.collapseTimeoutInterval = 6000;
+      this.loading = false;
+      this.audio_player.setGain($localStorage.getItem('a2-audio-param-gain') || 1);
+      this.deregHandlers = [];
+      this.deregHandlers.push($scope.$on('a2-audio-load-url', this.onLoadUrl.bind(this)));
+      this.deregHandlers.push($scope.$on('$destroy', this.onDestroy.bind(this)));
     },
-    controller: 'CNNDetailsCtrl',
-    controllerAs: 'controller',
-    templateUrl: '/app/analysis/cnn/details.html'
-  };
-}).controller('CNNDetailsCtrl', ["$scope", "$state", "ngTableParams", "a2AudioPlayer", "$filter", "a2CNN", "a2UserPermit", "Project", "a2AudioBarService", "notify", function ($scope, $state, ngTableParams, a2AudioPlayer, $filter, a2CNN, a2UserPermit, Project, a2AudioBarService, notify) {
-  var projecturl = Project.getUrl();
-  $scope.lists = {
-    thumbnails: [{
-      class: 'fa fa-th-large',
-      value: ''
-    }, {
-      class: 'fa fa-th',
-      value: 'is-small'
-    }],
-    search: [{
-      value: 'all',
-      text: 'All',
-      description: 'Show all matched rois.'
-    }, {
-      value: 'present',
-      text: 'Present',
-      description: 'Show all rois marked as present.'
-    }, {
-      value: 'not_present',
-      text: 'Not Present',
-      description: 'Show all rois marked as not present.'
-    }, {
-      value: 'unvalidated',
-      text: 'Unvalidated',
-      description: 'Show all rois without validation.'
-    }, {
-      value: 'by_score',
-      text: 'Score per Species',
-      description: 'Show rois ranked by score per species.'
-    }, {
-      value: 'by_score_per_site',
-      text: 'Score per Site',
-      description: 'Show rois ranked by score per site.'
-    }],
-    selection: [{
-      value: 'all',
-      text: 'All'
-    }, {
-      value: 'none',
-      text: 'None'
-    }, {
-      value: 'not-validated',
-      text: 'Not Validated'
-    }],
-    validation: [{
-      class: "fa val-1",
-      text: "Present",
-      value: 1
-    }, {
-      class: "fa val-0",
-      text: "Not Present",
-      value: 0
-    }, {
-      class: "fa val-null",
-      text: "Clear",
-      value: null
-    }],
-    current: {
-      thumbnailClass: 'is-small'
-    }
-  };
-  $scope.total = {
-    rois: 0,
-    pages: 0
-  };
-  $scope.selected = {
-    roi_index: 0,
-    roi: null,
-    page: 0,
-    search: $scope.lists.search[4]
-  };
-  $scope.validation = {
-    current: $scope.lists.validation[2]
-  };
-  $scope.offset = 0;
-  $scope.limit = 100; //$scope.viewType = "species";
-
-  var setupExportUrl = function () {
-    $scope.CNNExportUrl = a2CNN.getExportUrl({
-      cnnId: $scope.cnnId
-    });
-  };
-
-  $scope.exportCnnReport = function ($event) {
-    $event.stopPropagation();
-    if (a2UserPermit.isSuper()) return setupExportUrl();
-
-    if (a2UserPermit.all && !a2UserPermit.all.length || !a2UserPermit.can('export report')) {
-      return notify.error('You do not have permission to export CNN data');
-    } else return setupExportUrl();
-  };
-
-  var audio_player = new a2AudioPlayer($scope);
-
-  var initTable = function (p, c, s, f, t) {
-    var sortBy = {};
-    var acsDesc = 'desc';
-
-    if (s[0] == '+') {
-      acsDesc = 'asc';
-    }
-
-    sortBy[s.substring(1)] = acsDesc;
-    var tableConfig = {
-      page: p,
-      count: c,
-      sorting: sortBy,
-      filter: f
-    };
-    $scope.tableParams = new ngTableParams(tableConfig, {
-      total: t,
-      getData: function ($defer, params) {
-        $scope.infopanedata = "";
-        var filteredData = params.filter() ? $filter('filter')($scope.cnnOriginal, params.filter()) : $scope.cnnOriginal;
-        var orderedData = params.sorting() ? $filter('orderBy')(filteredData, params.orderBy()) : $scope.cnnOriginal;
-        params.total(orderedData.length);
-        $defer.resolve(orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count()));
-
-        if (orderedData.length < 1) {
-          $scope.infopanedata = "No cnn searches found.";
-        }
-
-        cnnsData = orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count());
-
-        if ($scope.viewType == "species") {
-          $scope.species = cnnsData;
-        } else if ($scope.viewType == "recordings") {
-          $scope.recordings = cnnsData;
-        } else {
-          $scope.mainResults = cnnsData;
-        }
+    onLoadUrl: function (event, options) {
+      this.loadUrl(options);
+    },
+    onDestroy: function () {
+      (this.deregHandlers || []).forEach(function (fn) {
+        fn();
+      });
+    },
+    setCollapseTimer: function () {
+      if (this.collapseTimer) {
+        $timeout.cancel(this.collapseTimer);
       }
-    });
-  }; //$scope.viewType = "all";
 
+      if (this.collapseTimeoutInterval) {
+        this.collapseTimer = $timeout(function () {
+          this.expanded = false;
+        }.bind(this), this.collapseTimeoutInterval);
+      }
+    },
+    seekPercent: function (percent) {
+      return this.audio_player.setCurrentTime(percent * this.audio_player.resource.duration);
+    },
+    setGain: function (gain) {
+      this.setCollapseTimer();
+      $localStorage.setItem('a2-audio-param-gain', gain);
+      return this.audio_player.setGain(gain);
+    },
+    play: function () {
+      this.setCollapseTimer();
+      return this.audio_player.play();
+    },
+    pause: function () {
+      this.setCollapseTimer();
+      return this.audio_player.pause();
+    },
+    stop: function () {
+      this.setCollapseTimer();
+      return this.audio_player.stop();
+    },
+    toggleExpanded: function () {
+      this.expanded = !this.expanded;
 
-  $scope.counts = {
-    recordings: null
-  };
+      if (this.expanded) {
+        this.setCollapseTimer();
+      }
+    },
+    loadUrl: function (options) {
+      options = options || {};
+      const url = options.url;
+      const play = options.play || options.play === undefined;
 
-  $scope.onSelect = function (item) {
-    $scope.select(item.value);
-  };
+      if (!url) {
+        return $q.resolve();
+      }
 
-  $scope.select = function (option) {
-    var selectFn = null;
+      this.loading = true;
+      this.expanded = true;
+      return this.audio_player.load(url).then(function () {
+        this.loading = false;
 
-    if (option === "all") {
-      selectFn = function (roi) {
-        roi.selected = true;
+        if (play) {
+          return this.play();
+        }
+      }.bind(this)).catch(function (e) {
+        this.loading = false;
+        this.error = e;
+        console.error(e);
+      }.bind(this));
+    }
+  });
+  this.initialize(this);
+}]);
+angular.module('arbimon.directive.a2-switch', []).directive('a2Switch', function () {
+  return {
+    restict: 'E',
+    templateUrl: '/directives/a2-switch/template.html',
+    require: 'ngModel',
+    scope: {
+      onText: '@',
+      offText: '@',
+      disabled: '='
+    },
+    link: function (scope, element, attrs, ngModelCtrl) {
+      scope.toggle = function (event) {
+        scope.value = !scope.value;
+        ngModelCtrl.$setViewValue(scope.value, event && event.type);
       };
-    } else if (option === "none") {
-      selectFn = function (roi) {
-        roi.selected = false;
-      };
-    } else if (option === "not-validated") {
-      selectFn = function (roi) {
-        roi.selected = roi.validated === null;
-      };
-    } else {
-      selectFn = function (roi) {
-        roi.selected = roi.id === option;
+
+      ngModelCtrl.$render = function () {
+        scope.value = !!ngModelCtrl.$viewValue;
       };
     }
-
-    ($scope.resultsROIs || []).forEach(selectFn);
   };
+});
+angular.module('a2.utils.facebook-login-button', ['a2.utils', 'a2.utils.global-anonymous-function', 'a2.utils.external-api-loader', 'a2.injected.data']).config(["externalApiLoaderProvider", function (externalApiLoaderProvider) {
+  externalApiLoaderProvider.addApi('facebook', {
+    url: "//connect.facebook.net/en_US/sdk.js",
+    namespace: 'FB',
+    onload: ["a2InjectedData", function (a2InjectedData) {
+      this.module.init(a2InjectedData.facebook_api);
+    }]
+  });
+}]).directive('a2FacebookLoginButton', ["$window", "$q", "$timeout", "a2InjectedData", "externalApiLoader", function ($window, $q, $timeout, a2InjectedData, externalApiLoader) {
+  return {
+    restrict: 'E',
+    templateUrl: '/directives/external/facebook-login-button.html',
+    scope: {
+      onSignedIn: '&?',
+      onError: '&?'
+    },
+    link: function (scope, element, attrs) {
+      element.children('.btn-facebook-login').addClass(element[0].className);
+      element[0].className = '';
 
-  var refreshDetails = function () {
-    a2CNN.getDetailsFor($scope.cnnId).then(function (data) {
-      $scope.job_details = data;
-    });
-  };
-
-  refreshDetails();
-
-  var bySpecies = function (dataIn) {
-    var dataOut = {};
-    dataIn.forEach(function (element) {
-      var s = element.species_id;
-
-      if (!(s in dataOut)) {
-        dataOut[s] = {
-          count: 0,
-          species_id: s,
-          scientific_name: element.scientific_name
-        };
-      }
-
-      if (element.present == 1) {
-        dataOut[s].count++;
-      }
-    });
-    return dataOut;
-  };
-
-  var byROIs = function (dataIn, thresh) {
-    if (!thresh) {
-      thresh = 0.9;
-    }
-
-    var dataOut = [];
-    dataIn.forEach(function (element) {
-      element.over_thresh = element.score >= thresh;
-      element.present = element.over_thresh;
-      dataOut.push(element);
-    });
-    dataOut.sort(function (a, b) {
-      return a.score < b.score ? 1 : -1;
-    });
-    return dataOut;
-  };
-
-  var byROIsbySpecies = function (dataIn, bySite) {
-    dataOut = {};
-    dataIn.forEach(function (element) {
-      var s = bySite ? element.site : element.species_id + '_' + element.songtype_id;
-
-      if (!(s in dataOut)) {
-        dataOut[s] = {
-          count: 0,
-          species_id: element.species_id,
-          songtype_id: element.songtype_id,
-          scientific_name: element.scientific_name,
-          songtype: element.songtype,
-          rois: []
-        };
-        if (bySite) dataOut[s].site = element.site;
-      }
-
-      dataOut[s].rois.push(element);
-      dataOut[s].count++;
-    });
-    return dataOut;
-  };
-
-  var byRecordings = function (dataIn) {
-    var dataOut = {
-      total: 0
-    };
-    dataIn.forEach(function (element) {
-      var r = element.recording_id;
-      var s = element.species_id;
-
-      if (!(r in dataOut)) {
-        dataOut[r] = {
-          recording_id: r,
-          thumbnail: element.thumbnail,
-          species: {},
-          total: 0,
-          species_list: ''
-        };
-      }
-
-      if (!(s in dataOut[r].species)) {
-        dataOut[r].species[s] = {
-          species_id: s,
-          scientific_name: element.scientific_name,
-          count: 0
-        };
-      }
-
-      if (element.present == 1) {
-        if (dataOut[r].species[s].count == 0) {
-          dataOut[r].species_list = dataOut[r].species_list + ' ' + element.scientific_name;
-        }
-
-        dataOut[r].species[s].count++;
-        dataOut[r].total++;
-      }
-    });
-    return dataOut;
-  };
-
-  var bySpeciesHist = function (dataIn, species_id) {
-    speciesTimes = [];
-    count = 0;
-    speciesName = 'All'; //fix this... ugh
-
-    dataIn.forEach(function (element) {
-      if (species_id == 'all' | element.species_id == species_id) {
-        if (species_id == 'all') {
-          speciesName = 'All';
-        } else {
-          speciesName = element.scientific_name;
-        }
-
-        if (element.present == 1) {
-          var d = new Date(element.datetime);
-          var minutes = d.getHours() * 60 + d.getMinutes();
-          speciesTimes.push(new Date(3000, 0, 1, d.getHours(), d.getMinutes()));
-          count++;
-        }
-      }
-    });
-    return {
-      times: speciesTimes,
-      count: count,
-      name: speciesName
-    };
-  };
-
-  var plotShown = false;
-
-  $scope.showHist = function (species_id) {
-    $scope.speciesInfo = bySpeciesHist($scope.results, species_id);
-    var trace = {
-      x: $scope.speciesInfo.times,
-      type: 'histogram',
-      //xbins: {size: new Date(3000, 0, 2, 2).getTime() - new Date(3000, 0, 2, 0).getTime()}
-      //magic numbers for full day/2 hour bins
-      xbins: {
-        start: 32503698000000,
-        end: 32503791600000,
-        size: 7200000
-      }
-    };
-    var layout = {
-      title: $scope.speciesInfo.name + ' by time of day.',
-      xaxis: {
-        tickformat: '%X',
-        // For more time formatting types, see: https://github.com/d3/d3-time-format/blob/master/README.md
-        range: [new Date(3000, 0, 1).getTime(), new Date(3000, 0, 2).getTime()]
-      }
-    };
-    var data = [trace];
-
-    if (!plotShown) {
-      Plotly.newPlot('speciesHist', data, layout);
-      plotShown = true;
-    } else {
-      Plotly.newPlot('speciesHist', data, layout);
+      scope.signIn = function () {
+        externalApiLoader.load('facebook').then(function (FB) {
+          FB.login(function (response) {
+            if (response.status === 'connected') {
+              console.log(response);
+              scope.onSignedIn({
+                user: response
+              });
+            } else if (response.status === 'not_authorized') {} else {}
+          }, {
+            scope: 'public_profile,email'
+          });
+        });
+      };
     }
   };
-
-  $scope.getRecordingVisualizerUrl = function (recording_id) {
-    return "/project/" + Project.getUrl() + "/visualizer/rec/" + recording_id;
-  };
-
-  $scope.getRoiVisualizerUrl = function (roi) {
-    var box = ['box', roi.x1, roi.y1, roi.x2, roi.y2].join(',');
-    return roi ? "/project/" + projecturl + "/#/visualizer/rec/" + roi.recording_id + "?a=" + box : '';
-  };
-
-  $scope.getTemplateVisualizerUrl = function (template) {
-    var box = ['box', template.x1, template.y1, template.x2, template.y2].join(',');
-    return template ? "/project/" + projecturl + "/visualizer/rec/" + template.recording + "?a=" + box : '';
-  };
-
-  $scope.playRoiAudio = function (roi, $event) {
-    if ($event) {
-      $event.preventDefault();
-      $event.stopPropagation();
-    }
-
-    a2AudioBarService.loadUrl(a2CNN.getAudioUrlFor(roi), true);
-  };
-
-  $scope.setPage = function (page, force) {
-    page = Math.max(0, Math.min(page, $scope.total.rois / $scope.limit | 0));
-
-    if (page != $scope.selected.page || force) {
-      $scope.selected.page = page;
-      $scope.offset = page * $scope.limit;
-      loadROIPage();
-    }
-  };
-
-  $scope.moveROIPage = function (n) {
-    var nextPage = $scope.selected.page + n;
-
-    if (nextPage > $scope.total.pages - 1) {
-      $scope.setPage(0);
-    } else if (nextPage < 0) {
-      $scope.setPage($scope.total.pages - 1);
-    } else {
-      $scope.setPage(nextPage);
-    }
-  };
-
-  $scope.setSpecies = function (species) {
-    $scope.selected.species = species;
-    $scope.selected.page = 0;
-    $scope.offset = 0;
-    var site_name = "site_" + $scope.selected.site.site_id + "_" + $scope.selected.site.name;
-
-    if ($scope.selected.site.site_id == 0) {
-      site_name = 0;
-    }
-
-    $scope.counts.roi_species_counts = getSpeciesCounts(site_name, $scope.roi_species_sites_counts);
-    $scope.counts.roi_sites_counts = getSitesCounts($scope.selected.species.species_id, $scope.roi_species_sites_counts);
-    var count_all_species = $scope.counts.roi_species_counts.reduce(function (count, current) {
-      return count = count + current.N;
-    }, 0);
-    all_species = {
-      species_id: 0,
-      N: count_all_species,
-      scientific_name: "All Species"
-    };
-    $scope.counts.roi_species_counts.unshift(all_species);
-    var count_all_sites = $scope.counts.roi_sites_counts.reduce(function (count, current) {
-      return count = count + current.N;
-    }, 0);
-    var all_site = {
-      site_id: 0,
-      N: count_all_sites,
-      name: "All Sites"
-    };
-    $scope.counts.roi_sites_counts.unshift(all_site);
-    $scope.selected.site = $scope.counts.roi_sites_counts.find(function (element) {
-      return element.site_id == $scope.selected.site.site_id;
-    });
-    $scope.selected.species = $scope.counts.roi_species_counts.find(function (element) {
-      return element.species_id == $scope.selected.species.species_id;
-    }); //$scope.counts.roi_sites_counts.unshift($scope.selected.site);
-    //$scope.selected.site = all_site;
-
-    $scope.total = {
-      rois: species.N,
-      pages: Math.ceil(species.N / $scope.limit)
-    };
-    loadROIPage();
-  };
-
-  $scope.counts = {};
-
-  $scope.setSite = function (site) {
-    $scope.selected.site = site;
-    $scope.selected.page = 0;
-    $scope.offset = 0;
-    var site_name = "site_" + $scope.selected.site.site_id + "_" + $scope.selected.site.name;
-
-    if ($scope.selected.site.site_id == 0) {
-      site_name = 0;
-    }
-
-    $scope.counts.roi_species_counts = getSpeciesCounts(site_name, $scope.roi_species_sites_counts);
-    $scope.counts.roi_sites_counts = getSitesCounts($scope.selected.species.species_id, $scope.roi_species_sites_counts);
-    var count_all_species = $scope.counts.roi_species_counts.reduce(function (count, current) {
-      return count = count + current.N;
-    }, 0);
-    all_species = {
-      species_id: 0,
-      N: count_all_species,
-      scientific_name: "All Species"
-    };
-    $scope.counts.roi_species_counts.unshift(all_species); //$scope.counts.roi_species_counts.unshift($scope.selected.species);
-
-    var count_all_sites = $scope.counts.roi_sites_counts.reduce(function (count, current) {
-      return count = count + current.N;
-    }, 0);
-    var all_site = {
-      site_id: 0,
-      N: count_all_sites,
-      name: "All Sites"
-    };
-    $scope.counts.roi_sites_counts.unshift(all_site);
-    $scope.selected.species = $scope.counts.roi_species_counts.find(function (element) {
-      return element.species_id == $scope.selected.species.species_id;
-    });
-    $scope.selected.site = $scope.counts.roi_sites_counts.find(function (element) {
-      return element.site_id == $scope.selected.site.site_id;
-    });
-    $scope.total = {
-      rois: site.N,
-      pages: Math.ceil(site.N / $scope.limit)
-    };
-    loadROIPage();
-  };
-
-  var loadROIPage = function () {
-    $scope.loading = true;
-    $scope.infoInfo = "Loading...";
-    $scope.showInfo = true;
-    a2CNN.listROIs($scope.cnnId, $scope.limit, $scope.offset, $scope.selected.species.species_id, $scope.selected.site.site_id, $scope.selected.search.value).then(function (data) {
-      $scope.resultsROIs = data;
-      $scope.infoInfo = "";
-      $scope.showInfo = false;
-      $scope.loading = false;
-      $scope.infopanedata = "";
-      $scope.rois = byROIs($scope.resultsROIs);
-      $scope.rois_species = byROIsbySpecies($scope.rois, $scope.selected.search.value === 'by_score_per_site');
-    });
-  };
-
-  $scope.validate = function () {
-    if (!a2UserPermit.can('validate cnn rois')) {
-      notify.log('You do not have permission to validate the cnn rois.');
-      return;
-    }
-
-    var validation = ($scope.validation.current || {
-      value: null
-    }).value;
-    var rois = [];
-
-    for (var species in $scope.rois_species) {
-      $scope.rois_species[species].rois.forEach(function (roi) {
-        if (roi.selected) {
-          rois.push(roi);
-        }
+}]);
+angular.module('a2.utils.google-login-button', ['a2.utils', 'a2.utils.q-promisify', 'a2.utils.global-anonymous-function', 'a2.utils.external-api-loader', 'a2.injected.data']).config(["externalApiLoaderProvider", function (externalApiLoaderProvider) {
+  externalApiLoaderProvider.addApi('google-api', {
+    url: "https://apis.google.com/js/client.js",
+    namespace: 'gapi',
+    jsonpCallback: 'onload'
+  });
+  externalApiLoaderProvider.addApi('google-api/auth2', {
+    parent: 'google-api',
+    loader: ["$qPromisify", function ($qPromisify) {
+      return $qPromisify.invoke(this.parent.module, 'load', 'auth2');
+    }],
+    onload: ["a2InjectedData", function (a2InjectedData) {
+      var auth2 = this.module.init({
+        client_id: a2InjectedData.google_oauth_client,
+        cookiepolicy: 'single_host_origin'
       });
+      return auth2.then(function () {
+        this.module.auth2 = auth2;
+      }.bind(this));
+    }],
+    getCachedModule: function () {
+      return this.parent && this.parent.module && this.parent.module.auth2;
     }
+  });
+}]).directive('a2GoogleLoginButton', ["$window", "$q", "$timeout", "globalAnonymousFunction", "a2InjectedData", "externalApiLoader", function ($window, $q, $timeout, globalAnonymousFunction, a2InjectedData, externalApiLoader) {
+  return {
+    restrict: 'E',
+    templateUrl: '/directives/external/google-login-button.html',
+    scope: {
+      onSignedIn: '&?',
+      onError: '&?'
+    },
+    link: function (scope, element, attrs) {
+      element.children('.btn-google-login').addClass(element[0].className);
+      element[0].className = '';
 
-    var roiIds = rois.map(function (roi) {
-      return roi.cnn_result_roi_id;
-    });
-
-    try {
-      a2CNN.validateRois($scope.cnnId, roiIds, validation).then(function (response) {
-        rois.forEach(function (roi) {
-          roi.validated = validation;
-          roi.selected = false;
-        }); //loadROIPage();
-      });
-    } catch (error) {
-      console.error("TCL: $scope.validate -> error", error);
-    }
-
-    refreshDetails();
-  }; //$scope.calcWidth = function(roi) {
-  //};
-
-
-  $scope.onScroll = function ($event, $controller) {
-    this.scrollElement = $controller.scrollElement;
-    var scrollPos = $controller.scrollElement.scrollY;
-    var headerTop = $controller.anchors.header.offset().top;
-    this.headerTop = headerTop | 0;
-    this.scrolledPastHeader = scrollPos >= headerTop;
-  };
-
-  var getSpeciesCounts = function (site, species_sites_matrix) {
-    if (site == 0) {
-      site = 'total';
-    }
-
-    var roi_species_counts = [];
-    species_sites_matrix.forEach(function (species) {
-      roi_species_counts.push({
-        species_id: species.species_id,
-        N: species[site],
-        scientific_name: species.scientific_name
-      });
-    });
-    return roi_species_counts;
-  };
-
-  var getSitesCounts = function (species, species_sites_matrix) {
-    if (species == 0) {
-      species = 'total';
-    }
-
-    var roi_site_counts = [];
-    species_sites_matrix.forEach(function (s) {
-      if (species == 'total' | s.species_id == species) {
-        for (key in s) {
-          split = key.split("_");
-          site_id = split[1];
-          name = split.slice(2).join("_");
-
-          if (split[0] == "site") {
-            row = {};
-            row.site_id = site_id;
-            row.N = s[key];
-            row.name = name;
-            roi_site_counts.push(row);
-          }
-        }
-      }
-    });
-
-    if (species == 'total') {
-      roi_site_counts_dict = roi_site_counts.reduce(function (sitesAcc, site) {
-        if (!(site.site_id in sitesAcc)) {
-          sitesAcc[site.site_id] = {
-            site_id: site.site_id,
-            N: 0,
-            name: site.name
-          };
-        }
-
-        sitesAcc[site.site_id].N += site.N;
-        return sitesAcc;
-      }, {});
-      roi_site_counts = Object.values(roi_site_counts_dict);
-    }
-
-    return roi_site_counts;
-  };
-
-  $scope.onSearchChanged = function () {
-    $scope.switchView("rois");
-  };
-
-  $scope.switchView = function (viewType, specie) {
-    if (specie) {
-      window.scrollTo(0, 0);
-    }
-
-    var sortBy = "-cnn_presence_id";
-
-    var loadSwitch = function () {
-      if (viewType == "species") {
-        $scope.species = bySpecies($scope.results);
-        $scope.viewType = "species";
-        sortBy = "-scientific_name";
-        $scope.showHist(specie ? specie : "all");
-        $scope.cnnOriginal = Object.values($scope.species);
-      } else if (viewType == "recordings") {
-        $scope.recordings = byRecordings($scope.results);
-        $scope.counts.recordings = Object.keys($scope.recordings).length;
-        $scope.viewType = "recordings";
-        sortBy = "-recording_id";
-        $scope.cnnOriginal = Object.values($scope.recordings);
-      } else {
-        $scope.viewType = "all";
-        $scope.mainResults = $scope.results;
-        $scope.cnnOriginal = Object.values($scope.results);
-      }
-
-      if ($scope.cnnOriginal.length > 0) {
-        initTable(1, 10, sortBy, {}, $scope.cnnOriginal.length);
-      } else {
-        $scope.infopanedata = "No cnn results found.";
-      }
-    };
-
-    if (viewType == "rois") {
-      a2CNN.countROIsBySpeciesSites($scope.cnnId, {
-        search: $scope.selected.search.value
-      }).then(function (response) {
-        var data = response.data;
-        $scope.roi_species_sites_counts = data;
-        $scope.counts.roi_species_counts = getSpeciesCounts($scope.selected.site ? $scope.selected.site.site_id : 0, $scope.roi_species_sites_counts);
-        $scope.counts.roi_sites_counts = getSitesCounts($scope.selected.species ? $scope.selected.species.species_id : 0, $scope.roi_species_sites_counts);
-        var count_all = $scope.counts.roi_species_counts.reduce(function (count, current) {
-          return count = count + current.N;
-        }, 0);
-        var all_species = {
-          species_id: 0,
-          N: count_all,
-          scientific_name: "All Species"
-        };
-        $scope.counts.roi_species_counts.unshift(all_species);
-
-        if (!$scope.selected.species) {
-          $scope.selected.species = all_species;
-        } else {
-          $scope.selected.species = $scope.counts.roi_species_counts.find(function (element) {
-            return element.species_id == $scope.selected.species.species_id;
-          }) || all_species;
-        }
-
-        var all_sites = {
-          site_id: 0,
-          N: count_all,
-          name: "All Sites"
-        };
-        $scope.counts.roi_sites_counts.unshift(all_sites);
-
-        if (!$scope.selected.site) {
-          $scope.selected.site = all_sites;
-        } else {
-          $scope.selected.site = $scope.counts.roi_sites_counts.find(function (element) {
-            return element.site_id == $scope.selected.site.site_id;
-          }) || all_sites;
-        }
-
-        $scope.total = {
-          rois: count_all,
-          pages: Math.ceil(count_all / $scope.limit)
-        };
-        $scope.viewType = "rois";
-        loadROIPage();
-      }); //$scope.viewType = "rois";
-      //if (!$scope.resultsROIs) {
-      //    loadROIPage();
-      //} else {
-      //    $scope.rois = byROIs($scope.resultsROIs);
-      //    $scope.rois_species = byROIsbySpecies($scope.rois);
-      //}
-    } else if (!$scope.results) {
-      $scope.loading = true;
-      $scope.infoInfo = "Loading...";
-      $scope.showInfo = true;
-      a2CNN.listResults($scope.cnnId).then(function (data) {
-        $scope.results = data;
-        $scope.infoInfo = "";
-        $scope.showInfo = false;
-        $scope.loading = false;
-        $scope.infopanedata = "";
-        $scope.switchView('rois'); //loadSwitch();
-      });
-    } else {
-      loadSwitch();
+      scope.signIn = function () {
+        externalApiLoader.load('google-api/auth2').then(function (auth2) {
+          auth2.auth2.signIn().then(function (user) {
+            scope.onSignedIn({
+              user: user
+            });
+          }, function (error) {
+            scope.onError({
+              error: error
+            });
+          });
+        });
+      };
     }
   };
-
-  $scope.switchView($state.params.detailType ? $state.params.detailType : 'all');
 }]);
 angular.module('a2.analysis.clustering-jobs', ['ui.bootstrap', 'a2.srv.clustering-jobs', 'a2.srv.playlists', 'a2.services', 'a2.permissions', 'a2.directive.audio-bar', 'humane', 'a2.filter.round', 'a2.directive.frequency_filter_range_control']).config(["$stateProvider", function ($stateProvider) {
   $stateProvider.state('analysis.clustering-jobs', {
@@ -13746,7 +12473,11 @@ angular.module('a2.analysis.clustering-jobs', ['ui.bootstrap', 'a2.srv.clusterin
   };
 
   $scope.showPagination = function () {
-    return $scope.paginationSettings.totalItems && $scope.paginationSettings.totalItems > $scope.paginationSettings.limit;
+    if ($scope.selectedFilterData.value === 'per_cluster') {
+      return $scope.paginationSettings.totalItems && $scope.gridData.length && $scope.gridData.length > 1;
+    } else {
+      return $scope.paginationSettings.totalItems && $scope.paginationSettings.totalItems > $scope.paginationSettings.limit;
+    }
   };
 
   $scope.getRoisDetails = function (isFilterChanged) {
@@ -13763,11 +12494,18 @@ angular.module('a2.analysis.clustering-jobs', ['ui.bootstrap', 'a2.srv.clusterin
       $scope.paginationSettings.offset = 0;
     }
 
-    $scope.paginationSettings.limit = 100;
-    $scope.paginationSettings.totalItems = $scope.aedData.id.length;
-    aedData = $scope.aedData.id.filter(function (id, i, a) {
-      return i >= $scope.paginationSettings.offset * $scope.paginationSettings.limit && i < $scope.paginationSettings.page * $scope.paginationSettings.limit;
-    });
+    if ($scope.selectedFilterData.value === 'per_cluster') {
+      aedData = $scope.gridData[$scope.paginationSettings.page - 1].aed;
+      $scope.paginationSettings.totalItems = $scope.gridData.length;
+      $scope.paginationSettings.limit = 1;
+    } else {
+      $scope.paginationSettings.limit = 100;
+      $scope.paginationSettings.totalItems = $scope.aedData.id.length;
+      aedData = $scope.aedData.id.filter(function (id, i, a) {
+        return i >= $scope.paginationSettings.offset * $scope.paginationSettings.limit && i < $scope.paginationSettings.page * $scope.paginationSettings.limit;
+      });
+    }
+
     return a2ClusteringJobs.getRoisDetails({
       jobId: $scope.clusteringJobId,
       aed: aedData,
@@ -13790,8 +12528,15 @@ angular.module('a2.analysis.clustering-jobs', ['ui.bootstrap', 'a2.srv.clusterin
           }
         });
       });
-      $scope.paginationSettings.totalPages = Math.ceil($scope.paginationSettings.totalItems / $scope.paginationSettings.limit);
-      $scope.paginationSettings.limit = 100;
+
+      if ($scope.selectedFilterData.value === 'per_cluster') {
+        $scope.paginationSettings.totalPages = $scope.gridData.length;
+        $scope.paginationSettings.limit = 1;
+      } else {
+        $scope.paginationSettings.totalPages = Math.ceil($scope.paginationSettings.totalItems / $scope.paginationSettings.limit);
+        $scope.paginationSettings.limit = 100;
+      }
+
       $scope.loading = false;
       $scope.allRois = groupedData;
       $scope.isRoisLoading = false;
@@ -14240,6 +12985,1279 @@ angular.module('a2.analysis.clustering-jobs', ['ui.bootstrap', 'a2.srv.clusterin
       });
     });
   };
+}]);
+angular.module('a2.analysis.audio-event-detection', ['a2.filter.as-csv', 'a2.filter.time-from-now', 'a2.srv.resolve', 'a2.srv.open-modal', 'a2.service.audio-event-detection', 'a2.analysis.audio-event-detection.new-modal']).config(["$stateProvider", "$urlRouterProvider", function ($stateProvider, $urlRouterProvider) {
+  $stateProvider.state('analysis.audio-event-detection', {
+    url: '/audio-event-detection',
+    controller: 'AudioEventDetectionAnalysisStateCtrl as controller',
+    templateUrl: '/app/analysis/audio-event-detection/index.html'
+  });
+}]).controller('AudioEventDetectionAnalysisStateCtrl', ["$q", "$promisedResolve", "$openModal", "a2UserPermit", function ($q, $promisedResolve, $openModal, a2UserPermit) {
+  this.initialize = function () {
+    return this.reload();
+  };
+
+  this.reload = function () {
+    this.loading = true;
+    return $promisedResolve({
+      audioEventDetectionsList: ["AudioEventDetectionService", function (AudioEventDetectionService) {
+        return AudioEventDetectionService.getList();
+      }]
+    }, this).then(function () {
+      this.loading = false;
+    }.bind(this));
+  };
+
+  this.new = function () {
+    if (!a2UserPermit.can('manage soundscapes')) {
+      notify.error('You do not have permission to create audio event detections.');
+      return;
+    }
+
+    return $openModal('audio-event-detection.new-modal', {
+      resolve: {
+        onSubmit: ["AudioEventDetectionService", function (AudioEventDetectionService) {
+          return AudioEventDetectionService.new;
+        }]
+      }
+    });
+  };
+
+  this.initialize();
+}]);
+angular.module('a2.analysis.audio-event-detection.new-modal', ['a2.srv.open-modal', 'a2.srv.resolve', 'a2.srv.playlists', 'humane', 'a2.directive.require-non-empty', 'a2.service.audio-event-detection']).config(["$openModalProvider", function ($openModalProvider) {
+  $openModalProvider.define('audio-event-detection.new-modal', {
+    templateUrl: '/app/analysis/audio-event-detection/new-modal.html',
+    controllerAs: 'controller',
+    controller: 'NewAudioEventDetectionModalCtrl',
+    resolve: {
+      onSubmit: function () {
+        return null;
+      }
+    }
+  });
+}]).constant('AudioEventDetectionParametersEditTemplateUrls', {
+  fltr: '/app/analysis/audio-event-detection/algorithm-fltr-edit-parameters.html'
+}).controller('NewAudioEventDetectionModalCtrl', ["$q", "$modalInstance", "$promisedResolve", "$parse", "notify", "AudioEventDetectionParametersEditTemplateUrls", "onSubmit", function ($q, $modalInstance, $promisedResolve, $parse, notify, AudioEventDetectionParametersEditTemplateUrls, onSubmit) {
+  this.playlists = [];
+  this.algorithmsList = [];
+  this.statisticsList = [];
+  var getDefaultName = $parse("[" + "(playlist.name || '[Playlist]'), " + "(algorithm.name || '[Algorithm]'), " + "(parameters ? '(' + (parameters  | asCSV) + ')' : ''), " + "(date | moment:'ll')" + "] | asCSV:' / '");
+
+  this.initialize = function () {
+    return this.reload().then(function () {
+      this.aed = {
+        algorithm: this.algorithmsList[0],
+        statistics: this.statisticsList.slice(),
+        playlist: null,
+        date: new Date()
+      };
+      this.notifyAedAlgorithmChanged();
+    }.bind(this));
+  };
+
+  this.reload = function () {
+    this.loading = true;
+    return $promisedResolve({
+      playlists: ["a2Playlists", function (a2Playlists) {
+        return a2Playlists.getList();
+      }],
+      algorithmsList: function (AudioEventDetectionService) {
+        return AudioEventDetectionService.getAlgorithmsList();
+      },
+      statisticsList: function (AudioEventDetectionService) {
+        return AudioEventDetectionService.getStatisticsList();
+      }
+    }, this).then(function () {
+      this.loading = false;
+    }.bind(this));
+  };
+
+  this.notifyAedAlgorithmChanged = function () {
+    var algorithm = this.aed.algorithm || {};
+    this.aed.parameters = algorithm.defaults || {};
+    this.algorithmParametersTemplate = AudioEventDetectionParametersEditTemplateUrls[algorithm.name];
+    this.recomputeDefaultName();
+  };
+
+  this.recomputeDefaultName = function () {
+    this.aed.defaultName = getDefaultName(this.aed);
+  };
+
+  this.ok = function () {
+    return $q.resolve().then(function () {
+      return onSubmit && onSubmit(this.aed);
+    }.bind(this)).then(function () {
+      return $modalInstance.close(this.aed);
+    }.bind(this)).catch(function (error) {
+      notify.error(error);
+    });
+  };
+
+  this.cancel = function () {
+    $modalInstance.dismiss('cancel');
+  };
+
+  this.initialize();
+}]);
+angular.module('a2.analysis.cnn', ['ui.bootstrap', 'a2.directive.audio-bar', 'a2.srv.cnn', 'a2.services', 'a2.permissions', 'humane', 'c3-charts']).config(["$stateProvider", "$urlRouterProvider", function ($stateProvider, $urlRouterProvider) {
+  $stateProvider.state('analysis.disabled-cnn', {
+    url: '/disabled/cnn',
+    templateUrl: '/app/analysis/cnn/disabled.html'
+  }).state('analysis.cnn', {
+    url: '/cnn/',
+    controller: 'CNNCtrl',
+    templateUrl: '/app/analysis/cnn/list.html'
+  }).state('analysis.cnn-details', {
+    url: '/cnn/:cnnId',
+    ///:detailType/',
+    controller: 'CNNCtrl',
+    templateUrl: '/app/analysis/cnn/list.html'
+  });
+}]).controller('CNNCtrl', ["$scope", "$modal", "$filter", "$location", "Project", "ngTableParams", "JobsData", "a2CNN", "a2Playlists", "notify", "$q", "a2UserPermit", "$state", "$stateParams", function ($scope, $modal, $filter, $location, Project, ngTableParams, JobsData, a2CNN, a2Playlists, notify, $q, a2UserPermit, $state, $stateParams) {
+  // this debug line for sanity between servers... Will remove TODO
+  console.log("CNN Version 1.0");
+  $scope.selectedCNNId = $stateParams.cnnId;
+
+  var initTable = function (p, c, s, f, t) {
+    var sortBy = {};
+    var acsDesc = 'desc';
+
+    if (s[0] == '+') {
+      acsDesc = 'asc';
+    }
+
+    sortBy[s.substring(1)] = acsDesc;
+    var tableConfig = {
+      page: p,
+      count: c,
+      sorting: sortBy,
+      filter: f
+    };
+    $scope.tableParams = new ngTableParams(tableConfig, {
+      total: t,
+      getData: function ($defer, params) {
+        $scope.infopanedata = "";
+        var filteredData = params.filter() ? $filter('filter')($scope.cnnOriginal, params.filter()) : $scope.cnnOriginal;
+        var orderedData = params.sorting() ? $filter('orderBy')(filteredData, params.orderBy()) : $scope.cnnOriginal;
+        params.total(orderedData.length);
+        $defer.resolve(orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count()));
+
+        if (orderedData.length < 1) {
+          $scope.infopanedata = "No cnn searches found.";
+        }
+
+        $scope.cnnsData = orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count());
+      }
+    });
+  };
+
+  $scope.loadCNNs = function () {
+    $scope.loading = true;
+    $scope.infoInfo = "Loading...";
+    $scope.showInfo = true;
+    return a2CNN.list().then(function (data) {
+      $scope.cnnOriginal = data;
+      $scope.cnnsData = data;
+      $scope.infoInfo = "";
+      $scope.showInfo = false;
+      $scope.loading = false;
+      $scope.infopanedata = "";
+
+      if (data.length > 0) {
+        if (!$scope.tableParams) {
+          initTable(1, 10, "-timestamp", {}, data.length);
+        } else {
+          $scope.tableParams.reload();
+        }
+      } else {
+        $scope.infopanedata = "No cnns found.";
+      }
+    });
+  };
+
+  if (!$scope.selectedCNNId) {
+    $scope.loadCNNs();
+  }
+
+  $scope.createNewCNN = function () {
+    // TODO: add in real cnn permissions
+    if (!a2UserPermit.can('manage cnns')) {
+      notify.error('You do not have permission to create cnn jobs.');
+      return;
+    }
+
+    var modalInstance = $modal.open({
+      templateUrl: '/app/analysis/cnn/createnewcnn.html',
+      controller: 'CreateNewCNNInstanceCtrl as controller'
+    });
+    modalInstance.result.then(function (result) {
+      data = result;
+
+      if (data.ok) {
+        JobsData.updateJobs();
+        notify.log("Your new cnn is waiting to start processing.<br> Check its status on <b>Jobs</b>.");
+      } else if (data.error) {
+        notify.error("Error: " + data.error);
+      } else if (data.url) {
+        $location.path(data.url);
+      }
+    });
+  };
+
+  $scope.deleteCNN = function (cnn, $event) {
+    $event.stopPropagation();
+
+    if (!a2UserPermit.can('manage cnns')) {
+      notify.error('You do not have permission to delete cnns.');
+      return;
+    }
+
+    var modalInstance = $modal.open({
+      templateUrl: '/app/analysis/cnn/deletecnn.html',
+      controller: 'DeleteCNNInstanceCtrl as controller',
+      resolve: {
+        cnn: function () {
+          return cnn;
+        }
+      }
+    });
+    modalInstance.result.then(function (ret) {
+      if (ret.err) {
+        notify.error("Error: " + ret.err);
+      } else {
+        notify.log("CNN: (" + cnn.name + ") deleted successfully");
+        $scope.loadCNNs();
+        /*
+        var index = -1;
+        var modArr = angular.copy($scope.cnnOriginal);
+        for (var i = 0; i < modArr.length; i++) {
+            if (modArr[i].job_id === cnn.job_id) {
+                index = i;
+                break;
+            }
+        }
+        if (index > -1) {
+            $scope.cnnOriginal.splice(index, 1);
+            notify.log("CNN deleted successfully");
+        }
+        */
+      }
+    });
+  };
+
+  $scope.selectItem = function (cnnId) {
+    if (!cnnId) {
+      $state.go('analysis.cnn', {});
+    } else {
+      $state.go('analysis.cnn-details', {
+        cnnId: cnnId //detailType: 'all'
+
+      });
+    }
+  };
+
+  $scope.setDetailedView = function (detailedView) {
+    $scope.detailedView = detailedView;
+    $state.transitionTo($state.current.name, {
+      patternMatchingId: $scope.selectedPatternMatchingId,
+      show: detailedView ? "detail" : "gallery"
+    }, {
+      notify: false
+    });
+  };
+}]).controller('DeleteCNNInstanceCtrl', ["$scope", "$modalInstance", "a2CNN", "cnn", "Project", function ($scope, $modalInstance, a2CNN, cnn, Project) {
+  this.cnn = cnn;
+  $scope.project_name = Project.getUrl();
+  $scope.deletingloader = false;
+
+  $scope.ok = function () {
+    $scope.deletingloader = true;
+    a2CNN.delete(cnn.job_id).then(function (data) {
+      $modalInstance.close(data);
+    });
+  };
+
+  $scope.cancel = function () {
+    $modalInstance.dismiss('cancel');
+  };
+}]).controller('CreateNewCNNInstanceCtrl', ["$scope", "$modalInstance", "a2PatternMatching", "a2Templates", "a2Playlists", "a2CNN", "notify", function ($scope, $modalInstance, a2PatternMatching, a2Templates, a2Playlists, a2CNN, notify) {
+  Object.assign(this, {
+    initialize: function () {
+      this.loading = {
+        playlists: false,
+        models: false
+      };
+      var list = this.list = {};
+      list.lambdas = [{
+        'name': 'call_id_testing:1 - create fake data',
+        'key': "new_cnn_job_test1"
+      }, {
+        'name': 'function_id_driver - test real function',
+        'key': "new_cnn_job_v1"
+      }];
+      this.data = {
+        name: null,
+        playlist: null,
+        model: null,
+        lambda: list.lambdas[0],
+        params: {}
+      };
+      this.loading.models = true;
+      a2CNN.listModels().then(function (models) {
+        this.loading.models = false;
+        list.models = models;
+      }.bind(this));
+      this.loading.playlists = true;
+      a2Playlists.getList().then(function (playlists) {
+        this.loading.playlists = false;
+        list.playlists = playlists;
+      }.bind(this));
+    },
+    ok: function () {
+      try {
+        return a2CNN.create({
+          playlist_id: this.data.playlist.id,
+          cnn_id: this.data.model.id,
+          name: this.data.name,
+          lambda: this.data.lambda.key,
+          params: this.data.params
+        }).then(function (cnn) {
+          $modalInstance.close({
+            ok: true,
+            cnn: cnn
+          });
+        }).catch(notify.serverError);
+      } catch (error) {
+        console.error("a2CNN.create error: " + error);
+      }
+    },
+    cancel: function (url) {
+      $modalInstance.close({
+        cancel: true,
+        url: url
+      });
+    }
+  });
+  this.initialize();
+}]).directive('a2CnnDetails', function () {
+  return {
+    restrict: 'E',
+    replace: true,
+    scope: {
+      cnnId: '=',
+      detailedView: '=',
+      onSetDetailedView: '&',
+      onGoBack: '&'
+    },
+    controller: 'CNNDetailsCtrl',
+    controllerAs: 'controller',
+    templateUrl: '/app/analysis/cnn/details.html'
+  };
+}).controller('CNNDetailsCtrl', ["$scope", "$state", "ngTableParams", "a2AudioPlayer", "$filter", "a2CNN", "a2UserPermit", "Project", "a2AudioBarService", "notify", function ($scope, $state, ngTableParams, a2AudioPlayer, $filter, a2CNN, a2UserPermit, Project, a2AudioBarService, notify) {
+  var projecturl = Project.getUrl();
+  $scope.lists = {
+    thumbnails: [{
+      class: 'fa fa-th-large',
+      value: ''
+    }, {
+      class: 'fa fa-th',
+      value: 'is-small'
+    }],
+    search: [{
+      value: 'all',
+      text: 'All',
+      description: 'Show all matched rois.'
+    }, {
+      value: 'present',
+      text: 'Present',
+      description: 'Show all rois marked as present.'
+    }, {
+      value: 'not_present',
+      text: 'Not Present',
+      description: 'Show all rois marked as not present.'
+    }, {
+      value: 'unvalidated',
+      text: 'Unvalidated',
+      description: 'Show all rois without validation.'
+    }, {
+      value: 'by_score',
+      text: 'Score per Species',
+      description: 'Show rois ranked by score per species.'
+    }, {
+      value: 'by_score_per_site',
+      text: 'Score per Site',
+      description: 'Show rois ranked by score per site.'
+    }],
+    selection: [{
+      value: 'all',
+      text: 'All'
+    }, {
+      value: 'none',
+      text: 'None'
+    }, {
+      value: 'not-validated',
+      text: 'Not Validated'
+    }],
+    validation: [{
+      class: "fa val-1",
+      text: "Present",
+      value: 1
+    }, {
+      class: "fa val-0",
+      text: "Not Present",
+      value: 0
+    }, {
+      class: "fa val-null",
+      text: "Clear",
+      value: null
+    }],
+    current: {
+      thumbnailClass: 'is-small'
+    }
+  };
+  $scope.total = {
+    rois: 0,
+    pages: 0
+  };
+  $scope.selected = {
+    roi_index: 0,
+    roi: null,
+    page: 0,
+    search: $scope.lists.search[4]
+  };
+  $scope.validation = {
+    current: $scope.lists.validation[2]
+  };
+  $scope.offset = 0;
+  $scope.limit = 100; //$scope.viewType = "species";
+
+  var setupExportUrl = function () {
+    $scope.CNNExportUrl = a2CNN.getExportUrl({
+      cnnId: $scope.cnnId
+    });
+  };
+
+  $scope.exportCnnReport = function ($event) {
+    $event.stopPropagation();
+    if (a2UserPermit.isSuper()) return setupExportUrl();
+
+    if (a2UserPermit.all && !a2UserPermit.all.length || !a2UserPermit.can('export report')) {
+      return notify.error('You do not have permission to export CNN data');
+    } else return setupExportUrl();
+  };
+
+  var audio_player = new a2AudioPlayer($scope);
+
+  var initTable = function (p, c, s, f, t) {
+    var sortBy = {};
+    var acsDesc = 'desc';
+
+    if (s[0] == '+') {
+      acsDesc = 'asc';
+    }
+
+    sortBy[s.substring(1)] = acsDesc;
+    var tableConfig = {
+      page: p,
+      count: c,
+      sorting: sortBy,
+      filter: f
+    };
+    $scope.tableParams = new ngTableParams(tableConfig, {
+      total: t,
+      getData: function ($defer, params) {
+        $scope.infopanedata = "";
+        var filteredData = params.filter() ? $filter('filter')($scope.cnnOriginal, params.filter()) : $scope.cnnOriginal;
+        var orderedData = params.sorting() ? $filter('orderBy')(filteredData, params.orderBy()) : $scope.cnnOriginal;
+        params.total(orderedData.length);
+        $defer.resolve(orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count()));
+
+        if (orderedData.length < 1) {
+          $scope.infopanedata = "No cnn searches found.";
+        }
+
+        cnnsData = orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count());
+
+        if ($scope.viewType == "species") {
+          $scope.species = cnnsData;
+        } else if ($scope.viewType == "recordings") {
+          $scope.recordings = cnnsData;
+        } else {
+          $scope.mainResults = cnnsData;
+        }
+      }
+    });
+  }; //$scope.viewType = "all";
+
+
+  $scope.counts = {
+    recordings: null
+  };
+
+  $scope.onSelect = function (item) {
+    $scope.select(item.value);
+  };
+
+  $scope.select = function (option) {
+    var selectFn = null;
+
+    if (option === "all") {
+      selectFn = function (roi) {
+        roi.selected = true;
+      };
+    } else if (option === "none") {
+      selectFn = function (roi) {
+        roi.selected = false;
+      };
+    } else if (option === "not-validated") {
+      selectFn = function (roi) {
+        roi.selected = roi.validated === null;
+      };
+    } else {
+      selectFn = function (roi) {
+        roi.selected = roi.id === option;
+      };
+    }
+
+    ($scope.resultsROIs || []).forEach(selectFn);
+  };
+
+  var refreshDetails = function () {
+    a2CNN.getDetailsFor($scope.cnnId).then(function (data) {
+      $scope.job_details = data;
+    });
+  };
+
+  refreshDetails();
+
+  var bySpecies = function (dataIn) {
+    var dataOut = {};
+    dataIn.forEach(function (element) {
+      var s = element.species_id;
+
+      if (!(s in dataOut)) {
+        dataOut[s] = {
+          count: 0,
+          species_id: s,
+          scientific_name: element.scientific_name
+        };
+      }
+
+      if (element.present == 1) {
+        dataOut[s].count++;
+      }
+    });
+    return dataOut;
+  };
+
+  var byROIs = function (dataIn, thresh) {
+    if (!thresh) {
+      thresh = 0.9;
+    }
+
+    var dataOut = [];
+    dataIn.forEach(function (element) {
+      element.over_thresh = element.score >= thresh;
+      element.present = element.over_thresh;
+      dataOut.push(element);
+    });
+    dataOut.sort(function (a, b) {
+      return a.score < b.score ? 1 : -1;
+    });
+    return dataOut;
+  };
+
+  var byROIsbySpecies = function (dataIn, bySite) {
+    dataOut = {};
+    dataIn.forEach(function (element) {
+      var s = bySite ? element.site : element.species_id + '_' + element.songtype_id;
+
+      if (!(s in dataOut)) {
+        dataOut[s] = {
+          count: 0,
+          species_id: element.species_id,
+          songtype_id: element.songtype_id,
+          scientific_name: element.scientific_name,
+          songtype: element.songtype,
+          rois: []
+        };
+        if (bySite) dataOut[s].site = element.site;
+      }
+
+      dataOut[s].rois.push(element);
+      dataOut[s].count++;
+    });
+    return dataOut;
+  };
+
+  var byRecordings = function (dataIn) {
+    var dataOut = {
+      total: 0
+    };
+    dataIn.forEach(function (element) {
+      var r = element.recording_id;
+      var s = element.species_id;
+
+      if (!(r in dataOut)) {
+        dataOut[r] = {
+          recording_id: r,
+          thumbnail: element.thumbnail,
+          species: {},
+          total: 0,
+          species_list: ''
+        };
+      }
+
+      if (!(s in dataOut[r].species)) {
+        dataOut[r].species[s] = {
+          species_id: s,
+          scientific_name: element.scientific_name,
+          count: 0
+        };
+      }
+
+      if (element.present == 1) {
+        if (dataOut[r].species[s].count == 0) {
+          dataOut[r].species_list = dataOut[r].species_list + ' ' + element.scientific_name;
+        }
+
+        dataOut[r].species[s].count++;
+        dataOut[r].total++;
+      }
+    });
+    return dataOut;
+  };
+
+  var bySpeciesHist = function (dataIn, species_id) {
+    speciesTimes = [];
+    count = 0;
+    speciesName = 'All'; //fix this... ugh
+
+    dataIn.forEach(function (element) {
+      if (species_id == 'all' | element.species_id == species_id) {
+        if (species_id == 'all') {
+          speciesName = 'All';
+        } else {
+          speciesName = element.scientific_name;
+        }
+
+        if (element.present == 1) {
+          var d = new Date(element.datetime);
+          var minutes = d.getHours() * 60 + d.getMinutes();
+          speciesTimes.push(new Date(3000, 0, 1, d.getHours(), d.getMinutes()));
+          count++;
+        }
+      }
+    });
+    return {
+      times: speciesTimes,
+      count: count,
+      name: speciesName
+    };
+  };
+
+  var plotShown = false;
+
+  $scope.showHist = function (species_id) {
+    $scope.speciesInfo = bySpeciesHist($scope.results, species_id);
+    var trace = {
+      x: $scope.speciesInfo.times,
+      type: 'histogram',
+      //xbins: {size: new Date(3000, 0, 2, 2).getTime() - new Date(3000, 0, 2, 0).getTime()}
+      //magic numbers for full day/2 hour bins
+      xbins: {
+        start: 32503698000000,
+        end: 32503791600000,
+        size: 7200000
+      }
+    };
+    var layout = {
+      title: $scope.speciesInfo.name + ' by time of day.',
+      xaxis: {
+        tickformat: '%X',
+        // For more time formatting types, see: https://github.com/d3/d3-time-format/blob/master/README.md
+        range: [new Date(3000, 0, 1).getTime(), new Date(3000, 0, 2).getTime()]
+      }
+    };
+    var data = [trace];
+
+    if (!plotShown) {
+      Plotly.newPlot('speciesHist', data, layout);
+      plotShown = true;
+    } else {
+      Plotly.newPlot('speciesHist', data, layout);
+    }
+  };
+
+  $scope.getRecordingVisualizerUrl = function (recording_id) {
+    return "/project/" + Project.getUrl() + "/visualizer/rec/" + recording_id;
+  };
+
+  $scope.getRoiVisualizerUrl = function (roi) {
+    var box = ['box', roi.x1, roi.y1, roi.x2, roi.y2].join(',');
+    return roi ? "/project/" + projecturl + "/#/visualizer/rec/" + roi.recording_id + "?a=" + box : '';
+  };
+
+  $scope.getTemplateVisualizerUrl = function (template) {
+    var box = ['box', template.x1, template.y1, template.x2, template.y2].join(',');
+    return template ? "/project/" + projecturl + "/visualizer/rec/" + template.recording + "?a=" + box : '';
+  };
+
+  $scope.playRoiAudio = function (roi, $event) {
+    if ($event) {
+      $event.preventDefault();
+      $event.stopPropagation();
+    }
+
+    a2AudioBarService.loadUrl(a2CNN.getAudioUrlFor(roi), true);
+  };
+
+  $scope.setPage = function (page, force) {
+    page = Math.max(0, Math.min(page, $scope.total.rois / $scope.limit | 0));
+
+    if (page != $scope.selected.page || force) {
+      $scope.selected.page = page;
+      $scope.offset = page * $scope.limit;
+      loadROIPage();
+    }
+  };
+
+  $scope.moveROIPage = function (n) {
+    var nextPage = $scope.selected.page + n;
+
+    if (nextPage > $scope.total.pages - 1) {
+      $scope.setPage(0);
+    } else if (nextPage < 0) {
+      $scope.setPage($scope.total.pages - 1);
+    } else {
+      $scope.setPage(nextPage);
+    }
+  };
+
+  $scope.setSpecies = function (species) {
+    $scope.selected.species = species;
+    $scope.selected.page = 0;
+    $scope.offset = 0;
+    var site_name = "site_" + $scope.selected.site.site_id + "_" + $scope.selected.site.name;
+
+    if ($scope.selected.site.site_id == 0) {
+      site_name = 0;
+    }
+
+    $scope.counts.roi_species_counts = getSpeciesCounts(site_name, $scope.roi_species_sites_counts);
+    $scope.counts.roi_sites_counts = getSitesCounts($scope.selected.species.species_id, $scope.roi_species_sites_counts);
+    var count_all_species = $scope.counts.roi_species_counts.reduce(function (count, current) {
+      return count = count + current.N;
+    }, 0);
+    all_species = {
+      species_id: 0,
+      N: count_all_species,
+      scientific_name: "All Species"
+    };
+    $scope.counts.roi_species_counts.unshift(all_species);
+    var count_all_sites = $scope.counts.roi_sites_counts.reduce(function (count, current) {
+      return count = count + current.N;
+    }, 0);
+    var all_site = {
+      site_id: 0,
+      N: count_all_sites,
+      name: "All Sites"
+    };
+    $scope.counts.roi_sites_counts.unshift(all_site);
+    $scope.selected.site = $scope.counts.roi_sites_counts.find(function (element) {
+      return element.site_id == $scope.selected.site.site_id;
+    });
+    $scope.selected.species = $scope.counts.roi_species_counts.find(function (element) {
+      return element.species_id == $scope.selected.species.species_id;
+    }); //$scope.counts.roi_sites_counts.unshift($scope.selected.site);
+    //$scope.selected.site = all_site;
+
+    $scope.total = {
+      rois: species.N,
+      pages: Math.ceil(species.N / $scope.limit)
+    };
+    loadROIPage();
+  };
+
+  $scope.counts = {};
+
+  $scope.setSite = function (site) {
+    $scope.selected.site = site;
+    $scope.selected.page = 0;
+    $scope.offset = 0;
+    var site_name = "site_" + $scope.selected.site.site_id + "_" + $scope.selected.site.name;
+
+    if ($scope.selected.site.site_id == 0) {
+      site_name = 0;
+    }
+
+    $scope.counts.roi_species_counts = getSpeciesCounts(site_name, $scope.roi_species_sites_counts);
+    $scope.counts.roi_sites_counts = getSitesCounts($scope.selected.species.species_id, $scope.roi_species_sites_counts);
+    var count_all_species = $scope.counts.roi_species_counts.reduce(function (count, current) {
+      return count = count + current.N;
+    }, 0);
+    all_species = {
+      species_id: 0,
+      N: count_all_species,
+      scientific_name: "All Species"
+    };
+    $scope.counts.roi_species_counts.unshift(all_species); //$scope.counts.roi_species_counts.unshift($scope.selected.species);
+
+    var count_all_sites = $scope.counts.roi_sites_counts.reduce(function (count, current) {
+      return count = count + current.N;
+    }, 0);
+    var all_site = {
+      site_id: 0,
+      N: count_all_sites,
+      name: "All Sites"
+    };
+    $scope.counts.roi_sites_counts.unshift(all_site);
+    $scope.selected.species = $scope.counts.roi_species_counts.find(function (element) {
+      return element.species_id == $scope.selected.species.species_id;
+    });
+    $scope.selected.site = $scope.counts.roi_sites_counts.find(function (element) {
+      return element.site_id == $scope.selected.site.site_id;
+    });
+    $scope.total = {
+      rois: site.N,
+      pages: Math.ceil(site.N / $scope.limit)
+    };
+    loadROIPage();
+  };
+
+  var loadROIPage = function () {
+    $scope.loading = true;
+    $scope.infoInfo = "Loading...";
+    $scope.showInfo = true;
+    a2CNN.listROIs($scope.cnnId, $scope.limit, $scope.offset, $scope.selected.species.species_id, $scope.selected.site.site_id, $scope.selected.search.value).then(function (data) {
+      $scope.resultsROIs = data;
+      $scope.infoInfo = "";
+      $scope.showInfo = false;
+      $scope.loading = false;
+      $scope.infopanedata = "";
+      $scope.rois = byROIs($scope.resultsROIs);
+      $scope.rois_species = byROIsbySpecies($scope.rois, $scope.selected.search.value === 'by_score_per_site');
+    });
+  };
+
+  $scope.validate = function () {
+    if (!a2UserPermit.can('validate cnn rois')) {
+      notify.log('You do not have permission to validate the cnn rois.');
+      return;
+    }
+
+    var validation = ($scope.validation.current || {
+      value: null
+    }).value;
+    var rois = [];
+
+    for (var species in $scope.rois_species) {
+      $scope.rois_species[species].rois.forEach(function (roi) {
+        if (roi.selected) {
+          rois.push(roi);
+        }
+      });
+    }
+
+    var roiIds = rois.map(function (roi) {
+      return roi.cnn_result_roi_id;
+    });
+
+    try {
+      a2CNN.validateRois($scope.cnnId, roiIds, validation).then(function (response) {
+        rois.forEach(function (roi) {
+          roi.validated = validation;
+          roi.selected = false;
+        }); //loadROIPage();
+      });
+    } catch (error) {
+      console.error("TCL: $scope.validate -> error", error);
+    }
+
+    refreshDetails();
+  }; //$scope.calcWidth = function(roi) {
+  //};
+
+
+  $scope.onScroll = function ($event, $controller) {
+    this.scrollElement = $controller.scrollElement;
+    var scrollPos = $controller.scrollElement.scrollY;
+    var headerTop = $controller.anchors.header.offset().top;
+    this.headerTop = headerTop | 0;
+    this.scrolledPastHeader = scrollPos >= headerTop;
+  };
+
+  var getSpeciesCounts = function (site, species_sites_matrix) {
+    if (site == 0) {
+      site = 'total';
+    }
+
+    var roi_species_counts = [];
+    species_sites_matrix.forEach(function (species) {
+      roi_species_counts.push({
+        species_id: species.species_id,
+        N: species[site],
+        scientific_name: species.scientific_name
+      });
+    });
+    return roi_species_counts;
+  };
+
+  var getSitesCounts = function (species, species_sites_matrix) {
+    if (species == 0) {
+      species = 'total';
+    }
+
+    var roi_site_counts = [];
+    species_sites_matrix.forEach(function (s) {
+      if (species == 'total' | s.species_id == species) {
+        for (key in s) {
+          split = key.split("_");
+          site_id = split[1];
+          name = split.slice(2).join("_");
+
+          if (split[0] == "site") {
+            row = {};
+            row.site_id = site_id;
+            row.N = s[key];
+            row.name = name;
+            roi_site_counts.push(row);
+          }
+        }
+      }
+    });
+
+    if (species == 'total') {
+      roi_site_counts_dict = roi_site_counts.reduce(function (sitesAcc, site) {
+        if (!(site.site_id in sitesAcc)) {
+          sitesAcc[site.site_id] = {
+            site_id: site.site_id,
+            N: 0,
+            name: site.name
+          };
+        }
+
+        sitesAcc[site.site_id].N += site.N;
+        return sitesAcc;
+      }, {});
+      roi_site_counts = Object.values(roi_site_counts_dict);
+    }
+
+    return roi_site_counts;
+  };
+
+  $scope.onSearchChanged = function () {
+    $scope.switchView("rois");
+  };
+
+  $scope.switchView = function (viewType, specie) {
+    if (specie) {
+      window.scrollTo(0, 0);
+    }
+
+    var sortBy = "-cnn_presence_id";
+
+    var loadSwitch = function () {
+      if (viewType == "species") {
+        $scope.species = bySpecies($scope.results);
+        $scope.viewType = "species";
+        sortBy = "-scientific_name";
+        $scope.showHist(specie ? specie : "all");
+        $scope.cnnOriginal = Object.values($scope.species);
+      } else if (viewType == "recordings") {
+        $scope.recordings = byRecordings($scope.results);
+        $scope.counts.recordings = Object.keys($scope.recordings).length;
+        $scope.viewType = "recordings";
+        sortBy = "-recording_id";
+        $scope.cnnOriginal = Object.values($scope.recordings);
+      } else {
+        $scope.viewType = "all";
+        $scope.mainResults = $scope.results;
+        $scope.cnnOriginal = Object.values($scope.results);
+      }
+
+      if ($scope.cnnOriginal.length > 0) {
+        initTable(1, 10, sortBy, {}, $scope.cnnOriginal.length);
+      } else {
+        $scope.infopanedata = "No cnn results found.";
+      }
+    };
+
+    if (viewType == "rois") {
+      a2CNN.countROIsBySpeciesSites($scope.cnnId, {
+        search: $scope.selected.search.value
+      }).then(function (response) {
+        var data = response.data;
+        $scope.roi_species_sites_counts = data;
+        $scope.counts.roi_species_counts = getSpeciesCounts($scope.selected.site ? $scope.selected.site.site_id : 0, $scope.roi_species_sites_counts);
+        $scope.counts.roi_sites_counts = getSitesCounts($scope.selected.species ? $scope.selected.species.species_id : 0, $scope.roi_species_sites_counts);
+        var count_all = $scope.counts.roi_species_counts.reduce(function (count, current) {
+          return count = count + current.N;
+        }, 0);
+        var all_species = {
+          species_id: 0,
+          N: count_all,
+          scientific_name: "All Species"
+        };
+        $scope.counts.roi_species_counts.unshift(all_species);
+
+        if (!$scope.selected.species) {
+          $scope.selected.species = all_species;
+        } else {
+          $scope.selected.species = $scope.counts.roi_species_counts.find(function (element) {
+            return element.species_id == $scope.selected.species.species_id;
+          }) || all_species;
+        }
+
+        var all_sites = {
+          site_id: 0,
+          N: count_all,
+          name: "All Sites"
+        };
+        $scope.counts.roi_sites_counts.unshift(all_sites);
+
+        if (!$scope.selected.site) {
+          $scope.selected.site = all_sites;
+        } else {
+          $scope.selected.site = $scope.counts.roi_sites_counts.find(function (element) {
+            return element.site_id == $scope.selected.site.site_id;
+          }) || all_sites;
+        }
+
+        $scope.total = {
+          rois: count_all,
+          pages: Math.ceil(count_all / $scope.limit)
+        };
+        $scope.viewType = "rois";
+        loadROIPage();
+      }); //$scope.viewType = "rois";
+      //if (!$scope.resultsROIs) {
+      //    loadROIPage();
+      //} else {
+      //    $scope.rois = byROIs($scope.resultsROIs);
+      //    $scope.rois_species = byROIsbySpecies($scope.rois);
+      //}
+    } else if (!$scope.results) {
+      $scope.loading = true;
+      $scope.infoInfo = "Loading...";
+      $scope.showInfo = true;
+      a2CNN.listResults($scope.cnnId).then(function (data) {
+        $scope.results = data;
+        $scope.infoInfo = "";
+        $scope.showInfo = false;
+        $scope.loading = false;
+        $scope.infopanedata = "";
+        $scope.switchView('rois'); //loadSwitch();
+      });
+    } else {
+      loadSwitch();
+    }
+  };
+
+  $scope.switchView($state.params.detailType ? $state.params.detailType : 'all');
+}]);
+angular.module('a2.analysis.audio-event-detections-clustering', ['ui.bootstrap', 'a2.srv.audio-event-detections-clustering', 'a2.services', 'a2.permissions', 'humane', 'a2.directive.error-message']).config(["$stateProvider", function ($stateProvider) {
+  $stateProvider.state('analysis.audio-event-detections-clustering', {
+    url: '/audio-event-detections-clustering',
+    controller: 'AudioEventDetectionsClusteringModelCtrl',
+    templateUrl: '/app/analysis/audio-event-detections-clustering/list.html'
+  });
+}]).controller('AudioEventDetectionsClusteringModelCtrl', ["$scope", "$modal", "$location", "JobsData", "notify", "a2AudioEventDetectionsClustering", "Project", "$localStorage", "$window", "a2UserPermit", function ($scope, $modal, $location, JobsData, notify, a2AudioEventDetectionsClustering, Project, $localStorage, $window, a2UserPermit) {
+  $scope.loadAudioEventDetections = function () {
+    $scope.loading = true;
+    $scope.showRefreshBtn = false;
+    $scope.projectUrl = Project.getUrl();
+    return a2AudioEventDetectionsClustering.list({
+      user: true,
+      dataExtended: true,
+      completed: true,
+      aedCount: true
+    }).then(function (data) {
+      $scope.audioEventDetectionsOriginal = data;
+      $scope.audioEventDetectionsData = data;
+      $scope.loading = false;
+
+      if (data && data.length) {
+        $scope.showRefreshBtn = true;
+      }
+    });
+  };
+
+  $scope.loadAudioEventDetections();
+
+  $scope.onSelectedJob = function (playlist_id, job_id, first_playlist_recording) {
+    $localStorage.setItem('analysis.audioEventJob', job_id);
+    $window.location.href = '/project/' + Project.getUrl() + '/visualizer/playlist/' + playlist_id + '/' + first_playlist_recording;
+  };
+
+  $scope.createNewClusteringModel = function () {
+    if (!a2UserPermit.can('manage AED and Clustering job')) {
+      notify.error('You do not have permission to create <br> Audio Event Detection job');
+      return;
+    }
+
+    var modalInstance = $modal.open({
+      templateUrl: '/app/analysis/audio-event-detections-clustering/new-audio-event-detection-clustering.html',
+      controller: 'CreateNewAudioEventDetectionClusteringCtrl as controller'
+    });
+    modalInstance.result.then(function (result) {
+      data = result;
+
+      if (data.create) {
+        JobsData.updateJobs();
+        $scope.showRefreshBtn = true;
+        notify.log("Your new Audio Event Detection Clustering model is waiting to start processing.<br> Check its status on <b>Jobs</b>.");
+      } else if (data.error) {
+        notify.error("Error: " + data.error);
+      } else if (data.url) {
+        $location.path(data.url);
+      }
+    });
+  };
+
+  $scope.deleteAedJob = function (aedJob, $event) {
+    $event.stopPropagation();
+
+    if (!a2UserPermit.can('manage AED and Clustering job')) {
+      notify.error('You do not have permission to delete <br> Audio Event Detection job');
+      return;
+    }
+
+    var modalInstance = $modal.open({
+      templateUrl: '/app/analysis/audio-event-detections-clustering/delete-audio-event-detection-clustering-job.html',
+      controller: 'DeleteAedJobCtrl as controller',
+      resolve: {
+        aedJob: function () {
+          return aedJob;
+        }
+      }
+    });
+    modalInstance.result.then(function (ret) {
+      if (ret.err) {
+        notify.error('Error: ' + ret.err);
+      } else {
+        const modArr = angular.copy($scope.audioEventDetectionsOriginal);
+        const indx = modArr.findIndex(function (item) {
+          return item.job_id === aedJob.job_id;
+        });
+
+        if (indx > -1) {
+          $scope.audioEventDetectionsOriginal.splice(indx, 1);
+          notify.log('Audio Event Detection Job deleted successfully');
+        }
+      }
+    });
+  };
+}]).controller('DeleteAedJobCtrl', ["$scope", "$modalInstance", "a2AudioEventDetectionsClustering", "aedJob", function ($scope, $modalInstance, a2AudioEventDetectionsClustering, aedJob) {
+  this.aedJob = aedJob;
+  $scope.deletingloader = false;
+
+  $scope.ok = function () {
+    $scope.deletingloader = true;
+    a2AudioEventDetectionsClustering.delete(aedJob.job_id).then(function (data) {
+      $modalInstance.close(data);
+    });
+  };
+
+  $scope.cancel = function () {
+    $modalInstance.dismiss('cancel');
+  };
+}]).controller('CreateNewAudioEventDetectionClusteringCtrl', ["$modalInstance", "a2AudioEventDetectionsClustering", "a2Playlists", "a2UserPermit", "notify", function ($modalInstance, a2AudioEventDetectionsClustering, a2Playlists, a2UserPermit, notify) {
+  Object.assign(this, {
+    initialize: function () {
+      this.loading = {
+        playlists: false
+      };
+      this.details = {
+        show: false
+      };
+      var list = this.list = {};
+      this.data = {
+        name: null,
+        playlist: null,
+        params: {
+          areaThreshold: 1,
+          amplitudeThreshold: 1,
+          durationThreshold: 0.2,
+          bandwidthThreshold: 0.5,
+          filterSize: 10,
+          minFrequency: 0,
+          maxFrequency: 24
+        }
+      };
+      this.isRfcxUser = a2UserPermit.isRfcx();
+      this.isSuper = a2UserPermit.isSuper();
+      this.errorJobLimit = false;
+      this.loading.playlists = true;
+      a2Playlists.getList({
+        filterPlaylistLimit: true
+      }).then(function (playlists) {
+        this.loading.playlists = false;
+        list.playlists = playlists;
+      }.bind(this));
+    },
+    isRfcx: function () {
+      return this.isRfcxUser || this.isSuper;
+    },
+    checkLimit: function (count) {
+      return count > 10000 && !this.isRfcx();
+    },
+    toggleDetails: function () {
+      this.details.show = !this.details.show;
+    },
+    newJob: function () {
+      try {
+        return a2AudioEventDetectionsClustering.create({
+          playlist_id: this.data.playlist.id,
+          name: this.data.name,
+          params: this.data.params
+        }).then(function (clusteringModel) {
+          $modalInstance.close({
+            create: true,
+            clusteringModel: clusteringModel
+          });
+        }).catch(notify.serverError);
+      } catch (error) {
+        console.error('a2AudioEventDetectionsClustering.create error: ' + error);
+      }
+    },
+    create: function () {
+      var _this = this;
+
+      this.errorJobLimit = false;
+      if (this.isRfcx()) return this.newJob();
+      return a2AudioEventDetectionsClustering.count().then(function (data) {
+        if (_this.checkLimit(data.totalRecordings)) {
+          _this.errorJobLimit = true;
+          return;
+        } else _this.newJob();
+      });
+    },
+    cancel: function (url) {
+      $modalInstance.close({
+        cancel: true,
+        url: url
+      });
+    },
+    isJobValid: function () {
+      return this.data && this.data.name && this.data.name.length > 3 && this.data.playlist && !this.isNotDefined(this.data.params.maxFrequency) && !this.isNotDefined(this.data.params.minFrequency);
+    },
+    showNameWarning: function () {
+      return this.data && this.data.name && this.data.name.length > 1 && this.data.name.length < 4;
+    },
+    showPlaylistLimitWarning: function () {
+      if (!this.data && !this.data.playlist) return;
+      return this.data && this.data.playlist && this.data.playlist.count > 2000 && !this.isRfcx();
+    },
+    showFrequencyWarning: function () {
+      return this.data.params.maxFrequency <= this.data.params.minFrequency;
+    },
+    isNotDefined: function (item) {
+      return item === undefined || item === null;
+    }
+  });
+  this.initialize();
 }]);
 angular.module('a2.analysis.patternmatching', ['ui.bootstrap', 'a2.directive.audio-bar', 'a2.srv.patternmatching', 'a2.services', 'a2.permissions', 'humane', 'c3-charts']).config(["$stateProvider", "$urlRouterProvider", function ($stateProvider, $urlRouterProvider) {
   $stateProvider.state('analysis.disabled-patternmatching', {
@@ -15071,205 +15089,6 @@ angular.module('a2.analysis.random-forest-models', ['ui.router', 'a2.analysis.ra
     abstract: true
   });
 }]);
-angular.module('a2.audiodata.playlists.playlist-arithmetic', []).directive('playlistArithmetic', ["a2Playlists", function (a2Playlists) {
-  return {
-    restrict: 'E',
-    templateUrl: '/app/audiodata/playlists/playlist-arithmetic.html',
-    scope: {
-      onExpressionSelected: '&'
-    },
-    controller: 'playlistArithmeticController as controller',
-    requires: '^PlaylistCtrl',
-    link: function (scope, element, attrs) {
-      var controller = scope.controller;
-      controller.initialize({
-        onSelected: function (expression) {
-          scope.onExpressionSelected({
-            expression: expression
-          });
-        }
-      });
-      scope.$on('$destroy', function () {
-        controller.$destroy();
-      });
-    }
-  };
-}]).controller('playlistArithmeticController', ["a2Playlists", "$interpolate", function (a2Playlists, $interpolate) {
-  this.selected = {};
-  this.operations = [{
-    type: 'union',
-    text: 'Join playlist 1 and 2',
-    icon: 'a2-union',
-    nameTemplate: '{{playlist1}} joined with {{playlist2}}'
-  }, {
-    type: 'intersection',
-    text: 'Intersect playlist 1 and 2',
-    icon: 'a2-intersect',
-    nameTemplate: '{{playlist1}} intersected with {{playlist2}}'
-  }, {
-    type: 'subtraction',
-    text: 'Remove playlist 2 from playlist 1',
-    icon: 'a2-difference',
-    nameTemplate: '{{playlist1}} minus {{playlist2}}'
-  }];
-  var removeOnInvalidateHandler;
-
-  this.initialize = function (options) {
-    this.options = options || {};
-    removeOnInvalidateHandler = a2Playlists.$on('invalidate-list', function () {
-      this.reset();
-    }.bind(this));
-    this.reset();
-    this.updateNamePlaceholder();
-  };
-
-  this.reset = function () {
-    return a2Playlists.getList().then(function (playlists) {
-      this.playlists = playlists;
-    }.bind(this));
-  };
-
-  this.$destroy = function () {
-    removeOnInvalidateHandler();
-  };
-
-  this.updateNamePlaceholder = function () {
-    var nameTemplate = (this.selected.operation || {}).nameTemplate || 'Playlist 3';
-    var term1 = this.selected.term1 || {};
-    var term2 = this.selected.term2 || {};
-    this.namePlaceholder = $interpolate(nameTemplate)({
-      playlist1: term1.name || '(playlist 1)',
-      playlist2: term2.name || '(playlist 2)'
-    });
-  };
-
-  this.submit = function () {
-    var operation = this.selected.operation;
-    var term1 = this.selected.term1;
-    var term2 = this.selected.term2;
-    var name = this.selected.name || this.namePlaceholder;
-
-    if (operation && term1 && term2 && name) {
-      if (this.options.onSelected) {
-        this.options.onSelected({
-          operation: operation.type,
-          term1: term1.id,
-          term2: term2.id,
-          name: name
-        });
-      }
-    }
-  };
-}]);
-angular.module('a2.audiodata.playlists', ['a2.services', 'a2.directives', 'ui.bootstrap', 'a2.audiodata.playlists.playlist-arithmetic', 'humane']).config(["$stateProvider", function ($stateProvider) {
-  $stateProvider.state('audiodata.playlists', {
-    url: '/playlists',
-    controller: 'PlaylistCtrl as controller',
-    templateUrl: '/app/audiodata/playlists/playlists.html'
-  });
-}]).controller('PlaylistCtrl', ["$scope", "a2Playlists", "$modal", "notify", "a2UserPermit", "$location", function ($scope, a2Playlists, $modal, notify, a2UserPermit, $location) {
-  this.initialize = function () {
-    removeOnInvalidateHandler = a2Playlists.$on('invalidate-list', function () {
-      this.reset();
-    }.bind(this));
-    this.reset();
-  };
-
-  this.reset = function () {
-    $scope.loading = true;
-    a2Playlists.getList({
-      info: true
-    }).then(function (data) {
-      $scope.playlists = data;
-      $scope.loading = false;
-    });
-  };
-
-  this.operate = function (expression) {
-    if (!a2UserPermit.can('manage playlists')) {
-      notify.error('You do not have permission to combine playlists');
-      return;
-    }
-
-    return a2Playlists.combine(expression).then(function () {
-      notify.log('Playlist created');
-    }).catch(function (err) {
-      err = err || {};
-      notify.error(err.message || err.data || 'Server error');
-    });
-  };
-
-  this.edit = function () {
-    if (!$scope.checked.length || $scope.checked.length > 1) {
-      notify.log('Please select one playlist to edit');
-      return;
-    }
-
-    if (!a2UserPermit.can('manage playlists')) {
-      notify.error('You do not have permission to edit playlists');
-      return;
-    }
-
-    $scope.pname = $scope.checked[0].name;
-    const playlist_id = $scope.checked[0].id;
-    const modalInstance = $modal.open({
-      templateUrl: '/app/audiodata/edit-playlist.html',
-      scope: $scope
-    });
-    modalInstance.result.then(function (playlistName) {
-      a2Playlists.rename({
-        id: playlist_id,
-        name: playlistName
-      }, function (data) {
-        if (data.error) return console.log(data.error);
-      });
-    });
-  };
-
-  $scope.del = function () {
-    if (!$scope.checked || !$scope.checked.length) return;
-
-    if (!a2UserPermit.can('manage playlists')) {
-      notify.error('You do not have permission to delete playlists');
-      return;
-    }
-
-    const playlists = $scope.checked.map(function (row) {
-      return '"' + row.name + '"';
-    });
-    const message = ["You are about to delete the following playlists: "];
-    const message2 = ["Are you sure?"];
-    $scope.popup = {
-      messages: message.concat(playlists, message2),
-      btnOk: "Yes",
-      btnCancel: "No"
-    };
-    const modalInstance = $modal.open({
-      templateUrl: '/common/templates/pop-up.html',
-      scope: $scope
-    });
-    modalInstance.result.then(function () {
-      const playlistIds = $scope.checked.map(function (pl) {
-        return pl.id;
-      });
-      $scope.loading = true;
-      a2Playlists.remove(playlistIds, function (data) {
-        if (data.error) return notify.error(data.error);
-        a2Playlists.getList().then(function (data) {
-          $scope.playlists = data;
-          $scope.loading = false;
-          notify.log((playlistIds.length > 1 ? 'Playlists ' : 'Playlist ') + 'deleted');
-        });
-      });
-    });
-  };
-
-  $scope.create = function (url) {
-    $location.path(url);
-  };
-
-  this.initialize();
-}]);
 angular.module('a2.analysis.soundscapes', ['a2.services', 'a2.permissions', 'ui.bootstrap', 'ui-rangeSlider', 'ngCsv']).config(["$stateProvider", "$urlRouterProvider", function ($stateProvider, $urlRouterProvider) {
   $stateProvider.state('analysis.soundscapes', {
     url: '/soundscapes',
@@ -15868,6 +15687,1516 @@ angular.module('a2.analysis.soundscapes', ['a2.services', 'a2.permissions', 'ui.
       });
     }
   });
+}]);
+angular.module('a2.citizen-scientist.expert', ['ui.bootstrap', 'a2.srv.patternmatching', 'a2.srv.citizen-scientist', 'a2.srv.citizen-scientist-expert', 'a2.visualizer.audio-player', 'a2.services', 'a2.permissions', 'humane', 'c3-charts']).config(["$stateProvider", "$urlRouterProvider", function ($stateProvider, $urlRouterProvider) {
+  $stateProvider.state('citizen-scientist.expert', {
+    url: '/expert/:patternMatchingId?',
+    controller: 'CitizenScientistExpertCtrl',
+    templateUrl: '/app/citizen-scientist/expert/list.html'
+  });
+}]).controller('CitizenScientistExpertCtrl', ["$scope", "$filter", "Project", "ngTableParams", "a2Playlists", "notify", "$q", "a2CitizenScientistService", "a2CitizenScientistExpertService", "a2PatternMatching", "a2UserPermit", "$state", "$stateParams", function ($scope, $filter, Project, ngTableParams, a2Playlists, notify, $q, a2CitizenScientistService, a2CitizenScientistExpertService, a2PatternMatching, a2UserPermit, $state, $stateParams) {
+  $scope.selectedPatternMatchingId = $stateParams.patternMatchingId;
+
+  var initTable = function (p, c, s, f, t) {
+    var sortBy = {};
+    var acsDesc = 'desc';
+
+    if (s[0] == '+') {
+      acsDesc = 'asc';
+    }
+
+    sortBy[s.substring(1)] = acsDesc;
+    var tableConfig = {
+      page: p,
+      count: c,
+      sorting: sortBy,
+      filter: f
+    };
+    $scope.tableParams = new ngTableParams(tableConfig, {
+      total: t,
+      getData: function ($defer, params) {
+        $scope.infopanedata = "";
+        var filteredData = params.filter() ? $filter('filter')($scope.patternmatchingsOriginal, params.filter()) : $scope.patternmatchingsOriginal;
+        var orderedData = params.sorting() ? $filter('orderBy')(filteredData, params.orderBy()) : $scope.patternmatchingsOriginal;
+        params.total(orderedData.length);
+        $defer.resolve(orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count()));
+
+        if (orderedData.length < 1) {
+          $scope.infopanedata = "No Pattern matchings searches found.";
+        }
+
+        $scope.patternmatchingsData = orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count());
+      }
+    });
+  };
+
+  $scope.getTemplateVisualizerUrl = function (template) {
+    var box = ['box', template.x1, template.y1, template.x2, template.y2].join(',');
+    return template ? "/project/" + template.source_project_uri + "/visualizer/rec/" + template.recording + "?a=" + box : '';
+  }, $scope.selectItem = function (patternmatchingId) {
+    $state.go('citizen-scientist.expert', {
+      patternMatchingId: patternmatchingId ? patternmatchingId : undefined
+    });
+  };
+
+  $scope.loadPatternMatchings = function () {
+    $scope.loading = true;
+    $scope.infoInfo = "Loading...";
+    $scope.showInfo = true;
+    return a2CitizenScientistExpertService.getPatternMatchings().then(function (data) {
+      $scope.patternmatchingsOriginal = data;
+      $scope.patternmatchingsData = data;
+      $scope.infoInfo = "";
+      $scope.showInfo = false;
+      $scope.loading = false;
+      $scope.infopanedata = "";
+
+      if (data.length > 0) {
+        if (!$scope.tableParams) {
+          initTable(1, 10, "+cname", {}, data.length);
+        } else {
+          $scope.tableParams.reload();
+        }
+      } else {
+        $scope.infopanedata = "No pattern matchings found.";
+      }
+    });
+  };
+
+  if (!$scope.selectedPatternMatchingId) {
+    $scope.loadPatternMatchings();
+  }
+}]).directive('a2CitizenScientistExpertDetails', function () {
+  return {
+    restrict: 'E',
+    replace: true,
+    scope: {
+      patternMatchingId: '=',
+      onGoBack: '&'
+    },
+    controller: 'CitizenScientistExpertDetailsCtrl',
+    controllerAs: 'controller',
+    templateUrl: '/app/citizen-scientist/expert/details.html'
+  };
+}).filter('pmValidation', function () {
+  return function (validation, cp, cnp) {
+    if (validation == 1) {
+      return 'present';
+    } else if (validation == 0) {
+      return 'not present';
+    } else if (validation === null || validation === undefined) {
+      if (cp > 0 && cnp > 0) {
+        return 'conflicted';
+      } else {
+        return '---';
+      }
+    }
+  };
+}).controller('CitizenScientistExpertDetailsCtrl', ["$scope", "a2PatternMatching", "a2Templates", "a2CitizenScientistExpertService", "a2UserPermit", "Project", "a2AudioBarService", "notify", function ($scope, a2PatternMatching, a2Templates, a2CitizenScientistExpertService, a2UserPermit, Project, a2AudioBarService, notify) {
+  Object.assign(this, {
+    id: null,
+    initialize: function (patternMatchingId) {
+      this.id = patternMatchingId;
+      this.offset = 0;
+      this.limit = 100;
+      this.selected = {
+        roi_index: 0,
+        roi: null,
+        page: 0
+      };
+      this.total = {
+        rois: 0,
+        pages: 0
+      };
+      this.loading = {
+        details: false,
+        rois: false
+      };
+      this.validation = this.lists.validation[2];
+      this.thumbnailClass = this.lists.thumbnails[0].value;
+      this.expertSearch = this.lists.search[0];
+      this.projecturl = Project.getUrl();
+      this.fetchDetails().then(function () {
+        this.loadPage(this.selected.page);
+      }.bind(this));
+    },
+    compositeValidation: function (roi) {
+      var expert_val = roi.expert_validated;
+      var consensus_val = roi.consensus_validated;
+      var cp = roi.cs_val_present;
+      var cnp = roi.cs_val_not_present;
+      return [expert_val, consensus_val, cp > 0 && cnp > 0 ? -1 : null].reduce(function (_, arg) {
+        return _ === null ? arg : _;
+      }, null);
+    },
+    lists: {
+      thumbnails: [{
+        class: 'fa fa-th-large',
+        value: ''
+      }, {
+        class: 'fa fa-th',
+        value: 'is-small'
+      }],
+      search: [{
+        value: 'all',
+        text: 'All',
+        description: 'Show all matched rois.'
+      }, {
+        value: 'consensus',
+        text: 'Consensus',
+        description: 'Show only rois where there is a consensus.'
+      }, {
+        value: 'pending',
+        text: 'Pending',
+        description: 'Show only rois that have not reached a consensus yet.'
+      }, {
+        value: 'conflicted',
+        text: 'Conflicted',
+        description: 'Show only rois where there is a conflict.'
+      }, {
+        value: 'expert',
+        text: 'Expert',
+        description: 'Show only rois that have been decided by an expert.'
+      }],
+      selection: [{
+        value: 'all',
+        text: 'All'
+      }, {
+        value: 'none',
+        text: 'None'
+      }, {
+        value: 'not-validated',
+        text: 'Not Validated'
+      }],
+      validation: [{
+        class: "fa val-1",
+        text: "Present",
+        value: 1
+      }, {
+        class: "fa val-0",
+        text: "Not Present",
+        value: 0
+      }, {
+        class: "fa val-null",
+        text: "Clear",
+        value: null
+      }]
+    },
+    fetchDetails: function () {
+      this.loading.details = true;
+      return a2CitizenScientistExpertService.getPatternMatchingDetailsFor(this.id).then(function (patternMatching) {
+        this.loading.details = false;
+        this.patternMatching = patternMatching;
+        this.setupExportUrl();
+        this.total = {
+          rois: patternMatching.matches,
+          pages: Math.ceil(patternMatching.matches / this.limit)
+        };
+      }.bind(this)).catch(function (err) {
+        this.loading.details = false;
+        return notify.serverError(err);
+      }.bind(this));
+    },
+    onExpertSearchChanged: function () {
+      this.selected.page = 0;
+      this.loadPage(0);
+    },
+    setupExportUrl: function () {
+      this.patternMatchingExportUrl = a2CitizenScientistExpertService.getCSExportUrl({
+        patternMatching: this.patternMatching.id
+      });
+    },
+    onScroll: function ($event, $controller) {
+      this.scrollElement = $controller.scrollElement;
+      var scrollPos = $controller.scrollElement.scrollY;
+      var headerTop = $controller.anchors.header.offset().top;
+      this.headerTop = headerTop | 0;
+      this.scrolledPastHeader = scrollPos >= headerTop;
+    },
+    onSelect: function ($item) {
+      this.select($item.value);
+    },
+    loadPage: function (pageNumber) {
+      this.loading.rois = true;
+      return a2CitizenScientistExpertService.getPatternMatchingRoisFor(this.id, this.limit, pageNumber * this.limit, {
+        search: this.expertSearch && this.expertSearch.value
+      }).then(function (rois) {
+        this.loading.rois = false;
+        this.rois = rois.reduce(function (_, roi) {
+          var sitename = roi.site;
+          var recname = roi.recording;
+
+          if (!_.idx[sitename]) {
+            _.idx[sitename] = {
+              list: [],
+              idx: {},
+              name: sitename
+            };
+
+            _.list.push(_.idx[sitename]);
+          }
+
+          var site = _.idx[sitename];
+          site.list.push(roi);
+          return _;
+        }, {
+          list: [],
+          idx: {}
+        }).list;
+        this.selected.roi = Math.min();
+
+        if (this.scrollElement) {
+          this.scrollElement.scrollTo(0, 0);
+        }
+
+        return rois;
+      }.bind(this)).catch(function (err) {
+        this.loading.rois = false;
+        return notify.serverError(err);
+      }.bind(this));
+    },
+    playRoiAudio: function (roi, $event) {
+      if ($event) {
+        $event.preventDefault();
+        $event.stopPropagation();
+      }
+
+      a2AudioBarService.loadUrl(a2PatternMatching.getAudioUrlFor(roi), true);
+    },
+    playTemplateAudio: function () {
+      a2AudioBarService.loadUrl(a2Templates.getAudioUrlFor(this.patternMatching.template), true);
+    },
+    getRoiVisualizerUrl: function (roi) {
+      var box = ['box', roi.x1, roi.y1, roi.x2, roi.y2].join(',');
+      return roi ? "/project/" + this.projecturl + "/visualizer/rec/" + roi.recording_id + "?a=" + box : '';
+    },
+    getTemplateVisualizerUrl: function (template) {
+      var box = ['box', template.x1, template.y1, template.x2, template.y2].join(',');
+      return template ? "/project/" + template.source_project_uri + "/visualizer/rec/" + template.recording + "?a=" + box : '';
+    },
+    setRoi: function (roi_index) {
+      if (this.total.rois <= 0) {
+        this.selected.roi_index = 0;
+        this.selected.roi = null;
+      } else {
+        this.selected.roi_index = Math.max(0, Math.min(roi_index | 0, this.total.rois - 1));
+        this.selected.roi = this.rois[this.selected.roi_index];
+      }
+
+      return this.selected.roi;
+    },
+    setPage: function (page, force) {
+      if (this.total.rois <= 0) {
+        this.selected.page = 0;
+        this.rois = [];
+        return this.rois;
+      } else {
+        page = Math.max(0, Math.min(page, this.total.rois / this.limit | 0));
+
+        if (page != this.selected.page || force) {
+          this.selected.page = page;
+          return this.loadPage(page);
+        }
+      }
+    },
+    select: function (option) {
+      var selectFn = null;
+
+      if (option === "all") {
+        selectFn = function (roi) {
+          roi.selected = true;
+        };
+      } else if (option === "none") {
+        selectFn = function (roi) {
+          roi.selected = false;
+        };
+      } else if (option === "not-validated") {
+        selectFn = function (roi) {
+          roi.selected = roi.cs_validated === null;
+        };
+      } else {
+        selectFn = function (roi) {
+          roi.selected = roi.id === option;
+        };
+      }
+
+      this.forEachRoi(selectFn);
+    },
+    forEachRoi: function (fn) {
+      (this.rois || []).forEach(function (site) {
+        site.list.forEach(fn);
+      });
+    },
+    validate: function (validation, rois) {
+      if (!a2UserPermit.can('validate pattern matchings')) {
+        notify.error('You do not have permission to validate the matched rois.');
+        return;
+      }
+
+      if (validation === undefined) {
+        validation = (this.validation || {
+          value: null
+        }).value;
+      }
+
+      if (rois === undefined) {
+        rois = [];
+        this.forEachRoi(function (roi) {
+          if (roi.selected) {
+            rois.push(roi);
+          }
+        });
+      }
+
+      var roiIds = rois.map(function (roi) {
+        return roi.id;
+      });
+      var val_delta = {
+        conflict_unresolved: 0,
+        conflict_resolved: 0,
+        null: 0,
+        0: 0,
+        1: 0
+      };
+      return a2CitizenScientistExpertService.validatePatternMatchingRois(this.id, roiIds, validation).then(function () {
+        rois.forEach(function (roi) {
+          var oldtag, newtag;
+
+          if (roi.cs_val_present > 0 && roi.cs_val_not_present > 0) {
+            oldtag = roi.expert_validated !== null ? 'conflict_resolved' : 'conflict_unresolved';
+            newtag = validation !== null ? 'conflict_resolved' : 'conflict_unresolved';
+          }
+
+          val_delta[oldtag] -= 1;
+          val_delta[newtag] += 1;
+          val_delta[roi.expert_validated] -= 1;
+          val_delta[validation] += 1;
+          roi.expert_validated = validation;
+          roi.selected = false;
+        });
+        this.patternMatching.cs_conflict_resolved += val_delta.conflict_resolved;
+        this.patternMatching.cs_conflict_unresolved += val_delta.conflict_unresolved;
+        this.patternMatching.expert_consensus_absent += val_delta[0];
+        this.patternMatching.expert_consensus_present += val_delta[1];
+        this.loadPage(this.selected.page);
+      }.bind(this));
+    },
+    nextMatch: function (step) {
+      return this.setRoi(this.selected.roi_index + (step || 1));
+    },
+    prevMatch: function (step) {
+      return this.setRoi(this.selected.roi_index - (step || 1));
+    },
+    nextPage: function (step) {
+      return this.setPage(this.selected.page + (step || 1));
+    },
+    prevPage: function (step) {
+      return this.setPage(this.selected.page - (step || 1));
+    },
+    next: function (step) {
+      if (!step) {
+        step = 1;
+      }
+
+      this.nextPage(step);
+    },
+    prev: function (step) {
+      if (!step) {
+        step = 1;
+      }
+
+      return this.next(-step);
+    }
+  });
+  this.initialize($scope.patternMatchingId);
+}]);
+angular.module('a2.citizen-scientist.admin', ['ui.router', 'a2.citizen-scientist.admin.classification-stats', 'a2.citizen-scientist.admin.user-stats', 'a2.citizen-scientist.admin.settings']).config(["$stateProvider", "$urlRouterProvider", function ($stateProvider, $urlRouterProvider) {
+  $stateProvider.state('citizen-scientist.admin', {
+    url: '/admin',
+    template: '<ui-view />',
+    abstract: true
+  });
+}]);
+angular.module('a2.citizen-scientist.my-stats', ['a2.services', 'a2.directives', 'ui.bootstrap', 'a2.srv.citizen-scientist-admin', 'angularFileUpload', 'humane']).config(["$stateProvider", "$urlRouterProvider", function ($stateProvider, $urlRouterProvider) {
+  $stateProvider.state('citizen-scientist.my-stats', {
+    url: '/my-stats',
+    controller: 'A2CitizenScientistMyStatsCtrl as controller',
+    templateUrl: '/app/citizen-scientist/my-stats/index.html'
+  });
+}]).controller('A2CitizenScientistMyStatsCtrl', ["$scope", "a2CitizenScientistService", "$stateParams", "$state", "Users", function ($scope, a2CitizenScientistService, $stateParams, $state, Users) {
+  this.loadPage = function () {
+    this.loading = true;
+    a2CitizenScientistService.getMyStats().then(function (data) {
+      this.loading = false;
+      var vars = ['validated', 'consensus', 'non_consensus', 'pending', 'reached_th'];
+      this.stats = data.stats.map(function (item, index) {
+        vars.forEach(function (_var) {
+          item['group_' + _var] = data.groupStats[index][_var];
+        });
+        return item;
+      });
+      this.overall = data.stats.reduce(function (_, item) {
+        vars.forEach(function (_var) {
+          _[_var] += item[_var];
+          _['group_' + _var] += item['group_' + _var];
+        });
+        return _;
+      }, vars.reduce(function (__, _var) {
+        __[_var] = 0;
+        __['group_' + _var] = 0;
+        return __;
+      }, {})); // compute overalls
+    }.bind(this));
+  };
+
+  this.loadPage();
+}]);
+angular.module('a2.citizen-scientist.patternmatching', ['ui.bootstrap', 'a2.srv.patternmatching', 'a2.srv.citizen-scientist', 'a2.visualizer.audio-player', 'a2.services', 'a2.permissions', 'humane', 'c3-charts']).config(["$stateProvider", "$urlRouterProvider", function ($stateProvider, $urlRouterProvider) {
+  $stateProvider.state('citizen-scientist.patternmatching', {
+    url: '/patternmatching',
+    controller: 'CitizenScientistPatternMatchingCtrl',
+    templateUrl: '/app/citizen-scientist/patternmatching/list.html'
+  });
+  $stateProvider.state('citizen-scientist.patternmatching-details', {
+    url: '/patternmatching/:patternMatchingId?',
+    controller: 'CitizenScientistPatternMatchingCtrl',
+    templateUrl: '/app/citizen-scientist/patternmatching/list.html'
+  });
+}]).controller('CitizenScientistPatternMatchingCtrl', ["$scope", "$filter", "Project", "ngTableParams", "a2Playlists", "notify", "$q", "a2CitizenScientistService", "a2PatternMatching", "a2UserPermit", "$state", "$stateParams", function ($scope, $filter, Project, ngTableParams, a2Playlists, notify, $q, a2CitizenScientistService, a2PatternMatching, a2UserPermit, $state, $stateParams) {
+  $scope.selectedPatternMatchingId = $stateParams.patternMatchingId;
+
+  var initTable = function (p, c, s, f, t) {
+    var sortBy = {};
+    var acsDesc = 'desc';
+
+    if (s[0] == '+') {
+      acsDesc = 'asc';
+    }
+
+    sortBy[s.substring(1)] = acsDesc;
+    var tableConfig = {
+      page: p,
+      count: c,
+      sorting: sortBy,
+      filter: f
+    };
+    $scope.tableParams = new ngTableParams(tableConfig, {
+      total: t,
+      getData: function ($defer, params) {
+        $scope.infopanedata = "";
+        var filteredData = params.filter() ? $filter('filter')($scope.patternmatchingsOriginal, params.filter()) : $scope.patternmatchingsOriginal;
+        var orderedData = params.sorting() ? $filter('orderBy')(filteredData, params.orderBy()) : $scope.patternmatchingsOriginal;
+        params.total(orderedData.length);
+        $defer.resolve(orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count()));
+
+        if (orderedData.length < 1) {
+          $scope.infopanedata = "No Pattern matchings searches found.";
+        }
+
+        $scope.patternmatchingsData = orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count());
+      }
+    });
+  };
+
+  $scope.getTemplateVisualizerUrl = function (template) {
+    var box = ['box', template.x1, template.y1, template.x2, template.y2].join(',');
+    return template ? "/project/" + template.source_project_uri + "/visualizer/rec/" + template.recording + "?a=" + box : '';
+  }, $scope.selectItem = function (patternmatchingId) {
+    $scope.selectedPatternMatchingId = patternmatchingId;
+
+    if (!patternmatchingId) {
+      $state.go('citizen-scientist.patternmatching', {});
+    } else {
+      $state.go('citizen-scientist.patternmatching-details', {
+        patternMatchingId: patternmatchingId
+      });
+    }
+  };
+
+  $scope.loadPatternMatchings = function () {
+    $scope.loading = true;
+    $scope.infoInfo = "Loading...";
+    $scope.showInfo = true;
+    return a2CitizenScientistService.getPatternMatchings().then(function (data) {
+      $scope.patternmatchingsOriginal = data;
+      $scope.patternmatchingsData = data;
+      $scope.infoInfo = "";
+      $scope.showInfo = false;
+      $scope.loading = false;
+      $scope.infopanedata = "";
+
+      if (data.length > 0) {
+        if (!$scope.tableParams) {
+          initTable(1, 10, "+cname", {}, data.length);
+        } else {
+          $scope.tableParams.reload();
+        }
+      } else {
+        $scope.infopanedata = "No pattern matchings found.";
+      }
+    });
+  };
+
+  if (!$scope.selectedPatternMatchingId) {
+    $scope.loadPatternMatchings();
+  }
+}]).directive('a2CitizenScientistPatternMatchingDetails', function () {
+  return {
+    restrict: 'E',
+    replace: true,
+    scope: {
+      patternMatchingId: '=',
+      onGoBack: '&'
+    },
+    controller: 'CitizenScientistPatternMatchingDetailsCtrl',
+    controllerAs: 'controller',
+    templateUrl: '/app/citizen-scientist/patternmatching/details.html'
+  };
+}).controller('CitizenScientistPatternMatchingDetailsCtrl', ["$scope", "a2PatternMatching", "a2Templates", "a2CitizenScientistService", "a2UserPermit", "Project", "a2AudioBarService", "notify", function ($scope, a2PatternMatching, a2Templates, a2CitizenScientistService, a2UserPermit, Project, a2AudioBarService, notify) {
+  Object.assign(this, {
+    id: null,
+    initialize: function (patternMatchingId) {
+      this.id = patternMatchingId;
+      this.offset = 0;
+      this.limit = 100;
+      this.selected = {
+        roi_index: 0,
+        roi: null,
+        page: 0
+      };
+      this.total = {
+        rois: 0,
+        pages: 0
+      };
+      this.loading = {
+        details: false,
+        rois: false
+      };
+      this.validation = this.lists.validation[2];
+      this.thumbnailClass = this.lists.thumbnails[0].value;
+      this.projecturl = Project.getUrl();
+      this.fetchDetails().then(function () {
+        this.loadPage(this.selected.page);
+      }.bind(this));
+    },
+    lists: {
+      thumbnails: [{
+        class: 'fa fa-th-large',
+        value: ''
+      }, {
+        class: 'fa fa-th',
+        value: 'is-small'
+      }],
+      selection: [{
+        value: 'all',
+        text: 'All'
+      }, {
+        value: 'none',
+        text: 'None'
+      } // {value:'not-validated', text:'Not Validated'},
+      ],
+      validation: [{
+        class: "fa val-1",
+        text: "Present",
+        value: 1
+      }, {
+        class: "fa val-0",
+        text: "Not Present",
+        value: 0
+      }, {
+        class: "fa val-null",
+        text: "Clear",
+        value: null
+      }]
+    },
+    fetchDetails: function () {
+      this.loading.details = true;
+      return a2CitizenScientistService.getPatternMatchingDetailsFor(this.id).then(function (patternMatching) {
+        this.loading.details = false;
+        this.patternMatching = patternMatching;
+        this.setupExportUrl();
+        this.total = {
+          rois: patternMatching.cs_total,
+          pages: Math.ceil(patternMatching.cs_total / this.limit)
+        };
+      }.bind(this)).catch(function (err) {
+        this.loading.details = false;
+        return notify.serverError(err);
+      }.bind(this));
+    },
+    setupExportUrl: function () {
+      this.patternMatchingExportUrl = a2PatternMatching.getExportUrl({
+        patternMatching: this.patternMatching.id
+      });
+    },
+    onScroll: function ($event, $controller) {
+      this.scrollElement = $controller.scrollElement;
+      var scrollPos = $controller.scrollElement.scrollY;
+      var headerTop = $controller.anchors.header.offset().top;
+      this.headerTop = headerTop | 0;
+      this.scrolledPastHeader = scrollPos >= headerTop;
+    },
+    onSelect: function ($item) {
+      this.select($item.value);
+    },
+    loadPage: function (pageNumber) {
+      this.loading.rois = true;
+      return a2CitizenScientistService.getPatternMatchingRoisFor(this.id, this.limit, pageNumber * this.limit).then(function (rois) {
+        this.loading.rois = false;
+        this.rois = rois.reduce(function (_, roi) {
+          var sitename = roi.site;
+          var recname = roi.recording;
+
+          if (!_.idx[sitename]) {
+            _.idx[sitename] = {
+              list: [],
+              idx: {},
+              name: sitename
+            };
+
+            _.list.push(_.idx[sitename]);
+          }
+
+          var site = _.idx[sitename];
+          site.list.push(roi);
+          return _;
+        }, {
+          list: [],
+          idx: {}
+        }).list;
+        this.selected.roi = Math.min();
+
+        if (this.scrollElement) {
+          this.scrollElement.scrollTo(0, 0);
+        }
+
+        return rois;
+      }.bind(this)).catch(function (err) {
+        this.loading.rois = false;
+        return notify.serverError(err);
+      }.bind(this));
+    },
+    playRoiAudio: function (roi, $event) {
+      if ($event) {
+        $event.preventDefault();
+        $event.stopPropagation();
+      }
+
+      a2AudioBarService.loadUrl(a2PatternMatching.getAudioUrlFor(roi), true);
+    },
+    playTemplateAudio: function () {
+      a2AudioBarService.loadUrl(a2Templates.getAudioUrlFor(this.patternMatching.template), true);
+    },
+    getRoiVisualizerUrl: function (roi) {
+      var box = ['box', roi.x1, roi.y1, roi.x2, roi.y2].join(',');
+      return roi ? "/project/" + this.projecturl + "/visualizer/rec/" + roi.recording_id + "?a=" + box : '';
+    },
+    getTemplateVisualizerUrl: function (template) {
+      var box = ['box', template.x1, template.y1, template.x2, template.y2].join(',');
+      return template ? "/project/" + template.source_project_uri + "/visualizer/rec/" + template.recording + "?a=" + box : '';
+    },
+    setRoi: function (roi_index) {
+      if (this.total.rois <= 0) {
+        this.selected.roi_index = 0;
+        this.selected.roi = null;
+      } else {
+        this.selected.roi_index = Math.max(0, Math.min(roi_index | 0, this.total.rois - 1));
+        this.selected.roi = this.rois[this.selected.roi_index];
+      }
+
+      return this.selected.roi;
+    },
+    setPage: function (page, force) {
+      if (this.total.rois <= 0) {
+        this.selected.page = 0;
+        this.rois = [];
+        return this.rois;
+      } else {
+        page = Math.max(0, Math.min(page, this.total.rois / this.limit | 0));
+
+        if (page != this.selected.page || force) {
+          this.selected.page = page;
+          return this.loadPage(page);
+        }
+      }
+    },
+    select: function (option) {
+      var selectFn = null;
+
+      if (option === "all") {
+        selectFn = function (roi) {
+          roi.selected = true;
+        };
+      } else if (option === "none") {
+        selectFn = function (roi) {
+          roi.selected = false;
+        };
+      } else if (option === "not-validated") {
+        selectFn = function (roi) {
+          roi.selected = roi.cs_validated === null;
+        };
+      } else {
+        selectFn = function (roi) {
+          roi.selected = roi.id === option;
+        };
+      }
+
+      this.forEachRoi(selectFn);
+    },
+    forEachRoi: function (fn) {
+      (this.rois || []).forEach(function (site) {
+        site.list.forEach(fn);
+      });
+    },
+    validate: function (validation, rois) {
+      if (!a2UserPermit.can('use citizen scientist interface')) {
+        notify.error('You do not have permission to validate the matched rois.');
+        return;
+      }
+
+      if (validation === undefined) {
+        validation = (this.validation || {
+          value: null
+        }).value;
+      }
+
+      if (rois === undefined) {
+        rois = [];
+        this.forEachRoi(function (roi) {
+          if (roi.selected) {
+            rois.push(roi);
+          }
+        });
+      }
+
+      var roiIds = rois.map(function (roi) {
+        return roi.id;
+      });
+      var val_delta = {
+        0: 0,
+        1: 0,
+        null: 0
+      };
+      rois.forEach(function (roi) {
+        val_delta[roi.cs_validated] -= 1;
+        val_delta[validation] += 1;
+        roi.cs_validated = validation;
+        roi.selected = false;
+      });
+      this.patternMatching.cs_absent += val_delta[0];
+      this.patternMatching.cs_present += val_delta[1];
+      return a2CitizenScientistService.validatePatternMatchingRois(this.id, roiIds, validation);
+    },
+    nextMatch: function (step) {
+      return this.setRoi(this.selected.roi_index + (step || 1));
+    },
+    prevMatch: function (step) {
+      return this.setRoi(this.selected.roi_index - (step || 1));
+    },
+    nextPage: function (step) {
+      return this.setPage(this.selected.page + (step || 1));
+    },
+    prevPage: function (step) {
+      return this.setPage(this.selected.page - (step || 1));
+    },
+    next: function (step) {
+      if (!step) {
+        step = 1;
+      }
+
+      this.nextPage(step);
+    },
+    prev: function (step) {
+      if (!step) {
+        step = 1;
+      }
+
+      return this.next(-step);
+    }
+  });
+  this.initialize($scope.patternMatchingId);
+}]);
+angular.module('a2.audiodata.playlists.playlist-arithmetic', []).directive('playlistArithmetic', ["a2Playlists", function (a2Playlists) {
+  return {
+    restrict: 'E',
+    templateUrl: '/app/audiodata/playlists/playlist-arithmetic.html',
+    scope: {
+      onExpressionSelected: '&'
+    },
+    controller: 'playlistArithmeticController as controller',
+    requires: '^PlaylistCtrl',
+    link: function (scope, element, attrs) {
+      var controller = scope.controller;
+      controller.initialize({
+        onSelected: function (expression) {
+          scope.onExpressionSelected({
+            expression: expression
+          });
+        }
+      });
+      scope.$on('$destroy', function () {
+        controller.$destroy();
+      });
+    }
+  };
+}]).controller('playlistArithmeticController', ["a2Playlists", "$interpolate", function (a2Playlists, $interpolate) {
+  this.selected = {};
+  this.operations = [{
+    type: 'union',
+    text: 'Join playlist 1 and 2',
+    icon: 'a2-union',
+    nameTemplate: '{{playlist1}} joined with {{playlist2}}'
+  }, {
+    type: 'intersection',
+    text: 'Intersect playlist 1 and 2',
+    icon: 'a2-intersect',
+    nameTemplate: '{{playlist1}} intersected with {{playlist2}}'
+  }, {
+    type: 'subtraction',
+    text: 'Remove playlist 2 from playlist 1',
+    icon: 'a2-difference',
+    nameTemplate: '{{playlist1}} minus {{playlist2}}'
+  }];
+  var removeOnInvalidateHandler;
+
+  this.initialize = function (options) {
+    this.options = options || {};
+    removeOnInvalidateHandler = a2Playlists.$on('invalidate-list', function () {
+      this.reset();
+    }.bind(this));
+    this.reset();
+    this.updateNamePlaceholder();
+  };
+
+  this.reset = function () {
+    return a2Playlists.getList().then(function (playlists) {
+      this.playlists = playlists;
+    }.bind(this));
+  };
+
+  this.$destroy = function () {
+    removeOnInvalidateHandler();
+  };
+
+  this.updateNamePlaceholder = function () {
+    var nameTemplate = (this.selected.operation || {}).nameTemplate || 'Playlist 3';
+    var term1 = this.selected.term1 || {};
+    var term2 = this.selected.term2 || {};
+    this.namePlaceholder = $interpolate(nameTemplate)({
+      playlist1: term1.name || '(playlist 1)',
+      playlist2: term2.name || '(playlist 2)'
+    });
+  };
+
+  this.submit = function () {
+    var operation = this.selected.operation;
+    var term1 = this.selected.term1;
+    var term2 = this.selected.term2;
+    var name = this.selected.name || this.namePlaceholder;
+
+    if (operation && term1 && term2 && name) {
+      if (this.options.onSelected) {
+        this.options.onSelected({
+          operation: operation.type,
+          term1: term1.id,
+          term2: term2.id,
+          name: name
+        });
+      }
+    }
+  };
+}]);
+angular.module('a2.audiodata.playlists', ['a2.services', 'a2.directives', 'ui.bootstrap', 'a2.audiodata.playlists.playlist-arithmetic', 'humane']).config(["$stateProvider", function ($stateProvider) {
+  $stateProvider.state('audiodata.playlists', {
+    url: '/playlists',
+    controller: 'PlaylistCtrl as controller',
+    templateUrl: '/app/audiodata/playlists/playlists.html'
+  });
+}]).controller('PlaylistCtrl', ["$scope", "a2Playlists", "$modal", "notify", "a2UserPermit", "$location", function ($scope, a2Playlists, $modal, notify, a2UserPermit, $location) {
+  this.initialize = function () {
+    removeOnInvalidateHandler = a2Playlists.$on('invalidate-list', function () {
+      this.reset();
+    }.bind(this));
+    this.reset();
+  };
+
+  this.reset = function () {
+    $scope.loading = true;
+    a2Playlists.getList({
+      info: true
+    }).then(function (data) {
+      $scope.playlists = data;
+      $scope.loading = false;
+    });
+  };
+
+  this.operate = function (expression) {
+    if (!a2UserPermit.can('manage playlists')) {
+      notify.error('You do not have permission to combine playlists');
+      return;
+    }
+
+    return a2Playlists.combine(expression).then(function () {
+      notify.log('Playlist created');
+    }).catch(function (err) {
+      err = err || {};
+      notify.error(err.message || err.data || 'Server error');
+    });
+  };
+
+  this.edit = function () {
+    if (!$scope.checked.length || $scope.checked.length > 1) {
+      notify.log('Please select one playlist to edit');
+      return;
+    }
+
+    if (!a2UserPermit.can('manage playlists')) {
+      notify.error('You do not have permission to edit playlists');
+      return;
+    }
+
+    $scope.pname = $scope.checked[0].name;
+    const playlist_id = $scope.checked[0].id;
+    const modalInstance = $modal.open({
+      templateUrl: '/app/audiodata/edit-playlist.html',
+      scope: $scope
+    });
+    modalInstance.result.then(function (playlistName) {
+      a2Playlists.rename({
+        id: playlist_id,
+        name: playlistName
+      }, function (data) {
+        if (data.error) return console.log(data.error);
+      });
+    });
+  };
+
+  $scope.del = function () {
+    if (!$scope.checked || !$scope.checked.length) return;
+
+    if (!a2UserPermit.can('manage playlists')) {
+      notify.error('You do not have permission to delete playlists');
+      return;
+    }
+
+    const playlists = $scope.checked.map(function (row) {
+      return '"' + row.name + '"';
+    });
+    const message = ["You are about to delete the following playlists: "];
+    const message2 = ["Are you sure?"];
+    $scope.popup = {
+      messages: message.concat(playlists, message2),
+      btnOk: "Yes",
+      btnCancel: "No"
+    };
+    const modalInstance = $modal.open({
+      templateUrl: '/common/templates/pop-up.html',
+      scope: $scope
+    });
+    modalInstance.result.then(function () {
+      const playlistIds = $scope.checked.map(function (pl) {
+        return pl.id;
+      });
+      $scope.loading = true;
+      a2Playlists.remove(playlistIds, function (data) {
+        if (data.error) return notify.error(data.error);
+        a2Playlists.getList().then(function (data) {
+          $scope.playlists = data;
+          $scope.loading = false;
+          notify.log((playlistIds.length > 1 ? 'Playlists ' : 'Playlist ') + 'deleted');
+        });
+      });
+    });
+  };
+
+  $scope.create = function (url) {
+    $location.path(url);
+  };
+
+  this.initialize();
+}]);
+angular.module('a2.audiodata.templates', ['a2.services', 'a2.directives', 'ui.bootstrap', 'a2.srv.templates', 'a2.directive.audio-bar', 'a2.visualizer.audio-player', 'humane']).config(["$stateProvider", function ($stateProvider) {
+  $stateProvider.state('audiodata.templates', {
+    url: '/templates',
+    controller: 'TemplatesCtrl as controller',
+    templateUrl: '/app/audiodata/templates/templates.html'
+  });
+}]).controller('TemplatesCtrl', ["$scope", "a2Templates", "Project", "$localStorage", "a2UserPermit", "notify", "$modal", "$window", "a2AudioBarService", function ($scope, a2Templates, Project, $localStorage, a2UserPermit, notify, $modal, $window, a2AudioBarService) {
+  var self = this;
+  Object.assign(this, {
+    initialize: function () {
+      this.loading = false;
+      this.isAdding = false;
+      this.templates = [];
+      this.currentTab = 'projectTemplates';
+      this.pagination = {
+        page: 1,
+        limit: 100,
+        offset: 0,
+        totalItems: 0,
+        totalPages: 0
+      };
+      this.projecturl = Project.getUrl();
+      this.search = {
+        q: ''
+      };
+      this.getList();
+      this.timeout;
+    },
+    goToSourceProject: function (projectId) {
+      if (!projectId) return;
+      Project.getProjectById(projectId, function (data) {
+        if (data) {
+          $window.location.pathname = "/project/" + data.url + "/audiodata/templates";
+        }
+      });
+    },
+    setCurrentPage: function () {
+      self.pagination.offset = self.pagination.page - 1;
+      this.getList();
+    },
+    getList: function () {
+      self.loading = true;
+      const opts = {
+        showRecordingUri: true,
+        q: self.search.q,
+        limit: self.pagination.limit,
+        offset: self.pagination.offset * self.pagination.limit
+      };
+      opts[self.currentTab] = true;
+      return a2Templates.getList(opts).then(function (data) {
+        self.loading = false;
+        self.templates = data.list;
+        self.pagination.totalItems = data.count;
+        self.pagination.totalPages = Math.ceil(self.pagination.totalItems / self.pagination.limit);
+      }.bind(this)).catch(function (err) {
+        self.loading = false;
+        self.templates = [];
+        notify.serverError(err);
+      }.bind(this));
+    },
+    onSearchChanged: function () {
+      var _this = this;
+
+      clearTimeout(self.timeout);
+      self.timeout = setTimeout(function () {
+        if (self.search.q.trim().length > 0 && self.search.q.trim().length < 3) return;
+
+        _this.reloadPage();
+      }, 1000);
+    },
+    reloadPage: function () {
+      this.resetPagination();
+      this.getList();
+    },
+    getTemplateVisualizerUrl: function (template) {
+      const box = ['box', template.x1, template.y1, template.x2, template.y2].join(',');
+      return template ? "/project/" + template.project_url + "/#/visualizer/rec/" + template.recording + "?a=" + box : '';
+    },
+    deleteTemplate: function (templateId) {
+      if (!a2UserPermit.can('manage templates')) {
+        notify.error('You do not have permission to delete templates');
+        return;
+      }
+
+      $scope.popup = {
+        title: 'Delete template',
+        messages: ['Are you sure you want to delete this template?'],
+        btnOk: 'Yes',
+        btnCancel: 'No'
+      };
+      var modalInstance = $modal.open({
+        templateUrl: '/common/templates/pop-up.html',
+        scope: $scope
+      });
+      modalInstance.result.then(function (confirmed) {
+        if (confirmed) {
+          return a2Templates.delete(templateId).then(function () {
+            self.getList();
+          });
+        }
+      });
+    },
+    toggleTab: function (access) {
+      self.currentTab = access;
+      this.reloadPage();
+    },
+    resetPagination: function () {
+      self.pagination = {
+        page: 1,
+        limit: 100,
+        offset: 0,
+        totalItems: 0,
+        totalPages: 0
+      };
+    },
+    addTemplate: function (template) {
+      self.isAdding = true;
+      a2Templates.add({
+        name: template.name,
+        recording: template.recording,
+        species: template.species,
+        songtype: template.songtype,
+        roi: {
+          x1: template.x1,
+          y1: template.y1,
+          x2: template.x2,
+          y2: template.y2
+        },
+        source_project_id: template.project
+      }).then(function (template) {
+        console.log('new template', template);
+        self.isAdding = false;
+        if (template.id === 0) notify.error('The template already exists in the project templates.');else if (template.error) notify.error('You do not have permission to manage templates');else notify.log('The template is added to the project.');
+      }).catch(function (err) {
+        console.log('err', err);
+        self.isAdding = false;
+        notify.error(err);
+      });
+    },
+    playTemplateAudio: function (template, $event) {
+      if ($event) {
+        $event.preventDefault();
+        $event.stopPropagation();
+      }
+
+      ;
+      $localStorage.setItem('a2-audio-param-gain', JSON.stringify(2));
+      console.info('play');
+      a2AudioBarService.loadUrl(a2Templates.getAudioUrlFor(template), true);
+    }
+  });
+  this.initialize();
+}]);
+angular.module('a2.audiodata.uploads', ['ui.router', 'a2.audiodata.uploads.upload', 'a2.audiodata.uploads.processing']).config(["$stateProvider", "$urlRouterProvider", function ($stateProvider, $urlRouterProvider) {
+  $stateProvider.state('audiodata.uploads', {
+    url: '/uploads',
+    template: '<ui-view />',
+    abstract: true
+  });
+}]);
+angular.module('a2.audiodata.uploads.processing', ['a2.services', 'a2.srv.uploads', 'a2.directives', 'ui.bootstrap', 'angularFileUpload', 'humane']).config(["$stateProvider", "$urlRouterProvider", function ($stateProvider, $urlRouterProvider) {
+  $stateProvider.state('audiodata.uploads.processing', {
+    url: '/processing',
+    controller: 'A2AudioDataUploadsProcessingCtrl as controller',
+    templateUrl: '/app/audiodata/uploads/processing.html'
+  });
+}]).controller('A2AudioDataUploadsProcessingCtrl', ["$scope", "a2UploadsService", function ($scope, a2UploadsService) {
+  this.loadPage = function () {
+    this.loading = true;
+    a2UploadsService.getProcessingList().then(function (data) {
+      this.loading = false;
+      this.list = data.list;
+      this.count = data.count;
+    }.bind(this));
+  };
+
+  this.loadPage();
+}]);
+angular.module('a2.audiodata.uploads.upload', ['a2.services', 'a2.directives', 'ui.bootstrap', 'angularFileUpload', 'a2.srv.app-listings', 'a2.filter.caps', 'humane']).config(["$stateProvider", "$urlRouterProvider", function ($stateProvider, $urlRouterProvider) {
+  $stateProvider.state('audiodata.uploads.upload', {
+    url: '/',
+    controller: 'A2AudioDataUploadsUploadCtrl as controller',
+    templateUrl: '/app/audiodata/uploads/upload.html'
+  });
+}]).filter('prettyBytes', function () {
+  return function (bytes) {
+    var labels = ['B', 'kB', 'MB', 'GB'];
+    var newBytes;
+    var p;
+
+    for (p = 1; bytes / Math.pow(1024, p) > 1; p++) {
+      newBytes = bytes / Math.pow(1024, p);
+    }
+
+    newBytes = Math.round(newBytes * 100) / 100;
+    return String(newBytes) + ' ' + labels[p - 1];
+  };
+}).controller('A2AudioDataUploadsUploadCtrl', ["$scope", "uploads", "Project", "AppListingsService", "a2UserPermit", "notify", "$interval", "a2UploadsService", function ($scope, uploads, Project, AppListingsService, a2UserPermit, notify, $interval, a2UploadsService) {
+  $scope.verifyAndUpload = function () {
+    if (!a2UserPermit.can('manage project recordings')) {
+      notify.error("You do not have permission to upload recordings");
+      return;
+    }
+
+    var index = 0;
+    $scope.uploading = true;
+
+    var _verifyAndUpload = function () {
+      var item = $scope.uploader.queue[index];
+
+      if (item && item.file && !item.file.size) {
+        item.isError = true;
+        item.errorMsg = "Error of the file size";
+        return;
+      }
+
+      var next = function () {
+        index++;
+
+        _verifyAndUpload();
+      };
+
+      if (!item || !$scope.uploading) {
+        $scope.uploading = false;
+        return;
+      }
+
+      if (item.isSuccess) // file uploaded on current batch
+        return next();
+      Project.recExists($scope.info.site.id, item.file.name, function (exists) {
+        if (exists) {
+          console.log('duplicated');
+          item.isDuplicate = true;
+          return next();
+        }
+
+        item.url = '/uploads/audio?project=' + $scope.project.project_id + '&site=' + $scope.info.site.id + '&nameformat=' + $scope.info.format.name + '&timezone=' + $scope.info.timezone.format;
+        item.upload();
+        item.onSuccess = next;
+        item.onError = next;
+      });
+    };
+
+    _verifyAndUpload();
+  };
+
+  $scope.isCheckingStatus = false;
+
+  $scope.queueJobToCheckStatus = function () {
+    if ($scope.isCheckingStatus) return;
+    $scope.isCheckingStatus = true;
+    a2UploadsService.getProcessingList({
+      site: $scope.info.site.id
+    }).then(function (files) {
+      const uploadingFiles = $scope.getUploadingFiles();
+
+      if (!uploadingFiles.length) {
+        $scope.cancelTimer();
+        $scope.isCheckingStatus = false;
+        return;
+      }
+
+      const userFiles = uploadingFiles.map(function (fileObj) {
+        return fileObj.file.name;
+      });
+
+      if (files && files.length) {
+        const filesToCheck = files.filter(function (file) {
+          return userFiles.includes(file.name);
+        });
+        const items = filesToCheck.slice(0, 5).map(function (item) {
+          return {
+            uploadUrl: item.uploadUrl,
+            uploadId: item.id,
+            filename: item.name
+          };
+        });
+        a2UploadsService.checkStatus({
+          items: items
+        }).then(function (data) {
+          if (data) {
+            data.forEach(function (item) {
+              const userFile = uploadingFiles.find(function (fileObj) {
+                return fileObj.file.name === item.filename;
+              });
+
+              if (userFile && item.status === 'uploaded') {
+                $scope.makeSuccessItem(userFile);
+              }
+            });
+            $scope.isCheckingStatus = false;
+          }
+        });
+      }
+    });
+  };
+
+  $scope.getUploadingFiles = function () {
+    const uploadingFiles = $scope.uploader.queue.filter(function (file) {
+      return file.isSuccess === true && file.isUploaded === false;
+    });
+    return uploadingFiles && uploadingFiles.length ? uploadingFiles : [];
+  };
+
+  $scope.checkUploadingFiles = function () {
+    if ($scope.getUploadingFiles().length) {
+      $scope.startTimer();
+    }
+  };
+
+  $scope.startTimer = function () {
+    $scope.cancelTimer();
+    $scope.checkStatusInterval = $interval(function () {
+      $scope.queueJobToCheckStatus();
+    }, 10000);
+  };
+
+  $scope.cancelTimer = function () {
+    if ($scope.checkStatusInterval) {
+      $interval.cancel($scope.checkStatusInterval);
+    }
+  };
+
+  $scope.$on('$destroy', function () {
+    $scope.cancelTimer();
+  });
+  AppListingsService.getFor('arbimon2-desktop-uploader').then(function (uploaderAppListing) {
+    this.uploaderAppListing = uploaderAppListing;
+  }.bind(this));
+
+  $scope.stopQueue = function () {
+    $scope.uploading = false;
+    angular.forEach($scope.uploader.queue, function (item) {
+      item.cancel();
+    });
+  };
+
+  $scope.uploader = uploads.getUploader();
+  $scope.info = {};
+  $scope.formats = [{
+    name: "Arbimon",
+    format: "(*-YYYY-MM-DD_HH-MM)"
+  }, {
+    name: "AudioMoth",
+    format: "(*YYYYMMDD_HHMMSS)"
+  }, {
+    name: "AudioMoth legacy",
+    format: "(Unix Time code in Hex)"
+  }, {
+    name: "Cornell",
+    format: "(*_YYYYMMDD_HHMMSSZ)"
+  }, {
+    name: "Song Meter",
+    format: "(*_YYYYMMDD_HHMMSS)"
+  }, {
+    name: "Wildlife",
+    format: "(YYYYMMDD_HHMMSS)"
+  }];
+  $scope.fileTimezone = [{
+    name: "UTC",
+    format: "utc"
+  }, {
+    name: "Site timezone",
+    format: "local"
+  }];
+  Project.getSites({
+    utcDiff: true
+  }, function (sites) {
+    $scope.sites = sites.sort(function (a, b) {
+      return new Date(b.updated_at) - new Date(a.updated_at);
+    });
+  });
+
+  $scope.selectSite = function () {
+    const local = $scope.info && $scope.info.site && $scope.info.site.utcOffset ? $scope.info.site.utcOffset + ' (local)' : 'Site timezone';
+    $scope.fileTimezone[1].name = local;
+    $scope.info.timezone = $scope.fileTimezone[1];
+  };
+
+  $scope.isStartUploadDisabled = function () {
+    return !$scope.uploader.queue.length || $scope.isLimitExceeded() || !$scope.info.site || !$scope.info.format || $scope.uploading;
+  };
+
+  $scope.isLimitExceeded = function () {
+    return $scope.uploader.queue.length > 1000;
+  };
+
+  const randomString = Math.round(Math.random() * 100000000);
+  this.uploaderApps = {
+    mac: 'https://rf.cx/ingest-app-latest-mac?r=' + randomString,
+    windows: 'https://rf.cx/ingest-app-latest-win?r=' + randomString
+  };
+  Project.getInfo(function (info) {
+    $scope.project = info;
+  });
+  $scope.uploader.filters.push({
+    name: 'supportedFormats',
+    fn: function (item) {
+      var name = item.name.split('.');
+      var extension = name[name.length - 1].toLowerCase();
+      var validFormats = /mp3|flac|wav|opus/i;
+      if (!validFormats.exec(extension)) return false;
+      return true;
+    }
+  });
+  $scope.uploader.filters.push({
+    name: 'notDuplicate',
+    fn: function (item) {
+      var duplicate = $scope.uploader.queue.filter(function (qItem) {
+        return qItem.file.name === item.name;
+      });
+      return !duplicate.length;
+    }
+  });
+
+  $scope.uploader.onErrorItem = function (item, response, status, headers) {
+    if (response.error) {
+      item.errorMsg = response.error;
+    } else if (status >= 500) {
+      item.errorMsg = "Server error";
+      return;
+    } else {
+      item.errorMsg = "An error ocurred";
+    }
+  };
+
+  $scope.uploader.onSuccessItem = function (item, response, status, headers) {
+    item.isUploaded = false;
+    console.info('count of uploading files', $scope.getUploadingFiles().length);
+    $scope.checkUploadingFiles();
+  };
+
+  $scope.makeSuccessItem = function (item) {
+    item.status = 'uploaded';
+    item.isUploading = false;
+    item.isSuccess = false;
+    item.isUploaded = true;
+    item.progress = 100;
+  };
+
+  $scope.getProgress = function (item) {
+    if (item.isUploading && item.progress === 100) return 90;else if (item.isSuccess && !item.isUploaded) return 90;else return item.progress;
+  };
+
+  $scope.removeCompleted = function () {
+    if (!$scope.uploader.queue.length) return;
+    $scope.uploader.queue = $scope.uploader.queue.filter(function (file) {
+      return !file.isSuccess;
+    });
+  };
+
+  $scope.getCountOfUploaded = function () {
+    if (!$scope.uploader || !$scope.uploader.queue || !$scope.uploader.queue.length) return 0;
+    $scope.uploaded = $scope.uploader.queue.filter(function (file) {
+      return !!file.isUploaded && !file.isError;
+    }).length;
+    return $scope.uploaded;
+  };
+
+  $scope.clearQueue = function () {
+    $scope.uploader.progress = 0;
+    $scope.uploaded = 0;
+  };
+
+  $scope.uploaded = 0;
+
+  $scope.uploader.onProgressAll = function () {};
+}]).factory('uploads', ["FileUploader", function (FileUploader) {
+  var u = new FileUploader();
+  window.addEventListener("beforeunload", function (e) {
+    if (u.isUploading) {
+      var confirmationMessage = "Upload is in progress, Are you sure to exit?";
+      (e || window.event).returnValue = confirmationMessage; //Gecko + IE
+
+      return confirmationMessage; //Webkit, Safari, Chrome etc.
+    }
+  });
+  return {
+    getUploader: function () {
+      return u;
+    }
+  };
 }]);
 angular.module('a2.audiodata.recordings.data-export-parameters', ['a2.directive.a2-auto-close-on-outside-click', 'a2.services', 'a2.directives', 'ui.bootstrap', 'humane', 'a2.directive.error-message']).directive('recordingDataExportParameters', ["$document", "$rootScope", function ($document, $rootScope) {
   return {
@@ -17029,1317 +18358,6 @@ angular.module('a2.audiodata.recordings', ['a2.directive.a2-auto-close-on-outsid
     }
   };
 });
-angular.module('a2.audiodata.templates', ['a2.services', 'a2.directives', 'ui.bootstrap', 'a2.srv.templates', 'a2.directive.audio-bar', 'a2.visualizer.audio-player', 'humane']).config(["$stateProvider", function ($stateProvider) {
-  $stateProvider.state('audiodata.templates', {
-    url: '/templates',
-    controller: 'TemplatesCtrl as controller',
-    templateUrl: '/app/audiodata/templates/templates.html'
-  });
-}]).controller('TemplatesCtrl', ["$scope", "a2Templates", "Project", "$localStorage", "a2UserPermit", "notify", "$modal", "$window", "a2AudioBarService", function ($scope, a2Templates, Project, $localStorage, a2UserPermit, notify, $modal, $window, a2AudioBarService) {
-  var self = this;
-  Object.assign(this, {
-    initialize: function () {
-      this.loading = false;
-      this.isAdding = false;
-      this.templates = [];
-      this.currentTab = 'projectTemplates';
-      this.pagination = {
-        page: 1,
-        limit: 100,
-        offset: 0,
-        totalItems: 0,
-        totalPages: 0
-      };
-      this.projecturl = Project.getUrl();
-      this.search = {
-        q: ''
-      };
-      this.getList();
-      this.timeout;
-    },
-    goToSourceProject: function (projectId) {
-      if (!projectId) return;
-      Project.getProjectById(projectId, function (data) {
-        if (data) {
-          $window.location.pathname = "/project/" + data.url + "/audiodata/templates";
-        }
-      });
-    },
-    setCurrentPage: function () {
-      self.pagination.offset = self.pagination.page - 1;
-      this.getList();
-    },
-    getList: function () {
-      self.loading = true;
-      const opts = {
-        showRecordingUri: true,
-        q: self.search.q,
-        limit: self.pagination.limit,
-        offset: self.pagination.offset * self.pagination.limit
-      };
-      opts[self.currentTab] = true;
-      return a2Templates.getList(opts).then(function (data) {
-        self.loading = false;
-        self.templates = data.list;
-        self.pagination.totalItems = data.count;
-        self.pagination.totalPages = Math.ceil(self.pagination.totalItems / self.pagination.limit);
-      }.bind(this)).catch(function (err) {
-        self.loading = false;
-        self.templates = [];
-        notify.serverError(err);
-      }.bind(this));
-    },
-    onSearchChanged: function () {
-      var _this = this;
-
-      clearTimeout(self.timeout);
-      self.timeout = setTimeout(function () {
-        if (self.search.q.trim().length > 0 && self.search.q.trim().length < 3) return;
-
-        _this.reloadPage();
-      }, 1000);
-    },
-    reloadPage: function () {
-      this.resetPagination();
-      this.getList();
-    },
-    getTemplateVisualizerUrl: function (template) {
-      const box = ['box', template.x1, template.y1, template.x2, template.y2].join(',');
-      return template ? "/project/" + template.project_url + "/#/visualizer/rec/" + template.recording + "?a=" + box : '';
-    },
-    deleteTemplate: function (templateId) {
-      if (!a2UserPermit.can('manage templates')) {
-        notify.error('You do not have permission to delete templates');
-        return;
-      }
-
-      $scope.popup = {
-        title: 'Delete template',
-        messages: ['Are you sure you want to delete this template?'],
-        btnOk: 'Yes',
-        btnCancel: 'No'
-      };
-      var modalInstance = $modal.open({
-        templateUrl: '/common/templates/pop-up.html',
-        scope: $scope
-      });
-      modalInstance.result.then(function (confirmed) {
-        if (confirmed) {
-          return a2Templates.delete(templateId).then(function () {
-            self.getList();
-          });
-        }
-      });
-    },
-    toggleTab: function (access) {
-      self.currentTab = access;
-      this.reloadPage();
-    },
-    resetPagination: function () {
-      self.pagination = {
-        page: 1,
-        limit: 100,
-        offset: 0,
-        totalItems: 0,
-        totalPages: 0
-      };
-    },
-    addTemplate: function (template) {
-      self.isAdding = true;
-      a2Templates.add({
-        name: template.name,
-        recording: template.recording,
-        species: template.species,
-        songtype: template.songtype,
-        roi: {
-          x1: template.x1,
-          y1: template.y1,
-          x2: template.x2,
-          y2: template.y2
-        },
-        source_project_id: template.project
-      }).then(function (template) {
-        console.log('new template', template);
-        self.isAdding = false;
-        if (template.id === 0) notify.error('The template already exists in the project templates.');else if (template.error) notify.error('You do not have permission to manage templates');else notify.log('The template is added to the project.');
-      }).catch(function (err) {
-        console.log('err', err);
-        self.isAdding = false;
-        notify.error(err);
-      });
-    },
-    playTemplateAudio: function (template, $event) {
-      if ($event) {
-        $event.preventDefault();
-        $event.stopPropagation();
-      }
-
-      ;
-      $localStorage.setItem('a2-audio-param-gain', JSON.stringify(2));
-      console.info('play');
-      a2AudioBarService.loadUrl(a2Templates.getAudioUrlFor(template), true);
-    }
-  });
-  this.initialize();
-}]);
-angular.module('a2.citizen-scientist.admin', ['ui.router', 'a2.citizen-scientist.admin.classification-stats', 'a2.citizen-scientist.admin.user-stats', 'a2.citizen-scientist.admin.settings']).config(["$stateProvider", "$urlRouterProvider", function ($stateProvider, $urlRouterProvider) {
-  $stateProvider.state('citizen-scientist.admin', {
-    url: '/admin',
-    template: '<ui-view />',
-    abstract: true
-  });
-}]);
-angular.module('a2.audiodata.uploads', ['ui.router', 'a2.audiodata.uploads.upload', 'a2.audiodata.uploads.processing']).config(["$stateProvider", "$urlRouterProvider", function ($stateProvider, $urlRouterProvider) {
-  $stateProvider.state('audiodata.uploads', {
-    url: '/uploads',
-    template: '<ui-view />',
-    abstract: true
-  });
-}]);
-angular.module('a2.audiodata.uploads.processing', ['a2.services', 'a2.srv.uploads', 'a2.directives', 'ui.bootstrap', 'angularFileUpload', 'humane']).config(["$stateProvider", "$urlRouterProvider", function ($stateProvider, $urlRouterProvider) {
-  $stateProvider.state('audiodata.uploads.processing', {
-    url: '/processing',
-    controller: 'A2AudioDataUploadsProcessingCtrl as controller',
-    templateUrl: '/app/audiodata/uploads/processing.html'
-  });
-}]).controller('A2AudioDataUploadsProcessingCtrl', ["$scope", "a2UploadsService", function ($scope, a2UploadsService) {
-  this.loadPage = function () {
-    this.loading = true;
-    a2UploadsService.getProcessingList().then(function (data) {
-      this.loading = false;
-      this.list = data.list;
-      this.count = data.count;
-    }.bind(this));
-  };
-
-  this.loadPage();
-}]);
-angular.module('a2.audiodata.uploads.upload', ['a2.services', 'a2.directives', 'ui.bootstrap', 'angularFileUpload', 'a2.srv.app-listings', 'a2.filter.caps', 'humane']).config(["$stateProvider", "$urlRouterProvider", function ($stateProvider, $urlRouterProvider) {
-  $stateProvider.state('audiodata.uploads.upload', {
-    url: '/',
-    controller: 'A2AudioDataUploadsUploadCtrl as controller',
-    templateUrl: '/app/audiodata/uploads/upload.html'
-  });
-}]).filter('prettyBytes', function () {
-  return function (bytes) {
-    var labels = ['B', 'kB', 'MB', 'GB'];
-    var newBytes;
-    var p;
-
-    for (p = 1; bytes / Math.pow(1024, p) > 1; p++) {
-      newBytes = bytes / Math.pow(1024, p);
-    }
-
-    newBytes = Math.round(newBytes * 100) / 100;
-    return String(newBytes) + ' ' + labels[p - 1];
-  };
-}).controller('A2AudioDataUploadsUploadCtrl', ["$scope", "uploads", "Project", "AppListingsService", "a2UserPermit", "notify", "$interval", "a2UploadsService", function ($scope, uploads, Project, AppListingsService, a2UserPermit, notify, $interval, a2UploadsService) {
-  $scope.verifyAndUpload = function () {
-    if (!a2UserPermit.can('manage project recordings')) {
-      notify.error("You do not have permission to upload recordings");
-      return;
-    }
-
-    var index = 0;
-    $scope.uploading = true;
-
-    var _verifyAndUpload = function () {
-      var item = $scope.uploader.queue[index];
-
-      if (item && item.file && !item.file.size) {
-        item.isError = true;
-        item.errorMsg = "Error of the file size";
-        return;
-      }
-
-      var next = function () {
-        index++;
-
-        _verifyAndUpload();
-      };
-
-      if (!item || !$scope.uploading) {
-        $scope.uploading = false;
-        return;
-      }
-
-      if (item.isSuccess) // file uploaded on current batch
-        return next();
-      Project.recExists($scope.info.site.id, item.file.name, function (exists) {
-        if (exists) {
-          console.log('duplicated');
-          item.isDuplicate = true;
-          return next();
-        }
-
-        item.url = '/uploads/audio?project=' + $scope.project.project_id + '&site=' + $scope.info.site.id + '&nameformat=' + $scope.info.format.name + '&timezone=' + $scope.info.timezone.format;
-        item.upload();
-        item.onSuccess = next;
-        item.onError = next;
-      });
-    };
-
-    _verifyAndUpload();
-  };
-
-  $scope.isCheckingStatus = false;
-
-  $scope.queueJobToCheckStatus = function () {
-    if ($scope.isCheckingStatus) return;
-    $scope.isCheckingStatus = true;
-    a2UploadsService.getProcessingList({
-      site: $scope.info.site.id
-    }).then(function (files) {
-      const uploadingFiles = $scope.getUploadingFiles();
-
-      if (!uploadingFiles.length) {
-        $scope.cancelTimer();
-        $scope.isCheckingStatus = false;
-        return;
-      }
-
-      const userFiles = uploadingFiles.map(function (fileObj) {
-        return fileObj.file.name;
-      });
-
-      if (files && files.length) {
-        const filesToCheck = files.filter(function (file) {
-          return userFiles.includes(file.name);
-        });
-        const items = filesToCheck.slice(0, 5).map(function (item) {
-          return {
-            uploadUrl: item.uploadUrl,
-            uploadId: item.id,
-            filename: item.name
-          };
-        });
-        a2UploadsService.checkStatus({
-          items: items
-        }).then(function (data) {
-          if (data) {
-            data.forEach(function (item) {
-              const userFile = uploadingFiles.find(function (fileObj) {
-                return fileObj.file.name === item.filename;
-              });
-
-              if (userFile && item.status === 'uploaded') {
-                $scope.makeSuccessItem(userFile);
-              }
-            });
-            $scope.isCheckingStatus = false;
-          }
-        });
-      }
-    });
-  };
-
-  $scope.getUploadingFiles = function () {
-    const uploadingFiles = $scope.uploader.queue.filter(function (file) {
-      return file.isSuccess === true && file.isUploaded === false;
-    });
-    return uploadingFiles && uploadingFiles.length ? uploadingFiles : [];
-  };
-
-  $scope.checkUploadingFiles = function () {
-    if ($scope.getUploadingFiles().length) {
-      $scope.startTimer();
-    }
-  };
-
-  $scope.startTimer = function () {
-    $scope.cancelTimer();
-    $scope.checkStatusInterval = $interval(function () {
-      $scope.queueJobToCheckStatus();
-    }, 10000);
-  };
-
-  $scope.cancelTimer = function () {
-    if ($scope.checkStatusInterval) {
-      $interval.cancel($scope.checkStatusInterval);
-    }
-  };
-
-  $scope.$on('$destroy', function () {
-    $scope.cancelTimer();
-  });
-  AppListingsService.getFor('arbimon2-desktop-uploader').then(function (uploaderAppListing) {
-    this.uploaderAppListing = uploaderAppListing;
-  }.bind(this));
-
-  $scope.stopQueue = function () {
-    $scope.uploading = false;
-    angular.forEach($scope.uploader.queue, function (item) {
-      item.cancel();
-    });
-  };
-
-  $scope.uploader = uploads.getUploader();
-  $scope.info = {};
-  $scope.formats = [{
-    name: "Arbimon",
-    format: "(*-YYYY-MM-DD_HH-MM)"
-  }, {
-    name: "AudioMoth",
-    format: "(*YYYYMMDD_HHMMSS)"
-  }, {
-    name: "AudioMoth legacy",
-    format: "(Unix Time code in Hex)"
-  }, {
-    name: "Cornell",
-    format: "(*_YYYYMMDD_HHMMSSZ)"
-  }, {
-    name: "Song Meter",
-    format: "(*_YYYYMMDD_HHMMSS)"
-  }, {
-    name: "Wildlife",
-    format: "(YYYYMMDD_HHMMSS)"
-  }];
-  $scope.fileTimezone = [{
-    name: "UTC",
-    format: "utc"
-  }, {
-    name: "Site timezone",
-    format: "local"
-  }];
-  Project.getSites({
-    utcDiff: true
-  }, function (sites) {
-    $scope.sites = sites.sort(function (a, b) {
-      return new Date(b.updated_at) - new Date(a.updated_at);
-    });
-  });
-
-  $scope.selectSite = function () {
-    const local = $scope.info && $scope.info.site && $scope.info.site.utcOffset ? $scope.info.site.utcOffset + ' (local)' : 'Site timezone';
-    $scope.fileTimezone[1].name = local;
-    $scope.info.timezone = $scope.fileTimezone[1];
-  };
-
-  $scope.isStartUploadDisabled = function () {
-    return !$scope.uploader.queue.length || $scope.isLimitExceeded() || !$scope.info.site || !$scope.info.format || $scope.uploading;
-  };
-
-  $scope.isLimitExceeded = function () {
-    return $scope.uploader.queue.length > 1000;
-  };
-
-  const randomString = Math.round(Math.random() * 100000000);
-  this.uploaderApps = {
-    mac: 'https://rf.cx/ingest-app-latest-mac?r=' + randomString,
-    windows: 'https://rf.cx/ingest-app-latest-win?r=' + randomString
-  };
-  Project.getInfo(function (info) {
-    $scope.project = info;
-  });
-  $scope.uploader.filters.push({
-    name: 'supportedFormats',
-    fn: function (item) {
-      var name = item.name.split('.');
-      var extension = name[name.length - 1].toLowerCase();
-      var validFormats = /mp3|flac|wav|opus/i;
-      if (!validFormats.exec(extension)) return false;
-      return true;
-    }
-  });
-  $scope.uploader.filters.push({
-    name: 'notDuplicate',
-    fn: function (item) {
-      var duplicate = $scope.uploader.queue.filter(function (qItem) {
-        return qItem.file.name === item.name;
-      });
-      return !duplicate.length;
-    }
-  });
-
-  $scope.uploader.onErrorItem = function (item, response, status, headers) {
-    if (response.error) {
-      item.errorMsg = response.error;
-    } else if (status >= 500) {
-      item.errorMsg = "Server error";
-      return;
-    } else {
-      item.errorMsg = "An error ocurred";
-    }
-  };
-
-  $scope.uploader.onSuccessItem = function (item, response, status, headers) {
-    item.isUploaded = false;
-    console.info('count of uploading files', $scope.getUploadingFiles().length);
-    $scope.checkUploadingFiles();
-  };
-
-  $scope.makeSuccessItem = function (item) {
-    item.status = 'uploaded';
-    item.isUploading = false;
-    item.isSuccess = false;
-    item.isUploaded = true;
-    item.progress = 100;
-  };
-
-  $scope.getProgress = function (item) {
-    if (item.isUploading && item.progress === 100) return 90;else if (item.isSuccess && !item.isUploaded) return 90;else return item.progress;
-  };
-
-  $scope.removeCompleted = function () {
-    if (!$scope.uploader.queue.length) return;
-    $scope.uploader.queue = $scope.uploader.queue.filter(function (file) {
-      return !file.isSuccess;
-    });
-  };
-
-  $scope.getCountOfUploaded = function () {
-    if (!$scope.uploader || !$scope.uploader.queue || !$scope.uploader.queue.length) return 0;
-    $scope.uploaded = $scope.uploader.queue.filter(function (file) {
-      return !!file.isUploaded && !file.isError;
-    }).length;
-    return $scope.uploaded;
-  };
-
-  $scope.clearQueue = function () {
-    $scope.uploader.progress = 0;
-    $scope.uploaded = 0;
-  };
-
-  $scope.uploaded = 0;
-
-  $scope.uploader.onProgressAll = function () {};
-}]).factory('uploads', ["FileUploader", function (FileUploader) {
-  var u = new FileUploader();
-  window.addEventListener("beforeunload", function (e) {
-    if (u.isUploading) {
-      var confirmationMessage = "Upload is in progress, Are you sure to exit?";
-      (e || window.event).returnValue = confirmationMessage; //Gecko + IE
-
-      return confirmationMessage; //Webkit, Safari, Chrome etc.
-    }
-  });
-  return {
-    getUploader: function () {
-      return u;
-    }
-  };
-}]);
-angular.module('a2.citizen-scientist.my-stats', ['a2.services', 'a2.directives', 'ui.bootstrap', 'a2.srv.citizen-scientist-admin', 'angularFileUpload', 'humane']).config(["$stateProvider", "$urlRouterProvider", function ($stateProvider, $urlRouterProvider) {
-  $stateProvider.state('citizen-scientist.my-stats', {
-    url: '/my-stats',
-    controller: 'A2CitizenScientistMyStatsCtrl as controller',
-    templateUrl: '/app/citizen-scientist/my-stats/index.html'
-  });
-}]).controller('A2CitizenScientistMyStatsCtrl', ["$scope", "a2CitizenScientistService", "$stateParams", "$state", "Users", function ($scope, a2CitizenScientistService, $stateParams, $state, Users) {
-  this.loadPage = function () {
-    this.loading = true;
-    a2CitizenScientistService.getMyStats().then(function (data) {
-      this.loading = false;
-      var vars = ['validated', 'consensus', 'non_consensus', 'pending', 'reached_th'];
-      this.stats = data.stats.map(function (item, index) {
-        vars.forEach(function (_var) {
-          item['group_' + _var] = data.groupStats[index][_var];
-        });
-        return item;
-      });
-      this.overall = data.stats.reduce(function (_, item) {
-        vars.forEach(function (_var) {
-          _[_var] += item[_var];
-          _['group_' + _var] += item['group_' + _var];
-        });
-        return _;
-      }, vars.reduce(function (__, _var) {
-        __[_var] = 0;
-        __['group_' + _var] = 0;
-        return __;
-      }, {})); // compute overalls
-    }.bind(this));
-  };
-
-  this.loadPage();
-}]);
-angular.module('a2.citizen-scientist.expert', ['ui.bootstrap', 'a2.srv.patternmatching', 'a2.srv.citizen-scientist', 'a2.srv.citizen-scientist-expert', 'a2.visualizer.audio-player', 'a2.services', 'a2.permissions', 'humane', 'c3-charts']).config(["$stateProvider", "$urlRouterProvider", function ($stateProvider, $urlRouterProvider) {
-  $stateProvider.state('citizen-scientist.expert', {
-    url: '/expert/:patternMatchingId?',
-    controller: 'CitizenScientistExpertCtrl',
-    templateUrl: '/app/citizen-scientist/expert/list.html'
-  });
-}]).controller('CitizenScientistExpertCtrl', ["$scope", "$filter", "Project", "ngTableParams", "a2Playlists", "notify", "$q", "a2CitizenScientistService", "a2CitizenScientistExpertService", "a2PatternMatching", "a2UserPermit", "$state", "$stateParams", function ($scope, $filter, Project, ngTableParams, a2Playlists, notify, $q, a2CitizenScientistService, a2CitizenScientistExpertService, a2PatternMatching, a2UserPermit, $state, $stateParams) {
-  $scope.selectedPatternMatchingId = $stateParams.patternMatchingId;
-
-  var initTable = function (p, c, s, f, t) {
-    var sortBy = {};
-    var acsDesc = 'desc';
-
-    if (s[0] == '+') {
-      acsDesc = 'asc';
-    }
-
-    sortBy[s.substring(1)] = acsDesc;
-    var tableConfig = {
-      page: p,
-      count: c,
-      sorting: sortBy,
-      filter: f
-    };
-    $scope.tableParams = new ngTableParams(tableConfig, {
-      total: t,
-      getData: function ($defer, params) {
-        $scope.infopanedata = "";
-        var filteredData = params.filter() ? $filter('filter')($scope.patternmatchingsOriginal, params.filter()) : $scope.patternmatchingsOriginal;
-        var orderedData = params.sorting() ? $filter('orderBy')(filteredData, params.orderBy()) : $scope.patternmatchingsOriginal;
-        params.total(orderedData.length);
-        $defer.resolve(orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count()));
-
-        if (orderedData.length < 1) {
-          $scope.infopanedata = "No Pattern matchings searches found.";
-        }
-
-        $scope.patternmatchingsData = orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count());
-      }
-    });
-  };
-
-  $scope.getTemplateVisualizerUrl = function (template) {
-    var box = ['box', template.x1, template.y1, template.x2, template.y2].join(',');
-    return template ? "/project/" + template.source_project_uri + "/visualizer/rec/" + template.recording + "?a=" + box : '';
-  }, $scope.selectItem = function (patternmatchingId) {
-    $state.go('citizen-scientist.expert', {
-      patternMatchingId: patternmatchingId ? patternmatchingId : undefined
-    });
-  };
-
-  $scope.loadPatternMatchings = function () {
-    $scope.loading = true;
-    $scope.infoInfo = "Loading...";
-    $scope.showInfo = true;
-    return a2CitizenScientistExpertService.getPatternMatchings().then(function (data) {
-      $scope.patternmatchingsOriginal = data;
-      $scope.patternmatchingsData = data;
-      $scope.infoInfo = "";
-      $scope.showInfo = false;
-      $scope.loading = false;
-      $scope.infopanedata = "";
-
-      if (data.length > 0) {
-        if (!$scope.tableParams) {
-          initTable(1, 10, "+cname", {}, data.length);
-        } else {
-          $scope.tableParams.reload();
-        }
-      } else {
-        $scope.infopanedata = "No pattern matchings found.";
-      }
-    });
-  };
-
-  if (!$scope.selectedPatternMatchingId) {
-    $scope.loadPatternMatchings();
-  }
-}]).directive('a2CitizenScientistExpertDetails', function () {
-  return {
-    restrict: 'E',
-    replace: true,
-    scope: {
-      patternMatchingId: '=',
-      onGoBack: '&'
-    },
-    controller: 'CitizenScientistExpertDetailsCtrl',
-    controllerAs: 'controller',
-    templateUrl: '/app/citizen-scientist/expert/details.html'
-  };
-}).filter('pmValidation', function () {
-  return function (validation, cp, cnp) {
-    if (validation == 1) {
-      return 'present';
-    } else if (validation == 0) {
-      return 'not present';
-    } else if (validation === null || validation === undefined) {
-      if (cp > 0 && cnp > 0) {
-        return 'conflicted';
-      } else {
-        return '---';
-      }
-    }
-  };
-}).controller('CitizenScientistExpertDetailsCtrl', ["$scope", "a2PatternMatching", "a2Templates", "a2CitizenScientistExpertService", "a2UserPermit", "Project", "a2AudioBarService", "notify", function ($scope, a2PatternMatching, a2Templates, a2CitizenScientistExpertService, a2UserPermit, Project, a2AudioBarService, notify) {
-  Object.assign(this, {
-    id: null,
-    initialize: function (patternMatchingId) {
-      this.id = patternMatchingId;
-      this.offset = 0;
-      this.limit = 100;
-      this.selected = {
-        roi_index: 0,
-        roi: null,
-        page: 0
-      };
-      this.total = {
-        rois: 0,
-        pages: 0
-      };
-      this.loading = {
-        details: false,
-        rois: false
-      };
-      this.validation = this.lists.validation[2];
-      this.thumbnailClass = this.lists.thumbnails[0].value;
-      this.expertSearch = this.lists.search[0];
-      this.projecturl = Project.getUrl();
-      this.fetchDetails().then(function () {
-        this.loadPage(this.selected.page);
-      }.bind(this));
-    },
-    compositeValidation: function (roi) {
-      var expert_val = roi.expert_validated;
-      var consensus_val = roi.consensus_validated;
-      var cp = roi.cs_val_present;
-      var cnp = roi.cs_val_not_present;
-      return [expert_val, consensus_val, cp > 0 && cnp > 0 ? -1 : null].reduce(function (_, arg) {
-        return _ === null ? arg : _;
-      }, null);
-    },
-    lists: {
-      thumbnails: [{
-        class: 'fa fa-th-large',
-        value: ''
-      }, {
-        class: 'fa fa-th',
-        value: 'is-small'
-      }],
-      search: [{
-        value: 'all',
-        text: 'All',
-        description: 'Show all matched rois.'
-      }, {
-        value: 'consensus',
-        text: 'Consensus',
-        description: 'Show only rois where there is a consensus.'
-      }, {
-        value: 'pending',
-        text: 'Pending',
-        description: 'Show only rois that have not reached a consensus yet.'
-      }, {
-        value: 'conflicted',
-        text: 'Conflicted',
-        description: 'Show only rois where there is a conflict.'
-      }, {
-        value: 'expert',
-        text: 'Expert',
-        description: 'Show only rois that have been decided by an expert.'
-      }],
-      selection: [{
-        value: 'all',
-        text: 'All'
-      }, {
-        value: 'none',
-        text: 'None'
-      }, {
-        value: 'not-validated',
-        text: 'Not Validated'
-      }],
-      validation: [{
-        class: "fa val-1",
-        text: "Present",
-        value: 1
-      }, {
-        class: "fa val-0",
-        text: "Not Present",
-        value: 0
-      }, {
-        class: "fa val-null",
-        text: "Clear",
-        value: null
-      }]
-    },
-    fetchDetails: function () {
-      this.loading.details = true;
-      return a2CitizenScientistExpertService.getPatternMatchingDetailsFor(this.id).then(function (patternMatching) {
-        this.loading.details = false;
-        this.patternMatching = patternMatching;
-        this.setupExportUrl();
-        this.total = {
-          rois: patternMatching.matches,
-          pages: Math.ceil(patternMatching.matches / this.limit)
-        };
-      }.bind(this)).catch(function (err) {
-        this.loading.details = false;
-        return notify.serverError(err);
-      }.bind(this));
-    },
-    onExpertSearchChanged: function () {
-      this.selected.page = 0;
-      this.loadPage(0);
-    },
-    setupExportUrl: function () {
-      this.patternMatchingExportUrl = a2CitizenScientistExpertService.getCSExportUrl({
-        patternMatching: this.patternMatching.id
-      });
-    },
-    onScroll: function ($event, $controller) {
-      this.scrollElement = $controller.scrollElement;
-      var scrollPos = $controller.scrollElement.scrollY;
-      var headerTop = $controller.anchors.header.offset().top;
-      this.headerTop = headerTop | 0;
-      this.scrolledPastHeader = scrollPos >= headerTop;
-    },
-    onSelect: function ($item) {
-      this.select($item.value);
-    },
-    loadPage: function (pageNumber) {
-      this.loading.rois = true;
-      return a2CitizenScientistExpertService.getPatternMatchingRoisFor(this.id, this.limit, pageNumber * this.limit, {
-        search: this.expertSearch && this.expertSearch.value
-      }).then(function (rois) {
-        this.loading.rois = false;
-        this.rois = rois.reduce(function (_, roi) {
-          var sitename = roi.site;
-          var recname = roi.recording;
-
-          if (!_.idx[sitename]) {
-            _.idx[sitename] = {
-              list: [],
-              idx: {},
-              name: sitename
-            };
-
-            _.list.push(_.idx[sitename]);
-          }
-
-          var site = _.idx[sitename];
-          site.list.push(roi);
-          return _;
-        }, {
-          list: [],
-          idx: {}
-        }).list;
-        this.selected.roi = Math.min();
-
-        if (this.scrollElement) {
-          this.scrollElement.scrollTo(0, 0);
-        }
-
-        return rois;
-      }.bind(this)).catch(function (err) {
-        this.loading.rois = false;
-        return notify.serverError(err);
-      }.bind(this));
-    },
-    playRoiAudio: function (roi, $event) {
-      if ($event) {
-        $event.preventDefault();
-        $event.stopPropagation();
-      }
-
-      a2AudioBarService.loadUrl(a2PatternMatching.getAudioUrlFor(roi), true);
-    },
-    playTemplateAudio: function () {
-      a2AudioBarService.loadUrl(a2Templates.getAudioUrlFor(this.patternMatching.template), true);
-    },
-    getRoiVisualizerUrl: function (roi) {
-      var box = ['box', roi.x1, roi.y1, roi.x2, roi.y2].join(',');
-      return roi ? "/project/" + this.projecturl + "/visualizer/rec/" + roi.recording_id + "?a=" + box : '';
-    },
-    getTemplateVisualizerUrl: function (template) {
-      var box = ['box', template.x1, template.y1, template.x2, template.y2].join(',');
-      return template ? "/project/" + template.source_project_uri + "/visualizer/rec/" + template.recording + "?a=" + box : '';
-    },
-    setRoi: function (roi_index) {
-      if (this.total.rois <= 0) {
-        this.selected.roi_index = 0;
-        this.selected.roi = null;
-      } else {
-        this.selected.roi_index = Math.max(0, Math.min(roi_index | 0, this.total.rois - 1));
-        this.selected.roi = this.rois[this.selected.roi_index];
-      }
-
-      return this.selected.roi;
-    },
-    setPage: function (page, force) {
-      if (this.total.rois <= 0) {
-        this.selected.page = 0;
-        this.rois = [];
-        return this.rois;
-      } else {
-        page = Math.max(0, Math.min(page, this.total.rois / this.limit | 0));
-
-        if (page != this.selected.page || force) {
-          this.selected.page = page;
-          return this.loadPage(page);
-        }
-      }
-    },
-    select: function (option) {
-      var selectFn = null;
-
-      if (option === "all") {
-        selectFn = function (roi) {
-          roi.selected = true;
-        };
-      } else if (option === "none") {
-        selectFn = function (roi) {
-          roi.selected = false;
-        };
-      } else if (option === "not-validated") {
-        selectFn = function (roi) {
-          roi.selected = roi.cs_validated === null;
-        };
-      } else {
-        selectFn = function (roi) {
-          roi.selected = roi.id === option;
-        };
-      }
-
-      this.forEachRoi(selectFn);
-    },
-    forEachRoi: function (fn) {
-      (this.rois || []).forEach(function (site) {
-        site.list.forEach(fn);
-      });
-    },
-    validate: function (validation, rois) {
-      if (!a2UserPermit.can('validate pattern matchings')) {
-        notify.error('You do not have permission to validate the matched rois.');
-        return;
-      }
-
-      if (validation === undefined) {
-        validation = (this.validation || {
-          value: null
-        }).value;
-      }
-
-      if (rois === undefined) {
-        rois = [];
-        this.forEachRoi(function (roi) {
-          if (roi.selected) {
-            rois.push(roi);
-          }
-        });
-      }
-
-      var roiIds = rois.map(function (roi) {
-        return roi.id;
-      });
-      var val_delta = {
-        conflict_unresolved: 0,
-        conflict_resolved: 0,
-        null: 0,
-        0: 0,
-        1: 0
-      };
-      return a2CitizenScientistExpertService.validatePatternMatchingRois(this.id, roiIds, validation).then(function () {
-        rois.forEach(function (roi) {
-          var oldtag, newtag;
-
-          if (roi.cs_val_present > 0 && roi.cs_val_not_present > 0) {
-            oldtag = roi.expert_validated !== null ? 'conflict_resolved' : 'conflict_unresolved';
-            newtag = validation !== null ? 'conflict_resolved' : 'conflict_unresolved';
-          }
-
-          val_delta[oldtag] -= 1;
-          val_delta[newtag] += 1;
-          val_delta[roi.expert_validated] -= 1;
-          val_delta[validation] += 1;
-          roi.expert_validated = validation;
-          roi.selected = false;
-        });
-        this.patternMatching.cs_conflict_resolved += val_delta.conflict_resolved;
-        this.patternMatching.cs_conflict_unresolved += val_delta.conflict_unresolved;
-        this.patternMatching.expert_consensus_absent += val_delta[0];
-        this.patternMatching.expert_consensus_present += val_delta[1];
-        this.loadPage(this.selected.page);
-      }.bind(this));
-    },
-    nextMatch: function (step) {
-      return this.setRoi(this.selected.roi_index + (step || 1));
-    },
-    prevMatch: function (step) {
-      return this.setRoi(this.selected.roi_index - (step || 1));
-    },
-    nextPage: function (step) {
-      return this.setPage(this.selected.page + (step || 1));
-    },
-    prevPage: function (step) {
-      return this.setPage(this.selected.page - (step || 1));
-    },
-    next: function (step) {
-      if (!step) {
-        step = 1;
-      }
-
-      this.nextPage(step);
-    },
-    prev: function (step) {
-      if (!step) {
-        step = 1;
-      }
-
-      return this.next(-step);
-    }
-  });
-  this.initialize($scope.patternMatchingId);
-}]);
-angular.module('a2.citizen-scientist.patternmatching', ['ui.bootstrap', 'a2.srv.patternmatching', 'a2.srv.citizen-scientist', 'a2.visualizer.audio-player', 'a2.services', 'a2.permissions', 'humane', 'c3-charts']).config(["$stateProvider", "$urlRouterProvider", function ($stateProvider, $urlRouterProvider) {
-  $stateProvider.state('citizen-scientist.patternmatching', {
-    url: '/patternmatching',
-    controller: 'CitizenScientistPatternMatchingCtrl',
-    templateUrl: '/app/citizen-scientist/patternmatching/list.html'
-  });
-  $stateProvider.state('citizen-scientist.patternmatching-details', {
-    url: '/patternmatching/:patternMatchingId?',
-    controller: 'CitizenScientistPatternMatchingCtrl',
-    templateUrl: '/app/citizen-scientist/patternmatching/list.html'
-  });
-}]).controller('CitizenScientistPatternMatchingCtrl', ["$scope", "$filter", "Project", "ngTableParams", "a2Playlists", "notify", "$q", "a2CitizenScientistService", "a2PatternMatching", "a2UserPermit", "$state", "$stateParams", function ($scope, $filter, Project, ngTableParams, a2Playlists, notify, $q, a2CitizenScientistService, a2PatternMatching, a2UserPermit, $state, $stateParams) {
-  $scope.selectedPatternMatchingId = $stateParams.patternMatchingId;
-
-  var initTable = function (p, c, s, f, t) {
-    var sortBy = {};
-    var acsDesc = 'desc';
-
-    if (s[0] == '+') {
-      acsDesc = 'asc';
-    }
-
-    sortBy[s.substring(1)] = acsDesc;
-    var tableConfig = {
-      page: p,
-      count: c,
-      sorting: sortBy,
-      filter: f
-    };
-    $scope.tableParams = new ngTableParams(tableConfig, {
-      total: t,
-      getData: function ($defer, params) {
-        $scope.infopanedata = "";
-        var filteredData = params.filter() ? $filter('filter')($scope.patternmatchingsOriginal, params.filter()) : $scope.patternmatchingsOriginal;
-        var orderedData = params.sorting() ? $filter('orderBy')(filteredData, params.orderBy()) : $scope.patternmatchingsOriginal;
-        params.total(orderedData.length);
-        $defer.resolve(orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count()));
-
-        if (orderedData.length < 1) {
-          $scope.infopanedata = "No Pattern matchings searches found.";
-        }
-
-        $scope.patternmatchingsData = orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count());
-      }
-    });
-  };
-
-  $scope.getTemplateVisualizerUrl = function (template) {
-    var box = ['box', template.x1, template.y1, template.x2, template.y2].join(',');
-    return template ? "/project/" + template.source_project_uri + "/visualizer/rec/" + template.recording + "?a=" + box : '';
-  }, $scope.selectItem = function (patternmatchingId) {
-    $scope.selectedPatternMatchingId = patternmatchingId;
-
-    if (!patternmatchingId) {
-      $state.go('citizen-scientist.patternmatching', {});
-    } else {
-      $state.go('citizen-scientist.patternmatching-details', {
-        patternMatchingId: patternmatchingId
-      });
-    }
-  };
-
-  $scope.loadPatternMatchings = function () {
-    $scope.loading = true;
-    $scope.infoInfo = "Loading...";
-    $scope.showInfo = true;
-    return a2CitizenScientistService.getPatternMatchings().then(function (data) {
-      $scope.patternmatchingsOriginal = data;
-      $scope.patternmatchingsData = data;
-      $scope.infoInfo = "";
-      $scope.showInfo = false;
-      $scope.loading = false;
-      $scope.infopanedata = "";
-
-      if (data.length > 0) {
-        if (!$scope.tableParams) {
-          initTable(1, 10, "+cname", {}, data.length);
-        } else {
-          $scope.tableParams.reload();
-        }
-      } else {
-        $scope.infopanedata = "No pattern matchings found.";
-      }
-    });
-  };
-
-  if (!$scope.selectedPatternMatchingId) {
-    $scope.loadPatternMatchings();
-  }
-}]).directive('a2CitizenScientistPatternMatchingDetails', function () {
-  return {
-    restrict: 'E',
-    replace: true,
-    scope: {
-      patternMatchingId: '=',
-      onGoBack: '&'
-    },
-    controller: 'CitizenScientistPatternMatchingDetailsCtrl',
-    controllerAs: 'controller',
-    templateUrl: '/app/citizen-scientist/patternmatching/details.html'
-  };
-}).controller('CitizenScientistPatternMatchingDetailsCtrl', ["$scope", "a2PatternMatching", "a2Templates", "a2CitizenScientistService", "a2UserPermit", "Project", "a2AudioBarService", "notify", function ($scope, a2PatternMatching, a2Templates, a2CitizenScientistService, a2UserPermit, Project, a2AudioBarService, notify) {
-  Object.assign(this, {
-    id: null,
-    initialize: function (patternMatchingId) {
-      this.id = patternMatchingId;
-      this.offset = 0;
-      this.limit = 100;
-      this.selected = {
-        roi_index: 0,
-        roi: null,
-        page: 0
-      };
-      this.total = {
-        rois: 0,
-        pages: 0
-      };
-      this.loading = {
-        details: false,
-        rois: false
-      };
-      this.validation = this.lists.validation[2];
-      this.thumbnailClass = this.lists.thumbnails[0].value;
-      this.projecturl = Project.getUrl();
-      this.fetchDetails().then(function () {
-        this.loadPage(this.selected.page);
-      }.bind(this));
-    },
-    lists: {
-      thumbnails: [{
-        class: 'fa fa-th-large',
-        value: ''
-      }, {
-        class: 'fa fa-th',
-        value: 'is-small'
-      }],
-      selection: [{
-        value: 'all',
-        text: 'All'
-      }, {
-        value: 'none',
-        text: 'None'
-      } // {value:'not-validated', text:'Not Validated'},
-      ],
-      validation: [{
-        class: "fa val-1",
-        text: "Present",
-        value: 1
-      }, {
-        class: "fa val-0",
-        text: "Not Present",
-        value: 0
-      }, {
-        class: "fa val-null",
-        text: "Clear",
-        value: null
-      }]
-    },
-    fetchDetails: function () {
-      this.loading.details = true;
-      return a2CitizenScientistService.getPatternMatchingDetailsFor(this.id).then(function (patternMatching) {
-        this.loading.details = false;
-        this.patternMatching = patternMatching;
-        this.setupExportUrl();
-        this.total = {
-          rois: patternMatching.cs_total,
-          pages: Math.ceil(patternMatching.cs_total / this.limit)
-        };
-      }.bind(this)).catch(function (err) {
-        this.loading.details = false;
-        return notify.serverError(err);
-      }.bind(this));
-    },
-    setupExportUrl: function () {
-      this.patternMatchingExportUrl = a2PatternMatching.getExportUrl({
-        patternMatching: this.patternMatching.id
-      });
-    },
-    onScroll: function ($event, $controller) {
-      this.scrollElement = $controller.scrollElement;
-      var scrollPos = $controller.scrollElement.scrollY;
-      var headerTop = $controller.anchors.header.offset().top;
-      this.headerTop = headerTop | 0;
-      this.scrolledPastHeader = scrollPos >= headerTop;
-    },
-    onSelect: function ($item) {
-      this.select($item.value);
-    },
-    loadPage: function (pageNumber) {
-      this.loading.rois = true;
-      return a2CitizenScientistService.getPatternMatchingRoisFor(this.id, this.limit, pageNumber * this.limit).then(function (rois) {
-        this.loading.rois = false;
-        this.rois = rois.reduce(function (_, roi) {
-          var sitename = roi.site;
-          var recname = roi.recording;
-
-          if (!_.idx[sitename]) {
-            _.idx[sitename] = {
-              list: [],
-              idx: {},
-              name: sitename
-            };
-
-            _.list.push(_.idx[sitename]);
-          }
-
-          var site = _.idx[sitename];
-          site.list.push(roi);
-          return _;
-        }, {
-          list: [],
-          idx: {}
-        }).list;
-        this.selected.roi = Math.min();
-
-        if (this.scrollElement) {
-          this.scrollElement.scrollTo(0, 0);
-        }
-
-        return rois;
-      }.bind(this)).catch(function (err) {
-        this.loading.rois = false;
-        return notify.serverError(err);
-      }.bind(this));
-    },
-    playRoiAudio: function (roi, $event) {
-      if ($event) {
-        $event.preventDefault();
-        $event.stopPropagation();
-      }
-
-      a2AudioBarService.loadUrl(a2PatternMatching.getAudioUrlFor(roi), true);
-    },
-    playTemplateAudio: function () {
-      a2AudioBarService.loadUrl(a2Templates.getAudioUrlFor(this.patternMatching.template), true);
-    },
-    getRoiVisualizerUrl: function (roi) {
-      var box = ['box', roi.x1, roi.y1, roi.x2, roi.y2].join(',');
-      return roi ? "/project/" + this.projecturl + "/visualizer/rec/" + roi.recording_id + "?a=" + box : '';
-    },
-    getTemplateVisualizerUrl: function (template) {
-      var box = ['box', template.x1, template.y1, template.x2, template.y2].join(',');
-      return template ? "/project/" + template.source_project_uri + "/visualizer/rec/" + template.recording + "?a=" + box : '';
-    },
-    setRoi: function (roi_index) {
-      if (this.total.rois <= 0) {
-        this.selected.roi_index = 0;
-        this.selected.roi = null;
-      } else {
-        this.selected.roi_index = Math.max(0, Math.min(roi_index | 0, this.total.rois - 1));
-        this.selected.roi = this.rois[this.selected.roi_index];
-      }
-
-      return this.selected.roi;
-    },
-    setPage: function (page, force) {
-      if (this.total.rois <= 0) {
-        this.selected.page = 0;
-        this.rois = [];
-        return this.rois;
-      } else {
-        page = Math.max(0, Math.min(page, this.total.rois / this.limit | 0));
-
-        if (page != this.selected.page || force) {
-          this.selected.page = page;
-          return this.loadPage(page);
-        }
-      }
-    },
-    select: function (option) {
-      var selectFn = null;
-
-      if (option === "all") {
-        selectFn = function (roi) {
-          roi.selected = true;
-        };
-      } else if (option === "none") {
-        selectFn = function (roi) {
-          roi.selected = false;
-        };
-      } else if (option === "not-validated") {
-        selectFn = function (roi) {
-          roi.selected = roi.cs_validated === null;
-        };
-      } else {
-        selectFn = function (roi) {
-          roi.selected = roi.id === option;
-        };
-      }
-
-      this.forEachRoi(selectFn);
-    },
-    forEachRoi: function (fn) {
-      (this.rois || []).forEach(function (site) {
-        site.list.forEach(fn);
-      });
-    },
-    validate: function (validation, rois) {
-      if (!a2UserPermit.can('use citizen scientist interface')) {
-        notify.error('You do not have permission to validate the matched rois.');
-        return;
-      }
-
-      if (validation === undefined) {
-        validation = (this.validation || {
-          value: null
-        }).value;
-      }
-
-      if (rois === undefined) {
-        rois = [];
-        this.forEachRoi(function (roi) {
-          if (roi.selected) {
-            rois.push(roi);
-          }
-        });
-      }
-
-      var roiIds = rois.map(function (roi) {
-        return roi.id;
-      });
-      var val_delta = {
-        0: 0,
-        1: 0,
-        null: 0
-      };
-      rois.forEach(function (roi) {
-        val_delta[roi.cs_validated] -= 1;
-        val_delta[validation] += 1;
-        roi.cs_validated = validation;
-        roi.selected = false;
-      });
-      this.patternMatching.cs_absent += val_delta[0];
-      this.patternMatching.cs_present += val_delta[1];
-      return a2CitizenScientistService.validatePatternMatchingRois(this.id, roiIds, validation);
-    },
-    nextMatch: function (step) {
-      return this.setRoi(this.selected.roi_index + (step || 1));
-    },
-    prevMatch: function (step) {
-      return this.setRoi(this.selected.roi_index - (step || 1));
-    },
-    nextPage: function (step) {
-      return this.setPage(this.selected.page + (step || 1));
-    },
-    prevPage: function (step) {
-      return this.setPage(this.selected.page - (step || 1));
-    },
-    next: function (step) {
-      if (!step) {
-        step = 1;
-      }
-
-      this.nextPage(step);
-    },
-    prev: function (step) {
-      if (!step) {
-        step = 1;
-      }
-
-      return this.next(-step);
-    }
-  });
-  this.initialize($scope.patternMatchingId);
-}]);
 angular.module('a2.visobjectsbrowser', ['a2.utils', 'a2.browser_common', 'a2.browser_recordings', 'a2.browser_soundscapes', 'a2.service.serialize-promised-fn'])
 /**
  * @ngdoc directive
@@ -19731,506 +19749,6 @@ angular.module('a2.visobjects.soundscape', ['a2.services', 'a2.visobjects.common
   return soundscape;
 }]);
 angular.module('a2.visobjects', ['a2.visobjects.common', 'a2.visobjects.recording', 'a2.visobjects.soundscape', 'a2.visobjects.audio-event-detection']);
-angular.module('a2.analysis.random-forest-models.classification', ['ui.bootstrap', 'a2.services', 'a2.permissions', 'humane', 'c3-charts']).config(["$stateProvider", "$urlRouterProvider", function ($stateProvider, $urlRouterProvider) {
-  $stateProvider.state('analysis.random-forest-models.classification', {
-    url: '/classification',
-    controller: 'ClassificationCtrl',
-    templateUrl: '/app/analysis/random-forest-models/classification/list.html'
-  });
-}]).controller('ClassificationCtrl', ["$scope", "$modal", "$filter", "Project", "ngTableParams", "JobsData", "a2Playlists", "notify", "$location", "a2Classi", "a2UserPermit", function ($scope, $modal, $filter, Project, ngTableParams, JobsData, a2Playlists, notify, $location, a2Classi, a2UserPermit) {
-  var initTable = function (p, c, s, f, t) {
-    var sortBy = {};
-    var acsDesc = 'desc';
-
-    if (s[0] == '+') {
-      acsDesc = 'asc';
-    }
-
-    sortBy[s.substring(1)] = acsDesc;
-    var tableConfig = {
-      page: p,
-      count: c,
-      sorting: sortBy,
-      filter: f
-    };
-    $scope.tableParams = new ngTableParams(tableConfig, {
-      total: t,
-      getData: function ($defer, params) {
-        $scope.infopanedata = "";
-        var filteredData = params.filter() ? $filter('filter')($scope.classificationsOriginal, params.filter()) : $scope.classificationsOriginal;
-        var orderedData = params.sorting() ? $filter('orderBy')(filteredData, params.orderBy()) : $scope.classificationsOriginal;
-        params.total(orderedData.length);
-        $defer.resolve(orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count()));
-
-        if (orderedData.length < 1) {
-          $scope.infopanedata = "No classifications found.";
-        }
-
-        $scope.classificationsData = orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count());
-        a2Classi.saveState({
-          'data': $scope.classificationsOriginal,
-          'filtered': $scope.classificationsData,
-          'f': params.filter(),
-          'o': params.orderBy(),
-          'p': params.page(),
-          'c': params.count(),
-          't': orderedData.length
-        });
-      }
-    });
-  };
-
-  $scope.updateFlags = function () {
-    $scope.successInfo = "";
-    $scope.showSuccess = false;
-    $scope.errorInfo = "";
-    $scope.showError = false;
-    $scope.infoInfo = "";
-    $scope.showInfo = false;
-    $scope.loading = false;
-  };
-
-  $scope.capitalize = function (row) {
-    return row.length ? row[0].toUpperCase() + row.slice(1) : row;
-  };
-
-  $scope.loadClassifications = function () {
-    a2Classi.list(function (data) {
-      $scope.classificationsOriginal = data;
-      data.forEach(function (row) {
-        row.muser = $scope.capitalize(row.firstname) + " " + $scope.capitalize(row.lastname);
-      });
-      $scope.classificationsData = data;
-      $scope.infoInfo = "";
-      $scope.showInfo = false;
-      $scope.loading = false;
-      $scope.infopanedata = "";
-
-      if (data.length > 0) {
-        if (!$scope.tableParams) {
-          initTable(1, 10, "+cname", {}, data.length);
-        } else {
-          $scope.tableParams.reload();
-        }
-      } else {
-        $scope.infopanedata = "No classifications found.";
-      }
-    });
-  };
-
-  $scope.showClassificationDetails = function (classi) {
-    $scope.infoInfo = "Loading...";
-    $scope.showInfo = true;
-    $scope.loading = true;
-    var data = {
-      id: classi.job_id,
-      name: classi.cname,
-      modelId: classi.model_id,
-      playlist: {
-        name: classi.playlist_name,
-        id: classi.playlist_id
-      }
-    };
-    var modalInstance = $modal.open({
-      templateUrl: '/app/analysis/random-forest-models/classification/classinfo.html',
-      controller: 'ClassiDetailsInstanceCtrl',
-      windowClass: 'details-modal-window',
-      backdrop: 'static',
-      resolve: {
-        ClassiInfo: function () {
-          return {
-            data: data,
-            project: $scope.projectData
-          };
-        }
-      }
-    });
-    modalInstance.opened.then(function () {
-      $scope.infoInfo = "";
-      $scope.showInfo = false;
-      $scope.loading = false;
-    });
-  };
-
-  $scope.createNewClassification = function () {
-    if (!a2UserPermit.can('manage models and classification')) {
-      notify.error('You do not have permission to create classifications');
-      return;
-    }
-
-    $scope.loading = true;
-    $scope.infoInfo = "Loading...";
-    $scope.showInfo = true;
-    var modalInstance = $modal.open({
-      templateUrl: '/app/analysis/random-forest-models/classification/createnewclassification.html',
-      controller: 'CreateNewClassificationInstanceCtrl',
-      resolve: {
-        data: ["$q", function ($q) {
-          var d = $q.defer();
-          Project.getModels(function (err, data) {
-            if (err) {
-              console.error(err);
-            }
-
-            d.resolve(data || []);
-          });
-          return d.promise;
-        }],
-        playlists: ["$q", function ($q) {
-          var d = $q.defer();
-          a2Playlists.getList().then(function (data) {
-            d.resolve(data || []);
-          });
-          return d.promise;
-        }],
-        projectData: function () {
-          return $scope.projectData;
-        }
-      }
-    });
-    modalInstance.opened.then(function () {
-      $scope.infoInfo = "";
-      $scope.showInfo = false;
-      $scope.loading = false;
-    });
-    modalInstance.result.then(function (result) {
-      data = result;
-
-      if (data.ok) {
-        JobsData.updateJobs();
-        notify.log("Your new classification is waiting to start processing.<br> Check its status on <b>Jobs</b>.");
-      }
-
-      if (data.error) {
-        notify.error("Error: " + data.error);
-      }
-
-      if (data.url) {
-        $location.path(data.url);
-      }
-    });
-  };
-
-  $scope.deleteClassification = function (id, name) {
-    if (!a2UserPermit.can('manage models and classification')) {
-      notify.error('You do not have permission to delete classifications');
-      return;
-    }
-
-    $scope.infoInfo = "Loading...";
-    $scope.showInfo = true;
-    $scope.loading = true;
-    var modalInstance = $modal.open({
-      templateUrl: '/app/analysis/random-forest-models/classification/deleteclassification.html',
-      controller: 'DeleteClassificationInstanceCtrl',
-      resolve: {
-        name: function () {
-          return name;
-        },
-        id: function () {
-          return id;
-        },
-        projectData: function () {
-          return $scope.projectData;
-        }
-      }
-    });
-    modalInstance.opened.then(function () {
-      $scope.infoInfo = "";
-      $scope.showInfo = false;
-      $scope.loading = false;
-    });
-    modalInstance.result.then(function (ret) {
-      if (ret.err) {
-        notify.error("Error: " + ret.err);
-      } else {
-        var index = -1;
-        var modArr = angular.copy($scope.classificationsOriginal);
-
-        for (var i = 0; i < modArr.length; i++) {
-          if (modArr[i].job_id === id) {
-            index = i;
-            break;
-          }
-        }
-
-        if (index > -1) {
-          $scope.classificationsOriginal.splice(index, 1);
-          $scope.tableParams.reload();
-          notify.log("Classification deleted successfully");
-        }
-      }
-    });
-  };
-
-  $scope.loading = true;
-  $scope.infoInfo = "Loading...";
-  $scope.showInfo = true;
-  Project.getInfo(function (data) {
-    $scope.projectData = data;
-  });
-  var stateData = a2Classi.getState();
-
-  if (stateData === null) {
-    $scope.loadClassifications();
-  } else {
-    if (stateData.data.length > 0) {
-      $scope.classificationsData = stateData.filtered;
-      $scope.classificationsOriginal = stateData.data;
-      initTable(stateData.p, stateData.c, stateData.o[0], stateData.f, stateData.filtered.length);
-    } else {
-      $scope.infopanedata = "No models found.";
-    }
-
-    $scope.infoInfo = "";
-    $scope.showInfo = false;
-    $scope.loading = false;
-  }
-}]).controller('DeleteClassificationInstanceCtrl', ["$scope", "$modalInstance", "a2Classi", "name", "id", "projectData", function ($scope, $modalInstance, a2Classi, name, id, projectData) {
-  $scope.name = name;
-  $scope.id = id;
-  $scope.deletingloader = false;
-  $scope.projectData = projectData;
-  var url = $scope.projectData.url;
-
-  $scope.ok = function () {
-    $scope.deletingloader = true;
-    a2Classi.delete(id, function (data) {
-      $modalInstance.close(data);
-    });
-  };
-
-  $scope.cancel = function () {
-    $modalInstance.dismiss('cancel');
-  };
-}]).controller('ClassiDetailsInstanceCtrl', ["$scope", "$modalInstance", "a2Classi", "a2Models", "notify", "a2UserPermit", "ClassiInfo", function ($scope, $modalInstance, a2Classi, a2Models, notify, a2UserPermit, ClassiInfo) {
-  var loadClassifiedRec = function () {
-    a2Classi.getResultDetails($scope.classiData.id, $scope.currentPage * $scope.maxPerPage, $scope.maxPerPage, function (dataRec) {
-      a2Classi.getRecVector($scope.classiData.id, dataRec[0].recording_id).success(function (data) {
-        var maxVal = Math.max.apply(null, data.vector);
-
-        if (typeof $scope.th === 'number') {
-          $scope.htresDeci = maxVal < $scope.th ? 'no' : 'yes';
-        }
-
-        $scope.recVect = data.vector;
-        $scope.recs = dataRec;
-        $scope.minv = dataRec[0].stats.minv;
-        $scope.maxv = dataRec[0].stats.maxv;
-        $scope.maxvRounded = Math.round($scope.maxv * 1000) / 1000;
-      });
-    });
-  };
-
-  $scope.ok = function () {
-    $modalInstance.close();
-  };
-
-  $scope.next = function () {
-    $scope.currentPage = $scope.currentPage + 1;
-
-    if ($scope.currentPage * $scope.maxPerPage >= $scope.classiData.total) {
-      $scope.currentPage = $scope.currentPage - 1;
-    } else {
-      loadClassifiedRec();
-    }
-  };
-
-  $scope.prev = function () {
-    $scope.currentPage = $scope.currentPage - 1;
-
-    if ($scope.currentPage < 0) {
-      $scope.currentPage = 0;
-    } else {
-      loadClassifiedRec();
-    }
-  };
-
-  $scope.gotoc = function (where) {
-    if (where == 'first') {
-      $scope.currentPage = 0;
-    }
-
-    if (where == 'last') {
-      $scope.currentPage = Math.ceil($scope.classiData.total / $scope.maxPerPage) - 1;
-    }
-
-    loadClassifiedRec();
-  };
-
-  $scope.toggleRecDetails = function () {
-    $scope.showMore = !$scope.showMore;
-
-    if ($scope.showMore && !$scope.recs) {
-      loadClassifiedRec();
-    }
-  };
-
-  $scope.loading = true;
-  $scope.htresDeci = '-';
-  $scope.classiData = ClassiInfo.data;
-  $scope.project = ClassiInfo.project;
-  $scope.showMore = false;
-  $scope.currentPage = 0;
-  $scope.maxPerPage = 1;
-  $scope.csvUrl = "/api/project/" + $scope.project.url + "/classifications/csv/" + $scope.classiData.id;
-  $scope.showDownload = a2UserPermit.can('manage models and classification');
-  console.table($scope.classiData);
-  a2Classi.getDetails($scope.classiData.id, function (data) {
-    if (!data) {
-      $modalInstance.close();
-      notify.log("No details available for this classification");
-      return;
-    }
-
-    angular.extend($scope.classiData, data);
-    $scope.totalRecs = Math.ceil($scope.classiData.total / $scope.maxPerPage);
-    console.log($scope.classiData);
-    $scope.results = [['absent', $scope.classiData.total - $scope.classiData.present], ['present', $scope.classiData.present], ['skipped', $scope.classiData.errCount]];
-    a2Models.findById($scope.classiData.modelId).success(function (modelInfo) {
-      console.log(modelInfo);
-      $scope.model = modelInfo;
-      $scope.loading = false;
-    }).error(function (err) {
-      $scope.loading = false;
-    });
-  });
-}]).controller('CreateNewClassificationInstanceCtrl', ["$scope", "$modalInstance", "a2Classi", "data", "projectData", "playlists", function ($scope, $modalInstance, a2Classi, data, projectData, playlists) {
-  $scope.data = data;
-  $scope.projectData = projectData;
-  $scope.recselected = '';
-  $scope.showselection = false;
-  $scope.playlists = playlists;
-  $scope.nameMsg = '';
-  $scope.datas = {
-    name: '',
-    classifier: '',
-    playlist: ''
-  };
-  $scope.$watch('recselected', function () {
-    if ($scope.recselected === 'selected') {
-      $scope.showselection = true;
-    } else {
-      $scope.showselection = false;
-    }
-  });
-
-  $scope.ok = function () {
-    $scope.nameMsg = '';
-    var url = $scope.projectData.url;
-    $scope.all = 0;
-    $scope.selectedSites = []; // NOTE temporary block disabled model types
-
-    if (!$scope.datas.classifier.enabled) return;
-    var classiData = {
-      n: $scope.datas.name,
-      c: $scope.datas.classifier.model_id,
-      a: $scope.all,
-      s: $scope.selectedSites.join(),
-      p: $scope.datas.playlist
-    };
-    a2Classi.create(classiData, function (data) {
-      if (data.name) {
-        $scope.nameMsg = 'Name exists';
-      } else {
-        $modalInstance.close(data);
-      }
-    });
-  };
-
-  $scope.buttonEnable = function () {
-    /*
-        var flag = false;
-        if ($scope.recselected === 'all')
-            flag = true;
-        else
-        {
-            var numberOfChecked = $('input:checkbox:checked').length;
-            if (numberOfChecked>0)
-            {
-                flag = true;
-            }
-         }
-    */
-    return !(typeof $scope.datas.playlist !== 'string' && $scope.datas.name.length && typeof $scope.datas.classifier !== 'string');
-  };
-
-  $scope.cancel = function (url) {
-    $modalInstance.close({
-      url: url
-    });
-  };
-}]).directive('a2Vectorchart', function () {
-  return {
-    restrict: 'E',
-    scope: {
-      vectorData: '=',
-      minvect: '=',
-      maxvect: '='
-    },
-    templateUrl: '/app/analysis/random-forest-models/classification/vectorchart.html',
-    controller: ["$scope", function ($scope) {
-      $scope.loadingflag = true;
-
-      $scope.drawVector = function () {
-        if (!$scope.vectorData) return;
-        $scope.loadingflag = true;
-        var canvas = $scope.canvas;
-        var vector = $scope.vectorData;
-        var height = 50;
-        var width = $scope.width;
-        var xStep;
-
-        if (width >= vector.length) {
-          canvas.width = width;
-          xStep = width / vector.length;
-        } else {
-          canvas.width = vector.length;
-          xStep = 1;
-        }
-
-        canvas.height = height;
-        ctx = canvas.getContext('2d');
-        ctx.beginPath();
-        var i = 0;
-        ctx.moveTo(i * xStep, height * (1 - (vector[i] - $scope.minvect) / ($scope.maxvect - $scope.minvect)));
-
-        while (i < vector.length) {
-          i++;
-          ctx.lineTo(i * xStep, height * (1 - (vector[i] - $scope.minvect) / ($scope.maxvect - $scope.minvect)));
-        }
-
-        ctx.strokeStyle = '#000';
-        ctx.stroke();
-
-        if ($scope.minvect < -0.09) {
-          //code
-          ctx.beginPath();
-          i = 0;
-          ctx.moveTo(i * xStep, height * (1 - (0 - $scope.minvect) / ($scope.maxvect - $scope.minvect)));
-
-          while (i < vector.length) {
-            i++;
-            ctx.lineTo(i * xStep, height * (1 - (0 - $scope.minvect) / ($scope.maxvect - $scope.minvect)));
-          }
-
-          ctx.strokeStyle = '#aa0000';
-          ctx.stroke();
-        }
-
-        $scope.loadingflag = false;
-      };
-
-      $scope.$watch('vectorData', function () {
-        $scope.drawVector();
-      });
-    }],
-    link: function (scope, element) {
-      scope.canvas = element.children()[0];
-      scope.width = parseInt(element.css('width'));
-    }
-  };
-});
 angular.module('a2.analysis.random-forest-models.models', ['a2.services', 'a2.permissions', 'a2.utils', 'ui.bootstrap', 'ui.select', 'ngSanitize', 'ngTable', 'ngCsv', 'humane']).config(["$stateProvider", "$urlRouterProvider", function ($stateProvider, $urlRouterProvider) {
   $stateProvider.state('analysis.random-forest-models.models', {
     url: '/models',
@@ -20925,6 +20443,506 @@ angular.module('a2.analysis.random-forest-models.models', ['a2.services', 'a2.pe
     $location.path(rurl);
   };
 }]);
+angular.module('a2.analysis.random-forest-models.classification', ['ui.bootstrap', 'a2.services', 'a2.permissions', 'humane', 'c3-charts']).config(["$stateProvider", "$urlRouterProvider", function ($stateProvider, $urlRouterProvider) {
+  $stateProvider.state('analysis.random-forest-models.classification', {
+    url: '/classification',
+    controller: 'ClassificationCtrl',
+    templateUrl: '/app/analysis/random-forest-models/classification/list.html'
+  });
+}]).controller('ClassificationCtrl', ["$scope", "$modal", "$filter", "Project", "ngTableParams", "JobsData", "a2Playlists", "notify", "$location", "a2Classi", "a2UserPermit", function ($scope, $modal, $filter, Project, ngTableParams, JobsData, a2Playlists, notify, $location, a2Classi, a2UserPermit) {
+  var initTable = function (p, c, s, f, t) {
+    var sortBy = {};
+    var acsDesc = 'desc';
+
+    if (s[0] == '+') {
+      acsDesc = 'asc';
+    }
+
+    sortBy[s.substring(1)] = acsDesc;
+    var tableConfig = {
+      page: p,
+      count: c,
+      sorting: sortBy,
+      filter: f
+    };
+    $scope.tableParams = new ngTableParams(tableConfig, {
+      total: t,
+      getData: function ($defer, params) {
+        $scope.infopanedata = "";
+        var filteredData = params.filter() ? $filter('filter')($scope.classificationsOriginal, params.filter()) : $scope.classificationsOriginal;
+        var orderedData = params.sorting() ? $filter('orderBy')(filteredData, params.orderBy()) : $scope.classificationsOriginal;
+        params.total(orderedData.length);
+        $defer.resolve(orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count()));
+
+        if (orderedData.length < 1) {
+          $scope.infopanedata = "No classifications found.";
+        }
+
+        $scope.classificationsData = orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count());
+        a2Classi.saveState({
+          'data': $scope.classificationsOriginal,
+          'filtered': $scope.classificationsData,
+          'f': params.filter(),
+          'o': params.orderBy(),
+          'p': params.page(),
+          'c': params.count(),
+          't': orderedData.length
+        });
+      }
+    });
+  };
+
+  $scope.updateFlags = function () {
+    $scope.successInfo = "";
+    $scope.showSuccess = false;
+    $scope.errorInfo = "";
+    $scope.showError = false;
+    $scope.infoInfo = "";
+    $scope.showInfo = false;
+    $scope.loading = false;
+  };
+
+  $scope.capitalize = function (row) {
+    return row.length ? row[0].toUpperCase() + row.slice(1) : row;
+  };
+
+  $scope.loadClassifications = function () {
+    a2Classi.list(function (data) {
+      $scope.classificationsOriginal = data;
+      data.forEach(function (row) {
+        row.muser = $scope.capitalize(row.firstname) + " " + $scope.capitalize(row.lastname);
+      });
+      $scope.classificationsData = data;
+      $scope.infoInfo = "";
+      $scope.showInfo = false;
+      $scope.loading = false;
+      $scope.infopanedata = "";
+
+      if (data.length > 0) {
+        if (!$scope.tableParams) {
+          initTable(1, 10, "+cname", {}, data.length);
+        } else {
+          $scope.tableParams.reload();
+        }
+      } else {
+        $scope.infopanedata = "No classifications found.";
+      }
+    });
+  };
+
+  $scope.showClassificationDetails = function (classi) {
+    $scope.infoInfo = "Loading...";
+    $scope.showInfo = true;
+    $scope.loading = true;
+    var data = {
+      id: classi.job_id,
+      name: classi.cname,
+      modelId: classi.model_id,
+      playlist: {
+        name: classi.playlist_name,
+        id: classi.playlist_id
+      }
+    };
+    var modalInstance = $modal.open({
+      templateUrl: '/app/analysis/random-forest-models/classification/classinfo.html',
+      controller: 'ClassiDetailsInstanceCtrl',
+      windowClass: 'details-modal-window',
+      backdrop: 'static',
+      resolve: {
+        ClassiInfo: function () {
+          return {
+            data: data,
+            project: $scope.projectData
+          };
+        }
+      }
+    });
+    modalInstance.opened.then(function () {
+      $scope.infoInfo = "";
+      $scope.showInfo = false;
+      $scope.loading = false;
+    });
+  };
+
+  $scope.createNewClassification = function () {
+    if (!a2UserPermit.can('manage models and classification')) {
+      notify.error('You do not have permission to create classifications');
+      return;
+    }
+
+    $scope.loading = true;
+    $scope.infoInfo = "Loading...";
+    $scope.showInfo = true;
+    var modalInstance = $modal.open({
+      templateUrl: '/app/analysis/random-forest-models/classification/createnewclassification.html',
+      controller: 'CreateNewClassificationInstanceCtrl',
+      resolve: {
+        data: ["$q", function ($q) {
+          var d = $q.defer();
+          Project.getModels(function (err, data) {
+            if (err) {
+              console.error(err);
+            }
+
+            d.resolve(data || []);
+          });
+          return d.promise;
+        }],
+        playlists: ["$q", function ($q) {
+          var d = $q.defer();
+          a2Playlists.getList().then(function (data) {
+            d.resolve(data || []);
+          });
+          return d.promise;
+        }],
+        projectData: function () {
+          return $scope.projectData;
+        }
+      }
+    });
+    modalInstance.opened.then(function () {
+      $scope.infoInfo = "";
+      $scope.showInfo = false;
+      $scope.loading = false;
+    });
+    modalInstance.result.then(function (result) {
+      data = result;
+
+      if (data.ok) {
+        JobsData.updateJobs();
+        notify.log("Your new classification is waiting to start processing.<br> Check its status on <b>Jobs</b>.");
+      }
+
+      if (data.error) {
+        notify.error("Error: " + data.error);
+      }
+
+      if (data.url) {
+        $location.path(data.url);
+      }
+    });
+  };
+
+  $scope.deleteClassification = function (id, name) {
+    if (!a2UserPermit.can('manage models and classification')) {
+      notify.error('You do not have permission to delete classifications');
+      return;
+    }
+
+    $scope.infoInfo = "Loading...";
+    $scope.showInfo = true;
+    $scope.loading = true;
+    var modalInstance = $modal.open({
+      templateUrl: '/app/analysis/random-forest-models/classification/deleteclassification.html',
+      controller: 'DeleteClassificationInstanceCtrl',
+      resolve: {
+        name: function () {
+          return name;
+        },
+        id: function () {
+          return id;
+        },
+        projectData: function () {
+          return $scope.projectData;
+        }
+      }
+    });
+    modalInstance.opened.then(function () {
+      $scope.infoInfo = "";
+      $scope.showInfo = false;
+      $scope.loading = false;
+    });
+    modalInstance.result.then(function (ret) {
+      if (ret.err) {
+        notify.error("Error: " + ret.err);
+      } else {
+        var index = -1;
+        var modArr = angular.copy($scope.classificationsOriginal);
+
+        for (var i = 0; i < modArr.length; i++) {
+          if (modArr[i].job_id === id) {
+            index = i;
+            break;
+          }
+        }
+
+        if (index > -1) {
+          $scope.classificationsOriginal.splice(index, 1);
+          $scope.tableParams.reload();
+          notify.log("Classification deleted successfully");
+        }
+      }
+    });
+  };
+
+  $scope.loading = true;
+  $scope.infoInfo = "Loading...";
+  $scope.showInfo = true;
+  Project.getInfo(function (data) {
+    $scope.projectData = data;
+  });
+  var stateData = a2Classi.getState();
+
+  if (stateData === null) {
+    $scope.loadClassifications();
+  } else {
+    if (stateData.data.length > 0) {
+      $scope.classificationsData = stateData.filtered;
+      $scope.classificationsOriginal = stateData.data;
+      initTable(stateData.p, stateData.c, stateData.o[0], stateData.f, stateData.filtered.length);
+    } else {
+      $scope.infopanedata = "No models found.";
+    }
+
+    $scope.infoInfo = "";
+    $scope.showInfo = false;
+    $scope.loading = false;
+  }
+}]).controller('DeleteClassificationInstanceCtrl', ["$scope", "$modalInstance", "a2Classi", "name", "id", "projectData", function ($scope, $modalInstance, a2Classi, name, id, projectData) {
+  $scope.name = name;
+  $scope.id = id;
+  $scope.deletingloader = false;
+  $scope.projectData = projectData;
+  var url = $scope.projectData.url;
+
+  $scope.ok = function () {
+    $scope.deletingloader = true;
+    a2Classi.delete(id, function (data) {
+      $modalInstance.close(data);
+    });
+  };
+
+  $scope.cancel = function () {
+    $modalInstance.dismiss('cancel');
+  };
+}]).controller('ClassiDetailsInstanceCtrl', ["$scope", "$modalInstance", "a2Classi", "a2Models", "notify", "a2UserPermit", "ClassiInfo", function ($scope, $modalInstance, a2Classi, a2Models, notify, a2UserPermit, ClassiInfo) {
+  var loadClassifiedRec = function () {
+    a2Classi.getResultDetails($scope.classiData.id, $scope.currentPage * $scope.maxPerPage, $scope.maxPerPage, function (dataRec) {
+      a2Classi.getRecVector($scope.classiData.id, dataRec[0].recording_id).success(function (data) {
+        var maxVal = Math.max.apply(null, data.vector);
+
+        if (typeof $scope.th === 'number') {
+          $scope.htresDeci = maxVal < $scope.th ? 'no' : 'yes';
+        }
+
+        $scope.recVect = data.vector;
+        $scope.recs = dataRec;
+        $scope.minv = dataRec[0].stats.minv;
+        $scope.maxv = dataRec[0].stats.maxv;
+        $scope.maxvRounded = Math.round($scope.maxv * 1000) / 1000;
+      });
+    });
+  };
+
+  $scope.ok = function () {
+    $modalInstance.close();
+  };
+
+  $scope.next = function () {
+    $scope.currentPage = $scope.currentPage + 1;
+
+    if ($scope.currentPage * $scope.maxPerPage >= $scope.classiData.total) {
+      $scope.currentPage = $scope.currentPage - 1;
+    } else {
+      loadClassifiedRec();
+    }
+  };
+
+  $scope.prev = function () {
+    $scope.currentPage = $scope.currentPage - 1;
+
+    if ($scope.currentPage < 0) {
+      $scope.currentPage = 0;
+    } else {
+      loadClassifiedRec();
+    }
+  };
+
+  $scope.gotoc = function (where) {
+    if (where == 'first') {
+      $scope.currentPage = 0;
+    }
+
+    if (where == 'last') {
+      $scope.currentPage = Math.ceil($scope.classiData.total / $scope.maxPerPage) - 1;
+    }
+
+    loadClassifiedRec();
+  };
+
+  $scope.toggleRecDetails = function () {
+    $scope.showMore = !$scope.showMore;
+
+    if ($scope.showMore && !$scope.recs) {
+      loadClassifiedRec();
+    }
+  };
+
+  $scope.loading = true;
+  $scope.htresDeci = '-';
+  $scope.classiData = ClassiInfo.data;
+  $scope.project = ClassiInfo.project;
+  $scope.showMore = false;
+  $scope.currentPage = 0;
+  $scope.maxPerPage = 1;
+  $scope.csvUrl = "/api/project/" + $scope.project.url + "/classifications/csv/" + $scope.classiData.id;
+  $scope.showDownload = a2UserPermit.can('manage models and classification');
+  console.table($scope.classiData);
+  a2Classi.getDetails($scope.classiData.id, function (data) {
+    if (!data) {
+      $modalInstance.close();
+      notify.log("No details available for this classification");
+      return;
+    }
+
+    angular.extend($scope.classiData, data);
+    $scope.totalRecs = Math.ceil($scope.classiData.total / $scope.maxPerPage);
+    console.log($scope.classiData);
+    $scope.results = [['absent', $scope.classiData.total - $scope.classiData.present], ['present', $scope.classiData.present], ['skipped', $scope.classiData.errCount]];
+    a2Models.findById($scope.classiData.modelId).success(function (modelInfo) {
+      console.log(modelInfo);
+      $scope.model = modelInfo;
+      $scope.loading = false;
+    }).error(function (err) {
+      $scope.loading = false;
+    });
+  });
+}]).controller('CreateNewClassificationInstanceCtrl', ["$scope", "$modalInstance", "a2Classi", "data", "projectData", "playlists", function ($scope, $modalInstance, a2Classi, data, projectData, playlists) {
+  $scope.data = data;
+  $scope.projectData = projectData;
+  $scope.recselected = '';
+  $scope.showselection = false;
+  $scope.playlists = playlists;
+  $scope.nameMsg = '';
+  $scope.datas = {
+    name: '',
+    classifier: '',
+    playlist: ''
+  };
+  $scope.$watch('recselected', function () {
+    if ($scope.recselected === 'selected') {
+      $scope.showselection = true;
+    } else {
+      $scope.showselection = false;
+    }
+  });
+
+  $scope.ok = function () {
+    $scope.nameMsg = '';
+    var url = $scope.projectData.url;
+    $scope.all = 0;
+    $scope.selectedSites = []; // NOTE temporary block disabled model types
+
+    if (!$scope.datas.classifier.enabled) return;
+    var classiData = {
+      n: $scope.datas.name,
+      c: $scope.datas.classifier.model_id,
+      a: $scope.all,
+      s: $scope.selectedSites.join(),
+      p: $scope.datas.playlist
+    };
+    a2Classi.create(classiData, function (data) {
+      if (data.name) {
+        $scope.nameMsg = 'Name exists';
+      } else {
+        $modalInstance.close(data);
+      }
+    });
+  };
+
+  $scope.buttonEnable = function () {
+    /*
+        var flag = false;
+        if ($scope.recselected === 'all')
+            flag = true;
+        else
+        {
+            var numberOfChecked = $('input:checkbox:checked').length;
+            if (numberOfChecked>0)
+            {
+                flag = true;
+            }
+         }
+    */
+    return !(typeof $scope.datas.playlist !== 'string' && $scope.datas.name.length && typeof $scope.datas.classifier !== 'string');
+  };
+
+  $scope.cancel = function (url) {
+    $modalInstance.close({
+      url: url
+    });
+  };
+}]).directive('a2Vectorchart', function () {
+  return {
+    restrict: 'E',
+    scope: {
+      vectorData: '=',
+      minvect: '=',
+      maxvect: '='
+    },
+    templateUrl: '/app/analysis/random-forest-models/classification/vectorchart.html',
+    controller: ["$scope", function ($scope) {
+      $scope.loadingflag = true;
+
+      $scope.drawVector = function () {
+        if (!$scope.vectorData) return;
+        $scope.loadingflag = true;
+        var canvas = $scope.canvas;
+        var vector = $scope.vectorData;
+        var height = 50;
+        var width = $scope.width;
+        var xStep;
+
+        if (width >= vector.length) {
+          canvas.width = width;
+          xStep = width / vector.length;
+        } else {
+          canvas.width = vector.length;
+          xStep = 1;
+        }
+
+        canvas.height = height;
+        ctx = canvas.getContext('2d');
+        ctx.beginPath();
+        var i = 0;
+        ctx.moveTo(i * xStep, height * (1 - (vector[i] - $scope.minvect) / ($scope.maxvect - $scope.minvect)));
+
+        while (i < vector.length) {
+          i++;
+          ctx.lineTo(i * xStep, height * (1 - (vector[i] - $scope.minvect) / ($scope.maxvect - $scope.minvect)));
+        }
+
+        ctx.strokeStyle = '#000';
+        ctx.stroke();
+
+        if ($scope.minvect < -0.09) {
+          //code
+          ctx.beginPath();
+          i = 0;
+          ctx.moveTo(i * xStep, height * (1 - (0 - $scope.minvect) / ($scope.maxvect - $scope.minvect)));
+
+          while (i < vector.length) {
+            i++;
+            ctx.lineTo(i * xStep, height * (1 - (0 - $scope.minvect) / ($scope.maxvect - $scope.minvect)));
+          }
+
+          ctx.strokeStyle = '#aa0000';
+          ctx.stroke();
+        }
+
+        $scope.loadingflag = false;
+      };
+
+      $scope.$watch('vectorData', function () {
+        $scope.drawVector();
+      });
+    }],
+    link: function (scope, element) {
+      scope.canvas = element.children()[0];
+      scope.width = parseInt(element.css('width'));
+    }
+  };
+});
 angular.module('a2.citizen-scientist.admin.classification-stats', ['a2.services', 'a2.directives', 'ui.bootstrap', 'a2.srv.citizen-scientist-admin', 'angularFileUpload', 'humane']).config(["$stateProvider", "$urlRouterProvider", function ($stateProvider, $urlRouterProvider) {
   $stateProvider.state('citizen-scientist.admin.classification-stats', {
     url: '/classification-stats/:speciesId?',
@@ -21486,6 +21504,29 @@ angular.module('a2.visualizer.layers.base-image-layer', []).config(["layer_types
     visible: true
   });
 }]);
+angular.module('a2.visualizer.layers.data-plot-layer', ['a2.directive.plotly-plotter', 'arbimon2.directive.a2-dropdown']).config(["layer_typesProvider", function (layer_typesProvider) {
+  /**
+   * @ngdoc object
+   * @name a2.visualizer.layers.data-plot-layer.object:data-plot-layer
+   * @description base image layer. 
+   * adds the data-plot-layer layer_type to layer_types. This layer shows a set of plots
+   * related to the visobject.
+   * The layer only has a spectrogram component.
+   * The layer requires a visobject of type audio-event-detection.
+   * The layer has no visibility button.
+   */
+  layer_typesProvider.addLayerType({
+    type: "data-plot-layer",
+    title: "",
+    controller: 'a2VisualizerDataPlotLayerController as controller',
+    require: {
+      type: ['audio-event-detection'],
+      selection: true
+    },
+    visible: true,
+    hide_visibility: true
+  });
+}]).controller('a2VisualizerDataPlotLayerController', ["$scope", function ($scope) {}]);
 angular.module('a2.visualizer.layers.recording-soundscape-region-tags', []).config(["layer_typesProvider", function (layer_typesProvider) {
   /**
    * @ngdoc object
@@ -21567,30 +21608,6 @@ angular.module('a2.visualizer.layers.recording-soundscape-region-tags', []).conf
     }
   });
 }]);
-angular.module('a2.visualizer.layers.data-plot-layer', ['a2.directive.plotly-plotter', 'arbimon2.directive.a2-dropdown']).config(["layer_typesProvider", function (layer_typesProvider) {
-  /**
-   * @ngdoc object
-   * @name a2.visualizer.layers.data-plot-layer.object:data-plot-layer
-   * @description base image layer. 
-   * adds the data-plot-layer layer_type to layer_types. This layer shows a set of plots
-   * related to the visobject.
-   * The layer only has a spectrogram component.
-   * The layer requires a visobject of type audio-event-detection.
-   * The layer has no visibility button.
-   */
-  layer_typesProvider.addLayerType({
-    type: "data-plot-layer",
-    title: "",
-    controller: 'a2VisualizerDataPlotLayerController as controller',
-    require: {
-      type: ['audio-event-detection'],
-      selection: true
-    },
-    visible: true,
-    hide_visibility: true
-  });
-}]).controller('a2VisualizerDataPlotLayerController', ["$scope", function ($scope) {}]);
-angular.module('a2.visualizer.layers.soundscapes', ['a2.visualizer.layers.soundscapes.info', 'a2.visualizer.layers.soundscapes.regions']);
 angular.module('a2.visualizer.layers.recordings', ['a2.filter.round', 'a2.directive.frequency_filter_range_control']).config(["layer_typesProvider", function (layer_typesProvider) {
   /**
    * @ngdoc object
@@ -21669,6 +21686,7 @@ angular.module('a2.visualizer.layers.recordings', ['a2.filter.round', 'a2.direct
     $modalInstance.close($scope.filter);
   };
 }]);
+angular.module('a2.visualizer.layers.soundscapes', ['a2.visualizer.layers.soundscapes.info', 'a2.visualizer.layers.soundscapes.regions']);
 angular.module('a2.visualizer.layers.species-presence', []).config(["layer_typesProvider", function (layer_typesProvider) {
   /**
    * @ngdoc object
@@ -22041,6 +22059,378 @@ angular.module('a2.visualizer.layers.zoom-input-layer', []).config(["layer_types
     },
     visible: true
   });
+}]);
+angular.module('a2.browser_recordings_by_playlist', ['a2.classy', 'a2.browser_common']).config(["BrowserLOVOsProvider", function (BrowserLOVOsProvider) {
+  BrowserLOVOsProvider.add({
+    name: 'playlist',
+    group: 'recordings',
+    vobject_type: 'recording',
+    icon: 'fa fa-list',
+    tooltip: "Browse Recordings by Playlist",
+    controller: 'a2BrowserRecordingsByPlaylistController',
+    template: '/app/visualizer/browser/recordings/by-playlist/recordings-by-playlist.html'
+  });
+}]).service('a2PlaylistLOVO', ["$q", "makeClass", "a2Playlists", "a2Pager", "$state", "$localStorage", "Project", function ($q, makeClass, a2Playlists, a2Pager, $state, $localStorage, Project) {
+  return makeClass({
+    static: {
+      PageSize: 10,
+      BlockSize: 7
+    },
+    constructor: function (playlist) {
+      this.loading = false;
+      this.playlist = playlist;
+      this.object_type = "recording";
+      this.offset = 0;
+      this.count = 0;
+      this.list = [];
+      this.whole_list = [];
+      var self = this;
+      this.paging = new a2Pager({
+        item_count: playlist.count,
+        page_size: this.constructor.PageSize,
+        block_size: this.constructor.BlockSize,
+        block_tracks_page: true,
+        on_page: function (e) {
+          return self.load_page(e.offset, e.count);
+        }
+      });
+    },
+    initialize: function () {
+      var self = this,
+          d = $q.defer();
+
+      if (this.initialized) {
+        d.resolve(true);
+      } else {
+        this.paging.set_page(0).then(function () {
+          d.resolve(false);
+        });
+      }
+
+      if (self.playlist && self.playlist.id === 0) {
+        d.resolve(true);
+        return d.promise;
+      }
+
+      ;
+      return d.promise.then(function () {
+        a2Playlists.getInfo(self.playlist.id, function (playlist_info) {
+          self.playlist = playlist_info;
+        });
+      }).then(function () {
+        if (self.whole_list) {
+          self.whole_list.forEach(self.append_extras.bind(self));
+        }
+      });
+    },
+    load_page: function (offset, count) {
+      var self = this,
+          d = $q.defer();
+      var opts = {
+        offset: offset,
+        limit: count,
+        show: 'thumbnail-path'
+      }; // get recordings data for temporary clusters playlist
+
+      if ($state.params.clusters) {
+        var clustersData = JSON.parse($localStorage.getItem('analysis.clusters'));
+
+        if (clustersData && clustersData.playlist && clustersData.playlist.recordings) {
+          opts.recordings = clustersData.playlist.recordings.filter(function (id, i, a) {
+            return i >= opts.offset && i < opts.offset + opts.limit;
+          });
+          self.count = clustersData.playlist.recordings.length;
+        }
+      }
+
+      ;
+      self.loading = true;
+      a2Playlists.getData(self.playlist.id, opts, function (recordings) {
+        self.list = recordings;
+        recordings.forEach(function (recording) {
+          recording.caption = [recording.site, moment.utc(recording.datetime).format('lll')].join(', ');
+          recording.vaxis = {
+            font: '7px',
+            color: '#333333',
+            range: [0, recording.sample_rate / 2000],
+            count: 5,
+            unit: ''
+          };
+          self.append_extras(recording);
+        });
+        self.loading = false;
+        d.resolve(recordings);
+      });
+      return d.promise;
+    },
+    append_extras: function (recording) {
+      if (recording) {
+        recording.extra = {
+          playlist: this.playlist
+        };
+      }
+
+      return recording;
+    },
+    find_local: function (recording) {
+      var self = this;
+      var id = recording && recording.id || recording | 0; // console.log(":: find : ", id);
+
+      return $q.resolve(this.append_extras(this.list && this.list.filter(function (r) {
+        // if(r.id == id){
+        // console.log("     :: found", r.id, r);
+        // }
+        return r.id == id;
+      }).shift()));
+    },
+    find: function (recording) {
+      var self = this;
+      var d = $q.defer();
+      var id = recording && recording.id || recording | 0;
+      self.find_local(recording).then(function (found_rec) {
+        if (found_rec) {
+          d.resolve(found_rec);
+        } else {
+          a2Playlists.getRecordingPosition(self.playlist.id, id).then(function (response) {
+            return self.paging.set_page(self.paging.page_for(response.data));
+          }).then(function (recordings) {
+            return self.find_local(recording);
+          }).then(function (found_rec) {
+            d.resolve(found_rec);
+          });
+        }
+      });
+      return d.promise;
+    },
+    previous: function (recording) {
+      var self = this;
+      var d = $q.defer(),
+          id = recording && recording.id || recording | 0;
+      a2Playlists.getPreviousRecording(this.playlist.id, id, function (r) {
+        d.resolve(self.append_extras(r));
+      });
+      return d.promise;
+    },
+    next: function (recording) {
+      var self = this;
+      var d = $q.defer(),
+          id = recording && recording.id || recording | 0;
+      a2Playlists.getNextRecording(this.playlist.id, id, function (r) {
+        d.resolve(self.append_extras(r));
+      });
+      return d.promise;
+    }
+  });
+}]).factory('a2Pager', ["makeClass", function (makeClass) {
+  return makeClass({
+    constructor: function (options) {
+      this.block_size = 10;
+      this.last_page = 0;
+      this.set_options(options);
+    },
+    resolve_value: function (value, current, first, last) {
+      switch (value) {
+        case 'first':
+          value = first;
+          break;
+
+        case 'previous':
+          value = current - 1;
+          break;
+
+        case 'next':
+          value = current + 1;
+          break;
+
+        case 'last':
+          value = last;
+          break;
+      }
+
+      return Math.max(first, Math.min(+value, last));
+    },
+    set_options: function (options) {
+      if (options.item_count) {
+        this.item_count = options.item_count;
+      }
+
+      if (options.page_size) {
+        this.page_size = options.page_size;
+      }
+
+      if (options.block_size) {
+        this.block_size = options.block_size;
+      }
+
+      if (options.last_page) {
+        this.last_page = options.last_page;
+      }
+
+      if (options.block_tracks_page !== undefined) {
+        this.block_tracks_page = !!options.block_tracks_page;
+      }
+
+      if (options.on_page !== undefined) {
+        this.on_page = options.on_page;
+      }
+
+      this.update();
+    },
+    page_for: function (item) {
+      var page = item / this.page_size | 0;
+      console.log("page_for(%s) :: %s", item, page);
+      return page;
+    },
+    set_page: function (page) {
+      this.current_page = this.resolve_value(page, this.current_page, 0, this.last_page) | 0;
+      this.is_at_first_page = this.current_page === 0;
+      this.is_at_last_page = this.current_page === this.last_page;
+
+      if (this.block_tracks_page) {
+        this.show_block((this.current_page - this.block_size / 2 + this.block_size % 2) / this.block_size);
+      } else {
+        this.show_block(this.current_page / this.block_size);
+      }
+
+      if (this.on_page instanceof Function) {
+        var offset = this.current_page * this.page_size;
+        return this.on_page({
+          page: this.current_page,
+          offset: offset,
+          count: Math.min(this.page_size, this.item_count - offset + 1)
+        });
+      }
+    },
+    update: function () {
+      this.is_at_first_page = this.current_page <= 0;
+      this.last_page = (this.item_count - 1) / this.page_size | 0;
+      this.last_page_block = this.last_page / this.block_size | 0;
+      this.is_at_last_page = this.current_page >= this.last_page;
+      this.show_block(this.block);
+    },
+    show_block: function (block) {
+      if (this.block_tracks_page) {
+        this.current_page_block = this.resolve_value(block, this.current_page_block, 0, this.last_page_block);
+      } else {
+        this.current_page_block = this.resolve_value(block, this.current_page_block, 0, this.last_page_block) | 0;
+      }
+
+      this.is_at_first_page_block = this.current_page_block <= 0;
+      this.is_at_last_page_block = this.current_page_block >= this.last_page_block;
+      this.current_page_block_first_page = this.current_page_block * this.block_size | 0;
+      this.current_page_block_last_page = Math.min((this.current_page_block + 1) * this.block_size - 1 | 0, this.last_page);
+      this.block = [];
+
+      for (var i = this.current_page_block_first_page, e = this.current_page_block_last_page; i <= e; ++i) {
+        this.block.push(i);
+      }
+    },
+    has_page: function (page) {
+      return 0 <= page && page <= this.last_page;
+    }
+  });
+}]).controller('a2BrowserRecordingsByPlaylistController', ["$scope", "a2Browser", "a2Playlists", "$q", "a2PlaylistLOVO", "$state", "$localStorage", function ($scope, a2Browser, a2Playlists, $q, a2PlaylistLOVO, $state, $localStorage) {
+  var self = this;
+  this.playlists = [];
+  this.active = false;
+  this.loading = {
+    playlists: false
+  };
+  this.playlist = null;
+  this.lovo = null;
+  this.auto = {};
+
+  this.activate = function () {
+    self.loading.playlists = true;
+    this.getPlaylists = a2Playlists.getList().then(function (playlists) {
+      // add temporary clusters playlist to playlists' array
+      if ($state.params.clusters) {
+        var clustersData = JSON.parse($localStorage.getItem('analysis.clusters'));
+
+        if (clustersData && clustersData.playlist) {
+          playlists.push(clustersData.playlist);
+        }
+      }
+
+      self.playlists = playlists;
+      self.loading.playlists = false;
+    }).then(function () {
+      self.active = true;
+
+      if (self.resolve.pld) {
+        self.resolve.pld.resolve(playlists);
+        delete self.resolve.pld;
+      }
+    }).then(function () {
+      return self.playlists;
+    });
+    return this.getPlaylists;
+  };
+
+  this.deactivate = function () {
+    self.active = false;
+  };
+
+  this.resolve = {};
+
+  this.resolve_link = function (link) {
+    if (link.location) {
+      a2Browser.set_location(link.location);
+    }
+  };
+
+  this.resolve_location = function (location) {
+    var m = /(\d+)(\/(\d+))?/.exec(location);
+    return m ? $q.resolve().then(function () {
+      var plid = m[1] | 0,
+          recid = m[3] | 0;
+      return self.getPlaylists.then(function (playlists) {
+        var playlist = self.playlists.filter(function (playlist) {
+          return playlist.id == plid;
+        }).shift();
+
+        if (playlist) {
+          self.playlist = playlist;
+          self.lovo = new a2PlaylistLOVO(playlist);
+          return self.lovo.initialize().then(function () {
+            return a2Browser.setLOVO(self.lovo);
+          }).then(function () {
+            return self.lovo.find(recid);
+          }).then(function (recording) {
+            return recording;
+          });
+        }
+      });
+    }) : $q.resolve();
+  };
+
+  this.get_location = function (recording) {
+    return 'playlist/' + (this.lovo ? this.lovo.playlist.id + (recording ? "/" + recording.id : '') : '');
+  };
+
+  this.set_playlist = function (playlist) {
+    this.playlist = playlist;
+
+    if (!self.active) {
+      return;
+    }
+
+    if (self.lovo && self.lovo.playlist.id != playlist.id) {
+      $scope.removeFromLocalStorage();
+    }
+
+    if (playlist && (self.lovo ? self.lovo.playlist != playlist : true)) {
+      self.lovo = new a2PlaylistLOVO(playlist);
+    }
+
+    a2Browser.setLOVO(self.lovo, self.lovo ? "playlist/" + self.lovo.playlist.id : '');
+  };
+
+  $scope.removeFromLocalStorage = function () {
+    $localStorage.setItem('analysis.clusters', null);
+    $localStorage.setItem('analysis.clusters.playlist', null);
+    $state.params.clusters = '';
+  };
 }]);
 angular.module('a2.browser_recordings_by_site', ['a2.browser_common']).config(["BrowserLOVOsProvider", function (BrowserLOVOsProvider) {
   BrowserLOVOsProvider.add({
@@ -22465,598 +22855,6 @@ angular.module('a2.browser_recordings_by_site', ['a2.browser_common']).config(["
     }
   };
 }]);
-angular.module('a2.browser_recordings_by_playlist', ['a2.classy', 'a2.browser_common']).config(["BrowserLOVOsProvider", function (BrowserLOVOsProvider) {
-  BrowserLOVOsProvider.add({
-    name: 'playlist',
-    group: 'recordings',
-    vobject_type: 'recording',
-    icon: 'fa fa-list',
-    tooltip: "Browse Recordings by Playlist",
-    controller: 'a2BrowserRecordingsByPlaylistController',
-    template: '/app/visualizer/browser/recordings/by-playlist/recordings-by-playlist.html'
-  });
-}]).service('a2PlaylistLOVO', ["$q", "makeClass", "a2Playlists", "a2Pager", "$state", "$localStorage", "Project", function ($q, makeClass, a2Playlists, a2Pager, $state, $localStorage, Project) {
-  return makeClass({
-    static: {
-      PageSize: 10,
-      BlockSize: 7
-    },
-    constructor: function (playlist) {
-      this.loading = false;
-      this.playlist = playlist;
-      this.object_type = "recording";
-      this.offset = 0;
-      this.count = 0;
-      this.list = [];
-      this.whole_list = [];
-      var self = this;
-      this.paging = new a2Pager({
-        item_count: playlist.count,
-        page_size: this.constructor.PageSize,
-        block_size: this.constructor.BlockSize,
-        block_tracks_page: true,
-        on_page: function (e) {
-          return self.load_page(e.offset, e.count);
-        }
-      });
-    },
-    initialize: function () {
-      var self = this,
-          d = $q.defer();
-
-      if (this.initialized) {
-        d.resolve(true);
-      } else {
-        this.paging.set_page(0).then(function () {
-          d.resolve(false);
-        });
-      }
-
-      if (self.playlist && self.playlist.id === 0) {
-        d.resolve(true);
-        return d.promise;
-      }
-
-      ;
-      return d.promise.then(function () {
-        a2Playlists.getInfo(self.playlist.id, function (playlist_info) {
-          self.playlist = playlist_info;
-        });
-      }).then(function () {
-        if (self.whole_list) {
-          self.whole_list.forEach(self.append_extras.bind(self));
-        }
-      });
-    },
-    load_page: function (offset, count) {
-      var self = this,
-          d = $q.defer();
-      var opts = {
-        offset: offset,
-        limit: count,
-        show: 'thumbnail-path'
-      }; // get recordings data for temporary clusters playlist
-
-      if ($state.params.clusters) {
-        var clustersData = JSON.parse($localStorage.getItem('analysis.clusters'));
-
-        if (clustersData && clustersData.playlist && clustersData.playlist.recordings) {
-          opts.recordings = clustersData.playlist.recordings.filter(function (id, i, a) {
-            return i >= opts.offset && i < opts.offset + opts.limit;
-          });
-          self.count = clustersData.playlist.recordings.length;
-        }
-      }
-
-      ;
-      self.loading = true;
-      a2Playlists.getData(self.playlist.id, opts, function (recordings) {
-        self.list = recordings;
-        recordings.forEach(function (recording) {
-          recording.caption = [recording.site, moment.utc(recording.datetime).format('lll')].join(', ');
-          recording.vaxis = {
-            font: '7px',
-            color: '#333333',
-            range: [0, recording.sample_rate / 2000],
-            count: 5,
-            unit: ''
-          };
-          self.append_extras(recording);
-        });
-        self.loading = false;
-        d.resolve(recordings);
-      });
-      return d.promise;
-    },
-    append_extras: function (recording) {
-      if (recording) {
-        recording.extra = {
-          playlist: this.playlist
-        };
-      }
-
-      return recording;
-    },
-    find_local: function (recording) {
-      var self = this;
-      var id = recording && recording.id || recording | 0; // console.log(":: find : ", id);
-
-      return $q.resolve(this.append_extras(this.list && this.list.filter(function (r) {
-        // if(r.id == id){
-        // console.log("     :: found", r.id, r);
-        // }
-        return r.id == id;
-      }).shift()));
-    },
-    find: function (recording) {
-      var self = this;
-      var d = $q.defer();
-      var id = recording && recording.id || recording | 0;
-      self.find_local(recording).then(function (found_rec) {
-        if (found_rec) {
-          d.resolve(found_rec);
-        } else {
-          a2Playlists.getRecordingPosition(self.playlist.id, id).then(function (response) {
-            return self.paging.set_page(self.paging.page_for(response.data));
-          }).then(function (recordings) {
-            return self.find_local(recording);
-          }).then(function (found_rec) {
-            d.resolve(found_rec);
-          });
-        }
-      });
-      return d.promise;
-    },
-    previous: function (recording) {
-      var self = this;
-      var d = $q.defer(),
-          id = recording && recording.id || recording | 0;
-      a2Playlists.getPreviousRecording(this.playlist.id, id, function (r) {
-        d.resolve(self.append_extras(r));
-      });
-      return d.promise;
-    },
-    next: function (recording) {
-      var self = this;
-      var d = $q.defer(),
-          id = recording && recording.id || recording | 0;
-      a2Playlists.getNextRecording(this.playlist.id, id, function (r) {
-        d.resolve(self.append_extras(r));
-      });
-      return d.promise;
-    }
-  });
-}]).factory('a2Pager', ["makeClass", function (makeClass) {
-  return makeClass({
-    constructor: function (options) {
-      this.block_size = 10;
-      this.last_page = 0;
-      this.set_options(options);
-    },
-    resolve_value: function (value, current, first, last) {
-      switch (value) {
-        case 'first':
-          value = first;
-          break;
-
-        case 'previous':
-          value = current - 1;
-          break;
-
-        case 'next':
-          value = current + 1;
-          break;
-
-        case 'last':
-          value = last;
-          break;
-      }
-
-      return Math.max(first, Math.min(+value, last));
-    },
-    set_options: function (options) {
-      if (options.item_count) {
-        this.item_count = options.item_count;
-      }
-
-      if (options.page_size) {
-        this.page_size = options.page_size;
-      }
-
-      if (options.block_size) {
-        this.block_size = options.block_size;
-      }
-
-      if (options.last_page) {
-        this.last_page = options.last_page;
-      }
-
-      if (options.block_tracks_page !== undefined) {
-        this.block_tracks_page = !!options.block_tracks_page;
-      }
-
-      if (options.on_page !== undefined) {
-        this.on_page = options.on_page;
-      }
-
-      this.update();
-    },
-    page_for: function (item) {
-      var page = item / this.page_size | 0;
-      console.log("page_for(%s) :: %s", item, page);
-      return page;
-    },
-    set_page: function (page) {
-      this.current_page = this.resolve_value(page, this.current_page, 0, this.last_page) | 0;
-      this.is_at_first_page = this.current_page === 0;
-      this.is_at_last_page = this.current_page === this.last_page;
-
-      if (this.block_tracks_page) {
-        this.show_block((this.current_page - this.block_size / 2 + this.block_size % 2) / this.block_size);
-      } else {
-        this.show_block(this.current_page / this.block_size);
-      }
-
-      if (this.on_page instanceof Function) {
-        var offset = this.current_page * this.page_size;
-        return this.on_page({
-          page: this.current_page,
-          offset: offset,
-          count: Math.min(this.page_size, this.item_count - offset + 1)
-        });
-      }
-    },
-    update: function () {
-      this.is_at_first_page = this.current_page <= 0;
-      this.last_page = (this.item_count - 1) / this.page_size | 0;
-      this.last_page_block = this.last_page / this.block_size | 0;
-      this.is_at_last_page = this.current_page >= this.last_page;
-      this.show_block(this.block);
-    },
-    show_block: function (block) {
-      if (this.block_tracks_page) {
-        this.current_page_block = this.resolve_value(block, this.current_page_block, 0, this.last_page_block);
-      } else {
-        this.current_page_block = this.resolve_value(block, this.current_page_block, 0, this.last_page_block) | 0;
-      }
-
-      this.is_at_first_page_block = this.current_page_block <= 0;
-      this.is_at_last_page_block = this.current_page_block >= this.last_page_block;
-      this.current_page_block_first_page = this.current_page_block * this.block_size | 0;
-      this.current_page_block_last_page = Math.min((this.current_page_block + 1) * this.block_size - 1 | 0, this.last_page);
-      this.block = [];
-
-      for (var i = this.current_page_block_first_page, e = this.current_page_block_last_page; i <= e; ++i) {
-        this.block.push(i);
-      }
-    },
-    has_page: function (page) {
-      return 0 <= page && page <= this.last_page;
-    }
-  });
-}]).controller('a2BrowserRecordingsByPlaylistController', ["$scope", "a2Browser", "a2Playlists", "$q", "a2PlaylistLOVO", "$state", "$localStorage", function ($scope, a2Browser, a2Playlists, $q, a2PlaylistLOVO, $state, $localStorage) {
-  var self = this;
-  this.playlists = [];
-  this.active = false;
-  this.loading = {
-    playlists: false
-  };
-  this.playlist = null;
-  this.lovo = null;
-  this.auto = {};
-
-  this.activate = function () {
-    self.loading.playlists = true;
-    this.getPlaylists = a2Playlists.getList().then(function (playlists) {
-      // add temporary clusters playlist to playlists' array
-      if ($state.params.clusters) {
-        var clustersData = JSON.parse($localStorage.getItem('analysis.clusters'));
-
-        if (clustersData && clustersData.playlist) {
-          playlists.push(clustersData.playlist);
-        }
-      }
-
-      self.playlists = playlists;
-      self.loading.playlists = false;
-    }).then(function () {
-      self.active = true;
-
-      if (self.resolve.pld) {
-        self.resolve.pld.resolve(playlists);
-        delete self.resolve.pld;
-      }
-    }).then(function () {
-      return self.playlists;
-    });
-    return this.getPlaylists;
-  };
-
-  this.deactivate = function () {
-    self.active = false;
-  };
-
-  this.resolve = {};
-
-  this.resolve_link = function (link) {
-    if (link.location) {
-      a2Browser.set_location(link.location);
-    }
-  };
-
-  this.resolve_location = function (location) {
-    var m = /(\d+)(\/(\d+))?/.exec(location);
-    return m ? $q.resolve().then(function () {
-      var plid = m[1] | 0,
-          recid = m[3] | 0;
-      return self.getPlaylists.then(function (playlists) {
-        var playlist = self.playlists.filter(function (playlist) {
-          return playlist.id == plid;
-        }).shift();
-
-        if (playlist) {
-          self.playlist = playlist;
-          self.lovo = new a2PlaylistLOVO(playlist);
-          return self.lovo.initialize().then(function () {
-            return a2Browser.setLOVO(self.lovo);
-          }).then(function () {
-            return self.lovo.find(recid);
-          }).then(function (recording) {
-            return recording;
-          });
-        }
-      });
-    }) : $q.resolve();
-  };
-
-  this.get_location = function (recording) {
-    return 'playlist/' + (this.lovo ? this.lovo.playlist.id + (recording ? "/" + recording.id : '') : '');
-  };
-
-  this.set_playlist = function (playlist) {
-    this.playlist = playlist;
-
-    if (!self.active) {
-      return;
-    }
-
-    if (self.lovo && self.lovo.playlist.id != playlist.id) {
-      $scope.removeFromLocalStorage();
-    }
-
-    if (playlist && (self.lovo ? self.lovo.playlist != playlist : true)) {
-      self.lovo = new a2PlaylistLOVO(playlist);
-    }
-
-    a2Browser.setLOVO(self.lovo, self.lovo ? "playlist/" + self.lovo.playlist.id : '');
-  };
-
-  $scope.removeFromLocalStorage = function () {
-    $localStorage.setItem('analysis.clusters', null);
-    $localStorage.setItem('analysis.clusters.playlist', null);
-    $state.params.clusters = '';
-  };
-}]);
-angular.module('a2.visualizer.layers.soundscapes.regions', ['visualizer-services', 'a2.utils', 'a2.soundscapeRegionTags']).config(["layer_typesProvider", function (layer_typesProvider) {
-  /**
-   * @ngdoc object
-   * @name a2.visualizer.layers.soundscapes.regions.object:soundscape-regions-layer
-   * @description Soundscape Regions layer. 
-   * adds the soundscape-regions-layer layer_type to layer_types. This layer uses
-   * a2.visualizer.layers.soundscapes.regions.controller:a2VisualizerSoundscapeRegionsLayerController as controller,
-   * and requires a visobject of type soundscape to be selected.
-   * The layer has a visibility button.
-   */
-  layer_typesProvider.addLayerType({
-    type: "soundscape-regions-layer",
-    title: "",
-    controller: 'a2VisualizerSoundscapeRegionsLayerController as soundscape',
-    require: {
-      type: 'soundscape',
-      browsetype: 'soundscape',
-      selection: true
-    },
-    visible: true // hide_visibility : true
-
-  });
-}]).controller('a2VisualizerSoundscapeRegionsLayerController', ["$scope", "$modal", "$location", "a2Soundscapes", "a22PointBBoxEditor", "a2UserPermit", "notify", function ($scope, $modal, $location, a2Soundscapes, a22PointBBoxEditor, a2UserPermit, notify) {
-  var self = this;
-
-  var bbox2string = function (bbox) {
-    var x1 = bbox.x1 | 0;
-    var y1 = bbox.y1 | 0;
-    var x2 = bbox.x2 | 0;
-    var y2 = bbox.y2 | 0;
-    return x1 + ',' + y1 + '-' + x2 + ',' + y2;
-  };
-
-  a2Soundscapes.getAmplitudeReferences().then(function (amplitudeReferences) {
-    this.amplitudeReferences = amplitudeReferences.reduce(function (_, item) {
-      _[item.value] = item;
-      return _;
-    }, {});
-  }.bind(this));
-  this.show = {
-    names: true,
-    tags: true
-  };
-
-  this.view_playlist = function (region) {
-    console.log("this.view_playlist = function(region){", region);
-
-    if (region.playlist) {
-      $scope.set_location("playlist/" + region.playlist);
-    }
-  };
-
-  this.query = function (bbox) {
-    if (!self.selection.valid) {
-      return;
-    }
-
-    a2Soundscapes.getRecordings(self.soundscape, bbox2string(bbox), {
-      count: 1,
-      threshold: 1
-    }, function (data) {
-      bbox.q = data;
-    });
-  };
-
-  this.submit = function (bbox, name) {
-    if (!self.selection.valid) {
-      return;
-    }
-
-    if (!a2UserPermit.can('manage soundscapes')) {
-      notify.error('You do not have permission to annotate soundscapes');
-      return;
-    }
-
-    a2Soundscapes.addRegion(self.soundscape, bbox2string(bbox), {
-      name: name,
-      threshold: 1
-    }, function (data) {
-      self.regions.push(data);
-      self.selection.bbox = data;
-    });
-  };
-
-  this.sample = function (bbox, percent) {
-    if (!bbox.id) {
-      return;
-    }
-
-    $modal.open({
-      templateUrl: '/app/visualizer/layers/soundscapes/regions/sample_soundscape_region_modal.html',
-      controller: 'a2VisualizerSampleSoundscapeRegionModalController',
-      size: 'sm',
-      resolve: {
-        data: function () {
-          return {
-            soundscape: self.soundscape,
-            region: bbox
-          };
-        }
-      }
-    }).result.then(function (region) {
-      if (region && region.id) {
-        self.regions.forEach(function (r, idx) {
-          if (r.id == region.id) {
-            self.regions[idx] = region;
-          }
-        });
-        self.selection.bbox = region;
-      }
-    });
-  };
-
-  this.selection = angular.extend(new a22PointBBoxEditor(), {
-    reset: function () {
-      this.super.reset.call(this);
-      this.percent = 100;
-      return this;
-    },
-    quantize: function (x, y, ceil) {
-      var q = ceil ? Math.ceil : Math.floor;
-      var xi = $scope.visobject.domain.x.unit_interval;
-      var yi = $scope.visobject.domain.y.unit_interval;
-      return [q(x / xi) * xi, q(y / yi) * yi];
-    },
-    add_tracer_point: function (x, y) {
-      this.super.add_tracer_point.apply(this, this.quantize(x, y));
-      return this;
-    },
-    add_point: function (x, y) {
-      this.super.add_point.apply(this, this.quantize(x, y));
-      return this;
-    },
-    validate: function (tmp_points) {
-      this.super.validate.call(this, tmp_points);
-      var q = this.quantize(this.bbox.x2 + 0.1, this.bbox.y2 + 0.1, true);
-      this.bbox.y2 = q[1];
-      this.selbox = {
-        x1: this.bbox.x1,
-        y1: this.bbox.y1,
-        x2: q[0],
-        y2: q[1]
-      };
-    },
-    query: function () {
-      self.query(this.bbox);
-    },
-    submit: function () {
-      self.submit(this.bbox, this.bbox.name);
-    },
-    sample: function () {
-      self.sample(this.bbox, this.percent);
-    },
-    view_samples: function () {
-      self.view_playlist(this.bbox);
-    },
-    select: function (region) {
-      this.bbox = region;
-
-      if ($scope.visobject && $scope.visobject.id && region && region.id) {
-        $scope.set_location('soundscape/' + $scope.visobject.id + '/' + region.id, true);
-      }
-    }
-  });
-  $scope.$watch('visobject', function (visobject) {
-    var sc = visobject && visobject.type == 'soundscape' && visobject.id;
-
-    if (sc) {
-      self.soundscape = sc;
-      self.selection.reset();
-      a2Soundscapes.getRegions(sc, {
-        view: 'tags'
-      }, function (regions) {
-        self.regions = regions;
-
-        if (visobject.extra && visobject.extra.region) {
-          self.selection.bbox = self.regions.filter(function (r) {
-            return r.id == visobject.extra.region;
-          }).pop();
-        }
-      });
-    } else {
-      self.soundscape = 0;
-    }
-  });
-}]).controller('a2VisualizerSampleSoundscapeRegionModalController', ["$scope", "$modalInstance", "a2Soundscapes", "data", function ($scope, $modalInstance, a2Soundscapes, data) {
-  $scope.soundscape = data.soundscape;
-  $scope.region = data.region;
-  $scope.data = {
-    percent: 100
-  };
-
-  $scope.ok = function () {
-    $scope.validation = {
-      count: 0
-    };
-    var sdata = $scope.data,
-        sval = $scope.validation;
-    var vdata = {};
-    var tst;
-
-    if (sdata.percent > 100) {
-      sval.percent = "Percent must be between 0% and 100%.";
-      sval.count++;
-    } else if ((sdata.percent * $scope.region.count | 0) < 1) {
-      sval.percent = "You must sample at least 1 recording.";
-      sval.count++;
-    } else {
-      vdata.percent = sdata.percent;
-    }
-
-    $scope.form_data = vdata;
-
-    if (sval.count === 0) {
-      a2Soundscapes.sampleRegion($scope.soundscape, $scope.region.id, vdata, function (region) {
-        $modalInstance.close(region);
-      });
-    }
-  };
-}]);
 angular.module('a2.visualizer.layers.soundscapes.info', ['visualizer-services', 'a2.utils', 'a2.soundscapeRegionTags', 'a2.url-update-service', 'a2.directives', 'a2.directive.a2-palette-drawer', 'a2.service.colorscale-gradients']).config(["layer_typesProvider", function (layer_typesProvider) {
   /**
    * @ngdoc object
@@ -23278,6 +23076,226 @@ angular.module('a2.visualizer.layers.soundscapes.info', ['visualizer-services', 
       $scope.$watch('amplitudeThreshold()', draw);
       $scope.$watch('amplitudeThresholdType()', draw);
       $scope.$watch('visualMax()', draw);
+    }
+  };
+}]);
+angular.module('a2.visualizer.layers.soundscapes.regions', ['visualizer-services', 'a2.utils', 'a2.soundscapeRegionTags']).config(["layer_typesProvider", function (layer_typesProvider) {
+  /**
+   * @ngdoc object
+   * @name a2.visualizer.layers.soundscapes.regions.object:soundscape-regions-layer
+   * @description Soundscape Regions layer. 
+   * adds the soundscape-regions-layer layer_type to layer_types. This layer uses
+   * a2.visualizer.layers.soundscapes.regions.controller:a2VisualizerSoundscapeRegionsLayerController as controller,
+   * and requires a visobject of type soundscape to be selected.
+   * The layer has a visibility button.
+   */
+  layer_typesProvider.addLayerType({
+    type: "soundscape-regions-layer",
+    title: "",
+    controller: 'a2VisualizerSoundscapeRegionsLayerController as soundscape',
+    require: {
+      type: 'soundscape',
+      browsetype: 'soundscape',
+      selection: true
+    },
+    visible: true // hide_visibility : true
+
+  });
+}]).controller('a2VisualizerSoundscapeRegionsLayerController', ["$scope", "$modal", "$location", "a2Soundscapes", "a22PointBBoxEditor", "a2UserPermit", "notify", function ($scope, $modal, $location, a2Soundscapes, a22PointBBoxEditor, a2UserPermit, notify) {
+  var self = this;
+
+  var bbox2string = function (bbox) {
+    var x1 = bbox.x1 | 0;
+    var y1 = bbox.y1 | 0;
+    var x2 = bbox.x2 | 0;
+    var y2 = bbox.y2 | 0;
+    return x1 + ',' + y1 + '-' + x2 + ',' + y2;
+  };
+
+  a2Soundscapes.getAmplitudeReferences().then(function (amplitudeReferences) {
+    this.amplitudeReferences = amplitudeReferences.reduce(function (_, item) {
+      _[item.value] = item;
+      return _;
+    }, {});
+  }.bind(this));
+  this.show = {
+    names: true,
+    tags: true
+  };
+
+  this.view_playlist = function (region) {
+    console.log("this.view_playlist = function(region){", region);
+
+    if (region.playlist) {
+      $scope.set_location("playlist/" + region.playlist);
+    }
+  };
+
+  this.query = function (bbox) {
+    if (!self.selection.valid) {
+      return;
+    }
+
+    a2Soundscapes.getRecordings(self.soundscape, bbox2string(bbox), {
+      count: 1,
+      threshold: 1
+    }, function (data) {
+      bbox.q = data;
+    });
+  };
+
+  this.submit = function (bbox, name) {
+    if (!self.selection.valid) {
+      return;
+    }
+
+    if (!a2UserPermit.can('manage soundscapes')) {
+      notify.error('You do not have permission to annotate soundscapes');
+      return;
+    }
+
+    a2Soundscapes.addRegion(self.soundscape, bbox2string(bbox), {
+      name: name,
+      threshold: 1
+    }, function (data) {
+      self.regions.push(data);
+      self.selection.bbox = data;
+    });
+  };
+
+  this.sample = function (bbox, percent) {
+    if (!bbox.id) {
+      return;
+    }
+
+    $modal.open({
+      templateUrl: '/app/visualizer/layers/soundscapes/regions/sample_soundscape_region_modal.html',
+      controller: 'a2VisualizerSampleSoundscapeRegionModalController',
+      size: 'sm',
+      resolve: {
+        data: function () {
+          return {
+            soundscape: self.soundscape,
+            region: bbox
+          };
+        }
+      }
+    }).result.then(function (region) {
+      if (region && region.id) {
+        self.regions.forEach(function (r, idx) {
+          if (r.id == region.id) {
+            self.regions[idx] = region;
+          }
+        });
+        self.selection.bbox = region;
+      }
+    });
+  };
+
+  this.selection = angular.extend(new a22PointBBoxEditor(), {
+    reset: function () {
+      this.super.reset.call(this);
+      this.percent = 100;
+      return this;
+    },
+    quantize: function (x, y, ceil) {
+      var q = ceil ? Math.ceil : Math.floor;
+      var xi = $scope.visobject.domain.x.unit_interval;
+      var yi = $scope.visobject.domain.y.unit_interval;
+      return [q(x / xi) * xi, q(y / yi) * yi];
+    },
+    add_tracer_point: function (x, y) {
+      this.super.add_tracer_point.apply(this, this.quantize(x, y));
+      return this;
+    },
+    add_point: function (x, y) {
+      this.super.add_point.apply(this, this.quantize(x, y));
+      return this;
+    },
+    validate: function (tmp_points) {
+      this.super.validate.call(this, tmp_points);
+      var q = this.quantize(this.bbox.x2 + 0.1, this.bbox.y2 + 0.1, true);
+      this.bbox.y2 = q[1];
+      this.selbox = {
+        x1: this.bbox.x1,
+        y1: this.bbox.y1,
+        x2: q[0],
+        y2: q[1]
+      };
+    },
+    query: function () {
+      self.query(this.bbox);
+    },
+    submit: function () {
+      self.submit(this.bbox, this.bbox.name);
+    },
+    sample: function () {
+      self.sample(this.bbox, this.percent);
+    },
+    view_samples: function () {
+      self.view_playlist(this.bbox);
+    },
+    select: function (region) {
+      this.bbox = region;
+
+      if ($scope.visobject && $scope.visobject.id && region && region.id) {
+        $scope.set_location('soundscape/' + $scope.visobject.id + '/' + region.id, true);
+      }
+    }
+  });
+  $scope.$watch('visobject', function (visobject) {
+    var sc = visobject && visobject.type == 'soundscape' && visobject.id;
+
+    if (sc) {
+      self.soundscape = sc;
+      self.selection.reset();
+      a2Soundscapes.getRegions(sc, {
+        view: 'tags'
+      }, function (regions) {
+        self.regions = regions;
+
+        if (visobject.extra && visobject.extra.region) {
+          self.selection.bbox = self.regions.filter(function (r) {
+            return r.id == visobject.extra.region;
+          }).pop();
+        }
+      });
+    } else {
+      self.soundscape = 0;
+    }
+  });
+}]).controller('a2VisualizerSampleSoundscapeRegionModalController', ["$scope", "$modalInstance", "a2Soundscapes", "data", function ($scope, $modalInstance, a2Soundscapes, data) {
+  $scope.soundscape = data.soundscape;
+  $scope.region = data.region;
+  $scope.data = {
+    percent: 100
+  };
+
+  $scope.ok = function () {
+    $scope.validation = {
+      count: 0
+    };
+    var sdata = $scope.data,
+        sval = $scope.validation;
+    var vdata = {};
+    var tst;
+
+    if (sdata.percent > 100) {
+      sval.percent = "Percent must be between 0% and 100%.";
+      sval.count++;
+    } else if ((sdata.percent * $scope.region.count | 0) < 1) {
+      sval.percent = "You must sample at least 1 recording.";
+      sval.count++;
+    } else {
+      vdata.percent = sdata.percent;
+    }
+
+    $scope.form_data = vdata;
+
+    if (sval.count === 0) {
+      a2Soundscapes.sampleRegion($scope.soundscape, $scope.region.id, vdata, function (region) {
+        $modalInstance.close(region);
+      });
     }
   };
 }]);
