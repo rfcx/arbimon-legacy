@@ -24,7 +24,7 @@ var app={
     },
     dependencies: {
         src: './bower_components',
-        dest:'public/includes',
+        dest:'public/assets',
         deps:{
             angular              :{'angular.min.*': '' },
             'angular-bootstrap'  :{'ui-bootstrap-tpls.min.js': '' },
@@ -58,13 +58,13 @@ var app={
     code:{
         name: 'arbimon2.js',
         src: './assets/app/**/*.js',
-        dest: './public/includes/js/',
+        dest: './public/assets/js/',
     },
     templates: {
         name:'arbimon2-templates.js',
         module: 'templates-arbimon2',
         src: './assets/app/**/*.html',
-        dest: './public/includes/js/',
+        dest: './public/assets/js/',
     },
     less: {
         name:'style.css',
@@ -73,9 +73,9 @@ var app={
             './assets/less/bootstrap.less',
             './assets/less/style.less'
         ],
-        dest: './public/includes/css/',
+        dest: './public/assets/css/',
     },
-    clean : './public/includes',
+    clean : './public/assets',
 };
 
 gulp.task('default', ['build']);

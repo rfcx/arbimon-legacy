@@ -5,7 +5,7 @@ angular.module('a2.forms',['templates-arbimon2'])
     var loadZXCVBN = function() {
         var a, b;
         b = $window.document.createElement("script");
-        b.src = "/includes/zxcvbn/zxcvbn.js";
+        b.src = "/assets/zxcvbn/zxcvbn.js";
         b.type = "text/javascript";
         b.async = !0;
         a = $window.document.getElementsByTagName("script")[0];
