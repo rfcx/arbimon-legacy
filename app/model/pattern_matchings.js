@@ -596,7 +596,7 @@ var PatternMatchings = {
             // Fill the original filename from the meta column.
             for (let _1 of results) {
                 _1.meta = _1.meta ? PatternMatchings.__parse_meta_data(_1.meta) : null;
-                _1.recording = _1.meta && _1.meta.filename? _1.meta.filename :  _1.recording;
+                _1.recording = _1.meta && _1.meta.filename? _1.meta.filename : _1.recording;
             }
             return results;
         });

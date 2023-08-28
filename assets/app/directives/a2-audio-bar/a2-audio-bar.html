@@ -26,13 +26,15 @@
             <div class="col-sm-12 center-block">
                 <div class="btn-toolbar row-flex flex-align-middle">
                     <div class="btn-group">
-                        <button class="btn btn-default btn-sm"
+                        <button class="btn btn-default btn-xs control-btn"
+                                style="padding: 5px 10px"
                                 ng-disabled="!controller.audio_player.has_recording"
                                 ng-click="controller[controller.audio_player.is_playing ? 'pause' : 'play']()">
                             <i class="fa"
                                ng-class="{'fa-play':!controller.audio_player.is_playing, 'fa-pause':controller.audio_player.is_playing}"></i>
                         </button>
-                        <button class="btn btn-default btn-sm"
+                        <button class="btn btn-default btn-xs control-btn"
+                                style="padding: 5px 10px"
                                 ng-disabled="!controller.audio_player.has_recording"
                                 ng-click="controller.stop()">
 
@@ -41,7 +43,7 @@
                     </div>
                     <div class="btn-group">
                         <div class="btn-group dropup" dropdown role="group">
-                            <button class="btn btn-sm btn-default dropdown-toggle" dropdown-toggle
+                            <button class="btn btn-sm btn-default dropdown-toggle control-btn" dropdown-toggle
                                     ng-disabled="!controller.audio_player.has_recording">
                                 <i class="fa fa-fw-1"
                                    ng-class="controller.audio_player.resource.audio.volume > .75 ? 'fa-volume-up' : controller.audio_player.resource.audio.volume > .25 ? 'fa-volume-down' : 'fa-volume-off'"></i>

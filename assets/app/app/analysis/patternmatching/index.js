@@ -536,6 +536,7 @@ angular.module('a2.analysis.patternmatching', [
             $event.preventDefault();
             $event.stopPropagation();
         }
+        console.info('play')
         a2AudioBarService.loadUrl(a2PatternMatching.getAudioUrlFor(roi), true);
     },
 

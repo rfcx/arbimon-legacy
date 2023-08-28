@@ -177,7 +177,7 @@ router.get('/auth0-login', async function(req, res, next) {
         }
         else {
             await model.users.connectRFCx(req, profile, tokens); // if user is logged in and is authenticating with Auth0 ("Connect with RFCx feature")
-            res.redirect('/connect-with-rfcx');
+            res.redirect('/projects');
         }
     } catch (e) {
         next(e)

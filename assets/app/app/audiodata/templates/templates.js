@@ -153,6 +153,7 @@ angular.module('a2.audiodata.templates', [
                 $event.stopPropagation();
             };
             $localStorage.setItem('a2-audio-param-gain', JSON.stringify(2));
+            console.info('play')
             a2AudioBarService.loadUrl(a2Templates.getAudioUrlFor(template), true);
         }
     });

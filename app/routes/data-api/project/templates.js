@@ -6,6 +6,7 @@ const router = express.Router();
 const model = require('../../../model');
 const { httpErrorHandler, Converter } = require('@rfcx/http-utils');
 const fs = require('fs');
+const path = require('path');
 
 /** Return a list of all the templates in a project.
  */
@@ -75,8 +76,11 @@ router.get('/:template/image', function(req, res, next) {
     }).catch(next);
 });
 
-router.get('/:template/audio', function(req, res, next) {
-    model.templates.getAudioFile(req.params.template, { gain: req.query.gain }).then(function(roiAudio) {
+router.get('/audio/:templateUrl', function(req, res, next) {
+    const roiUrl = req.params.templateUrl;
+    const ext = path.extname(roiUrl)
+    const template = path.basename(roiUrl, ext);
+    model.templates.getAudioFile(template, { gain: req.query.gain }).then(function(roiAudio) {
         if (!roiAudio){
             res.sendStatus(404);
         } if (roiAudio.path.includes('/internal')) {

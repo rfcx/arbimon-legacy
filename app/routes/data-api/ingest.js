@@ -1,9 +1,9 @@
 /* jshint node:true */
 "use strict";
 
-var express = require('express');
-var router = express.Router();
-var model = require('../../model');
+let express = require('express');
+let router = express.Router();
+let model = require('../../model');
 const request = require('request');
 const moment = require('moment');
 const authentication = require('../../middleware/jwt');
@@ -35,14 +35,14 @@ router.post('/recordings/create', verifyToken(), hasRole(['systemUser']), async 
 
     await converter.validate();
     const siteExternalId = converter.transformedArray[0].site_external_id
-    var site = await model.sites.find({ external_id: siteExternalId }).get(0);
+    let site = await model.sites.find({ external_id: siteExternalId }).get(0);
     if (!site) {
       throw new EmptyResultError('Site with given external_id not found.');
     }
     const timezone = await model.sites.getSiteTimezoneAsync(site.site_id);
     const recordings = converter.transformedArray.map((data) => {
-      const meta = data.meta.replace(/'/g, "\\'");
-      var recordingData = {
+      const metaData = data.meta.replace(/'/g, "\\'");
+      let recordingData = {
         site_id: site.site_id,
         uri: data.uri,
         datetime_utc: data.datetime.toISOString(),
@@ -57,7 +57,7 @@ router.post('/recordings/create', verifyToken(), hasRole(['systemUser']), async 
         bit_rate: data.bit_rate,
         sample_encoding: data.sample_encoding,
         upload_time: moment.utc().toISOString(),
-        meta: meta
+        meta: metaData
       };
       const parsedData = data.meta ? JSON.parse(data.meta) : null;
 			const artist = parsedData && parsedData.ARTIST ? parsedData.ARTIST : parsedData.artist
@@ -94,7 +94,7 @@ router.post('/recordings/delete', verifyToken(), hasRole(['systemUser']), async 
 
     await converter.validate();
     const siteExternalId = converter.transformedArray[0].site_external_id
-    var site = await model.sites.find({ external_id: siteExternalId }).get(0);
+    let site = await model.sites.find({ external_id: siteExternalId }).get(0);
     if (!site) {
       throw new EmptyResultError('Site with given external_id not found.');
     }

@@ -25,7 +25,7 @@
                         <div class="row-flex flex-space-between flex-self-align-bottom flex-direction-column">
                             <div class="row-flex flex-direction-row">
                                 <div class="btn-group btn-group-margin input-group row-flex flex-direction-row">
-                                    <span class="input-group-addon" title="Please select species and song type to validate ROIs" style="width: 90px; padding: 9px 12px;">Select:</span>
+                                    <span class="btn btn-default control-border not-active" title="Please select species and song type to validate ROIs" style="width: 90px;">Select:</span>
                                     <input class="form-control" style="width: 150px;"
                                         type="text"
                                         placeholder="Type Species"
@@ -39,7 +39,7 @@
                                         typeahead-loading="speciesLoading"
                                     >
                                     <span class="input-group-btn">
-                                        <button class="btn btn-default" title="Please select species and song type to validate ROIs">
+                                        <button class="btn btn-default control-border" title="Please select species and song type to validate ROIs">
                                             <i ng-show="speciesLoading" class="fa fa-spinner fa-spin"></i>
                                             <i ng-show="!speciesLoading" class="fa fa-search"></i>
                                         </button>
@@ -56,8 +56,8 @@
                                     </ui-select>
                                 </div>
                                 <div class="btn-group btn-group-margin">
-                                    <button class="btn btn-default not-active" >Validate as:</button>
-                                    <ui-select ng-model="validation.status" class="btn-group-item border-left-radius" theme="bootstrap">
+                                    <button class="btn btn-default control-border not-active" >Validate as:</button>
+                                    <ui-select ng-model="validation.status" class="btn-group-item border-left-radius control-border" theme="bootstrap">
                                         <ui-select-match  class="right-corners">
                                             <i ng-class="$select.selected.class"></i> {{$select.selected.text}}
                                         </ui-select-match>
@@ -73,7 +73,7 @@
                             <div>
                                 <div class="btn-group btn-group-margin row-flex flex-direction-row">
                                     <div class="btn-group row-flex flex-self-align-bottom mr-2" style="position: relative;">
-                                        <button class="btn btn-default" type="button" tooltip="Save to playlist" ng-click="togglePopup()">
+                                        <button class="btn btn-default control-border" type="button" tooltip="Save to playlist" ng-click="togglePopup()">
                                             <i class="fa fa-music"></i>
                                         </button>
                                         <div class="popover right create-template" style="display: block;" ng-if="isPopupOpened">

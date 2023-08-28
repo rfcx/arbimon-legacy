@@ -1,6 +1,6 @@
 <div class="visualizer-root show-spectrogram" a2-scroll="onScrolling()" ng-mousemove="onMouseMove($event)">
     <div a2-visualizer-spectrogram-affixed="{'align-h':.5, 'align-v':.5, container:'viewport'}"
-        ng-show="loading_visobject || !visobject"
+        ng-show="loading_visobject || !visobject" class="text-center"
     >
         <div class="on-empty" ng-if="!loading_visobject">
             Please select a {{visobject_type}}.

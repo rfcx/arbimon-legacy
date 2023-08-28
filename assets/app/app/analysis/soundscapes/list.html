@@ -2,18 +2,18 @@
     <div class="col-sm-12 col-lg-11 padded-view-div" >
         <h3>
             Soundscapes
-            <a class="btn btn-sm btn-default"
+            <a class="btn btn-sm btn-default ml-3"
                 tooltip="Create New Soundscape job"
                 tooltip-placement="right"
                 ng-click="createNewSoundscape()">
-                <i class="fa fa-plus mr-1"></i>New Job
+                <i class="fa fa-plus"></i> New Job
             </a>
         </h3>
         <loader ng-show="loading"></loader>
-        <button class="btn btn-default pull-right"
+        <button class="btn btn-default pull-right btn-sm"
             tooltip="Refresh list"
             ng-click="loadSoundscapes()">
-                <i class="fa fa-refresh"></i>
+                <i class="fa fa-refresh"></i> Refresh List
         </button>
 
         <div ng-if="!loading && soundscapesData && soundscapesData.length">

@@ -2,18 +2,18 @@
     <div class="col-sm-12 col-lg-11 padded-view-div" >
         <h3>
             Random Forest Models
-            <a class="btn btn-sm btn-default"
+            <a class="btn btn-sm btn-default ml-3"
                 tooltip="Create New Model"
                 tooltip-placement="right"
                 ng-click="newModel() | trackEvent:'Analysis-Model list':'new model'">
-                <i class="fa fa-plus" ></i>
+                <i class="fa fa-plus"></i> New Job
             </a>
         </h3>
         <loader ng-show="loading"></loader>
-        <button class="btn btn-default pull-right"
+        <button class="btn btn-default pull-right btn-sm"
             tooltip="Refresh list"
             ng-click="loadModels()">
-            <i class="fa fa-refresh"></i>
+            <i class="fa fa-refresh"></i> Refresh List
         </button>
 
         <div ng-hide="loading">

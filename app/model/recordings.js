@@ -97,7 +97,7 @@ var Recordings = {
         sample_encoding: joi.string(),
         upload_time:     joi.string(),
         datetime_utc:    joi.string(),
-        meta:  joi.optional(),
+        meta:  joi.string().optional(),
     },
     parseUrl: function(recording_url){
         var patternFound = false, resolved = false;
