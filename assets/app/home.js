@@ -182,9 +182,19 @@ angular.module('a2.home', [
     }).bind(this));
 
     this.valueShortScale = function(value) {
-        const formattedNumber = numeral(value).format('0.0a')
-        const firstDecimalDigit = (x) => x.split('.')[1].slice(0, 1)
-        return firstDecimalDigit(formattedNumber) === '0' ? formattedNumber.replace('.0', '') : formattedNumber
+        if (value && Number(value) > 999999999) {
+            value = value.toString().substring(0, 4)
+            console.log(value)
+            const formattedNumber = numeral(value.toString().substring(0, 4)).format('0,0')
+            value = formattedNumber + ' million'
+            return value
+        }
+        else {
+            return numeral(value).format('0,0')
+        }
+        // const formattedNumber = numeral(value).format('0.0a')
+        // const firstDecimalDigit = (x) => x.split('.')[1].slice(0, 1)
+        // return firstDecimalDigit(formattedNumber) === '0' ? formattedNumber.replace('.0', '') : formattedNumber
     }
 })
 
