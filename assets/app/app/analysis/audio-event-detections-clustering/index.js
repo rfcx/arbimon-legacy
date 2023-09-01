@@ -147,7 +147,7 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
             this.errorJobLimit = false;
 
             this.loading.playlists = true;
-            a2Playlists.getList({filterPlaylistLimit: true}).then((function(playlists){
+            a2Playlists.getList().then((function(playlists){
                 this.loading.playlists = false;
                 list.playlists = playlists;
             }).bind(this));
