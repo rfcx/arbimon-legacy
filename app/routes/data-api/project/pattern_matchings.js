@@ -125,7 +125,7 @@ router.get('/:patternMatching/site-index', function(req, res, next) {
         }).catch(next);
 });
 
-router.get('/:patternMatching/:jobName?', function(req, res, next) {
+router.get('/:patternMatching/:fileName?', function(req, res, next) {
     if(req.query.out=="text"){
         res.type('text/plain');
     } else {
