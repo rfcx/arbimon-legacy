@@ -67,7 +67,7 @@ async function main () {
         // Process the Occupancy model report
         const data = await recordings.exportOccupancyModels(projection_parameters, filters)
         rowData.species_name = filters.species_name || projection_parameters.species
-        return processOccupancyModelStream(data, rowData, currentTime, message, jobName).then(async () => {
+        return processOccupancyModelStream(data, rowData, projection_parameters.species, filters, currentTime, message, jobName).then(async () => {
             console.log(`arbimon-recording-export job finished: occupancy models report for ${message}`)
         })
     }
@@ -180,9 +180,9 @@ async function processClusteringStream (cluster, results, rowData, currentTime, 
 }
 
 // Process the Occupancy model report and send the email
-async function processOccupancyModelStream (results, rowData, currentTime, message, jobName) {
+async function processOccupancyModelStream (results, rowData, speciesId, filters, currentTime, message, jobName) {
     return new Promise(async function (resolve, reject) {
-        let sitesData = await recordings.getCountSitesRecPerDates(rowData.project_id);
+        let sitesData = await recordings.getCountSitesRecPerDates(rowData.project_id, filters);
         let allSites = sitesData.map(item => { return item.site }).filter((v, i, s) => s.indexOf(v) === i);
         // Get the first/last recording/date per project, not include invalid dates.
         let dates = sitesData
@@ -201,14 +201,13 @@ async function processOccupancyModelStream (results, rowData, currentTime, messa
             if (streamObject[row.site]) {
                 let index = fields.findIndex(date => date === row.date);
                 streamObject[row.site][index+1] = row.count === 0 ? 0 : 1;
-                streamObject[row.site][fields.length+index+1] = (new Date(row.date).getTime()/86400000 + 2440587.5).toFixed();
             }
             else {
                 let tempRow = {};
-                let tempJdays = {};
                 // Fill each cell in the report.
                 fields.forEach((item) => {
                     tempRow.site = row.site;
+                    tempRow.siteId = row.siteId;
                     let site = sitesData.find(site => {
                         if (site.site === row.site) {
                             return item === moment(new Date(`${site.year}/${site.month}/${site.day}`)).format('YYYY/MM/DD');
@@ -219,12 +218,8 @@ async function processOccupancyModelStream (results, rowData, currentTime, messa
                     // NA ( device was not active in that day, in other words, there are no recordings for this day);
                     // NI ( no information from the user if species is present or absent). Changed to 0
                     tempRow[item] = item === row.date? (row.count === 0 ? 0 : 1) : (site ? '0' : 'NA');
-                    // Detection parameter:
-                    // The julian day when there are recordings for that day;
-                    // NA if the recorder was not active in that day (i.e there is no recordings associated with that day).
-                    tempJdays[item] = item === row.date? (new Date(row.date).getTime()/86400000 + 2440587.5).toFixed() : (site ? (new Date(item).getTime()/86400000 + 2440587.5).toFixed() : 'NA');
                 });
-                streamObject[row.site] = [...Object.values(tempRow), ...Object.values(tempJdays)];
+                streamObject[row.site] = [...Object.values(tempRow)];
             }
         };
         // Get sites without validations.
@@ -232,23 +227,20 @@ async function processOccupancyModelStream (results, rowData, currentTime, messa
         if (notValidated && notValidated.length) {
             for (let row of notValidated) {
                 let notValidatedRow = {};
-                let notValidatedDays = {};
                 fields.forEach((item) => {
                     notValidatedRow.site = row;
                     let site = sitesData.find(site => {
                         if (site.site === row) {
+                            notValidatedRow.siteId = site.siteId;
                             return item === moment(new Date(`${site.year}/${site.month}/${site.day}`)).format('YYYY/MM/DD');
                         }
                     });
                     notValidatedRow[item] = site ? '0' : 'NA';
-                    notValidatedDays[item] = site ? (moment(new Date(`${site.year}/${site.month}/${site.day}`)).valueOf()/86400000 + 2440587.5).toFixed() : 'NA';
                 });
-                streamObject[row] = [...Object.values(notValidatedRow), ...Object.values(notValidatedDays)];
+                streamObject[row] = [...Object.values(notValidatedRow)];
             }
         }
-        fields = [...fields, ...fields];
-        fields.unshift('site');
-
+        fields.unshift('site', 'siteId');
         let datastream = new stream.Readable({objectMode: true});
 
         let _buf = []
@@ -265,7 +257,7 @@ async function processOccupancyModelStream (results, rowData, currentTime, messa
             csv_stringify(_buf, { header: true, columns: fields }, async (err, data) => {
                 const content = Buffer.from(data).toString('base64')
                 try {
-                    const title = 'occupancy-model-' + rowData.species_name + '.csv'
+                    const title = 'occupancy-' + speciesId + '-' + rowData.species_name + '.csv'
                     await sendEmail('Arbimon export completed', title, rowData, content, false)
                     await updateExportRecordings(rowData, { processed_at: currentTime })
                     await recordings.closeConnection()
