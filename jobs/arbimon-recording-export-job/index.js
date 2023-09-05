@@ -183,6 +183,7 @@ async function processClusteringStream (cluster, results, rowData, currentTime, 
 async function processOccupancyModelStream (results, rowData, speciesId, filters, currentTime, message, jobName) {
     return new Promise(async function (resolve, reject) {
         let sitesData = await recordings.getCountSitesRecPerDates(rowData.project_id, filters);
+        console.log('\n\n--sitesData--', sitesData)
         let allSites = sitesData.map(item => { return item.site }).filter((v, i, s) => s.indexOf(v) === i);
         // Get the first/last recording/date per project, not include invalid dates.
         let dates = sitesData
@@ -258,6 +259,7 @@ async function processOccupancyModelStream (results, rowData, speciesId, filters
                 const content = Buffer.from(data).toString('base64')
                 try {
                     const title = 'occupancy-' + speciesId + '-' + rowData.species_name + '.csv'
+                    console.log('\n\n--title--', title)
                     await sendEmail('Arbimon export completed', title, rowData, content, false)
                     await updateExportRecordings(rowData, { processed_at: currentTime })
                     await recordings.closeConnection()

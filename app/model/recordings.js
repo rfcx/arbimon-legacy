@@ -1990,6 +1990,7 @@ var Recordings = {
                 AND (rv.present_review>0 OR rv.present_aed>0 OR rv.present is not null)
                 ${isRangeAvailable ? 'AND (R.datetime >= ' + '"' + filters.range.from + '"' + ' AND R.datetime <=' + '"' + filters.range.to + '"' + ')' : ''}
             GROUP BY S.name, YEAR(R.datetime), MONTH(R.datetime), DAY(R.datetime) ORDER BY R.datetime ASC`;
+        console.log('\n\n--query--', query)
         let queryResult = await dbpool.query({
             sql: query,
             typeCast: sqlutil.parseUtcDatetime,
