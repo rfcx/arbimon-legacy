@@ -46,7 +46,7 @@ angular.module('a2.srv.patternmatching', [
             return a2APIService.get('/pattern-matchings/' + patternMatchingId + '/site-index' + (query ? '?'+query : '')).catch(notify.serverError);
         },
         getExportUrl: function(params){
-            return '/api/project/' + Project.getUrl() + '/pattern-matchings/' + params.patternMatching + '/' + params.jobName + '.csv';
+            return '/api/project/' + Project.getUrl() + '/pattern-matchings/' + params.patternMatching + '/' + params.fileName + '.csv';
         },
         getAudioUrlFor: function(roi){
             const ext = '.mp3'

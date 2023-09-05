@@ -892,11 +892,11 @@ angular.module('a2.analysis.clustering-jobs', [
     };
 
     $scope.showPagination = function () {
-        if ($scope.selectedFilterData.value === 'per_cluster') {
-            return $scope.paginationSettings.totalItems && ($scope.gridData.length && $scope.gridData.length > 1)
-        } else {
+        // if ($scope.selectedFilterData.value === 'per_cluster') {
+        //     return $scope.paginationSettings.totalItems && ($scope.gridData.length && $scope.gridData.length > 1)
+        // } else {
             return $scope.paginationSettings.totalItems && ($scope.paginationSettings.totalItems > $scope.paginationSettings.limit)
-        }
+        // }
     }
 
     $scope.getRoisDetails = function(isFilterChanged) {
@@ -910,17 +910,17 @@ angular.module('a2.analysis.clustering-jobs', [
             $scope.paginationSettings.page = 1;
             $scope.paginationSettings.offset = 0;
         }
-        if ($scope.selectedFilterData.value === 'per_cluster') {
-            aedData = $scope.gridData[$scope.paginationSettings.page-1].aed;
-            $scope.paginationSettings.totalItems = $scope.gridData.length;
-            $scope.paginationSettings.limit = 1;
-        } else {
+        // if ($scope.selectedFilterData.value === 'per_cluster') {
+        //     aedData = $scope.gridData[$scope.paginationSettings.page-1].aed;
+        //     $scope.paginationSettings.totalItems = $scope.gridData.length;
+        //     $scope.paginationSettings.limit = 1;
+        // } else {
             $scope.paginationSettings.limit = 100;
             $scope.paginationSettings.totalItems = $scope.aedData.id.length;
             aedData = $scope.aedData.id.filter((id, i, a) => {
                 return (i >= ($scope.paginationSettings.offset * $scope.paginationSettings.limit)) && (i < ($scope.paginationSettings.page * $scope.paginationSettings.limit))
             })
-        }
+        // }
         return a2ClusteringJobs.getRoisDetails({
             jobId: $scope.clusteringJobId,
             aed: aedData,
@@ -940,13 +940,13 @@ angular.module('a2.analysis.clustering-jobs', [
                     }
                 })
             })
-            if ($scope.selectedFilterData.value === 'per_cluster') {
-                $scope.paginationSettings.totalPages = $scope.gridData.length;
-                $scope.paginationSettings.limit = 1;
-            } else {
+            // if ($scope.selectedFilterData.value === 'per_cluster') {
+            //     $scope.paginationSettings.totalPages = $scope.gridData.length;
+            //     $scope.paginationSettings.limit = 1;
+            // } else {
                 $scope.paginationSettings.totalPages = Math.ceil($scope.paginationSettings.totalItems / $scope.paginationSettings.limit);
                 $scope.paginationSettings.limit = 100;
-            }
+            // }
             $scope.loading = false;
             $scope.allRois = groupedData
             $scope.isRoisLoading = false;
