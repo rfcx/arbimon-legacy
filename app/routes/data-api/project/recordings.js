@@ -13,12 +13,6 @@ const fs = require('fs')
 
 let s3, s3RFCx;
 
-const getUTC = function (date) {
-    var d = new Date(date);
-    d.setTime(d.getTime() + (d.getTimezoneOffset() * 60000));
-    return d;
-};
-
 function defineS3Clients() {
     if (!s3) {
         s3 = new AWS.S3(getS3ClientConfig('aws'))
