@@ -1311,7 +1311,6 @@ var Recordings = {
             const siteIds = Object.values(siteData).map(function(site){
                 return site.site_id;
             })
-            console.log(outputs)
             if (!siteIds.length && outputs.includes('list')) {
                 return {
                     count: 0,
@@ -1329,7 +1328,6 @@ var Recordings = {
                 data.push(getUTC(parameters.range.from), getUTC(parameters.range.to));
             }
 
-            console.log(parameters.sites, parameters.sites_ids)
             if (parameters.sites) {
                 tables.push("JOIN sites AS s ON s.site_id = r.site_id");
                 constraints.push('s.site_id IN (?)')
@@ -1991,7 +1989,7 @@ var Recordings = {
                 AND (rv.present_review>0 OR rv.present_aed>0 OR rv.present is not null)
                 ${isRangeAvailable ? 'AND (R.datetime >= ' + '"' + filters.range.from + '"' + ' AND R.datetime <=' + '"' + filters.range.to + '"' + ')' : ''}
             GROUP BY S.name, YEAR(R.datetime), MONTH(R.datetime), DAY(R.datetime) ORDER BY R.datetime ASC`;
-        console.log('\n\n----exportOccupancyModels---', query)
+        console.log('exportOccupancyModels', query)
         let queryResult = await dbpool.query({
             sql: query,
             typeCast: sqlutil.parseUtcDatetime,
