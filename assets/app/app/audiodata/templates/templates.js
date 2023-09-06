@@ -14,7 +14,7 @@ angular.module('a2.audiodata.templates', [
         templateUrl: '/app/audiodata/templates/templates.html'
     });
 })
-.controller('TemplatesCtrl', function($scope, a2Templates, Project, $localStorage, a2UserPermit, notify, $modal, $window, a2AudioBarService) {
+.controller('TemplatesCtrl', function($scope, a2Templates, Project, SpeciesTaxons, $localStorage, a2UserPermit, notify, $modal, $window, a2AudioBarService) {
     var self = this;
     Object.assign(this, {
         initialize: function(){
@@ -30,9 +30,12 @@ angular.module('a2.audiodata.templates', [
                 totalPages: 0
             }
             this.projecturl = Project.getUrl();
-            this.search = { q: '' };
+            this.search = { q: '', taxon: '' };
+            this.getTaxons();
             this.getList();
             this.timeout;
+            this.taxons = [ { id: 0, taxon: 'All taxons' }]
+            this.search.taxon = this.taxons[0]
         },
         goToSourceProject: function(projectId) {
             if (!projectId) return;
@@ -46,11 +49,21 @@ angular.module('a2.audiodata.templates', [
             self.pagination.offset = self.pagination.page - 1;
             this.getList();
         },
+        getTaxons: function () {
+            SpeciesTaxons.getList(function(data){
+                if (data && data.length) {
+                    data.forEach(taxon => {
+                        self.taxons.push(taxon)
+                    })
+                }
+            })
+        },
         getList: function() {
             self.loading = true;
             const opts = { 
                 showRecordingUri: true,
                 q: self.search.q,
+                taxon: self.search.taxon && self.search.taxon.id ? self.search.taxon.id : null,
                 limit: self.pagination.limit,
                 offset: self.pagination.offset * self.pagination.limit
             }

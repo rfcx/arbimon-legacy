@@ -118,6 +118,12 @@ var Templates = {
             constraints.push(`(T.name LIKE '%${options.q}%' OR ${options.projectTemplates ? 'P2.name' : 'P.name'} LIKE '%${options.q}%' OR Sp.scientific_name LIKE '%${options.q}%')`);
         }
 
+        if (options.taxon) {
+            tables.push('JOIN species_taxons Stx ON Stx.taxon_id = Sp.taxon_id');
+            select.push('Stx.taxon_id, Stx.taxon')
+            constraints.push('Stx.taxon_id = ' + options.taxon);
+        }
+
         if (constraints.length === 0){
             return q.reject(new Error("Templates.find called with invalid query.")).nodeify(callback);
         }

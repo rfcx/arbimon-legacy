@@ -6,6 +6,7 @@ exports.SoundscapeComposition = require('./soundscape-composition');
 exports.sites           = require('./sites');
 exports.trainingSets    = require('./training_sets');
 exports.species         = require('./species');
+exports.speciesTaxons   = require('./species_taxons');
 exports.songtypes       = require('./songtypes');
 exports.models          = require('./models');
 exports.AppListings     = require('./app-listings');
