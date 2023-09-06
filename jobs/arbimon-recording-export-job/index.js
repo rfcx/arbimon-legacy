@@ -259,7 +259,6 @@ async function processOccupancyModelStream (results, rowData, speciesId, filters
                 const content = Buffer.from(data).toString('base64')
                 try {
                     const title = 'occupancy-' + speciesId + '-' + rowData.species_name + '.csv'
-                    console.log('\n\n--title--', title)
                     await sendEmail('Arbimon export completed', title, rowData, content, false)
                     await updateExportRecordings(rowData, { processed_at: currentTime })
                     await recordings.closeConnection()

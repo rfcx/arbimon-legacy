@@ -1734,8 +1734,9 @@ var Recordings = {
             LEFT JOIN recordings R ON S.site_id = R.site_id
             WHERE S.project_id = ${projectId}
                 AND S.deleted_at is null
-                ${isRangeAvailable ? 'AND (R.datetime >= ' + '"' + filters.range.from + '"' + ' AND R.datetime <= ' + '"' + filters.range.to + '"' + ')' : ''}
+                ${isRangeAvailable ? 'AND (R.datetime >= ' + '"' + getUTC(filters.range.from) + '"' + ' AND R.datetime <= ' + '"' + getUTC(filters.range.to) + '"' + ')' : ''}
             GROUP BY S.name, YEAR(R.datetime), MONTH(R.datetime), DAY(R.datetime);`;
+        console.log('\n\n----getCountSitesRecPerDates---', query)
         let queryResult = await dbpool.query({
             sql: query,
             typeCast: sqlutil.parseUtcDatetime,
@@ -1988,9 +1989,9 @@ var Recordings = {
             WHERE rv.species_id = ${projection.species}
                 AND (S.project_id = ${filters.project_id} OR pis.project_id = ${filters.project_id})
                 AND (rv.present_review>0 OR rv.present_aed>0 OR rv.present is not null)
-                ${isRangeAvailable ? 'AND (R.datetime >= ' + '"' + filters.range.from + '"' + ' AND R.datetime <=' + '"' + filters.range.to + '"' + ')' : ''}
+                ${isRangeAvailable ? 'AND (R.datetime >= ' + '"' + getUTC(filters.range.from) + '"' + ' AND R.datetime <=' + '"' + getUTC(filters.range.to) + '"' + ')' : ''}
             GROUP BY S.name, YEAR(R.datetime), MONTH(R.datetime), DAY(R.datetime) ORDER BY R.datetime ASC`;
-        console.log('\n\n--query--', query)
+        console.log('\n\n----exportOccupancyModels---', query)
         let queryResult = await dbpool.query({
             sql: query,
             typeCast: sqlutil.parseUtcDatetime,

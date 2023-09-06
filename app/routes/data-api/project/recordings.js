@@ -13,6 +13,12 @@ const fs = require('fs')
 
 let s3, s3RFCx;
 
+const getUTC = function (date) {
+    var d = new Date(date);
+    d.setTime(d.getTime() + (d.getTimezoneOffset() * 60000));
+    return d;
+};
+
 function defineS3Clients() {
     if (!s3) {
         s3 = new AWS.S3(getS3ClientConfig('aws'))
@@ -92,6 +98,13 @@ router.get('/occupancy-models-export/:species?', function(req, res, next) {
     }
     filters.project_id = req.project.project_id
     filters.species_name = projection.species_name
+    if (filters && filters.range && filters.range.from) {
+        filters.range.from = getUTC(filters.range.from)
+    }
+    if (filters && filters.range && filters.range.to) {
+        filters.range.to = getUTC(filters.range.to)
+    }
+    console.log('\n\n----filters---', filters)
     const userEmail = filters.userEmail
     delete filters.userEmail
     delete projection.species_name
