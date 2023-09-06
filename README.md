@@ -6,7 +6,7 @@
 
 ### Local Dev Setup with Docker
 
-The recommended dev setup is to use docker-compose to create your web and database containers. By default, docker-compose will create and seed a new database using the migrations and seeds in `scripts/db`.
+The recommended dev setup is to use docker-compose to create your web and database containers. By default, docker-compose will create and seed a new database using the migrations and seeds in `db/init` (submodule).
 
 1. Build the docker image
 
@@ -209,13 +209,13 @@ DB_PASSWORD=secret
 
 ### Database migrations
 
-Create an SQL file in `scripts/db` starting with an incremented number -- see `001-example-migrations.sql` for an example. Migrations may contain SQL statements to modify the data.
+Create an SQL file in `db/init` starting with an incremented number -- see `001-example-migrations.sql` for an example. Migrations may contain SQL statements to modify the data.
 
 Periodically merge all the migrations into a single file `000-base-tables.sql`.
 
 ### Database seeds
 
-The seed files in `scripts/db` are separated into reference data, species data and test data. The seed files must be kept up-to-date with any migrations that are added because they are always run after all the migrations (in docker-compose local environment).
+The seed files in `db/init` are separated into reference data, species data and test data. The seed files must be kept up-to-date with any migrations that are added because they are always run after all the migrations (in docker-compose local environment).
 
 ### Python
 
