@@ -1311,7 +1311,6 @@ var Recordings = {
             const siteIds = Object.values(siteData).map(function(site){
                 return site.site_id;
             })
-            console.log(outputs)
             if (!siteIds.length && outputs.includes('list')) {
                 return {
                     count: 0,
@@ -1329,7 +1328,6 @@ var Recordings = {
                 data.push(getUTC(parameters.range.from), getUTC(parameters.range.to));
             }
 
-            console.log(parameters.sites, parameters.sites_ids)
             if (parameters.sites) {
                 tables.push("JOIN sites AS s ON s.site_id = r.site_id");
                 constraints.push('s.site_id IN (?)')
@@ -1727,12 +1725,16 @@ var Recordings = {
         });
     },
 
-    getCountSitesRecPerDates: async function(project_id){
-        let query = `SELECT S.name as site, YEAR(R.datetime) as year, MONTH(R.datetime) as month, DAY(R.datetime) as day,COUNT(*) as count
+    getCountSitesRecPerDates: async function(projectId, filters){
+        const isRangeAvailable = filters.range !== undefined
+        let query = `SELECT S.name as site, S.site_id as siteId, YEAR(R.datetime) as year, MONTH(R.datetime) as month, DAY(R.datetime) as day,COUNT(*) as count
             FROM sites S
             LEFT JOIN recordings R ON S.site_id = R.site_id
-            WHERE S.project_id = ${project_id} AND S.deleted_at is null
+            WHERE S.project_id = ${projectId}
+                AND S.deleted_at is null
+                ${isRangeAvailable ? 'AND (R.datetime >= ' + '"' + filters.range.from + '"' + ' AND R.datetime <= ' + '"' + filters.range.to + '"' + ')' : ''}
             GROUP BY S.name, YEAR(R.datetime), MONTH(R.datetime), DAY(R.datetime);`;
+        console.log('\n\n----getCountSitesRecPerDates---', query)
         let queryResult = await dbpool.query({
             sql: query,
             typeCast: sqlutil.parseUtcDatetime,
@@ -1975,14 +1977,19 @@ var Recordings = {
             })
     },
 
-    exportOccupancyModels: async function(projection, filters){
-        let query = `SELECT S.name as site, DATE_FORMAT(R.datetime, "%Y/%m/%d") as date, SUM(rv.present=1 OR rv.present_review>0 OR rv.present_aed>0) as count
+    exportOccupancyModels: async function(projection, filters) {
+        const isRangeAvailable = filters.range !== undefined
+        let query = `SELECT S.name as site, S.site_id as siteId, DATE_FORMAT(R.datetime, "%Y/%m/%d") as date, SUM(rv.present=1 OR rv.present_review>0 OR rv.present_aed>0) as count
             FROM recordings R
             JOIN sites S ON S.site_id = R.site_id
             LEFT JOIN project_imported_sites AS pis ON S.site_id = pis.site_id AND pis.project_id = ${filters.project_id}
             LEFT JOIN recording_validations AS rv ON R.recording_id = rv.recording_id
-            WHERE rv.species_id = ${projection.species} AND (S.project_id = ${filters.project_id} OR pis.project_id = ${filters.project_id}) AND (rv.present_review>0 OR rv.present_aed>0 OR rv.present is not null)
+            WHERE rv.species_id = ${projection.species}
+                AND (S.project_id = ${filters.project_id} OR pis.project_id = ${filters.project_id})
+                AND (rv.present_review>0 OR rv.present_aed>0 OR rv.present is not null)
+                ${isRangeAvailable ? 'AND (R.datetime >= ' + '"' + filters.range.from + '"' + ' AND R.datetime <=' + '"' + filters.range.to + '"' + ')' : ''}
             GROUP BY S.name, YEAR(R.datetime), MONTH(R.datetime), DAY(R.datetime) ORDER BY R.datetime ASC`;
+        console.log('exportOccupancyModels', query)
         let queryResult = await dbpool.query({
             sql: query,
             typeCast: sqlutil.parseUtcDatetime,

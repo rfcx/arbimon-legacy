@@ -99,6 +99,10 @@ angular.module('a2.srv.project', [
                 if (filters.tags) {
                     filters.tags = filters.tags.flat();
                 }
+                if (filters.range) {
+                    filters.range.from = moment(filters.range.from).format('YYYY-MM-DD') + 'T00:00:00.000Z';
+                    filters.range.to = moment(filters.range.to).format('YYYY-MM-DD') + 'T23:59:59.999Z';
+                }
                 var params={filters:filters, show:projection};
 
                 Object.keys(params).forEach(function(param){
