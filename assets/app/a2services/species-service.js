@@ -71,4 +71,19 @@ angular.module('a2.srv.species', [])
         }
     };
 })
+.factory('SpeciesTaxons', function($http){
+    var speciesTaxons;
+    return {
+        getList: function(callback) {
+            if (speciesTaxons)
+                return callback(speciesTaxons);
+
+            $http.get('/api/species_taxons/all')
+                .success(function(data) {
+                    speciesTaxons = data;
+                    callback(speciesTaxons);
+                });
+        }
+    };
+})
 ;

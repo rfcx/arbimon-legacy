@@ -4,6 +4,7 @@ var routes = [
     '/user',
     '/sites',
     '/species',
+    '/species_taxons',
     '/songtypes',
     '/project',
     '/orders',

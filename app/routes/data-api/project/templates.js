@@ -16,6 +16,7 @@ router.get('/', function(req, res, next) {
         deleted: 0,
         showSpecies: true,
         q: req.query.q,
+        taxon: req.query.taxon
     };
     if (req.query.showRecordingUri === 'true') {
         params.showRecordingUri = req.query.showRecordingUri;
