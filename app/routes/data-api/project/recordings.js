@@ -92,6 +92,7 @@ router.get('/occupancy-models-export/:species?', function(req, res, next) {
     }
     filters.project_id = req.project.project_id
     filters.species_name = projection.species_name
+
     const userEmail = filters.userEmail
     delete filters.userEmail
     delete projection.species_name

@@ -18,6 +18,16 @@
                 <div class="mb-2 pull-left">
                     <input type="text" class="form-control" ng-model="controller.search.q" style="width: 320px;" placeholder="Search templates by name, species or project" ng-change="controller.onSearchChanged()">
                 </div>
+                <div class="col-sm-2">
+                    <ui-select ng-model="controller.search.taxon" theme="bootstrap" ng-change="controller.onSearchChanged()">
+                        <ui-select-match placeholder="Taxon" title="{{ $select.selected.taxon }}">
+                            {{ $select.selected.taxon }}
+                        </ui-select-match>
+                        <ui-select-choices repeat="item in controller.taxons | filter:$select.search">
+                            {{ item.taxon }}
+                        </ui-select-choices>
+                    </ui-select>
+                </div>
                 <loader ng-if="controller.loading"></loader>
                 <a2-table ng-if="!controller.loading" search="search" rows="controller.templates" no-checkbox>
                     <field tdclass="is-v-middle" tdclass="spectrogram-img">
@@ -101,6 +111,11 @@
                         </button>
                     </field>
                 </a2-table>
+                <div class="jumbotron" ng-show="(!controller.templates || controller.templates.length == 0) && !controller.loading">
+                    <h3>
+                        No templates found.
+                    </h3>
+                </div>
                 <div ng-if="controller.templates && (controller.pagination.totalItems > controller.pagination.limit)" class="row">
                   <div class="col-sm-12">
                       <pagination total-items="controller.pagination.totalItems"
@@ -115,11 +130,6 @@
                           items-per-page="controller.pagination.limit">
                       </pagination>
                   </div>
-              </div>
-                <div class="jumbotron" ng-show="(!controller.templates || controller.templates.length == 0) && !controller.loading">
-                    <h3>
-                        No templates found.
-                    </h3>
                 </div>
             </div>
         </div>

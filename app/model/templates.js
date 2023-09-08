@@ -118,6 +118,12 @@ var Templates = {
             constraints.push(`(T.name LIKE '%${options.q}%' OR ${options.projectTemplates ? 'P2.name' : 'P.name'} LIKE '%${options.q}%' OR Sp.scientific_name LIKE '%${options.q}%')`);
         }
 
+        if (options.taxon) {
+            tables.push('JOIN species_taxons Stx ON Stx.taxon_id = Sp.taxon_id');
+            select.push('Stx.taxon_id, Stx.taxon')
+            constraints.push('Stx.taxon_id = ' + options.taxon);
+        }
+
         if (constraints.length === 0){
             return q.reject(new Error("Templates.find called with invalid query.")).nodeify(callback);
         }
@@ -158,11 +164,21 @@ var Templates = {
     },
 
     findWithPagination: async function (options) {
-        const count = options.q ? await Templates.templatesCount(
+        let join = ` JOIN species S ON T.species_id = S.species_id`
+        let where = ''
+        if (options.q) {
+            join += ` ${options.projectTemplates ? 'LEFT JOIN projects P2 ON T.source_project_id = P2.project_id' : ''}`;
+            where += ` AND (T.name LIKE '%${options.q}%' OR ${options.projectTemplates ? 'P2.name' : 'P.name'} LIKE '%${options.q}%' OR S.scientific_name LIKE '%${options.q}%')`
+        }
+        if (options.taxon) {
+            join += ` JOIN species_taxons Stx ON Stx.taxon_id = S.taxon_id`;
+            where += ` AND Stx.taxon_id = ${options.taxon}`
+        }
+        const count = (options.q || options.taxon) ? await Templates.templatesCount(
             options.project,
             options.publicTemplates,
-            ` JOIN species S ON T.species_id = S.species_id ${options.projectTemplates ? 'LEFT JOIN projects P2 ON T.source_project_id = P2.project_id' : ''}`,
-            ` AND (T.name LIKE '%${options.q}%' OR ${options.projectTemplates ? 'P2.name' : 'P.name'} LIKE '%${options.q}%' OR S.scientific_name LIKE '%${options.q}%')`,
+            join,
+            where,
             options.isRfcxUser
         ) : await Templates.templatesCount(options.project, options.publicTemplates, null, null, options.isRfcxUser);
         if (count) {
