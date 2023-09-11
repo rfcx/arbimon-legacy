@@ -18,6 +18,12 @@ const { streamToBuffer, zipDirectory } = require('../services/file-helper')
 
 const S3_BUCKET_ARBIMON = process.env.S3_BUCKET_ARBIMON
 
+const tmpFilePath = 'jobs/arbimon-recording-export-job/tmpfilecache'
+
+if (!fs.existsSync(tmpFilePath)) {
+    fs.mkdirSync(tmpFilePath);
+}
+
 async function main () {
   try {
     console.log('arbimon-recordings-export job started')
@@ -359,13 +365,15 @@ async function processGroupedDetectionsStream (results, rowData, projection_para
             csv_stringify(_buf, { header: true, columns: fields }, async (err, data) => {
                 const content = Buffer.from(data).toString('base64')
                 try {
-                    await sendEmail('Arbimon export completed', 'grouped-detections-export.csv', rowData, content, false)
+                    await sendEmail('Arbimon export completed', 'grouped-detections-export.csv', rowData, content, false);
+                    fs.rmSync(tmpFilePath, { recursive: true, force: true });
                     await updateExportRecordings(rowData, { processed_at: currentTime })
                     await recordings.closeConnection()
                     resolve()
                 } catch(error) {
                     console.error('Error while sending grouped-detections-export email.', error)
                     await errorMessage(message, jobName)
+                    fs.rmSync(tmpFilePath, { recursive: true, force: true });
                     await updateExportRecordings(rowData, { error: JSON.stringify(error) })
                     await recordings.closeConnection()
                     resolve()
