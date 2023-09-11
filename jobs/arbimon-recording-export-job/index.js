@@ -182,6 +182,7 @@ async function getMultipleOccupancyModelsData(projection_parameters, filters, ro
     if (!fs.existsSync(tmpFilePath)) {
         fs.mkdirSync(tmpFilePath);
     }
+    console.log('folder jobs/arbimon-recording-export-job/tmpfilecache exists', fs.existsSync(tmpFilePath))
     for (const [i, specie] of projection_parameters.species.entries()) {
         const data = await exportOccupancyModels(specie, filters)
         rowData.species_name = filters.species_name[i] || specie
