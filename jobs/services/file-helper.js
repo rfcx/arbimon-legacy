@@ -14,7 +14,8 @@ async function zipDirectory (sourceDir, outPath) {
     archive
       .directory(sourceDir, false)
       .on('error', (err) => {
-        console.log('\n\n<- zipDirectory error', reject(err))
+        console.log('\n\n<- zipDirectory error', err)
+        reject(err)
       })
       .pipe(stream)
     ;
@@ -26,7 +27,7 @@ async function zipDirectory (sourceDir, outPath) {
 
 async function streamToBuffer () {
   return new Promise((resolve, reject) => {
-    const stream = fs.createReadStream('arbimon-recording-export-job/tmpfilecache/occupancy-export.zip');
+    const stream = fs.createReadStream('jobs/arbimon-recording-export-job/tmpfilecache/occupancy-export.zip');
     const data = [];
 
     stream.on('data', (chunk) => {
@@ -38,6 +39,7 @@ async function streamToBuffer () {
     })
 
     stream.on('error', (err) => {
+      console.log('\n\n<- streamToBuffer error', err)
       reject(err)
     })
   

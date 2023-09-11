@@ -179,7 +179,7 @@ async function processClusteringStream (cluster, results, rowData, currentTime, 
 // Process the Occupancy model report and send the email
 async function getMultipleOccupancyModelsData(projection_parameters, filters, rowData, currentTime, message, jobName) {
     const tmpFilePath = 'jobs/arbimon-recording-export-job/tmpfilecache'
-    if (!fs.existsSync(tmpFilePath)) {
+    if (!fs.existsSync(tmpFilePath, { recursive: true })) {
         fs.mkdirSync(tmpFilePath);
     }
     console.log('folder jobs/arbimon-recording-export-job/tmpfilecache exists', fs.existsSync(tmpFilePath))
@@ -292,7 +292,6 @@ async function processOccupancyModelStream (results, rowData, speciesId, filters
         datastream.on('end', async () => {
             const title = 'occupancy-' + speciesId + '-' + rowData.species_name + '.csv';
             csv_stringify(_buf, { header: true, columns: fields }, async (err, data) => {
-                console.log('data exists', data)
                 fs.writeFile(`jobs/arbimon-recording-export-job/tmpfilecache/${title}`, data, function (err, result) {
                     if (err) {
                         console.log('error writing file to temp folder', err);
