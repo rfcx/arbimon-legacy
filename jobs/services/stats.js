@@ -55,12 +55,12 @@ async function reportStats (reportData, jobName) {
 }
 
 async function errorMessage (error, jobName) {
-    const text = combineErrorMessage(error, jobName)
-    console.info(text)
-    if (SLACK_REPORT_ENABLED) {
-      await errorToSlack(text, jobName)
-    }
+  const text = combineErrorMessage(error, jobName)
+  console.info(text)
+  if (SLACK_REPORT_ENABLED) {
+    await errorToSlack(text, jobName)
   }
+}
 
 module.exports = {
   reportStats,

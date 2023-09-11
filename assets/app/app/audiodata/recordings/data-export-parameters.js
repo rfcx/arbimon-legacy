@@ -89,7 +89,7 @@ angular.module('a2.audiodata.recordings.data-export-parameters', [
         },
         {   title:'Occupancy Model Format',
             identifier:'species',
-            placeholder: 'Species...',
+            placeholder: 'Select species...',
             getList: function(Project){
                 return Project.getClasses().then(function(classes){
                     // Exclude classes with repeating species names
@@ -100,6 +100,7 @@ angular.module('a2.audiodata.recordings.data-export-parameters', [
                             cl[id] = {value:cls.species, caption:cls.species_name, name: id}
                         }
                     })
+                    console.log(Object.values(cl))
                     return Object.values(cl)
                 })
             },
@@ -203,9 +204,13 @@ angular.module('a2.audiodata.recordings.data-export-parameters', [
                     return item.value;
                 });
             }
-            if(selected[index] && parameter_set.identifier==='species' && selected[index].value){
-                _[parameter_set.identifier] = selected[index].value;
-                _['species_name'] = selected[index].name;
+            if(selected[index] && parameter_set.identifier==='species'){
+                _[parameter_set.identifier] = selected[index].map(function(item){
+                    return item.value;
+                });
+                _['species_name'] = selected[index].map(function(item){
+                    return item.name;
+                });
             }
             if(selected[index] && parameter_set.identifier==='grouped' && selected[index].value){
                 _[parameter_set.identifier] = selected[index].value;
