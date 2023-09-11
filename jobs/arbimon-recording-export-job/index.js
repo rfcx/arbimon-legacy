@@ -178,11 +178,11 @@ async function processClusteringStream (cluster, results, rowData, currentTime, 
 
 // Process the Occupancy model report and send the email
 async function getMultipleOccupancyModelsData(projection_parameters, filters, rowData, currentTime, message, jobName) {
-    const tmpFilePath = 'arbimon-recording-export-job/tmpfilecache'
+    const tmpFilePath = 'jobs/arbimon-recording-export-job/tmpfilecache'
     if (!fs.existsSync(tmpFilePath)) {
         fs.mkdirSync(tmpFilePath);
     }
-    console.log('folder arbimon-recording-export-job/tmpfilecache exists', fs.existsSync(tmpFilePath))
+    console.log('folder jobs/arbimon-recording-export-job/tmpfilecache exists', fs.existsSync(tmpFilePath))
     for (const [i, specie] of projection_parameters.species.entries()) {
         const data = await exportOccupancyModels(specie, filters)
         rowData.species_name = filters.species_name[i] || specie
@@ -195,7 +195,7 @@ async function getMultipleOccupancyModelsData(projection_parameters, filters, ro
 }
 
 async function buildOccupancyFolder() {
-    await zipDirectory('arbimon-recording-export-job/tmpfilecache', 'arbimon-recording-export-job/tmpfilecache/occupancy-export.zip')
+    await zipDirectory('jobs/arbimon-recording-export-job/tmpfilecache', 'jobs/arbimon-recording-export-job/tmpfilecache/occupancy-export.zip')
 }
 
 async function sendFolderToTheUser(rowData, currentTime, jobName, message) {
@@ -293,7 +293,7 @@ async function processOccupancyModelStream (results, rowData, speciesId, filters
             const title = 'occupancy-' + speciesId + '-' + rowData.species_name + '.csv';
             csv_stringify(_buf, { header: true, columns: fields }, async (err, data) => {
                 console.log('data exists', data)
-                fs.writeFile(`arbimon-recording-export-job/tmpfilecache/${title}`, data, function (err, result) {
+                fs.writeFile(`jobs/arbimon-recording-export-job/tmpfilecache/${title}`, data, function (err, result) {
                     if (err) {
                         console.log('error writing file to temp folder', err);
                         reject(err)
