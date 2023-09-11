@@ -13,7 +13,9 @@ async function zipDirectory (sourceDir, outPath) {
   return new Promise((resolve, reject) => {
     archive
       .directory(sourceDir, false)
-      .on('error', err => reject(err))
+      .on('error', (err) => {
+        console.log('\n\n<- zipDirectory error', reject(err))
+      })
       .pipe(stream)
     ;
 
