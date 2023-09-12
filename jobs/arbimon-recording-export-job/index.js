@@ -17,6 +17,7 @@ const { uploadAsStream, getSignedUrl } = require('../../app/utils/storage')
 const { streamToBuffer, zipDirectory } = require('../services/file-helper')
 
 const S3_BUCKET_ARBIMON = process.env.S3_BUCKET_ARBIMON
+const tmpFilePath = 'jobs/arbimon-recording-export-job/tmpfilecache'
 
 async function main () {
   try {
@@ -178,7 +179,6 @@ async function processClusteringStream (cluster, results, rowData, currentTime, 
 
 // Process the Occupancy model report and send the email
 async function getMultipleOccupancyModelsData(projection_parameters, filters, rowData, currentTime, message, jobName) {
-    const tmpFilePath = 'jobs/arbimon-recording-export-job/tmpfilecache'
     if (!fs.existsSync(tmpFilePath, { recursive: true })) {
         fs.mkdirSync(tmpFilePath);
     }
@@ -200,16 +200,17 @@ async function buildOccupancyFolder() {
 
 async function sendFolderToTheUser(rowData, currentTime, jobName, message) {
     await streamToBuffer().then(async (buffer) => {
-        const content = Buffer.from(buffer).toString('base64')
         try {
             const filePath = await saveLatestData(S3_BUCKET_ARBIMON, buffer, rowData.project_id, currentTime, 'occupancy-export', '.zip', 'application/zip')
             const url = await getSignedUrl({ Bucket: S3_BUCKET_ARBIMON, Key: filePath }, { clientType: 'rfcx' })
             await sendEmail('Arbimon export completed', 'Occupancy export', rowData, url, true)
             await updateExportRecordings(rowData, { processed_at: currentTime })
+            fs.rmSync(tmpFilePath, { recursive: true, force: true });
             await recordings.closeConnection()
         } catch(error) {
             console.error('Error while sending occupancy-model email.', error)
             await errorMessage(message, jobName)
+            fs.rmSync(tmpFilePath, { recursive: true, force: true });
             await updateExportRecordings(rowData, { error: JSON.stringify(error) })
             await recordings.closeConnection()
         }
@@ -365,14 +366,12 @@ async function processGroupedDetectionsStream (results, rowData, projection_para
                 const content = Buffer.from(data).toString('base64')
                 try {
                     await sendEmail('Arbimon export completed', 'grouped-detections-export.csv', rowData, content, false);
-                    fs.rmSync(tmpFilePath, { recursive: true, force: true });
                     await updateExportRecordings(rowData, { processed_at: currentTime })
                     await recordings.closeConnection()
                     resolve()
                 } catch(error) {
                     console.error('Error while sending grouped-detections-export email.', error)
                     await errorMessage(message, jobName)
-                    fs.rmSync(tmpFilePath, { recursive: true, force: true });
                     await updateExportRecordings(rowData, { error: JSON.stringify(error) })
                     await recordings.closeConnection()
                     resolve()
