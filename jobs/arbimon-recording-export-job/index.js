@@ -54,8 +54,9 @@ async function main () {
         await errorMessage(message, jobName)
         return
     }
+
+    // Process the Clustering report
     if (projection_parameters && projection_parameters.aed) {
-        // Process the Clustering report
         let params = projection_parameters
         params.project_id = filters.project_id
         params.exportReport = true
@@ -63,12 +64,7 @@ async function main () {
         return processClusteringStream(params.cluster, data, rowData, currentTime, message, jobName, projection_parameters.projectUrl).then(async () => {
             console.log(`arbimon-recording-export job finished: clustering report for ${message}`)
         })
-    }
-    else if (projection_parameters && projection_parameters.species) {
-        // Create the Occupancy model csv files, put them to .zip folder a send the folder to the user email
-        await getMultipleOccupancyModelsData(projection_parameters, filters, rowData, currentTime, message, jobName)
-    }
-    else if (projection_parameters && projection_parameters.grouped && projection_parameters.validation && !projection_parameters.species) {
+    } else if (projection_parameters && projection_parameters.grouped && projection_parameters.validation) {
         // Combine grouped detections report
         let allData
         // Get all sites, data, hours for selected project.
@@ -91,7 +87,11 @@ async function main () {
         return processGroupedDetectionsStream(data, rowData, projection_parameters, allData, currentTime, message, jobName).then(async () => {
             console.log(`arbimon-recording-export job finished: grouped detections report for ${message}`)
         })
+    } else if (projection_parameters && projection_parameters.species) {
+        // Create the Occupancy model csv files, put them to .zip folder a send the folder to the user email
+        await getMultipleOccupancyModelsData(projection_parameters, filters, rowData, currentTime, message, jobName)
     } else {
+        // Recordings export
         return new Promise((resolve, reject) => {
             recordingsExport.collectData(projection_parameters, filters, async (err, filePath) => {
                 if (err) {
