@@ -216,7 +216,7 @@ angular.module('a2.audiodata.recordings.data-export-parameters', [
                 _[parameter_set.identifier] = selected[index].value;
                 _['grouped'] = selected[index].value;
             }
-            if (selected[index] && parameter_set.identifier === 'species') {
+            if (selected[index] && parameter_set.identifier === 'species' && selected[index].length) {
                 _[parameter_set.identifier] = selected[index].map(function(item){
                     return item.value;
                 });
