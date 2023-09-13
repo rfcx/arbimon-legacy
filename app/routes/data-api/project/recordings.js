@@ -82,7 +82,7 @@ router.get('/count', function(req, res, next) {
     getCachedMetrics(req, res, key, p, next);
 });
 
-router.post('/occupancy-models-export/:species?', function(req, res, next) {
+router.post('/occupancy-models-export', function(req, res, next) {
     let filters, projection
     try {
         filters = req.body.filters ? req.body.filters : {}

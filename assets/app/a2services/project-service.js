@@ -105,7 +105,7 @@ angular.module('a2.srv.project', [
                 }
                 var params={filters:filters, show:projection};
                 const getUrl = '/api/project/'+url+'/recordings/'+ (
-                    projection && projection.species ? 'occupancy-models-export/'+projection.species_name :
+                    projection && projection.species ? 'occupancy-models-export' :
                     (projection && projection.grouped ? 'grouped-detections-export' : 'recordings-export'));
                 return $http.post(getUrl, params).then(function(response) {
                     return response.data;

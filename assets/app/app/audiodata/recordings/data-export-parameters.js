@@ -207,16 +207,16 @@ angular.module('a2.audiodata.recordings.data-export-parameters', [
             selected[5] = this.lists[5].filter(function(item) { if (item.value !== 0) { return item } });
         }
         this.onExport(this.parameter_set_list.reduce(function(_, parameter_set, index){
-            if(selected[index] && selected[index].length){
+            if (selected[index] && selected[index].length && parameter_set.identifier !== 'species') {
                 _[parameter_set.identifier] = selected[index].map(function(item){
                     return item.value;
                 });
             }
-            if(selected[index] && parameter_set.identifier==='grouped' && selected[index].value){
+            if (selected[index] && parameter_set.identifier === 'grouped' && selected[index].value) {
                 _[parameter_set.identifier] = selected[index].value;
                 _['grouped'] = selected[index].value;
             }
-            if(selected[index] && parameter_set.identifier==='species'){
+            if (selected[index] && parameter_set.identifier === 'species') {
                 _[parameter_set.identifier] = selected[index].map(function(item){
                     return item.value;
                 });
