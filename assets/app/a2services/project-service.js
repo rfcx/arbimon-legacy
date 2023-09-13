@@ -104,19 +104,10 @@ angular.module('a2.srv.project', [
                     filters.range.to = moment(filters.range.to).format('YYYY-MM-DD') + 'T23:59:59.999Z';
                 }
                 var params={filters:filters, show:projection};
-
-                Object.keys(params).forEach(function(param){
-                    if(!Object.keys(params[param] || {}).length){
-                        delete params[param];
-                    }
-                });
-
-                var serializedParams = $httpParamSerializer(params);
                 const getUrl = '/api/project/'+url+'/recordings/'+ (
                     projection && projection.species ? 'occupancy-models-export/'+projection.species_name :
-                    (projection && projection.grouped ? 'grouped-detections-export' : 'recordings-export'))
-                    + (serializedParams.length ? '?'+serializedParams : '');
-                return $http.get(getUrl).then(function(response) {
+                    (projection && projection.grouped ? 'grouped-detections-export' : 'recordings-export'));
+                return $http.post(getUrl, params).then(function(response) {
                     return response.data;
                 }).catch(notify.serverError);;
             },

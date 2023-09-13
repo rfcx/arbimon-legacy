@@ -82,11 +82,11 @@ router.get('/count', function(req, res, next) {
     getCachedMetrics(req, res, key, p, next);
 });
 
-router.get('/occupancy-models-export/:species?', function(req, res, next) {
+router.post('/occupancy-models-export/:species?', function(req, res, next) {
     let filters, projection
     try {
-        filters = req.query.filters ? JSON.parse(req.query.filters) : {}
-        projection = req.query.show ? JSON.parse(req.query.show) : {};
+        filters = req.body.filters ? req.body.filters : {}
+        projection = req.body.show ? req.body.show : {};
     } catch(e){
         return next(e);
     }
@@ -102,11 +102,11 @@ router.get('/occupancy-models-export/:species?', function(req, res, next) {
     }).catch(next);
 });
 
-router.get('/recordings-export', function(req, res, next) {
+router.post('/recordings-export', function(req, res, next) {
     let filters, projection
     try {
-        filters = req.query.filters ? JSON.parse(req.query.filters) : {}
-        projection = req.query.show ? JSON.parse(req.query.show) : {};
+        filters = req.body.filters ? req.body.filters : {}
+        projection = req.body.show ? req.body.show : {};
     } catch(e){
         return next(e);
     }
@@ -121,11 +121,11 @@ router.get('/recordings-export', function(req, res, next) {
     }).catch(next);
 });
 
-router.get('/grouped-detections-export', function(req, res, next) {
+router.post('/grouped-detections-export', function(req, res, next) {
     let filters, projection
     try {
-        filters = req.query.filters ? JSON.parse(req.query.filters) : {}
-        projection = req.query.show ? JSON.parse(req.query.show) : {};
+        filters = req.body.filters ? req.body.filters : {}
+        projection = req.body.show ? req.body.show : {};
     } catch(e){
         return next(e);
     }
