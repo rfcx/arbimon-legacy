@@ -1953,7 +1953,7 @@ var Recordings = {
                 }
                 return Q.all(promises);
             }).then(async function() {
-                const chunkSize = 200
+                const chunkSize = 1000
                 let index = 0
                 async function getData () {
                     let results = [];
