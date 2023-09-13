@@ -4,6 +4,9 @@ metadata:
   annotations:
     nginx.ingress.kubernetes.io/limit-rpm: "120"
     nginx.ingress.kubernetes.io/proxy-body-size: "200m"
+    nginx.ingress.kubernetes.io/auth-type: basic
+    nginx.ingress.kubernetes.io/auth-secret: bio-basic-auth-secrets
+    nginx.ingress.kubernetes.io/auth-realm: 'Authentication Required'
   name: arbimon-ingress
   namespace: testing
   labels:

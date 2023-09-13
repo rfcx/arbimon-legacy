@@ -1,2 +1,0 @@
-ALTER TABLE `arbimon2`.`projects`
-ADD COLUMN `image` VARCHAR(255) DEFAULT NULL;
