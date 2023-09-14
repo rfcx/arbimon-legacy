@@ -11,9 +11,8 @@ const recordings = require('../../app/model/recordings')
 const clusterings = require('../../app/model/clustering-jobs')
 const projects = require('../../app/model/projects')
 const config_hosts = require('../../config/hosts');
-const { saveLatestData, combineFilename } = require('../services/storage')
+const { saveLatestData, combineFilename, uploadAsStream, getSignedUrl } = require('../services/storage')
 const recordingsExport = require('./recordings')
-const { uploadAsStream, getSignedUrl } = require('../../app/utils/storage')
 const { streamToBuffer, zipDirectory } = require('../services/file-helper')
 
 const S3_BUCKET_ARBIMON = process.env.S3_BUCKET_ARBIMON
@@ -119,8 +118,8 @@ async function main () {
 
 async function saveFile (filePath, currentTime, projectId) {
     const s3FileKey = combineFilename(currentTime, projectId, 'export-recording', '.csv')
-    await uploadAsStream({ filePath, Bucket: S3_BUCKET_ARBIMON, Key: s3FileKey, ContentType: 'text/csv' }, { clientType: 'rfcx' })
-    return await getSignedUrl({ Bucket: S3_BUCKET_ARBIMON, Key: s3FileKey }, { clientType: 'rfcx' })
+    await uploadAsStream({ filePath, Bucket: S3_BUCKET_ARBIMON, Key: s3FileKey, ContentType: 'text/csv' })
+    return await getSignedUrl({ Bucket: S3_BUCKET_ARBIMON, Key: s3FileKey })
 }
 
 // Process Clustering report and send the email
@@ -154,7 +153,7 @@ async function processClusteringStream (cluster, results, rowData, currentTime, 
                 const isBigContent = contentSize && contentSize > 10240 // 10MB
                 if (isBigContent) {
                     const filePath = await saveLatestData(S3_BUCKET_ARBIMON, data, rowData.project_id, currentTime, 'clustering-rois-export', '.csv', 'text/csv')
-                    const url = await getSignedUrl({ Bucket: S3_BUCKET_ARBIMON, Key: filePath }, { clientType: 'rfcx' })
+                    const url = await getSignedUrl({ Bucket: S3_BUCKET_ARBIMON, Key: filePath })
                     await sendEmail('Arbimon export completed', null, rowData, url, true)
                 }
                 try {
@@ -203,7 +202,8 @@ async function sendFolderToTheUser(rowData, currentTime, jobName, message) {
     await streamToBuffer().then(async (buffer) => {
         try {
             const filePath = await saveLatestData(S3_BUCKET_ARBIMON, buffer, rowData.project_id, currentTime, 'occupancy-export', '.zip', 'application/zip')
-            const url = await getSignedUrl({ Bucket: S3_BUCKET_ARBIMON, Key: filePath }, { clientType: 'rfcx' })
+            const url = await getSignedUrl({ Bucket: S3_BUCKET_ARBIMON, Key: filePath })
+            console.log('\n\n--------url-------', url)
             await sendEmail('Arbimon export completed', 'Occupancy export', rowData, url, true)
             await updateExportRecordings(rowData, { processed_at: currentTime })
             fs.rmSync(tmpFilePath, { recursive: true, force: true });
