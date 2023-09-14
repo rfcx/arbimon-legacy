@@ -67,11 +67,27 @@ async function exportOccupancyModels (specie, filters) {
     return rows
 }
 
+async function getCountSitesRecPerDates (projectId, filters) {
+    const connection = await mysql.getConnection()
+    const isRangeAvailable = filters.range !== undefined
+    let query = `SELECT S.name as site, S.site_id as siteId, YEAR(R.datetime) as year, MONTH(R.datetime) as month, DAY(R.datetime) as day,COUNT(*) as count
+        FROM sites S
+        LEFT JOIN recordings R ON S.site_id = R.site_id
+        WHERE S.project_id = ${projectId}
+            AND S.deleted_at is null
+            ${isRangeAvailable ? 'AND (R.datetime >= ' + '"' + filters.range.from + '"' + ' AND R.datetime <= ' + '"' + filters.range.to + '"' + ')' : ''}
+        GROUP BY S.name, YEAR(R.datetime), MONTH(R.datetime), DAY(R.datetime);
+    `;
+    const [rows, fields] = await connection.execute(query)
+    return rows
+}
+
 
 module.exports = {
   deleteRecordings,
   exportOccupancyModels,
   getExportRecordingsRow,
   updateExportRecordings,
-  getCountConnections
+  getCountConnections,
+  getCountSitesRecPerDates
 }

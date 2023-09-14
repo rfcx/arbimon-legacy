@@ -1725,22 +1725,6 @@ var Recordings = {
         });
     },
 
-    getCountSitesRecPerDates: async function(projectId, filters){
-        const isRangeAvailable = filters.range !== undefined
-        let query = `SELECT S.name as site, S.site_id as siteId, YEAR(R.datetime) as year, MONTH(R.datetime) as month, DAY(R.datetime) as day,COUNT(*) as count
-            FROM sites S
-            LEFT JOIN recordings R ON S.site_id = R.site_id
-            WHERE S.project_id = ${projectId}
-                AND S.deleted_at is null
-                ${isRangeAvailable ? 'AND (R.datetime >= ' + '"' + filters.range.from + '"' + ' AND R.datetime <= ' + '"' + filters.range.to + '"' + ')' : ''}
-            GROUP BY S.name, YEAR(R.datetime), MONTH(R.datetime), DAY(R.datetime);`;
-        let queryResult = await dbpool.query({
-            sql: query,
-            typeCast: sqlutil.parseUtcDatetime,
-        })
-        return queryResult;
-    },
-
     writeExportParams: function(projection, filters, userId, userEmail) {
         return Q.ninvoke(joi, 'validate', projection, Recordings.SCHEMAS.exportProjections)
             .then((projection_parameters) => {

@@ -5,7 +5,7 @@ const stream = require('stream');
 const csv_stringify = require('csv-stringify');
 const mandrill = require('mandrill-api/mandrill')
 const moment = require('moment')
-const { exportOccupancyModels, getExportRecordingsRow, updateExportRecordings, getCountConnections } = require('../services/recordings')
+const { exportOccupancyModels, getExportRecordingsRow, getCountSitesRecPerDates, updateExportRecordings, getCountConnections } = require('../services/recordings')
 const { errorMessage } = require('../services/stats')
 const recordings = require('../../app/model/recordings')
 const clusterings = require('../../app/model/clustering-jobs')
@@ -185,6 +185,7 @@ async function getMultipleOccupancyModelsData(projection_parameters, filters, ro
     console.log('folder jobs/arbimon-recording-export-job/tmpfilecache exists', fs.existsSync(tmpFilePath))
     for (const [i, specie] of projection_parameters.species.entries()) {
         const data = await exportOccupancyModels(specie, filters)
+        console.log('\n\n----data---', allSites)
         rowData.species_name = filters.species_name[i] || specie
         await processOccupancyModelStream(data, rowData, specie, filters).then(async () => {
             console.log(`occupancy models report for ${message}, specie ${rowData.species_name}`)
@@ -219,8 +220,9 @@ async function sendFolderToTheUser(rowData, currentTime, jobName, message) {
 
 async function processOccupancyModelStream (results, rowData, speciesId, filters) {
     return new Promise(async function (resolve, reject) {
-        let sitesData = await recordings.getCountSitesRecPerDates(rowData.project_id, filters);
+        let sitesData = await getCountSitesRecPerDates(rowData.project_id, filters);
         let allSites = sitesData.map(item => { return item.site }).filter((v, i, s) => s.indexOf(v) === i);
+        console.log('\n\n----allSites---', allSites)
         // Get the first/last recording/date per project, not include invalid dates.
         let dates = sitesData
             .filter(s => s.year && s.month && s.day && s.year > '1970')
