@@ -12,8 +12,7 @@ async function uploadObjToFile (bucket, filename, buf, contentType) {
                 Bucket: bucket,
                 Key: filename,
                 Body: buf,
-                ContentType: contentType? contentType : 'text/csv',
-                ACL: 'public-read'
+                ContentType: contentType? contentType : 'text/csv'
             }, (putErr, data) => {
                 if (putErr) {
                     console.error('putErr', putErr)
