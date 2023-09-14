@@ -90,6 +90,7 @@ router.post('/update', function(req, res, next) {
             return res.json({ error: 'Site with same name already exists'});
         }
 
+        site.timezone_locked = result[0].timezone_locked
         model.sites.updateSite(site, req.session.idToken).then(function() {
             res.json({ message: 'Site updated' });
             model.projects.updateProjectLocation(project.project_id, site.lat, site.lon)

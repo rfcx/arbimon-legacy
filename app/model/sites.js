@@ -140,7 +140,7 @@ var Sites = {
         if(typeof site.site_id === "undefined")
             return callback(new Error("required field 'site_id' missing"));
 
-        if (site.lat !== undefined && site.lon !== undefined) {
+        if (site.lat !== undefined && site.lon !== undefined && !site.timezone_locked) {
             try {
                 site.timezone = tzlookup(site.lat, site.lon);
             } catch(err) {

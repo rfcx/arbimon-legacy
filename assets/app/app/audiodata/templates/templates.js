@@ -80,6 +80,7 @@ angular.module('a2.audiodata.templates', [
             }).bind(this));
         },
         onSearchChanged: function () {
+            self.loading = true;
             clearTimeout(self.timeout);
             self.timeout = setTimeout(() => {
                 if (self.search.q.trim().length > 0 && self.search.q.trim().length < 3) return
