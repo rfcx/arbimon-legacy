@@ -118,7 +118,7 @@ async function main () {
 }
 
 async function saveFile (filePath, currentTime, projectId) {
-    const s3FileKey = combineFilename(currentTime, projectId, 'export-recording')
+    const s3FileKey = combineFilename(currentTime, projectId, 'export-recording', '.csv')
     await uploadAsStream({ filePath, Bucket: S3_BUCKET_ARBIMON, Key: s3FileKey, ContentType: 'text/csv' }, { clientType: 'rfcx' })
     return await getSignedUrl({ Bucket: S3_BUCKET_ARBIMON, Key: s3FileKey }, { clientType: 'rfcx' })
 }
