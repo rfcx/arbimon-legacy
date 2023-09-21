@@ -48,10 +48,46 @@ async function getCountConnections (options = {}) {
     return rows
 }
 
+async function exportOccupancyModels (specie, filters) {
+    const connection = await mysql.getConnection()
+    const isRangeAvailable = filters.range !== undefined
+    let sql = `SELECT S.name as site, S.site_id as siteId, DATE_FORMAT(R.datetime, "%Y/%m/%d") as date, SUM(rv.present=1 OR rv.present_review>0 OR rv.present_aed>0) as count
+        FROM recordings R
+        JOIN sites S ON S.site_id = R.site_id
+        LEFT JOIN project_imported_sites AS pis ON S.site_id = pis.site_id AND pis.project_id = ${filters.project_id}
+        LEFT JOIN recording_validations AS rv ON R.recording_id = rv.recording_id
+        WHERE rv.species_id = ${specie}
+            AND (S.project_id = ${filters.project_id} OR pis.project_id = ${filters.project_id})
+            AND (rv.present_review>0 OR rv.present_aed>0 OR rv.present is not null)
+            ${isRangeAvailable ? 'AND (R.datetime >= ' + '"' + filters.range.from + '"' + ' AND R.datetime <=' + '"' + filters.range.to + '"' + ')' : ''}
+        GROUP BY S.name, YEAR(R.datetime), MONTH(R.datetime), DAY(R.datetime) ORDER BY R.datetime ASC
+    `;
+
+    const [rows, fields] = await connection.execute(sql)
+    return rows
+}
+
+async function getCountSitesRecPerDates (projectId, filters) {
+    const connection = await mysql.getConnection()
+    const isRangeAvailable = filters.range !== undefined
+    let query = `SELECT S.name as site, S.site_id as siteId, YEAR(R.datetime) as year, MONTH(R.datetime) as month, DAY(R.datetime) as day,COUNT(*) as count
+        FROM sites S
+        LEFT JOIN recordings R ON S.site_id = R.site_id
+        WHERE S.project_id = ${projectId}
+            AND S.deleted_at is null
+            ${isRangeAvailable ? 'AND (R.datetime >= ' + '"' + filters.range.from + '"' + ' AND R.datetime <= ' + '"' + filters.range.to + '"' + ')' : ''}
+        GROUP BY S.name, YEAR(R.datetime), MONTH(R.datetime), DAY(R.datetime);
+    `;
+    const [rows, fields] = await connection.execute(query)
+    return rows
+}
+
 
 module.exports = {
   deleteRecordings,
+  exportOccupancyModels,
   getExportRecordingsRow,
   updateExportRecordings,
-  getCountConnections
+  getCountConnections,
+  getCountSitesRecPerDates
 }
