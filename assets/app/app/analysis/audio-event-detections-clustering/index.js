@@ -9,12 +9,15 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
 .config(function($stateProvider) {
     $stateProvider
         .state('analysis.audio-event-detections-clustering', {
-            url: '/audio-event-detections-clustering',
+            url: '/audio-event-detections-clustering?newJob',
             controller: 'AudioEventDetectionsClusteringModelCtrl',
             templateUrl: '/app/analysis/audio-event-detections-clustering/list.html'
         })
 })
-.controller('AudioEventDetectionsClusteringModelCtrl' , function($scope, $modal, $location, JobsData, notify, a2AudioEventDetectionsClustering, Project, $localStorage, $window, a2UserPermit) {
+.controller('AudioEventDetectionsClusteringModelCtrl' , function($scope, $modal, $location, JobsData, notify, a2AudioEventDetectionsClustering, Project, $localStorage, $window, a2UserPermit, $state) {
+
+    var p = $state.params;
+    var isNewJob = p && p.newJob !== undefined;
 
     $scope.loadAudioEventDetections = function() {
         $scope.loading = true;
@@ -67,6 +70,10 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
             }
         });
     };
+
+    if (isNewJob) {
+        $scope.createNewClusteringModel()
+    }
 
     $scope.deleteAedJob = function(aedJob, $event) {
         $event.stopPropagation();

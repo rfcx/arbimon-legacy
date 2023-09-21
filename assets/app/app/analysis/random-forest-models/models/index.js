@@ -11,7 +11,7 @@ angular.module('a2.analysis.random-forest-models.models', [
 ])
 .config(function($stateProvider, $urlRouterProvider) {
     $stateProvider.state('analysis.random-forest-models.models', {
-        url: '/models',
+        url: '/models?newJob',
         controller: 'ModelsCtrl',
         templateUrl: '/app/analysis/random-forest-models/models/list.html'
     })
@@ -21,7 +21,7 @@ angular.module('a2.analysis.random-forest-models.models', [
         templateUrl: '/app/analysis/random-forest-models/models/modelinfo.html'
     });
 })
-.controller('ModelsCtrl', function($scope, $modal, $filter, ngTableParams, Project, a2Models, JobsData, $location, notify, a2UserPermit) {
+.controller('ModelsCtrl', function($scope, $modal, $filter, ngTableParams, Project, a2Models, JobsData, $location, notify, a2UserPermit, $state) {
     $scope.infoInfo = "Loading...";
     $scope.showInfo = true;
     $scope.loading = true;
@@ -39,6 +39,9 @@ angular.module('a2.analysis.random-forest-models.models', [
     Project.getInfo(function(data) {
         $scope.projectData = data;
     });
+
+    var p = $state.params;
+    var isNewJob = p && p.newJob !== undefined;
 
     var initTable = function(p,c,s,f,t) {
         var sortBy = {};
@@ -192,7 +195,7 @@ angular.module('a2.analysis.random-forest-models.models', [
         $scope.infoInfo = "Loading...";
         $scope.showInfo = true;
         $scope.loading = true;
-        var url = $scope.projectData.url;
+        // var url = $scope.projectData.url;
 
         a2Models.getFormInfo(function(data) {
 
@@ -238,6 +241,10 @@ angular.module('a2.analysis.random-forest-models.models', [
             });
         });
     };
+
+    if (isNewJob) {
+        $scope.newModel()
+    }
 })
 .controller('NewModelInstanceCtrl', function($scope, $modalInstance, a2Models, Project, projectData, types, trainings, notify, $http) {
     $scope.types = types;

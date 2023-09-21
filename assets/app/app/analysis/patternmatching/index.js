@@ -13,7 +13,7 @@ angular.module('a2.analysis.patternmatching', [
         templateUrl: '/app/analysis/patternmatching/disabled.html'
     });
     $stateProvider.state('analysis.patternmatching', {
-        url: '/patternmatching',
+        url: '/patternmatching?newJob',
         controller: 'PatternMatchingCtrl',
         templateUrl: '/app/analysis/patternmatching/list.html'
     });
@@ -23,7 +23,7 @@ angular.module('a2.analysis.patternmatching', [
         templateUrl: '/app/analysis/patternmatching/list.html'
     });
 })
-.controller('PatternMatchingCtrl' , function($scope, $modal, JobsData, $location, notify, $q, a2PatternMatching, a2UserPermit, $state, $stateParams, Project) {
+.controller('PatternMatchingCtrl' , function($scope, $modal, JobsData, $location, notify, a2PatternMatching, a2UserPermit, $state, $stateParams) {
     $scope.selectedPatternMatchingId = $stateParams.patternMatchingId;
     $scope.loading = { rows: false, showRefreshBtn: false };
     $scope.paginationSettings = {
@@ -35,6 +35,9 @@ angular.module('a2.analysis.patternmatching', [
     }
     $scope.search = { q: '' };
     var timeout;
+
+    var p = $state.params;
+    var isNewJob = p && p.newJob !== undefined;
 
     $scope.getTemplateVisualizerUrl = function(template) {
         var box
@@ -148,6 +151,10 @@ angular.module('a2.analysis.patternmatching', [
             }
         });
     };
+
+    if (isNewJob) {
+        $scope.createNewPatternMatching()
+    }
 
     $scope.deletePatternMatching = function(patternMatching, $event) {
         $event.stopPropagation();

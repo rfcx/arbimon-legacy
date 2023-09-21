@@ -7,7 +7,7 @@ angular.module('a2.analysis.soundscapes', [
 ])
 .config(function($stateProvider, $urlRouterProvider) {
     $stateProvider.state('analysis.soundscapes', {
-        url: '/soundscapes',
+        url: '/soundscapes?newJob',
         controller: 'SoundscapesCtrl as controller',
         templateUrl: '/app/analysis/soundscapes/list.html'
     });
@@ -24,7 +24,8 @@ angular.module('a2.analysis.soundscapes', [
     $location,
     a2Soundscapes,
     notify,
-    a2UserPermit
+    a2UserPermit,
+    $state
 ){
     var $=$window.$;
     $scope.successInfo = "";
@@ -34,6 +35,9 @@ angular.module('a2.analysis.soundscapes', [
     $scope.infoInfo = "Loading...";
     $scope.showInfo = true;
     $scope.loading = true;
+
+    var p = $state.params;
+    var isNewJob = p && p.newJob !== undefined;
 
     $scope.infopanedata = '';
 
@@ -244,6 +248,10 @@ angular.module('a2.analysis.soundscapes', [
             }
         });
     };
+
+    if (isNewJob) {
+        $scope.createNewSoundscape()
+    }
 
     $scope.showDetails = function(soundscapeId) {
 
