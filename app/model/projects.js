@@ -187,6 +187,7 @@ var Projects = {
                 "       s.published, \n"+
                 "       s.updated_at, \n"+
                 "       s.external_id, \n"+
+                "       s.timezone_locked, \n"+
                 "       s.project_id != ? AS imported, \n"+
                 "       s.token_created_on \n" +
                 "FROM sites AS s \n"+
