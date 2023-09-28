@@ -239,7 +239,7 @@ async function processOccupancyModelStream (results, rowData, speciesId, filters
             // Combine repeating sites with existing data in the report.
             if (streamObject[row.site]) {
                 let index = fields.findIndex(date => date === row.date);
-                streamObject[row.site][index+1] = row.count === 0 ? 0 : 1;
+                streamObject[row.site][index+2] = row.count === 0 ? 0 : 1;
             }
             else {
                 let tempRow = {};
