@@ -256,7 +256,7 @@ async function processOccupancyModelStream (results, rowData, speciesId, filters
                     // 1 (present); 0 (absent);
                     // NA ( device was not active in that day, in other words, there are no recordings for this day);
                     // NI ( no information from the user if species is present or absent). Changed to 0
-                    tempRow[item] = item === row.date? (row.count === 0 ? 0 : 1) : (site ? '0' : 'NA');
+                    tempRow[item] = item === row.date? (row.count === '0' ? 0 : 1) : (site ? '0' : 'NA');
                 });
                 streamObject[row.site] = [...Object.values(tempRow)];
             }
