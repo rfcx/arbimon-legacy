@@ -184,7 +184,6 @@ async function getMultipleOccupancyModelsData(projection_parameters, filters, ro
     console.log('folder jobs/arbimon-recording-export-job/tmpfilecache exists', fs.existsSync(tmpFilePath))
     for (const [i, specie] of projection_parameters.species.entries()) {
         const data = await exportOccupancyModels(specie, filters)
-        console.log('\n\n----data---', data)
         rowData.species_name = filters.species_name[i] || specie
         await processOccupancyModelStream(data, rowData, specie, filters).then(async () => {
             console.log(`occupancy models report for ${message}, specie ${rowData.species_name}`)
