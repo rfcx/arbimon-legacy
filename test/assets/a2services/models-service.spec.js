@@ -42,7 +42,7 @@ describe('Module: a2.srv.models', function() {
             
             beforeEach(function() {
                 request = $httpBackend
-                    .expectGET('/api/project/test/models');
+                    .expectGET('/legacy-api/project/test/models');
             });
             
             it('requests to the correct route and call success', function() {
@@ -72,7 +72,7 @@ describe('Module: a2.srv.models', function() {
             
             beforeEach(function() {
                 request = $httpBackend
-                    .expectGET('/api/project/test/models/forminfo');
+                    .expectGET('/legacy-api/project/test/models/forminfo');
             });
             
             it('requests to the correct route and call success', function() {
@@ -102,7 +102,7 @@ describe('Module: a2.srv.models', function() {
             
             beforeEach(function() {
                 request = $httpBackend
-                    .expectGET('/api/project/test/models/1');
+                    .expectGET('/legacy-api/project/test/models/1');
             });
             
             it('requests to the correct route and call success', function() {
@@ -143,7 +143,7 @@ describe('Module: a2.srv.models', function() {
                 };
                 
                 request = $httpBackend
-                    .expectPOST('/api/project/test/models/new', modelData);
+                    .expectPOST('/legacy-api/project/test/models/new', modelData);
             });
             
             it('requests to the correct route and call success', function() {
@@ -163,7 +163,7 @@ describe('Module: a2.srv.models', function() {
             
             beforeEach(function() {
                 request = $httpBackend
-                    .expectGET('/api/project/test/models/1/delete');
+                    .expectGET('/legacy-api/project/test/models/1/delete');
             });
             
             it('requests to the correct route and call success', function() {
@@ -193,7 +193,7 @@ describe('Module: a2.srv.models', function() {
             
             beforeEach(function() {
                 request = $httpBackend
-                    .expectGET('/api/project/test/models/1/validation-list/');
+                    .expectGET('/legacy-api/project/test/models/1/validation-list/');
             });
             
             it('requests to the correct route and call success', function() {
@@ -223,7 +223,7 @@ describe('Module: a2.srv.models', function() {
             
             beforeEach(function() {
                 request = $httpBackend
-                    .expectPOST('/api/project/test/models/savethreshold', { m: 1, t: 2 });
+                    .expectPOST('/legacy-api/project/test/models/savethreshold', { m: 1, t: 2 });
             });
             
             it('requests to the correct route and call success', function() {

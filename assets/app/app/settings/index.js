@@ -130,11 +130,11 @@ angular.module('a2.settings',[
 
     $scope.findUser = function(query) {
         $scope.curQuery = query
-        return $http.get('/api/user/search/'+ query).then(function(response) { return response.data; });
+        return $http.get('/legacy-api/user/search/'+ query).then(function(response) { return response.data; });
     };
 
     $scope.inviteUser = function(data) {
-        return $http.post('/api/user/invite', data).then(function(response) { return response.data; });
+        return $http.post('/legacy-api/user/invite', data).then(function(response) { return response.data; });
     };
 
     $scope.add = function() {

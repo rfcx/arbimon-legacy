@@ -9,12 +9,12 @@ angular.module('a2.srv.clustering-jobs', [
             const config = {
                 params: opts
             };
-            return $http.get('/api/project/'+Project.getUrl()+'/clustering-jobs', config).then(function(response){
+            return $http.get('/legacy-api/project/'+Project.getUrl()+'/clustering-jobs', config).then(function(response){
                 return response.data;
             }).catch(notify.serverError);
         },
         getJobDetails: function(clusteringJobId) {
-            return $http.get('/api/project/' + Project.getUrl() + '/clustering-jobs/' + clusteringJobId + '/job-details').then(function(response){
+            return $http.get('/legacy-api/project/' + Project.getUrl() + '/clustering-jobs/' + clusteringJobId + '/job-details').then(function(response){
                 return response.data;
             }).catch(notify.serverError);
         },
@@ -22,7 +22,7 @@ angular.module('a2.srv.clustering-jobs', [
             var config = {
                 params: opts
             };
-            return $http.get('/api/project/' + Project.getUrl() + '/clustering-jobs/' + opts.job_id + '/clustering-details', config).then(function(response){
+            return $http.get('/legacy-api/project/' + Project.getUrl() + '/clustering-jobs/' + opts.job_id + '/clustering-details', config).then(function(response){
                 return response.data;
             }).catch(notify.serverError);
         },
@@ -42,7 +42,7 @@ angular.module('a2.srv.clustering-jobs', [
             }
             else params.all = true;
 
-            return $http.post('/api/project/' + Project.getUrl() + '/clustering-jobs/' + opts.jobId + '/rois-details', params).then(function(response){
+            return $http.post('/legacy-api/project/' + Project.getUrl() + '/clustering-jobs/' + opts.jobId + '/rois-details', params).then(function(response){
                 return response.data;
             }).catch(notify.serverError);
         },
@@ -50,13 +50,13 @@ angular.module('a2.srv.clustering-jobs', [
             const config = {
                 params: opts
             };
-            return $http.post('/api/project/' + Project.getUrl() + '/clustering-jobs/' + opts.jobId + '/rois-export', config)
+            return $http.post('/legacy-api/project/' + Project.getUrl() + '/clustering-jobs/' + opts.jobId + '/rois-export', config)
                 .then(function(response){
                     return response.data;
                 }).catch(notify.serverError);
         },
         getAudioUrlFor: function(recId, aedId) {
-            return '/api/project/' + Project.getUrl() + '/clustering-jobs/' + recId + '/audio/' + aedId;
+            return '/legacy-api/project/' + Project.getUrl() + '/clustering-jobs/' + recId + '/audio/' + aedId;
         },
         audioEventDetections: function(opts) {
             var config = {
@@ -65,18 +65,18 @@ angular.module('a2.srv.clustering-jobs', [
             if (opts.completed) {
                 config.params.completed = opts.completed;
             }
-            return $http.get('/api/project/'+Project.getUrl()+'/clustering-jobs/audio-event-detections', config).then(function(response){
+            return $http.get('/legacy-api/project/'+Project.getUrl()+'/clustering-jobs/audio-event-detections', config).then(function(response){
                 return response.data;
             }).catch(notify.serverError);
         },
         create: function(data) {
-            return $http.post('/api/project/'+Project.getUrl()+'/clustering-jobs/new', data)
+            return $http.post('/legacy-api/project/'+Project.getUrl()+'/clustering-jobs/new', data)
                 .then(function(response){
                     return response.data;
                 }).catch(notify.serverError);
         },
         delete: function(clusteringJobId) {
-            return $http.post('/api/project/' + Project.getUrl() + '/clustering-jobs/' + clusteringJobId + '/remove').then(function(response){
+            return $http.post('/legacy-api/project/' + Project.getUrl() + '/clustering-jobs/' + clusteringJobId + '/remove').then(function(response){
                 return response.data;
             }).catch(notify.serverError);
         },

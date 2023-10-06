@@ -23,14 +23,14 @@ angular.module('a2.home', [
     return [
         {   title:'projects created',
             getData: function($http){
-                return $http.get('/api/project/projects-count').then(function(projects) {
+                return $http.get('/legacy-api/project/projects-count').then(function(projects) {
                     return projects.data;
                 });
             },
         },
         {   title:'recordings uploaded',
             getData: function($http){
-                return $http.get('/api/project/recordings-count').then(function(recordings) {
+                return $http.get('/legacy-api/project/recordings-count').then(function(recordings) {
                     return recordings.data;
                 });
             },
@@ -38,14 +38,14 @@ angular.module('a2.home', [
         {   title:'analyses performed',
             description: 'Number of files processed by pattern matching jobs',
             getData: function($http){
-                return $http.get('/api/project/jobs-count').then(function(jobs) {
+                return $http.get('/legacy-api/project/jobs-count').then(function(jobs) {
                     return jobs.data;
                 });
             },
         },
         {   title: 'species identified',
             getData: function($http){
-                return $http.get('/api/project/recordings-species-count').then(function(species) {
+                return $http.get('/legacy-api/project/recordings-species-count').then(function(species) {
                     return species.data;
                 });
             },
@@ -115,7 +115,7 @@ angular.module('a2.home', [
         this.isLoading = true;
         this.projects = [];
         this.highlightedProjects = [];
-        $http.get('/api/user/projectlist', config).success(function(data) {
+        $http.get('/legacy-api/user/projectlist', config).success(function(data) {
             data.forEach(function(p){
                 p.lastAccessed = psCache[p.id] || 0;
                 var lat = p.lat && p.lat >= -85.0511 && p.lat <= 85.0511? p.lat : 37.773972;
@@ -129,15 +129,15 @@ angular.module('a2.home', [
                 this.highlightedProjects = data.filter(item => item.featured === 1);
                 this.highlightedProjects.forEach(project => {
                     project.isLoading = true;
-                    $http.get('/api/project/' + project.url + '/templates/count', { params: { projectTemplates: true } }).success(function(data) {
+                    $http.get('/legacy-api/project/' + project.url + '/templates/count', { params: { projectTemplates: true } }).success(function(data) {
                         project.templatesTotal = data.count || 0;
                         project.isLoading = false;
                     });
-                    $http.get('/api/project/' + project.url + '/recordings/count').success(function(count) {
+                    $http.get('/legacy-api/project/' + project.url + '/recordings/count').success(function(count) {
                         project.recCount = count;
                         project.isLoading = false;
                     })
-                    $http.get('/api/project/' + project.url + '/species-count').success(function(count) {
+                    $http.get('/legacy-api/project/' + project.url + '/species-count').success(function(count) {
                         project.speciesCount = count || 0;
                         project.isLoading = false;
                     })
@@ -176,7 +176,7 @@ angular.module('a2.home', [
 
     $scope.isAnonymousGuest = true;
 
-    $http.get('/api/user/info').success((function(data) {
+    $http.get('/legacy-api/user/info').success((function(data) {
         $scope.isAnonymousGuest = data.isAnonymousGuest;
         this.loadProjectList();
     }).bind(this));

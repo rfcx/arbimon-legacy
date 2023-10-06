@@ -77,7 +77,7 @@ router.use(function(req, res, next) {
     next();
 });
 
-router.get('/api/login_available', function(req, res, next) {
+router.get('/legacy-api/login_available', function(req, res, next) {
     res.type('json');
     if(!req.query.username) {
         return res.json({ error: "missing parameter"});
@@ -90,7 +90,7 @@ router.get('/api/login_available', function(req, res, next) {
     });
 });
 
-router.get('/api/email_available', function(req, res, next) {
+router.get('/legacy-api/email_available', function(req, res, next) {
     res.type('json');
     if(!req.query.email) {
         return res.json({ error: "missing parameter"});

@@ -98,14 +98,14 @@ describe('login.js', function(){
             });
         });
     });
-    describe('get /api/login_available', function(){
+    describe('get /legacy-api/login_available', function(){
         it('Should indicate wether a given login is available or not.', function(done){
             mock.model.users.usernameInUse=function(name, cb){
                 cb(null, false);
             };
             var req, res;
             login.handle(req={
-                method:'get', url:'/api/login_available', query:{username:'pepe'}
+                method:'get', url:'/legacy-api/login_available', query:{username:'pepe'}
             }, res={
                 json:function(obj){
                     obj.should.deep.equal({available:true});
@@ -118,7 +118,7 @@ describe('login.js', function(){
         it('Should respond error message if parameter is missing.', function(done){
             var req, res;
             login.handle(req={
-                method:'get', url:'/api/login_available', query:{}
+                method:'get', url:'/legacy-api/login_available', query:{}
             }, res={
                 json:function(obj){
                     obj.should.deep.equal({error: "missing parameter"});
@@ -134,7 +134,7 @@ describe('login.js', function(){
             };
             var req, res;
             login.handle(req={
-                method:'get', url:'/api/login_available', query:{username:'pepe'}
+                method:'get', url:'/legacy-api/login_available', query:{username:'pepe'}
             }, res={
             }, function(err){
                 should.exist(err);
@@ -143,14 +143,14 @@ describe('login.js', function(){
             });
         });
     });
-    describe('get /api/email_available', function(){
+    describe('get /legacy-api/email_available', function(){
         it('Should indicate wether a given email is available or not.', function(done){
             mock.model.users.emailInUse=function(name, cb){
                 cb(null, false);
             };
             var req, res;
             login.handle(req={
-                method:'get', url:'/api/email_available', query:{email:'pepe@site.com'}
+                method:'get', url:'/legacy-api/email_available', query:{email:'pepe@site.com'}
             }, res={
                 json:function(obj){
                     obj.should.deep.equal({available:true});
@@ -163,7 +163,7 @@ describe('login.js', function(){
         it('Should respond error message if email parameter is not valid.', function(done){
             var req, res;
             login.handle(req={
-                method:'get', url:'/api/email_available', query:{email:'invalidemail!#$'}
+                method:'get', url:'/legacy-api/email_available', query:{email:'invalidemail!#$'}
             }, res={
                 json:function(obj){
                     obj.should.deep.equal({invalid:true});
@@ -176,7 +176,7 @@ describe('login.js', function(){
         it('Should respond error message if parameter is missing.', function(done){
             var req, res;
             login.handle(req={
-                method:'get', url:'/api/email_available', query:{}
+                method:'get', url:'/legacy-api/email_available', query:{}
             }, res={
                 json:function(obj){
                     obj.should.deep.equal({error: "missing parameter"});
@@ -192,7 +192,7 @@ describe('login.js', function(){
             };
             var req, res;
             login.handle(req={
-                method:'get', url:'/api/email_available', query:{email:'pepe@site.com'}
+                method:'get', url:'/legacy-api/email_available', query:{email:'pepe@site.com'}
             }, res={
             }, function(err){
                 should.exist(err);

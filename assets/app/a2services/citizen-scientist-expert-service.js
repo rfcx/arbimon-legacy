@@ -23,7 +23,7 @@ angular.module('a2.srv.citizen-scientist-expert', [
         },
         getCSExportUrl: function(options){
             options = options || {};
-            return '/api/project/' + Project.getUrl() + '/citizen-scientist/pattern-matchings/' + (options.patternMatching | 0) + '/export.csv';
+            return '/legacy-api/project/' + Project.getUrl() + '/citizen-scientist/pattern-matchings/' + (options.patternMatching | 0) + '/export.csv';
         },
     };
 })

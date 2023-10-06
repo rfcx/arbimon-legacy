@@ -10,7 +10,7 @@ angular.module('a2.orders.project-order-service', [
             }
             var data = angular.merge({}, orderData);
             delete data.action;
-            return $http.post('/api/orders/'+orderData.action, orderData).then(function(response){
+            return $http.post('/legacy-api/orders/'+orderData.action, orderData).then(function(response){
                 var data = response.data;
                 // notify any succesfull messages
                 if(data.message) {

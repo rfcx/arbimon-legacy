@@ -44,7 +44,7 @@ var createOrder = function(user, order, addendum, appHost) {
         shippingAddress: addendum.address,
         redirect_urls: {
             return_url: appHost + "/process-order/"+ orderId,
-            cancel_url: appHost + "/api/orders/cancel/" + orderId,
+            cancel_url: appHost + "/legacy-api/orders/cancel/" + orderId,
         },
     });
 

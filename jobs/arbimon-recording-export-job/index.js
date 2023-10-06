@@ -138,7 +138,7 @@ async function processClusteringStream (cluster, results, rowData, currentTime, 
         datastream.on('data', (d) => {
             for (let row in cluster) {
                 if (d.recording_id) {
-                    d.uri = `${config_hosts.publicUrl}/api/project/${projectUrl}/recordings/download/${d.recording_id}`;
+                    d.uri = `${config_hosts.publicUrl}/legacy-api/project/${projectUrl}/recordings/download/${d.recording_id}`;
                 }
                 if (cluster[row].includes(d.aed_id)) {
                     d.cluster = row

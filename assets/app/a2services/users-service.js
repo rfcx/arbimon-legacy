@@ -4,7 +4,7 @@ angular.module('a2.srv.users', [])
 
     return {
         getInfoForId: function(user_id){
-            return $http.get('/api/user/info/'+user_id).then(function(response) {
+            return $http.get('/legacy-api/user/info/'+user_id).then(function(response) {
                 return response.data.user;
             });
         }

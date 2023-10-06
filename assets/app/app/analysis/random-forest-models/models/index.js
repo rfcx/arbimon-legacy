@@ -265,7 +265,7 @@ angular.module('a2.analysis.random-forest-models.models', [
     };
 
 
-    $http.get('/api/jobs/types')
+    $http.get('/legacy-api/jobs/types')
         .success(function(jobTypes) {
             var training = jobTypes.filter(function(type) {
                 return type.name === "Model training";

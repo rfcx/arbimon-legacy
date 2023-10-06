@@ -41,7 +41,7 @@ describe('Module: a2.srv.soundscapes', function() {
             it('request to correct route', function() {
                 
                 $httpBackend
-                    .expectGET('/api/project/test/soundscapes/1')
+                    .expectGET('/legacy-api/project/test/soundscapes/1')
                     .respond(200, 'data');
                     
                 a2Soundscapes.get(1, function(data){
@@ -55,7 +55,7 @@ describe('Module: a2.srv.soundscapes', function() {
         describe('a2Soundscapes.getSCIdx', function() {
             it('request to correct route without params', function() {
                 $httpBackend
-                    .expectGET('/api/project/test/soundscapes/1/scidx')
+                    .expectGET('/legacy-api/project/test/soundscapes/1/scidx')
                     .respond(200, 'data');
                     
                 a2Soundscapes.getSCIdx(1, function(data){
@@ -67,7 +67,7 @@ describe('Module: a2.srv.soundscapes', function() {
             
             it('request to correct route with params', function() {
                 $httpBackend
-                    .expectGET('/api/project/test/soundscapes/1/scidx?param=test')
+                    .expectGET('/legacy-api/project/test/soundscapes/1/scidx?param=test')
                     .respond(200, 'data');
                     
                 a2Soundscapes.getSCIdx(1, { param: 'test'}, function(data){
@@ -79,7 +79,7 @@ describe('Module: a2.srv.soundscapes', function() {
 
             it('request to correct route, using returned promise', function() {
                 $httpBackend
-                    .expectGET('/api/project/test/soundscapes/1/scidx')
+                    .expectGET('/legacy-api/project/test/soundscapes/1/scidx')
                     .respond(200, 'data');
                     
                 a2Soundscapes.getSCIdx(1).then(function(data){
@@ -94,7 +94,7 @@ describe('Module: a2.srv.soundscapes', function() {
         describe('a2Soundscapes.getNormVector', function() {
             it('request to correct route with a given callback', function() {
                 $httpBackend
-                    .expectGET('/api/project/test/soundscapes/1/norm-vector')
+                    .expectGET('/legacy-api/project/test/soundscapes/1/norm-vector')
                     .respond(200, 'data');
                     
                 a2Soundscapes.getNormVector(1, function(data){
@@ -106,7 +106,7 @@ describe('Module: a2.srv.soundscapes', function() {
             
             it('request to correct route using returned promise', function() {
                 $httpBackend
-                    .expectGET('/api/project/test/soundscapes/1/norm-vector')
+                    .expectGET('/legacy-api/project/test/soundscapes/1/norm-vector')
                     .respond(200, 'data');
                     
                 a2Soundscapes.getNormVector(1).then(function(data){
@@ -120,7 +120,7 @@ describe('Module: a2.srv.soundscapes', function() {
         describe('a2Soundscapes.getList', function() {
             it('request to correct route without params', function() {
                 $httpBackend
-                    .expectGET('/api/project/test/soundscapes/')
+                    .expectGET('/legacy-api/project/test/soundscapes/')
                     .respond(200, 'data');
                     
                 a2Soundscapes.getList(function(data){
@@ -131,7 +131,7 @@ describe('Module: a2.srv.soundscapes', function() {
             });
             it('request to correct route with params', function() {
                 $httpBackend
-                    .expectGET('/api/project/test/soundscapes/?param=test')
+                    .expectGET('/legacy-api/project/test/soundscapes/?param=test')
                     .respond(200, 'data');
                     
                 a2Soundscapes.getList({ param: 'test' }, function(data){
@@ -147,7 +147,7 @@ describe('Module: a2.srv.soundscapes', function() {
             
             beforeEach(function() {
                 request = $httpBackend
-                    .expectGET('/api/project/test/soundscapes/details');
+                    .expectGET('/legacy-api/project/test/soundscapes/details');
             });
             
             it('requests to the correct route and call success', function() {
@@ -175,7 +175,7 @@ describe('Module: a2.srv.soundscapes', function() {
         describe('a2Soundscapes.setVisualizationOptions', function() {
             it('request to correct route', function() {
                 $httpBackend
-                    .expectPOST('/api/project/test/soundscapes/1/scale', { param: 'test' })
+                    .expectPOST('/legacy-api/project/test/soundscapes/1/scale', { param: 'test' })
                     .respond(200, 'data');
                     
                 a2Soundscapes.setVisualizationOptions(1, { param: 'test' }, function(data){
@@ -189,7 +189,7 @@ describe('Module: a2.srv.soundscapes', function() {
         describe('a2Soundscapes.addRegion', function() {
             it('request to correct route', function() {
                 $httpBackend
-                    .expectPOST('/api/project/test/soundscapes/1/regions/add', { 
+                    .expectPOST('/legacy-api/project/test/soundscapes/1/regions/add', { 
                         param: 'test', 
                         bbox: 'bbox'
                     })
@@ -206,7 +206,7 @@ describe('Module: a2.srv.soundscapes', function() {
         describe('a2Soundscapes.sampleRegion', function() {
             it('request to correct route', function() {
                 $httpBackend
-                    .expectPOST('/api/project/test/soundscapes/1/regions/2/sample', { 
+                    .expectPOST('/legacy-api/project/test/soundscapes/1/regions/2/sample', { 
                         param: 'test'
                     })
                     .respond(200, 'data');
@@ -222,7 +222,7 @@ describe('Module: a2.srv.soundscapes', function() {
         describe('a2Soundscapes.getRegion', function() {
             it('request to correct route', function() {
                 $httpBackend
-                    .expectGET('/api/project/test/soundscapes/1/regions/2')
+                    .expectGET('/legacy-api/project/test/soundscapes/1/regions/2')
                     .respond(200, 'data');
                     
                 a2Soundscapes.getRegion(1, 2, function(data){
@@ -236,7 +236,7 @@ describe('Module: a2.srv.soundscapes', function() {
         describe('a2Soundscapes.getRecordingTags', function() {
             it('request to correct route', function() {
                 $httpBackend
-                    .expectGET('/api/project/test/soundscapes/1/regions/2/tags/3')
+                    .expectGET('/legacy-api/project/test/soundscapes/1/regions/2/tags/3')
                     .respond(200, 'data');
                     
                 a2Soundscapes.getRecordingTags(1, 2, 3, function(data){
@@ -250,7 +250,7 @@ describe('Module: a2.srv.soundscapes', function() {
         describe('a2Soundscapes.addRecordingTag', function() {
             it('request to correct route', function() {
                 $httpBackend
-                    .expectPOST('/api/project/test/soundscapes/1/regions/2/tags/3/add', {
+                    .expectPOST('/legacy-api/project/test/soundscapes/1/regions/2/tags/3/add', {
                         tag: 'test-tag'
                     })
                     .respond(200, 'data');
@@ -266,7 +266,7 @@ describe('Module: a2.srv.soundscapes', function() {
         describe('a2Soundscapes.removeRecordingTag', function() {
             it('request to correct route', function() {
                 $httpBackend
-                    .expectPOST('/api/project/test/soundscapes/1/regions/2/tags/3/remove', {
+                    .expectPOST('/legacy-api/project/test/soundscapes/1/regions/2/tags/3/remove', {
                         tag: 'test-tag'
                     })
                     .respond(200, 'data');
@@ -282,7 +282,7 @@ describe('Module: a2.srv.soundscapes', function() {
         describe('a2Soundscapes.getRegions', function() {
             it('request to correct route without params', function() {
                 $httpBackend
-                    .expectGET('/api/project/test/soundscapes/1/regions')
+                    .expectGET('/legacy-api/project/test/soundscapes/1/regions')
                     .respond(200, 'data');
                     
                 a2Soundscapes.getRegions(1, function(data){
@@ -293,7 +293,7 @@ describe('Module: a2.srv.soundscapes', function() {
             });
             it('request to correct route with params', function() {
                 $httpBackend
-                    .expectGET('/api/project/test/soundscapes/1/regions?param=test')
+                    .expectGET('/legacy-api/project/test/soundscapes/1/regions?param=test')
                     .respond(200, 'data');
                     
                 a2Soundscapes.getRegions(1, { param: 'test' }, function(data){
@@ -307,7 +307,7 @@ describe('Module: a2.srv.soundscapes', function() {
         describe('a2Soundscapes.getRecordings', function() {
             it('request to correct route without params', function() {
                 $httpBackend
-                    .expectGET('/api/project/test/soundscapes/1/recordings/foo')
+                    .expectGET('/legacy-api/project/test/soundscapes/1/recordings/foo')
                     .respond(200, 'data');
                     
                 a2Soundscapes.getRecordings(1, 'foo', function(data){
@@ -318,7 +318,7 @@ describe('Module: a2.srv.soundscapes', function() {
             });
             it('request to correct route with params', function() {
                 $httpBackend
-                    .expectGET('/api/project/test/soundscapes/1/recordings/foo?param=test')
+                    .expectGET('/legacy-api/project/test/soundscapes/1/recordings/foo?param=test')
                     .respond(200, 'data');
                     
                 a2Soundscapes.getRecordings(1, 'foo', { param: 'test' }, function(data){
@@ -332,7 +332,7 @@ describe('Module: a2.srv.soundscapes', function() {
         describe('a2Soundscapes.findIndices', function() {
             it('request to correct route', function() {
                 $httpBackend
-                    .expectGET('/api/project/test/soundscapes/1/indices')
+                    .expectGET('/legacy-api/project/test/soundscapes/1/indices')
                     .respond(200, 'data');
                     
                 a2Soundscapes.findIndices(1, function(data){
@@ -348,7 +348,7 @@ describe('Module: a2.srv.soundscapes', function() {
             
             beforeEach(function() {
                 request = $httpBackend
-                    .expectGET('/api/project/test/soundscapes/1/delete');
+                    .expectGET('/legacy-api/project/test/soundscapes/1/delete');
             });
             
             it('requests to the correct route and call success', function() {
@@ -384,7 +384,7 @@ describe('Module: a2.srv.soundscapes', function() {
                 };
                 
                 request = $httpBackend
-                    .expectPOST('/api/project/test/soundscape/new', data);
+                    .expectPOST('/legacy-api/project/test/soundscape/new', data);
             });
             
             it('requests to the correct route and call success', function() {

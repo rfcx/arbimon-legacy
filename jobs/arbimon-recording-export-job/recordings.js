@@ -65,7 +65,7 @@ async function writeChunk (results, projectUrl, targetFile, isFirstChunk) {
           }
           delete row.meta;
           if (row.url) {
-              row.url = `${config_hosts.publicUrl}/api/project/${projectUrl}/recordings/download/${row.url}`;
+              row.url = `${config_hosts.publicUrl}/legacy-api/project/${projectUrl}/recordings/download/${row.url}`;
           }
           // Fill a specific label for each cell without validations data.
           fields.forEach(f => {

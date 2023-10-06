@@ -42,7 +42,7 @@ describe('Module: a2.srv.classi', function() {
             
             beforeEach(function() {
                 request = $httpBackend
-                    .expectGET('/api/project/test/classifications');
+                    .expectGET('/legacy-api/project/test/classifications');
             });
             
             it('requests to the correct route and call success', function() {
@@ -74,7 +74,7 @@ describe('Module: a2.srv.classi', function() {
             
             beforeEach(function() {
                 request = $httpBackend
-                    .expectGET('/api/project/test/classifications/1');
+                    .expectGET('/legacy-api/project/test/classifications/1');
             });
             
             it('requests to the correct route and call success', function() {
@@ -104,7 +104,7 @@ describe('Module: a2.srv.classi', function() {
             
             beforeEach(function() {
                 request = $httpBackend
-                    .expectGET('/api/project/test/classifications/1/more/2/3');
+                    .expectGET('/legacy-api/project/test/classifications/1/more/2/3');
             });
             
             it('requests to the correct route and call success', function() {
@@ -139,7 +139,7 @@ describe('Module: a2.srv.classi', function() {
                 recId = 2;
                 
                 request = $httpBackend
-                    .expectGET('/api/project/test/classifications/'+classificationId+'/vector/'+recId);
+                    .expectGET('/legacy-api/project/test/classifications/'+classificationId+'/vector/'+recId);
             });
             
             it('requests to the correct route and call success', function() {
@@ -180,7 +180,7 @@ describe('Module: a2.srv.classi', function() {
                 };
                 
                 request = $httpBackend
-                    .expectPOST('/api/project/test/classifications/new', classiData);
+                    .expectPOST('/legacy-api/project/test/classifications/new', classiData);
             });
             
             it('requests to the correct route and call success', function() {
@@ -210,7 +210,7 @@ describe('Module: a2.srv.classi', function() {
             
             beforeEach(function() {
                 request = $httpBackend
-                    .expectGET('/api/project/test/classifications/1/delete');
+                    .expectGET('/legacy-api/project/test/classifications/1/delete');
             });
             
             it('requests to the correct route and call success', function() {

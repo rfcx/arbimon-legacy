@@ -27,7 +27,7 @@ angular.module('a2.srv.templates', ['a2.srv.project'])
             if (opts && opts.offset !== undefined) {
                 config.params.offset = opts.offset;
             }
-            return $http.get('/api/project/'+projectName+'/templates', config).then(function(response) {
+            return $http.get('/legacy-api/project/'+projectName+'/templates', config).then(function(response) {
                 return response.data;
             });
         },
@@ -39,7 +39,7 @@ angular.module('a2.srv.templates', ['a2.srv.project'])
             if (opts && opts.publicTemplates) {
                 config.params.publicTemplates = opts.publicTemplates;
             }
-            return $http.get('/api/project/' + Project.getUrl() + '/templates/count', config)
+            return $http.get('/legacy-api/project/' + Project.getUrl() + '/templates/count', config)
                 .then(function(response){
                     return response.data;
                 });
@@ -47,24 +47,24 @@ angular.module('a2.srv.templates', ['a2.srv.project'])
 
         add: function(template_data) {
             var projectName = Project.getUrl();
-            return $http.post('/api/project/'+projectName+'/templates/add', template_data).then(function(response) {
+            return $http.post('/legacy-api/project/'+projectName+'/templates/add', template_data).then(function(response) {
                 return response.data;
             }).catch(notify.serverError);
         },
 
         getAudioUrlFor: function(template){
             const ext = '.mp3'
-            return '/api/project/' + Project.getUrl() + '/templates/audio/' + template.id + ext;
+            return '/legacy-api/project/' + Project.getUrl() + '/templates/audio/' + template.id + ext;
         },
 
         delete: function(templateId) {
             var projectName = Project.getUrl();
-            return $http.post('/api/project/'+projectName+'/templates/' + templateId + '/remove');
+            return $http.post('/legacy-api/project/'+projectName+'/templates/' + templateId + '/remove');
         },
 
         getImage: function(templateId) {
             var projectName = Project.getUrl();
-            return $http.get('/api/project/'+projectName+'/templates/data/'+templateId+'/image').then(function(response) {
+            return $http.get('/legacy-api/project/'+projectName+'/templates/data/'+templateId+'/image').then(function(response) {
                 return response.data;
             });
         },

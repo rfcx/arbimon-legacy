@@ -15,7 +15,7 @@ angular.module('a2.srv.project', [
                 return url;
             },
             getInfo: function(callback) {
-                $http.get('/api/project/'+url+'/info')
+                $http.get('/legacy-api/project/'+url+'/info')
                 .success(function(data) {
                     callback(data);
                 });
@@ -27,13 +27,13 @@ angular.module('a2.srv.project', [
                 if (projectId) {
                     config.params.project_id = projectId;
                 }
-                $http.get('/api/project/'+url+'/info/source-project', config)
+                $http.get('/legacy-api/project/'+url+'/info/source-project', config)
                     .success(function(data) {
                         callback(data);
                     });
             },
             updateInfo: function(info, callback) {
-                $http.post('/api/project/'+url+'/info/update', info)
+                $http.post('/legacy-api/project/'+url+'/info/update', info)
                 .success(function(data){
                     callback(null, data);
                 })
@@ -42,14 +42,14 @@ angular.module('a2.srv.project', [
                 });
             },
             getUsage: function() {
-                return $http.get('/api/project/'+url+'/usage');
+                return $http.get('/legacy-api/project/'+url+'/usage');
             },
             getSites: function(options, callback) {
                 if(typeof options == 'function') {
                     callback = options;
                     options = {};
                 }
-                return $q.when($http.get('/api/project/'+url+'/sites', {
+                return $q.when($http.get('/legacy-api/project/'+url+'/sites', {
                     params: options
                 })).then(function(response){
                     if(callback){
@@ -64,7 +64,7 @@ angular.module('a2.srv.project', [
                     options = {};
                 }
 
-                return $q.when($http.get('/api/project/'+url+'/classes', {
+                return $q.when($http.get('/legacy-api/project/'+url+'/classes', {
                         params: options
                     })).then(function(response){
                         if(callback){
@@ -82,7 +82,7 @@ angular.module('a2.srv.project', [
                     query['tags[]'] = query.tags.flat()
                     delete query.tags
                 }
-                $http.get('/api/project/'+url+'/recordings/search',{
+                $http.get('/legacy-api/project/'+url+'/recordings/search',{
                         params: query
                     })
                     .success(function(data) {
@@ -104,7 +104,7 @@ angular.module('a2.srv.project', [
                     filters.range.to = moment(filters.range.to).format('YYYY-MM-DD') + 'T23:59:59.999Z';
                 }
                 var params={filters:filters, show:projection};
-                const getUrl = '/api/project/'+url+'/recordings/'+ (
+                const getUrl = '/legacy-api/project/'+url+'/recordings/'+ (
                     projection && projection.species ? 'occupancy-models-export' :
                     (projection && projection.grouped ? 'grouped-detections-export' : 'recordings-export'));
                 return $http.post(getUrl, params).then(function(response) {
@@ -112,7 +112,7 @@ angular.module('a2.srv.project', [
                 }).catch(notify.serverError);;
             },
             getSitesExportUrl: function() {
-                return '/api/project/' + url + '/sites-export.csv';
+                return '/legacy-api/project/' + url + '/sites-export.csv';
             },
             getRecTotalQty: function(callback) {
                 return a2APIService.get('/recordings/count').then(function(data) {
@@ -123,7 +123,7 @@ angular.module('a2.srv.project', [
                 });
             },
             getProjectTotalSpecies: function(projectId, callback) {
-                $http.get('/api/project/' + url + '/species-count', {project_id: projectId})
+                $http.get('/legacy-api/project/' + url + '/species-count', {project_id: projectId})
                     .success(function(count) {
                         callback(count);
                     });
@@ -141,7 +141,7 @@ angular.module('a2.srv.project', [
                     callback = options;
                     options = {};
                 }
-                $http.get('/api/project/'+url+'/recordings/'+key, {
+                $http.get('/legacy-api/project/'+url+'/recordings/'+key, {
                         params: options
                     })
                     .success(function(data) {
@@ -157,13 +157,13 @@ angular.module('a2.srv.project', [
                 });
             },
             getOneRecording: function(rec_id, callback) {
-                $http.get('/api/project/'+url+'/recordings/find/'+rec_id)
+                $http.get('/legacy-api/project/'+url+'/recordings/find/'+rec_id)
                     .success(function(data) {
                         callback(data);
                     });
             },
             getRecordingInfo: function(rec_id, callback) {
-                $http.get('/api/project/'+url+'/recordings/info/'+rec_id)
+                $http.get('/legacy-api/project/'+url+'/recordings/info/'+rec_id)
                     .success(function(data) {
                         callback(data);
                     })
@@ -172,43 +172,43 @@ angular.module('a2.srv.project', [
                     });
             },
             getNextRecording: function(rec_id, callback) {
-                $http.get('/api/project/'+url+'/recordings/next/'+rec_id)
+                $http.get('/legacy-api/project/'+url+'/recordings/next/'+rec_id)
                     .success(function(data) {
                         callback(data);
                     });
             },
             getPreviousRecording: function(rec_id, callback) {
-                $http.get('/api/project/'+url+'/recordings/previous/'+rec_id)
+                $http.get('/legacy-api/project/'+url+'/recordings/previous/'+rec_id)
                     .success(function(data) {
                         callback(data);
                     });
             },
             validateRecording: function(rec_id, validation, callback){
-                $http.post('/api/project/'+url+'/recordings/validate/'+rec_id, validation)
+                $http.post('/legacy-api/project/'+url+'/recordings/validate/'+rec_id, validation)
                     .success(function(data) {
                         callback(data);
                     });
             },
             recExists: function(site_id, filename, callback) {
-                $http.get('/api/project/'+url+'/recordings/exists/site/'+ site_id +'/file/' + filename)
+                $http.get('/legacy-api/project/'+url+'/recordings/exists/site/'+ site_id +'/file/' + filename)
                     .success(function(data) {
                         callback(data.exists);
                     });
             },
             downloadRecording: function(rec_id, callback) {
-                $http.get('/api/project/'+url+'/recordings/download/'+ rec_id)
+                $http.get('/legacy-api/project/'+url+'/recordings/download/'+ rec_id)
                     .success(function(data) {
                         callback(data);
                     });
             },
             addClass: function(projectClass, callback) {
-                return $http.post('/api/project/'+url+'/class/add', projectClass);
+                return $http.post('/legacy-api/project/'+url+'/class/add', projectClass);
             },
             removeClasses: function(projectClasses, callback) {
-                return $http.post('/api/project/'+url+'/class/del', projectClasses);
+                return $http.post('/legacy-api/project/'+url+'/class/del', projectClasses);
             },
             getUsers: function(callback) {
-                $http.get('/api/project/'+url+'/users')
+                $http.get('/legacy-api/project/'+url+'/users')
                     .success(function(data){
                         callback(null, data);
                     })
@@ -217,7 +217,7 @@ angular.module('a2.srv.project', [
                     });
             },
             getRoles: function(callback) {
-                $http.get('/api/project/'+url+'/roles')
+                $http.get('/legacy-api/project/'+url+'/roles')
                     .success(function(data){
                         callback(null, data);
                     })
@@ -226,7 +226,7 @@ angular.module('a2.srv.project', [
                     });
             },
             addUser: function(data, callback){
-                $http.post('/api/project/'+url+'/user/add', data)
+                $http.post('/legacy-api/project/'+url+'/user/add', data)
                     .success(function(response){
                         callback(null, response);
                     })
@@ -235,7 +235,7 @@ angular.module('a2.srv.project', [
                     });
             },
             removeUser: function(data, callback){
-                $http.post('/api/project/'+url+'/user/del', data)
+                $http.post('/legacy-api/project/'+url+'/user/del', data)
                 .success(function(response){
                     callback(null, response);
                 })
@@ -244,7 +244,7 @@ angular.module('a2.srv.project', [
                 });
             },
             changeUserRole: function(data, callback){
-                $http.post('/api/project/'+url+'/user/role', data)
+                $http.post('/legacy-api/project/'+url+'/user/role', data)
                 .success(function(response){
                     callback(null, response);
                 })
@@ -253,7 +253,7 @@ angular.module('a2.srv.project', [
                 });
             },
             getModels: function(callback) {
-                $http.get('/api/project/'+url+'/models')
+                $http.get('/legacy-api/project/'+url+'/models')
                 .success(function(response){
                     callback(null, response);
                 })
@@ -262,7 +262,7 @@ angular.module('a2.srv.project', [
                 });
             },
             getClassi: function(callback) {
-                $http.get('/api/project/'+url+'/classifications')
+                $http.get('/legacy-api/project/'+url+'/classifications')
                 .success(function(response){
                     callback(null, response);
                 })
@@ -271,13 +271,13 @@ angular.module('a2.srv.project', [
                 });
             },
             validationsCount: function(callback) {
-                $http.get('/api/project/'+url+'/validations/count')
+                $http.get('/legacy-api/project/'+url+'/validations/count')
                 .success(function(response){
                     callback(response.count);
                 });
             },
             validationBySpeciesSong: function(speciesId, songtypeId, callback) {
-                $http.get( '/api/project/' + url + '/validations', {
+                $http.get( '/legacy-api/project/' + url + '/validations', {
                         params: {
                             species_id: speciesId,
                             sound_id: songtypeId
@@ -292,13 +292,13 @@ angular.module('a2.srv.project', [
                 if (ownershipType) {
                     config.params.type = ownershipType;
                 }
-                $http.get('/api/user/projectlist', config)
+                $http.get('/legacy-api/user/projectlist', config)
                     .success(function(response) {
                         callback(response);
                     });
             },
             removeProject: function(data) {
-                return $http.post('/api/project/'+url+'/remove', data);
+                return $http.post('/legacy-api/project/'+url+'/remove', data);
             }
         };
     })

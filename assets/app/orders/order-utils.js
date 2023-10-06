@@ -27,11 +27,11 @@ angular.module('a2.orders.order-utils', [
         },
         
         paymentsStatus: function() {
-            return $http.get('/api/orders/payments-status', {cache:true});
+            return $http.get('/legacy-api/orders/payments-status', {cache:true});
         },
 
         checkCouponCode: function(code, project) {
-            return $http.post('/api/orders/check-coupon', {
+            return $http.post('/legacy-api/orders/check-coupon', {
                 hash:code, project:project
             }).then(function(response){
                 return response.data;
@@ -39,7 +39,7 @@ angular.module('a2.orders.order-utils', [
         },
         
         getOrdersContact: function() {
-            return $http.get('/api/orders/contact', {cache:true});
+            return $http.get('/legacy-api/orders/contact', {cache:true});
         },
         
         info: {

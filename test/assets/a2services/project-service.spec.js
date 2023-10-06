@@ -44,7 +44,7 @@ describe('Module: a2.srv.project', function() {
             it('request to correct route', function() {
 
                 $httpBackend
-                    .expectGET('/api/project/test/info')
+                    .expectGET('/legacy-api/project/test/info')
                     .respond(200, 'data');
 
                 Project.getInfo(function(data){
@@ -58,7 +58,7 @@ describe('Module: a2.srv.project', function() {
         describe('Project.updateInfo', function() {
             it('request to correct route', function() {
                 $httpBackend
-                    .expectPOST('/api/project/test/info/update', {})
+                    .expectPOST('/legacy-api/project/test/info/update', {})
                     .respond(200, 'data');
 
                 Project.updateInfo({}, function(err, data){
@@ -73,7 +73,7 @@ describe('Module: a2.srv.project', function() {
             it('request to correct route', function() {
 
                 $httpBackend
-                    .expectGET('/api/project/test/sites')
+                    .expectGET('/legacy-api/project/test/sites')
                     .respond(200, 'data');
 
                 Project.getSites(function(data){
@@ -88,7 +88,7 @@ describe('Module: a2.srv.project', function() {
             it('request to correct route', function() {
 
                 $httpBackend
-                    .expectGET('/api/project/test/classes')
+                    .expectGET('/legacy-api/project/test/classes')
                     .respond(200, 'data');
 
                 Project.getClasses(function(data){
@@ -103,7 +103,7 @@ describe('Module: a2.srv.project', function() {
             it('request to correct route with no query', function() {
 
                 $httpBackend
-                    .expectGET('/api/project/test/recordings/search')
+                    .expectGET('/legacy-api/project/test/recordings/search')
                     .respond(200, 'data');
 
                 Project.getRecs(function(data){
@@ -116,7 +116,7 @@ describe('Module: a2.srv.project', function() {
             it('request to correct route with query', function() {
 
                 $httpBackend
-                    .expectGET('/api/project/test/recordings/search?limit=10&offset=0&output=count&sites=test+site')
+                    .expectGET('/legacy-api/project/test/recordings/search?limit=10&offset=0&output=count&sites=test+site')
                     .respond(200, 'data');
 
                 Project.getRecs({
@@ -135,7 +135,7 @@ describe('Module: a2.srv.project', function() {
         describe('Project.getRecTotalQty', function() {
             it('request to correct route and return count', function() {
                 $httpBackend
-                    .expectGET('/api/project/test/recordings/count')
+                    .expectGET('/legacy-api/project/test/recordings/count')
                     .respond(200, { count: 100 });
 
                 Project.getRecTotalQty(function(count){
@@ -150,7 +150,7 @@ describe('Module: a2.srv.project', function() {
             it('request to correct route with no query and no options', function() {
 
                 $httpBackend
-                    .expectGET('/api/project/test/recordings/')
+                    .expectGET('/legacy-api/project/test/recordings/')
                     .respond(200, 'data');
 
                 Project.getRecordings('', function(data){
@@ -163,7 +163,7 @@ describe('Module: a2.srv.project', function() {
             it('request to correct route with query and no options', function() {
 
                 $httpBackend
-                    .expectGET('/api/project/test/recordings/test-2014-4-8')
+                    .expectGET('/legacy-api/project/test/recordings/test-2014-4-8')
                     .respond(200, 'data');
 
                 var key = 'test-2014-4-8';
@@ -177,7 +177,7 @@ describe('Module: a2.srv.project', function() {
             it('request to correct route with query and options', function() {
 
                 $httpBackend
-                    .expectGET('/api/project/test/recordings/test-2014-4-8?show=thumbnail-path')
+                    .expectGET('/legacy-api/project/test/recordings/test-2014-4-8?show=thumbnail-path')
                     .respond(200, 'data');
 
                 var key = 'test-2014-4-8';
@@ -196,7 +196,7 @@ describe('Module: a2.srv.project', function() {
             it('request to correct route', function() {
 
                 $httpBackend
-                    .expectGET('/api/project/test/recordings/available/test-2014-4-8')
+                    .expectGET('/legacy-api/project/test/recordings/available/test-2014-4-8')
                     .respond(200, 'data');
 
                 var key = 'test-2014-4-8';
@@ -212,7 +212,7 @@ describe('Module: a2.srv.project', function() {
             it('request to correct route', function() {
 
                 $httpBackend
-                    .expectGET('/api/project/test/recordings/find/1')
+                    .expectGET('/legacy-api/project/test/recordings/find/1')
                     .respond(200, 'data');
 
                 Project.getOneRecording(1, function(data){
@@ -227,7 +227,7 @@ describe('Module: a2.srv.project', function() {
             it('request to correct route', function() {
 
                 $httpBackend
-                    .expectGET('/api/project/test/recordings/info/1')
+                    .expectGET('/legacy-api/project/test/recordings/info/1')
                     .respond(200, 'data');
 
                 Project.getRecordingInfo(1, function(data){
@@ -242,7 +242,7 @@ describe('Module: a2.srv.project', function() {
             it('request to correct route', function() {
 
                 $httpBackend
-                    .expectGET('/api/project/test/recordings/next/1')
+                    .expectGET('/legacy-api/project/test/recordings/next/1')
                     .respond(200, 'data');
 
                 Project.getNextRecording(1, function(data){
@@ -257,7 +257,7 @@ describe('Module: a2.srv.project', function() {
             it('request to correct route', function() {
 
                 $httpBackend
-                    .expectGET('/api/project/test/recordings/previous/1')
+                    .expectGET('/legacy-api/project/test/recordings/previous/1')
                     .respond(200, 'data');
 
                 Project.getPreviousRecording(1, function(data){
@@ -272,7 +272,7 @@ describe('Module: a2.srv.project', function() {
             it('request to correct route', function() {
 
                 $httpBackend
-                    .expectPOST('/api/project/test/recordings/validate/1')
+                    .expectPOST('/legacy-api/project/test/recordings/validate/1')
                     .respond(200, 'data');
 
                 var validation = {
@@ -291,7 +291,7 @@ describe('Module: a2.srv.project', function() {
             it('request to correct route', function() {
 
                 $httpBackend
-                    .expectGET('/api/project/test/recordings/exists/site/1/file/recorder-2015-01-01_00-00')
+                    .expectGET('/legacy-api/project/test/recordings/exists/site/1/file/recorder-2015-01-01_00-00')
                     .respond(200, { exists: true });
 
                 Project.recExists(1, 'recorder-2015-01-01_00-00', function(data){
@@ -308,7 +308,7 @@ describe('Module: a2.srv.project', function() {
             it('request to correct route', function() {
 
                 $httpBackend
-                    .expectPOST('/api/project/test/class/add', {})
+                    .expectPOST('/legacy-api/project/test/class/add', {})
                     .respond(200, 'data');
 
                 Project.addClass({}, function(err, data){
@@ -323,7 +323,7 @@ describe('Module: a2.srv.project', function() {
             it('request to correct route', function() {
 
                 $httpBackend
-                    .expectPOST('/api/project/test/class/del', [{}])
+                    .expectPOST('/legacy-api/project/test/class/del', [{}])
                     .respond(200, 'data');
 
                 Project.removeClasses([{}], function(err, data){
@@ -338,7 +338,7 @@ describe('Module: a2.srv.project', function() {
             it('request to correct route', function() {
 
                 $httpBackend
-                    .expectGET('/api/project/test/users')
+                    .expectGET('/legacy-api/project/test/users')
                     .respond(200, 'data');
 
                 Project.getUsers(function(err, data){
@@ -353,7 +353,7 @@ describe('Module: a2.srv.project', function() {
             it('request to correct route', function() {
 
                 $httpBackend
-                    .expectGET('/api/project/test/roles')
+                    .expectGET('/legacy-api/project/test/roles')
                     .respond(200, 'data');
 
                 Project.getRoles(function(err, data){
@@ -368,7 +368,7 @@ describe('Module: a2.srv.project', function() {
             it('request to correct route', function() {
 
                 $httpBackend
-                    .expectPOST('/api/project/test/user/add', {})
+                    .expectPOST('/legacy-api/project/test/user/add', {})
                     .respond(200, 'data');
 
                 var userData = {};
@@ -384,7 +384,7 @@ describe('Module: a2.srv.project', function() {
             it('request to correct route', function() {
 
                 $httpBackend
-                    .expectPOST('/api/project/test/user/del', {})
+                    .expectPOST('/legacy-api/project/test/user/del', {})
                     .respond(200, 'data');
 
                 var userData = {};
@@ -400,7 +400,7 @@ describe('Module: a2.srv.project', function() {
             it('request to correct route', function() {
 
                 $httpBackend
-                    .expectPOST('/api/project/test/user/role', {})
+                    .expectPOST('/legacy-api/project/test/user/role', {})
                     .respond(200, 'data');
 
                 var userData = {};
@@ -416,7 +416,7 @@ describe('Module: a2.srv.project', function() {
             it('request to correct route', function() {
 
                 $httpBackend
-                    .expectGET('/api/project/test/models')
+                    .expectGET('/legacy-api/project/test/models')
                     .respond(200, 'data');
 
                 Project.getModels(function(err, data){
@@ -431,7 +431,7 @@ describe('Module: a2.srv.project', function() {
             it('request to correct route', function() {
 
                 $httpBackend
-                    .expectGET('/api/project/test/classifications')
+                    .expectGET('/legacy-api/project/test/classifications')
                     .respond(200, 'data');
 
                 Project.getClassi(function(err, data){
@@ -445,7 +445,7 @@ describe('Module: a2.srv.project', function() {
         describe('Project.validationsCount', function() {
             it('request to correct route and return count', function() {
                 $httpBackend
-                    .expectGET('/api/project/test/validations/count')
+                    .expectGET('/legacy-api/project/test/validations/count')
                     .respond(200, { count: 100 });
 
                 Project.validationsCount(function(count){

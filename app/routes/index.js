@@ -133,7 +133,7 @@ router.get('/user-settings', function(req, res) {
     }
 });
 
-router.use('/api', dataApi);
+router.use('/legacy-api', dataApi);
 router.use('/project', project);
 router.use('/site', site);
 router.use('/citizen-scientist', require('./citizen-scientist'));

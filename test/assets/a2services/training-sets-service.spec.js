@@ -36,7 +36,7 @@ describe('Module: a2.srv.training-sets', function() {
             it('requests to the correct route', function() {
                 
                 $httpBackend
-                    .expectGET('/api/project/test/training-sets')
+                    .expectGET('/legacy-api/project/test/training-sets')
                     .respond(200, 'data');
                     
                 a2TrainingSets.getList(function(data){
@@ -55,7 +55,7 @@ describe('Module: a2.srv.training-sets', function() {
                 };
                 
                 $httpBackend
-                    .expectPOST('/api/project/test/training-sets/add', formData)
+                    .expectPOST('/legacy-api/project/test/training-sets/add', formData)
                     .respond(200, 'data');
                     
                 a2TrainingSets.add(formData, function(data){
@@ -74,7 +74,7 @@ describe('Module: a2.srv.training-sets', function() {
                 };
                 
                 $httpBackend
-                    .expectPOST('/api/project/test/training-sets/add-data/1', formData)
+                    .expectPOST('/legacy-api/project/test/training-sets/add-data/1', formData)
                     .respond(200, 'data');
                     
                 a2TrainingSets.addData(1, formData, function(data){
@@ -89,7 +89,7 @@ describe('Module: a2.srv.training-sets', function() {
             it('requests to the correct route without recording_uri', function() {
                 
                 $httpBackend
-                    .expectGET('/api/project/test/training-sets/list/1/')
+                    .expectGET('/legacy-api/project/test/training-sets/list/1/')
                     .respond(200, 'data');
                     
                 a2TrainingSets.getData(1, function(data){
@@ -102,7 +102,7 @@ describe('Module: a2.srv.training-sets', function() {
             it('requests to the correct route with recording_uri', function() {
                 
                 $httpBackend
-                    .expectGET('/api/project/test/training-sets/list/1/some-uri')
+                    .expectGET('/legacy-api/project/test/training-sets/list/1/some-uri')
                     .respond(200, 'data');
                     
                 a2TrainingSets.getData(1, 'some-uri', function(data){
@@ -117,7 +117,7 @@ describe('Module: a2.srv.training-sets', function() {
             it('requests to the correct route', function() {
                 
                 $httpBackend
-                    .expectGET('/api/project/test/training-sets/data/1/get-image/2')
+                    .expectGET('/legacy-api/project/test/training-sets/data/1/get-image/2')
                     .respond(200, 'data');
                     
                 a2TrainingSets.getDataImage(1, 2, function(data){
@@ -132,7 +132,7 @@ describe('Module: a2.srv.training-sets', function() {
             it('requests to the correct route', function() {
                 
                 $httpBackend
-                    .expectGET('/api/project/test/training-sets/types')
+                    .expectGET('/legacy-api/project/test/training-sets/types')
                     .respond(200, 'data');
                     
                 a2TrainingSets.getTypes(function(data){
@@ -147,7 +147,7 @@ describe('Module: a2.srv.training-sets', function() {
             it('requests to the correct route', function() {
                 
                 $httpBackend
-                    .expectGET('/api/project/test/training-sets/rois/1')
+                    .expectGET('/legacy-api/project/test/training-sets/rois/1')
                     .respond(200, 'data');
                     
                 a2TrainingSets.getRois(1, function(data){
@@ -162,7 +162,7 @@ describe('Module: a2.srv.training-sets', function() {
             it('requests to the correct route', function() {
                 
                 $httpBackend
-                    .expectGET('/api/project/test/training-sets/species/1')
+                    .expectGET('/legacy-api/project/test/training-sets/species/1')
                     .respond(200, 'data');
                     
                 a2TrainingSets.getSpecies(1, function(data){
@@ -177,7 +177,7 @@ describe('Module: a2.srv.training-sets', function() {
             it('requests to the correct route', function() {
                 
                 $httpBackend
-                    .expectGET('/api/project/test/training-sets/1/remove-roi/2')
+                    .expectGET('/legacy-api/project/test/training-sets/1/remove-roi/2')
                     .respond(200, 'data');
                     
                 a2TrainingSets.removeRoi(1, 2, function(data){

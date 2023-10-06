@@ -31,13 +31,13 @@ angular.module('a2.srv.api', [])
 .factory('a2APIService', function($location, $q, a2APIServiceClass){
     var nrm = /\/?(project|citizen-scientist|visualizer)\/([\w\_\-]+)/.exec($location.absUrl());
     var projectName = nrm ? nrm[2] : '';
-    var apiURLPrefix = '/api/project/'+projectName;
+    var apiURLPrefix = '/legacy-api/project/'+projectName;
     function returnData(response){
         return response.data;
     }
 
     var a2APIService = new a2APIServiceClass(apiURLPrefix);
-    a2APIService.api = new a2APIServiceClass('/api');
+    a2APIService.api = new a2APIServiceClass('/legacy-api');
     a2APIService.project = new a2APIServiceClass('/project/' + projectName);
 
     a2APIService.getProjectName = function() {

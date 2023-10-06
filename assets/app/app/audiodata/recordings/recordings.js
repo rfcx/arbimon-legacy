@@ -203,7 +203,7 @@ angular.module('a2.audiodata.recordings', [
             },
             controllerAs: 'popup'
         }).result.then(function() {
-            return $http.post('/api/project/'+Project.getUrl()+'/recordings/delete', { recs: recs });
+            return $http.post('/legacy-api/project/'+Project.getUrl()+'/recordings/delete', { recs: recs });
         }).then((function(response){
             if(response.data.error){
                 return notify.error(response.data.error);
@@ -265,7 +265,7 @@ angular.module('a2.audiodata.recordings', [
                 controllerAs: 'popup'
             }).result;
         }).then(function() {
-            return $http.post('/api/project/'+Project.getUrl()+'/recordings/delete-matching', filters)
+            return $http.post('/legacy-api/project/'+Project.getUrl()+'/recordings/delete-matching', filters)
                 .error(function(error) {
                     return notify.error(error);
                 });

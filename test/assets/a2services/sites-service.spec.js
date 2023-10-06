@@ -36,7 +36,7 @@ describe('Module: a2.srv.sites', function() {
             it('request to correct route', function() {
                 
                 $httpBackend
-                    .expectGET('/api/sites/published')
+                    .expectGET('/legacy-api/sites/published')
                     .respond(200, 'data');
                     
                 a2Sites.listPublished(function(data){
@@ -49,7 +49,7 @@ describe('Module: a2.srv.sites', function() {
         describe('a2Sites.import', function() {
             it('request to correct route', function() {
                 $httpBackend
-                    .expectPOST('/api/project/test/sites/import', { site: {} })
+                    .expectPOST('/legacy-api/project/test/sites/import', { site: {} })
                     .respond(200, 'data');
                     
                 a2Sites.import({}, function(data){
@@ -62,7 +62,7 @@ describe('Module: a2.srv.sites', function() {
         describe('a2Sites.update', function() {
             it('request to correct route', function() {
                 $httpBackend
-                    .expectPOST('/api/project/test/sites/update', { site: {} })
+                    .expectPOST('/legacy-api/project/test/sites/update', { site: {} })
                     .respond(200, 'data');
                     
                 a2Sites.update({}, function(data){
@@ -75,7 +75,7 @@ describe('Module: a2.srv.sites', function() {
         describe('a2Sites.create', function() {
             it('request to correct route', function() {
                 $httpBackend
-                    .expectPOST('/api/project/test/sites/create', { site: {} })
+                    .expectPOST('/legacy-api/project/test/sites/create', { site: {} })
                     .respond(200, 'data');
                     
                 a2Sites.create({}, function(data){
@@ -88,7 +88,7 @@ describe('Module: a2.srv.sites', function() {
         describe('a2Sites.delete', function() {
             it('request to correct route', function() {
                 $httpBackend
-                    .expectPOST('/api/project/test/sites/delete', { site: {} })
+                    .expectPOST('/legacy-api/project/test/sites/delete', { site: {} })
                     .respond(200, 'data');
                     
                 a2Sites.delete({}, function(data){
@@ -101,7 +101,7 @@ describe('Module: a2.srv.sites', function() {
         describe('a2Sites.generateToken', function() {
             it('request to correct route', function() {
                 $httpBackend
-                    .expectPOST('/api/project/test/sites/generate-token', { site: 1 })
+                    .expectPOST('/legacy-api/project/test/sites/generate-token', { site: 1 })
                     .respond(200, 'data');
                     
                 a2Sites.generateToken({ id: 1 })
@@ -115,7 +115,7 @@ describe('Module: a2.srv.sites', function() {
         describe('a2Sites.revokeToken', function() {
             it('request to correct route', function() {
                 $httpBackend
-                    .expectPOST('/api/project/test/sites/revoke-token', { site: 1 })
+                    .expectPOST('/legacy-api/project/test/sites/revoke-token', { site: 1 })
                     .respond(200, 'data');
                     
                 a2Sites.revokeToken({ id: 1 })
