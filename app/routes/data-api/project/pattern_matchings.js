@@ -129,6 +129,8 @@ router.get('/:patternMatching/:fileName?', function(req, res, next) {
     if(req.query.out=="text"){
         res.type('text/plain');
     } else {
+        res.setHeader('Content-type', 'text/csv')
+        res.set({ 'Content-Disposition' : `attachment; filename=${ req.params.fileName }`})
         res.type('text/csv');
     }
 

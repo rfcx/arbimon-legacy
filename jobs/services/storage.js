@@ -1,4 +1,6 @@
+const fs = require('fs')
 const AWS = require('aws-sdk');
+
 const s3 = new AWS.S3({
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
     secretAccessKey: process.env.AWS_SECRET_KEY,
@@ -37,7 +39,26 @@ async function saveLatestData (bucket, buf, project, timeStart, reportType, repo
   return filePath
 }
 
+async function getSignedUrl ({ Bucket, Key, Expires = 86400 }) {
+  return new Promise((resolve, reject) => {
+    s3.getSignedUrl('getObject', { Bucket, Key, Expires }, (err, data) => {
+      if (err) {
+        reject(err)
+        return
+      }
+      resolve(data)
+    })
+  })
+}
+
+async function uploadAsStream ({ filePath, Bucket, Key, ContentType }) {
+  const Body = fs.createReadStream(filePath)
+  return s3.upload({ Bucket, Key, ContentType, Body }).promise()
+}
+
 module.exports = {
   combineFilename,
   saveLatestData,
+  getSignedUrl,
+  uploadAsStream
 }
