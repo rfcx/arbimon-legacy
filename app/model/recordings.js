@@ -1726,6 +1726,7 @@ var Recordings = {
     },
 
     writeExportParams: function(projection, filters, userId, userEmail) {
+        if (filters.sites) delete filters.sites
         return Q.ninvoke(joi, 'validate', projection, Recordings.SCHEMAS.exportProjections)
             .then((projection_parameters) => {
                 const q = `INSERT INTO recordings_export_parameters (project_id, user_id, user_email, projection_parameters, filters, created_at, processed_at, error)
