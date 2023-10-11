@@ -594,7 +594,7 @@ var Users = {
 
             return {
                 success: true,
-                redirect : req.query.redirect || '/projects',
+                redirect : req.query.redirect || '/my-projects',
                 captchaNeeded: result.captchaNeeded
             };
         });

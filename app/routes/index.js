@@ -73,51 +73,51 @@ router.get('/projects/:externalId', async (req, res) => {
     res.type('html');
     try {
         const project = await model.projects.find({external_id: req.params.externalId}).get(0);
-        return res.redirect(`/project/${project.url}/dashboard`);
+        return res.redirect(`/p/${project.url}/insights`);
       }
       catch (e) {
         return res.redirect('/');
     }
 });
 
-router.get('/projects', function(req, res) {
-    res.type('html');
-    res.render('home', {
-        title: "Projects",
-        user: req.session.user,
-        auth0UniversalLoginUrl: auth0Service.universalLoginUrl,
-        state: 'projects',
-        inject_data: {
-            mapbox_access_token: config('mapbox_api').accessToken
-        },
-    });
-});
+// router.get('/projects', function(req, res) {
+//     res.type('html');
+//     res.render('home', {
+//         title: "Projects",
+//         user: req.session.user,
+//         auth0UniversalLoginUrl: auth0Service.universalLoginUrl,
+//         state: 'projects',
+//         inject_data: {
+//             mapbox_access_token: config('mapbox_api').accessToken
+//         },
+//     });
+// });
 
-router.get('/my-projects', function(req, res) {
-    res.type('html');
-    res.render('home', {
-        title: "Projects",
-        user: req.session.user,
-        auth0UniversalLoginUrl: auth0Service.universalLoginUrl,
-        state: 'projects',
-        inject_data: {
-            mapbox_access_token: config('mapbox_api').accessToken
-        },
-    });
-});
+// router.get('/my-projects', function(req, res) {
+//     res.type('html');
+//     res.render('home', {
+//         title: "Projects",
+//         user: req.session.user,
+//         auth0UniversalLoginUrl: auth0Service.universalLoginUrl,
+//         state: 'projects',
+//         inject_data: {
+//             mapbox_access_token: config('mapbox_api').accessToken
+//         },
+//     });
+// });
 
-router.get('/', function(req, res) {
-    res.type('html');
-    res.render('home', {
-        title: "Projects",
-        user: req.session.user,
-        auth0UniversalLoginUrl: auth0Service.universalLoginUrl,
-        state: 'home',
-        inject_data: {
-            mapbox_access_token: config('mapbox_api').accessToken
-        },
-    });
-});
+// router.get('/', function(req, res) {
+//     res.type('html');
+//     res.render('home', {
+//         title: "Projects",
+//         user: req.session.user,
+//         auth0UniversalLoginUrl: auth0Service.universalLoginUrl,
+//         state: 'home',
+//         inject_data: {
+//             mapbox_access_token: config('mapbox_api').accessToken
+//         },
+//     });
+// });
 
 
 router.get('/user-settings', function(req, res) {

@@ -103,7 +103,7 @@ angular.module('a2.settings',[
             return Project.removeProject({ external_id: $scope.project.external_id })
                 .then(function() {
                     notify.log('Project deleted');
-                    $window.location.href = '/projects';
+                    $window.location.href = '/my-projects';
                 });
         });
     }

@@ -26,7 +26,7 @@ try {
 var a2 = angular.module('a2.app', [
     'a2.permissions',
     'templates-arbimon2',
-    'a2.app.dashboard',
+    // 'a2.app.dashboard',
     'a2.audiodata',
     'a2.visualizer',
     'a2.analysis',
@@ -62,7 +62,7 @@ var a2 = angular.module('a2.app', [
 
         if(allowed === undefined) { // if permissions have not loaded go dashboard
             e.preventDefault();
-            $state.go('dashboard');
+            $state.go('audiodata');
         }
         else if(allowed === false){
             e.preventDefault();
@@ -74,7 +74,7 @@ var a2 = angular.module('a2.app', [
     a2GoogleMapsLoaderProvider.setAPIKey(a2InjectedData.googleAPI.key);
     AngularyticsProvider.setEventHandlers(['GoogleUniversal']);
     $locationProvider.html5Mode(true);
-    $urlRouterProvider.otherwise("/dashboard");
+    $urlRouterProvider.otherwise("/audiodata");
 })
 .controller('MainCtrl', function($scope, $state, Project, a2UserPermit, $window){
     $scope.$state = $state;
