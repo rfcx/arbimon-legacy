@@ -80,18 +80,19 @@ router.get('/projects/:externalId', async (req, res) => {
     }
 });
 
-// router.get('/projects', function(req, res) {
-//     res.type('html');
-//     res.render('home', {
-//         title: "Projects",
-//         user: req.session.user,
-//         auth0UniversalLoginUrl: auth0Service.universalLoginUrl,
-//         state: 'projects',
-//         inject_data: {
-//             mapbox_access_token: config('mapbox_api').accessToken
-//         },
-//     });
-// });
+router.get('/projects', function(req, res) {
+    res.redirect('/my-projects');
+    // res.type('html');
+    // res.render('home', {
+    //     title: "Projects",
+    //     user: req.session.user,
+    //     auth0UniversalLoginUrl: auth0Service.universalLoginUrl,
+    //     state: 'projects',
+    //     inject_data: {
+    //         mapbox_access_token: config('mapbox_api').accessToken
+    //     },
+    // });
+});
 
 // router.get('/my-projects', function(req, res) {
 //     res.type('html');
