@@ -57,8 +57,12 @@ router.use('/uploads', uploads);
 // all routes after this middleware
 // are available only to logged users
 router.use(function(req, res, next) {
-    if(req.session && (req.session.loggedIn || req.session.isAnonymousGuest)) {
+    if(req.session && req.session.loggedIn) {
         return next();
+    }
+    // redirect user to the old Arbimon, user should be logged in
+    if (req.session.isAnonymousGuest) {
+        res.redirect(auth0Service.universalLoginUrl)
     }
     res.render('get_fragment_hack.ejs');
 });
