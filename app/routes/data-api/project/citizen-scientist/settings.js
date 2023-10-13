@@ -36,9 +36,7 @@ router.post('/', function(req, res, next) {
 
     q.resolve().then(function(){
         if(!req.haveAccess(project_id, "manage project settings")){
-            throw new Error({
-                error: "You don't have permission to manage project settings"
-            });
+            throw new Error("You don't have permission to manage project settings");
         }
     }).then(function(){
         return model.CitizenScientist.setSettings({
