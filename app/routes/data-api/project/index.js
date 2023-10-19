@@ -68,6 +68,7 @@ router.param('projectUrl', function(req, res, next, project_url){
                     req.session.user.permissions = {};
 
                 req.session.user.permissions[project.project_id] = rows;
+                req.session.loggedIn = true
 
                 req.project = project;
 

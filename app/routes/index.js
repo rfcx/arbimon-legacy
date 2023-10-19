@@ -15,6 +15,8 @@ var queryHandler = dbpool.queryHandler;
 var config = require('../config');
 const auth0Service = require('../model/auth0')
 const model = require('../model');
+const authentication = require('../middleware/jwt');
+const parseTokenData = authentication.parseTokenData;
 
 router.get('/alive', function(req, res, next) { // for health checks
     res.type('json');
@@ -30,7 +32,7 @@ router.get('/alive', function(req, res, next) { // for health checks
 });
 
 
-router.use('/', login);
+router.use('/', parseTokenData(), login);
 
 router.get('/home', function(req, res) {
     res.redirect('/');
@@ -56,16 +58,16 @@ router.use('/uploads', uploads);
 
 // all routes after this middleware
 // are available only to logged users
-router.use(function(req, res, next) {
-    if(req.session && req.session.loggedIn) {
-        return next();
-    }
-    // redirect user to the old Arbimon, user should be logged in
-    if (req.session.isAnonymousGuest) {
-        res.redirect(auth0Service.universalLoginUrl)
-    }
-    res.render('get_fragment_hack.ejs');
-});
+// router.use(function(req, res, next) {
+//     if(req.session && req.session.loggedIn) {
+//         return next();
+//     }
+//     // redirect user to the old Arbimon, user should be logged in
+//     if (req.session.isAnonymousGuest) {
+//         res.redirect(auth0Service.universalLoginUrl)
+//     }
+//     res.render('get_fragment_hack.ejs');
+// });
 
 router.get('/process-order/:orderId', function(req, res, next) {
     res.type('html');

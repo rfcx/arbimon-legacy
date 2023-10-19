@@ -633,12 +633,12 @@ var Users = {
         return this.findById(insertData.insertId).get(0)
     },
 
-    makeUserObject: function(user, profile, options){
+    makeUserObject: function(user, options){
         options = options || {};
-        var userObj = {
+        let userObj = {
             id: user.user_id,
             username: user.login,
-            imageUrl: profile.picture,
+            imageUrl: user.picture ? user.picture : null,
             isSuper: user.is_super,
             isRfcx: user.email.includes('rfcx.org')
         };
