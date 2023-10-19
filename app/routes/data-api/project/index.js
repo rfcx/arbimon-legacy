@@ -56,11 +56,14 @@ router.param('projectUrl', function(req, res, next, project_url){
         var project = rows[0];
 
         var permissions = req.session.user.permissions && req.session.user.permissions[project.project_id];
-
-        if(!permissions) {
+        if (!permissions || (permissions && !permissions.length)) {
             model.users.getPermissions(req.session.user.id, project.project_id, function(err, rows) {
-                if(project.is_private && !rows.length && req.session.user.isSuper === 0) {
+                if(req.session.isAnonymousGuest === true) {
                     // if not authorized to see project send 401
+                    return res.sendStatus(401);
+                }
+                if(project.is_private && !rows.length && req.session.user.isSuper === 0) {
+                    // if project is private and user hasn't permissions into the project send 401
                     return res.sendStatus(401);
                 }
 
