@@ -45,9 +45,11 @@ const anonymousGuest = {
 }
 
 router.use(function create_user_object(req, res, next) {
+    console.log('\n-----create_user_object--BEFORE-', req.session)
     if (!req.user) {
         req.session.isAnonymousGuest = true;
         req.session.user = anonymousGuest;
+        console.log('\n---user1---', req.session)
         next();
     }
     else if (req.session && req.user && req.user.email) {
@@ -55,10 +57,13 @@ router.use(function create_user_object(req, res, next) {
             if (!user.length) {
                 req.session.isAnonymousGuest = true;
                 req.session.user = anonymousGuest;
+                console.log('\n---user2---', req.session)
                 next();
             }
+            req.session.isAnonymousGuest = false;
             user[0].picture = req.user.picture
             req.session.user = model.users.makeUserObject(user[0], {secure: req.secure, all:true});
+            console.log('\n---user3---', req.session)
             next();
         })
     }
