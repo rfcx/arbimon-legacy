@@ -53,12 +53,16 @@ const verifyToken = function() {
 
 const parseTokenData = function() {
     return function(req, res, next) {
-      let token = req.headers['authorization'];
+      const headersToken = req.headers['authorization']
+      const sessionToken = req.session && req.session.idToken ? req.session.idToken : null
+      let token = headersToken ? headersToken : sessionToken
       if (!token) {
         req.user = null
       }
-      else if (token && token.startsWith('Bearer ')) {
-        token = token.slice(7, token.length);
+      else if (token) {
+        if (token.startsWith('Bearer ')) {
+          token = token.slice(7, token.length);
+        }
         let decodedToken
         try {
           decodedToken = jwt.verify(token, cert);

@@ -45,25 +45,22 @@ const anonymousGuest = {
 }
 
 router.use(function create_user_object(req, res, next) {
-    console.log('\n-----create_user_object--BEFORE-', req.session)
+    const session = req.session
     if (!req.user) {
-        req.session.isAnonymousGuest = true;
-        req.session.user = anonymousGuest;
-        console.log('\n---user1---', req.session)
+        session.isAnonymousGuest = true;
+        session.user = anonymousGuest;
         next();
     }
-    else if (req.session && req.user && req.user.email) {
+    else if (session && req.user && req.user.email) {
         q.ninvoke(model.users, 'findByEmail', req.user.email).get(0).then(async user => {
             if (!user.length) {
-                req.session.isAnonymousGuest = true;
-                req.session.user = anonymousGuest;
-                console.log('\n---user2---', req.session)
+                session.isAnonymousGuest = true;
+                session.user = anonymousGuest;
                 next();
             }
-            req.session.isAnonymousGuest = false;
+            session.isAnonymousGuest = false;
             user[0].picture = req.user.picture
-            req.session.user = model.users.makeUserObject(user[0], {secure: req.secure, all:true});
-            console.log('\n---user3---', req.session)
+            session.user = model.users.makeUserObject(user[0], {secure: req.secure, all:true});
             next();
         })
     }
