@@ -55,7 +55,8 @@ const parseTokenData = function() {
     return function(req, res, next) {
       const headersToken = req.headers['authorization']
       const sessionToken = req.session && req.session.idToken ? req.session.idToken : null
-      console.log('\n\n - token', headersToken, sessionToken)
+      console.log('\n\n - headersToken token', headersToken, req.session)
+      console.log('\n\n - sso token', req.session)
       let token = headersToken ? headersToken : sessionToken
       if (!token) {
         req.user = null

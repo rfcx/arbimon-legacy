@@ -56,7 +56,6 @@ router.param('projectUrl', function(req, res, next, project_url){
         var project = rows[0];
 
         let permissions = req.session.user.permissions && req.session.user.permissions[project.project_id]
-        console.log('\n\n - api projectUrl', req.session)
         if (!permissions || (permissions && !permissions.length)) {
             model.users.getPermissions(req.session.user.id, project.project_id, function(err, rows) {
                 if(req.session.isAnonymousGuest === true) {
