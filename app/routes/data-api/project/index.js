@@ -43,7 +43,7 @@ router.param('projectUrl', function(req, res, next, project_url){
             return res.status(404).json({ error: "project not found"});
         }
 
-        var permissionsMap = rows.reduce(function(_, p) {
+        let permissionsMap = rows.reduce(function(_, p) {
             _[p.name] = true;
             return _;
         })
@@ -55,7 +55,8 @@ router.param('projectUrl', function(req, res, next, project_url){
 
         var project = rows[0];
 
-        var permissions = req.session.user.permissions && req.session.user.permissions[project.project_id];
+        let permissions = req.session.user.permissions && req.session.user.permissions[project.project_id]
+        console.log('\n\n - api projectUrl', req.session)
         if (!permissions || (permissions && !permissions.length)) {
             model.users.getPermissions(req.session.user.id, project.project_id, function(err, rows) {
                 if(req.session.isAnonymousGuest === true) {
