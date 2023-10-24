@@ -699,6 +699,8 @@ var Sites = {
                     }
                     let siteExternalId = await this.createInCoreAPI(coreSite, token);
                     await this.setExternalId(result.insertId, siteExternalId, connection);
+                    let { country, countryCode } = await this.getCountryCodeCoreAPI(coreSite, token);
+                    await this.setCountryCode(result.insertId, country, countryCode, connection);
                 }
                 await connection.commit();
                 await connection.release();
@@ -743,6 +745,24 @@ var Sites = {
                 throw new Error(`Unable to parse location header: ${response.headers.location}`)
             }
             throw new Error(`Unexpected status code or location header: ${response.statusCode} ${response.headers.location}`)
+        })
+    },
+
+    getCountryCodeCoreAPI: async function(coreSite, idToken) {
+        const options = {
+            method: 'GET',
+            url: `${rfcxConfig.apiBaseUrl}/streams?projects[]=${coreSite.project_id}&name[]=${coreSite.name}`,
+            headers: {
+                'content-type': 'application/json',
+                Authorization: `Bearer ${idToken}`
+            },
+            json: true
+          }
+          return rp(options).then((response) => {
+            if (response.body && !response.body.error) {
+                const body  = response.body
+                return { country: body[0].country_name, countryCode: body[0].country_code }
+            } else throw new Error('Failed to get site data')
         })
     },
 
@@ -881,6 +901,10 @@ var Sites = {
 
     setExternalId: function (siteId, externalId, connection) {
         return (connection? connection.query : dbpool.query)(`UPDATE sites SET external_id = "${externalId}" WHERE site_id = ${siteId}`, [])
+    },
+
+    setCountryCode: function (siteId, country, countryCode, connection) {
+        return (connection? connection.query : dbpool.query)(`UPDATE sites SET country = "${country}", country_code = "${countryCode}" WHERE site_id = ${siteId}`, [])
     },
 
     /**
