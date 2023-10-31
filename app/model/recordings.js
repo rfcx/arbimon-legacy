@@ -2004,24 +2004,21 @@ var Recordings = {
         return query(q);
     },
 
-    deleteInCoreAPI: async function(recs, idToken) {
-        if (!recs.length) return
-        const segments = recs.map(rec => rec.segment_id)
-        const body = {
-            segments
-        }
+    deleteRecordingsInCoreAPI: async function(params, idToken) {
+        if (!params.length) return
+        console.log('- deleteRecordingsInCoreAPI', params)
         const options = {
             method: 'DELETE',
-            url: `${rfcxConfig.apiBaseUrl}/internal/arbimon/segment`,
+            url: `${rfcxConfig.apiBaseUrl}/internal/arbimon/recordings`,
             headers: {
                 'content-type': 'application/json',
                 Authorization: idToken,
                 source: 'arbimon'
             },
-            body: JSON.stringify(body)
+            body: JSON.stringify(params)
         }
         return rp(options).then((response) => {
-            if (response.statusCode !== 204) {
+            if (response.statusCode !== 200) {
                 throw new Error('Failed to delete recordings');
             }
         })
@@ -2102,14 +2099,13 @@ var Recordings = {
             })
     },
 
-    delete: async function(recs, project_id, callback) {
+    delete: async function(recs, project_id, token, callback) {
         let db
         return dbpool.getConnection()
             .then(async (connection) => {
                 db = connection;
                 await db.beginTransaction();
                 const query = util.promisify(db.query).bind(db);
-
                 const recIds = recs.map(function(rec) {
                     return rec.id
                 });
@@ -2120,6 +2116,19 @@ var Recordings = {
                         msg: 'No recordings were deleted'
                     }
                 }
+                const params = {}
+                recs.forEach(rec => {
+                    if (params[rec.site_external_id]) {
+                        params[rec.site_external_id].starts.push(rec.datetime_utc)
+                    }
+                    else {
+                        params[rec.site_external_id] = {
+                            stream: rec.site_external_id,
+                            starts: [rec.datetime_utc]
+                        }
+                    }
+                })
+                await this.deleteRecordingsInCoreAPI(Object.values(params), token)
                 await this.deleteRecordingInAnalyses(recIds)
                 await this.deleteRecordingsFromArbimon(recIds, query)
                 await this.deleteRecordingsFromS3(rows)

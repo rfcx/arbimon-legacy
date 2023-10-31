@@ -390,7 +390,7 @@ router.post('/delete', function(req, res, next) {
     });
     return model.playlists.findRecordingsPlaylists(recIds).then(function(result) {
         playlists = result
-        model.recordings.delete(recs, req.project.project_id, async function(err, result) {
+        model.recordings.delete(recs, req.project.project_id, req.session.idToken, async function(err, result) {
             if(err) return next(err);
 
             res.json(result);
