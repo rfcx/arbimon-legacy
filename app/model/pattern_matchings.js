@@ -735,7 +735,7 @@ var PatternMatchings = {
             if(!pmr){
                 return;
             }
-            const freq_max = (pmr.sample_rate && pmr.y2 > pmr.sample_rate) ? (pmr.sample_rate / 2) : pmr.y2
+            const freq_max = (pmr.sample_rate && (pmr.y2 > pmr.sample_rate / 2)) ? (pmr.sample_rate / 2) : pmr.y2
             const opts = {
                 uri: pmr.recUri,
                 site_id: pmr.recSiteId,
