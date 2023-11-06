@@ -24,7 +24,7 @@ The recommended dev setup is to use docker-compose to create your web and databa
 
    (To stop the server, press Ctrl-C.)
 
-3. After the app container is running, open your browser at http://localhost:3000
+3. After the app container is running, open your browser at http://localhost:3000/project/balbina/audiodata/sites or http://localhost:3000/project/noise-puerto-rico/audiodata/sites or http://localhost:3000/project/taganrog-bay/audiodata/sites
 
 
 ### Alternative Local Dev Setup (no docker)
