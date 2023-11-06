@@ -1,4 +1,6 @@
-# Arbimon - Acoustic Analyzer
+# Arbimon Legacy
+
+The legacy components of [Arbimon](https://github.com/rfcx/arbimon).
 
 [Release Notes](./CHANGELOG.md) | [Deployment Notes](./DEPLOYMENT_NOTES.md)
 
