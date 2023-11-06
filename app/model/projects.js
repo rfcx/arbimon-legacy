@@ -29,15 +29,6 @@ const projectSchema = joi.object().keys({
 
 var Projects = {
 
-    plans: {
-        free: { // Changes must be matched in assets/app/orders/plan-selection.js
-            cost: 0,
-            storage: 100000,
-            processing: 10000000,
-            tier: 'free'
-        }
-    },
-
     countAllProjects: async function() {
         const q = 'SELECT count(*) AS count FROM projects';
 
@@ -125,23 +116,16 @@ var Projects = {
         }
 
         if(!query.basicInfo){
-            selectExtra += "   pp.tier, \n"+
-                          "   pp.storage AS storage_limit, \n"+
-                          "   pp.processing AS processing_limit, \n"+
-                          "   pp.created_on AS plan_created, \n"+
-                          "   pp.activation AS plan_activated, \n"+
-                          "   p.citizen_scientist_enabled, \n"+
+            selectExtra += "   p.citizen_scientist_enabled, \n"+
                           "   p.pattern_matching_enabled, \n"+
                           "   p.reports_enabled, \n"+
                           "   p.is_partner, \n"+
-                          "   p.cnn_enabled, \n"+
-                          "   pp.duration_period AS plan_period \n";
-            joinExtra   += "JOIN project_plans AS pp ON pp.plan_id = p.current_plan \n";
+                          "   p.cnn_enabled \n";
         } else {
             selectExtra += "p.project_id as id \n";
         }
 
-        let que = "SELECT p.*" + (selectExtra ? ", \n" + selectExtra : "\n") +
+        let que = "SELECT p.* " + (selectExtra ? ", \n" + selectExtra : "\n") +
         "FROM projects AS p \n" + joinExtra +
         "WHERE (" + whereExp.join(") \n" +
         "  AND (") + ")";
@@ -294,7 +278,7 @@ var Projects = {
     },
 
     /**
-     * creates a project and its plan, and adds the creator to the project as
+     * creates a project and adds the creator to the project as
      * owner on user_project_role
      * @param {Object} project
      * @param {String} project.name
@@ -311,14 +295,7 @@ var Projects = {
             description: joi.string().optional(),
             external_id: joi.string().optional(),
             project_type_id: joi.number(),
-            is_private: joi.boolean(),
-            plan: joi.object().keys({
-                tier: joi.string(),
-                storage: joi.number(),
-                processing: joi.number(),
-                activation: joi.date().optional(),
-                duration_period: joi.number().optional(),
-            })
+            is_private: joi.boolean()
         });
 
         var result = joi.validate(project, schema, {
@@ -331,8 +308,6 @@ var Projects = {
         }
 
         project = result.value;
-        var plan = project.plan;
-        delete project.plan;
 
         project.storage_usage = 0;
         project.processing_usage = 0;
@@ -346,7 +321,7 @@ var Projects = {
             await db.beginTransaction()
         }
         try {
-            const result = await this.runProjectCreationQueue(db, project, owner_id, plan);
+            const result = await this.runProjectCreationQueue(db, project, owner_id);
             await db.commit()
             return result
         } catch (e) {
@@ -355,7 +330,7 @@ var Projects = {
         }
     },
 
-    runProjectCreationQueue: async function(connection, project, owner_id, plan) {
+    runProjectCreationQueue: async function(connection, project, owner_id) {
         let queryAsync = util.promisify(connection.query);
         let result = await queryAsync('INSERT INTO projects SET ?', project);
         let projectId = result.insertId;
@@ -365,10 +340,6 @@ var Projects = {
             role_id: 4
         };
         await queryAsync('INSERT INTO user_project_role SET ?', values);
-        plan.project_id = projectId;
-        plan.created_on = new Date();
-        let newPlan = await queryAsync('INSERT INTO project_plans SET ?', plan);
-        await queryAsync('UPDATE projects SET current_plan = ? WHERE project_id = ?', [newPlan.insertId, projectId]);
         return projectId;
     },
 
@@ -382,7 +353,6 @@ var Projects = {
      * @param {Number} project.project_type_id
      * @param {Boolean} project.is_private
      * @param {Boolean} project.is_enabled
-     * @param {String} project.current_plan
      * @param {Number} project.storage_usage
      * @param {Number} project.processing_usage
      * @param {Function} callback(err, projectId)
@@ -399,7 +369,6 @@ var Projects = {
             project_type_id: joi.number(),
             is_private: [joi.number().valid(0,1), joi.boolean()],
             is_enabled: [joi.number().valid(0,1), joi.boolean()],
-            current_plan: joi.number(),
             storage_usage: joi.number().allow(null),
             processing_usage: joi.number().allow(null),
             citizen_scientist_enabled: [joi.number().valid(0,1), joi.boolean()],
@@ -407,22 +376,12 @@ var Projects = {
             cnn_enabled: [joi.number().valid(0,1), joi.boolean()],
             aed_enabled: [joi.number().valid(0,1), joi.boolean()],
             clustering_enabled: [joi.number().valid(0,1), joi.boolean()],
-            reports_enabled: [joi.number().valid(0,1), joi.boolean()],
-            plan: joi.object().keys({
-                tier: joi.string(),
-                storage: joi.number(),
-                processing: joi.number(),
-                activation: joi.date().allow(null).optional(),
-                duration_period: joi.number().allow(null).optional(),
-            }).optional()
+            reports_enabled: [joi.number().valid(0,1), joi.boolean()]
         };
 
         return q.ninvoke(joi, 'validate', project, schema).then(function(projectInfo){
             var projectId = projectInfo.project_id;
             delete projectInfo.project_id;
-
-            var projectInfoPlan = projectInfo.plan;
-            delete projectInfo.plan;
 
             return q.all([
                 (db? db.query : dbpool.query)(
@@ -430,15 +389,7 @@ var Projects = {
                     'SET ?\n'+
                     'WHERE project_id = ?', [
                     projectInfo, projectId
-                ]),
-                projectInfoPlan && (db? db.query : dbpool.query)(
-                    "UPDATE project_plans\n"+
-                    "SET ?\n" +
-                    "WHERE project_id=?", [
-                        projectInfoPlan,
-                        projectId
-                    ]
-                )
+                ])
             ]);
         }).nodeify(callback);
     },
@@ -1225,7 +1176,6 @@ var Projects = {
      */
     createProject: async function (data, userId, connection) {
         const projectData = {
-            plan: this.plans.free,
             project_type_id: 1,
             ...data
         }
@@ -1296,7 +1246,6 @@ var Projects = {
     findOrCreatePersonalProject: async function (user) {
         const projectData = {
             is_private: true,
-            plan: this.plans.free,
             name: `${user.firstname} ${user.lastname}'s project`,
             url: this.getPersonalProjectUrl(user),
             description: `${user.firstname}'s personal project`,
