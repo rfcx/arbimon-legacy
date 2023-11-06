@@ -148,7 +148,7 @@ var Sites = {
                 site.timezone = 'UTC';
             }
         }
-        if (site.lat !== undefined || site.lon !== undefined || site.alt !== undefined) {
+        if (site.lat !== undefined || site.lon !== undefined || site.alt !== undefined || site.project_id) {
             site['updated_at'] = moment.utc(new Date()).format();
         }
 
