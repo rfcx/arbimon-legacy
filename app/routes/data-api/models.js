@@ -38,10 +38,10 @@ router.get('/project/:projectUrl/models/forminfo', function(req, res, next) {
 
     model.models.types(function(err, row1) {
         if(err) return next(err);
-        
+
         model.projects.trainingSets( req.params.projectUrl, function(err, row2) {
             if(err) return next(err);
-            
+
             res.json({ types:row1 , trainings:row2});
         });
     });
@@ -53,18 +53,18 @@ router.post('/project/:projectUrl/models/new', function(req, res, next) {
     var project_id, name, train_id, classifier_id, usePresentTraining;
     var useNotPresentTraining, usePresentValidation, useNotPresentValidation, user_id;
     var job_id, params;
-    
+
     return model.projects.findByUrl(req.params.projectUrl).then(function gather_job_params(rows){
         if(!rows.length){
             throw new APIError({ error: "project not found"}, 404);
         }
-        
+
         project_id = rows[0].project_id;
-        
+
         if(!req.haveAccess(project_id, "manage models and classification")){
             throw new APIError({ error: "you dont have permission to 'manage models and classification'"});
         }
-        
+
         name = (req.body.n);
         train_id = req.body.t;
         classifier_id = req.body.c;
@@ -84,7 +84,7 @@ router.post('/project/:projectUrl/models/new', function(req, res, next) {
             upv: usePresentValidation,
             unv: useNotPresentValidation,
         };
-        
+
         return q.ninvoke(model.jobs, 'modelNameExists', {
             name: name,
             classifier: classifier_id,
@@ -103,7 +103,7 @@ router.post('/project/:projectUrl/models/new', function(req, res, next) {
         job_id = _job_id;
 
         pokeDaMonkey(); // parallel promise
-        
+
         res.json({ ok:"job created trainingJob:"+job_id});
     }).catch(next);
 });
@@ -158,6 +158,7 @@ router.get('/project/:projectUrl/models/:mid/delete', function(req, res, next) {
 });
 
 router.get('/project/:projectUrl/models/:modelId/validation-list', function(req, res, next) {
+    return res.sendStatus(503)
     res.type('json');
 
     if(!req.params.modelId)
@@ -165,11 +166,11 @@ router.get('/project/:projectUrl/models/:modelId/validation-list', function(req,
 
     model.projects.modelValidationUri(req.params.modelId, function(err, row) {
         if(err) return next(err);
-        
+
         if(!row.length) {
             return res.sendStatus(404);
         }
-        
+
         var validationUri = row[0].uri;
         validationUri = validationUri.replace('.csv','_vals.csv');
         s3.getObject({
@@ -184,7 +185,7 @@ router.get('/project/:projectUrl/models/:modelId/validation-list', function(req,
             var outData = String(data.Body);
 
             var lines = outData.split('\n');
-            
+
             lines = lines.filter(function(line) {
                 return line !== '';
             });
@@ -194,12 +195,12 @@ router.get('/project/:projectUrl/models/:modelId/validation-list', function(req,
                 var prec = items[1].trim(' ') == 1 ? 'yes' :'no';
                 var modelprec = items[2].trim(' ') == 'NA' ? '-' : ( items[2].trim(' ') == 1 ? 'yes' :'no');
                 var entryType = items[3] ? items[3].trim(' '):'';
-                
+
                 model.recordings.recordingInfoGivenUri(items[0], function(err, recData) {
                     if(err) return callback(err);
-                    
+
                     if(!recData.length) return callback(null, false);
-                    
+
                     var recUriThumb = recData[0].uri.replace('.wav','.thumbnail.png');
                     recUriThumb = recUriThumb.replace('.flac','.thumbnail.png');
 
@@ -212,18 +213,18 @@ router.get('/project/:projectUrl/models/:modelId/validation-list', function(req,
                         url: 'https://' + config('aws').bucketName + '.s3.' + config('aws').region + '.amazonaws.com/' + recUriThumb,
                         type: entryType
                     };
-                    
+
                     callback(null, rowSent);
                 });
 
             },
             function(err, results) {
                 if(err) return next(err);
-                
+
                 var vals = results.filter(function(vali) {
                     return !!vali;
                 });
-                
+
                 debug('model validations:', vals);
                 res.json({ validations: vals });
             });
@@ -238,12 +239,12 @@ router.get('/project/:projectUrl/models/:modelId/training-vector/:recId', functi
     if(!req.params.modelId || !req.params.recId) {
         return res.status(400).json({ error: 'missing parameters'});
     }
-    
+
     model.models.getTrainingVector(req.params.modelId, req.params.recId, function(err, result) {
         if(err) return next(err);
-        
+
         var vectorUri = result;
-        
+
         s3.getObject({
             Key: vectorUri,
             Bucket: config('aws').bucketName
@@ -257,7 +258,7 @@ router.get('/project/:projectUrl/models/:modelId/training-vector/:recId', functi
                     return next(err);
                 }
             }
-            
+
             async.map(String(data.Body).split(','), function(number, next) {
                 next(null, parseFloat(number));
             }, function done(err, vector) {
@@ -279,7 +280,7 @@ router.get('/project/:projectUrl/validations', function(req, res, next) {
     }
     model.projects.validationsStats(req.params.projectUrl, req.query.species_id, req.query.sound_id, function(err, stats) {
         if(err) return next(err);
-        
+
         res.json(stats);
     });
 });
