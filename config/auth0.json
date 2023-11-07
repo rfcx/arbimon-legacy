@@ -1,7 +1,7 @@
 {
-  "auth0Domain": "",
+  "audience": "https://rfcx.org",
+  "auth0Domain": "auth.rfcx.org",
   "clientId": "",
-  "redirectUri": "",
-  "audience": "",
-  "logoutRedirectUri": ""
+  "logoutRedirectUri": "http://localhost:3000",
+  "redirectUri": "http://localhost:3000/auth0-login"
 }
