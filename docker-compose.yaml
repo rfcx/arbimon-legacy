@@ -1,7 +1,13 @@
-version: "3.2"
+version: "3.8"
+include:
+  - ./db/docker-compose.yaml
 services:
   app:
-    image: "arbimon"
+    image: arbimon
+    build:
+      context: .
+      dockerfile: ./build/Dockerfile
+      target: arbimon
     ports:
       - "3000:3000"
     volumes:
@@ -16,18 +22,9 @@ services:
       - DB_PASSWORD=admin-secret
       - REDIS_URL=redis://redis:6379
     command: ["./node_modules/.bin/gulp", "watch"]
-  mysql:
-    image: "mariadb:10.4"
-    ports:
-      - "3306:3306"
-    volumes:
-      - data-mysql:/var/lib/mysql
-      - ./db/init:/docker-entrypoint-initdb.d
-    environment:
-      - MYSQL_ROOT_PASSWORD=root-secret
-      - MYSQL_DATABASE=arbimon2
-      - MYSQL_USER=admin
-      - MYSQL_PASSWORD=admin-secret
+    depends_on:
+      - mysql
+      - redis
   redis:
     image: redis:6.2-alpine
     ports:
@@ -35,5 +32,4 @@ services:
     volumes: 
       - data-redis:/data
 volumes:
-  data-mysql:
   data-redis:

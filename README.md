@@ -1,12 +1,43 @@
-# Arbimon - Acoustic Analyzer
+# Arbimon Legacy
+
+The legacy components of [Arbimon](https://github.com/rfcx/arbimon).
 
 [Release Notes](./CHANGELOG.md) | [Deployment Notes](./DEPLOYMENT_NOTES.md)
 
 ## Getting started
 
-### Local Dev Setup with Docker
+### Local Dev Setup (recommended)
 
-The recommended dev setup is to use docker-compose to create your web and database containers. By default, docker-compose will create and seed a new database using the migrations and seeds in `db/init` (submodule).
+The recommended dev setup is to use docker-compose to start your database, redis and storage. By default, docker-compose will create and seed a new database using the migrations and seeds in `db/init` (submodule).
+
+1. Make sure you've got Node installed (or `nvm use`).
+   
+2. Install the dependencies
+
+    ```sh
+    npm i
+    ```
+
+3. Run the containers (database and redis) in the background.
+   
+    ```sh
+    docker compose up -d mysql redis
+    ```
+
+4. Start your dev environment
+
+    ```sh
+    npm run dev
+    ```
+
+5. Open browser at http://localhost:3000/project/balbina/audiodata/sites or http://localhost:3000/project/noise-puerto-rico/audiodata/sites or http://localhost:3000/project/taganrog-bay/audiodata/sites
+
+_TODO_: Add `arbimon-store` and test with S3 mocking.
+
+
+### Local Dev Setup with 100% Docker (cause you don't want to install anything)
+
+An alternative dev setup is to use docker-compose to create your web container along with your database, redis, storage. 
 
 1. Build the docker image
 
@@ -16,7 +47,7 @@ The recommended dev setup is to use docker-compose to create your web and databa
 
    Note: on Apple silicon, you might need `docker buildx build --platform linux/amd64 -t arbimon --target=arbimon -f build/Dockerfile .`.
 
-2. Run the containers (web and database)
+2. Run the containers (web, database and redis)
 
     ```sh
     docker compose up
@@ -24,10 +55,13 @@ The recommended dev setup is to use docker-compose to create your web and databa
 
    (To stop the server, press Ctrl-C.)
 
-3. After the app container is running, open your browser at http://localhost:3000
+3. After the app container is running, open your browser at http://localhost:3000/project/balbina/audiodata/sites or http://localhost:3000/project/noise-puerto-rico/audiodata/sites or http://localhost:3000/project/taganrog-bay/audiodata/sites
+
+_TODO_: Make the live reload work under docker.
 
 
-### Alternative Local Dev Setup (no docker)
+### Alternative Local Dev Setup (no docker, not recommended)
+
 If you use Windows it's recommended to use WSL (Windows Subsystem for Linux) [https://docs.microsoft.com/en-us/windows/wsl/install-win10](https://docs.microsoft.com/en-us/windows/wsl/install-win10). Ubuntu 18.04 is recommended.
 
 
@@ -37,7 +71,7 @@ If you use Windows it's recommended to use WSL (Windows Subsystem for Linux) [ht
 
 2. Install Dependencies
 
-    App requires [https://nodejs.org/](node.js) to be installed (8.10.0 works, higher such as 12 will not. Unknown exactly where the cutoff is.) If you use `nvm` tool, you can run `nvm use` to switch node to required version (uses `.nvmrc` file).
+    App requires [https://nodejs.org/](node.js) to be installed (currently version 16). If you use `nvm` tool, you can run `nvm use` to switch node to required version (uses `.nvmrc` file).
 
     Install node modules:
     ```sh

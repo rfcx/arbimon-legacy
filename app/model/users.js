@@ -267,14 +267,10 @@ var Users = {
 
     findOwnedProjects: function(user_id, query) {
         return dbpool.query(
-            "SELECT p.*, \n"+
-            "   pp.tier \n"+
+            "SELECT p.* \n"+
             "FROM projects as p \n"+
-            "JOIN project_plans AS pp ON (p.current_plan = pp.plan_id) \n"+
             "JOIN user_project_role AS upr ON (p.project_id = upr.project_id and upr.role_id = 4) \n"+
-            "WHERE upr.user_id = ? " +
-            (query && query.free ? "\n" +
-            "  AND pp.tier = 'free'" : ''), [
+            "WHERE upr.user_id = ?", [
             user_id
         ]);
     },
