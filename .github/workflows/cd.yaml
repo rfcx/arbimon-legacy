@@ -13,7 +13,7 @@ jobs:
     name: 'Prepare'
     uses: rfcx/cicd/.github/workflows/notify-prepare.yaml@master
     with:
-      repo: arbimon
+      repo: arbimon-legacy
       workflow-id: cd.yaml
     secrets:
       github-token: ${{ secrets.GITHUB_TOKEN }}
