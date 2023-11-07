@@ -65,7 +65,7 @@ const getRandomMin = function(max, min) {
 
 const recalculateMetrics = async function(k, v, params, isInsert) {
     const value = await getCountForSelectedMetric(k, params)
-    const expiresAt = moment.utc().add(1, 'days').add(getRandomMin(0, 60), 'minutes').format('YYYY-MM-DD HH:mm:ss')
+    const expiresAt = moment.utc().add(15, 'minutes').add(getRandomMin(0, 60), 'seconds').format('YYYY-MM-DD HH:mm:ss')
     isInsert ? await model.projects.insertCachedMetrics({ key: v, value, expiresAt }) : await model.projects.updateCachedMetrics({ key: v, value, expiresAt })
 }
 
