@@ -35,7 +35,7 @@
         <div class="navbar-collapse navbar-collapse-menu-rfcx" ng-class="{'collapse': leftCollapsedMenu }">
             <ul class="nav navbar-nav navbar-left">
                 <% if (user && !user.isAnonymousGuest) { %>
-                <li class="<%- state === 'projects'? 'active' : '' %>"><a href="/projects">My Projects</a></li>
+                <li class="<%- state === 'projects'? 'active' : '' %>"><a href="/projects">Projects</a></li>
                 <% } %>
                 <% if (user && user.isSuper) { %>
                 <li><a href="/admin/"><i class="fa fa-cogs"></i> Admin</a></li>
