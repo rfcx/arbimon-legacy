@@ -24,13 +24,15 @@ The recommended dev setup is to use docker-compose to start your database, redis
     docker compose up -d mysql redis
     ```
 
-4. Start your dev environment
+4. Configure Auth0 by copying `config/auth0_backend.json` to `config/auth0_backend.local.json` and setting the client id and secret, and by copying `config/auth0.json` to `config/auth0.local.json` and setting the client id. (Obtain these secrets from another developer.)
+   
+5. Start your dev environment
 
     ```sh
     npm run dev
     ```
 
-5. Open browser at http://localhost:3000/project/balbina/audiodata/sites or http://localhost:3000/project/noise-puerto-rico/audiodata/sites or http://localhost:3000/project/taganrog-bay/audiodata/sites
+6. Open browser at http://localhost:3000/project/balbina/audiodata/sites or http://localhost:3000/project/noise-puerto-rico/audiodata/sites or http://localhost:3000/project/taganrog-bay/audiodata/sites
 
 _TODO_: Add `arbimon-store` and test with S3 mocking.
 
