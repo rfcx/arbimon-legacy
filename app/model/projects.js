@@ -633,8 +633,7 @@ var Projects = {
         LEFT JOIN recordings r on r.recording_id = rv.recording_id
         SET rv.project_id = ${newProjectId}
         WHERE rv.project_id = ${originalProjectId}
-            AND r.site_id = ${siteId}
-            AND (rv.present = 1 OR rv.present_review > 0 OR rv.present_aed > 0);`
+            AND r.site_id = ${siteId}`
         return dbpool.query(sql);
     },
 
