@@ -46,7 +46,7 @@ const anonymousGuest = {
 
 router.use(function create_user_object(req, res, next) {
     const session = req.session
-    console.log('\n\n - session', session)
+    // console.log('\n\n - session', session)
     if (!req.user) {
         session.isAnonymousGuest = true;
         session.user = anonymousGuest;

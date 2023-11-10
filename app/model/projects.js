@@ -614,6 +614,40 @@ var Projects = {
         }).nodeify(callback);
     },
 
+    insertClassAsync: function(projectClass) {
+        const {projectId, specieId, songtypeId} = projectClass
+        const sql = `INSERT INTO project_classes(project_id, species_id, songtype_id)
+        VALUES(${projectId}, ${specieId}, ${songtypeId})`
+        return dbpool.query(sql)
+    },
+
+    checkClassAsync: function(projectClass) {
+        const {projectId, specieId, songtypeId} = projectClass
+        const sql = `SELECT * FROM project_classes
+        WHERE project_id = ${projectId} AND species_id = ${specieId} AND songtype_id = ${songtypeId}`
+        return dbpool.query(sql)
+    },
+
+    updateProjectInAnalyses: async function(originalProjectId, newProjectId, siteId) {
+        const sql = `UPDATE recording_validations rv
+        LEFT JOIN recordings r on r.recording_id = rv.recording_id
+        SET rv.project_id = ${newProjectId}
+        WHERE rv.project_id = ${originalProjectId}
+            AND r.site_id = ${siteId}
+            AND (rv.present = 1 OR rv.present_review > 0 OR rv.present_aed > 0);`
+        return dbpool.query(sql);
+    },
+
+    getProjectValidationsBySite: async function(projectId, siteId) {
+        const sql = `SELECT rv.species_id, rv.songtype_id
+        FROM recording_validations rv
+        LEFT JOIN recordings r on r.recording_id = rv.recording_id
+        WHERE rv.project_id = ${projectId}
+            AND r.site_id = ${siteId}
+            AND (rv.present = 1 OR rv.present_review > 0 OR rv.present_aed > 0);`
+        return dbpool.query(sql);
+    },
+
     removeClasses: function(project_classes, callback) {
         var schema = joi.array().min(1).items(joi.number());
 

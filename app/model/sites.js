@@ -766,7 +766,7 @@ var Sites = {
         })
     },
 
-    updateSite: async function(site, idToken) {
+    updateSite: async function(site, options, idToken) {
         let db;
         return dbpool.getConnection()
             .then(async (connection) => {
@@ -783,6 +783,24 @@ var Sites = {
                         project_id: site.project_id
                     }, idToken)
                 };
+                const { originalProjectId } = options
+                if (site.project_id !== undefined && originalProjectId !== site.project_id) {
+                    // Update project in validations if any site is moving to another project
+                    const newProject = site.project_id
+                    const validations = await projects.getProjectValidationsBySite(originalProjectId, site.site_id)
+                    if (validations.length) {
+                        for (let validation of validations) {
+                            const projectClass = {
+                                projectId: newProject,
+                                specieId: validation.species_id,
+                                songtypeId: validation.songtype_id
+                            };
+                            const newProjectClass = await projects.checkClassAsync(projectClass)
+                            if (!newProjectClass.length) await projects.insertClassAsync(projectClass)
+                        }
+                        await projects.updateProjectInAnalyses(originalProjectId, newProject, site.site_id)
+                    }
+                }
                 await db.commit();
                 await db.release();
             })
