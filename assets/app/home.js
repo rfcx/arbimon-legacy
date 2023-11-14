@@ -175,7 +175,7 @@ angular.module('a2.home', [
         var psCache = getProjectSelectCache();
         psCache[project.id] = new Date().getTime();
         setProjectSelectCache(psCache);
-        $window.open($scope.bioAnalyticsBaseUrl + "/" + project.url)
+        $window.open($scope.bioAnalyticsBaseUrl + "/" + project.url, "_self")
     };
 
     $scope.isAnonymousGuest = true;
