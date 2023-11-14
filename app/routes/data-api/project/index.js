@@ -89,6 +89,11 @@ router.get('/:projectUrl/info', function(req, res, next) {
     res.json({ ...req.project, bioAnalyticsBaseUrl: rfcxConfig.bioAnalyticsBaseUrl });
 });
 
+router.get('/bioAnalyticsBaseUrl', function(req, res, next) {
+    res.type('json');
+    res.json(rfcxConfig.bioAnalyticsBaseUrl);
+});
+
 router.get('/:projectUrl/info/source-project', function(req, res, next) {
     res.type('json');
     model.projects.findById(req.query.project_id, function(err, result){

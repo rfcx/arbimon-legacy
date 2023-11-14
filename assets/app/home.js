@@ -164,6 +164,10 @@ angular.module('a2.home', [
         }).bind(this));
     };
 
+    $http.get('/api/project/bioAnalyticsBaseUrl').success(function(url) {
+        $scope.bioAnalyticsBaseUrl = url
+    })
+
     this.selectProject = function(project) {
         if (!project.is_enabled) {
             return;
@@ -171,7 +175,7 @@ angular.module('a2.home', [
         var psCache = getProjectSelectCache();
         psCache[project.id] = new Date().getTime();
         setProjectSelectCache(psCache);
-        $window.location.assign("/project/" + project.url + "/");
+        $window.open($scope.bioAnalyticsBaseUrl + "/" + project.url)
     };
 
     $scope.isAnonymousGuest = true;
