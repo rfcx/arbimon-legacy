@@ -95,7 +95,7 @@
             </i>
             <input id="param-th" class="form-control" ng-model="controller.data.params.threshold" placeholder="0.1" type="text"/>
         </div>
-        <div class="form-group">
+        <div class="form-group" ng-if="userPermit.has('citizen_scientist')">
             <label for="param-cs"><input id="param-cs" ng-model="controller.data.params.citizen_scientist" type="checkbox"/> Allow citizen scientist validations </label>
         </div>
     </form>
