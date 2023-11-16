@@ -65,7 +65,7 @@ jobs:
     needs: [prepare, build, deploy]
     uses: rfcx/cicd/.github/workflows/notify-send.yaml@master
     with:
-      repo: arbimon
+      repo: arbimon-legacy
       branch-name: ${{ needs.prepare.outputs.branch-name }}
       workflow-id: cd.yaml
       previous-run-id: ${{ needs.prepare.outputs.previous-run-id }}
