@@ -394,6 +394,11 @@ var Projects = {
         }).nodeify(callback);
     },
 
+    updateAsync: function (project, connection) {
+        let update = util.promisify(this.update)
+        return update(project, connection)
+    },
+
     updateProjectLocation: async function(projectId, lat, lon) {
         if (!projectId || !lat || !lon) return
         const config = {
