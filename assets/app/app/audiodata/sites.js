@@ -562,7 +562,7 @@ angular.module('a2.audiodata.sites', [
                         if ($scope.assets && $scope.selected.external_id) {
                             $scope.assets = $scope.assets.filter(asset => asset.meta !== null)
                             for (var i = 0; i < $scope.assets.length; i++) {
-                                var src = '/api/project/'+ $scope.project.url + '/streams/'+ $scope.selected.external_id +'/assets/' + $scope.assets[i].id
+                                var src = '/legacy-api/project/'+ $scope.project.url + '/streams/'+ $scope.selected.external_id +'/assets/' + $scope.assets[i].id
                                 $scope.images.push({
                                     id: i,
                                     src: src,

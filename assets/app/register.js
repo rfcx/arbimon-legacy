@@ -36,7 +36,7 @@ angular.module('a2.register' , [
         }
         
         $scope.testUserTimeout = $timeout(function(){
-            $http.get('/api/login_available', {
+            $http.get('/legacy-api/login_available', {
                 params: {
                     username: $scope.user.username
                 }
@@ -70,7 +70,7 @@ angular.module('a2.register' , [
         
         
         $scope.testEmailTimeout = $timeout(function(){
-            $http.get('/api/email_available', {
+            $http.get('/legacy-api/email_available', {
                 params: {
                     email: $scope.user.email
                 }

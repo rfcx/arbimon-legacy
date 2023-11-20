@@ -101,7 +101,7 @@ angular.module('a2.admin.projects.list', [
         },
 
         getProjectInfo : function(project) {
-            return $http.get('/api/project/'+project.url+'/info').then(function(response){
+            return $http.get('/legacy-api/project/'+project.url+'/info').then(function(response){
                 var data = response.data;
                 data.is_enabled = !!data.is_enabled;
                 return data;
@@ -109,13 +109,13 @@ angular.module('a2.admin.projects.list', [
         },
 
         getProjectSites : function(project) {
-            return $http.get('/api/project/'+project.url+'/sites').then(function(response) {
+            return $http.get('/legacy-api/project/'+project.url+'/sites').then(function(response) {
                 return response.data;
             });
         },
 
         getProjectRecordingCount : function(project) {
-            return $http.get('/api/project/'+project.url+'/recordings/count').then(function(response) {
+            return $http.get('/legacy-api/project/'+project.url+'/recordings/count').then(function(response) {
                 return response.data.count;
             });
         },

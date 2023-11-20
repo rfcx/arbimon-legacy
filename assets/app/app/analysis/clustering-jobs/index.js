@@ -694,7 +694,7 @@ angular.module('a2.analysis.clustering-jobs', [
 .controller('a2ClusterFrequencyFilterModalController', function($scope, $modalInstance, data, Project) {
     $scope.filterData = {};
     $scope.filterData.max_freq = data.frequency.max;
-    $scope.filterData.src="/api/project/"+Project.getUrl()+"/recordings/tiles/3298382/0/0";
+    $scope.filterData.src="/legacy-api/project/"+Project.getUrl()+"/recordings/tiles/3298382/0/0";
 
     $scope.has_previous_filter = true;
     $scope.frequency = data.frequency && data.frequency.currentMax ? { min: angular.copy(data.frequency.currentMin), max: data.frequency.currentMax } : { min: 0, max: $scope.filterData.max_freq };
@@ -1248,7 +1248,7 @@ angular.module('a2.analysis.clustering-jobs', [
     $scope.searchSpecies = function(search) {
         $scope.selected.songtype = null;
         $scope.speciesLoading = true;
-        return $http.get('/api/species/search', {
+        return $http.get('/legacy-api/species/search', {
             params: {
                 q: search
             }

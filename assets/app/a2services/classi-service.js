@@ -12,7 +12,7 @@ angular.module('a2.srv.classi', [
             return saveData;
         },
         list: function(callback) {
-            return $http.get('/api/project/'+Project.getUrl()+'/classifications').then(function(response){
+            return $http.get('/legacy-api/project/'+Project.getUrl()+'/classifications').then(function(response){
                 if(callback){
                     callback(response.data);
                 }
@@ -20,12 +20,12 @@ angular.module('a2.srv.classi', [
             }).catch(notify.serverError);
         },
         getDetails: function(classificationId, callback) {
-            $http.get('/api/project/' + Project.getUrl() + '/classifications/' + classificationId)
+            $http.get('/legacy-api/project/' + Project.getUrl() + '/classifications/' + classificationId)
                 .success(callback)
                 .error(notify.serverError);
         },
         getResultDetails: function(classificationId, first, limit, callback) {
-            return $http.get('/api/project/'+ Project.getUrl() +'/classifications/'+classificationId+'/more/'+ first + '/' + limit)
+            return $http.get('/legacy-api/project/'+ Project.getUrl() +'/classifications/'+classificationId+'/more/'+ first + '/' + limit)
                 .then(function(response) {
                     if (callback){
                         callback(response.data);
@@ -34,15 +34,15 @@ angular.module('a2.srv.classi', [
                 }).catch(notify.serverError);
         },
         getRecVector: function(classificationId, recId) {
-            return $http.get('/api/project/'+Project.getUrl()+'/classifications/'+classificationId+'/vector/'+recId);
+            return $http.get('/legacy-api/project/'+Project.getUrl()+'/classifications/'+classificationId+'/vector/'+recId);
         },
         create: function(classificationData, callback) {
-            $http.post('/api/project/'+Project.getUrl()+'/classifications/new', classificationData)
+            $http.post('/legacy-api/project/'+Project.getUrl()+'/classifications/new', classificationData)
                 .success(callback)
                 .error(notify.serverError);
         },
         delete: function(classificationId, callback) {
-            $http.get('/api/project/' + Project.getUrl() + '/classifications/' + classificationId + '/delete')
+            $http.get('/legacy-api/project/' + Project.getUrl() + '/classifications/' + classificationId + '/delete')
                 .success(callback)
                 .error(notify.serverError);
         },

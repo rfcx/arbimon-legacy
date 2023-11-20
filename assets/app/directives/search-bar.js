@@ -29,7 +29,7 @@ angular.module('a2.directive.search-bar', [])
                     config.params.q = $scope.q;
                 }
                 $scope.projectsLoading = true;
-                return $http.get('/api/user/projectlist', config).then(function(result) {
+                return $http.get('/legacy-api/user/projectlist', config).then(function(result) {
                     $scope.projectsLoading = false;
                     $scope.projects = result.data;
                     return result.data;

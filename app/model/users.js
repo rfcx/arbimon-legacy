@@ -267,14 +267,10 @@ var Users = {
 
     findOwnedProjects: function(user_id, query) {
         return dbpool.query(
-            "SELECT p.*, \n"+
-            "   pp.tier \n"+
+            "SELECT p.* \n"+
             "FROM projects as p \n"+
-            "JOIN project_plans AS pp ON (p.current_plan = pp.plan_id) \n"+
             "JOIN user_project_role AS upr ON (p.project_id = upr.project_id and upr.role_id = 4) \n"+
-            "WHERE upr.user_id = ? " +
-            (query && query.free ? "\n" +
-            "  AND pp.tier = 'free'" : ''), [
+            "WHERE upr.user_id = ?", [
             user_id
         ]);
     },
@@ -594,7 +590,7 @@ var Users = {
 
             return {
                 success: true,
-                redirect : req.query.redirect || '/projects',
+                redirect : req.query.redirect || '/my-projects',
                 captchaNeeded: result.captchaNeeded
             };
         });
@@ -633,12 +629,12 @@ var Users = {
         return this.findById(insertData.insertId).get(0)
     },
 
-    makeUserObject: function(user, profile, options){
+    makeUserObject: function(user, options){
         options = options || {};
-        var userObj = {
+        let userObj = {
             id: user.user_id,
             username: user.login,
-            imageUrl: profile.picture,
+            imageUrl: user.picture ? user.picture : null,
             isSuper: user.is_super,
             isRfcx: user.email.includes('rfcx.org')
         };

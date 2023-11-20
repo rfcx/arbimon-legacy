@@ -1,6 +1,6 @@
 {
-  "auth0Domain": "",
+  "audience": "https://rfcx.org",
+  "auth0Domain": "auth.rfcx.org",
   "clientId": "",
-  "clientSecret": "",
-  "audience": ""
+  "clientSecret": ""
 }

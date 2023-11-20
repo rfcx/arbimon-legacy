@@ -7,14 +7,14 @@ angular.module('a2.srv.species', [])
             if(species)
                 return callback(species);
 
-            $http.get('/api/species/list/100')
+            $http.get('/legacy-api/species/list/100')
                 .success(function(data) {
                     species = data;
                     callback(species);
                 });
         },
         search: function(query, callback) {
-            $http.get('/api/species/search', {
+            $http.get('/legacy-api/species/search', {
                 params: {
                     q: query
                 }
@@ -24,7 +24,7 @@ angular.module('a2.srv.species', [])
             });
         },
         findById: function(species_id, callback){
-            return $http.get('/api/species/'+species_id).then(function(response) {
+            return $http.get('/legacy-api/species/'+species_id).then(function(response) {
                 if (callback) {
                     callback(response.data);
                 }
@@ -50,7 +50,7 @@ angular.module('a2.srv.species', [])
             if(songs)
                 return callback(songs);
 
-            $http.get('/api/songtypes/all')
+            $http.get('/legacy-api/songtypes/all')
             .success(function(data) {
                 songs = data;
                 callback(songs);
@@ -62,7 +62,7 @@ angular.module('a2.srv.species', [])
                 return;
             }
             
-            $http.get('/api/songtypes/all')
+            $http.get('/legacy-api/songtypes/all')
                 .success(function(data) {
                     songs = data;
                     searchId(songtype_id, callback);
@@ -78,7 +78,7 @@ angular.module('a2.srv.species', [])
             if (speciesTaxons)
                 return callback(speciesTaxons);
 
-            $http.get('/api/species_taxons/all')
+            $http.get('/legacy-api/species_taxons/all')
                 .success(function(data) {
                     speciesTaxons = data;
                     callback(speciesTaxons);

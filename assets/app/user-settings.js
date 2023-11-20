@@ -14,7 +14,7 @@ angular.module('a2.user-settings', [
 .controller('UserSettingsCtrl', function($scope, $modal, $http, notify){
     this.data={};
     
-    $http.get('/api/user/info').then((function(response){
+    $http.get('/legacy-api/user/info').then((function(response){
         $scope.user = response.data;
         this.user = response.data;
         this.reset();
@@ -26,7 +26,7 @@ angular.module('a2.user-settings', [
     
     this.save = function() {
         var data = this.data;
-        return $http.post('/api/user/update', {
+        return $http.post('/legacy-api/user/update', {
             userData: {
                 name     : data.name,
                 lastname : data.lastname,

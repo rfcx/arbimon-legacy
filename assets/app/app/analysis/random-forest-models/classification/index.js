@@ -371,7 +371,7 @@ angular.module('a2.analysis.random-forest-models.classification', [
         $scope.currentPage = 0;
         $scope.maxPerPage = 1;
 
-        $scope.csvUrl = "/api/project/"+$scope.project.url+"/classifications/csv/"+$scope.classiData.id;
+        $scope.csvUrl = "/legacy-api/project/"+$scope.project.url+"/classifications/csv/"+$scope.classiData.id;
 
         $scope.showDownload = a2UserPermit.can('manage models and classification');
 

@@ -193,7 +193,7 @@ angular.module('a2.visualizer.audio-player', [])
             const form = document.createElement('form')
             form.style.display = 'none'
             form.method = 'GET'
-            const url = '/api/project/' + Project.getUrl() + '/recordings/download/' + visobject.id;
+            const url = '/legacy-api/project/' + Project.getUrl() + '/recordings/download/' + visobject.id;
             form.action = url
             document.body.appendChild(form)
             form.submit()

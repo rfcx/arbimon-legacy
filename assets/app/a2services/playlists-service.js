@@ -12,13 +12,13 @@ angular.module('a2.srv.playlists', [
             if (options && options.filterPlaylistLimit) {
                 options.params.filterPlaylistLimit = options.filterPlaylistLimit
             }
-            return $http.get('/api/project/'+projectName+'/playlists', options).then(function(response) {
+            return $http.get('/legacy-api/project/'+projectName+'/playlists', options).then(function(response) {
                 return response.data;
             });
         },
 
         create: function(playlistParams, callback) {
-            $http.post('/api/project/'+projectName+'/playlists/create', playlistParams).success(function(data) {
+            $http.post('/legacy-api/project/'+projectName+'/playlists/create', playlistParams).success(function(data) {
                 $rootScope.$emit('a2Playlists-invalidate-list');
                 callback(data);
             });
@@ -32,7 +32,7 @@ angular.module('a2.srv.playlists', [
         },
 
         getRecordingPosition: function(playlist, recording, callback){
-            var r = $http.get('/api/project/'+projectName+'/playlists/'+playlist+'/'+recording+'/position');
+            var r = $http.get('/legacy-api/project/'+projectName+'/playlists/'+playlist+'/'+recording+'/position');
             if(callback){
                 r.success(callback);
             }
@@ -40,33 +40,33 @@ angular.module('a2.srv.playlists', [
         },
         // addData: function(playlist, tset_data, callback) {
         //     var projectName = Project.getUrl();
-        //     $http.post('/api/project/'+projectName+'/playlists/add-data/'+playlist, tset_data).success(function(data) {
+        //     $http.post('/legacy-api/project/'+projectName+'/playlists/add-data/'+playlist, tset_data).success(function(data) {
         //         callback(data);
         //     });
         // },
         getPreviousRecording : function(playlist, recording, callback){
-            return $http.get('/api/project/'+projectName+'/playlists/'+playlist+'/'+recording+'/previous')
+            return $http.get('/legacy-api/project/'+projectName+'/playlists/'+playlist+'/'+recording+'/previous')
                 .success(function(data) {
                     callback(data);
                 });
         },
 
         getNextRecording : function(playlist, recording, callback){
-            return $http.get('/api/project/'+projectName+'/playlists/'+playlist+'/'+recording+'/next')
+            return $http.get('/legacy-api/project/'+projectName+'/playlists/'+playlist+'/'+recording+'/next')
                 .success(function(data) {
                     callback(data);
                 });
         },
 
         rename: function(playlist, callback) {
-            $http.post('/api/project/'+projectName+'/playlists/rename', playlist).success(function(data) {
+            $http.post('/legacy-api/project/'+projectName+'/playlists/rename', playlist).success(function(data) {
                 $rootScope.$emit('a2Playlists-invalidate-list');
                 callback(data);
             });
         },
 
         remove: function(playlistIds, callback) {
-            $http.post('/api/project/'+projectName+'/playlists/delete', {
+            $http.post('/legacy-api/project/'+projectName+'/playlists/delete', {
                 playlists: playlistIds
             }).success(function(data) {
                 $rootScope.$emit('a2Playlists-invalidate-list');
@@ -77,14 +77,14 @@ angular.module('a2.srv.playlists', [
         getInfo: function(playlist, callback) {
             $http({
                 method : 'GET',
-                url    : '/api/project/'+projectName+'/playlists/info/'+playlist,
+                url    : '/legacy-api/project/'+projectName+'/playlists/info/'+playlist,
             }).success(function(data) {
                 callback(data);
             });
         },
 
         getData: function(playlist, params, callback) {
-            $http.post('/api/project/'+projectName+'/playlists/'+playlist, params).success(function(data) {
+            $http.post('/legacy-api/project/'+projectName+'/playlists/'+playlist, params).success(function(data) {
                 callback(data);
             });
         },
@@ -94,7 +94,7 @@ angular.module('a2.srv.playlists', [
         },
 
         attachAedToPlaylist: function(opts, callback) {
-            $http.post('/api/project/'+projectName+'/playlists/'+opts.playlist_id+'/aed', { aed: opts.aed }).success(function(data) {
+            $http.post('/legacy-api/project/'+projectName+'/playlists/'+opts.playlist_id+'/aed', { aed: opts.aed }).success(function(data) {
                 callback(data);
             });
         },

@@ -7,7 +7,7 @@ angular.module('countries-list', [])
                 if(countries)
                     return callback(countries);
                 
-                $http.get('/api/orders/countries')
+                $http.get('/legacy-api/orders/countries')
                     .success(function(data) {
                         countries = data;
                         callback(countries);

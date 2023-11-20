@@ -55,7 +55,7 @@ angular.module('a2.visobjects.recording', [
         // set it to the scope
         this.tiles.set.forEach((function(tile){
             if (!!data.legacy) {
-                tile.src="/api/project/"+Project.getUrl()+"/recordings/tiles/"+this.id+"/"+tile.i+"/"+tile.j;
+                tile.src="/legacy-api/project/"+Project.getUrl()+"/recordings/tiles/"+this.id+"/"+tile.i+"/"+tile.j;
             } else {
                 var streamId = data.uri.split('/')[3]
                 const datetime = data.datetime_utc ? data.datetime_utc : data.datetime

@@ -674,7 +674,7 @@ var PatternMatchings = {
         PatternMatchings.combineDatetime(pmr);
         delete pmr.datetime;
         if (pmr.recording_id) {
-            pmr.url = `${config('hosts').publicUrl}/api/project/${projectUrl}/recordings/download/${pmr.recording_id}`;
+            pmr.url = `${config('hosts').publicUrl}/legacy-api/project/${projectUrl}/recordings/download/${pmr.recording_id}`;
             delete pmr.recording_id;
         }
         if (pmr.sample_rate) {
@@ -735,7 +735,7 @@ var PatternMatchings = {
             if(!pmr){
                 return;
             }
-            const freq_max = (pmr.sample_rate && pmr.y2 > pmr.sample_rate) ? (pmr.sample_rate / 2) : pmr.y2
+            const freq_max = (pmr.sample_rate && (pmr.y2 > pmr.sample_rate / 2)) ? (pmr.sample_rate / 2) : pmr.y2
             const opts = {
                 uri: pmr.recUri,
                 site_id: pmr.recSiteId,

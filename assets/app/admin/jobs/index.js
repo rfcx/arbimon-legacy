@@ -112,7 +112,7 @@ angular.module('a2.admin.jobs', [
     getJobQueueInfo();
     
     
-    $http.get('/api/jobs/types')
+    $http.get('/legacy-api/jobs/types')
         .success(function(jobTypes) {
             var colors = ['#1482f8', '#df3627', '#40af3b', '#9f51bf', '#d37528'];
             

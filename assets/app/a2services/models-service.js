@@ -20,33 +20,33 @@ angular.module('a2.srv.models', [
             return saveData;
         },
         list: function(callback) {
-            $http.get( '/api/project/' + Project.getUrl() + '/models')
+            $http.get( '/legacy-api/project/' + Project.getUrl() + '/models')
                 .success(callback)
                 .error(notify.serverError);
         },
         getFormInfo: function(callback) {
-            $http.get( '/api/project/' + Project.getUrl() + '/models/forminfo')
+            $http.get( '/legacy-api/project/' + Project.getUrl() + '/models/forminfo')
                 .success(callback)
                 .error(notify.serverError);
         },
         findById: function(modelId) {
-            return $http.get( '/api/project/' + Project.getUrl() + '/models/' + modelId);
+            return $http.get( '/legacy-api/project/' + Project.getUrl() + '/models/' + modelId);
         },
         create: function(modelData) {
-            return $http.post('/api/project/' + Project.getUrl() + '/models/new', modelData);
+            return $http.post('/legacy-api/project/' + Project.getUrl() + '/models/new', modelData);
         },
         delete: function(modelId, callback) {
-            $http.get( '/api/project/' + Project.getUrl() + '/models/' + modelId + "/delete")
+            $http.get( '/legacy-api/project/' + Project.getUrl() + '/models/' + modelId + "/delete")
                 .success(callback)
                 .error(notify.serverError);
         },
         getValidationResults: function(modelId, callback) {
-            $http.get( '/api/project/' + Project.getUrl() + '/models/' + modelId + '/validation-list/')
+            $http.get( '/legacy-api/project/' + Project.getUrl() + '/models/' + modelId + '/validation-list/')
                 .success(callback)
                 .error(notify.serverError);
         },
         getRecVector: function(modelId, recId, callback) {
-            return $http.get( '/api/project/' + Project.getUrl() + '/models/' + modelId + '/training-vector/' + recId);
+            return $http.get( '/legacy-api/project/' + Project.getUrl() + '/models/' + modelId + '/training-vector/' + recId);
         },
         setThreshold: function(modelId, thresholdValue) {
             var data = {
@@ -54,7 +54,7 @@ angular.module('a2.srv.models', [
                 t: thresholdValue
             };
             
-            return $http.post('/api/project/' + Project.getUrl() + '/models/savethreshold', data);
+            return $http.post('/legacy-api/project/' + Project.getUrl() + '/models/savethreshold', data);
         }
     };
 })

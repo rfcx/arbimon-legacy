@@ -106,6 +106,7 @@ router.get('/:projecturl?/', function(req, res, next) {
                     req.session.user.permissions = {};
 
                 req.session.user.permissions[project.project_id] = rows;
+                req.session.loggedIn = true
                 var perms = {
                     authorized: true,
                     public: !project.is_private,

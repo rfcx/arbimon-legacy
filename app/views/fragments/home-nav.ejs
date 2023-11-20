@@ -9,8 +9,8 @@
                 <span class="icon-bar"></span>
             </button>
             <a href="/" class="navbar-brand navbar-brand-center">
-                <img src="/images/favicon/rfcx-logo.svg" class="navbar-logo" alt="Arbimon Logo">
-                <span class="navbar-title hide-for-tablet">Arbimon</span>
+                <img src="/images/favicon/arbimon-logo.svg" class="navbar-logo" alt="Arbimon Logo">
+                <span class="navbar-title">Arbimon</span>
             </a>
             <% if (!user || user.isAnonymousGuest) { %>
             <div ng-click="toggleSearch = !toggleSearch;" class="search-nav-mobile search-nav-mobile-offset">
@@ -35,7 +35,7 @@
         <div class="navbar-collapse navbar-collapse-menu-rfcx" ng-class="{'collapse': leftCollapsedMenu }">
             <ul class="nav navbar-nav navbar-left">
                 <% if (user && !user.isAnonymousGuest) { %>
-                <li class="<%- state === 'projects'? 'active' : '' %>"><a href="/projects">My Projects</a></li>
+                <li class="<%- state === 'projects'? 'active' : '' %>"><a href="/projects">Projects</a></li>
                 <% } %>
                 <% if (user && user.isSuper) { %>
                 <li><a href="/admin/"><i class="fa fa-cogs"></i> Admin</a></li>

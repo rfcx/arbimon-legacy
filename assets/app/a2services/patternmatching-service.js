@@ -16,17 +16,17 @@ angular.module('a2.srv.patternmatching', [
             const config = {
                 params: opts
             };
-            return $http.get('/api/project/'+Project.getUrl()+'/pattern-matchings', config).then(function(response){
+            return $http.get('/legacy-api/project/'+Project.getUrl()+'/pattern-matchings', config).then(function(response){
                 return response.data;
             }).catch(notify.serverError);
         },
         getDetailsFor: function(patternMatchingId) {
-            return $http.get('/api/project/' + Project.getUrl() + '/pattern-matchings/' + patternMatchingId + '/details').then(function(response){
+            return $http.get('/legacy-api/project/' + Project.getUrl() + '/pattern-matchings/' + patternMatchingId + '/details').then(function(response){
                 return response.data;
             });
         },
         getPatternMatchingsTotal: function(callback) {
-            $http.get('/api/project/' + Project.getUrl() + '/pattern-matchings/count')
+            $http.get('/legacy-api/project/' + Project.getUrl() + '/pattern-matchings/count')
             .success(function(data) {
                 callback(data);
             });
@@ -46,14 +46,14 @@ angular.module('a2.srv.patternmatching', [
             return a2APIService.get('/pattern-matchings/' + patternMatchingId + '/site-index' + (query ? '?'+query : '')).catch(notify.serverError);
         },
         getExportUrl: function(params){
-            return '/api/project/' + Project.getUrl() + '/pattern-matchings/' + params.patternMatching + '/' + params.fileName + '.csv';
+            return '/legacy-api/project/' + Project.getUrl() + '/pattern-matchings/' + params.patternMatching + '/' + params.fileName + '.csv';
         },
         getAudioUrlFor: function(roi){
             const ext = '.mp3'
-            return '/api/project/' + Project.getUrl() + '/pattern-matchings/' + roi.pattern_matching_id + '/audio/' + roi.id + ext;
+            return '/legacy-api/project/' + Project.getUrl() + '/pattern-matchings/' + roi.pattern_matching_id + '/audio/' + roi.id + ext;
         },
         validateRois: function(patternMatchingId, rois, validation, cls) {
-            return $http.post('/api/project/' + Project.getUrl() + '/pattern-matchings/' + patternMatchingId + '/validate', {
+            return $http.post('/legacy-api/project/' + Project.getUrl() + '/pattern-matchings/' + patternMatchingId + '/validate', {
                 rois: rois,
                 validation: validation,
                 cls: cls
@@ -62,17 +62,17 @@ angular.module('a2.srv.patternmatching', [
             });
         },
         create: function(data) {
-            return $http.post('/api/project/'+Project.getUrl()+'/pattern-matchings/new', data).then(function(response){
+            return $http.post('/legacy-api/project/'+Project.getUrl()+'/pattern-matchings/new', data).then(function(response){
                 return response.data;
             });
         },
         update: function(patternMatchingId, data) {
-            return $http.post('/api/project/'+Project.getUrl()+'/pattern-matchings/' + patternMatchingId + '/update', data).then(function(response){
+            return $http.post('/legacy-api/project/'+Project.getUrl()+'/pattern-matchings/' + patternMatchingId + '/update', data).then(function(response){
                 return response.data;
             });
         },
         delete: function(patternMatchingId) {
-            return $http.post('/api/project/' + Project.getUrl() + '/pattern-matchings/' + patternMatchingId + '/remove').then(function(response){
+            return $http.post('/legacy-api/project/' + Project.getUrl() + '/pattern-matchings/' + patternMatchingId + '/remove').then(function(response){
                 return response.data;
             });
         },

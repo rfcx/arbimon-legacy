@@ -5,7 +5,7 @@ angular.module('a2.orders.shipping-form', [
 ])
 .controller('ShippingFormCtrl', function($scope, $http, $modalInstance, $modal, orderData, countries, a2order) {
     if(!orderData.address) {
-        $http.get('/api/user/address')
+        $http.get('/legacy-api/user/address')
             .success(function(data) {
                 $scope.address = data.address || {};
             });
@@ -21,7 +21,7 @@ angular.module('a2.orders.shipping-form', [
     $scope.verify = function() {
         // TODO this method should validate form and call server to get shipping cost
         
-        $http.post('/api/orders/calculate-shipping', { 
+        $http.post('/legacy-api/orders/calculate-shipping', {
                 address: $scope.address,
                 recorderQty: orderData.recorderQty,
             })

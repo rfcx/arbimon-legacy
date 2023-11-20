@@ -15,91 +15,20 @@
         <div class="container homepage">
             <div class="row">
                 <div class="col-md-12">
-                    <% if (state === 'home' || (user && user.isAnonymousGuest)) { %>
-                        <div class="row mb-5 flex-align-middle row-flex flex-space-between summary-stats-wrapper">
-                            <div class="summary-desc">
-                                <h1 class="text-frequency">Arbimon <span class="font-size-base">by Rainforest Connection®</span></h1>
-                                <h3 style="text-align: left; margin-bottom: 50px; margin-top: 14px;">
-                                    Upload and analyze an unlimited amount of audio from your AudioMoth, Song Meter,
-                                    or other recording device, with our free cloud-based analytical tool.
-                                </h3>
-                                <div class="button-group">
-                                    <% if (user && user.isAnonymousGuest) { %>
-                                        <a class="btn btn-lg btn-primary mb-3" href="<%- auth0UniversalLoginUrl %>&screen_hint=signup" ng-click="isEmpty=1 | trackEvent:'Home':'Sing up to rfcx'">Start analyzing</a>
-                                        <a class="btn btn-lg btn-default mb-3" href="https://rfcx.org/ecoacoustics" ng-click="isEmpty=1 | trackEvent:'Home':'Navigate to Ecoacoustics page'">Learn more about our work</a>
-                                    <% } else {%>
-                                        <a class="btn btn-lg btn-primary mb-3" href="/projects" ng-click="isEmpty=1 | trackEvent:'Home':'Navigate to My Projects'">Start analyzing</a>
-                                        <a class="btn btn-lg btn-default mb-3" href="https://rfcx.org/ecoacoustics" ng-click="isEmpty=1 | trackEvent:'Home':'Navigate to Ecoacoustics page'">Learn more about our work</a>
-                                    <% } %>
-                                </div>
-                            </div>
-                            <div class="summary-stats" style="margin-top: 48px" ng-view>
-                                <div class="summary-stats-row row-flex flex-space-between" style="flex-wrap: wrap;" ng-if="list_summary_data && list_summary_data.length && summary_data">
-                                    <div class="text-center" style="width: 50%;" ng-repeat="data in list_summary_data">
-                                        <h1 ng-init="data.index=$index" style="margin: 25px 0 0">
-                                            <i ng-show="summaryDataLoading" class="fa fa-spinner fa-spin summary-font-size"></i>
-                                            <h2 class="hide text-flamingo" title="{{data.description}}" ng-class="{'show': !summaryDataLoading}">{{ summary_data[data.index] | number }}</h2>
-                                        </h1>
-                                        <h3 class="hide" ng-class="{'show': data.title}" title="{{data.description}}" style="line-height: 1.6; margin-top: 0; margin-bottom: 0;">
-                                            {{ data.title }}
-                                        </h3>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    <% } %>
                     <div ng-if="controller.isLoading" class="row ng-cloak text-center" style="padding: 64px 0;" >
                         <i class="fa fa-spinner fa-spin" style="font-size: 32px;"></i>
                     </div>
                     <div class="row mb-4" ng-if="!controller.isLoading">
-                        <div class="showcase-title">
-                            <% if (state === 'projects') { %>
-                                <h3 style="margin-top: 20px;">My Projects</h3>
-                            <% } else { %>
-                                <h3 ng-if="controller.highlightedProjects" style="margin-top: 50px;">Project Showcase</h3>
-                            <% } %>
+                        <div class="col-md-12">
+                            <h3>Projects</h3>
                         </div>
                     </div>
-                    <%if (state === 'home' || (user && user.isAnonymousGuest)) { %>
-                        <div ng-if="controller.highlightedProjects && !controller.isLoading" class="row">
-                            <div ng-if="controller.highlightedProjects.length" style="text-align: center; padding: 0; min-height: 200px;">
-                                <ul class="projects-list highlighted-list">
-                                    <li class="ng-cloak projects-list-item highlighted-item"
-                                        ng-repeat="project in controller.highlightedProjects"
-                                        style="background: url({{project.image}}) no-repeat top center; background-size: cover;" ng-click="controller.selectProject(project) | trackEvent:'Home':'select project'">
-                                        <div class="text-left">
-                                            <div class="title" style="font-size: 20px;" title="{{ project.name }}">
-                                                {{ project.name }}
-                                            </div>
-                                            <span class="line-clamp mb-2">{{ project.description }}</span>
-                                            <div class="text-center" style="height: 20px;">
-                                                <i ng-show="project.isLoading" class="fa fa-spinner fa-spin" style="font-size: 18px; position: relative;"></i>
-                                                <div class="text-left" ng-show="!project.isLoading">
-                                                    <span class="a2-badge no-wrap" style="background-color: rgb(110, 111, 126, 0.5); color: white; margin-left: 0;">{{ project.recCount | number }} recordings</span>
-                                                    <span class="a2-badge no-wrap" style="background-color: rgb(110, 111, 126, 0.5); color: white">{{ project.templatesTotal }} templates</span>
-                                                    <span class="a2-badge no-wrap" style="background-color: rgb(110, 111, 126, 0.5); color: white">{{ project.speciesCount }} species</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </li>
-                                </ul>
-                            </div>
-                            <div ng-if="isExplorePage && !controller.highlightedProjects.length && !controller.isLoading">
-                                <h4>No results</h3>
-                            </div>
-                        </div>
-                    <% } %>
-                    <div class="row" ng-if="!isExplorePage">
+                    <div class="row">
                         <div class="col-md-12" style="text-align: center; padding: 0; min-height: 600px;">
                             <ul class="projects-list">
-                                <li ng-if="!controller.isAnonymousGuest && !controller.isLoading && !isExplorePage" class="projects-list-item projects-list-item-add"
-                                    ng-click="controller.createProject() | trackEvent:'Home':'create a new project'">
-                                    <div class="title">+</div>
-                                    <div>New Project</div>
-                                </li>
-                                <li class="ng-cloak projects-list-item" ng-class="{'disabled': !project.is_enabled }"
+                                <li class="ng-cloak projects-list-item"
                                     ng-repeat="project in results = ( controller.projects | orderBy: controller.projectSort.sort )"
-                                    style="background: url({{project.mapUrl}}) no-repeat top center; background-size: cover;" ng-click="controller.selectProject(project) | trackEvent:'Home':'select project'">
+                                    ng-click="controller.selectProject(project)">
                                     <div class="text-left">
                                         <div class="title" title="{{ project.name }}">
                                             {{ project.name }}

@@ -29,6 +29,34 @@ router.post('/projects', verifyToken(), hasRole(['appUser', 'rfcxUser']), async 
   }
 })
 
+router.patch('/projects/:externalId', verifyToken(), hasRole(['appUser', 'rfcxUser']), async function(req, res) {
+  try {
+    const user = await model.users.ensureUserExistFromAuth0(req.user);
+    const converter = new Converter(req.body, {});
+    converter.convert('name').optional().toString();
+    converter.convert('description').optional().toString();
+
+    const params = await converter.validate();
+    const project = await model.projects.find({ external_id: req.params.externalId }).get(0);
+    if (!project) {
+      throw new EmptyResultError('Project with given external_id not found.');
+    }
+    if (!await model.projects.userHasPermission(project.project_id, user.user_id)) {
+      throw new ForbiddenError(`You don't have permission to manage project`);
+    }
+    await model.projects.updateAsync({
+      project_id: project.project_id,
+      name: params.name !== undefined ? params.name : project.name,
+      url: project.url,
+      description: params.description !== undefined ? params.description : project.description,
+      is_private: project.is_private,
+    })
+    res.sendStatus(200);
+  } catch (e) {
+    httpErrorHandler(req, res, 'Failed updating a project')(e);
+  }
+})
+
 router.post('/sites', verifyToken(), hasRole(['appUser', 'rfcxUser', 'guardianCreator']), async function(req, res) {
   try {
     const converter = new Converter(req.body, {});

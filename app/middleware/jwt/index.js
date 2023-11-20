@@ -51,6 +51,31 @@ const verifyToken = function() {
   }
 }
 
+const parseTokenData = function() {
+    return function(req, res, next) {
+      const headersToken = req.headers['authorization']
+      const sessionToken = req.session && req.session.idToken ? req.session.idToken : null
+      let token = headersToken ? headersToken : sessionToken
+      if (!token) {
+        req.user = null
+      }
+      else if (token) {
+        if (token.startsWith('Bearer ')) {
+          token = token.slice(7, token.length);
+        }
+        let decodedToken
+        try {
+          decodedToken = jwt.verify(token, cert);
+          req.user = decodedToken;
+        }
+        catch (e) {
+          req.user = null
+        }
+      }
+      next();
+    }
+}
+
 const hasRole = function(expectedRoles) {
   expectedRoles = (Array.isArray(expectedRoles)? expectedRoles : [expectedRoles]);
   return function(req, res, next) {
@@ -67,4 +92,5 @@ const hasRole = function(expectedRoles) {
 module.exports = {
   verifyToken,
   hasRole,
+  parseTokenData
 }

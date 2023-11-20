@@ -49,6 +49,7 @@ router.get('/:projecturl?/', function(req, res, next) {
                 // if not authorized to see project send 404
                 return next();
             } else {
+                req.session.loggedIn = true
                 return res.redirect('/visualizer/' + project.url + '/');
             }
         }).catch(next);
@@ -97,6 +98,7 @@ router.get('/:projecturl?/', function(req, res, next) {
                     req.session.user.permissions = {};
 
                 req.session.user.permissions[project.project_id] = rows;
+                req.session.loggedIn = true
                 var perms = {
                     authorized: true,
                     public: !project.is_private,

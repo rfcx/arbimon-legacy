@@ -37,7 +37,7 @@ angular.module('a2.jobs', [
     });
 
     var hideJob = function(jobId, action) {
-        $http.get('/api/project/' + Project.getUrl() + '/jobs/hide/' + jobId)
+        $http.get('/legacy-api/project/' + Project.getUrl() + '/jobs/hide/' + jobId)
             .success(function(data) {
                     JobsData.updateJobs();
                     const message = 'Job ' + action + ' successfully.'
@@ -167,7 +167,7 @@ angular.module('a2.jobs', [
     updateJobs = function() {
         if (isProcessing) return
         isProcessing = true;
-        $http.get('/api/project/' + url + '/jobs/progress', { params: { last3Months: true } })
+        $http.get('/legacy-api/project/' + url + '/jobs/progress', { params: { last3Months: true } })
             .success(function(data) {
                 data.forEach(item => {
                     if (item.job_type_id === 1 && item.completed === 0 && item.state === 'error') {
@@ -191,7 +191,7 @@ angular.module('a2.jobs', [
             return jobs;
         },
         getJobTypes: function() {
-            return $http.get('/api/jobs/types');
+            return $http.get('/legacy-api/jobs/types');
         },
         updateJobs: function() {
             return updateJobs();

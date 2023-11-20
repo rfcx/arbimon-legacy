@@ -8,7 +8,7 @@ angular.module('a2.orders.process-order', [
     
     $scope.processing = true;
     
-    $http.post('/api/orders/process/'+orderId+$window.location.search)
+    $http.post('/legacy-api/orders/process/'+orderId+$window.location.search)
         .success(function(data) {
             console.log('data', data);
             $scope.invoice = {

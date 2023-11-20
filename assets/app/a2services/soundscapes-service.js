@@ -21,7 +21,7 @@ angular.module('a2.srv.soundscapes', [
         },
         get: function(soundscapeId, callback) {
             var projectName = Project.getUrl();
-            $http.get('/api/project/'+projectName+'/soundscapes/' + soundscapeId)
+            $http.get('/legacy-api/project/'+projectName+'/soundscapes/' + soundscapeId)
                 .success(function(data) {
                     callback(data);
                 });
@@ -38,7 +38,7 @@ angular.module('a2.srv.soundscapes', [
             var d = $q.defer();
             var projectName = Project.getUrl();
             
-            $http.get('/api/project/'+projectName+'/soundscapes/' + soundscapeId + '/scidx', {
+            $http.get('/legacy-api/project/'+projectName+'/soundscapes/' + soundscapeId + '/scidx', {
                     params : params
                 })
                 .success(function(data) {
@@ -52,7 +52,7 @@ angular.module('a2.srv.soundscapes', [
             var d = $q.defer();
             var projectName = Project.getUrl();
             
-            $http.get('/api/project/'+projectName+'/soundscapes/' + soundscapeId + '/norm-vector')
+            $http.get('/legacy-api/project/'+projectName+'/soundscapes/' + soundscapeId + '/norm-vector')
                 .success(function(data) {
                     if(callback) callback(data);
                     
@@ -68,7 +68,7 @@ angular.module('a2.srv.soundscapes', [
             }
             var projectName = Project.getUrl();
             
-            $http.get('/api/project/'+projectName+'/soundscapes/', {
+            $http.get('/legacy-api/project/'+projectName+'/soundscapes/', {
                     params : query
                 })
                 .success(function(data) {
@@ -76,13 +76,13 @@ angular.module('a2.srv.soundscapes', [
                 });
         },
         getList2: function(callback) {
-            $http.get('/api/project/'+Project.getUrl()+'/soundscapes/details')
+            $http.get('/legacy-api/project/'+Project.getUrl()+'/soundscapes/details')
                 .success(callback)
                 .error(notify.serverError);
         },
         setVisualizationOptions: function(soundscapeId, params, callback){
             var projectName = Project.getUrl();
-            $http.post('/api/project/'+projectName+'/soundscapes/' + soundscapeId + '/scale', params)
+            $http.post('/legacy-api/project/'+projectName+'/soundscapes/' + soundscapeId + '/scale', params)
                 .success(function(data) {
                     callback(data);
                 });
@@ -90,14 +90,14 @@ angular.module('a2.srv.soundscapes', [
         addRegion: function(soundscapeId, bbox, params, callback) {
             var projectName = Project.getUrl();
             params.bbox = bbox;
-            $http.post('/api/project/'+projectName+'/soundscapes/' + soundscapeId + '/regions/add', params)
+            $http.post('/legacy-api/project/'+projectName+'/soundscapes/' + soundscapeId + '/regions/add', params)
                 .success(function(data) {
                     callback(data);
                 });
         },
         sampleRegion: function(soundscapeId, region, params, callback) {
             var projectName = Project.getUrl();
-            $http.post('/api/project/'+projectName+'/soundscapes/' + soundscapeId + '/regions/'+region+'/sample', params)
+            $http.post('/legacy-api/project/'+projectName+'/soundscapes/' + soundscapeId + '/regions/'+region+'/sample', params)
                 .success(function(data) {
                     callback(data);
                 });
@@ -111,28 +111,28 @@ angular.module('a2.srv.soundscapes', [
                 args.push('raw=1');
             }
             d.resolve(
-                '/api/project/'+projectName+'/soundscapes/' + soundscapeId + '/export-list' +
+                '/legacy-api/project/'+projectName+'/soundscapes/' + soundscapeId + '/export-list' +
                 ( args.length ? '?'+args.join('&')  : '')
             );
             return d.promise;
         },
         getRegion: function(soundscapeId, region, callback) {
             var projectName = Project.getUrl();
-            $http.get('/api/project/'+projectName+'/soundscapes/' + soundscapeId + '/regions/' + region)
+            $http.get('/legacy-api/project/'+projectName+'/soundscapes/' + soundscapeId + '/regions/' + region)
                 .success(function(data) {
                     callback(data);
                 });
         },
         getRecordingTags: function(soundscapeId, region, recording, callback){
             var projectName = Project.getUrl();
-            $http.get('/api/project/'+projectName+'/soundscapes/' + soundscapeId + '/regions/'+ region + '/tags/' + recording)
+            $http.get('/legacy-api/project/'+projectName+'/soundscapes/' + soundscapeId + '/regions/'+ region + '/tags/' + recording)
                 .success(function(data) {
                     callback(data);
                 });
         },
         addRecordingTag: function (soundscapeId, region, recording, tag, callback){
             var projectName = Project.getUrl();
-            $http.post('/api/project/'+projectName+'/soundscapes/' + soundscapeId + '/regions/'+ region + '/tags/' + recording + '/add', 
+            $http.post('/legacy-api/project/'+projectName+'/soundscapes/' + soundscapeId + '/regions/'+ region + '/tags/' + recording + '/add', 
                 { 
                     tag: tag 
                 })
@@ -140,7 +140,7 @@ angular.module('a2.srv.soundscapes', [
         },
         removeRecordingTag: function (soundscapeId, region, recording, tag, callback){
             var projectName = Project.getUrl();
-            $http.post('/api/project/'+projectName+'/soundscapes/' + soundscapeId + '/regions/'+ region + '/tags/' + recording + '/remove',
+            $http.post('/legacy-api/project/'+projectName+'/soundscapes/' + soundscapeId + '/regions/'+ region + '/tags/' + recording + '/remove',
                 {
                     tag: tag
                 })
@@ -153,7 +153,7 @@ angular.module('a2.srv.soundscapes', [
             }
             var projectName = Project.getUrl();
             
-            $http.get('/api/project/'+projectName+'/soundscapes/' + soundscapeId + '/regions', {
+            $http.get('/legacy-api/project/'+projectName+'/soundscapes/' + soundscapeId + '/regions', {
                     params : query
                 })
                 .success(function(data) {
@@ -167,7 +167,7 @@ angular.module('a2.srv.soundscapes', [
             }
             var projectName = Project.getUrl();
             
-            $http.get('/api/project/'+projectName+'/soundscapes/' + soundscapeId + '/recordings/'+bbox, {
+            $http.get('/legacy-api/project/'+projectName+'/soundscapes/' + soundscapeId + '/recordings/'+bbox, {
                     params : query
                 })
                 .success(function(data) {
@@ -176,16 +176,16 @@ angular.module('a2.srv.soundscapes', [
         },
         // TODO change method to receive id
         findIndices: function(soundscapeId, callback) {
-            $http.get('/api/project/'+ Project.getUrl() +'/soundscapes/' + soundscapeId + '/indices')
+            $http.get('/legacy-api/project/'+ Project.getUrl() +'/soundscapes/' + soundscapeId + '/indices')
                 .success(callback);
         },
         delete: function(soundscapeId, callback) {
-            $http.get('/api/project/' + Project.getUrl() + '/soundscapes/' + soundscapeId + "/delete")
+            $http.get('/legacy-api/project/' + Project.getUrl() + '/soundscapes/' + soundscapeId + "/delete")
                 .success(callback)
                 .error(notify.serverError);
         },
         create: function(soundscapeData) {
-            return $http.post('/api/project/'+ Project.getUrl() +'/soundscape/new', soundscapeData);
+            return $http.post('/legacy-api/project/'+ Project.getUrl() +'/soundscape/new', soundscapeData);
         }
     };
 })

@@ -90,7 +90,10 @@ router.post('/update', function(req, res, next) {
             return res.json({ error: 'Site with same name already exists'});
         }
 
-        model.sites.updateSite(site, req.session.idToken).then(function() {
+        const options = {
+            originalProjectId: project.project_id
+        }
+        model.sites.updateSite(site, options, req.session.idToken).then(function() {
             res.json({ message: 'Site updated' });
             model.projects.updateProjectLocation(project.project_id, site.lat, site.lon)
         }).catch(next);

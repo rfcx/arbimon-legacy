@@ -10,11 +10,11 @@ angular.module('a2.srv.citizen-scientist-admin', [
             return a2APIService.get('/citizen-scientist/stats/user' + (userId ? '/' + userId : '')).catch(notify.serverError);
         },
         getUserStatsExportUrl: function(){
-            return '/api/project/' + Project.getUrl() + '/citizen-scientist/stats/export/user-stats.csv';
+            return '/legacy-api/project/' + Project.getUrl() + '/citizen-scientist/stats/export/user-stats.csv';
         },
         getCSExportUrl: function(pattern_matching_id, per_user){
             var filename = per_user ? 'export-per-user.csv' : 'export.csv';
-            return '/api/project/' + Project.getUrl() + '/citizen-scientist/pattern-matchings/' + (pattern_matching_id) + '/' + filename;
+            return '/legacy-api/project/' + Project.getUrl() + '/citizen-scientist/pattern-matchings/' + (pattern_matching_id) + '/' + filename;
         },
         getSettings: function(){
             return a2APIService.get('/citizen-scientist/settings').catch(notify.serverError);

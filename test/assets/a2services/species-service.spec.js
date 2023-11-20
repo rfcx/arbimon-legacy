@@ -40,7 +40,7 @@ describe('Module: a2.srv.species', function() {
                 ];
                 
                 $httpBackend
-                    .expectGET('/api/species/list/100')
+                    .expectGET('/legacy-api/species/list/100')
                     .respond(200, speciesList);
                     
                 Species.get(function(species){
@@ -59,7 +59,7 @@ describe('Module: a2.srv.species', function() {
         describe('Species.search', function() {
             it('request to correct route', function() {
                 $httpBackend
-                    .expectGET('/api/species/search?q=coqui')
+                    .expectGET('/legacy-api/species/search?q=coqui')
                     .respond(200, 'data');
                     
                 Species.search('coqui', function(data){
@@ -73,7 +73,7 @@ describe('Module: a2.srv.species', function() {
         describe('Species.findById', function() {
             it('request to correct route', function() {
                 $httpBackend
-                    .expectGET('/api/species/1')
+                    .expectGET('/legacy-api/species/1')
                     .respond(200, 'data');
                     
                 Species.findById(1, function(data){
@@ -128,7 +128,7 @@ describe('Module: a2.srv.species', function() {
             it('request to correct route and cache list after first request', function() {
                 
                 $httpBackend
-                    .expectGET('/api/songtypes/all')
+                    .expectGET('/legacy-api/songtypes/all')
                     .respond(200, songList);
                     
                 Songtypes.get(function(songs){
@@ -147,7 +147,7 @@ describe('Module: a2.srv.species', function() {
         describe('Songtypes.findById', function() {
             it('request to correct route without cache and after return proper data from cache', function() {
                 $httpBackend
-                    .expectGET('/api/songtypes/all')
+                    .expectGET('/legacy-api/songtypes/all')
                     .respond(200, songList);
                     
                 Songtypes.findById(1, function(songs){

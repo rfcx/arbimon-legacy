@@ -138,15 +138,8 @@ describe('Project', function(){
          
         it('Should return a project given its id.', function(done){
             dbpool.pool.cache[
-                "SELECT p.*, \n" +
-                "   pp.tier, \n" +
-                "   pp.storage AS storage_limit, \n" +
-                "   pp.processing AS processing_limit, \n" +
-                "   pp.created_on AS plan_created, \n" +
-                "   pp.activation AS plan_activated, \n" +
-                "   pp.duration_period AS plan_period \n" +
+                "SELECT p.* \n" +
                 "FROM projects AS p \n" +
-                "JOIN project_plans AS pp ON pp.plan_id = p.current_plan \n" +
                 "WHERE (p.project_id = ?)"
             ]={value:[project]};
             projects.findById(1, function(err, results){
@@ -161,15 +154,8 @@ describe('Project', function(){
          
         it('Should return a project given its url.', function(done){
             dbpool.pool.cache[
-                "SELECT p.*, \n" +
-                "   pp.tier, \n" +
-                "   pp.storage AS storage_limit, \n" +
-                "   pp.processing AS processing_limit, \n" +
-                "   pp.created_on AS plan_created, \n" +
-                "   pp.activation AS plan_activated, \n" +
-                "   pp.duration_period AS plan_period \n" +
+                "SELECT p.* \n" +
                 "FROM projects AS p \n" +
-                "JOIN project_plans AS pp ON pp.plan_id = p.current_plan \n" +
                 "WHERE (p.url = ?)"
             ]={value:[project]};
             projects.findByUrl('project-url', function(err, results){
@@ -184,15 +170,8 @@ describe('Project', function(){
          
         it('Should return a project given its name.', function(done){
             dbpool.pool.cache[
-                "SELECT p.*, \n" +
-                "   pp.tier, \n" +
-                "   pp.storage AS storage_limit, \n" +
-                "   pp.processing AS processing_limit, \n" +
-                "   pp.created_on AS plan_created, \n" +
-                "   pp.activation AS plan_activated, \n" +
-                "   pp.duration_period AS plan_period \n" +
+                "SELECT p.* " +
                 "FROM projects AS p \n" +
-                "JOIN project_plans AS pp ON pp.plan_id = p.current_plan \n" +
                 "WHERE (p.name = ?)"
             ]={value:[project]};
             projects.findByName('project', function(err, results){
@@ -315,17 +294,6 @@ describe('Project', function(){
                 'SET ?'
             ]={ value:{ insertId: 102 } };
             
-            dbpool.pool.cache[
-                'INSERT INTO project_plans \n'+
-                'SET ?'
-            ]={ value:{ insertId: 103 } };
-            
-            dbpool.pool.cache[
-                'UPDATE projects \n' +
-                'SET current_plan = ? \n' +
-                'WHERE project_id = ?'
-            ]={ value:{ insertId: 103 } };
-            
             projects.create(pdata, powner, function(err, projectId){
                 should.not.exist(err);
                 projectId.should.deep.equal(101);
@@ -337,8 +305,7 @@ describe('Project', function(){
         var requiredKeys = [
             'url', 
             'name', 
-            'description', 
-            'plan', 
+            'description',  
             'project_type_id', 
             'is_private'
         ];

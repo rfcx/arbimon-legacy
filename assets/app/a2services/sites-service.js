@@ -5,21 +5,21 @@ angular.module('a2.srv.sites', [
 .factory('a2Sites',function($http, $q, Project, notify){
     return {
         listPublished: function(callback) {
-            $http.get('/api/sites/published')
+            $http.get('/legacy-api/sites/published')
             .success(function(data) {
                 callback(data);
             });
         },
 
         import: function(site, callback) {
-            $http.post('/api/project/'+ Project.getUrl() +'/sites/import', {
+            $http.post('/legacy-api/project/'+ Project.getUrl() +'/sites/import', {
                 site: site,
             })
             .success(callback);
         },
 
         update: function(site, callback) {
-            $http.post('/api/project/'+ Project.getUrl() +'/sites/update', {
+            $http.post('/legacy-api/project/'+ Project.getUrl() +'/sites/update', {
                 site: site,
             })
             .success(callback)
@@ -27,7 +27,7 @@ angular.module('a2.srv.sites', [
         },
 
         create: function(site, callback) {
-            $http.post('/api/project/'+ Project.getUrl() +'/sites/create', {
+            $http.post('/legacy-api/project/'+ Project.getUrl() +'/sites/create', {
                 site: site,
             })
             .success(callback)
@@ -35,7 +35,7 @@ angular.module('a2.srv.sites', [
         },
 
         delete: function(sites, callback) {
-            $http.post('/api/project/'+ Project.getUrl() +'/sites/delete', {
+            $http.post('/legacy-api/project/'+ Project.getUrl() +'/sites/delete', {
                 sites: sites
             })
             .success(callback)
@@ -44,12 +44,12 @@ angular.module('a2.srv.sites', [
 
         // Uses Promises :-)
         getLogFiles: function(site, callback) {
-            return $http.get('/api/project/'+ Project.getUrl() +'/sites/'+site+'/logs');
+            return $http.get('/legacy-api/project/'+ Project.getUrl() +'/sites/'+site+'/logs');
         },
 
         getSiteLogDataDates: function(site, series){
             var d=$q.defer();
-            $http.get('/api/project/'+ Project.getUrl() +'/sites/'+site+'/log/data.txt?get=dates')
+            $http.get('/legacy-api/project/'+ Project.getUrl() +'/sites/'+site+'/log/data.txt?get=dates')
                 .success(d.resolve.bind(d))
                 .error(d.reject.bind(d));
             return d.promise;
@@ -58,11 +58,11 @@ angular.module('a2.srv.sites', [
         getSiteLogDataUrl: function(site, series, from, to, period){
             var args = 'q='+period+'&from='+from.getTime()+'&to='+to.getTime();
             if(/uploads/.test(series)){
-                return $q.resolve('/api/project/'+ Project.getUrl() +'/sites/'+site+'/uploads.txt?'+args);
+                return $q.resolve('/legacy-api/project/'+ Project.getUrl() +'/sites/'+site+'/uploads.txt?'+args);
             } else if(/recordings/.test(series)){
-                    return $q.resolve('/api/project/'+ Project.getUrl() +'/sites/'+site+'/data.txt?'+args);
+                    return $q.resolve('/legacy-api/project/'+ Project.getUrl() +'/sites/'+site+'/data.txt?'+args);
             } else {
-                return $q.resolve('/api/project/'+ Project.getUrl() +'/sites/'+site+'/log/data.txt?stat='+series+'&'+args);
+                return $q.resolve('/legacy-api/project/'+ Project.getUrl() +'/sites/'+site+'/log/data.txt?stat='+series+'&'+args);
             }
         },
 
@@ -83,7 +83,7 @@ angular.module('a2.srv.sites', [
         // Get list of assets to a site
         getListOfAssets: function(site_id) {
             var d = $q.defer();
-            $http.get('/api/project/'+ Project.getUrl() + '/streams/'+site_id+'/assets')
+            $http.get('/legacy-api/project/'+ Project.getUrl() + '/streams/'+site_id+'/assets')
                 .success(d.resolve.bind(d))
                 .error(d.reject.bind(d));
             return d.promise;
@@ -91,13 +91,13 @@ angular.module('a2.srv.sites', [
 
         // Uses Promises
         generateToken : function(site){
-            return $http.post('/api/project/'+ Project.getUrl() +'/sites/generate-token', {
+            return $http.post('/legacy-api/project/'+ Project.getUrl() +'/sites/generate-token', {
                 site: site.id
             });
         },
 
         revokeToken : function(site){
-            return $http.post('/api/project/'+ Project.getUrl() +'/sites/revoke-token', {
+            return $http.post('/legacy-api/project/'+ Project.getUrl() +'/sites/revoke-token', {
                 site: site.id
             });
         }

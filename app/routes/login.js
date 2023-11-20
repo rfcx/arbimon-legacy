@@ -16,7 +16,7 @@ var fs = require('fs');
 var path = require('path');
 var url = require('url');
 var dd = console.log;
-
+var q = require('q');
 var config = require('../config');
 var model = require('../model/');
 var sha256 = require('../utils/sha256');
@@ -32,26 +32,39 @@ var mailTemplates = {
 const mandrill = require('mandrill-api/mandrill');
 const mandrill_client = new mandrill.Mandrill(config('mandrill_key').key)
 
-router.use(function create_anonymous_guest_if_not_logged_in(req, res, next){
-    if(req.session && !req.session.loggedIn && (!req.session.isAnonymousGuest || !req.session.user)){
+const anonymousGuest = {
+    id: 0,
+    username: 'guest',
+    email: '',
+    firstname: 'Anonymous',
+    lastname: 'Guest',
+    isAnonymousGuest: true,
+    isSuper: 0,
+    isRfcx: 0,
+    imageUrl: ''
+}
 
-        var dummyEmail = new Date().getTime() + '@b.com';
-
-        req.session.isAnonymousGuest = true;
-        req.session.user = {
-            id: 0,
-            username: 'guest',
-            email: '',
-            firstname: 'Anonymous',
-            lastname: 'Guest',
-            isAnonymousGuest: true,
-            isSuper: 0,
-            isRfcx: 0,
-            imageUrl: ''
-        };
-        debug("Anonimous guest user created in session.");
+router.use(function create_user_object(req, res, next) {
+    const session = req.session
+    // console.log('\n\n - session', session)
+    if (!req.user) {
+        session.isAnonymousGuest = true;
+        session.user = anonymousGuest;
+        next();
     }
-    next();
+    else if (session && req.user && req.user.email) {
+        q.ninvoke(model.users, 'findByEmail', req.user.email).get(0).then(async user => {
+            if (!user.length) {
+                session.isAnonymousGuest = true;
+                session.user = anonymousGuest;
+                next();
+            }
+            session.isAnonymousGuest = false;
+            user[0].picture = req.user.picture
+            session.user = model.users.makeUserObject(user[0], {secure: req.secure, all:true});
+            next();
+        })
+    }
 });
 
 router.use(function(req, res, next) {
@@ -77,7 +90,7 @@ router.use(function(req, res, next) {
     next();
 });
 
-router.get('/api/login_available', function(req, res, next) {
+router.get('/legacy-api/login_available', function(req, res, next) {
     res.type('json');
     if(!req.query.username) {
         return res.json({ error: "missing parameter"});
@@ -90,7 +103,7 @@ router.get('/api/login_available', function(req, res, next) {
     });
 });
 
-router.get('/api/email_available', function(req, res, next) {
+router.get('/legacy-api/email_available', function(req, res, next) {
     res.type('json');
     if(!req.query.email) {
         return res.json({ error: "missing parameter"});

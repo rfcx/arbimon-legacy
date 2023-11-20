@@ -15,6 +15,8 @@ var queryHandler = dbpool.queryHandler;
 var config = require('../config');
 const auth0Service = require('../model/auth0')
 const model = require('../model');
+const authentication = require('../middleware/jwt');
+const parseTokenData = authentication.parseTokenData;
 
 router.get('/alive', function(req, res, next) { // for health checks
     res.type('json');
@@ -30,11 +32,7 @@ router.get('/alive', function(req, res, next) { // for health checks
 });
 
 
-router.use('/', login);
-
-router.get('/home', function(req, res) {
-    res.redirect('/');
-});
+router.use('/', parseTokenData(), login);
 
 router.get('/support', function(req, res) {
     res.redirect(config('hosts').support);
@@ -57,10 +55,9 @@ router.use('/uploads', uploads);
 // all routes after this middleware
 // are available only to logged users
 router.use(function(req, res, next) {
-    if(req.session && (req.session.loggedIn || req.session.isAnonymousGuest)) {
-        return next();
-    }
-    res.render('get_fragment_hack.ejs');
+    if (!req.user) {
+        res.redirect(auth0Service.universalLoginUrl) 
+    } else return next();
 });
 
 router.get('/process-order/:orderId', function(req, res, next) {
@@ -73,7 +70,7 @@ router.get('/projects/:externalId', async (req, res) => {
     res.type('html');
     try {
         const project = await model.projects.find({external_id: req.params.externalId}).get(0);
-        return res.redirect(`/project/${project.url}/dashboard`);
+        return res.redirect(`/p/${project.url}`);
       }
       catch (e) {
         return res.redirect('/');
@@ -86,37 +83,17 @@ router.get('/projects', function(req, res) {
         title: "Projects",
         user: req.session.user,
         auth0UniversalLoginUrl: auth0Service.universalLoginUrl,
-        state: 'projects',
-        inject_data: {
-            mapbox_access_token: config('mapbox_api').accessToken
-        },
+        state: 'projects'
     });
 });
 
-router.get('/my-projects', function(req, res) {
-    res.type('html');
-    res.render('home', {
-        title: "Projects",
-        user: req.session.user,
-        auth0UniversalLoginUrl: auth0Service.universalLoginUrl,
-        state: 'projects',
-        inject_data: {
-            mapbox_access_token: config('mapbox_api').accessToken
-        },
-    });
+router.get('/project/:projectUrl/dashboard', function(req, res, next) {
+    res.type('json');
+    return res.redirect(`/p/${req.params.projectUrl}/dashboard`)
 });
 
 router.get('/', function(req, res) {
-    res.type('html');
-    res.render('home', {
-        title: "Projects",
-        user: req.session.user,
-        auth0UniversalLoginUrl: auth0Service.universalLoginUrl,
-        state: 'home',
-        inject_data: {
-            mapbox_access_token: config('mapbox_api').accessToken
-        },
-    });
+    res.redirect('/projects');
 });
 
 
@@ -133,7 +110,7 @@ router.get('/user-settings', function(req, res) {
     }
 });
 
-router.use('/api', dataApi);
+router.use('/legacy-api', dataApi);
 router.use('/project', project);
 router.use('/site', site);
 router.use('/citizen-scientist', require('./citizen-scientist'));

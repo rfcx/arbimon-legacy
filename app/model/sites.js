@@ -148,6 +148,11 @@ var Sites = {
                 site.timezone = 'UTC';
             }
         }
+
+        if (site.name !== undefined) {
+            site['updated_at'] = moment.utc(new Date()).format();
+        }
+
         if (site.lat !== undefined || site.lon !== undefined || site.alt !== undefined || site.project_id) {
             site['updated_at'] = moment.utc(new Date()).format();
         }
@@ -694,6 +699,8 @@ var Sites = {
                     }
                     let siteExternalId = await this.createInCoreAPI(coreSite, token);
                     await this.setExternalId(result.insertId, siteExternalId, connection);
+                    let { country, countryCode } = await this.getCountryCodeCoreAPI(coreSite, token);
+                    await this.setCountryCode(result.insertId, country, countryCode, connection);
                 }
                 await connection.commit();
                 await connection.release();
@@ -741,7 +748,25 @@ var Sites = {
         })
     },
 
-    updateSite: async function(site, idToken) {
+    getCountryCodeCoreAPI: async function(coreSite, idToken) {
+        const options = {
+            method: 'GET',
+            url: `${rfcxConfig.apiBaseUrl}/streams?projects[]=${coreSite.project_id}&name[]=${coreSite.name}`,
+            headers: {
+                'content-type': 'application/json',
+                Authorization: `Bearer ${idToken}`
+            },
+            json: true
+          }
+          return rp(options).then((response) => {
+            if (response.body && !response.body.error) {
+                const body  = response.body
+                return { country: body[0].country_name, countryCode: body[0].country_code }
+            } else throw new Error('Failed to get site data')
+        })
+    },
+
+    updateSite: async function(site, options, idToken) {
         let db;
         return dbpool.getConnection()
             .then(async (connection) => {
@@ -758,6 +783,24 @@ var Sites = {
                         project_id: site.project_id
                     }, idToken)
                 };
+                const { originalProjectId } = options
+                if (site.project_id !== undefined && originalProjectId !== site.project_id) {
+                    // Update project in validations if any site is moving to another project
+                    const newProject = site.project_id
+                    const validations = await projects.getProjectValidationsBySite(originalProjectId, site.site_id)
+                    if (validations.length) {
+                        for (let validation of validations) {
+                            const projectClass = {
+                                projectId: newProject,
+                                specieId: validation.species_id,
+                                songtypeId: validation.songtype_id
+                            };
+                            const newProjectClass = await projects.checkClassAsync(projectClass)
+                            if (!newProjectClass.length) await projects.insertClassAsync(projectClass)
+                        }
+                        await projects.updateProjectInAnalyses(originalProjectId, newProject, site.site_id)
+                    }
+                }
                 await db.commit();
                 await db.release();
             })
@@ -876,6 +919,10 @@ var Sites = {
 
     setExternalId: function (siteId, externalId, connection) {
         return (connection? connection.query : dbpool.query)(`UPDATE sites SET external_id = "${externalId}" WHERE site_id = ${siteId}`, [])
+    },
+
+    setCountryCode: function (siteId, country, countryCode, connection) {
+        return (connection? connection.query : dbpool.query)(`UPDATE sites SET country = "${country}", country_code = "${countryCode}" WHERE site_id = ${siteId}`, [])
     },
 
     /**
