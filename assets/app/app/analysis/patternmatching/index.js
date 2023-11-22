@@ -235,6 +235,7 @@ angular.module('a2.analysis.patternmatching', [
         thumbnails: [
             { class:'fa fa-th-large', value:''},
             { class:'fa fa-th', value:'is-small'},
+            { class:'fa fa-bars', value:'pm-full-size'},
         ],
         search: [
             {value:'all', text:'All', description: 'Show all matched Region of Interest.'},
