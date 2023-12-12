@@ -2014,7 +2014,7 @@ var Recordings = {
             url: `${rfcxConfig.apiBaseUrl}/internal/arbimon/recordings`,
             headers: {
                 'content-type': 'application/json',
-                Authorization: idToken,
+                Authorization: `Bearer ${idToken}`,
                 source: 'arbimon'
             },
             body: JSON.stringify(params)
