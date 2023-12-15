@@ -23,7 +23,7 @@ var Sites = {
         var selectExtra = '';
         var joinExtra = '';
 
-        whereExp.push('s.deleted_at is null')
+        whereExp.push('s.deleted_at is null', 's.hidden = 0')
 
         if(query.hasOwnProperty("id")) {
             whereExp.push("s.site_id = ?");
@@ -206,7 +206,7 @@ var Sites = {
         var q = 'SELECT count(*) as count \n'+
                 'FROM sites \n'+
                 'WHERE name = %s \n'+
-                'AND project_id = %s AND deleted_at is null';
+                'AND project_id = %s AND deleted_at is null AND hidden = 0';
 
         q = util.format(q,
             dbpool.escape(site_name),
@@ -699,8 +699,8 @@ var Sites = {
                     }
                     let siteExternalId = await this.createInCoreAPI(coreSite, token);
                     await this.setExternalId(result.insertId, siteExternalId, connection);
-                    let { country, countryCode } = await this.getCountryCodeCoreAPI(coreSite, token);
-                    await this.setCountryCode(result.insertId, country, countryCode, connection);
+                    let { countryCode } = await this.getCountryCodeCoreAPI(coreSite, token);
+                    await this.setCountryCode(result.insertId, countryCode, connection);
                 }
                 await connection.commit();
                 await connection.release();
@@ -761,7 +761,7 @@ var Sites = {
           return rp(options).then((response) => {
             if (response.body && !response.body.error) {
                 const body  = response.body
-                return { country: body[0].country_name, countryCode: body[0].country_code }
+                return { countryCode: body[0].country_code }
             } else throw new Error('Failed to get site data')
         })
     },
@@ -921,8 +921,8 @@ var Sites = {
         return (connection? connection.query : dbpool.query)(`UPDATE sites SET external_id = "${externalId}" WHERE site_id = ${siteId}`, [])
     },
 
-    setCountryCode: function (siteId, country, countryCode, connection) {
-        return (connection? connection.query : dbpool.query)(`UPDATE sites SET country = "${country}", country_code = "${countryCode}" WHERE site_id = ${siteId}`, [])
+    setCountryCode: function (siteId, countryCode, connection) {
+        return (connection? connection.query : dbpool.query)(`UPDATE sites SET country_code = "${countryCode}" WHERE site_id = ${siteId}`, [])
     },
 
     /**
@@ -937,19 +937,19 @@ var Sites = {
     countAllSites: function(callback) {
         var q = 'SELECT count(*) AS count \n'+
                 'FROM `sites` \n'+
-                'WHERE deleted_at is null';
+                'WHERE deleted_at is null AND hidden = 0';
 
         queryHandler(q, callback);
     },
 
     countProjectSites: function(projectId) {
-        return dbpool.query(`SELECT COUNT(site_id) AS count FROM sites WHERE project_id = ${dbpool.escape(projectId)} AND deleted_at is null`).get(0).get('count');
+        return dbpool.query(`SELECT COUNT(site_id) AS count FROM sites WHERE project_id = ${dbpool.escape(projectId)} AND deleted_at is null AND hidden = 0`).get(0).get('count');
     },
 
     countSitesToday: function(callback) {
         var q = 'SELECT count(*) AS count \n'+
                 'FROM `sites` \n' +
-                'WHERE DATE(created_at) = DATE(NOW()) AND deleted_at is null';
+                'WHERE DATE(created_at) = DATE(NOW()) AND deleted_at is null AND hidden = 0 ';
 
         queryHandler(q, callback);
     }
