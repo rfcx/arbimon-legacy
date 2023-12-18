@@ -176,7 +176,7 @@ var Projects = {
                 "       s.token_created_on \n" +
                 "FROM sites AS s \n"+
                 "LEFT JOIN project_imported_sites as pis ON s.site_id = pis.site_id AND pis.project_id = ? \n"+
-                "WHERE (s.project_id = ? OR pis.project_id = ?) AND s.deleted_at is null AND s.hidden = 0",  typeCast: sqlutil.parseUtcDatetime },
+                "WHERE (s.project_id = ? OR pis.project_id = ?) AND s.deleted_at is null",  typeCast: sqlutil.parseUtcDatetime },
                 [project_id, project_id, project_id, project_id]
         ).then(function(sites){
             if(sites.length && options && options.compute){
@@ -236,7 +236,7 @@ var Projects = {
             FROM sites AS s
             LEFT JOIN project_imported_sites as pis ON s.site_id = pis.site_id AND pis.project_id=${project_id}
             LEFT JOIN recordings as r ON s.site_id = r.site_id
-            WHERE (s.project_id=${project_id} OR pis.project_id=${project_id}) AND s.deleted_at is null AND s.hidden = 0
+            WHERE (s.project_id=${project_id} OR pis.project_id=${project_id}) AND s.deleted_at is null
             GROUP BY s.site_id ORDER by s.name;`;
         return dbpool.streamQuery({ sql })
     },
@@ -245,7 +245,7 @@ var Projects = {
         return dbpool.query({ sql:
             `SELECT COALESCE(DATE_FORMAT(r.datetime, "${format}")) as date
             FROM recordings AS r
-            JOIN sites as s ON s.site_id = r.site_id AND s.project_id = ? AND s.deleted_at is null AND s.hidden = 0
+            JOIN sites as s ON s.site_id = r.site_id AND s.project_id = ? AND s.deleted_at is null
             LEFT JOIN project_imported_sites as pis ON s.site_id = pis.site_id AND pis.project_id = ?
             WHERE s.project_id = ? OR pis.project_id = ?
             GROUP BY YEAR(r.datetime), MONTH(r.datetime), DAY(r.datetime) ORDER BY r.datetime ASC`,  typeCast: sqlutil.parseUtcDatetime },

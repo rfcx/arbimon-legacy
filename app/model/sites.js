@@ -23,7 +23,7 @@ var Sites = {
         var selectExtra = '';
         var joinExtra = '';
 
-        whereExp.push('s.deleted_at is null', 's.hidden = 0')
+        whereExp.push('s.deleted_at is null')
 
         if(query.hasOwnProperty("id")) {
             whereExp.push("s.site_id = ?");
@@ -206,7 +206,7 @@ var Sites = {
         var q = 'SELECT count(*) as count \n'+
                 'FROM sites \n'+
                 'WHERE name = %s \n'+
-                'AND project_id = %s AND deleted_at is null AND hidden = 0';
+                'AND project_id = %s AND deleted_at is null';
 
         q = util.format(q,
             dbpool.escape(site_name),
@@ -937,19 +937,19 @@ var Sites = {
     countAllSites: function(callback) {
         var q = 'SELECT count(*) AS count \n'+
                 'FROM `sites` \n'+
-                'WHERE deleted_at is null AND hidden = 0';
+                'WHERE deleted_at is null';
 
         queryHandler(q, callback);
     },
 
     countProjectSites: function(projectId) {
-        return dbpool.query(`SELECT COUNT(site_id) AS count FROM sites WHERE project_id = ${dbpool.escape(projectId)} AND deleted_at is null AND hidden = 0`).get(0).get('count');
+        return dbpool.query(`SELECT COUNT(site_id) AS count FROM sites WHERE project_id = ${dbpool.escape(projectId)} AND deleted_at is null`).get(0).get('count');
     },
 
     countSitesToday: function(callback) {
         var q = 'SELECT count(*) AS count \n'+
                 'FROM `sites` \n' +
-                'WHERE DATE(created_at) = DATE(NOW()) AND deleted_at is null AND hidden = 0 ';
+                'WHERE DATE(created_at) = DATE(NOW()) AND deleted_at is null';
 
         queryHandler(q, callback);
     }

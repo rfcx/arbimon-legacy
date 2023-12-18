@@ -1275,7 +1275,7 @@ var Recordings = {
         var schema = Recordings.SCHEMAS.searchFilters;
 
         return Q.ninvoke(joi, 'validate', params, schema).then(function (parameters) {
-            return dbpool.query("SELECT s.* FROM sites s WHERE s.project_id = ? AND s.deleted_at is null AND s.hidden = 0\n" +
+            return dbpool.query("SELECT s.* FROM sites s WHERE s.project_id = ? AND s.deleted_at is null\n" +
                 "OR s.site_id in (\n" +
                 "   SELECT pis.site_id FROM project_imported_sites pis WHERE pis.project_id = ?\n" +
                 ")", [parameters.project_id, parameters.project_id])
@@ -1608,7 +1608,7 @@ var Recordings = {
                 builder.addConstraint("s.project_id = ?",[ parameters.project_id ])
             }
 
-            builder.addConstraint("s.deleted_at is null", "s.hidden = 0")
+            builder.addConstraint("s.deleted_at is null")
 
             if(parameters.range) {
                 builder.addConstraint('r.datetime BETWEEN ? AND ?',[
