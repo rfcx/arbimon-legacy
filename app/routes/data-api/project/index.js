@@ -6,14 +6,10 @@ var express = require('express');
 var router = express.Router();
 var async = require('async');
 var joi = require('joi');
-var util = require('util');
 var gravatar = require('gravatar');
-var paypal = require('paypal-rest-sdk');
-var uuid = require('node-uuid');
 var config = require('../../../config');
 const rfcxConfig = config('rfcx');
 const csv_stringify = require('csv-stringify');
-const moment = require('moment');
 const { getCachedMetrics } = require('../../../utils/cached-metrics');
 var model = require('../../../model');
 

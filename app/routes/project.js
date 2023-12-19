@@ -125,8 +125,6 @@ router.get('/:projecturl?/', function(req, res, next) {
                     permissions: rows.map(function(perm) { return perm.name; }),
                 };
 
-                debug("project perms:", req.session.user.permissions);
-
                 req.project = {
                     id: project.project_id,
                     name: project.name,
