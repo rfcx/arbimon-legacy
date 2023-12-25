@@ -42,7 +42,8 @@ var a2 = angular.module('a2.app', [
     'humane',
     'a2.googlemaps',
     'a2.injected.data',
-    'a2.directive.search-bar'
+    'a2.directive.search-bar',
+    'a2.directive.side-bar'
 ])
 .run(function($rootScope, Angularytics, a2UserPermit, notify, $state) {
     $rootScope.Math = Math; // export math library to angular :-)

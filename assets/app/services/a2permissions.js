@@ -25,6 +25,12 @@ angular.module('a2.permissions', [
         getUserEmail: function() {
             return permit.userEmail;
         },
+        getUserImage: function() {
+            return permit.userImage;
+        },
+        getUserFullName: function() {
+            return permit.userFullName;
+        },
         has: function(feature) {
             return permit.features && permit.features[feature];
         },

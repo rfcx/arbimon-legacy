@@ -1,0 +1,155 @@
+
+<div
+    id="a2Sidebar"
+    class="fixed w-13 z-50 top-0 left-0 h-screen transition-transform sm:translate-x-0 bg-echo group transition duration-300 ease-in-out delay-500 sidebar-menu"
+    aria-label="Sidebar"
+    data-drawer-backdrop="false"
+    ng-mouseenter="showSidebar = true"
+    ng-mouseleave="showSidebar = false; collapse()"
+>
+    <div class="h-full pb-4 overflow-y-auto">
+        <div class="row-flex flex-direction-column h-full justify-between">
+            <div>
+                <div class="pl-3 pr-2 my-4 h-8 row-flex flex-direction-row flex-align-middle">
+                    <a ng-href="{{getUrlFor('reports')}}" class="row-flex flex-align-middle sidebar-title">
+                        <img src="/images/favicon/arbimon-logo.svg" class="h-7 max-h-7" alt="Arbimon Logo">
+                        <span ng-if="showSidebar" class="ml-4 uppercase whitespace-nowrap text-lg font-display text-insight">
+                            Arbimon
+                        </span>
+                    </a>
+                </div>
+                <div class="my-4 border-t-1 border-util-gray-02"></div>
+                <ul class="px-3 row-flex flex-direction-column gap-y-4 border-gray-700">
+                    <li ng-repeat="item in allItems">
+                        <a
+                            v-show="item.visibleCondition == null || item.visibleCondition() === true"
+                            ng-if="item.route"
+                            ng-href="{{ item.route }}"
+                            title="{{ item.title }}"
+                            
+                            class="row-flex flex-align-middle text-base sidebar-title sidebar-submenu"
+                        >
+                            <span ng-if="item.iconRaw === 'fi-grid'" class="p-0.5">
+                                <img src="/images/fi-grid.svg">
+                            </span>
+                            <span ng-if="item.iconRaw === 'pres-chart-bar' === true"  class="p-0.5">
+                                <img src="/images/pres-chart-bar.svg" class="icon-fill">
+                            </span>
+                            <span ng-if="showSidebar" class="ml-3">{{ item.title }}</span>
+                        </a>
+                        <button
+                            ng-if="item.children"
+                            type="button"
+                            class="mainmenu row-flex flex-align-middle w-full text-base font-normal sidebar-submenu"
+                            data-target="#{{itemId(item.title)}}"
+                            aria-expanded="false"
+                            aria-controls="{{itemId(item.title)}}"
+                            data-toggle="collapse"
+                        >
+                            <span ng-if="item.iconRaw === 'cloud-upload'" class="p-0.5">
+                                <img src="/images/cloud-upload.svg" class="icon-fill">
+                            </span>
+                            <span ng-if="item.iconRaw === 'fa-search'" class="p-0.5" style="width: 28px">
+                                <i class="fa fa-search" style="font-size: 20px;"></i>
+                            </span>
+                            <span ng-if="item.iconRaw === 'fi-aed'" class="p-0.5">
+                                <img src="/images/fi-activity.svg"  class="icon-fill">
+                            </span>
+                            <span ng-if="item.iconRaw === 'fi-settings'" class="p-0.5">
+                                <img src="/images/fi-settings.svg" class="icon-fill">
+                            </span>
+                            <div ng-if="showSidebar" class="row-flex flex-1 ml-3 text-left whitespace-nowrap" style="width: 190px">
+                                {{ item.title }}
+                            </div>
+                            <span ng-if="showSidebar" class="p-0.5">
+                                <i class="fa fa-chevron-down" style="font-size: 12px;"></i>
+                                <i class="fa fa-chevron-up hidden" style="font-size: 12px;"></i>
+                            </span>
+                        </button>
+                        <ul
+                            ng-if="item.children"
+                            id="{{ itemId(item.title) }}"
+                            class="collapse submenu"
+                        >
+                            <li
+                                ng-repeat="childItem in item.children"
+                                ng-if="!childItem.insightRoute"
+                                ui-sref="{{ childItem.route }}"
+                                ui-sref-active="active"
+                                class="mt-4 sidebar-submenu"
+                            >
+                                <a class="row-flex flex-align-middle pl-12 w-full text-base font-normal sidebar-title cursor-pointer">
+                                    {{ childItem.title }}
+                                </a>
+                            </li>
+                            <li
+                                ng-repeat="childItem in item.children"
+                                ng-if="childItem.insightRoute"
+                                class="mt-4 sidebar-submenu"
+                            >
+                                <a
+                                    ng-if="childItem.visibleCondition() === true"
+                                    ng-href="{{ childItem.insightRoute }}"
+                                    class="row-flex flex-align-middle pl-12 w-full text-base font-normal sidebar-title cursor-pointer"
+                                >
+                                    {{ childItem.title }}
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+                <div class="my-4 border-t-1 border-util-gray-02"> </div>
+                <ul class="px-3 row-flex flex-direction-column gap-y-4">
+                    <li class="sidebar-submenu row-flex flex-align-middle">
+                        <a
+                            title="Arbimon Support"
+                            ng-href="{{ supportLink }}"
+                            class="row-flex flex-align-middle text-base font-normal sidebar-title sidebar-submenu"
+                        >
+                            <img src="/images/fi-help.svg" class="ml-1 icon-fill self-center">
+                            <span ng-if="showSidebar" class="ml-3">Help</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-submenu">
+                        <a ng-href="{{getUrlFor('my-projects')}}" class="row-flex flex-align-middle text-base font-normal sidebar-title sidebar-submenu">
+                            <span class="p-0.5"><img src="/images/fi-clipboard.svg" class="icon-fill"></span>
+                            <span ng-if="showSidebar" class="ml-3">My projects</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div>
+                <div class="my-4 border-t-1 border-util-gray-02"></div>
+                <ul class="px-3 row-flex flex-direction-column gap-y-4">
+                    <li class="sidebar-submenu">
+                        <a ng-href="{{ accountSettings }}" class="row-flex flex-align-middle text-base font-normal sidebar-title">
+                            <span class="p-0.5"><img src="/images/fi-user.svg" class="icon-fill"></span>
+                            <span ng-if="showSidebar" class="ml-3">Account settings</span>
+                        </a>
+                    </li>
+                    <li class="my-2 row-flex flex-align-middle cursor-pointer text-base font-normal sidebar-submenu">
+                        <a href="/logout" class="sidebar-title">
+                            <span class="p-0.5"><img src="/images/fi-log-out.svg" class="icon-fill"></span>
+                            <span ng-if="showSidebar" class="ml-3">Sign Out</span>
+                        </a>
+                    </li>
+                </ul>
+                <div class="my-4 border-t-1 border-util-gray-02"></div>
+                <ul class="px-2.5 row-flex flex-direction-column gap-y-4">
+                    <li class="my-2 row-flex flex-align-middle text-base font-normal h-10 sidebar-submenu">
+                        <img
+                            class="h-8 w-8 self-center rounded-full"
+                            style="background-color: #808080;"
+                            ng-src="{{ getUserImage() }}"
+                            alt="User Image"
+                        >
+                        <div ng-if="showSidebar" class="ml-3 row-flex flex-direction-row align-top group-hover">
+                            <span class="block">{{ getUserFullName() }}</span>
+                            <span class="text-sm text-util-gray-01">{{ getUserEmail() }}</span>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

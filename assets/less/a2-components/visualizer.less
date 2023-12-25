@@ -5,7 +5,7 @@
 
 .visualizer {
     position: absolute;
-    top: 62px;
+    top: 0;
     bottom: 0;
     left: 0;
     right: 0;
@@ -69,6 +69,7 @@
     height: 100%;
     z-index: 1000;
     border: 1px solid @util-gray-02;
+    background-color: @moss;
     @media (min-width: @screen-md-min) {
         > .thumb{
             display: none;
@@ -77,7 +78,7 @@
             margin-top:0;
         }
         position: absolute;
-        left: 0;
+        left: 51px;
         right: auto;
         top: 0;
         bottom: 0;
@@ -115,7 +116,7 @@
     padding-right: (@grid-gutter-width / 2);
     position: absolute;
     @media (min-width: @screen-md-min) {
-        left: @sidebar-width;
+        left: @sidebar-width + 51px;
     }
     border-left: 1px solid @gray;
     left: 0;
