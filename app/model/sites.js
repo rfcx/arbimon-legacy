@@ -886,7 +886,7 @@ var Sites = {
             dbpool.query(`DELETE FROM training_set_roi_set_data WHERE recording_id in (${recIds})`)
         ];
         console.log('--deleteRecordingInAnalyses recIds', recIds)
-        return Q.all(promises);
+        return q.all(promises);
     },
 
     getRecordingIdsbySite: async function(site_id) {
