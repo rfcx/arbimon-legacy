@@ -73,7 +73,7 @@
                         >
                             <li
                                 ng-repeat="childItem in item.children"
-                                ng-if="!childItem.insightRoute"
+                                ng-if="!childItem.externalRoute"
                                 ui-sref="{{ childItem.route }}"
                                 ui-sref-active="active"
                                 class="mt-4 sidebar-submenu"
@@ -84,12 +84,12 @@
                             </li>
                             <li
                                 ng-repeat="childItem in item.children"
-                                ng-if="childItem.insightRoute"
+                                ng-if="childItem.externalRoute"
                                 class="mt-4 sidebar-submenu"
                             >
                                 <a
                                     ng-if="childItem.visibleCondition() === true"
-                                    ng-href="{{ childItem.insightRoute }}"
+                                    ng-href="{{ childItem.externalRoute }}"
                                     class="row-flex flex-align-middle pl-12 w-full text-base font-normal sidebar-title cursor-pointer"
                                 >
                                     {{ childItem.title }}

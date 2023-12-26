@@ -129,14 +129,14 @@ angular.module('a2.directive.side-bar', [])
                             visibleCondition: () => {
                                 return $scope.isRfcx()
                             },
-                            insightRoute: $scope.arbimonUrl + '/p/' + url + '/analyse/cnn'
+                            externalRoute: $scope.arbimonUrl + '/p/' + url + '/analyse/cnn'
                         },
                         {
                             title: 'Citizen Scientist',
                             visibleCondition: () => {
                                 return a2UserPermit.has('citizen_scientist')
                             },
-                            route: $scope.getUrlFor('citizen-scientist')
+                            externalRoute: $scope.getUrlFor('citizen-scientist')
                         }
                         
                     ]
