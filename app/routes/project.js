@@ -122,6 +122,8 @@ router.get('/:projecturl?/', function(req, res, next) {
                     isAuthorized: !req.session.isAnonymousGuest,
                     rfcxUser: !!req.session.user && !!req.session.user.email && !!req.session.user.email.includes('rfcx.org'),
                     userEmail: !!req.session.user && !!req.session.user.email ? req.session.user.email : '',
+                    userImage: !!req.session.user && !!req.session.user.imageUrl ? req.session.user.imageUrl : '',
+                    userFullName: !!req.session.user && !!req.session.user.firstname ? req.session.user.firstname + ' ' + req.session.user.lastname : '',
                     permissions: rows.map(function(perm) { return perm.name; }),
                 };
 
