@@ -876,14 +876,8 @@ var Sites = {
 
     deleteRecordingInAnalyses: async function(recIds) {
         let promises=[
-            dbpool.query(`DELETE FROM audio_event_detections_clustering WHERE recording_id in (${recIds})`),
-            dbpool.query(`DELETE FROM classification_results WHERE recording_id in (${recIds})`),
-            dbpool.query(`DELETE FROM cnn_results_presence WHERE recording_id in (${recIds})`),
-            dbpool.query(`DELETE FROM cnn_results_rois WHERE recording_id in (${recIds})`),
             dbpool.query(`DELETE FROM pattern_matching_rois WHERE recording_id in (${recIds})`),
-            dbpool.query(`DELETE FROM soundscape_region_tags WHERE recording_id in (${recIds})`),
-            dbpool.query(`DELETE FROM templates WHERE recording_id in (${recIds})`),
-            dbpool.query(`DELETE FROM training_set_roi_set_data WHERE recording_id in (${recIds})`)
+            dbpool.query(`UPDATE templates set deleted=1 WHERE recording_id in (${recIds})`),
         ];
         console.log('--deleteRecordingInAnalyses recIds', recIds)
         return q.all(promises);

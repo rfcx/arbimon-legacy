@@ -2074,7 +2074,7 @@ var Recordings = {
             dbpool.query(`DELETE FROM cnn_results_rois WHERE recording_id in (${recIds})`),
             dbpool.query(`DELETE FROM pattern_matching_rois WHERE recording_id in (${recIds})`),
             dbpool.query(`DELETE FROM soundscape_region_tags WHERE recording_id in (${recIds})`),
-            dbpool.query(`DELETE FROM templates WHERE recording_id in (${recIds})`),
+            dbpool.query(`UPDATE templates set deleted=1 WHERE recording_id in (${recIds})`),
             dbpool.query(`DELETE FROM training_set_roi_set_data WHERE recording_id in (${recIds})`)
         ];
         console.log('recIds', recIds)
