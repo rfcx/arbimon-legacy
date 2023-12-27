@@ -78,13 +78,7 @@ router.get('/projects/:externalId', async (req, res) => {
 });
 
 router.get('/projects', function(req, res) {
-    res.type('html');
-    res.render('home', {
-        title: "Projects",
-        user: req.session.user,
-        auth0UniversalLoginUrl: auth0Service.universalLoginUrl,
-        state: 'projects'
-    });
+    res.redirect('/my-projects');
 });
 
 router.get('/project/:projectUrl/dashboard', function(req, res, next) {
@@ -93,7 +87,7 @@ router.get('/project/:projectUrl/dashboard', function(req, res, next) {
 });
 
 router.get('/', function(req, res) {
-    res.redirect('/projects');
+    res.redirect('/my-projects');
 });
 
 
