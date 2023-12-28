@@ -28,6 +28,14 @@ var tagRoutes = require('./tags');
 var audioEventDetectionsClusteringRoutes = require('./audio-event-detections-clustering');
 var clusteringRoutes = require('./clustering-jobs');
 
+router.get('/:projectId/user-role', async function(req, res, next) {
+    res.type('json');
+    const projectId = req.params.projectId
+    const userEmail = req.query.email
+    const role = await model.users.getUserRoleByEmail(projectId, userEmail)
+    res.json({ role });
+});
+
 router.param('projectUrl', function(req, res, next, project_url){
     res.type('json');
     model.projects.find({ url: project_url }, function(err, rows) {

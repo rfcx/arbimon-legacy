@@ -265,6 +265,16 @@ var Users = {
         ]).nodeify(callback);
     },
 
+    getUserRoleByEmail: function(projectId, userEmail) {
+        const q = `SELECT r.name as role
+        FROM users u
+        JOIN user_project_role as upr ON u.user_id = upr.user_id
+        JOIN roles as r ON upr.role_id = r.role_id
+        WHERE u.email = '${userEmail}'
+        AND upr.project_id = ${projectId}`
+        return dbpool.query(q).get(0).get('role')
+    },
+
     findOwnedProjects: function(user_id, query) {
         return dbpool.query(
             "SELECT p.* \n"+
