@@ -151,8 +151,11 @@ angular.module('a2.directive.side-bar', [])
                     iconRaw: 'fi-settings',
                     children: [
                         {
-                            title: 'Details',
-                            route: 'settings.details'
+                            title: 'Project information',
+                            visibleCondition: () => {
+                                return true
+                            },
+                            externalRoute: $scope.arbimonUrl + '/p/' + url + '/settings'
                         },
                         {
                             title: 'Members',

@@ -1,7 +1,7 @@
 
 <div
     id="a2Sidebar"
-    class="fixed w-13 z-50 top-0 left-0 h-screen transition-transform sm:translate-x-0 bg-echo group transition duration-300 ease-in-out delay-500 sidebar-menu"
+    class="fixed w-13 top-0 left-0 h-screen transition-transform sm:translate-x-0 bg-echo group transition duration-300 ease-in-out delay-500 sidebar-menu"
     aria-label="Sidebar"
     data-drawer-backdrop="false"
     ng-mouseenter="showSidebar = true"
@@ -45,6 +45,7 @@
                             aria-expanded="false"
                             aria-controls="{{itemId(item.title)}}"
                             data-toggle="collapse"
+                            ng-click="toggleSubmenu = !toggleSubmenu"
                         >
                             <span ng-if="item.iconRaw === 'cloud-upload'" class="p-0.5">
                                 <img src="/images/cloud-upload.svg" class="icon-fill">
@@ -58,12 +59,12 @@
                             <span ng-if="item.iconRaw === 'fi-settings'" class="p-0.5">
                                 <img src="/images/fi-settings.svg" class="icon-fill">
                             </span>
-                            <div ng-if="showSidebar" class="row-flex flex-1 ml-3 text-left whitespace-nowrap" style="width: 190px">
-                                {{ item.title }}
+                            <div ng-if="showSidebar" class="row-flex flex-1 ml-3 text-left whitespace-nowrap" style="width: 185px">
+                                <span>{{ item.title }}</span>
                             </div>
                             <span ng-if="showSidebar" class="p-0.5">
-                                <i class="fa fa-chevron-down" style="font-size: 12px;"></i>
-                                <i class="fa fa-chevron-up hidden" style="font-size: 12px;"></i>
+                                <i class="fa fa-chevron-down" ng-class="{'hidden': toggleSubmenu}" style="font-size: 12px;"></i>
+                                <i class="fa fa-chevron-up" ng-class="{'hidden': !toggleSubmenu}" style="font-size: 12px;"></i>
                             </span>
                         </button>
                         <ul
@@ -76,23 +77,23 @@
                                 ng-if="!childItem.externalRoute"
                                 ui-sref="{{ childItem.route }}"
                                 ui-sref-active="active"
-                                class="mt-4 sidebar-submenu"
+                                class="mt-4 sidebar-submenu sidebar-submenu-left"
                             >
                                 <a class="row-flex flex-align-middle pl-12 w-full text-base font-normal sidebar-title cursor-pointer">
-                                    {{ childItem.title }}
+                                    <span>{{ childItem.title }}</span>
                                 </a>
                             </li>
                             <li
                                 ng-repeat="childItem in item.children"
                                 ng-if="childItem.externalRoute"
-                                class="mt-4 sidebar-submenu"
+                                class="mt-4 sidebar-submenu sidebar-submenu-left"
                             >
                                 <a
                                     ng-if="childItem.visibleCondition() === true"
                                     ng-href="{{ childItem.externalRoute }}"
                                     class="row-flex flex-align-middle pl-12 w-full text-base font-normal sidebar-title cursor-pointer"
                                 >
-                                    {{ childItem.title }}
+                                    <span>{{ childItem.title }}</span>
                                 </a>
                             </li>
                         </ul>

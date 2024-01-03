@@ -1,5 +1,6 @@
 .sidebar-menu {
   border-right: 1px solid #4b4b4b;
+  z-index: 101;
   &:hover {
     width: 264px;
     transition-delay: 300ms;
@@ -21,6 +22,14 @@
   }
 }
 
+.sidebar-submenu-left {
+    padding-inline-start: 48px;
+}
+
+.submenu {
+  padding-inline-start: 0;
+}
+
 .sidebar-title:hover {
   text-decoration: none;
 }
@@ -29,10 +38,13 @@
   text-decoration: none;
 }
 
-li.active > a {
+li.active {
   background-color: #FFFEFC;
-  text-decoration: none;
   border-radius: 4px;
+}
+
+li.active > a {
+  text-decoration: none;
   color: #1e1c13;
 }
 

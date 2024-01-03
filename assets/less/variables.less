@@ -22,8 +22,10 @@
 @insight: #FFFEFC;
 @cloud: #F9F6F2;
 @fog: #E9E6E1;
-@util-gray-01: #7F7D78;
-@util-gray-02: #4B4B4B;
+@util-gray-01: #D3D2CF;
+@util-gray-02: #7F7D78;
+@util-gray-03: #4B4B4B;
+@util-gray-04: #242424;
 
 // @gray-darkest: #131525;
 // @gray-darker: #2f3140;
@@ -38,7 +40,7 @@
 @gray-darker: @pitch;
 @gray-dark: @moss;
 @gray: @moss;
-@gray-light: @util-gray-01;
+@gray-light: @util-gray-02;
 @gray-lighter: #ebebeb;
 
 @brand-default: @gray;
@@ -51,8 +53,8 @@
 
 @val-color-0: @brand-warning;
 @val-color-1: @brand-primary;
-@val-color-2: @util-gray-01;
-@val-color-null: @util-gray-01;
+@val-color-2: @util-gray-02;
+@val-color-null: @util-gray-02;
 @val-color-conflict: @brand-danger;
 @val-color-default: @brand-default;
 
@@ -169,7 +171,7 @@
 @table-bg-active: @table-bg-hover;
 
 //** Border color for table and cell borders.
-@table-border-color: @util-gray-02;
+@table-border-color: @util-gray-03;
 
 //== Buttons
 //
@@ -178,8 +180,8 @@
 @btn-font-weight: normal;
 
 @btn-default-color: @cloud;
-@btn-default-bg: @util-gray-02;
-@btn-default-border: @util-gray-02;
+@btn-default-bg: @util-gray-03;
+@btn-default-border: @util-gray-03;
 
 @btn-primary-color: @echo;
 @btn-primary-bg: @brand-primary;
@@ -201,7 +203,7 @@
 @btn-danger-bg: @brand-default;
 @btn-danger-border: @btn-default-color;
 
-@btn-link-disabled-color: @util-gray-01;
+@btn-link-disabled-color: @util-gray-02;
 // Allows for customizing button radius independently from global border radius
 @btn-border-radius-base: @border-radius-base;
 @btn-border-radius-large: @border-radius-large;
@@ -212,14 +214,14 @@
 //##
 
 //** `<input>` background color
-@input-bg: @util-gray-02;
+@input-bg: @util-gray-03;
 //** `<input disabled>` background color
 @input-bg-disabled: #292d49;
 
 //** Text color for `<input>`s
 @input-color: @insight;
 //** `<input>` border color
-@input-border: @util-gray-02;
+@input-border: @util-gray-03;
 
 // TODO: Rename `@input-border-radius` to `@input-border-radius-base` in v4
 //** Default `.form-control` border radius
@@ -234,7 +236,7 @@
 @input-border-focus: #fff;
 
 //** Placeholder text color
-@input-color-placeholder: @util-gray-01;
+@input-color-placeholder: @util-gray-02;
 //** Default `.form-control` height
 @input-height-base: (@line-height-computed + (@padding-base-vertical * 2) + 2);
 //** Large `.form-control` height
@@ -286,9 +288,9 @@
 //** Active dropdown menu item background color.
 @dropdown-link-active-bg: @pitch;
 //** Disabled dropdown menu item background color.
-@dropdown-link-disabled-color: @util-gray-01;
+@dropdown-link-disabled-color: @util-gray-02;
 //** Text color for headers within dropdown menus.
-@dropdown-header-color: @util-gray-01;
+@dropdown-header-color: @util-gray-02;
 //** Deprecated `@dropdown-caret-color` as of v3.1.0
 @dropdown-caret-color: #000;
 
@@ -452,8 +454,8 @@
 @nav-disabled-link-hover-color: lighten(@gray, 10%);
 
 //== Tabs
-@nav-tabs-border-color: @util-gray-02;
-@nav-tabs-link-hover-border-color: @util-gray-02;
+@nav-tabs-border-color: @util-gray-03;
+@nav-tabs-link-hover-border-color: @util-gray-03;
 @nav-tabs-active-link-hover-bg: @body-bg;
 @nav-tabs-active-link-hover-color: @brand-primary;
 @nav-tabs-active-link-hover-border-color: @nav-tabs-link-hover-border-color;
@@ -471,20 +473,20 @@
 //##
 
 @pagination-color: @text-color;
-@pagination-bg: #2f3140;
-@pagination-border: transparent;
+@pagination-bg: transparent;
+@pagination-border: @util-gray-03;
 
 @pagination-hover-color: @text-color;
-@pagination-hover-bg: @util-gray-02;
+@pagination-hover-bg: @util-gray-04;
 @pagination-hover-border: transparent;
 
 @pagination-active-color: @text-color;
-@pagination-active-bg: @util-gray-02;
+@pagination-active-bg: @util-gray-03;
 @pagination-active-border: transparent;
 
 @pagination-disabled-color: @text-color;
-@pagination-disabled-bg: @pitch;
-@pagination-disabled-border: transparent;
+@pagination-disabled-bg: transparent;
+@pagination-disabled-border: @util-gray-04;
 
 //== Pager
 //
@@ -560,7 +562,7 @@
 //** Popover border color
 @popover-border-color: rgba(0, 0, 0, 0.2);
 //** Popover fallback border color
-@popover-fallback-border-color: @util-gray-01;
+@popover-fallback-border-color: @util-gray-02;
 //** Popover title background color
 @popover-title-bg: darken(@popover-bg, 3%);
 
@@ -618,7 +620,7 @@
 //** Modal content border color
 @modal-content-border-color: rgba(0, 0, 0, 0.2);
 //** Modal content border color **for IE8**
-@modal-content-fallback-border-color: @util-gray-01;
+@modal-content-fallback-border-color: @util-gray-02;
 //** Modal backdrop background color
 @modal-backdrop-bg: #000;
 //** Modal backdrop opacity
@@ -685,7 +687,7 @@
 //** Background color on `.list-group-item`
 @list-group-bg: @gray-dark;
 //** `.list-group-item` border color
-@list-group-border: @util-gray-02;
+@list-group-border: @util-gray-03;
 //** List group border radius
 @list-group-border-radius: @border-radius-base;
 
@@ -701,7 +703,7 @@
 @list-group-active-text-color: lighten(@list-group-active-bg, 40%);
 
 //** Text color of disabled list items
-// @list-group-disabled-color: @util-gray-01;
+// @list-group-disabled-color: @util-gray-02;
 @list-group-disabled-color: @gray-light;
 //** Background color of disabled list items
 @list-group-disabled-bg: @gray-lighter;
@@ -727,7 +729,7 @@
 @panel-footer-bg: @gray;
 
 @panel-default-text: @text-color;
-@panel-default-border: @util-gray-02;
+@panel-default-border: @util-gray-03;
 @panel-default-heading-bg: @moss;
 
 @panel-primary-text: #fff;
@@ -782,7 +784,7 @@
 @badge-color: #fff;
 //** Linked badge text color on hover
 @badge-link-hover-color: #fff;
-@badge-bg: @util-gray-02;
+@badge-bg: @util-gray-03;
 
 //** Badge text color in active nav link
 @badge-active-color: @brand-primary;
@@ -804,7 +806,7 @@
 //** Breadcrumb text color
 @breadcrumb-color: @text-color;
 //** Text color of current page in the breadcrumb
-@breadcrumb-active-color: @util-gray-01;
+@breadcrumb-active-color: @util-gray-02;
 //** Textual separator for between breadcrumb elements
 @breadcrumb-separator: "/";
 
@@ -854,13 +856,13 @@
 //** Horizontal offset for forms and lists.
 @component-offset-horizontal: 180px;
 //** Text muted color
-@text-muted: @util-gray-01;
+@text-muted: @util-gray-02;
 //** Abbreviations and acronyms border color
-@abbr-border-color: @util-gray-01;
+@abbr-border-color: @util-gray-02;
 //** Headings small color
-@headings-small-color: @util-gray-01;
+@headings-small-color: @util-gray-02;
 //** Blockquote small color
-@blockquote-small-color: @util-gray-01;
+@blockquote-small-color: @util-gray-02;
 //** Blockquote font size
 @blockquote-font-size: (@font-size-base * 1.25);
 //** Blockquote border color
