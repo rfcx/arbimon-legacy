@@ -1982,15 +1982,15 @@ var Recordings = {
 
     /* fetch count of project recordings.
     */
-    deleteMatching: function(filters, project_id){
+    deleteMatching: function(filters, project_id, idToken){
         return this.buildSearchQuery(filters, true).then(function(builder){
             builder.addProjection.apply(builder, [
                 'r.recording_id as id'
             ]);
             delete builder.orderBy;
-
+            console.info('--builder.getSQL()', builder.getSQL())
             return dbpool.query(builder.getSQL()).then(function(rows){
-                return Q.ninvoke(Recordings, 'delete', rows, project_id);
+                return Q.ninvoke(Recordings, 'delete', rows, project_id, idToken);
             });
         });
     },
@@ -2117,6 +2117,7 @@ var Recordings = {
                     }
                 }
                 const params = {}
+                console.info('--recs', recs)
                 recs.forEach(rec => {
                     if (params[rec.site_external_id]) {
                         params[rec.site_external_id].starts.push(rec.datetime_utc)

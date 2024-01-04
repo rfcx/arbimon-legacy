@@ -72,12 +72,11 @@ router.use(function create_user_object(req, res, next) {
 router.use(function(req, res, next) {
 
     req.haveAccess = function(project_id, permission_name) {
-        console.log('--req.session.user', req.session)
         if(req.session.user.isSuper === 1)
             return true;
 
         var projectPerms = req.session.user.permissions && req.session.user.permissions[project_id];
-
+        console.log('--haveAccess', projectPerms, project_id, permission_name)
         if(!projectPerms)
             return false;
 
