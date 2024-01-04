@@ -1985,10 +1985,12 @@ var Recordings = {
     deleteMatching: function(filters, project_id, idToken){
         return this.buildSearchQuery(filters, true).then(function(builder){
             builder.addProjection.apply(builder, [
-                'r.recording_id as id'
+                'r.recording_id as id',
+                'r.datetime_utc',
+                'r.site_id',
+                's.external_id as site_external_id'
             ]);
             delete builder.orderBy;
-            console.info('--builder.getSQL()', builder.getSQL())
             return dbpool.query(builder.getSQL()).then(function(rows){
                 return Q.ninvoke(Recordings, 'delete', rows, project_id, idToken);
             });
@@ -2117,7 +2119,6 @@ var Recordings = {
                     }
                 }
                 const params = {}
-                console.info('--recs', recs)
                 recs.forEach(rec => {
                     if (params[rec.site_external_id]) {
                         params[rec.site_external_id].starts.push(rec.datetime_utc)
