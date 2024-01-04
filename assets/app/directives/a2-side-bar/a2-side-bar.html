@@ -40,12 +40,10 @@
                         <button
                             ng-if="item.children"
                             type="button"
-                            class="mainmenu row-flex flex-align-middle w-full text-base font-normal sidebar-submenu"
+                            class="mainmenu row-flex flex-align-middle w-full text-base font-normal sidebar-submenu collapsed"
                             data-target="#{{itemId(item.title)}}"
-                            aria-expanded="false"
                             aria-controls="{{itemId(item.title)}}"
                             data-toggle="collapse"
-                            ng-click="toggleSubmenu = !toggleSubmenu"
                         >
                             <span ng-if="item.iconRaw === 'cloud-upload'" class="p-0.5">
                                 <img src="/images/cloud-upload.svg" class="icon-fill">
@@ -63,8 +61,8 @@
                                 <span>{{ item.title }}</span>
                             </div>
                             <span ng-if="showSidebar" class="p-0.5">
-                                <i class="fa fa-chevron-down" ng-class="{'hidden': toggleSubmenu}" style="font-size: 12px;"></i>
-                                <i class="fa fa-chevron-up" ng-class="{'hidden': !toggleSubmenu}" style="font-size: 12px;"></i>
+                                <i class="fa fa-chevron-down" style="font-size: 12px;"></i>
+                                <i class="fa fa-chevron-up" style="font-size: 12px;"></i>
                             </span>
                         </button>
                         <ul

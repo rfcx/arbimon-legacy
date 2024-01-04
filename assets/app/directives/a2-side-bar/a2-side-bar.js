@@ -181,7 +181,7 @@ angular.module('a2.directive.side-bar', [])
     $scope.itemId = function(title) {
         return 'sidebar-' + title.toLowerCase().replace(' ', '-')
     }
-  
+
     $scope.collapse = function() {
         submenuEl = document.querySelectorAll('.submenu')
         mainmenuEl = document.querySelectorAll('.mainmenu')
@@ -190,7 +190,7 @@ angular.module('a2.directive.side-bar', [])
             submenuEl.forEach((el) => el.classList.remove('in'))
         }
     }
-  
+
     $scope.initData()
 })
 ;
