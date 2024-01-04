@@ -42,6 +42,7 @@ var authorize = function(authtype){
             var perm = 'manage project recordings';
 
             if(!req.haveAccess(req.query.project, perm)) {
+                console.error(`you dont have permission to ${ perm }`)
                 res.status(401).json({
                     error: `you dont have permission to ${ perm }`
                 });
