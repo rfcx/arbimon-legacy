@@ -6,11 +6,11 @@ var util = require('util');
 var _ = require('lodash');
 var q = require('q');
 
-const fileHelper = require('../utils/file-helper')
-var model = require('../model');
-var tmpFileCache = require('../utils/tmpfilecache');
-var formatParse = require('../utils/format-parse');
-const uploadQueue = require('../utils/upload-queue');
+const fileHelper = require('../../utils/file-helper')
+var model = require('../../model');
+var tmpFileCache = require('../../utils/tmpfilecache');
+var formatParse = require('../../utils/format-parse');
+const uploadQueue = require('../../utils/upload-queue');
 
 var deleteFile = function(filename) {
     fs.unlink(filename, function(err) {

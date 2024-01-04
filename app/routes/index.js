@@ -6,7 +6,6 @@ var router = express.Router();
 
 var project = require('./project');
 var dataApi = require('./data-api');
-var uploads = require('./uploads');
 var site = require('./site');
 var login = require('./login');
 var acmeChallenge = require('./acme-challenge');
@@ -49,8 +48,6 @@ router.get('/connect-with-rfcx', function(req, res) {
 
 
 router.use('/', acmeChallenge);
-
-router.use('/uploads', uploads);
 
 // all routes after this middleware
 // are available only to logged users
