@@ -46,6 +46,7 @@ const anonymousGuest = {
 
 router.use(function create_user_object(req, res, next) {
     const session = req.session
+    console.log('--req.session', req.session)
     const permissions = session.user && session.user.permissions ? session.user.permissions : undefined
     if (!req.user) {
         session.isAnonymousGuest = true;
@@ -71,7 +72,7 @@ router.use(function create_user_object(req, res, next) {
 router.use(function(req, res, next) {
 
     req.haveAccess = function(project_id, permission_name) {
-        console.log('--req.session.user', req.session.user)
+        console.log('--req.session.user', req.session)
         if(req.session.user.isSuper === 1)
             return true;
 
