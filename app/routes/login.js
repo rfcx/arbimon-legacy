@@ -46,7 +46,6 @@ const anonymousGuest = {
 
 router.use(function create_user_object(req, res, next) {
     const session = req.session
-    console.log('--req.session', req.session)
     const permissions = session.user && session.user.permissions ? session.user.permissions : undefined
     if (!req.user) {
         session.isAnonymousGuest = true;
@@ -64,6 +63,7 @@ router.use(function create_user_object(req, res, next) {
             user[0].picture = req.user.picture
             session.user = model.users.makeUserObject(user[0], {secure: req.secure, all:true});
             session.user.permissions = permissions
+            console.log('--session.user.permissions', session.user.permissions)
             next();
         })
     }
