@@ -1984,15 +1984,17 @@ var Recordings = {
 
     /* fetch count of project recordings.
     */
-    deleteMatching: function(filters, project_id){
+    deleteMatching: function(filters, project_id, idToken){
         return this.buildSearchQuery(filters, true).then(function(builder){
             builder.addProjection.apply(builder, [
-                'r.recording_id as id'
+                'r.recording_id as id',
+                'r.datetime_utc',
+                'r.site_id',
+                's.external_id as site_external_id'
             ]);
             delete builder.orderBy;
-
             return dbpool.query(builder.getSQL()).then(function(rows){
-                return Q.ninvoke(Recordings, 'delete', rows, project_id);
+                return Q.ninvoke(Recordings, 'delete', rows, project_id, idToken);
             });
         });
     },
