@@ -39,7 +39,7 @@ async function saveLatestData (bucket, buf, project, timeStart, reportType, repo
   return filePath
 }
 
-async function getSignedUrl ({ Bucket, Key, Expires = 86400 }) {
+async function getSignedUrl ({ Bucket, Key, Expires = 604800 }) {
   return new Promise((resolve, reject) => {
     s3.getSignedUrl('getObject', { Bucket, Key, Expires }, (err, data) => {
       if (err) {
