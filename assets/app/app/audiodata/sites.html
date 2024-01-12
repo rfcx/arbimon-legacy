@@ -1,97 +1,98 @@
 <div class="row">
-    <div class="col-md-7">
-
-
-<div class="row" a2-scroll="onScroll($event, $controller)" a2-scroll-on="window">
-    <div class="col-md-push-6 col-md-6 toolbar">
-        <input class="form-control" type="text" placeholder="Search by name" ng-model="search" ng-change="onFilterChanged()">
-    </div>
-    <div class="col-md-6 col-md-pull-6 toolbar">
-        <button class="btn btn-default mr-1 mb-1"
-            ng-click="create() | trackEvent:'Dashboard-sites':'add site'">
-            Create
-        </button>
-        <button class="btn btn-default mr-1 mb-1"
-            ng-click="edit() | trackEvent:'Dashboard-sites':'edit site'"
-            ng-disabled="!selected || selected.imported">
-            Edit
-        </button>
-        <button class="btn btn-default btn-file mr-1 mb-1" ng-click="importSite()">
-            Import
-        </button>
-        <button class="btn btn-default btn-file mr-1 mb-1" ng-click="exportSites()">
-            Export Sites
-        </button>
-        <div class="btn-group mr-1 mb-1" dropdown dropdown-append-to-body="true" a2-auto-close-on-outside-click>
-            <button class="btn btn-default" dropdown-toggle>
-                <i class="fa fa-trash"></i> Delete <i class="fa fa-caret-down"></i></button>
+    <h1 class="navbar-rfcx-link-m mt-0">
+        Sites
+    </h1>
+    <div class="col-md-7 mt-4">
+    <div class="row" a2-scroll="onScroll($event, $controller)" a2-scroll-on="window">
+        <div class="col-md-push-6 col-md-6 toolbar">
+            <input class="form-control" type="text" placeholder="Search by name" ng-model="search" ng-change="onFilterChanged()">
+        </div>
+        <div class="col-md-6 col-md-pull-6 toolbar">
+            <button class="btn btn-default mr-1 mb-1"
+                ng-click="create() | trackEvent:'Dashboard-sites':'add site'">
+                Create
             </button>
-            <ul class="dropdown-form dropdown-menu" role="menu">
-                <li class="cs-pointer" ng-disabled="!selected">
-                    <a ng-click="del()">
-                        Delete selected site
-                    </a>
-                </li>
-                <li class="cs-pointer">
-                    <a ng-click="delAllEmptySites()">
-                        Delete all empty sites
-                    </a>
-                </li>
-            </ul>
+            <button class="btn btn-default mr-1 mb-1"
+                ng-click="edit() | trackEvent:'Dashboard-sites':'edit site'"
+                ng-disabled="!selected || selected.imported">
+                Edit
+            </button>
+            <button class="btn btn-default btn-file mr-1 mb-1" ng-click="importSite()">
+                Import
+            </button>
+            <button class="btn btn-default btn-file mr-1 mb-1" ng-click="exportSites()">
+                Export Sites
+            </button>
+            <div class="btn-group mr-1 mb-1" dropdown dropdown-append-to-body="true" a2-auto-close-on-outside-click>
+                <button class="btn btn-default" dropdown-toggle>
+                    <i class="fa fa-trash"></i> Delete <i class="fa fa-caret-down"></i></button>
+                </button>
+                <ul class="dropdown-form dropdown-menu" role="menu">
+                    <li class="cs-pointer" ng-disabled="!selected">
+                        <a ng-click="del()">
+                            Delete selected site
+                        </a>
+                    </li>
+                    <li class="cs-pointer">
+                        <a ng-click="delAllEmptySites()">
+                            Delete all empty sites
+                        </a>
+                    </li>
+                </ul>
+            </div>
         </div>
     </div>
-</div>
-<div class="row sites">
-    <div ng-class="editing || creating ? 'visible-md-block visible-lg-block' : '' ">
-        <a2-table rows="sites" on-select="sel(row)" data-checked="checked" no-checkbox>
-            <field title="Name" key="name" tdclass="name hidelongtext">
-                <span id="site-{{row.id}}" data-external-id="{{ row.external_id }}" title="{{ row.name }}">{{ row.name }}</span>
-                <span class="a2-badge" title="ARBIMON ONLY" ng-if="!row.external_id">ARBIMON ONLY</span>
-            </field>
-            <ng-container ng-if="!row.imported && (row.has_logs || row.token_created_on)">
-                <field>
-                    <i ng-if="row.has_logs" class="fa fa-book" title="Has status logs"></i>
-                    <i ng-if="row.token_created_on" class="fa fa-link" title="Has a Token"></i>
+    <div class="row sites">
+        <div ng-class="editing || creating ? 'visible-md-block visible-lg-block' : '' ">
+            <a2-table rows="sites" on-select="sel(row)" data-checked="checked" no-checkbox>
+                <field title="Name" key="name" tdclass="name hidelongtext">
+                    <span id="site-{{row.id}}" data-external-id="{{ row.external_id }}" title="{{ row.name }}">{{ row.name }}</span>
+                    <span class="a2-badge" title="ARBIMON ONLY" ng-if="!row.external_id">ARBIMON ONLY</span>
                 </field>
-            </ng-container>
-            <field title="No. of recordings" key="rec_count" tooltip="Total # of 1min recording segments">
-                {{ row.rec_count }}
-            </field>
-            <field title="Latitude" key="lat">
-                {{ row.lat | number:3 }}
-            </field>
-            <field title="Longitude" key="lon">
-                {{ row.lon | number:3 }}
-            </field>
-            <field title="Elevation" key="alt">
-                {{ row.alt | number:2 }}
-            </field>
-            <field title="Current Timezone" key="timezone" tdclass="timezone hidelongtext">
-                <span title="{{ row.timezone }}">{{ row.utc }}</span>
-            </field>
-            <field title="Updated" key="date" tdclass="date hidelongtext">
-                <span title="{{ row.updated_at | moment : 'lll' : row.timezone }}">
-                    {{ row.updated_at | moment : 'lll' : row.timezone }}
-                </span>
-            </field>
-            <field title="Deployed" key="deployed" tdclass="date hidelongtext">
-                <span title="{{ row.deployment }}">
-                    {{ row.deployment }}
-                </span>
-            </field>
-        </a2-table>
-        <div class="jumbotron" ng-show="(!sites || !sites.length > 0) && !loading">
-            <h3 class="text-center">
-                This project does not have any <i class="fa fa-map-marker"></i> sites
-            </h3>
-        </div>
-        <div class="col-xs-10 col-md-6">
-            <loader ng-hide="!loading"></loader>
+                <ng-container ng-if="!row.imported && (row.has_logs || row.token_created_on)">
+                    <field>
+                        <i ng-if="row.has_logs" class="fa fa-book" title="Has status logs"></i>
+                        <i ng-if="row.token_created_on" class="fa fa-link" title="Has a Token"></i>
+                    </field>
+                </ng-container>
+                <field title="No. of recordings" key="rec_count" tooltip="Total # of 1min recording segments">
+                    {{ row.rec_count }}
+                </field>
+                <field title="Latitude" key="lat">
+                    {{ row.lat | number:3 }}
+                </field>
+                <field title="Longitude" key="lon">
+                    {{ row.lon | number:3 }}
+                </field>
+                <field title="Elevation" key="alt">
+                    {{ row.alt | number:2 }}
+                </field>
+                <field title="Current Timezone" key="timezone" tdclass="timezone hidelongtext">
+                    <span title="{{ row.timezone }}">{{ row.utc }}</span>
+                </field>
+                <field title="Updated" key="date" tdclass="date hidelongtext">
+                    <span title="{{ row.updated_at | moment : 'lll' : row.timezone }}">
+                        {{ row.updated_at | moment : 'lll' : row.timezone }}
+                    </span>
+                </field>
+                <field title="Deployed" key="deployed" tdclass="date hidelongtext">
+                    <span title="{{ row.deployment }}">
+                        {{ row.deployment }}
+                    </span>
+                </field>
+            </a2-table>
+            <div class="jumbotron" ng-show="(!sites || !sites.length > 0) && !loading">
+                <h3 class="text-center">
+                    This project does not have any <i class="fa fa-map-marker"></i> sites
+                </h3>
+            </div>
+            <div class="col-xs-10 col-md-6">
+                <loader ng-hide="!loading"></loader>
+            </div>
         </div>
     </div>
 </div>
-</div>
-<div class="col-md-5">
+<div class="col-md-5 mt-4">
     <ul class="nav nav-tabs">
         <li class="ng-isolate-scope" ng-class="{active:show.map}">
             <a id="mapHeader" ng-click="set_show('map')" href="">

@@ -1,6 +1,6 @@
 <div class="row">
     <div class="col-sm-12 col-lg-11 padded-view-div" ng-if="!selectedPatternMatchingId">
-        <h3>
+        <h1 class="mt-0" style="margin-bottom: 24px;">
             Pattern Matching
             <a class="btn btn-sm btn-default ml-3"
                 tooltip="Create New Pattern Matching job"
@@ -8,7 +8,7 @@
                 ng-click="createNewPatternMatching() | trackEvent:'Analysis-Pattern-Matching-List':'Create new pattern matching'">
                 <i class="fa fa-plus"></i> New Job
             </a>
-        </h3>
+        </h1>
         <div>
           <input ng-if="isShowSearch()" type="text" class="form-control pull-left" ng-model="search.q" style="width: 325px;" placeholder="Search jobs by name, template, species, song type" ng-change="onFilterChanged()">
           <button ng-if="loading.showRefreshBtn" class="btn btn-default pull-right btn-sm"
