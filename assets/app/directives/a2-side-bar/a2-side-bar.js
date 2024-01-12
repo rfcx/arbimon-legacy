@@ -76,14 +76,6 @@ angular.module('a2.directive.side-bar', [])
                         {
                             title: 'Playlists',
                             route: 'audiodata.playlists'
-                        },
-                        {
-                            title: 'Templates',
-                            route: 'audiodata.templates'
-                        },
-                        {
-                            title: 'Training sets',
-                            route: 'audiodata.trainingSets'
                         }
                     ]
                 },
@@ -96,15 +88,23 @@ angular.module('a2.directive.side-bar', [])
                             route: 'jobs'
                         },
                         {
-                            title: 'Pattern Matching',
+                            title: 'Pattern Matching (PM)',
                             visibleCondition: () => {
                                 return a2UserPermit.has('pattern_matching')
                             },
                             route: 'analysis.patternmatching'
                         },
                         {
+                            title: 'PM Templates',
+                            route: 'audiodata.templates'
+                        },
+                        {
                             title: 'Random Forest Models',
                             route: 'analysis.random-forest-models.models'
+                        },
+                        {
+                            title: 'RFM Training Sets',
+                            route: 'audiodata.trainingSets'
                         },
                         {
                             title: 'Soundscape Analysis',
