@@ -19,7 +19,7 @@
                     </a>
                 </div>
                 <div class="my-4 border-t-1 border-util-gray-02"></div>
-                <ul class="px-3 row-flex flex-direction-column gap-y-3 border-gray-700">
+                <ul class="px-3 row-flex flex-direction-column gap-y-3 mb-0">
                     <li ng-repeat="item in allItems">
                         <a
                             v-show="item.visibleCondition == null || item.visibleCondition() === true"
@@ -27,7 +27,7 @@
                             ng-href="{{ item.route }}"
                             title="{{ item.title }}"
                             
-                            class="row-flex flex-align-middle text-base sidebar-title sidebar-submenu py-1 px-1"
+                            class="row-flex flex-align-middle text-base sidebar-title sidebar-submenu py-1 px-1 h-7.3"
                         >
                             <span ng-if="item.iconRaw === 'fi-grid'" class="p-0.5">
                                 <img src="/images/fi-grid.svg">
@@ -40,21 +40,21 @@
                         <button
                             ng-if="item.children"
                             type="button"
-                            class="mainmenu row-flex flex-align-middle bg-light-50 text-base font-normal py-1 px-1 sidebar-submenu collapsed"
+                            class="mainmenu row-flex flex-align-middle bg-light-50 text-base font-normal py-1 px-1 h-7.3 sidebar-submenu collapsed"
                             data-target="#{{itemId(item.title)}}"
                             aria-controls="{{itemId(item.title)}}"
                             data-toggle="collapse"
                         >
-                            <span ng-if="item.iconRaw === 'cloud-upload'" class="p-0.5">
+                            <span ng-if="item.iconRaw === 'cloud-upload'" class="p-0.5" style="width: 28px">
                                 <img src="/images/cloud-upload.svg" class="icon-fill">
                             </span>
                             <span ng-if="item.iconRaw === 'fa-search'" class="p-0.5" style="width: 28px">
-                                <i class="fa fa-search" style="font-size: 20px;"></i>
+                                <i class="fa fa-search" style="font-size: 22px;"></i>
                             </span>
-                            <span ng-if="item.iconRaw === 'fi-aed'" class="p-0.5">
+                            <span ng-if="item.iconRaw === 'fi-aed'" class="p-0.5" style="width: 28px">
                                 <img src="/images/fi-activity.svg"  class="icon-fill">
                             </span>
-                            <span ng-if="item.iconRaw === 'fi-settings'" class="p-0.5">
+                            <span ng-if="item.iconRaw === 'fi-settings'" class="p-0.5" style="width: 28px">
                                 <img src="/images/fi-settings.svg" class="icon-fill">
                             </span>
                             <div ng-if="showSidebar" class="row-flex flex-1 ml-3 text-left whitespace-nowrap" style="width: 185px">
@@ -73,19 +73,20 @@
                             <li
                                 ng-repeat="childItem in item.children"
                                 ui-sref-active="active"
-                                class="mt-3 sidebar-submenu sidebar-submenu-left"
+                                class="sidebar-submenu sidebar-submenu-left"
+                                ng-class="{'mt-3': !childItem.externalRoute || childItem.externalRoute && childItem.visibleCondition() === true}"
                             >
                                 <a
                                     ng-if="!childItem.externalRoute"
                                     ui-sref="{{ childItem.route }}"
-                                    class="row-flex flex-align-middle py-1 w-full text-base font-normal sidebar-title cursor-pointer"
+                                    class="row-flex flex-align-middle py-1 h-7.3 w-full text-base font-normal sidebar-title cursor-pointer"
                                 >
                                     <span>{{ childItem.title }}</span>
                                 </a>
                                 <a
                                     ng-if="childItem.externalRoute && childItem.visibleCondition() === true"
                                     ng-href="{{ childItem.externalRoute }}"
-                                    class="row-flex flex-align-middle py-1 w-full text-base font-normal sidebar-title cursor-pointer"
+                                    class="row-flex flex-align-middle py-1 h-7.3 w-full text-base font-normal sidebar-title cursor-pointer"
                                 >
                                     <span>{{ childItem.title }}</span>
                                 </a>
@@ -94,19 +95,19 @@
                     </li>
                 </ul>
                 <div class="my-4 border-t-1 border-util-gray-02"> </div>
-                <ul class="px-3 row-flex flex-direction-column gap-y-3">
+                <ul class="px-3 row-flex flex-direction-column gap-y-3 mb-0">
                     <li class="sidebar-submenu row-flex flex-align-middle">
                         <a
                             title="Arbimon Support"
                             ng-href="{{ supportLink }}"
-                            class="row-flex flex-align-middle text-base font-normal py-1 px-1 sidebar-title sidebar-submenu"
+                            class="row-flex flex-align-middle text-base font-normal py-1 px-1 h-7.3 sidebar-title sidebar-submenu"
                         >
                             <img src="/images/fi-help.svg" class="ml-1 icon-fill self-center">
                             <span ng-if="showSidebar" class="ml-3">Help</span>
                         </a>
                     </li>
                     <li class="sidebar-submenu">
-                        <a ng-href="{{getUrlFor('my-projects')}}" class="row-flex flex-align-middle text-base font-normal py-1 px-1 sidebar-title sidebar-submenu">
+                        <a ng-href="{{getUrlFor('my-projects')}}" class="row-flex flex-align-middle text-base font-normal py-1 px-1 h-7.3 sidebar-title sidebar-submenu">
                             <span class="p-0.5"><img src="/images/fi-clipboard.svg" class="icon-fill"></span>
                             <span ng-if="showSidebar" class="ml-3">My projects</span>
                         </a>
@@ -115,14 +116,14 @@
             </div>
             <div>
                 <div class="my-4 border-t-1 border-util-gray-02"></div>
-                <ul class="px-3 row-flex flex-direction-column gap-y-3">
+                <ul class="px-3 row-flex flex-direction-column gap-y-3 mb-0">
                     <li class="sidebar-submenu">
-                        <a ng-href="{{ accountSettings }}" class="row-flex flex-align-middle text-base font-normal py-1 px-1 sidebar-title">
+                        <a ng-href="{{ accountSettings }}" class="row-flex flex-align-middle text-base font-normal py-1 px-1 h-7.3 sidebar-title">
                             <span class="p-0.5"><img src="/images/fi-user.svg" class="icon-fill"></span>
                             <span ng-if="showSidebar" class="ml-3">Account settings</span>
                         </a>
                     </li>
-                    <li class="row-flex flex-align-middle cursor-pointer text-base font-normal py-1 px-1 sidebar-submenu">
+                    <li class="row-flex flex-align-middle cursor-pointer text-base font-normal py-1 px-1 h-7.3 sidebar-submenu">
                         <a href="/logout" class="sidebar-title">
                             <span class="p-0.5"><img src="/images/fi-log-out.svg" class="icon-fill"></span>
                             <span ng-if="showSidebar" class="ml-3">Sign Out</span>
@@ -130,7 +131,7 @@
                     </li>
                 </ul>
                 <div class="my-4 border-t-1 border-util-gray-02"></div>
-                <ul class="px-2.5 row-flex flex-direction-column gap-y-3">
+                <ul class="px-2.5 row-flex flex-direction-column gap-y-3 mb-0">
                     <li class="my-2 row-flex flex-align-middle text-base font-normal h-10">
                         <img
                             class="h-8 w-8 self-center rounded-full"
