@@ -5,6 +5,21 @@
     width: 264px;
     transition-delay: 300ms;
     border-color: @insight;
+    ::-webkit-scrollbar {
+      width: 6px !important;
+      overflow-y: auto;
+      scrollbar-width: thin;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent !important;
+    }
+    ::-webkit-scrollbar-track:hover {
+      background: transparent !important;
+    }
+    ::-webkit-scrollbar-thumb {
+      background-color: #7F7D78 !important;
+      border-radius: 6px;
+    }
   }
 }
 
@@ -73,6 +88,14 @@ ul {
   margin-left: 8px;
 }
 
+.ml-3 {
+  margin-left: 12px;
+}
+
+.ml-3\.2 {
+  margin-left: 12.8px;
+}
+
 .ml-4 {
   margin-left: 16px;
 }
@@ -104,6 +127,10 @@ ul {
 .px-2\.5 {
   padding-left: 10px;
   padding-right: 10px;
+}
+
+.pb-0\.7 {
+  padding-bottom: 2.8px;
 }
 
 .gap-y-3 {
