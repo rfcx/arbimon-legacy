@@ -27,7 +27,7 @@
                             ng-href="{{ item.route }}"
                             title="{{ item.title }}"
                             
-                            class="row-flex flex-align-middle text-base sidebar-title sidebar-submenu py-1 px-1 h-7.3"
+                            class="row-flex flex-align-middle text-base sidebar-title sidebar-submenu py-1 px-1 h-9"
                         >
                             <span ng-if="item.iconRaw === 'fi-grid'" class="p-0.5">
                                 <img src="/images/fi-grid.svg">
@@ -40,7 +40,7 @@
                         <button
                             ng-if="item.children"
                             type="button"
-                            class="mainmenu row-flex flex-align-middle bg-light-50 text-base font-normal py-1 px-1 h-7.3 sidebar-submenu collapsed"
+                            class="mainmenu row-flex flex-align-middle bg-light-50 text-base font-normal py-1 px-1 h-9 sidebar-submenu collapsed"
                             data-target="#{{itemId(item.title)}}"
                             aria-controls="{{itemId(item.title)}}"
                             data-toggle="collapse"
@@ -60,7 +60,7 @@
                             <div ng-if="showSidebar" class="row-flex flex-1 ml-3 text-left whitespace-nowrap" style="width: 180px">
                                 <span>{{ item.title }}</span>
                             </div>
-                            <span ng-if="showSidebar" class="pb-0.7">
+                            <span ng-if="showSidebar" class="pb-0.9">
                                 <i class="fa fa-chevron-down self-center" style="font-size: 12px;"></i>
                                 <i class="fa fa-chevron-up self-center" style="font-size: 12px;"></i>
                             </span>
@@ -79,14 +79,14 @@
                                 <a
                                     ng-if="!childItem.externalRoute"
                                     ui-sref="{{ childItem.route }}"
-                                    class="row-flex flex-align-middle py-1 h-7.3 w-full text-base font-normal sidebar-title cursor-pointer"
+                                    class="row-flex flex-align-middle py-1 h-9 w-full text-base font-normal sidebar-title cursor-pointer"
                                 >
                                     <span>{{ childItem.title }}</span>
                                 </a>
                                 <a
                                     ng-if="childItem.externalRoute && childItem.visibleCondition() === true"
                                     ng-href="{{ childItem.externalRoute }}"
-                                    class="row-flex flex-align-middle py-1 h-7.3 w-full text-base font-normal sidebar-title cursor-pointer"
+                                    class="row-flex flex-align-middle py-1 h-9 w-full text-base font-normal sidebar-title cursor-pointer"
                                 >
                                     <span>{{ childItem.title }}</span>
                                 </a>
@@ -100,14 +100,14 @@
                         <a
                             title="Arbimon Support"
                             ng-href="{{ supportLink }}"
-                            class="row-flex flex-align-middle text-base font-normal py-1 px-1 h-7.3 sidebar-title sidebar-submenu"
+                            class="row-flex flex-align-middle text-base font-normal py-1 px-1 h-9 sidebar-title sidebar-submenu"
                         >
                             <img src="/images/fi-help.svg" class="ml-1 icon-fill self-center">
                             <span ng-if="showSidebar" class="ml-3.2">Help</span>
                         </a>
                     </li>
                     <li class="sidebar-submenu">
-                        <a ng-href="{{getUrlFor('my-projects')}}" class="row-flex flex-align-middle text-base font-normal py-1 px-1 h-7.3 sidebar-title sidebar-submenu">
+                        <a ng-href="{{getUrlFor('my-projects')}}" class="row-flex flex-align-middle text-base font-normal py-1 px-1 h-9 sidebar-title sidebar-submenu">
                             <span class="p-0.5"><img src="/images/fi-clipboard.svg" class="icon-fill"></span>
                             <span ng-if="showSidebar" class="ml-3">My projects</span>
                         </a>
@@ -118,12 +118,12 @@
                 <div class="my-4 border-t-1 border-util-gray-02"></div>
                 <ul class="px-3 row-flex flex-direction-column gap-y-3 mb-0">
                     <li class="sidebar-submenu">
-                        <a ng-href="{{ accountSettings }}" class="row-flex flex-align-middle text-base font-normal py-1 px-1 h-7.3 sidebar-title">
+                        <a ng-href="{{ accountSettings }}" class="row-flex flex-align-middle text-base font-normal py-1 px-1 h-9 sidebar-title">
                             <span class="p-0.5"><img src="/images/fi-user.svg" class="icon-fill"></span>
                             <span ng-if="showSidebar" class="ml-3">Account settings</span>
                         </a>
                     </li>
-                    <li class="row-flex flex-align-middle cursor-pointer text-base font-normal py-1 px-1 h-7.3 sidebar-submenu">
+                    <li class="row-flex flex-align-middle cursor-pointer text-base font-normal py-1 px-1 h-9 sidebar-submenu">
                         <a href="/logout" class="sidebar-title">
                             <span class="p-0.5"><img src="/images/fi-log-out.svg" class="icon-fill"></span>
                             <span ng-if="showSidebar" class="ml-2">Sign Out</span>
@@ -141,7 +141,7 @@
                         >
                         <div ng-if="showSidebar" class="ml-3 row-flex flex-direction-column align-top cursor-default">
                             <span class="block">{{ getUserFullName() }}</span>
-                            <span class="text-sm text-util-gray-01">{{ getUserEmail() }}</span>
+                            <span class="text-sm text-util-gray-02">{{ getUserEmail() }}</span>
                         </div>
                     </li>
                 </ul>
