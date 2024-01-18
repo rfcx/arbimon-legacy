@@ -5,7 +5,7 @@
     aria-label="Sidebar"
     data-drawer-backdrop="false"
     ng-mouseenter="showSidebar = true"
-    ng-mouseleave="showSidebar = true; collapse()"
+    ng-mouseleave="showSidebar = false; collapse()"
 >
     <div class="h-full pb-4 overflow-y-auto">
         <div class="row-flex flex-direction-column h-full justify-between">
@@ -27,7 +27,7 @@
                         Project name
                     </p>
                     <p class="text-sm text-util-gray-01 m-0 mt-1 font-normal text-wrap">
-                        RFCx-Guardians in Madre de Dios Peru
+                        {{ projectData.name }}
                     </p>
                 </div>
                 <div
