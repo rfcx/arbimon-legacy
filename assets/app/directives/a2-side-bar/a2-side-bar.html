@@ -5,7 +5,7 @@
     aria-label="Sidebar"
     data-drawer-backdrop="false"
     ng-mouseenter="showSidebar = true"
-    ng-mouseleave="showSidebar = false; collapse()"
+    ng-mouseleave="showSidebar = true; collapse()"
 >
     <div class="h-full pb-4 overflow-y-auto">
         <div class="row-flex flex-direction-column h-full justify-between">
@@ -19,6 +19,21 @@
                     </a>
                 </div>
                 <div class="my-4 border-t-1 border-util-gray-02"></div>
+                <div
+                    v-if="showSidebar"
+                    class="px-4.5"
+                >
+                    <p class="text-xs text-util-gray-02 m-0 font-medium">
+                        Project name
+                    </p>
+                    <p class="text-sm text-util-gray-01 m-0 mt-1 font-normal text-wrap">
+                        RFCx-Guardians in Madre de Dios Peru
+                    </p>
+                </div>
+                <div
+                    v-if="showSidebar"
+                    class="my-4 border-t-1 border-util-gray-02"
+                />
                 <ul class="px-3 row-flex flex-direction-column gap-y-3 mb-0">
                     <li ng-repeat="item in allItems">
                         <a
