@@ -12,6 +12,11 @@
 <div class="container-page">
     <div class="content-wrap">
         <% include fragments/home-nav %>
+        <% if (state === 'projects') { %>
+            <div class="row-flex flex-align-middle flex-space-center launch-banner py-4" style="margin-top: -20px;">
+                Lorem Ipsum speaks at TEDxCERN about the technology behind Arbimon
+            </div>
+        <% } %>
         <div class="container homepage">
             <div class="row">
                 <div class="col-md-12">
