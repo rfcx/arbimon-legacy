@@ -9,88 +9,231 @@
                 <i class="fa fa-plus"></i> New Job
             </a>
         </h1>
-        <div>
-          <input ng-if="isShowSearch()" type="text" class="form-control pull-left" ng-model="search.q" style="width: 325px;" placeholder="Search jobs by name, template, species, song type" ng-change="onFilterChanged()">
-          <button ng-if="loading.showRefreshBtn" class="btn btn-default pull-right btn-sm"
-              tooltip="Refresh list"
-              ng-click="loadPatternMatchings()">
-                  <i class="fa fa-refresh"></i> Refresh List
-          </button>
+        <div class="row panel-body">
+            <ul class="nav nav-tabs col-md-12">
+                <li class="nav-item" ng-class="{ active: currentTab === 'patternMatchings' }">
+                    <a class="nav-link" href="" ng-click="toggleTab('patternMatchings')">
+                        Pattern Matching Results
+                    </a>
+                </li>
+                <li class="nav-item" ng-class="{ active: currentTab === 'projectTemplates' }">
+                    <a class="nav-link" href="" ng-click="toggleTab('projectTemplates')">
+                        Project Templates
+                    </a>
+                </li>
+                <li class="nav-item" ng-class="{ active: currentTab === 'publicTemplates' }">
+                    <a class="nav-link" href="" ng-click="toggleTab('publicTemplates')">
+                        Public Templates
+                    </a>
+                </li>
+            </ul>
         </div>
-        <div class="ml-2"><loader ng-show="loading.rows"></loader></div>
-        <div ng-show="!loading.rows && patternmatchingsData && !patternmatchingsData.length" class="help-wrapper col-sm-12 row-flex flex-direction-column flex-space-center flex-align-middle" style="text-align: center;">
-            <a class="btn btn-sm btn-default"
-                tooltip="Create New Pattern Matching job"
-                tooltip-placement="top"
-                ng-click="createNewPatternMatching() | trackEvent:'Analysis-Pattern-Matching-List':'Create new pattern matching'">
-                <i class="fa fa-plus mr-1" ></i> New Job
-            </a>
-            <p class="mt-3 mb-0">Learn more:</p>
-            <p class="mb-0"><a href="https://support.rfcx.org/article/99-what-is-pattern-matching-pm-in-arbimon" target="_blank">1. What is Pattern Matching?<i class="ml-2 fa fa-external-link"></i></a></p>
-            <p class="mb-0"><a href="https://support.rfcx.org/article/135-pattern-matching-best-practices" target="_blank">2. Pattern Matching best practices<i class="ml-2 fa fa-external-link"></i></a></p>
-        </div>
-        <div ng-if="!loading.rows && patternmatchingsData && patternmatchingsData.length" class="pm-list">
-            <a2-table rows="patternmatchingsData" no-checkbox="true" on-select="selectItem(row.id) | trackEvent:'Analysis-Pattern-Matching-List':' show pattern matching details'">
-                <field title="Name" tdclass="is-v-middle hidelongtext widthtd" key="name">
-                    <div class="row-flex flex-align-middle flex-direction-row flex-space-start">
-                        <div class="roi-thumbnail mr-3">
-                            <img ng-src="{{row.template.uri}}" class="roi-img is-small"/>
-                            <a class="roi-btn-br" ng-href="{{getTemplateVisualizerUrl(row.template)}}">
-                                <i tooltip-placement="left"
-                                    tooltip-append-to-body="true"
-                                    tooltip="View in Visualizer"
-                                    class="fa fa-cubes">
-                                </i>
-                            </a>
+        <div ng-if="currentTab === 'patternMatchings'">
+            <div>
+              <input ng-if="isShowSearch()" type="text" class="form-control pull-left" ng-model="search.q" style="width: 380px;" placeholder="Search jobs by name, template, species, song type" ng-change="onFilterChanged()">
+              <button ng-if="loading.showRefreshBtn" class="btn btn-default pull-right btn-sm"
+                  tooltip="Refresh list"
+                  ng-click="loadPatternMatchings()">
+                      <i class="fa fa-refresh"></i> Refresh List
+              </button>
+            </div>
+            <div class="ml-2"><loader ng-show="loading.rows"></loader></div>
+            <div ng-show="!loading.rows && patternmatchingsData && !patternmatchingsData.length" class="help-wrapper col-sm-12 row-flex flex-direction-column flex-space-center flex-align-middle" style="text-align: center;">
+                <a class="btn btn-sm btn-default"
+                    tooltip="Create New Pattern Matching job"
+                    tooltip-placement="top"
+                    ng-click="createNewPatternMatching() | trackEvent:'Analysis-Pattern-Matching-List':'Create new pattern matching'">
+                    <i class="fa fa-plus mr-1" ></i> New Job
+                </a>
+                <p class="mt-3 mb-0">Learn more:</p>
+                <p class="mb-0"><a href="https://support.rfcx.org/article/99-what-is-pattern-matching-pm-in-arbimon" target="_blank">1. What is Pattern Matching?<i class="ml-2 fa fa-external-link"></i></a></p>
+                <p class="mb-0"><a href="https://support.rfcx.org/article/135-pattern-matching-best-practices" target="_blank">2. Pattern Matching best practices<i class="ml-2 fa fa-external-link"></i></a></p>
+            </div>
+            <div ng-if="!loading.rows && patternmatchingsData && patternmatchingsData.length" class="pm-list">
+                <a2-table rows="patternmatchingsData" no-checkbox="true" on-select="selectItem(row.id) | trackEvent:'Analysis-Pattern-Matching-List':' show pattern matching details'">
+                    <field title="Name" tdclass="is-v-middle hidelongtext widthtd" key="name">
+                        <div class="row-flex flex-align-middle flex-direction-row flex-space-start">
+                            <div class="roi-thumbnail mr-3">
+                                <img ng-src="{{row.template.uri}}" class="roi-img is-small"/>
+                                <a class="roi-btn-br" ng-href="{{getPMTemplateVisualizerUrl(row.template)}}">
+                                    <i tooltip-placement="left"
+                                        tooltip-append-to-body="true"
+                                        tooltip="View in Visualizer"
+                                        class="fa fa-cubes">
+                                    </i>
+                                </a>
+                            </div>
+                            <span class="mr-3 hidelongtext" title="{{ row.name }}">{{ row.name }}</span>
+                            <button class="btn btn-default btn-xs"
+                                ng-click="update(row, $event)"
+                                tooltip="Edit Name"
+                                tooltip-trigger="mouseenter">
+                                <i class="fa fa-pencil"></i>
+                            </button>
                         </div>
-                        <span class="mr-3 hidelongtext" title="{{ row.name }}">{{ row.name }}</span>
+                    </field>
+                    <field title="Timestamp" key="timestamp" tdclass="is-v-middle">
+                        {{ row.timestamp | moment : 'lll' }}
+                    </field>
+                    <field title="Playlist" key="playlist_name" tdclass="hidelongtext no-wrap-table-cell is-v-middle">
+                        <span title="{{row.playlist_name}}">{{row.playlist_name}}</span>
+                    </field>
+                    <field title="Template" key="template" tdclass="species is-v-middle hidelongtext">
+                        <div> {{row.template.species_name}}, {{row.template.songtype_name}}</div>
+                        <div class="text-dim" title="Template name">{{row.template.name}}</div>
+                    </field>
+                    <field title="Parameters" key="parameters" tdclass="hidelongtext no-wrap-table-cell is-v-middle">
+                        <span class="mr-1" title="{{row.parameters | asCSV }}">{{row.parameters | asCSV }}</span>
+                    </field>
+                    <field title="User" key="user" tdclass="is-v-middle">
+                        {{ row.user }}
+                    </field>
+                    <field tdclass="is-v-middle">
                         <button class="btn btn-default btn-xs"
-                            ng-click="update(row, $event)"
-                            tooltip="Edit Name"
+                            ng-click="deletePatternMatching(row, $event) | trackEvent:'Analysis-Pattern-Matching-list':'delete pattern matching'"
+                            tooltip="Delete"
                             tooltip-trigger="mouseenter">
-                            <i class="fa fa-pencil"></i>
+                            <i class="fa fa-trash"></i>
                         </button>
-                    </div>
-                </field>
-                <field title="Timestamp" key="timestamp" tdclass="is-v-middle">
-                    {{ row.timestamp | moment : 'lll' }}
-                </field>
-                <field title="Playlist" key="playlist_name" tdclass="hidelongtext no-wrap-table-cell is-v-middle">
-                    <span title="{{row.playlist_name}}">{{row.playlist_name}}</span>
-                </field>
-                <field title="Template" key="template" tdclass="species is-v-middle hidelongtext">
-                    <div> {{row.template.species_name}}, {{row.template.songtype_name}}</div>
-                    <div class="text-dim" title="Template name">{{row.template.name}}</div>
-                </field>
-                <field title="Parameters" key="parameters" tdclass="hidelongtext no-wrap-table-cell is-v-middle">
-                    <span class="mr-1" title="{{row.parameters | asCSV }}">{{row.parameters | asCSV }}</span>
-                </field>
-                <field title="User" key="user" tdclass="is-v-middle">
-                    {{ row.user }}
-                </field>
-                <field tdclass="is-v-middle">
-                    <button class="btn btn-default btn-xs"
-                        ng-click="deletePatternMatching(row, $event) | trackEvent:'Analysis-Pattern-Matching-list':'delete pattern matching'"
-                        tooltip="Delete"
-                        tooltip-trigger="mouseenter">
-                        <i class="fa fa-trash"></i>
-                    </button>
-                </field>
-            </a2-table>
+                    </field>
+                </a2-table>
+            </div>
+        </div>
+        <div class="row templates" ng-if="currentTab === 'projectTemplates' || currentTab === 'publicTemplates'">
+            <div class="col-md-12">
+                <div class="mb-2 pull-left">
+                    <input type="text" class="form-control" ng-model="searchTemplates.q" style="width: 320px;" placeholder="Search templates by name, species or project" ng-change="onSearchChanged()">
+                </div>
+                <div class="col-sm-2">
+                    <ui-select ng-model="searchTemplates.taxon" theme="bootstrap" ng-change="onSearchChanged()">
+                        <ui-select-match placeholder="Taxon" title="{{ $select.selected.taxon }}">
+                            {{ $select.selected.taxon }}
+                        </ui-select-match>
+                        <ui-select-choices repeat="item in taxons | filter:$select.search">
+                            {{ item.taxon }}
+                        </ui-select-choices>
+                    </ui-select>
+                </div>
+                <loader ng-if="loadingTemplates.value"></loader>
+                <div ng-if="!loadingTemplates.value && templatesData && templatesData.length">
+                    <a2-table rows="templatesData" no-checkbox>
+                        <field tdclass="is-v-middle" tdclass="spectrogram-img">
+                            <div class="roi-thumbnail" ng-style="{'opacity': row.disabled ? 0.6 : 1}">
+                                <div ng-if="row.disabled" class="muted-layer-message" style="left: 10%; top: 30%"
+                                    tooltip="Unable to visualize your template due to corrupted data"
+                                >
+                                    <span class="glyphicon glyphicon-ban-circle fa-xs" style="color: white;" aria-hidden="true"></span>
+                                    <span class="pl-1 fa-xs" style="color: white;">Unavailable</span>
+                                </div>
+                                <img ng-src="{{row.uri}}" class="roi-img is-small"/>
+                                <a class="roi-btn-bl cs-pointer" ng-click="playTemplateAudio(row, $event)"
+                                    ng-class="{'row-disabled': row.disabled}"
+                                >
+                                    <i tooltip-placement="left"
+                                        tooltip-append-to-body="true"
+                                        class="fa fa-play">
+                                    </i>
+                                </a>
+                                <a class="roi-btn-br" ng-href="{{ getTemplateVisualizerUrl(row) }}"
+                                    title="{{ row.disabled ? 'Unable to visualize your template due to corrupted data' : 'View in Visualizer' }}"
+                                >
+                                    <i tooltip-placement="left"
+                                        tooltip-append-to-body="true"
+                                        ng-class="{'row-disabled': row.disabled }"
+                                        class="fa fa-cubes">
+                                    </i>
+                                </a>
+                            </div>
+                        </field>
+                        <field title="Name" key="name" tdclass="is-v-middle name">
+                            <div>
+                                <p class="m-0 is-v-middle no-wrap hidelongtext" title="{{ row.name }}">{{ row.name }}</p>
+                                <a class="is-v-middle"
+                                    ng-if="currentTab === 'projectTemplates' && row.project !== row.source_project_id && row.source_project_id !== null"
+                                    ng-click="goToSourceProject(row.source_project_id)">
+                                    <i aria-hidden="true" class="glyphicon glyphicon-link pl-2"></i>linked
+                                </a>
+                            </div>
+                        </field>
+                        <field title="Species" key="species_name" tdclass="is-v-middle no-wrap hidelongtext">
+                            {{ row.species_name }}
+                        </field>
+                        <field title="Song type" key="songtype_name" tdclass="is-v-middle no-wrap hidelongtext">
+                            {{ row.songtype_name }}
+                        </field>
+                        <field title="Author" key="author" tdclass="is-v-middle no-wrap hidelongtext" show="currentTab === 'publicTemplates'">
+                            <span title="{{ row.author }}">
+                                {{ row.author }}
+                            </span>
+                        </field>
+                        <field title="Project" key="project_name" tdclass="is-v-middle no-wrap hidelongtext" show="currentTab === 'publicTemplates'">
+                            {{ row.project_name }}
+                        </field>
+                        <field title="Sampling" key="sample_rate" tdclass="is-v-middle no-wrap" show="currentTab === 'publicTemplates'">
+                            {{ row.sample_rate }}
+                        </field>
+                        <field title="Date created" key="date_created" tdclass="is-v-middle no-wrap">
+                            {{ row.date_created | moment: 'll' }}
+                        </field>
+                        <field title="Source" key="source_project_name" tdclass="is-v-middle no-wrap hidelongtext" show="currentTab === 'projectTemplates'" tdclass="source">
+                            <span title="{{ row.project !== row.source_project_id && row.source_project_id !== null ? row.author + ' / ' + row.source_project_name : '' }}">
+                                {{ row.project !== row.source_project_id && row.source_project_id !== null ? row.author + ' / ' + row.source_project_name : '-' }}
+                            </span>
+                        </field>
+                        <field tdclass="is-v-middle">
+                            <button class="btn btn-default"
+                                ng-if="currentTab === 'projectTemplates'"
+                                ng-click="deleteTemplate(row.id) | trackEvent:'Audiodata-template':'del clicked'"
+                                tooltip="Delete Template"
+                                tooltip-trigger="mouseenter">
+                                <i class="fa fa-trash"></i>
+                            </button>
+                            <button class="btn btn-default"
+                                ng-if="currentTab === 'publicTemplates'"
+                                ng-click="addTemplate(row) | trackEvent:'Audiodata-template':'add clicked'"
+                                tooltip="Add Template"
+                                ng-disabled="isAddingTemplate.value === true"
+                                tooltip-trigger="mouseenter">
+                                <i class="fa fa-plus"></i>
+                            </button>
+                        </field>
+                    </a2-table>
+                </div>
+                <div class="jumbotron" ng-show="(!templatesData || templatesData.length == 0) && loadingTemplates.value === false">
+                    <h3>
+                        No templates found.
+                    </h3>
+                </div>
+            </div>
         </div>
     </div>
-    <div ng-if="paginationSettings.totalJobs && (paginationSettings.totalJobs > paginationSettings.limit)" class="row">
+    <div ng-if="templatesData && (paginationTemplates.totalItems > paginationTemplates.limit) && currentTab !== 'patternMatchings'" class="row">
         <div class="col-sm-12">
-            <pagination total-items="paginationSettings.totalJobs"
-                ng-model="paginationSettings.page"
+            <pagination total-items="paginationTemplates.totalItems"
+                ng-model="paginationTemplates.page"
                 ng-change="setCurrentPage()"
                 class="pagination-sm"
                 boundary-links="true"
                 max-size="10"
                 rotate="false"
-                num-pages="paginationSettings.totalPages"
+                num-pages="paginationTemplates.totalPages"
+                ng-disabled="loadingTemplates.value"
+                items-per-page="paginationTemplates.limit">
+            </pagination>
+        </div>
+    </div>
+    <div ng-if="pagination.totalItems && (pagination.totalItems > pagination.limit) && currentTab === 'patternMatchings'" class="row">
+        <div class="col-sm-12">
+            <pagination total-items="pagination.totalItems"
+                ng-model="pagination.page"
+                ng-change="setCurrentPage()"
+                class="pagination-sm"
+                boundary-links="true"
+                max-size="10"
+                rotate="false"
+                num-pages="pagination.totalPages"
                 ng-disabled="loading.rows"
-                items-per-page="paginationSettings.limit">
+                items-per-page="pagination.limit">
             </pagination>
         </div>
     </div>
