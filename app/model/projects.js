@@ -17,6 +17,7 @@ const queryHandler = dbpool.queryHandler;
 const APIError = require('../utils/apierror');
 const species = require('./species');
 const songtypes = require('./songtypes');
+const users = require('./users');
 const roles = require('./roles')
 
 const projectSchema = joi.object().keys({
@@ -699,7 +700,6 @@ var Projects = {
 
     addUser: function(userProjectRole, connection, callback) {
         var schema = {
-            user_id: joi.number().required(),
             user_email: joi.string(),
             project_id: joi.number().required(),
             role_id: joi.number().required()
@@ -708,14 +708,16 @@ var Projects = {
         joi.validate(userProjectRole, schema, function(err, upr){
             if(err) return callback(err);
 
-            var user_id = dbpool.escape(upr.user_id);
+            var user_email = upr.user_email;
             var project_id = dbpool.escape(upr.project_id);
             var role_id = dbpool.escape(upr.role_id);
 
-            var qFind = 'SELECT * FROM user_project_role WHERE user_id = %s AND project_id = %s';
+            var qFind = `SELECT upr.* FROM users u
+                JOIN user_project_role upr on upr.user_id = u.user_id
+                WHERE u.email = %s AND upr.project_id = %s`;
 
-            qFind = util.format(qFind, user_id, project_id);
-            queryHandler(qFind, (err, d) => {
+            qFind = util.format(qFind, user_email, project_id);
+            queryHandler(qFind, async (err, d) => {
                 if (err) {
                     return callback(err)
                 }
@@ -723,9 +725,10 @@ var Projects = {
                     if (d && d.length) {
                         return callback(new APIError("User already attached to the project", 404));
                     }
+                    const user = await users.findByEmailAsync(user_email)
                     var q = 'INSERT INTO user_project_role \n'+
                     'SET user_id = %s, role_id = %s, project_id = %s';
-                    q = util.format(q, user_id, role_id, project_id);
+                    q = util.format(q, user.user_id, role_id, project_id);
                     connection ? connection.query(q, callback) : queryHandler(q, callback);
                 }
             });
@@ -788,7 +791,7 @@ var Projects = {
                         }
                         break;
                     case 'remove':
-                      await this.removeUserRoleAsync(options.user_id, options.project_id, connection);
+                      await this.removeUserRoleAsync(options.user_email, options.project_id, connection);
                       if (rfcxConfig.coreAPIEnabled) {
                         await this.removeUserRoleInCoreAPI(options.user_email, options.project_id, token);
                     }
@@ -997,23 +1000,22 @@ var Projects = {
         queryHandler(q, callback);
     },
 
-    removeUser: function(user_id, project_id, connection, callback) {
+    removeUser: function(user_email, project_id, connection, callback) {
         if(typeof project_id !== 'number')
             return callback(new Error("invalid type for 'project_id'"));
-
-        if(typeof user_id !== 'number')
-            return callback(new Error("invalid type for 'user_id'"));
 
         var q = "DELETE FROM user_project_role \n"+
                 "WHERE user_id = %s AND project_id = %s";
 
-        q = util.format(q, dbpool.escape(user_id), dbpool.escape(project_id));
-        connection ? connection.query(q, callback) : queryHandler(q, callback);
+        users.findByEmailAsync(user_email).then((user) => {
+            q = util.format(q, dbpool.escape(user.user_id), dbpool.escape(project_id));
+            connection ? connection.query(q, callback) : queryHandler(q, callback);
+        })
     },
 
-    removeUserRoleAsync: function(user_id, project_id, connection) {
+    removeUserRoleAsync: function(user_email, project_id, connection) {
         let removeUser = util.promisify(this.removeUser)
-        return removeUser(user_id, project_id, connection)
+        return removeUser(user_email, project_id, connection)
     },
 
     availableRoles: function(callback) {

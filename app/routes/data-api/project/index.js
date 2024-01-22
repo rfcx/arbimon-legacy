@@ -28,14 +28,6 @@ var tagRoutes = require('./tags');
 var audioEventDetectionsClusteringRoutes = require('./audio-event-detections-clustering');
 var clusteringRoutes = require('./clustering-jobs');
 
-router.get('/:projectId/user-role', async function(req, res, next) {
-    res.type('json');
-    const projectId = req.params.projectId
-    const userEmail = req.query.email
-    const role = await model.users.getUserRoleByEmail(projectId, userEmail)
-    res.json({ role });
-});
-
 router.param('projectUrl', function(req, res, next, project_url){
     res.type('json');
     model.projects.find({ url: project_url }, function(err, rows) {
@@ -434,9 +426,8 @@ router.post('/:projectUrl/user/add', async function(req, res, next) {
 
     const userRole = {
         project_id: req.project.project_id,
-        user_id: req.body.user_id,
         user_email: req.body.user_email,
-        role_id: 2 // default to normal user
+        role_id: req.body.role_id
     }
     model.projects.updateUserRoleInArbimonAndCoreAPI({userRole: userRole}, req.session.idToken, 'add').then(function() {
         res.json({ success: true });
@@ -477,7 +468,6 @@ router.post('/:projectUrl/user/del', async function(req, res, next) {
 
     const options = {
         project_id: req.project.project_id,
-        user_id: req.body.user_id,
         user_email: req.body.user_email
     }
 
