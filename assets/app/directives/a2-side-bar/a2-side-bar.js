@@ -149,7 +149,7 @@ angular.module('a2.directive.side-bar', [])
                         {
                             title: 'Project information',
                             visibleCondition: () => {
-                                return true
+                                return a2UserPermit.can('manage project settings')
                             },
                             externalRoute: $scope.arbimonUrl + '/p/' + url + '/settings'
                         },
