@@ -20,7 +20,7 @@
                 </div>
                 <div class="my-4 border-t-1 border-util-gray-02"></div>
                 <div
-                    v-if="showSidebar"
+                    ng-if="showSidebar"
                     class="px-4.5"
                 >
                     <p class="text-xs text-util-gray-02 m-0 font-medium">
@@ -30,10 +30,7 @@
                         {{ projectData.name }}
                     </p>
                 </div>
-                <div
-                    v-if="showSidebar"
-                    class="my-4 border-t-1 border-util-gray-02"
-                />
+                <div ng-if="showSidebar" class="my-4 border-t-1 border-util-gray-02"> </div>
                 <ul class="px-3 row-flex flex-direction-column gap-y-3 mb-0">
                     <li ng-repeat="item in allItems">
                         <a
