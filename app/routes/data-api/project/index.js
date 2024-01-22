@@ -416,7 +416,7 @@ router.get('/:projectUrl/sites-export.csv', function(req, res, next) {
 
 router.post('/:projectUrl/user/add', async function(req, res, next) {
     res.type('json');
-    if(!req.body.user_id) {
+    if(!req.body.user_email) {
         return res.json({ error: "missing parameters"});
     }
 
@@ -458,7 +458,7 @@ router.post('/:projectUrl/user/role', async function(req, res, next) {
 
 router.post('/:projectUrl/user/del', async function(req, res, next) {
     res.type('json');
-    if(!req.body.user_id) {
+    if(!req.body.user_email) {
         return res.json({ error: "missing parameters"});
     }
 
