@@ -88,15 +88,11 @@ angular.module('a2.directive.side-bar', [])
                             route: 'jobs'
                         },
                         {
-                            title: 'Pattern Matching (PM)',
+                            title: 'Pattern Matching',
                             visibleCondition: () => {
                                 return a2UserPermit.has('pattern_matching')
                             },
                             route: 'analysis.patternmatching'
-                        },
-                        {
-                            title: 'PM Templates',
-                            route: 'audiodata.templates'
                         },
                         {
                             title: 'Random Forest Models',
@@ -159,7 +155,10 @@ angular.module('a2.directive.side-bar', [])
                         },
                         {
                             title: 'Members',
-                            route: 'settings.users'
+                            visibleCondition: () => {
+                                return a2UserPermit.can('manage project settings')
+                            },
+                            externalRoute: $scope.arbimonUrl + '/p/' + url + '/users'
                         }
                     ]
                 }
