@@ -427,7 +427,7 @@ router.post('/:projectUrl/user/add', async function(req, res, next) {
     const userRole = {
         project_id: req.project.project_id,
         user_email: req.body.user_email,
-        role_id: req.body.role_id
+        role_id: req.body.role_id ? req.body.role_id : 2
     }
     model.projects.updateUserRoleInArbimonAndCoreAPI({userRole: userRole}, req.session.idToken, 'add').then(function() {
         res.json({ success: true });
@@ -437,7 +437,7 @@ router.post('/:projectUrl/user/add', async function(req, res, next) {
 router.post('/:projectUrl/user/role', async function(req, res, next) {
     res.type('json');
 
-    if(!req.body.user_id || !req.body.role_id) {
+    if(!req.body.user_email) {
         return res.json({ error: "missing parameters"});
     }
 
@@ -447,7 +447,6 @@ router.post('/:projectUrl/user/role', async function(req, res, next) {
 
     const userRole = {
         project_id: req.project.project_id,
-        user_id: req.body.user_id,
         user_email: req.body.user_email,
         role_id: req.body.role_id
     }
