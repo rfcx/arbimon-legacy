@@ -13,7 +13,7 @@ angular.module('a2.analysis.patternmatching', [
         templateUrl: '/app/analysis/patternmatching/disabled.html'
     });
     $stateProvider.state('analysis.patternmatching', {
-        url: '/patternmatching?newJob',
+        url: '/patternmatching?newJob&tab',
         controller: 'PatternMatchingCtrl',
         templateUrl: '/app/analysis/patternmatching/list.html'
     });
@@ -78,20 +78,10 @@ angular.module('a2.analysis.patternmatching', [
 
     $scope.getTaxons();
 
-    $scope.currentTab = 'patternMatchings';
     $scope.loadingTemplates = { value: false };
     $scope.isAddingTemplate = { value: false };
 
     $scope.projecturl = Project.getUrl();
-
-    $scope.goToSourceProject = function(projectId) {
-        if (!projectId) return;
-        Project.getProjectById(projectId, function(data) {
-            if (data) {
-                $window.location.pathname = "/project/"+data.url+"/audiodata/templates";
-            }
-        });
-    }
 
     $scope.getTemplates = function() {
         $scope.loadingTemplates.value = true;
@@ -113,6 +103,24 @@ angular.module('a2.analysis.patternmatching', [
             $scope.templatesData = [];
             notify.serverError(err);
         }).bind(this));
+    }
+
+    const tabs = ['patternMatchings', 'projectTemplates', 'publicTemplates']
+
+    const paramsTab = $state.params.tab
+
+    if (paramsTab && tabs.includes(paramsTab)) {
+        $scope.currentTab = paramsTab
+        $scope.getTemplates()
+    } else $scope.currentTab = 'patternMatchings'
+
+    $scope.goToSourceProject = function(projectId) {
+        if (!projectId) return;
+        Project.getProjectById(projectId, function(data) {
+            if (data) {
+                $window.location.pathname = "/project/"+data.url+"/audiodata/templates";
+            }
+        });
     }
 
     $scope.onSearchChanged = function () {
