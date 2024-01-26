@@ -83,6 +83,11 @@ router.get('/project/:projectUrl/dashboard', function(req, res, next) {
     return res.redirect(`/p/${req.params.projectUrl}/dashboard`)
 });
 
+router.get('/project/:projectUrl/', function(req, res, next) {
+    res.type('json');
+    return res.redirect(`/p/${req.params.projectUrl}/dashboard`)
+});
+
 router.get('/', function(req, res) {
     res.redirect('/my-projects');
 });
