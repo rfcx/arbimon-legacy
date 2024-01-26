@@ -90,17 +90,13 @@ angular.module('a2.directive.side-bar', [])
                         {
                             title: 'Pattern Matching',
                             visibleCondition: () => {
-                                return a2UserPermit.has('pattern_matching')
+                                return true
                             },
                             route: 'analysis.patternmatching'
                         },
                         {
                             title: 'Random Forest Models',
                             route: 'analysis.random-forest-models.models'
-                        },
-                        {
-                            title: 'RFM Training Sets',
-                            route: 'audiodata.trainingSets'
                         },
                         {
                             title: 'Soundscape Analysis',
@@ -149,14 +145,14 @@ angular.module('a2.directive.side-bar', [])
                         {
                             title: 'Project information',
                             visibleCondition: () => {
-                                return a2UserPermit.can('manage project settings')
+                                return true
                             },
                             externalRoute: $scope.arbimonUrl + '/p/' + url + '/settings'
                         },
                         {
                             title: 'Members',
                             visibleCondition: () => {
-                                return a2UserPermit.can('manage project settings')
+                                return true
                             },
                             externalRoute: $scope.arbimonUrl + '/p/' + url + '/users'
                         }

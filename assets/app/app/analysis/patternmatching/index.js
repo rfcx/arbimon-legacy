@@ -59,7 +59,7 @@ angular.module('a2.analysis.patternmatching', [
     $scope.search = { q: '' };
     var timeout;
 
-    var p = $state.params;
+    const p = $state.params;
     var isNewJob = p && p.newJob !== undefined;
 
     $scope.searchTemplates = { q: '', taxon: '' };
@@ -107,7 +107,7 @@ angular.module('a2.analysis.patternmatching', [
 
     const tabs = ['patternMatchings', 'projectTemplates', 'publicTemplates']
 
-    const paramsTab = $state.params.tab
+    const paramsTab = p.tab
 
     if (paramsTab && tabs.includes(paramsTab)) {
         $scope.currentTab = paramsTab
