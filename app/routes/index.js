@@ -42,25 +42,15 @@ router.get('/classifiers', function(req, res) {
     res.render('classifiers', { user: req.session.user });
 });
 
-router.get('/connect-with-rfcx', function(req, res) {
-    res.redirect('/');
-});
-
-
 router.use('/', acmeChallenge);
 
 // all routes after this middleware
 // are available only to logged users
 router.use(function(req, res, next) {
     if (!req.user) {
-        res.redirect(auth0Service.universalLoginUrl) 
+        req.session.currentPath = req.protocol + '://' + req.get('host') + req.originalUrl;
+        res.redirect('/legacy-login')
     } else return next();
-});
-
-router.get('/process-order/:orderId', function(req, res, next) {
-    res.type('html');
-    // render view to show progress
-    res.render('processing-order');
 });
 
 router.get('/projects/:externalId', async (req, res) => {
