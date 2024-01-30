@@ -62,9 +62,6 @@ router.param('projectUrl', function(req, res, next, project_url){
                     // if project is private and user hasn't permissions into the project send 401
                     return res.sendStatus(401);
                 }
-                if (!project.is_private && !rows.length && req.session.user.isSuper === 0) {
-                    return res.redirect(`/p/${req.params.projectUrl}/insights`)
-                }
                 if(!req.session.user.permissions)
                     req.session.user.permissions = {};
 
@@ -78,15 +75,9 @@ router.param('projectUrl', function(req, res, next, project_url){
         }
         else {
             req.project = project;
-
             return next();
         }
     });
-});
-
-router.get('/:projectUrl/', function(req, res, next) {
-    res.type('json');
-    return res.redirect(`/p/${req.params.projectUrl}/dashboard`)
 });
 
 router.use('/:projectUrl/sites', sites);

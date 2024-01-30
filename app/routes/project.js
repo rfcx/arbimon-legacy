@@ -77,6 +77,15 @@ router.get('/:projecturl?/', function(req, res, next) {
                     return _;
                 }, {});
 
+                const isEmptyPath = req._parsedOriginalUrl && (req._parsedOriginalUrl.path === `/project/${project_url}` || req._parsedOriginalUrl.path ===`/project/${project_url}/`);
+                if (isEmptyPath && (permissionsMap['view project'] || req.session.user.isSuper)) {
+                    return res.redirect(`/p/${project_url}/dashboard`)
+                }
+
+                if (isEmptyPath && (!project.is_private && !permissionsMap['view project'])) {
+                    return res.redirect(`/p/${project_url}/insights`)
+                }
+
                 if(!project.is_private || permissionsMap['view project'] || req.session.user.isSuper){
                     // pass
                 } else if(permissionsMap['use citizen scientist interface']){
