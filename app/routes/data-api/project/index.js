@@ -39,6 +39,8 @@ router.param('projectUrl', function(req, res, next, project_url){
             return res.status(404).json({ error: "project not found"});
         }
 
+        const project = rows[0];
+
         let permissionsMap = rows.reduce(function(_, p) {
             _[p.name] = true;
             return _;
@@ -49,8 +51,6 @@ router.param('projectUrl', function(req, res, next, project_url){
                 return res.redirect('/citizen-scientist/' + project.project_id + '/');
         }
 
-        var project = rows[0];
-
         let permissions = req.session.user.permissions && req.session.user.permissions[project.project_id]
         if (!permissions || (permissions && !permissions.length)) {
             model.users.getPermissions(req.session.user.id, project.project_id, function(err, rows) {
@@ -58,11 +58,13 @@ router.param('projectUrl', function(req, res, next, project_url){
                     // if not authorized to see project send 401
                     return res.sendStatus(401);
                 }
-                if(project.is_private && !rows.length && req.session.user.isSuper === 0) {
+                if (project.is_private && !rows.length && req.session.user.isSuper === 0) {
                     // if project is private and user hasn't permissions into the project send 401
                     return res.sendStatus(401);
                 }
-
+                if (!project.is_private && !rows.length && req.session.user.isSuper === 0) {
+                    return res.redirect(`/p/${req.params.projectUrl}/insights`)
+                }
                 if(!req.session.user.permissions)
                     req.session.user.permissions = {};
 
@@ -80,6 +82,11 @@ router.param('projectUrl', function(req, res, next, project_url){
             return next();
         }
     });
+});
+
+router.get('/:projectUrl/', function(req, res, next) {
+    res.type('json');
+    return res.redirect(`/p/${req.params.projectUrl}/dashboard`)
 });
 
 router.use('/:projectUrl/sites', sites);
@@ -125,21 +132,6 @@ router.get('/recordings-count', function(req, res, next) {
 });
 
 // Dasboard page metrics
-
-router.get('/:projectUrl/species-count', function(req, res, next) {
-    res.type('json');
-    let p = req.query.project_id? req.query.project_id : req.project.project_id;
-    const key = { 'project-species-count': `project-${p}-species` }
-    getCachedMetrics(req, res, key, p, next);
-});
-
-router.get('/:projectUrl/sites-count', function(req, res, next) {
-    res.type('json');
-    let p = req.query.project_id? req.query.project_id : req.project.project_id;
-    const key = { 'project-site-count': `project-${p}-site` }
-    getCachedMetrics(req, res, key, p, next);
-});
-
 router.get('/:projectUrl/playlist-count', function(req, res, next) {
     res.type('json');
     let p = req.query.project_id? req.query.project_id : req.project.project_id;
@@ -210,6 +202,7 @@ router.get('/:projectUrl/soundscape-job-count', function(req, res, next) {
     getCachedMetrics(req, res, key, p, next);
 });
 
+// TODO reuse the router
 router.post('/:projectUrl/info/update', function(req, res, next) {
     res.type('json');
     if(!req.haveAccess(req.project.project_id, "manage project settings")) {

@@ -33,8 +33,12 @@ router.use('/', function(req, res, next){
 
 router.get('/:projecturl?/', function(req, res, next) {
     res.type('html');
-    var project_url = req.params.projecturl;
-    var project_id = req.query.id;
+    const project_url = req.params.projecturl;
+    if(!project_url){
+        res.redirect('/projects');
+        return;
+    }
+    const project_id = req.query.id;
     if(project_id && !project_url){
         var project;
         return model.projects.find({ id: project_id, publicTemplates: true }).get(0).then(function(_project) {
@@ -53,14 +57,6 @@ router.get('/:projecturl?/', function(req, res, next) {
         }).catch(next);
     }
 
-    debug('project_url:', project_url);
-
-    // redirect to home if no project is given
-    if(!project_url){
-        res.redirect('/');
-        return;
-    }
-
     model.projects.find({ url: project_url, publicTemplates: true}, function(err, rows) {
             if(err) return next(err);
 
@@ -73,12 +69,6 @@ router.get('/:projecturl?/', function(req, res, next) {
                     project: project,
                     user: req.session.user
                 });
-            }
-
-
-            if(project.plan_period && project.plan_activated) {
-                project.plan_due = new Date(project.plan_activated);
-                project.plan_due.setFullYear(project.plan_due.getFullYear() + project.plan_period);
             }
 
             model.users.getPermissions(req.session.user.id, project.project_id, function(err, rows) {

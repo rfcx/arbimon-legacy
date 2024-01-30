@@ -64,6 +64,10 @@ router.get('/projects/:externalId', async (req, res) => {
     }
 });
 
+router.get('/', function(req, res) {
+    res.redirect('/my-projects');
+});
+
 router.get('/projects', function(req, res) {
     res.redirect('/my-projects');
 });
@@ -77,11 +81,6 @@ router.get('/project/:projectUrl/', function(req, res, next) {
     res.type('json');
     return res.redirect(`/p/${req.params.projectUrl}/dashboard`)
 });
-
-router.get('/', function(req, res) {
-    res.redirect('/my-projects');
-});
-
 
 router.get('/user-settings', function(req, res) {
     res.type('html');
