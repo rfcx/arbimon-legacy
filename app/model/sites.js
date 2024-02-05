@@ -699,8 +699,8 @@ var Sites = {
                     }
                     let siteExternalId = await this.createInCoreAPI(coreSite, token);
                     await this.setExternalId(result.insertId, siteExternalId, connection);
-                    let { country, countryCode } = await this.getCountryCodeCoreAPI(coreSite, token);
-                    await this.setCountryCode(result.insertId, country, countryCode, connection);
+                    let { countryCode } = await this.getCountryCodeCoreAPI(coreSite, token);
+                    await this.setCountryCode(result.insertId, countryCode, connection);
                 }
                 await connection.commit();
                 await connection.release();
@@ -761,7 +761,7 @@ var Sites = {
           return rp(options).then((response) => {
             if (response.body && !response.body.error) {
                 const body  = response.body
-                return { country: body[0].country_name, countryCode: body[0].country_code }
+                return { countryCode: body[0].country_code }
             } else throw new Error('Failed to get site data')
         })
     },
@@ -854,6 +854,8 @@ var Sites = {
                     if (validationIds.length) {
                         await this.resetRecValidationById(project_id, validationIds.map(v => v.recording_validation_id))
                     }
+                    const recIds = await this.getRecordingIdsbySite(site_id)
+                    await this.deleteRecordingInAnalyses(recIds.map(rec => rec.recording_id))
                     await this.removeFromProjectAsync(site_id, project_id, db);
                     if (rfcxConfig.coreAPIEnabled) {
                         await this.deleteInCoreAPI(site_id, idToken)
@@ -870,6 +872,22 @@ var Sites = {
                 }
                 throw new Error('Failed to delete site');
             })
+    },
+
+    deleteRecordingInAnalyses: async function(recIds) {
+        let promises=[
+            dbpool.query(`DELETE FROM pattern_matching_rois WHERE recording_id in (${recIds})`),
+            dbpool.query(`UPDATE templates set deleted=1 WHERE recording_id in (${recIds})`),
+        ];
+        console.log('--deleteRecordingInAnalyses recIds', recIds)
+        return q.all(promises);
+    },
+
+    getRecordingIdsbySite: async function(site_id) {
+        const q = `SELECT recording_id
+            FROM recordings
+            WHERE site_id in (${site_id})`
+        return dbpool.query(q);
     },
 
     getRecordingValidationBySiteId: async function(siteIds) {
@@ -921,8 +939,8 @@ var Sites = {
         return (connection? connection.query : dbpool.query)(`UPDATE sites SET external_id = "${externalId}" WHERE site_id = ${siteId}`, [])
     },
 
-    setCountryCode: function (siteId, country, countryCode, connection) {
-        return (connection? connection.query : dbpool.query)(`UPDATE sites SET country = "${country}", country_code = "${countryCode}" WHERE site_id = ${siteId}`, [])
+    setCountryCode: function (siteId, countryCode, connection) {
+        return (connection? connection.query : dbpool.query)(`UPDATE sites SET country_code = "${countryCode}" WHERE site_id = ${siteId}`, [])
     },
 
     /**

@@ -6,7 +6,6 @@ var router = express.Router();
 
 var project = require('./project');
 var dataApi = require('./data-api');
-var uploads = require('./uploads');
 var site = require('./site');
 var login = require('./login');
 var acmeChallenge = require('./acme-challenge');
@@ -43,27 +42,15 @@ router.get('/classifiers', function(req, res) {
     res.render('classifiers', { user: req.session.user });
 });
 
-router.get('/connect-with-rfcx', function(req, res) {
-    res.redirect('/');
-});
-
-
 router.use('/', acmeChallenge);
-
-router.use('/uploads', uploads);
 
 // all routes after this middleware
 // are available only to logged users
 router.use(function(req, res, next) {
     if (!req.user) {
-        res.redirect(auth0Service.universalLoginUrl) 
+        req.session.currentPath = req.protocol + '://' + req.get('host') + req.originalUrl;
+        res.redirect('/legacy-login')
     } else return next();
-});
-
-router.get('/process-order/:orderId', function(req, res, next) {
-    res.type('html');
-    // render view to show progress
-    res.render('processing-order');
 });
 
 router.get('/projects/:externalId', async (req, res) => {
@@ -77,25 +64,18 @@ router.get('/projects/:externalId', async (req, res) => {
     }
 });
 
+router.get('/', function(req, res) {
+    res.redirect('/my-projects');
+});
+
 router.get('/projects', function(req, res) {
-    res.type('html');
-    res.render('home', {
-        title: "Projects",
-        user: req.session.user,
-        auth0UniversalLoginUrl: auth0Service.universalLoginUrl,
-        state: 'projects'
-    });
+    res.redirect('/my-projects');
 });
 
 router.get('/project/:projectUrl/dashboard', function(req, res, next) {
     res.type('json');
     return res.redirect(`/p/${req.params.projectUrl}/dashboard`)
 });
-
-router.get('/', function(req, res) {
-    res.redirect('/projects');
-});
-
 
 router.get('/user-settings', function(req, res) {
     res.type('html');

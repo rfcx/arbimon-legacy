@@ -13,7 +13,7 @@ angular.module('a2.analysis.patternmatching', [
         templateUrl: '/app/analysis/patternmatching/disabled.html'
     });
     $stateProvider.state('analysis.patternmatching', {
-        url: '/patternmatching?newJob',
+        url: '/patternmatching?newJob&tab',
         controller: 'PatternMatchingCtrl',
         templateUrl: '/app/analysis/patternmatching/list.html'
     });
@@ -23,29 +23,205 @@ angular.module('a2.analysis.patternmatching', [
         templateUrl: '/app/analysis/patternmatching/list.html'
     });
 })
-.controller('PatternMatchingCtrl' , function($scope, $modal, JobsData, $location, notify, a2PatternMatching, a2UserPermit, $state, $stateParams) {
+.controller('PatternMatchingCtrl' , function(
+    $scope,
+    $state,
+    $stateParams,
+    $modal,
+    $localStorage,
+    $window,
+    $location,
+    notify,
+    JobsData,
+    a2PatternMatching,
+    a2UserPermit,
+    a2Templates,
+    a2AudioBarService,
+    Project,
+    SpeciesTaxons
+) {
     $scope.selectedPatternMatchingId = $stateParams.patternMatchingId;
     $scope.loading = { rows: false, showRefreshBtn: false };
-    $scope.paginationSettings = {
+    $scope.pagination = {
         page: 1,
         limit: 10,
         offset: 0,
-        totalJobs: 0,
+        totalItems: 0,
+        totalPages: 0
+    }
+    $scope.paginationTemplates = {
+        page: 1,
+        limit: 10,
+        offset: 0,
+        totalItems: 0,
         totalPages: 0
     }
     $scope.search = { q: '' };
     var timeout;
 
-    var p = $state.params;
+    const p = $state.params;
     var isNewJob = p && p.newJob !== undefined;
 
+    $scope.searchTemplates = { q: '', taxon: '' };
+    $scope.taxons = [ { id: 0, taxon: 'All taxons' }]
+    $scope.searchTemplates.taxon = $scope.taxons[0]
+
+    $scope.getTaxons = function () {
+        SpeciesTaxons.getList(function(data){
+            if (data && data.length) {
+                data.forEach(taxon => {
+                    $scope.taxons.push(taxon)
+                })
+            }
+        })
+    }
+
+    $scope.getTaxons();
+
+    $scope.loadingTemplates = { value: false };
+    $scope.isAddingTemplate = { value: false };
+
+    $scope.projecturl = Project.getUrl();
+
+    $scope.getTemplates = function() {
+        $scope.loadingTemplates.value = true;
+        const opts = {
+            showRecordingUri: true,
+            q: $scope.searchTemplates.q,
+            taxon: $scope.searchTemplates.taxon && $scope.searchTemplates.taxon.id ? $scope.searchTemplates.taxon.id : null,
+            limit: $scope.paginationTemplates.limit,
+            offset: $scope.paginationTemplates.offset * $scope.paginationTemplates.limit
+        }
+        opts[$scope.currentTab] = true
+        return a2Templates.getList(opts).then((function(data){
+            $scope.loadingTemplates.value = false;
+            $scope.templatesData = data.list;
+            $scope.paginationTemplates.totalItems = data.count;
+            $scope.paginationTemplates.totalPages = Math.ceil($scope.paginationTemplates.totalItems / $scope.paginationTemplates.limit);
+        }.bind(this))).catch((function(err){
+            $scope.loadingTemplates.value = false;
+            $scope.templatesData = [];
+            notify.serverError(err);
+        }).bind(this));
+    }
+
+    const tabs = ['patternMatchings', 'projectTemplates', 'publicTemplates']
+
+    const paramsTab = p.tab
+
+    if (paramsTab && tabs.includes(paramsTab)) {
+        $scope.currentTab = paramsTab
+        $scope.getTemplates()
+    } else $scope.currentTab = 'patternMatchings'
+
+    $scope.goToSourceProject = function(projectId) {
+        if (!projectId) return;
+        Project.getProjectById(projectId, function(data) {
+            if (data) {
+                $window.location.pathname = "/project/"+data.url+"/audiodata/templates";
+            }
+        });
+    }
+
+    $scope.onSearchChanged = function () {
+        $scope.loadingTemplates.value = true;
+        clearTimeout(timeout);
+        timeout = setTimeout(() => {
+            if ($scope.searchTemplates.q.trim().length > 0 && $scope.searchTemplates.q.trim().length < 3) return
+            $scope.reloadPage()
+        }, 1000);
+    }
+
     $scope.getTemplateVisualizerUrl = function(template) {
+        const box = ['box', template.x1, template.y1, template.x2, template.y2].join(',');
+        return template ? "/project/"+template.project_url+"/#/visualizer/rec/"+template.recording+"?a="+box : '';
+    }
+
+    $scope.deleteTemplate = function(templateId) {
+        if(!a2UserPermit.can('manage templates')) {
+            notify.error('You do not have permission to delete templates');
+            return;
+        }
+
+        $scope.popup = {
+            title: 'Delete template',
+            messages: ['Are you sure you want to delete this template?'],
+            btnOk: 'Yes',
+            btnCancel: 'No',
+        };
+
+        var modalInstance = $modal.open({
+            templateUrl: '/common/templates/pop-up.html',
+            scope: $scope
+        });
+
+        modalInstance.result.then(function(confirmed) {
+            if(confirmed){
+                return a2Templates.delete(templateId).then(function(){
+                    $scope.getTemplates();
+                });
+            }
+        });
+
+    }
+
+    $scope.toggleTab = function(tab) {
+        $scope.currentTab = tab;
+        $scope.reloadPage()
+    }
+
+    $scope.reloadPage = function () {
+        $scope.resetPagination();
+        if ($scope.currentTab === 'patternMatchings') {
+            $scope.loadPatternMatchings();
+        }
+        else $scope.getTemplates()
+    }
+
+    $scope.addTemplate = function(template) {
+        $scope.isAddingTemplate.value = true
+        a2Templates.add({
+            name : template.name,
+            recording : template.recording,
+            species : template.species,
+            songtype : template.songtype,
+            roi : {
+                x1: template.x1,
+                y1: template.y1,
+                x2: template.x2,
+                y2: template.y2,
+            },
+            source_project_id: template.project
+        }).then((function(template){
+            console.log('new template', template);
+            self.isAddingTemplate.value = false
+            if (template.id === 0) notify.error('The template already exists in the project templates.');
+            else if (template.error) notify.error('You do not have permission to manage templates');
+            else notify.log('The template is added to the project.');
+        })).catch((function(err){
+            console.log('err', err);
+            self.isAddingTemplate.value = false
+            notify.error(err);
+        }));
+    }
+
+    $scope.playTemplateAudio = function(template, $event) {
+        if ($event) {
+            $event.preventDefault();
+            $event.stopPropagation();
+        };
+        $localStorage.setItem('a2-audio-param-gain', JSON.stringify(2));
+        console.info('play')
+        a2AudioBarService.loadUrl(a2Templates.getAudioUrlFor(template), true);
+    }
+
+    $scope.getPMTemplateVisualizerUrl = function(template) {
         var box
         if (template && template.x1) {
             box = ['box', template.x1, template.y1, template.x2, template.y2].join(',');
         }
         return template ? "/project/"+template.source_project_uri+"/visualizer/rec/"+template.recording+"?a="+box : '';
-    },
+    }
 
     $scope.selectItem = function(patternmatchingId){
         $scope.selectedPatternMatchingId = patternmatchingId;
@@ -59,8 +235,13 @@ angular.module('a2.analysis.patternmatching', [
     }
 
     $scope.setCurrentPage = function() {
-        this.paginationSettings.offset = $scope.paginationSettings.page - 1;
-        $scope.loadPatternMatchings();
+        if ($scope.currentTab === 'patternMatchings') {
+            this.pagination.offset = $scope.pagination.page - 1;
+            $scope.loadPatternMatchings();
+        } else {
+            this.paginationTemplates.offset = $scope.paginationTemplates.page - 1;
+            $scope.getTemplates();
+        }
     };
 
     $scope.update = function(patternMatching, $event){
@@ -92,13 +273,13 @@ angular.module('a2.analysis.patternmatching', [
         return a2PatternMatching.list({
             completed: true,
             q: $scope.search.q,
-            limit: $scope.paginationSettings.limit,
-            offset: $scope.paginationSettings.offset * $scope.paginationSettings.limit
+            limit: $scope.pagination.limit,
+            offset: $scope.pagination.offset * $scope.pagination.limit
         }).then(function(data) {
             $scope.patternmatchingsOriginal = data.list;
             $scope.patternmatchingsData = data.list;
-            $scope.paginationSettings.totalJobs = data.count;
-            $scope.paginationSettings.totalPages = Math.ceil($scope.paginationSettings.totalJobs / $scope.paginationSettings.limit);
+            $scope.pagination.totalItems = data.count;
+            $scope.pagination.totalPages = Math.ceil($scope.pagination.totalItems / $scope.pagination.limit);
             $scope.showInfo = false;
             $scope.loading.rows = false;
             if (data && data.list.length) {
@@ -121,10 +302,14 @@ angular.module('a2.analysis.patternmatching', [
     }
 
     $scope.resetPagination = function () {
-        $scope.paginationSettings.page = 1
-        $scope.paginationSettings.offset = 0
-        $scope.paginationSettings.totalJobs = 0
-        $scope.paginationSettings.totalPages = 0
+        $scope.pagination.page = 1
+        $scope.pagination.offset = 0
+        $scope.pagination.totalItems = 0
+        $scope.pagination.totalPages = 0
+        $scope.paginationTemplates.page = 1
+        $scope.paginationTemplates.offset = 0
+        $scope.paginationTemplates.totalItems = 0
+        $scope.paginationTemplates.totalPages = 0
     }
 
     $scope.createNewPatternMatching = function () {

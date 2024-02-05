@@ -46,7 +46,7 @@ const anonymousGuest = {
 
 router.use(function create_user_object(req, res, next) {
     const session = req.session
-    // console.log('\n\n - session', session)
+    const permissions = session.user && session.user.permissions ? session.user.permissions : undefined
     if (!req.user) {
         session.isAnonymousGuest = true;
         session.user = anonymousGuest;
@@ -62,6 +62,7 @@ router.use(function create_user_object(req, res, next) {
             session.isAnonymousGuest = false;
             user[0].picture = req.user.picture
             session.user = model.users.makeUserObject(user[0], {secure: req.secure, all:true});
+            session.user.permissions = permissions
             next();
         })
     }
@@ -70,13 +71,10 @@ router.use(function create_user_object(req, res, next) {
 router.use(function(req, res, next) {
 
     req.haveAccess = function(project_id, permission_name) {
-
         if(req.session.user.isSuper === 1)
             return true;
 
         var projectPerms = req.session.user.permissions && req.session.user.permissions[project_id];
-        debug("user permissions:", req.session.user.permissions);
-
         if(!projectPerms)
             return false;
 
@@ -142,37 +140,16 @@ router.post('/login', function(req, res, next) {
     }).catch(next);
 });
 
-/** Processes an oauth-based login.
- * response codes:
- *      200 - login accepted
- *      423 - account disabled
- *      449 - oauth no authorized on account
- */
-router.post('/oauth-login', function(req, res, next) {
-    res.type('json');
-    model.oauth.verify(req.body.token, req.body.type).then(function(credentials){
-        return model.users.oauthLogin(req, credentials, req.body);
-    }).then(function(){
-        res.json({
-            success:true,
-            redirect:'/projects'
-        });
-    }, next);
-});
-
-router.get('/auth0-login', async function(req, res, next) {
+router.get('/legacy-login', (req, res, next) => {
+    if (!req.user) {
+        return res.redirect(auth0Service.universalLoginUrl)
+    }
+})
+router.get('/legacy-login-callback', async function(req, res, next) {
     res.type('html');
     try {
         const query = req.query || {}
         if (query.error) {
-            if (req.session.user && req.session.user.username !== 'guest') {
-                return res.redirect(url.format({
-                    pathname: '/connect-with-rfcx',
-                    query: {
-                        error: query.error_description
-                    }
-                }));
-            }
             return next(new Error(query.error_description))
         }
         if (!query.code) {
@@ -183,21 +160,17 @@ router.get('/auth0-login', async function(req, res, next) {
             return next(new Error('Invalid authentication data'))
         }
         const profile = auth0Service.parseTokens(tokens)
-        model.users.sendTouchAPI(tokens.id_token) // no need to wait for response
-        if (!req.session || !req.session.user || req.session.user.username === 'guest') { // user user is not logged in and is authenticating with Auth0
-            await model.users.auth0Login(req, profile, tokens);
+        model.users.sendTouchAPI(tokens.id_token)
+        await model.users.auth0Login(req, profile, tokens);
+        if (!req.session === undefined && !req.session.currentPath) {
             res.redirect('/projects');
-        }
-        else {
-            await model.users.connectRFCx(req, profile, tokens); // if user is logged in and is authenticating with Auth0 ("Connect with RFCx feature")
-            res.redirect('/projects');
-        }
+        } else res.redirect(req.session.currentPath)
     } catch (e) {
         next(e)
     }
 });
 
-router.get('/logout', function(req, res, next) {
+router.get('/legacy-logout', function(req, res, next) {
     res.type('json');
     req.session.destroy(function(err) {
         if(err) return next(err);

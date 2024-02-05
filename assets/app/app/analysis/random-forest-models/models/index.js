@@ -11,7 +11,7 @@ angular.module('a2.analysis.random-forest-models.models', [
 ])
 .config(function($stateProvider, $urlRouterProvider) {
     $stateProvider.state('analysis.random-forest-models.models', {
-        url: '/models?newJob',
+        url: '/models?newJob&tab',
         controller: 'ModelsCtrl',
         templateUrl: '/app/analysis/random-forest-models/models/list.html'
     })
@@ -42,6 +42,18 @@ angular.module('a2.analysis.random-forest-models.models', [
 
     var p = $state.params;
     var isNewJob = p && p.newJob !== undefined;
+
+    const tabs = ['rfm', 'trainingSets', 'classifications']
+
+    const paramsTab = p.tab
+
+    if (paramsTab && tabs.includes(paramsTab)) {
+        $scope.currentTab = paramsTab
+    } else $scope.currentTab = 'rfm'
+
+    $scope.toggleTab = function(tab) {
+        $scope.currentTab = tab;
+    }
 
     var initTable = function(p,c,s,f,t) {
         var sortBy = {};
@@ -784,4 +796,25 @@ angular.module('a2.analysis.random-forest-models.models', [
         var rurl = "/visualizer/rec/" + $scope.selected.id;
         $location.path(rurl);
     };
-});
+})
+
+.directive('a2TrainingSets', function(){
+    return {
+        restrict : 'E',
+        replace: true,
+        scope : { },
+        controller : 'TrainingSetsCtrl',
+        controllerAs: 'controller',
+        templateUrl: '/app/audiodata/training-sets.html'
+    };
+})
+
+.directive('a2Classifications', function(){
+    return {
+        restrict : 'E',
+        replace: true,
+        scope : { },
+        controller : 'ClassificationCtrl',
+        templateUrl: '/app/analysis/random-forest-models/classification/list.html'
+    };
+})

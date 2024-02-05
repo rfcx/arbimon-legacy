@@ -1248,7 +1248,7 @@ var Recordings = {
             const dateFormat = 'YYYYMMDDTHHmmssSSS'
             const start = momentStart.format(dateFormat)
             const end = momentEnd.format(dateFormat)
-            recording.thumbnail = `/api/ingest/recordings/${site.external_id}_t${start}Z.${end}Z_z95_wdolph_g1_fspec_mtrue_d420.154.png`
+            recording.thumbnail = `/legacy-api/ingest/recordings/${site.external_id}_t${start}Z.${end}Z_z95_wdolph_g1_fspec_mtrue_d420.154.png`
         }
     },
     __compute_spectrogram_tiles : function(recording, callback){
@@ -1982,15 +1982,17 @@ var Recordings = {
 
     /* fetch count of project recordings.
     */
-    deleteMatching: function(filters, project_id){
+    deleteMatching: function(filters, project_id, idToken){
         return this.buildSearchQuery(filters, true).then(function(builder){
             builder.addProjection.apply(builder, [
-                'r.recording_id as id'
+                'r.recording_id as id',
+                'r.datetime_utc',
+                'r.site_id',
+                's.external_id as site_external_id'
             ]);
             delete builder.orderBy;
-
             return dbpool.query(builder.getSQL()).then(function(rows){
-                return Q.ninvoke(Recordings, 'delete', rows, project_id);
+                return Q.ninvoke(Recordings, 'delete', rows, project_id, idToken);
             });
         });
     },
@@ -2074,7 +2076,7 @@ var Recordings = {
             dbpool.query(`DELETE FROM cnn_results_rois WHERE recording_id in (${recIds})`),
             dbpool.query(`DELETE FROM pattern_matching_rois WHERE recording_id in (${recIds})`),
             dbpool.query(`DELETE FROM soundscape_region_tags WHERE recording_id in (${recIds})`),
-            dbpool.query(`DELETE FROM templates WHERE recording_id in (${recIds})`),
+            dbpool.query(`UPDATE templates set deleted=1 WHERE recording_id in (${recIds})`),
             dbpool.query(`DELETE FROM training_set_roi_set_data WHERE recording_id in (${recIds})`)
         ];
         console.log('recIds', recIds)
