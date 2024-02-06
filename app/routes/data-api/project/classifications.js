@@ -59,7 +59,7 @@ router.get('/:classiId/more/:from/:total', function(req, res, next) {
                     const dateFormat = 'YYYYMMDDTHHmmssSSS'
                     const start = momentStart.format(dateFormat)
                     const end = momentEnd.format(dateFormat)
-                    classiInfo.rec_image_url = `/api/ingest/recordings/${site[0].external_id}_t${start}Z.${end}Z_rfull_g1_fspec_d600.512_wdolph_z120.png`
+                    classiInfo.rec_image_url = `/legacy-api/ingest/recordings/${site[0].external_id}_t${start}Z.${end}Z_rfull_g1_fspec_d600.512_wdolph_z120.png`
                 }
                 delete classiInfo.uri;
             }

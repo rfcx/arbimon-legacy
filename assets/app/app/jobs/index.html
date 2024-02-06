@@ -1,7 +1,9 @@
 <div ng-controller="StatusBarNavController" data-ng-init="init()">
-    <div class="container-fluid row row row-flex flex-space-center">
+    <div class="row row-flex container-sidenav">
         <div class="col-sm-12 col-lg-11 padded-view-div">
-            <h3 ng-show="showActiveJobs()">Active Jobs</h3>
+            <h1 class="mt-0">
+                Active Jobs
+            </h1>
             <h3 ng-show="showEmptyList()">No jobs in the last 90 day</h3>
             <div><loader ng-show="showLoader()"></loader></div>
             <div ng-show="showActiveJobs()">

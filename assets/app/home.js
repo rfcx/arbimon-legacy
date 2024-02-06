@@ -4,7 +4,6 @@ angular.module('a2.home', [
     'a2.utils',
     'a2.forms',
     'a2.orders',
-    'a2.login',
     'humane',
     'angularytics',
     'ui.router',

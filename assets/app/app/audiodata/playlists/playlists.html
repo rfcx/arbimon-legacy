@@ -1,5 +1,8 @@
 <div class="row">
-    <div class="col-sm-12 toolbar">
+    <h1 class="navbar-rfcx-link-m mt-0">
+        Playlists
+    </h1>
+    <div class="col-sm-12 toolbar mt-4">
         <div class="btn-group">
             <button class="btn btn-default"
                 ng-click="controller.edit() | trackEvent:'Audiodata-playlists':'edit clicked'"
@@ -9,7 +12,7 @@
                 Edit
             </button>
         </div>
-        <div class="btn-group padding-left">
+        <div class="btn-group ml-1">
             <button class="btn btn-default"
                 ng-click="del() | trackEvent:'Audiodata-playlists':'del clicked'"
                 tooltip="Delete"
@@ -18,7 +21,7 @@
                 Delete
             </button>
         </div>
-        <div class="btn-group padding-left">
+        <div class="btn-group ml-1">
             <button class="btn btn-default"
                 ng-click="create('/audiodata/recordings') | trackEvent:'Audiodata-Recordings':'createPlaylist'"
                 tooltip="Create New Playlist"
@@ -26,7 +29,7 @@
                 <i class="fa fa-plus mr-1"></i> New Playlist
             </button>
         </div>
-        <div class="btn-group padding-left">
+        <div class="btn-group ml-1">
             <span class="dropdown" dropdown dropdown-append-to-body="true" a2-auto-close-on-outside-click>
                 <button class="btn btn-default" ng-disabled="playlists && !playlists.length" dropdown-toggle><i class="fa a2-combine"></i> <i class="fa fa-caret-down"></i></button>
                 <div class="dropdown-form dropdown-menu a2-filters-box-dropdown datepicker" role="menu">
@@ -34,7 +37,7 @@
                 </div>
             </span>
         </div>
-        <div class="btn-group padding-left">
+        <div class="btn-group ml-1">
             <input class="form-control" type="text" placeholder="Search" ng-model="search" style="width: 320px;">
         </div>
     </div>
@@ -46,7 +49,7 @@
             <field title="Name" key="name">
                 {{ row.name }}
             </field>
-            <field title="No. of recordings" key="count">
+            <field title="No. of recordings" key="count" tdclass="seconds-div-center">
                 {{ row.count }}
             </field>
             <expand-select>

@@ -9,9 +9,9 @@ spec:
     kind: Deployment
     name: arbimon
   minReplicas: 1
-  maxReplicas: 2
+  maxReplicas: 5
   metrics:
     - type: Resource
       resource:
         name: cpu
-        targetAverageUtilization: 80
+        targetAverageUtilization: 40

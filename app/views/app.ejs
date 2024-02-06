@@ -12,140 +12,6 @@
 <body ng-controller="MainCtrl">
     <div class="container-page">
         <div class="content-wrap">
-            <nav class="navbar navbar-default mb-3" role="navigation">
-                <div class="container-fluid">
-                    <div class="navbar-header">
-                        <button ng-init="leftCollapsedMenu = true" ng-click="leftCollapsedMenu = !leftCollapsedMenu; rightCollapsedMenu = true" type="button"
-                            class="navbar-toggle navbar-toggle-left collapsed">
-                            <span class="sr-only">Toggle navigation</span>
-                            <span class="icon-bar"></span>
-                            <span class="icon-bar"></span>
-                            <span class="icon-bar"></span>
-                        </button>
-                        <a href="/" class="navbar-brand navbar-brand-center">
-                            <img src="/images/favicon/arbimon-logo.svg" class="navbar-logo" alt="Arbimon Logo">
-                            <span class="navbar-title visible-xs-inline visible-sm-inline visible-lg-inline">Arbimon</span>
-                        </a>
-                        <% if (!user || user.isAnonymousGuest) { %>
-                        <div ng-click="toggleSearch = !toggleSearch;" class="search-nav-mobile search-nav-mobile-offset">
-                            <i class="fa fa-search" style="font-size: 20px; position: relative;"></i>
-                        </div>
-                        <a class="navbar-btn btn btn-primary navbar-toggle-right collapse-menu-hide collapsed mr-0"
-                            href="<%- auth0UniversalLoginUrl %>">
-                            Sign In
-                        </a>
-                        <% } else { %>
-                        <div ng-click="toggleSearch = !toggleSearch" class="search-nav-mobile">
-                            <i class="fa fa-search" style="font-size: 20px"></i>
-                        </div>
-                        <button ng-init="rightCollapsedMenu = true" ng-click="rightCollapsedMenu = !rightCollapsedMenu; leftCollapsedMenu = true" type="button"
-                            class="navbar-toggle navbar-toggle-right collapsed fa user-avatar<% if(user.isSuper) { %> swag-super<% } %>"
-                            style="background-image:url('<%- user.imageUrl %>');background-color: #808080;">
-                        </button>
-                        <% } %>
-                    </div>
-                    <div ng-show="toggleSearch" class="navbar-collapse search-input-mobile" style="padding: 10px 15px; position: relative;">
-                        <search-bar></search-bar>
-                    </div>
-                    <div class="navbar-collapse navbar-collapse-menu-rfcx" ng-class="{'collapse': leftCollapsedMenu }">
-                        <ul class="nav navbar-nav navbar-left hide-tooltip-lg">
-                            <% if (user && !user.isAnonymousGuest) { %>
-                                <li ng-if="!citizenScientistUser">
-                                    <a class="navbar-link" href="/projects">Projects</a>
-                                </li>
-                            <% } %>
-                            <li tooltip-placement="bottom" tooltip="<%=  project.name  %>">
-                                <a class="text-overflow navbar-link" style="cursor: default">
-                                    <span data-external-id="<%= project.external_id %>"><%=  project.name  %></span>
-                                </a>
-                            </li>
-                            <!-- <li ui-sref-active="active" ng-if="!citizenScientistUser">
-                                <a ui-sref="dashboard" tooltip="Summary" tooltip-placement="bottom">
-                                    <i class="visible-sm-inline visible-md-inline fa fa-dashboard"></i>
-                                    <span class="visible-xs-inline visible-lg-inline">Summary</span>
-                                </a>
-                            </li> -->
-                            <li ui-sref-active="open" tooltip="Data" tooltip-placement="bottom" ng-if="!citizenScientistUser">
-                                <a ui-sref="audiodata">
-                                    <i class="visible-sm-inline visible-md-inline fa fa-cloud-upload"></i>
-                                    <span class="visible-xs-inline visible-lg-inline">Data</span>
-                                </a>
-                                <ul class="navbar-hide-collapsed dropdown-menu" a2-sidenav-bar-anchor="audiodata"></ul>
-                            </li>
-                            <li ui-sref-active="active" tooltip="Visualizer" tooltip-placement="bottom">
-                                <a ui-sref="visualizer">
-                                    <i class="visible-sm-inline visible-md-inline fa fa-cubes"></i>
-                                    <span class="visible-xs-inline visible-lg-inline">Visualizer</span>
-                                </a>
-                            </li>
-                            <li ui-sref-active="open" tooltip="Analysis" tooltip-placement="bottom" ng-if="!citizenScientistUser">
-                                <a ui-sref="analysis">
-                                    <i class="visible-sm-inline visible-md-inline fa fa-send-o"></i>
-                                    <span class="visible-xs-inline visible-lg-inline">Analysis</span>
-                                </a>
-                                <ul class="navbar-hide-collapsed dropdown-menu" a2-sidenav-bar-anchor="analysis"></ul>
-                            </li>
-                            <li ui-sref-active="open" tooltip="Citizen Scientist" tooltip-placement="bottom" ng-if="userPermit.has('citizen_scientist')">
-                                <a ng-href="{{getUrlFor('citizen-scientist')}}" target="arbimonCSUI">
-                                    <i class="visible-sm-inline visible-md-inline fa fa-users"></i>
-                                    <span class="visible-xs-inline visible-lg-inline">Citizen Scientist</span>
-                                </a>
-                                <ul class="navbar-hide-collapsed dropdown-menu" a2-sidenav-bar-anchor="citizen-scientist"></ul>
-                            </li>
-                        </ul>
-                        <ul class="nav navbar-nav hide-tooltip-lg" ng-if="!citizenScientistUser">
-                            <li ui-sref-active="active">
-                                <a ui-sref="jobs" tooltip="Active Jobs" tooltip-placement="bottom">
-                                    <i class="visible-sm-inline visible-md-inline fa fa-cogs"></i>
-                                    <span class="visible-xs-inline visible-lg-inline">Jobs</span>
-                                </a>
-                            </li>
-                        </ul>
-                        <ul class="nav navbar-nav hide-tooltip-lg" ng-if="!citizenScientistUser">
-                            <li ui-sref-active="open">
-                                <a ui-sref="settings" tooltip="Settings" tooltip-placement="bottom">
-                                    <i class="visible-sm-inline visible-md-inline fa fa-wrench"></i>
-                                    <span class="visible-xs-inline visible-lg-inline">Settings</span>
-                                </a>
-                                <ul class="navbar-hide-collapsed dropdown-menu" a2-sidenav-bar-anchor="settings"></ul>
-                            </li>
-                        </ul>
-                        <ul class="nav navbar-nav hide-tooltip-lg" ng-if="reportsEnabled">
-                            <li>
-                                <a ng-href="{{getUrlFor('reports')}}" tooltip="Insights" tooltip-placement="bottom">
-                                    <span class="visible-xs-inline visible-lg-inline">Insights</span>
-                                    <i class="ml-1 fa fa-external-link"></i>
-                                </a>
-                            </li>
-                        </ul>
-                        <ul class="nav navbar-nav navbar-right">
-                            <li class="search-input">
-                                <search-bar></search-bar>
-                            </li>
-                            <hr class="navbar-divider-collapse">
-                            <ul class="nav navbar-nav navbar-menu-hide hide-tooltip-lg mr-0">
-                                <% include fragments/user-dropdown %>
-                            </ul>
-                        </ul>
-                    </div>
-                    <% if (user && !user.isAnonymousGuest) { %>
-                    <div class="navbar-collapse navbar-collapse-menu-rfcx" ng-class="{'collapse': rightCollapsedMenu }">
-                        <ul class="nav navbar-nav navbar-left collapse-menu-hide">
-                            <li>
-                                <a href="/user-settings">
-                                    <i class="fa fa-wrench"></i> Account Settings
-                                </a>
-                            </li>
-                            <li>
-                                <a href="/logout">
-                                    <i class="fa fa-sign-out"></i> Sign out
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                    <% } %>
-                </div>
-            </nav>
             <% if(planAlert == 'expired') { %>
                 <div class="alert alert-danger" ng-hide="hideAlertBar" ng-click="hideAlertBar = true">
                     Your project data plan have expired, please renew your plan.
@@ -163,6 +29,7 @@
                 <div ui-view="citizen-scientist"   ng-show="$state.includes('citizen-scientist')"></div>
                 <div ui-view></div>
             </div>
+            <a2-side-bar />
         </div>
         <% include fragments/footer %>
     </div>

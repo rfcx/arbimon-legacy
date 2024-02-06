@@ -9,7 +9,8 @@ var routes = [
     '/project',
     '/orders',
     '/jobs',
-    '/app-listings'
+    '/app-listings',
+    '/uploads'
 ];
 
 

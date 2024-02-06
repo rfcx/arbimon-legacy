@@ -67,3 +67,21 @@ spec:
             limits:
               memory: '1000Mi'
               cpu: '0.5'
+---
+kind: HorizontalPodAutoscaler
+apiVersion: autoscaling/v2beta1
+metadata:
+  name: arbimon-ingest-consumer-scaler
+  namespace: production
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1beta1
+    kind: Deployment
+    name: arbimon-ingest-consumer
+  minReplicas: 1
+  maxReplicas: 2
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        targetAverageUtilization: 80

@@ -75,6 +75,7 @@
 */
 @import "branding.less";
 @import "main.less";
+@import "sidebar.less";
 
 b, strong {
   font-weight: 900;
@@ -368,7 +369,9 @@ b, strong {
 }
 
 .container-sidenav {
-  margin-left: 130px;
+  padding-top: 80px;
+  margin-left: 100px;
+  margin-right: 49px;
   @media (max-width: @grid-float-breakpoint) {
     margin-left: 0;
   }
@@ -410,10 +413,6 @@ textarea.fixed-width {
   &.w-8 {
     transform: translateX(-25%) rotate(-90deg);
   }
-}
-
-.w-8 {
-  min-width: 8em;
 }
 
 // -> visualizer-spectrogram.html
@@ -568,7 +567,7 @@ textarea.fixed-width {
 // a2-table directive style
 .a2-table {
   & > tbody > tr.active > td {
-    background-color: @gray;
+    background-color: @util-gray-02;
   }
 
   & th:first-child,
@@ -1757,7 +1756,7 @@ img.outlined {
 // Navigation new version
 .navbar-default .navbar-nav>.active>a,
 .navbar-default .navbar-nav>.open>a {
-  background: transparent;
+  background: @moss;
 //   &:after {
 //     content: " ";
 //     background: #31984f;
