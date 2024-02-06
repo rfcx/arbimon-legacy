@@ -33,12 +33,8 @@ router.use('/', function(req, res, next){
 
 router.get('/:projecturl?/', function(req, res, next) {
     res.type('html');
-    const project_url = req.params.projecturl;
-    if(!project_url){
-        res.redirect('/projects');
-        return;
-    }
-    const project_id = req.query.id;
+    var project_url = req.params.projecturl;
+    var project_id = req.query.id;
     if(project_id && !project_url){
         var project;
         return model.projects.find({ id: project_id, publicTemplates: true }).get(0).then(function(_project) {
@@ -57,6 +53,14 @@ router.get('/:projecturl?/', function(req, res, next) {
         }).catch(next);
     }
 
+    debug('project_url:', project_url);
+
+    // redirect to home if no project is given
+    if(!project_url){
+        res.redirect('/');
+        return;
+    }
+
     model.projects.find({ url: project_url, publicTemplates: true}, function(err, rows) {
             if(err) return next(err);
 
@@ -71,21 +75,17 @@ router.get('/:projecturl?/', function(req, res, next) {
                 });
             }
 
+
+            if(project.plan_period && project.plan_activated) {
+                project.plan_due = new Date(project.plan_activated);
+                project.plan_due.setFullYear(project.plan_due.getFullYear() + project.plan_period);
+            }
+
             model.users.getPermissions(req.session.user.id, project.project_id, function(err, rows) {
                 var permissionsMap = rows.reduce(function(_, p) {
                     _[p.name] = true;
                     return _;
                 }, {});
-
-                const isEmptyPath = req._parsedOriginalUrl && (req._parsedOriginalUrl.path === `/project/${project_url}` || req._parsedOriginalUrl.path ===`/project/${project_url}/`);
-                console.info('---isEmptyPath', isEmptyPath, permissionsMap, req.session)
-                if (isEmptyPath && (permissionsMap['view project'] || req.session.user.isSuper)) {
-                    return res.redirect(`/p/${project_url}/dashboard`)
-                }
-
-                if (isEmptyPath && (!project.is_private && !permissionsMap['view project'])) {
-                    return res.redirect(`/p/${project_url}/insights`)
-                }
 
                 if(!project.is_private || permissionsMap['view project'] || req.session.user.isSuper){
                     // pass
@@ -122,10 +122,10 @@ router.get('/:projecturl?/', function(req, res, next) {
                     isAuthorized: !req.session.isAnonymousGuest,
                     rfcxUser: !!req.session.user && !!req.session.user.email && !!req.session.user.email.includes('rfcx.org'),
                     userEmail: !!req.session.user && !!req.session.user.email ? req.session.user.email : '',
-                    userImage: !!req.session.user && !!req.session.user.imageUrl ? req.session.user.imageUrl : '',
-                    userFullName: !!req.session.user && !!req.session.user.firstname ? req.session.user.firstname + ' ' + req.session.user.lastname : '',
                     permissions: rows.map(function(perm) { return perm.name; }),
                 };
+
+                debug("project perms:", req.session.user.permissions);
 
                 req.project = {
                     id: project.project_id,

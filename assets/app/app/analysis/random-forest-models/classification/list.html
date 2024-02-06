@@ -1,11 +1,14 @@
 <div class="row">
-    <div class="col-sm-12 col-lg-11 padded-view-div">
-        <a class="btn btn-sm btn-default ml-3"
-            tooltip="Create New Classification"
-            tooltip-placement="right"
-            ng-click="createNewClassification() | trackEvent:'Analysis-Classification-List':'Create new classification'">
-            <i class="fa fa-plus"></i> New Job
-        </a>
+    <div class="col-sm-12 col-lg-11 padded-view-div"  >
+        <h3>
+            Classifications
+            <a class="btn btn-sm btn-default ml-3"
+                tooltip="Create New Classification"
+                tooltip-placement="right"
+                ng-click="createNewClassification() | trackEvent:'Analysis-Classification-List':'Create new classification'">
+                <i class="fa fa-plus"></i> New Job
+            </a>
+        </h3>
         <loader ng-show="loading"></loader>
         <button class="btn btn-default pull-right  btn-sm"
             tooltip="Refresh list"

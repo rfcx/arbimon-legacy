@@ -1,6 +1,6 @@
 <div class="row">
     <div class="col-sm-12 col-lg-11 padded-view-div" >
-        <h1 class="mt-0" style="margin-bottom: 24px;">
+        <h3>
             Random Forest Models
             <a class="btn btn-sm btn-default ml-3"
                 tooltip="Create New Model"
@@ -8,76 +8,46 @@
                 ng-click="newModel() | trackEvent:'Analysis-Model list':'new model'">
                 <i class="fa fa-plus"></i> New Job
             </a>
-        </h1>
-        <div class="row panel-body">
-            <ul class="nav nav-tabs col-md-12">
-                <li class="nav-item" ng-class="{ active: currentTab === 'rfm' }">
-                    <a class="nav-link" href="" ng-click="toggleTab('rfm')">
-                        RFM
-                    </a>
-                </li>
-                <li class="nav-item" ng-class="{ active: currentTab === 'trainingSets' }">
-                    <a class="nav-link" href="" ng-click="toggleTab('trainingSets')">
-                        Training Sets
-                    </a>
-                </li>
-                <li class="nav-item" ng-class="{ active: currentTab === 'classifications' }">
-                    <a class="nav-link" href="" ng-click="toggleTab('classifications')">
-                        Classifications
-                    </a>
-                </li>
-            </ul>
-        </div>
-        <div ng-if="currentTab === 'rfm'">
-            <div>
-                <loader ng-show="loading"></loader>
-                <button class="btn btn-default pull-right btn-sm"
-                    tooltip="Refresh list"
-                    ng-click="loadModels()">
-                    <i class="fa fa-refresh"></i> Refresh List
-                </button>
-            </div>
-            <div ng-hide="loading">
-                <a2-table rows="modelsData" no-checkbox="true">
-                    <field title="Date" key="date">
-                        {{ row.date | moment : 'lll' }}
-                    </field>
-                    <field title="Name" tdclass="hidelongtext widthtd" key="mname" filter>
-                        {{row.mname}}
-                    </field>
-                    <field title="Type" key="mtname" filter>
-                        {{row.mtname}}
-                    </field>
-                    <field title="User" key="muser" tdclass="no-wrap-table-cell" filter>
-                        {{row.muser}}
-                    </field>
-                    <field>
-                        <button class="btn btn-default btn-xs"
-                            ui-sref="analysis.modeldetails({ modelId: row.model_id })">
-                            Show details
-                        </button>
-                        <button class="btn btn-default btn-xs"
-                            ng-click="deleteModel(row.model_id,row.mname) | trackEvent:'Analysis-Model list':'delete model'">
-                            Delete
-                        </button>
-                    </field>
-                </a2-table>
-            </div>
-            <div class="jumbotron" ng-show="(!modelsDataOrig || !modelsDataOrig.length > 0) && !loading">
-                <h3>{{ infopanedata }}
-                    <a ng-click="newModel() | trackEvent:'Analysis-Model list':'new model'">
-                        Create a model
-                    </a>
-                </h3>
-            </div>
-        </div>
+        </h3>
+        <loader ng-show="loading"></loader>
+        <button class="btn btn-default pull-right btn-sm"
+            tooltip="Refresh list"
+            ng-click="loadModels()">
+            <i class="fa fa-refresh"></i> Refresh List
+        </button>
 
-        <div ng-if="currentTab === 'trainingSets'">
-            <a2-training-sets />
+        <div ng-hide="loading">
+            <a2-table rows="modelsData" no-checkbox="true">
+                <field title="Date" key="date">
+                    {{ row.date | moment : 'lll' }}
+                </field>
+                <field title="Name" tdclass="hidelongtext widthtd" key="mname" filter>
+                    {{row.mname}}
+                </field>
+                <field title="Type" key="mtname" filter>
+                    {{row.mtname}}
+                </field>
+                <field title="User" key="muser" tdclass="no-wrap-table-cell" filter>
+                    {{row.muser}}
+                </field>
+                <field>
+                    <button class="btn btn-default btn-xs"
+                        ui-sref="analysis.modeldetails({ modelId: row.model_id })">
+                        Show details
+                    </button>
+                    <button class="btn btn-default btn-xs"
+                        ng-click="deleteModel(row.model_id,row.mname) | trackEvent:'Analysis-Model list':'delete model'">
+                        Delete
+                    </button>
+                </field>
+            </a2-table>
         </div>
-
-        <div ng-if="currentTab === 'classifications'">
-            <a2-classifications />
+        <div class="jumbotron" ng-show="(!modelsDataOrig || !modelsDataOrig.length > 0) && !loading">
+            <h3>{{ infopanedata }}
+                <a ng-click="newModel() | trackEvent:'Analysis-Model list':'new model'">
+                    Create a model
+                </a>
+            </h3>
         </div>
     </div>
 </div>

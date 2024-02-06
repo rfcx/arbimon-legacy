@@ -80,7 +80,7 @@ angular.module('a2.audiodata.uploads.upload', [
                     return next();
                 }
 
-                item.url = '/legacy-api/uploads/audio?project=' + $scope.project.project_id+
+                item.url = '/uploads/audio?project=' + $scope.project.project_id+
                             '&site=' + $scope.info.site.id +
                             '&nameformat=' + $scope.info.format.name +
                             '&timezone=' + $scope.info.timezone.format;

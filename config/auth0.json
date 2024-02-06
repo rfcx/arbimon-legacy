@@ -3,5 +3,5 @@
   "auth0Domain": "auth.rfcx.org",
   "clientId": "",
   "logoutRedirectUri": "http://localhost:3000",
-  "redirectUri": "http://localhost:3000/legacy-login-callback"
+  "redirectUri": "http://localhost:3000/auth0-login"
 }

@@ -1,6 +1,6 @@
 <div class="row" >
     <div class="col-sm-12 col-lg-11 padded-view-div" >
-        <h1 class="mt-0" style="margin-bottom: 24px;">
+        <h3>
             Soundscapes
             <a class="btn btn-sm btn-default ml-3"
                 tooltip="Create New Soundscape job"
@@ -8,82 +8,68 @@
                 ng-click="createNewSoundscape()">
                 <i class="fa fa-plus"></i> New Job
             </a>
-        </h1>
-        <div class="row panel-body">
-            <ul class="nav nav-tabs col-md-12">
-                <li class="nav-item" ng-class="{ active: currentTab === 'soundscapes' }">
-                    <a class="nav-link" href="" ng-click="toggleTab('soundscapes')">
-                        Soundscapes
-                    </a>
-                </li>
-                <li class="nav-item" ng-class="{ active: currentTab === 'sounscapeCompCl' }">
-                    <a class="nav-link" href="" ng-click="toggleTab('sounscapeCompCl')">
-                        Soundscape Composition Classes
-                    </a>
-                </li>
-            </ul>
+        </h3>
+        <loader ng-show="loading"></loader>
+        <button class="btn btn-default pull-right btn-sm"
+            tooltip="Refresh list"
+            ng-click="loadSoundscapes()">
+                <i class="fa fa-refresh"></i> Refresh List
+        </button>
+
+        <div ng-if="!loading && soundscapesData && soundscapesData.length">
+            <a2-table rows="soundscapesData" no-checkbox="true">
+                <field title="Date" key="date" tdclass="no-wrap-table-cell">
+                    {{ row.date | moment : 'lll' }}
+                </field>
+                <field title="Name" tdclass="no-wrap-table-cell hidelongtext widthtd" key="name" filter>
+                    {{row.name}}
+                </field>
+                <field title="User" key="user" filter tdclass="no-wrap-table-cell">
+                    {{ row.user }}
+                </field>
+
+                <field title="Playlist" key="playlist" filter tdclass="no-wrap-table-cell hidelongtext is-v-middle">
+                    {{row.playlist}}
+                </field>
+                <field>
+                    <div class="row-flex flex-space-end">
+                        <a class="btn btn-default btn-xs mr-2" ui-sref="visualizer.view({type:'soundscape', idA:row.soundscape_id})"
+                        ><i class="fa fa-cubes"></i> View</a>
+
+                        <button class="btn btn-default btn-xs mr-2" ng-click="showDetails(row.soundscape_id) | trackEvent:'Analysis-Soundscapes-List':' show soundscapes details'"
+                        ><i class="fa fa-list-alt"></i> Show details</button>
+
+                        <span class="btn-group" dropdown dropdown-append-to-body="true">
+                            <button class="btn btn-default btn-xs"
+                                ng-click="controller.exportSoundscape({soundscape:row}) | trackEvent:'Analysis-Soundscapes list':'export soundscape'"
+                            ><i class="fa fa-download"></i> Export</button>
+                            <button class="btn btn-default btn-xs mr-2" dropdown-toggle><i class="fa fa-caret-down"></i></button>
+                            <ul class="dropdown-menu" role="menu">
+                                <li><a ng-click="controller.exportSoundscape({soundscape:row}) | trackEvent:'Analysis-Soundscapes list':'export soundscape'">
+                                    Export Matrix
+                                </a></li>
+                                <li><a ng-click="controller.exportSoundscape({soundscape:row, raw:true}) | trackEvent:'Analysis-Soundscapes list':'export soundscape raw'">
+                                    Export Raw Data
+                                </a></li>
+                            </ul>
+                        </span>
+
+                        <button class="btn btn-default btn-xs" ng-click="deleteSoundscape(row.soundscape_id,row.name) | trackEvent:'Analysis-Soundscapes list':'delete soundscape'"
+                        ><i class="fa fa-trash"></i> Delete</button>
+                    </div>
+                </field>
+            </a2-table>
         </div>
-        <div ng-if="currentTab === 'soundscapes'">
-            <loader ng-show="loading"></loader>
-            <button class="btn btn-default pull-right btn-sm"
-                tooltip="Refresh list"
-                ng-click="loadSoundscapes()">
-                    <i class="fa fa-refresh"></i> Refresh List
-            </button>
-            <div ng-if="!loading && soundscapesData && soundscapesData.length">
-                <a2-table rows="soundscapesData" no-checkbox="true">
-                    <field title="Date" key="date" tdclass="no-wrap-table-cell">
-                        {{ row.date | moment : 'lll' }}
-                    </field>
-                    <field title="Name" tdclass="no-wrap-table-cell hidelongtext widthtd" key="name" filter>
-                        {{row.name}}
-                    </field>
-                    <field title="User" key="user" filter tdclass="no-wrap-table-cell">
-                        {{ row.user }}
-                    </field>
-                    <field title="Playlist" key="playlist" filter tdclass="no-wrap-table-cell hidelongtext is-v-middle">
-                        {{row.playlist}}
-                    </field>
-                    <field>
-                        <div class="row-flex flex-space-end">
-                            <a class="btn btn-default btn-xs mr-2" ui-sref="visualizer.view({type:'soundscape', idA:row.soundscape_id})"
-                            ><i class="fa fa-cubes"></i> View</a>
-                            <button class="btn btn-default btn-xs mr-2" ng-click="showDetails(row.soundscape_id) | trackEvent:'Analysis-Soundscapes-List':' show soundscapes details'"
-                            ><i class="fa fa-list-alt"></i> Show details</button>
-                            <span class="btn-group" dropdown dropdown-append-to-body="true">
-                                <button class="btn btn-default btn-xs"
-                                    ng-click="controller.exportSoundscape({soundscape:row}) | trackEvent:'Analysis-Soundscapes list':'export soundscape'"
-                                ><i class="fa fa-download"></i> Export</button>
-                                <button class="btn btn-default btn-xs mr-2" dropdown-toggle><i class="fa fa-caret-down"></i></button>
-                                <ul class="dropdown-menu" role="menu">
-                                    <li><a ng-click="controller.exportSoundscape({soundscape:row}) | trackEvent:'Analysis-Soundscapes list':'export soundscape'">
-                                        Export Matrix
-                                    </a></li>
-                                    <li><a ng-click="controller.exportSoundscape({soundscape:row, raw:true}) | trackEvent:'Analysis-Soundscapes list':'export soundscape raw'">
-                                        Export Raw Data
-                                    </a></li>
-                                </ul>
-                            </span>
-                            <button class="btn btn-default btn-xs" ng-click="deleteSoundscape(row.soundscape_id,row.name) | trackEvent:'Analysis-Soundscapes list':'delete soundscape'"
-                            ><i class="fa fa-trash"></i> Delete</button>
-                        </div>
-                    </field>
-                </a2-table>
-            </div>
-            <div ng-show="!loading.rows && soundscapesOriginal && !soundscapesOriginal.length" class="help-wrapper col-sm-12 row-flex flex-direction-column flex-space-center flex-align-middle" style="text-align: center;">
-                <h3>
-                    {{ infopanedata }}
-                    <a class="btn btn-sm btn-default"
-                        tooltip="Create New Soundscape job"
-                        tooltip-placement="top"
-                        ng-click="createNewSoundscape() | trackEvent:'Analysis-Soundscapes':'Create new soundscape'">
-                        <i class="fa fa-plus mr-1" ></i> New Job
-                    </a>
-                </h3>
-            </div>
-        </div>
-        <div ng-if="currentTab === 'sounscapeCompCl'">
-            <a2-soundscape-composition-classes />
+        <div ng-show="!loading.rows && soundscapesOriginal && !soundscapesOriginal.length" class="help-wrapper col-sm-12 row-flex flex-direction-column flex-space-center flex-align-middle" style="text-align: center;">
+            <h3>
+                {{ infopanedata }}
+                <a class="btn btn-sm btn-default"
+                    tooltip="Create New Soundscape job"
+                    tooltip-placement="top"
+                    ng-click="createNewSoundscape() | trackEvent:'Analysis-Soundscapes':'Create new soundscape'">
+                    <i class="fa fa-plus mr-1" ></i> New Job
+                </a>
+            </h3>
         </div>
     </div>
 </div>

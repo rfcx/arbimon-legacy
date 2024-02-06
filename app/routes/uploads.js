@@ -6,11 +6,11 @@ var util = require('util');
 var _ = require('lodash');
 var q = require('q');
 
-const fileHelper = require('../../utils/file-helper')
-var model = require('../../model');
-var tmpFileCache = require('../../utils/tmpfilecache');
-var formatParse = require('../../utils/format-parse');
-const uploadQueue = require('../../utils/upload-queue');
+const fileHelper = require('../utils/file-helper')
+var model = require('../model');
+var tmpFileCache = require('../utils/tmpfilecache');
+var formatParse = require('../utils/format-parse');
+const uploadQueue = require('../utils/upload-queue');
 
 var deleteFile = function(filename) {
     fs.unlink(filename, function(err) {
@@ -24,12 +24,11 @@ var authorize = function(authtype){
         if(req.systemSettings('feature.uploads') == 'off') {
             return res.status(503).json({ error: 'uploads are unavailable, try again later' });
         }
-        console.log('--authorize', req.query.project)
+
         var accessToken = req.get('X-X-access-token-X-X') || req.body.token;
 
         if(authtype.session && req.session && req.session.loggedIn) {
             if(!req.query.project || !req.query.site || !req.query.nameformat || !req.query.timezone) {
-                console.error('--missing parameters', req.query.project, req.query.site, req.query.nameformat, req.query.timezone)
                 return res.status(400).json({ error: 'missing parameters' });
             }
 
@@ -43,7 +42,6 @@ var authorize = function(authtype){
             var perm = 'manage project recordings';
 
             if(!req.haveAccess(req.query.project, perm)) {
-                console.error(`you dont have permission to ${ perm }`)
                 res.status(401).json({
                     error: `you dont have permission to ${ perm }`
                 });
@@ -106,7 +104,7 @@ var verifySite = function(req, res, next) {
         }
 
         var site = rows[0];
-        console.log('--site  to upload', site)
+
         // verify token is valid to the system
         // note this is for site token validation, not for access token validation
         if(req.token && (site.token_created_on !== req.token.iat)) {

@@ -1,21 +1,22 @@
 <div class="row">
-    <h1 class="navbar-rfcx-link-m mt-0">
-        Species
-    </h1>
-    <div class="col-xs-10 col-md-6 mt-4">
-        <button class="btn btn-default"
-            ng-click="add() | trackEvent:'Dashboard-species':'add species'"
-            tooltip="Select a species sound"
-            tooltip-trigger="mouseenter">
-            <i class="fa fa-plus"></i> New Species
-        </button>
-        <button class="btn btn-default ml-3"
-            ng-disabled="!checked || !checked.length"
-            ng-click="del() | trackEvent:'Dashboard-species':'delete species'"
-            tooltip="Remove species sound"
-            tooltip-trigger="mouseenter">
-            <i class="fa fa-trash"></i> Remove Species
-        </button>
+    <div class="col-xs-10 col-md-6">
+        <h4>
+            Project Species
+            <button class="btn btn-default ml-3"
+                ng-click="add() | trackEvent:'Dashboard-species':'add species'"
+                tooltip="Select a species sound"
+                tooltip-trigger="mouseenter">
+                <i class="fa fa-plus"></i> New Species
+            </button>
+            <button class="btn btn-default ml-3"
+                ng-disabled="!checked || !checked.length"
+                ng-click="del() | trackEvent:'Dashboard-species':'delete species'"
+                tooltip="Remove species sound"
+                tooltip-trigger="mouseenter">
+                <i class="fa fa-trash"></i> Remove Species
+            </button>
+
+        </h4>
         <a2-table rows="classes" data-checked="checked" no-select>
             <field title="Species" key="species_name">
                 {{ row.species_name }}

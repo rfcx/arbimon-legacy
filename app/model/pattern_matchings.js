@@ -292,8 +292,6 @@ var PatternMatchings = {
             builder.addTable("JOIN recordings", "R", "R.recording_id = PMR.recording_id");
             builder.addTable("JOIN sites", "S", "S.site_id = R.site_id");
 
-            builder.addConstraint("S.deleted_at is null");
-
             builder.addProjection(
                 'R.uri as recording, R.meta ',
                 'S.name as site, S.site_id',
@@ -606,7 +604,7 @@ var PatternMatchings = {
 
     getSitesForPM (pmId) {
         return dbpool.query(`SELECT site_id, name as site FROM sites
-            WHERE site_id IN (SELECT DISTINCT denorm_site_id FROM pattern_matching_rois WHERE pattern_matching_id = ?) AND deleted_at is null;`, [pmId])
+            WHERE site_id IN (SELECT DISTINCT denorm_site_id FROM pattern_matching_rois WHERE pattern_matching_id = ?);`, [pmId])
             .then((sites) => {
                 return sites.sort((a, b) => a.site.localeCompare(b.site))
             })
