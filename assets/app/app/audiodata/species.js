@@ -4,19 +4,52 @@ angular.module('a2.audiodata.species', [
     'ui.bootstrap',
     'humane'
 ])
-.controller('SpeciesCtrl', function($scope, Project, $modal, notify, a2UserPermit) {
+.controller('SpeciesCtrl', function($scope, Project, $modal, notify, a2UserPermit, a2Templates, a2AudioBarService, $localStorage) {
     $scope.loading = true;
     $scope.selected = {};
+    $scope.supportLink = 'https://support.rfcx.org/article/34-pattern-matching-template'
 
-    Project.getClasses(function(classes){
-        $scope.classes = classes;
-        $scope.loading = false;
-    });
+    $scope.getProjectClasses = function() {
+        Project.getClasses().then(classes => {
+            $scope.classes = classes;
+        });
+
+        a2Templates.getList({projectTemplates: true}).then(function(templates){
+            const classes = $scope.classes
+            $scope.templates = templates;
+            classes.forEach(cl => {
+                const temp = $scope.templates.filter(template => template.songtype === cl.songtype && template.species === cl.species)
+                if (temp && temp.length) {
+                    cl.templates = temp.slice(0, 3);
+                    cl.extraTemplatesLink = '/project/' + Project.getUrl() + '/analysis/patternmatching?tab=publicTemplates'
+                }
+            })
+            $scope.classes = classes
+            $scope.loading = false;
+            console.log('classes', classes)
+        });
+    }
+
+    $scope.getProjectClasses()
 
     Project.getInfo(function(info){
         $scope.project = info;
     });
 
+    $scope.playTemplateAudio = function(template, $event) {
+        if ($event) {
+            $event.preventDefault();
+            $event.stopPropagation();
+        };
+        $localStorage.setItem('a2-audio-param-gain', JSON.stringify(2));
+        console.info('play')
+        a2AudioBarService.loadUrl(a2Templates.getAudioUrlFor(template), true);
+    }
+
+    $scope.getTemplateVisualizerUrl = function(template){
+        const box = ['box', template.x1, template.y1, template.x2, template.y2].join(',');
+        return template ? "/project/"+template.project_url+"/#/visualizer/rec/"+template.recording+"?a="+box : '';
+    }
 
     $scope.add = function() {
 
@@ -42,9 +75,7 @@ angular.module('a2.audiodata.species', [
                 .success(function(result){
                     notify.log(selected.species.scientific_name + ' ' + selected.song.name +" added to project");
 
-                    Project.getClasses(function(classes){
-                        $scope.classes = classes;
-                    });
+                    $scope.getProjectClasses()
                 })
                 .error(function(data, status) {
                     if(status < 500)
@@ -94,9 +125,7 @@ angular.module('a2.audiodata.species', [
 
             Project.removeClasses(params)
                 .success(function(result) {
-                    Project.getClasses(function(classes){
-                        $scope.classes = classes;
-                    });
+                    $scope.getProjectClasses()
                 })
                 .error(function(data, status) {
                     if(status < 500)

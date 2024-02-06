@@ -58,20 +58,15 @@ angular.module('a2.srv.project', [
                     return response.data;
                 });
             },
-            getClasses: function(options, callback) {
-                if(typeof options == 'function') {
-                    callback = options;
-                    options = {};
-                }
+            getClasses: function(options) {
+                var config = {
+                    params: options
+                };
 
-                return $q.when($http.get('/legacy-api/project/'+url+'/classes', {
-                        params: options
-                    })).then(function(response){
-                        if(callback){
-                            callback(response.data);
-                        }
-                        return response.data;
-                    });
+                return $http.get('/legacy-api/project/'+url+'/classes', config).then(function(response) {
+                    console.log('response', response)
+                    return response.data;
+                }).catch(notify.serverError);
             },
             getRecs: function(query, callback) {
                 if(typeof query === "function") {

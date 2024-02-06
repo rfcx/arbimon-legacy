@@ -28,7 +28,7 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags'])
             };
 
             var load_project_classes = function(){
-                Project.getClasses(function(classes){
+                Project.getClasses().then(classes => {
                     $scope.classes = classes;
                     
                     var taxons = {};

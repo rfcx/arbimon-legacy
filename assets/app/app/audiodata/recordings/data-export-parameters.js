@@ -91,7 +91,7 @@ angular.module('a2.audiodata.recordings.data-export-parameters', [
             identifier:'species',
             placeholder: 'Select species...',
             getList: function(Project){
-                return Project.getClasses().then(function(classes){
+                return Project.getClasses().then(classes => {
                     // Exclude classes with repeating species names
                     var cl = {};
                     classes.forEach(cls => {

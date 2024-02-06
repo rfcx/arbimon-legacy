@@ -91,7 +91,7 @@ angular.module('a2.audiodata.soundscape-composition-classes', [
                 .success(function(result){
                     notify.log(selected.species.scientific_name + ' ' + selected.song.name +" added to project");
 
-                    Project.getClasses(function(classes){
+                    Project.getClasses().then(classes => {
                         this.classes = classes;
                     });
                 })
@@ -143,7 +143,7 @@ angular.module('a2.audiodata.soundscape-composition-classes', [
 
             Project.removeClasses(params)
                 .success(function(result) {
-                    Project.getClasses(function(classes){
+                    Project.getClasses().then(classes => {
                         this.classes = classes;
                     });
                 })

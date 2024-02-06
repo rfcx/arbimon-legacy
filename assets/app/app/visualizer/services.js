@@ -132,7 +132,7 @@ angular.module('visualizer-services', ['a2.services'])
     })
     .controller('a2ProjectClasses', function(Project) {
         var self = this;
-        Project.getClasses(function(list) {
+        Project.getClasses().then(list => {
             self.list = list;
         });
     })

@@ -29,7 +29,7 @@ angular.module('a2.visualizer.layers.templates', [
     self.recordingTemplates = [];
     self.citizenScientistUser = a2UserPermit.all && a2UserPermit.all.length === 1 && a2UserPermit.all.includes('use citizen scientist interface') && !a2UserPermit.can('delete project') && !a2UserPermit.isSuper();
 
-    Project.getClasses(function(project_classes){
+    Project.getClasses().then(project_classes => {
         self.project_classes = project_classes;
     });
 
