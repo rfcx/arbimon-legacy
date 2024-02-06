@@ -7,7 +7,7 @@ angular.module('a2.analysis.soundscapes', [
 ])
 .config(function($stateProvider, $urlRouterProvider) {
     $stateProvider.state('analysis.soundscapes', {
-        url: '/soundscapes?newJob&tab',
+        url: '/soundscapes?newJob',
         controller: 'SoundscapesCtrl as controller',
         templateUrl: '/app/analysis/soundscapes/list.html'
     });
@@ -38,18 +38,6 @@ angular.module('a2.analysis.soundscapes', [
 
     var p = $state.params;
     var isNewJob = p && p.newJob !== undefined;
-
-    const tabs = ['soundscapes', 'sounscapeCompCl']
-
-    const paramsTab = p.tab
-
-    if (paramsTab && tabs.includes(paramsTab)) {
-        $scope.currentTab = paramsTab
-    } else $scope.currentTab = 'soundscapes'
-
-    $scope.toggleTab = function(tab) {
-        $scope.currentTab = tab;
-    }
 
     $scope.infopanedata = '';
 
@@ -778,15 +766,4 @@ angular.module('a2.analysis.soundscapes', [
         }
 
     });
-})
-
-.directive('a2SoundscapeCompositionClasses', function(){
-    return {
-        restrict : 'E',
-        replace: true,
-        scope : { },
-        controller : 'SoundscapeCompositionClassesScreenCtrl',
-        controllerAs: 'controller',
-        templateUrl: '/app/audiodata/soundscape-composition-classes.html'
-    };
-})
+});

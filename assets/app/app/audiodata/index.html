@@ -1,4 +1,14 @@
 <div>
+    <a2-sidenav-bar name="audiodata" enabled="('audiodata' | includedByState)">
+        <li ui-sref="audiodata.sites"    ui-sref-active="active"><a>Sites</a></li>
+        <li ui-sref="audiodata.uploads.upload" ng-class=" ('audiodata.uploads' | includedByState) ? 'active' : ''"><a>Uploads</a></li>
+        <li ui-sref="audiodata.recordings" ui-sref-active="active"><a>Recordings</a></li>
+        <li ui-sref="audiodata.species"  ui-sref-active="active"><a>Species</a></li>
+        <li ui-sref="audiodata.scAnnotationClasses"  ui-sref-active="active"><a>Soundscape Composition Classes</a></li>
+        <li ui-sref="audiodata.trainingSets" ui-sref-active="active"><a>Training sets</a></li>
+        <li ui-sref="audiodata.templates" ui-sref-active="active"><a>Templates</a></li>
+        <li ui-sref="audiodata.playlists" ui-sref-active="active"><a>Playlists</a></li>
+    </a2-sidenav-bar>
     <div class="container-fluid container-sidenav">
         <div class="row">
             <div class="col-sm-12">

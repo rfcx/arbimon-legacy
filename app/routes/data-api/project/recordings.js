@@ -413,7 +413,7 @@ router.post('/delete-matching', function(req, res, next) {
 
     params.project_id = req.project.project_id;
 
-    model.recordings.deleteMatching(params, req.project.project_id, req.session.idToken).then(function(result) {
+    model.recordings.deleteMatching(params, req.project.project_id).then(function(result) {
         res.json(result);
     }).catch(next);
 });

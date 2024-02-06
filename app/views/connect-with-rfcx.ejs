@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html ng-app="a2.login">
+
+<head>
+    <% include fragments/header %>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Arbimon - Connect with RFCx</title>
+</head>
+
+<body>
+
+    <div class="container-page">
+        <div class="content-wrap">
+            <% include fragments/home-nav %>
+
+            <div class="container">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="panel panel-default pull-right my-5 ml-5" style="max-width:500px;min-width:320px">
+                            <div class="panel-heading">
+                                <h3 class="my-2">Status &nbsp;
+                                <% if (!user || user.isAnonymousGuest) { %>
+                                    <span class="label">Unknown</span>
+                                <% } else if (user.rfcx_id) { %>
+                                    <span class="label label-success">Complete</span>
+                                <% } else { %>
+                                    <span class="label label-warning">Not completed</span>
+                                <% } %>
+                                </h3>
+                            </div>
+                            <div class="panel-body">
+                            <% if (error) { %>
+                                <div class="alert alert-info">
+                                    <strong>Warning!</strong> <%- error %>
+                                </div>
+                            <% } %>
+                            <% if (!user || user.isAnonymousGuest) { %>
+                                <p><a href="/login">Login</a> to check your status.</p>
+                            <% } else if (user.rfcx_id) { %>
+                                <p>Your account is already connected to RFCx.</p>
+                            <% } else { %>
+                                <h2 class="panel-title mb-4">Start migration now</h2>
+                                <ul>
+                                    <li>If you do not have a RFCx account:
+                                       <p class="my-4"><a class="btn btn-primary" href="<%- auth0UniversalLoginUrl %>&screen_hint=signup">Create RFCx account</a></p>
+                                    </li>
+                                    <li>If you have a RFCx account:
+                                        <p class="my-4"><a class="btn btn-default" href="<%- auth0UniversalLoginUrl %>">Login with RFCx</a></p>
+                                    </li>
+                                </ul>
+                            <% } %>
+                            </div>
+                        </div>
+        
+                        <div>
+                            <h2>Arbimon II account migration</h2>
+        
+                            <p>As an Arbimon user, you are now part of a comprehensive technology ecosystem to support bioacoustics research! Our goal
+                            is to make Arbimon the best platform for your research, conservation, and management projects. With one single login,
+                            you will now have access to the following applications:</p>
+        
+                            <ul>
+                                <li class="mb-4"><strong>Ingest</strong> - upload large volumes of audio as a background process while you continue to work in Arbimon.</li>
+                                <li class="mb-4"><strong>Companion</strong> (coming soon!) - used in conjunction with your AudioMoth devices to mark deployment
+                                    location (with photos), manage large numbers of devices, and streamline ingestion into Arbimon for analysis.</li>
+                                <li class="mb-4"><strong>Edge</strong> (coming soon!) - upgraded version of AudioMoth with exceptional battery life that’s solar powered, allowing you to
+                            leave it in the field for long periods of time before retrieving it.</li>
+                                <li class="mb-4"><strong>Explorer</strong> (coming soon!) - engage your audio in a captivating, colorful spectrogram format and share snippets with other
+                            colleagues in the community.</li>
+                            </ul>
+        
+                            <p>Add yourself to our distribution list to receive important updates about the Edge and the Explorer app by scrolling to
+                            the bottom of <a href="https://www.rfcx.org">www.rfcx.org</a> and adding your email.</p>
+        
+                            <h3>Questions?</h3>
+        
+                            <p>In order to best support you during this exciting expansion, we’ve added a direct line to our support team - which can
+                            be accessed via chat inside Arbimon or by email at <a href="mailto:support@rfcx.org">support@rfcx.org</a>. If you have any questions, concerns or ideas that
+                            we can assist with, please don’t hesitate to reach out to us.</p>
+        
+                            <p>We are very excited to continue to work with you to make Arbimon the best platform for your research, conservation, and
+                            management projects. Thank you for your continued work in improving biodiversity monitoring around the world!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <% include fragments/footer %>
+    </div>
+</body>
+
+</html>

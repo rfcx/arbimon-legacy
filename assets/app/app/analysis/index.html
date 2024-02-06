@@ -1,4 +1,21 @@
 <div>
+    <a2-sidenav-bar name="analysis" enabled="('analysis' | includedByState)">
+        <li ui-sref="analysis.patternmatching" ng-class="{active: $state.includes('analysis.patternmatching-details') || $state.includes('analysis.patternmatching')}" ng-if="userPermit.has('pattern_matching')"><a>Pattern Matching</a></li>
+        <li ui-sref="analysis.disabled-patternmatching" ui-sref-active="active" class="disabled" ng-if="!userPermit.has('pattern_matching')"><a>Pattern Matching</a></li>
+        <li ui-sref="analysis.random-forest-models.models" ng-class=" ('analysis.random-forest-models' | includedByState) ? 'active' : ''">
+            <a>Random Forest Models (RFM)</a>
+        </li>
+        <li ng-class=" ('analysis.random-forest-models' | includedByState) ? 'open' : ''">
+            <ul class="dropdown-menu subnav">
+                <li ui-sref="analysis.random-forest-models.models" ui-sref-active="active"><a style="white-space:normal">Create Model</a></li>
+                <li ui-sref="analysis.random-forest-models.classification" ui-sref-active="active"><a style="white-space:normal !important">Run Model</a></li>
+            </ul>
+        </li>
+        <li ui-sref="analysis.cnn" ng-if="userPermit.has('cnn')" ng-class="{active: $state.includes('analysis.cnn-details') || $state.includes('analysis.cnn')}"><a>CNN</a></li>
+        <li ui-sref="analysis.soundscapes" ui-sref-active="active"><a>Soundscapes</a></li>
+        <li ui-sref="analysis.audio-event-detections-clustering" ui-sref-active="active" ng-if="userPermit.has('clustering')"><a>Audio Event Detection</a></li>
+        <li ui-sref="analysis.clustering-jobs" ng-class="{active: $state.includes('analysis.clustering-jobs') || $state.includes('analysis.clustering-jobs-details') || $state.includes('analysis.grid-view')}" ng-if="userPermit.has('aed')"><a>Clustering</a></li>
+    </a2-sidenav-bar>
     <div class="container-fluid container-sidenav">
         <div class="row">
             <div class="col-sm-12">
