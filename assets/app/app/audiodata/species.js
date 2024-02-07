@@ -20,8 +20,10 @@ angular.module('a2.audiodata.species', [
             classes.forEach(cl => {
                 const temp = $scope.templates.filter(template => template.songtype === cl.songtype && template.species === cl.species)
                 if (temp && temp.length) {
+                    if (temp.length >= 3) {
+                        cl.extraTemplatesLink = '/project/' + Project.getUrl() + '/analysis/patternmatching?tab=publicTemplates'
+                    }
                     cl.templates = temp.slice(0, 3);
-                    cl.extraTemplatesLink = '/project/' + Project.getUrl() + '/analysis/patternmatching?tab=publicTemplates'
                 }
             })
             $scope.classes = classes

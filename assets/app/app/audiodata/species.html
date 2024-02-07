@@ -18,10 +18,10 @@
         </button>
         <a2-table ng-if="!loading" rows="classes" data-checked="checked" no-select class="species-table">
             <field title="Species" key="species_name" tdclass="is-v-middle width-25">
-                <span class="em">{{ row.species_name }}</span>
+                <span title="{{row.species_name}}" class="em">{{ row.species_name }}</span>
             </field>
             <field title="Taxon" key="taxon" tdclass="is-v-middle width-15">
-                {{ row.taxon }}
+                <span title="{{ row.taxon }}" class="em">{{ row.taxon }}</span>
             </field>
             <field title="Sound" key="songtype_name" tdclass="is-v-middle width-15">
                 {{ row.songtype_name }}
