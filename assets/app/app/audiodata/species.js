@@ -4,7 +4,7 @@ angular.module('a2.audiodata.species', [
     'ui.bootstrap',
     'humane'
 ])
-.controller('SpeciesCtrl', function($scope, Project, $modal, notify, a2UserPermit, a2Templates, a2AudioBarService, $localStorage) {
+.controller('SpeciesCtrl', function($scope, Project, $modal, notify, a2UserPermit, a2Templates, a2AudioBarService, $localStorage, $state, $window) {
     $scope.loading = true;
     $scope.selected = {};
     $scope.supportLink = 'https://support.rfcx.org/article/34-pattern-matching-template'
@@ -26,7 +26,6 @@ angular.module('a2.audiodata.species', [
             })
             $scope.classes = classes
             $scope.loading = false;
-            console.log('classes', classes)
         });
     }
 
@@ -35,6 +34,17 @@ angular.module('a2.audiodata.species', [
     Project.getInfo(function(info){
         $scope.project = info;
     });
+
+    $scope.showExtraTemplates = function(species, extraTemplatesLink) {
+        $scope.removeFromLocalStorage();
+        $localStorage.setItem('audiodata.templates',  JSON.stringify(species));
+        $window.location.href = extraTemplatesLink;
+    }
+
+    $scope.removeFromLocalStorage = function () {
+        $localStorage.setItem('audiodata.templates', null);
+        $state.params.tab = '';
+    }
 
     $scope.playTemplateAudio = function(template, $event) {
         if ($event) {

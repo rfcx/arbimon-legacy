@@ -111,6 +111,10 @@ angular.module('a2.analysis.patternmatching', [
 
     if (paramsTab && tabs.includes(paramsTab)) {
         $scope.currentTab = paramsTab
+        this.speciesData = JSON.parse($localStorage.getItem('audiodata.templates'));
+        if (this.speciesData && this.speciesData.length) {
+            $scope.searchTemplates.q = this.speciesData
+        }
         $scope.getTemplates()
     } else $scope.currentTab = 'patternMatchings'
 
@@ -165,7 +169,15 @@ angular.module('a2.analysis.patternmatching', [
 
     }
 
+    $scope.removeFromLocalStorage = function () {
+        $localStorage.setItem('audiodata.templates', null);
+        $routeParams= null;
+        $state.transitionTo($state.current.name, {tab: ''}, { notify: false });
+        this.speciesData = JSON.parse($localStorage.getItem('audiodata.templates'));
+    }
+
     $scope.toggleTab = function(tab) {
+        $scope.removeFromLocalStorage()
         $scope.currentTab = tab;
         $scope.reloadPage()
     }

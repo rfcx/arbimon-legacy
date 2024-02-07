@@ -59,7 +59,7 @@
                     </div>
                     <p ng-if="row.extraTemplatesLink" class="row-flex flex-direction-column ml-2">
                         <span>More templates available</span>
-                        <span>at <a ng-href="{{ row.extraTemplatesLink }}" style="color: #ADFF2C">Public Template Library</a></span>
+                        <span>at <a ng-click="showExtraTemplates(row.species_name, row.extraTemplatesLink)" style="color: #ADFF2C; cursor:pointer;">Public Template Library</a></span>
                     </p>
                     <p ng-if="!row.templates" class="mb-0">
                         No templates available for this species

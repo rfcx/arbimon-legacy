@@ -64,7 +64,6 @@ angular.module('a2.srv.project', [
                 };
 
                 return $http.get('/legacy-api/project/'+url+'/classes', config).then(function(response) {
-                    console.log('response', response)
                     return response.data;
                 }).catch(notify.serverError);
             },
