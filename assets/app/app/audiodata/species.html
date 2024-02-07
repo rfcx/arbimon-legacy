@@ -2,7 +2,7 @@
     <h1 class="navbar-rfcx-link-m mt-0">
         Species
     </h1>
-    <div class="col-xs-10 mt-4">
+    <div class="col-12 mt-4">
         <button class="btn btn-default"
             ng-click="add() | trackEvent:'Dashboard-species':'add species'"
             tooltip="Select a species sound"
@@ -17,8 +17,8 @@
             <i class="fa fa-trash mr-2"></i> Remove species
         </button>
         <a2-table ng-if="!loading" rows="classes" data-checked="checked" no-select class="species-table">
-            <field title="Species" key="species_name" tdclass="is-v-middle em width-25">
-                {{ row.species_name }}
+            <field title="Species" key="species_name" tdclass="is-v-middle width-25">
+                <span class="em">{{ row.species_name }}</span>
             </field>
             <field title="Taxon" key="taxon" tdclass="is-v-middle width-15">
                 {{ row.taxon }}
