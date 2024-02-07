@@ -822,7 +822,7 @@ var Projects = {
             })
     },
 
-    updateUserRoleInCoreAPI: async function(userProjectRole, idToken) {
+    updateUserRoleInCoreAPI: async function(userProjectRole, token) {
         const project = await this.findById(userProjectRole.project_id)
         if (!project.external_id) {
             throw new ValidationError(`Project "${project.name}" data is invalid. Please contact to support.`)
@@ -839,7 +839,7 @@ var Projects = {
             url: `${rfcxConfig.apiBaseUrl}/projects/${project.external_id}/users`,
             headers: {
                 'content-type': 'application/json',
-                Authorization: `Bearer ${idToken}`,
+                Authorization: token,
                 source: 'arbimon'
             },
             body: JSON.stringify(body)
@@ -851,7 +851,7 @@ var Projects = {
         }
     },
 
-    removeUserRoleInCoreAPI: async function(user_email, project_id, idToken) {
+    removeUserRoleInCoreAPI: async function(user_email, project_id, token) {
         const project = await this.findById(project_id)
         if (!project.external_id) {
             throw new ValidationError(`Project "${project.name}" data is invalid. Please contact to support.`)
@@ -866,7 +866,7 @@ var Projects = {
             url: `${rfcxConfig.apiBaseUrl}/projects/${project.external_id}/users`,
             headers: {
                 'content-type': 'application/json',
-                Authorization: `Bearer ${idToken}`,
+                Authorization: token,
                 source: 'arbimon'
             },
             body: JSON.stringify(body)

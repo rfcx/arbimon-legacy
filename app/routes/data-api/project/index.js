@@ -408,12 +408,14 @@ router.post('/:projectUrl/user/add', async function(req, res, next) {
         return res.json({ error: "you don't have permission to manage project settings and users" });
     }
 
+    const token = req.headers.authorization || req.session.idToken || req.cookies.id_token
+
     const userRole = {
         project_id: req.project.project_id,
         user_email: req.body.user_email,
         role_id: req.body.role_id ? req.body.role_id : 2
     }
-    model.projects.updateUserRoleInArbimonAndCoreAPI({userRole: userRole}, req.session.idToken, 'add').then(function() {
+    model.projects.updateUserRoleInArbimonAndCoreAPI({userRole: userRole}, token, 'add').then(function() {
         res.json({ success: true });
     }).catch(next);
 });
@@ -429,12 +431,14 @@ router.post('/:projectUrl/user/role', async function(req, res, next) {
         return res.json({ error: "you don't have permission to manage project settings and users" });
     }
 
+    const token = req.headers.authorization || req.session.idToken || req.cookies.id_token
+
     const userRole = {
         project_id: req.project.project_id,
         user_email: req.body.user_email,
         role_id: req.body.role_id
     }
-    model.projects.updateUserRoleInArbimonAndCoreAPI({ userRole: userRole }, req.session.idToken, 'change').then(function() {
+    model.projects.updateUserRoleInArbimonAndCoreAPI({ userRole: userRole }, token, 'change').then(function() {
         res.json({ success: true });
     }).catch(next);
 });
@@ -449,12 +453,14 @@ router.post('/:projectUrl/user/del', async function(req, res, next) {
         return res.json({ error: "you don't have permission to manage project settings and users" });
     }
 
+    const token = req.headers.authorization || req.session.idToken || req.cookies.id_token
+
     const options = {
         project_id: req.project.project_id,
         user_email: req.body.user_email
     }
 
-    model.projects.updateUserRoleInArbimonAndCoreAPI(options, req.session.idToken, 'remove').then(function() {
+    model.projects.updateUserRoleInArbimonAndCoreAPI(options, token, 'remove').then(function() {
         res.json({ success: true });
     }).catch(next);
 });
