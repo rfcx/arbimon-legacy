@@ -299,11 +299,7 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
                 loading.sites = false
             })
 
-        Project.getClasses(
-            {
-                validations: true,
-            },
-            function(classes) {
+        Project.getClasses({ validations: true}).then(function(classes) {
                 options.classes = classes;
             }
         );

@@ -103,7 +103,7 @@ angular.module('a2.visualizer.layers.training-sets', [
 
     $scope.loadingClasses = true;
 
-    Project.getClasses(function(project_classes){
+    Project.getClasses().then(function(project_classes){
         $scope.project_classes = project_classes;
         $scope.loadingClasses = false;
     });
