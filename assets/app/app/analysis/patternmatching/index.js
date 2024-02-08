@@ -191,7 +191,8 @@ angular.module('a2.analysis.patternmatching', [
     }
 
     $scope.addTemplate = function(template) {
-        $scope.isAddingTemplate.value = true
+        template.isAddingTemplate = true;
+        $scope.isAddingTemplate.value = true;
         a2Templates.add({
             name : template.name,
             recording : template.recording,
@@ -204,14 +205,16 @@ angular.module('a2.analysis.patternmatching', [
                 y2: template.y2,
             },
             source_project_id: template.project
-        }).then((function(template){
-            console.log('new template', template);
+        }).then((function(data){
+            console.log('new template', data);
+            template.isAddingTemplate = false
             $scope.isAddingTemplate.value = false
-            if (template.id === 0) notify.error('The template already exists in the project templates.');
-            else if (template.error) notify.error('You do not have permission to manage templates');
+            if (data.id === 0) notify.error('The template already exists in the project templates.');
+            else if (data.error) notify.error('You do not have permission to manage templates');
             else notify.log('The template is added to the project.');
         })).catch((function(err){
             console.log('err', err);
+            template.isAddingTemplate = false
             $scope.isAddingTemplate.value = false
             notify.error('Error adding a template');
         }));

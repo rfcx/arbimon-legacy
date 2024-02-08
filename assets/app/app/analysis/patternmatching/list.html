@@ -194,7 +194,8 @@
                                 tooltip="Add Template"
                                 ng-disabled="isAddingTemplate.value === true"
                                 tooltip-trigger="mouseenter">
-                                <i class="fa fa-plus"></i>
+                                <i ng-if="row.isAddingTemplate" class="fa fa-spinner fa-spin"></i>
+                                <i ng-if="!row.isAddingTemplate" class="fa fa-plus"></i>
                             </button>
                         </field>
                     </a2-table>
