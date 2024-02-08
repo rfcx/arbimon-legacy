@@ -128,10 +128,9 @@ router.post('/add', function(req, res, next) {
     if (req.body.source_project_id) {
         opts.source_project_id = req.body.source_project_id;
     }
-    model.templates.insert(opts)
-        .then(function(new_template) {
-            res.json(new_template);
-        }).catch(next);
+    return model.templates.insert(opts).then(function(new_template) {
+        res.json(new_template);
+    }).catch(next);
 });
 
 router.post('/:template/remove', function(req, res, next) {

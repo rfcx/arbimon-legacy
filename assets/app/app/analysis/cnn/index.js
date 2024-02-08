@@ -527,7 +527,7 @@ angular.module('a2.analysis.cnn', [
 
     $scope.getRoiVisualizerUrl = function(roi){
         var box = ['box', roi.x1, roi.y1, roi.x2, roi.y2].join(',')
-        return roi ? "/project/"+projecturl+"/#/visualizer/rec/"+roi.recording_id+"?a="+box : '';
+        return roi ? "/project/"+projecturl+"/visualizer/rec/"+roi.recording_id+"?a="+box : '';
     };
 
     $scope.getTemplateVisualizerUrl = function(template){

@@ -138,7 +138,7 @@ angular.module('a2.analysis.patternmatching', [
 
     $scope.getTemplateVisualizerUrl = function(template) {
         const box = ['box', template.x1, template.y1, template.x2, template.y2].join(',');
-        return template ? "/project/"+template.project_url+"/#/visualizer/rec/"+template.recording+"?a="+box : '';
+        return template ? "/project/"+template.project_url+"/visualizer/rec/"+template.recording+"?a="+box : '';
     }
 
     $scope.deleteTemplate = function(templateId) {
@@ -206,14 +206,14 @@ angular.module('a2.analysis.patternmatching', [
             source_project_id: template.project
         }).then((function(template){
             console.log('new template', template);
-            self.isAddingTemplate.value = false
+            $scope.isAddingTemplate.value = false
             if (template.id === 0) notify.error('The template already exists in the project templates.');
             else if (template.error) notify.error('You do not have permission to manage templates');
             else notify.log('The template is added to the project.');
         })).catch((function(err){
             console.log('err', err);
-            self.isAddingTemplate.value = false
-            notify.error(err);
+            $scope.isAddingTemplate.value = false
+            notify.error('Error adding a template');
         }));
     }
 

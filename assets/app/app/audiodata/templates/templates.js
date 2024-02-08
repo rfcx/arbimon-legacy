@@ -93,7 +93,7 @@ angular.module('a2.audiodata.templates', [
         },
         getTemplateVisualizerUrl: function(template){
             const box = ['box', template.x1, template.y1, template.x2, template.y2].join(',');
-            return template ? "/project/"+template.project_url+"/#/visualizer/rec/"+template.recording+"?a="+box : '';
+            return template ? "/project/"+template.project_url+"/visualizer/rec/"+template.recording+"?a="+box : '';
         },
         deleteTemplate: function(templateId){
             if(!a2UserPermit.can('manage templates')) {

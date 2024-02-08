@@ -1112,7 +1112,7 @@ angular.module('a2.analysis.clustering-jobs', [
     $scope.getRoiVisualizerUrl = function(roi){
         var projecturl = Project.getUrl();
         var box = ['box', roi.time_min, roi.frequency_min, roi.time_max, roi.frequency_max].join(',');
-        return roi ? '/project/' + projecturl + '/#/visualizer/rec/' + roi.recording_id + '?a=' + box : '';
+        return roi ? '/project/' + projecturl + '/visualizer/rec/' + roi.recording_id + '?a=' + box : '';
     };
 
     $scope.togglePopup = function() {

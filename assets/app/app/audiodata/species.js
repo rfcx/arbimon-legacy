@@ -60,7 +60,7 @@ angular.module('a2.audiodata.species', [
 
     $scope.getTemplateVisualizerUrl = function(template){
         const box = ['box', template.x1, template.y1, template.x2, template.y2].join(',');
-        return template ? "/project/"+template.project_url+"/#/visualizer/rec/"+template.recording+"?a="+box : '';
+        return template ? "/project/"+template.project_url+"/visualizer/rec/"+template.recording+"?a="+box : '';
     }
 
     $scope.add = function() {
