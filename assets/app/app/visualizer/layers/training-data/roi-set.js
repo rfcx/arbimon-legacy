@@ -29,6 +29,7 @@ angular.module('a2.visualizer.layers.training-sets.roi_set', [
     var self=this;
     self.type='roi_set';
     self.typedef  = training_set_types.roi_set;
+    $scope.isAddingTS = false
     $scope.getXCoord = function(x1, x2){
         return $scope.getXSide(x1, x2) == 'left' ? x1 : x2;
     };
@@ -81,11 +82,12 @@ angular.module('a2.visualizer.layers.training-sets.roi_set', [
                 notify.error('You do not have permission to add ROIs to training set');
                 return;
             }
-            
+            $scope.isAddingTS = true
             a2TrainingSets.addData(self.tsetId, {
                 recording : self.recording,
                 roi : this.roi
             }, (function(new_tset_data){
+                $scope.isAddingTS = false
                 $timeout((function(){
                     this.reset();
                     self.rois.push(new_tset_data);

@@ -58,7 +58,8 @@
             <div class="popover-content">
                 <button class="btn btn-sm btn-default"
                     ng-click=" $event.stopPropagation(); layer.training_data.data.editor.submit() | trackEvent:'Visualizer-Roi-Set':'add roi'">
-                    <i class="fa fa-plus text-success"></i> Add Data
+                    <i ng-if="isAddingTS" class="fa fa-spinner fa-spin"></i>
+                    <i ng-if="!isAddingTS" class="fa fa-plus text-success"></i> Add Data
                 </button>
                 <button class="btn btn-sm btn-default"
                     ng-click=" $event.stopPropagation(); layer.training_data.data.editor.reset() | trackEvent:'Visualizer-Roi-Set':'cancel roi'">
