@@ -18,19 +18,7 @@
                         </span>
                     </a>
                 </div>
-                <div class="my-4 border-t-1 border-util-gray-02"></div>
-                <div
-                    ng-if="showSidebar"
-                    class="px-4.5"
-                >
-                    <p class="text-xs text-util-gray-02 m-0 font-medium">
-                        Project name
-                    </p>
-                    <p class="text-sm text-util-gray-01 m-0 mt-1 font-normal text-wrap">
-                        {{ projectData.name }}
-                    </p>
-                </div>
-                <div ng-if="showSidebar" class="my-4 border-t-1 border-util-gray-02"> </div>
+                <div class="my-4 border-t-1 border-util-gray-02"> </div>
                 <ul class="px-2 row-flex flex-direction-column gap-y-3 mb-0">
                     <li ng-repeat="item in allItems">
                         <a
@@ -107,6 +95,20 @@
                     </li>
                 </ul>
                 <div class="my-4 border-t-1 border-util-gray-02"> </div>
+                <div
+                    ng-if="showSidebar"
+                    class="px-4.5"
+                >
+                    <p class="text-xs text-util-gray-02 m-0 font-medium">
+                        Project name
+                    </p>
+                    <p class="text-sm text-util-gray-01 m-0 mt-1 font-normal text-wrap">
+                        {{ projectData.name }}
+                    </p>
+                </div>
+            </div>
+            <div>
+                <div class="my-4 border-t-1 border-util-gray-02"></div>
                 <ul class="px-2 row-flex flex-direction-column gap-y-3 mb-0">
                     <li class="sidebar-submenu row-flex flex-align-middle">
                         <a
@@ -120,25 +122,23 @@
                             <span ng-if="showSidebar" class="ml-3.2">Help</span>
                         </a>
                     </li>
+                </ul>
+                <div class="my-4 border-t-1 border-util-gray-02"></div>
+                <ul class="px-2 row-flex flex-direction-column gap-y-3 mb-0">
                     <li class="sidebar-submenu">
                         <a ng-href="{{getUrlFor('my-projects')}}" class="row-flex flex-align-middle text-base font-normal py-1 px-1 h-9 sidebar-title sidebar-submenu">
                             <span class="row-flex flex-space-center" style="width: 28px">
                                 <img src="/images/fi-clipboard.svg" class="icon-fill">
                             </span>
-                            <span ng-if="showSidebar" class="ml-3">My projects</span>
+                            <span ng-if="showSidebar" class="ml-3">My Projects</span>
                         </a>
                     </li>
-                </ul>
-            </div>
-            <div>
-                <div class="my-4 border-t-1 border-util-gray-02"></div>
-                <ul class="px-2 row-flex flex-direction-column gap-y-3 mb-0">
                     <li class="sidebar-submenu">
                         <a ng-href="{{ accountSettings }}" class="row-flex flex-align-middle text-base font-normal py-1 px-1 h-9 sidebar-title">
                             <span class="row-flex flex-space-center" style="width: 28px">
                                 <img src="/images/fi-user.svg" class="con-fill">
                             </span>
-                            <span ng-if="showSidebar" class="ml-3">Account settings</span>
+                            <span ng-if="showSidebar" class="ml-3">Account Settings</span>
                         </a>
                     </li>
                     <li class="cursor-pointer text-base font-normal py-1 px-1 h-9 sidebar-submenu">
