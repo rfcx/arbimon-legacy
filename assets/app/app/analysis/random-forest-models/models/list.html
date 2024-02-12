@@ -11,19 +11,19 @@
         </h1>
         <div class="row panel-body">
             <ul class="nav nav-tabs col-md-12">
+                <li class="nav-item" ng-class="{ active: currentTab === 'classifications' }">
+                    <a class="nav-link" href="" ng-click="toggleTab('classifications')">
+                        Classification Results
+                    </a>
+                </li>
                 <li class="nav-item" ng-class="{ active: currentTab === 'rfm' }">
                     <a class="nav-link" href="" ng-click="toggleTab('rfm')">
-                        RFM Results
+                        Training Results
                     </a>
                 </li>
                 <li class="nav-item" ng-class="{ active: currentTab === 'trainingSets' }">
                     <a class="nav-link" href="" ng-click="toggleTab('trainingSets')">
                         Training Sets
-                    </a>
-                </li>
-                <li class="nav-item" ng-class="{ active: currentTab === 'classifications' }">
-                    <a class="nav-link" href="" ng-click="toggleTab('classifications')">
-                        Classifications
                     </a>
                 </li>
             </ul>
