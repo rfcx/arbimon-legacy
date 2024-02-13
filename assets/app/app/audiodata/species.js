@@ -23,7 +23,7 @@ angular.module('a2.audiodata.species', [
     $scope.searchSpecies = { q: '' };
 
     $scope.isShowSearch = function () {
-        return ($scope.classes && $scope.classes.length && $scope.classes.length > 10) || $scope.searchSpecies.q.trim().length > 0
+        return ($scope.classes && $scope.classes.length && $scope.classes.length < 10) || $scope.searchSpecies.q.trim().length > 0
     }
 
     $scope.getProjectClasses = function() {
