@@ -14,7 +14,7 @@ angular.module('a2.directive.side-bar', [])
     $scope.submenuEl = null
     $scope.mainmenuEl = null
   
-    $scope.supportLink = 'https://support.rfcx.org/'
+    $scope.supportLink = 'http://help.arbimon.org/'
 
     $scope.isRfcx = function () {
         return a2UserPermit.isRfcx();
