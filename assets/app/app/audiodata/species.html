@@ -1,5 +1,5 @@
 <div class="row">
-    <h1 class="navbar-rfcx-link-m mt-0">
+    <h1 class="mt-0 ml-0">
         Species
     </h1>
     <div class="col-12 mt-4">
@@ -16,7 +16,9 @@
             tooltip-trigger="mouseenter">
             <i class="fa fa-trash mr-2"></i> Remove species
         </button>
-        <a2-table ng-if="!loading" rows="classes" data-checked="checked" no-select class="species-table">
+        <input ng-if="isShowSearch()" type="text" class="form-control mt-4" ng-model="searchSpecies.q" style="width: 380px;" placeholder="Search species by name" ng-change="onFilterChanged()">
+        <div class="mt-2 row-flex flex-direction-row"><loader ng-if="loading"></loader></div>
+        <a2-table ng-if="!loading && classes && classes.length" rows="classes" data-checked="checked" no-select class="species-table">
             <field title="Species" key="species_name" tdclass="is-v-middle width-25">
                 <span title="{{row.species_name}}" class="em">{{ row.species_name }}</span>
             </field>
@@ -26,52 +28,120 @@
             <field title="Sound" key="songtype_name" tdclass="is-v-middle width-15">
                 {{ row.songtype_name }}
             </field>
-            <field title="Templates" tdclass="is-v-middle width-45">
-                <div class="row-flex flex-direction-row flex-align-middle">
+            <field title="Project Templates" tdclass="is-v-middle width-45">
+                <div class="row-flex flex-direction-column flex-space-start">
 
-                    <div ng-repeat="template in row.templates" class="roi-thumbnail mr-3"
-                        ng-style="{'opacity': template.disabled ? 0.6 : 1}" style="border-color: transparent;background-color:transparent">
-                        <div ng-if="template.disabled" class="muted-layer-message" style="left: 10%; top: 30%"
-                            tooltip="Unable to visualize your template due to corrupted data"
-                        >
-                            <span class="glyphicon glyphicon-ban-circle fa-xs" style="color: white;" aria-hidden="true"></span>
-                            <span class="pl-1 fa-xs" style="color: white;">Unavailable</span>
+                    <div class="row-flex flex-direction-row flex-align-middle">
+                        <div ng-repeat="template in row.templates" class="roi-thumbnail mr-3"
+                            ng-style="{'opacity': template.disabled ? 0.6 : 1}" style="border-color: transparent;background-color:transparent">
+                            <div ng-if="template.disabled" class="muted-layer-message" style="left: 10%; top: 30%"
+                                tooltip="Unable to visualize your template due to corrupted data"
+                            >
+                                <span class="glyphicon glyphicon-ban-circle fa-xs" style="color: white;" aria-hidden="true"></span>
+                                <span class="pl-1 fa-xs" style="color: white;">Unavailable</span>
+                            </div>
+                            <img ng-src="{{template.uri}}" class="roi-img is-middle" style="border-radius: 4px;"/>
+                            <a class="roi-btn-bl cs-pointer" ng-click="playTemplateAudio(template, $event)"
+                                ng-class="{'row-disabled': template.disabled}" title="Play sound"
+                            >
+                                <i tooltip-placement="left"
+                                    tooltip-append-to-body="true"
+                                    class="fa fa-play cs-pointer"
+                                    style="font-size: 16px;">
+                                </i>
+                            </a>
+                            <a class="roi-btn-br cs-pointer" ng-click="showExtraTemplates(row.species_name, row.redirectLink)"
+                                title="View template"
+                            >
+                                <i tooltip-placement="left"
+                                    tooltip-append-to-body="true"
+                                    class="fa fa-external-link cs-pointer"
+                                    style="font-size: 16px;"></i>
+                                </i>
+                            </a>
                         </div>
-                        <img ng-src="{{template.uri}}" class="roi-img is-middle" style="border-radius: 4px;"/>
-                        <a class="roi-btn-bl cs-pointer" ng-click="playTemplateAudio(template, $event)"
-                            ng-class="{'row-disabled': template.disabled}"
-                        >
-                            <i tooltip-placement="left"
-                                tooltip-append-to-body="true"
-                                class="fa fa-play"
-                                style="font-size: 16px;">
-                            </i>
-                        </a>
-                        <a class="roi-btn-br" ng-href="{{getTemplateVisualizerUrl(template)}}"
-                            title="{{ template.disabled ? 'Unable to visualize your template due to corrupted data' : 'View in Visualizer' }}"
-                        >
-                            <i tooltip-placement="left"
-                                tooltip-append-to-body="true"
-                                ng-class="{'row-disabled': template.disabled }"
-                                class="fa fa-external-link">
-                            </i>
-                        </a>
                     </div>
-                    <p ng-if="row.extraTemplatesLink" class="row-flex flex-direction-column ml-2">
-                        <span>More templates available</span>
-                        <span>at <a ng-click="showExtraTemplates(row.species_name, row.extraTemplatesLink)" style="color: #ADFF2C; cursor:pointer;">Public Template Library</a></span>
+
+                    <p ng-if="row.extraTemplatesLink" class="row-flex flex-direction-column mt-4 mb-0">
+                        <span>More templates in <a ng-click="showExtraTemplates(row.species_name, row.extraTemplatesLink)" style="color: #ADFF2C; cursor:pointer;">Project Templates</a></span>
                     </p>
                     <p ng-if="!row.templates" class="mb-0">
                         No templates available for this species
-                        <span class="btn ml-1"
-                            popover-html="'There are no project or public templates for this species yet.<br />
-                            Learn how to create your own template <a href={{supportLink}}>[here]</a>.'"
-                            popover-trigger="click"
+                        <a id="popoverTemplates-{{row.id}}"
+                            class="btn ml-1"
+                            style="border:none;outline:none;"
+                            role="button"
+                            popover-html="'There are no project templates for this species.<br />
+                            <a class=\'text-frequency\' href={{supportLink}}>Learn how to create a template</a>'"
+                            popover-trigger="focus"
                             popover-append-to-body="true"
                             data-placement="right"
+                            tabindex="0"
                         >
                             <img src="/images/fi-info.svg">
-                        </span>
+                        </a>
+                    </p>
+                </div>
+            </field>
+            <field title="Public Templates" tdclass="is-v-middle width-45">
+                <div class="row-flex flex-direction-column flex-space-start">
+
+                    <div class="row-flex flex-direction-row flex-align-middle">
+                        <div ng-repeat="template in row.publicTemplates" class="roi-thumbnail mr-3"
+                            ng-style="{'opacity': template.disabled ? 0.6 : 1}" style="border-color: transparent;background-color:transparent">
+                            <div ng-if="template.disabled" class="muted-layer-message" style="left: 10%; top: 30%"
+                                tooltip="Unable to visualize your template due to corrupted data"
+                            >
+                                <span class="glyphicon glyphicon-ban-circle fa-xs" style="color: white;" aria-hidden="true"></span>
+                                <span class="pl-1 fa-xs" style="color: white;">Unavailable</span>
+                            </div>
+                            <img ng-src="{{template.uri}}" class="roi-img is-middle" style="border-radius: 4px;"/>
+                            <a class="roi-btn-bl cs-pointer" ng-click="playTemplateAudio(template, $event)"
+                                ng-class="{'row-disabled': template.disabled}" title="Play sound"
+                            >
+                                <i tooltip-placement="left"
+                                    tooltip-append-to-body="true"
+                                    class="fa fa-play cs-pointer"
+                                    style="font-size: 16px;">
+                                </i>
+                            </a>
+                            <a class="roi-btn-br cs-pointer" ng-click="showExtraTemplates(row.species_name, row.redirectPublicLink)"
+                                title="View template"
+                            >
+                                <i tooltip-placement="left"
+                                    tooltip-append-to-body="true"
+                                    class="fa fa-external-link cs-pointer"
+                                    style="font-size: 16px;">
+                                </i>
+                            </a>
+                            <a class="roi-btn-tr" ng-click="addTemplate(template)"
+                                title="Add templates to project" ng-disabled="isAdding === true || checkUserPermissions(template)"
+                                ng-style="{'opacity': isAdding === true || checkUserPermissions(template) ? 0.4 : 1, 'cursor': isAdding === true || checkUserPermissions(template) ? 'default' : 'pointer' }"
+                            >
+                                <i ng-if="template.isAddingTemplate" style="font-size: 16px;" class="fa fa-spinner fa-spin"></i>
+                                <i ng-if="!template.isAddingTemplate" style="font-size: 16px;" class="fa fa-plus"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <p ng-if="row.extraPublicTemplatesLink" class="row-flex flex-direction-column mb-0 mt-4">
+                        <span>More templates in <a ng-click="showExtraTemplates(row.species_name, row.extraPublicTemplatesLink)" style="color: #ADFF2C; cursor:pointer;">Public Templates</a></span>
+                    </p>
+                    <p ng-if="!row.publicTemplates" class="mb-0">
+                        No templates available for this species
+                        <a id="popoverPublicTemplates-{{row.id}}"
+                            class="btn ml-1"
+                            style="border:none;outline:none;"
+                            role="button"
+                            popover-html="'There are no public templates for this species.<br />
+                            <a class=\'text-frequency\' href={{supportLink}}>Learn how to contribute</a>'"
+                            popover-trigger="focus"
+                            popover-append-to-body="true"
+                            data-placement="right"
+                            tabindex="0"
+                        >
+                            <img src="/images/fi-info.svg">
+                        </a>
                     </p>
                 </div>
             </field>
@@ -81,7 +151,20 @@
                 This project does not have any species assigned
             </h3>
         </div>
-        <loader ng-hide="!loading"></loader>
     </div>
-
+    <div ng-if="!loading && classes && (pagination.totalItems > pagination.limit)" class="row">
+        <div class="col-sm-12">
+            <pagination total-items="pagination.totalItems"
+                ng-model="pagination.page"
+                ng-change="setCurrentPage()"
+                class="pagination-sm"
+                boundary-links="true"
+                max-size="10"
+                rotate="false"
+                num-pages="pagination.totalPages"
+                ng-disabled="loading"
+                items-per-page="pagination.limit">
+            </pagination>
+        </div>
+    </div>
 </div>

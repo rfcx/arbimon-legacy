@@ -10,6 +10,7 @@ const q = require('q');
 const config = require('../config');
 const dbpool = require('../utils/dbpool');
 const Recordings = require('./recordings');
+const { isArray } = require('lodash');
 
 let s3;
 
@@ -186,6 +187,45 @@ var Templates = {
             return { list: list, count: count }
         }
         else return { list: [], count: 0 }
+    },
+
+    getTemplatesByClass: async function (classIds) {
+        classIds = Array.isArray(classIds) ? classIds : [classIds];
+        let query = ''
+        classIds.forEach((cl, index) => {
+            let constraints = [];
+            let tables = ['templates T'];
+            let select = [
+                "T.`template_id` as id",
+                "T.`project_id` as project",
+                "T.`recording_id` as recording",
+                "T.`species_id` as species",
+                "T.`songtype_id` as songtype",
+                "T.`name`",
+                "CONCAT('https://"+config('aws').bucketName+".s3."+config('aws').region+".amazonaws.com/', T.`uri`) as `uri`",
+                "T.`x1`", "T.`y1`", "T.`x2`", "T.`y2`",
+                "T.`date_created`",
+                "T.user_id",
+                "T.disabled"
+            ];
+            constraints.push('T.deleted = 0 AND T.disabled = 0');
+            select.push(
+                "P.`name` as `project_name`, P.`url` as `project_url`",
+            );
+            tables.push('JOIN projects P ON T.project_id = P.project_id');
+            constraints.push('P.is_private = 0')
+            constraints.push('T.source_project_id IS NULL');
+            tables.push('JOIN project_classes pc ON pc.species_id = T.species_id AND pc.songtype_id = T.songtype_id');
+            constraints.push(`pc.project_class_id = ${cl}`);
+
+            const sql = `(SELECT ${select.join(', ')}
+                FROM ${tables.join(' ')}
+                WHERE ${constraints.join(' AND ')}
+                ORDER BY date_created ASC
+                LIMIT 3)`
+            query += index === classIds.length - 1 ? sql : `${sql} UNION `
+        })
+        return dbpool.query(query)
     },
 
     SCHEMA: joi.object().keys({

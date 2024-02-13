@@ -517,7 +517,8 @@ var Projects = {
         if(classId) {
             where_clause.push("pc.project_class_id = ?");
             params.push(classId);
-        } else if(options.ids){
+        }
+        if(options && options.ids){
             if(options.noProject){
                 params = [];
                 where_clause = [];
@@ -525,7 +526,10 @@ var Projects = {
             where_clause.push("pc.project_class_id IN (?)");
             params.push(options.ids);
         }
-        if (options.speciesId && options.songtypeId) {
+        if (options.q) {
+            where_clause.push(`sp.scientific_name LIKE '%${options.q}%'`);
+        }
+        if (options && options.speciesId && options.songtypeId) {
             where_clause.push('pc.species_id = ? AND pc.songtype_id = ?');
             params.push(options.speciesId);
             params.push(options.songtypeId);
@@ -551,13 +555,38 @@ var Projects = {
             "FROM " + from_clause.join("\n") + "\n" +
             "WHERE (" + where_clause.join(") AND (") + ")" +
             (groupby_clause.length ? "\nGROUP BY " + groupby_clause.join(",") : ""),
-            params)
+            params) +
+            (options.limit ? ("\nLIMIT " + Number(options.limit) + " OFFSET " + Number(options.offset)) : "")
         ).get(0).nodeify(callback);
     },
 
     getProjectClassesAsync: function(projectId, classId, options) {
         let getProjectClasses = util.promisify(this.getProjectClasses)
         return getProjectClasses(projectId, classId, options)
+    },
+
+    getProjectClassesWithPagination: async function (projectId, options) {
+        const count = options.q ? await Projects.totalProjectClasses(
+            projectId,
+            `JOIN species AS sp ON sp.species_id = pc.species_id
+             JOIN songtypes AS so ON so.songtype_id = pc.songtype_id
+             JOIN species_taxons AS st ON st.taxon_id = sp.taxon_id`,
+            ` AND sp.scientific_name LIKE '%${options.q}%'`
+        ) : await Projects.totalProjectClasses(projectId);
+        console.log('count', count)
+        if (count) {
+            const list =  await Projects.getProjectClassesAsync(projectId, null, options);
+            return { list: list, count: count }
+        }
+        else return { list: [], count: 0 }
+    },
+
+    totalProjectClasses: async function(projectId, join, where) {
+        let q = `SELECT count(*) as count
+        FROM project_classes as pc
+        ${join ? join : ''}
+        WHERE pc.project_id = ${dbpool.escape(projectId)} ${where ? where : ''}`;
+        return dbpool.query(q).get(0).get('count');
     },
 
     insertClass: function(project_class, callback) {

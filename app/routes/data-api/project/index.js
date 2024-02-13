@@ -261,16 +261,30 @@ router.post('/:projectUrl/info/update', function(req, res, next) {
 
 router.get('/:projectUrl/classes', function(req, res, next) {
     res.type('json');
-    var classId = req.query.class_id || null;
-    var options = {};
+    const classId = req.query.class_id || null;
+
+    let opts = {
+        q: req.query.q,
+        limit: req.query.limit,
+        offset: req.query.offset,
+    };
+
     if(req.query.validations) {
-        options.countValidations = true;
+        opts.countValidations = true;
     }
 
-    model.projects.getProjectClasses(req.project.project_id, classId, options, function(err, classes){
-        if(err) return next(err);
-        res.json(classes);
-    });
+    if (req.query.limit) {
+        model.projects.getProjectClassesWithPagination(req.project.project_id, opts)
+            .then(data => {
+                res.json(data);
+            }).catch(next);
+    }
+    else {
+        model.projects.getProjectClasses(req.project.project_id, classId, opts, function(err, classes){
+            if(err) return next(err);
+            res.json(classes);
+        });
+    }
 });
 
 router.post('/:projectUrl/class/add', function(req, res, next) {

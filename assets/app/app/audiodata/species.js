@@ -5,33 +5,145 @@ angular.module('a2.audiodata.species', [
     'humane'
 ])
 .controller('SpeciesCtrl', function($scope, Project, $modal, notify, a2UserPermit, a2Templates, a2AudioBarService, $localStorage, $state, $window) {
-    $scope.loading = true;
+    $scope.loading = false;
+    $scope.isAdding = false;
     $scope.selected = {};
     $scope.supportLink = 'https://support.rfcx.org/article/34-pattern-matching-template'
 
+    var timeout;
+
+    $scope.pagination = {
+        page: 1,
+        limit: 10,
+        offset: 0,
+        totalItems: 0,
+        totalPages: 0
+    }
+
+    $scope.searchSpecies = { q: '' };
+
+    $scope.isShowSearch = function () {
+        return ($scope.classes && $scope.classes.length && $scope.classes.length > 10) || $scope.searchSpecies.q.trim().length > 0
+    }
+
     $scope.getProjectClasses = function() {
-        Project.getClasses().then(classes => {
-            $scope.classes = classes;
+        $scope.loading = true;
+        const opts = {
+            q: $scope.searchSpecies.q,
+            limit: $scope.pagination.limit,
+            offset: $scope.pagination.offset * $scope.pagination.limit
+        }
+
+        Project.getClasses(opts).then(classes => {
+            $scope.pagination.totalItems = classes.count
+            $scope.classes = classes.list;
+            if ($scope.classes.length) {
+                a2Templates.getList({projectTemplates: true}).then(function(templates) {
+                    const redirectLink = '/project/' + Project.getUrl() + '/analysis/patternmatching?tab=projectTemplates'
+                    const classes = $scope.classes
+                    $scope.templates = templates;
+                    classes.forEach(cl => {
+                        const temp = $scope.templates.filter(template => template.songtype === cl.songtype && template.species === cl.species)
+                        if (temp && temp.length) {
+                            if (temp.length >= 3) {
+                                cl.extraTemplatesLink = redirectLink
+                            }
+                            cl.redirectLink = redirectLink
+                            cl.templates = temp.slice(0, 3);
+                        }
+                    })
+                });
+                const classIds = $scope.classes.map(function(cl) {
+                    return cl.id
+                });
+                a2Templates.getTemplatesByClass({classIds: classIds}).then(function(templates) {
+                    const redirectLink = '/project/' + Project.getUrl() + '/analysis/patternmatching?tab=publicTemplates'
+                    const classes = $scope.classes
+                    const publicTemplates = templates;
+                    classes.forEach(cl => {
+                        const temp = publicTemplates.filter(template => template.songtype === cl.songtype && template.species === cl.species)
+                        if (temp && temp.length) {
+                            if (temp.length >= 3) {
+                                cl.extraPublicTemplatesLink = redirectLink
+                            }
+                            cl.redirectPublicLink = redirectLink
+                            cl.publicTemplates = temp.slice(0, 3);
+                        }
+                    })
+                    $scope.classes = classes
+                    $scope.loading = false;
+                });
+            } else {
+                $scope.loading = false;
+            }
         });
 
-        a2Templates.getList({projectTemplates: true}).then(function(templates){
-            const classes = $scope.classes
-            $scope.templates = templates;
-            classes.forEach(cl => {
-                const temp = $scope.templates.filter(template => template.songtype === cl.songtype && template.species === cl.species)
-                if (temp && temp.length) {
-                    if (temp.length >= 3) {
-                        cl.extraTemplatesLink = '/project/' + Project.getUrl() + '/analysis/patternmatching?tab=publicTemplates'
-                    }
-                    cl.templates = temp.slice(0, 3);
-                }
-            })
-            $scope.classes = classes
-            $scope.loading = false;
-        });
     }
 
     $scope.getProjectClasses()
+
+    $scope.setCurrentPage = function() {
+        $scope.pagination.offset = $scope.pagination.page - 1;
+        $scope.getProjectClasses()
+    };
+
+    $scope.checkUserPermissions = function(publicTemplate) {
+        if (!a2UserPermit.can('manage templates')) {
+            return true;
+        }
+        else if (publicTemplate.project_url === Project.getUrl()) {
+            return true;
+        }
+        else return false
+    }
+
+    $scope.addTemplate = function(template) {
+        template.isAddingTemplate = true;
+        $scope.isAdding = true
+        a2Templates.add({
+            name : template.name,
+            recording : template.recording,
+            species : template.species,
+            songtype : template.songtype,
+            roi : {
+                x1: template.x1,
+                y1: template.y1,
+                x2: template.x2,
+                y2: template.y2,
+            },
+            source_project_id: template.project
+        }).then((function(data){
+            console.log('new template', data);
+            template.isAddingTemplate = false;
+            $scope.isAdding = false
+            if (data.id === 0) notify.error('The template already exists in the project templates.');
+            else if (data.error) notify.error('You do not have permission to manage templates');
+            else notify.log('The template is added to the project.');
+            $scope.resetPagination()
+            $scope.getProjectClasses()
+        })).catch((function(err){
+            console.log('err', err);
+            template.isAddingTemplate = false;
+            $scope.isAdding = false
+            notify.error(err);
+        }));
+    },
+
+    $scope.onFilterChanged = function () {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => {
+            if ($scope.searchSpecies.q.trim().length > 0 && $scope.searchSpecies.q.trim().length < 4) return
+            $scope.resetPagination()
+            $scope.getProjectClasses()
+        }, 1000);
+    }
+
+    $scope.resetPagination = function () {
+        $scope.pagination.page = 1
+        $scope.pagination.offset = 0
+        $scope.pagination.totalItems = 0
+        $scope.pagination.totalPages = 0
+    }
 
     Project.getInfo(function(info){
         $scope.project = info;
@@ -39,7 +151,7 @@ angular.module('a2.audiodata.species', [
 
     $scope.showExtraTemplates = function(species, extraTemplatesLink) {
         $scope.removeFromLocalStorage();
-        $localStorage.setItem('audiodata.templates',  JSON.stringify(species));
+        $localStorage.setItem('audiodata.templates', JSON.stringify(species));
         $window.location.href = extraTemplatesLink;
     }
 

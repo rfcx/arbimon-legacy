@@ -53,6 +53,13 @@ router.get('/', function(req, res, next) {
     }
 });
 
+router.get('/class', function(req, res, next) {
+    res.type('json');
+    model.templates.getTemplatesByClass(req.query.classIds).then(function(data) {
+        res.json(data);
+    }).catch(next);
+});
+
 router.get('/count', function(req, res, next) {
     res.type('json');
 
