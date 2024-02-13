@@ -6,9 +6,9 @@
         a2-scroll="controller.onScroll($event, $controller)"
         a2-scroll-on="window"
     >
-        <ol class="breadcrumb cs-pointer" style="width:280px;">
-            <li ui-sref="analysis.patternmatching">< Back to Pattern Matching results</li>
-        </ol>
+        <div class="cs-pointer mb-2" ui-sref="analysis.patternmatching">
+            < Back to Pattern Matching results
+        </div>
         <a2-scroll-anchor name="header" class="a2-page-header-placeholder" ng-class="{ 'is-active': controller.scrolledPastHeader }" />
         <div class="panel-body a2-page-header" ng-class="{ 'is-fixed': controller.scrolledPastHeader, 'scroll-past-header': controller.scrolledPastHeader }">
             <div class="row row-flex flex-self-align-top">
