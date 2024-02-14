@@ -676,7 +676,7 @@ var PatternMatchings = {
         PatternMatchings.combineDatetime(pmr);
         delete pmr.datetime;
         if (pmr.recording_id) {
-            pmr.url = `${config('hosts').publicUrl}/legacy-api/project/${projectUrl}/recordings/download/${pmr.recording_id}`;
+            pmr.url = `${config('hosts').publicUrl}/api/project/${projectUrl}/recordings/download/${pmr.recording_id}`;
             delete pmr.recording_id;
         }
         if (pmr.sample_rate) {
