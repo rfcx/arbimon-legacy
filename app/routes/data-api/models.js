@@ -1,25 +1,18 @@
 /* jshint node:true */
 "use strict";
 
-var util = require('util');
-var path = require('path');
+const express = require('express');
+const async = require('async');
+const AWS = require('aws-sdk');
+const q = require('q');
 
-var debug = require('debug')('arbimon2:route:models');
-var express = require('express');
-var request = require('request');
-var async = require('async');
-var AWS = require('aws-sdk');
-var q = require('q');
-
-var model = require('../../model');
-var pokeDaMonkey = require('../../utils/monkey');
-var scriptsFolder = __dirname+'/../../scripts/';
-var config = require('../../config');
-var dbpool = require('../../utils/dbpool');
-var APIError = require('../../utils/apierror');
-
-var router = express.Router();
-var s3 = new AWS.S3();
+const model = require('../../model');
+const pokeDaMonkey = require('../../utils/monkey');
+const config = require('../../config');
+const APIError = require('../../utils/apierror');
+const router = express.Router();
+const s3 = new AWS.S3();
+const { httpErrorHandler } = require('@rfcx/http-utils');
 
 // ------------------------ models routes -------------------------------------
 
@@ -157,53 +150,48 @@ router.get('/project/:projectUrl/models/:mid/delete', function(req, res, next) {
     });
 });
 
-router.get('/project/:projectUrl/models/:modelId/validation-list', function(req, res, next) {
+router.get('/project/:projectUrl/models/:modelId/validation-list', async function(req, res, next) {
     res.type('json');
-
-    if(!req.params.modelId)
-        return res.json({ error: 'missing values' });
-
-    model.projects.modelValidationUri(req.params.modelId, function(err, row) {
-        if(err) return next(err);
-        
-        if(!row.length) {
+    if (!req.params.modelId) return res.json({ error: 'missing values' });
+    return model.projects.modelValidationUri(req.params.modelId, async function (err, row) {
+        if (!row.length) {
             return res.sendStatus(404);
         }
-        
-        var validationUri = row[0].uri;
+        let validationUri = row[0].uri;
         validationUri = validationUri.replace('.csv','_vals.csv');
+        await getModelsData(validationUri)
+            .then(data => {
+                res.json({ validations: data });
+            })
+            .catch(e => httpErrorHandler(req, res, 'Failed get validations')(e))
+    })
+});
+
+async function getModelsData(validationUri) {
+    return new Promise(async function (resolve, reject) {
         s3.getObject({
             Key: validationUri,
             Bucket: config('aws').bucketName
-        },
-        function(err, data) {
-            if(err) {
-                if(err.code == 'NoSuchKey') return res.json({ err: "list not found"});
-                else return next(err);
+        }, async function(err, data) {
+            if (err) {
+                if (err.code == 'NoSuchKey') return reject('Validation list not found');
+                else return reject('Failed get validations');
             }
-            var outData = String(data.Body);
-
-            var lines = outData.split('\n');
-            
-            lines = lines.filter(function(line) {
-                return line !== '';
-            });
-
-            async.map(lines, function(line, callback) {
-                var items = line.split(',');
-                var prec = items[1].trim(' ') == 1 ? 'yes' :'no';
-                var modelprec = items[2].trim(' ') == 'NA' ? '-' : ( items[2].trim(' ') == 1 ? 'yes' :'no');
-                var entryType = items[3] ? items[3].trim(' '):'';
-                
-                model.recordings.recordingInfoGivenUri(items[0], function(err, recData) {
-                    if(err) return callback(err);
-                    
-                    if(!recData.length) return callback(null, false);
-                    
-                    var recUriThumb = recData[0].uri.replace('.wav','.thumbnail.png');
+            const outData = String(data.Body);
+            let lines = outData.split('\n');
+            lines = lines.filter(line => { return line !== ''; })
+            let rowSent = []
+            for (let line of lines) {
+                const items = line.split(',');
+                const prec = items[1].trim(' ') == 1 ? 'yes' :'no';
+                const modelprec = items[2].trim(' ') == 'NA' ? '-' : ( items[2].trim(' ') == 1 ? 'yes' :'no');
+                const entryType = items[3] ? items[3].trim(' '):'';
+                const recData = await model.recordings.recordingInfoGivenUri(items[0])
+                if(recData && recData.length) {
+                    let recUriThumb = recData[0].uri.replace('.wav','.thumbnail.png');
                     recUriThumb = recUriThumb.replace('.flac','.thumbnail.png');
 
-                    var rowSent = {
+                    rowSent.push({
                         site: recData[0].site,
                         date: recData[0].date,
                         presence: prec,
@@ -211,27 +199,14 @@ router.get('/project/:projectUrl/models/:modelId/validation-list', function(req,
                         id: recData[0].id,
                         url: 'https://' + config('aws').bucketName + '.s3.' + config('aws').region + '.amazonaws.com/' + recUriThumb,
                         type: entryType
-                    };
-                    
-                    callback(null, rowSent);
-                });
-
-            },
-            function(err, results) {
-                if(err) return next(err);
-                
-                var vals = results.filter(function(vali) {
-                    return !!vali;
-                });
-                
-                debug('model validations:', vals);
-                res.json({ validations: vals });
-            });
-
+                    })
+                }
+            }
+            const vals = rowSent.filter((vali) => { return !!vali; });
+            resolve(vals)
         });
-    });
-
-});
+    })
+}
 
 router.get('/project/:projectUrl/models/:modelId/training-vector/:recId', function(req, res, next) {
     res.type('json');

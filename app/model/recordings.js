@@ -1255,15 +1255,15 @@ var Recordings = {
         Recordings.fetchSpectrogramTiles(recording, callback);
     },
 
-    recordingInfoGivenUri : function(uri, callback){
-        var q = "SELECT r.`recording_id` AS id, \n " +
+    recordingInfoGivenUri : async function(uri){
+        const q = "SELECT r.`recording_id` AS id, \n " +
                 "       date_format(r.`datetime`,'%m-%d-%Y %H:%i') as date, \n"+
                 "       s.`name` site, \n"+
                 "       r.`uri` \n" +
                 "FROM `recordings` r\n"+
                 "JOIN `sites` s ON s.`site_id` = r.`site_id`\n"+
                 "WHERE r.`uri` = " + dbpool.escape(uri);
-        queryHandler(q, callback);
+        return dbpool.query(q);
     },
 
     /** finds a set of recordings given some search criteria.
