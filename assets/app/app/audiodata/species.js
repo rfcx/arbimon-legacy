@@ -7,6 +7,7 @@ angular.module('a2.audiodata.species', [
 .controller('SpeciesCtrl', function($scope, Project, $modal, notify, a2UserPermit, a2Templates, a2AudioBarService, $localStorage, $state, $window) {
     $scope.loading = false;
     $scope.isAdding = false;
+    $scope.isRemoving = false;
     $scope.selected = {};
     $scope.supportLink = 'https://support.rfcx.org/article/34-pattern-matching-template'
 
@@ -90,7 +91,17 @@ angular.module('a2.audiodata.species', [
         else if (publicTemplate.project_url === Project.getUrl()) {
             return true;
         }
-        else return false
+        const cl = $scope.classes.find(c => c.species === publicTemplate.species && c.songtype === publicTemplate.songtype)
+        var isDuplicate = false
+        if (cl && cl.templates && cl.templates.length) {
+            cl.templates.forEach(template => {
+                if (template.recording === publicTemplate.recording && template.x1 === publicTemplate.x1 && template.x2 === publicTemplate.x2
+                        && template.y1 === publicTemplate.y1 && template.y2 === publicTemplate.y2) {
+                            isDuplicate = true
+                        }
+            })
+        }
+        return isDuplicate
     }
 
     $scope.addTemplate = function(template) {
@@ -133,9 +144,6 @@ angular.module('a2.audiodata.species', [
     }
 
     $scope.deleteTemplate = function(template) {
-        template.isRemovingTemplate = true;
-        $scope.isRemoving = true
-
         $scope.popup = {
             title: 'Delete template',
             messages: ['Are you sure you want to delete this template?'],
@@ -149,11 +157,12 @@ angular.module('a2.audiodata.species', [
         });
 
         modalInstance.result.then(function(confirmed) {
+            template.isRemovingTemplate = true;
+            $scope.isRemoving = true
             if(confirmed){
                 return a2Templates.delete(template.id).then(function() {
                     template.isRemovingTemplate = false;
                     $scope.isRemoving = false;
-                    $scope.resetPagination()
                     $scope.getProjectClasses()
                 });
             }
