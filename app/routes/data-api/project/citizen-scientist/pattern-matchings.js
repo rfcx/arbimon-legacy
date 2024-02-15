@@ -313,9 +313,7 @@ router.post('/:patternMatching/remove', function(req, res, next) {
 
     q.resolve().then(function(){
         if(!req.haveAccess(project_id, "manage pattern matchings")){
-            throw new APIError({
-                error: "You don't have permission to delete pattern matchings"
-            });
+            throw new Error("You don't have permission to delete pattern matchings");
         }
     }).then(function(){
         return model.patternMatchings.delete(req.params.patternMatching | 0);

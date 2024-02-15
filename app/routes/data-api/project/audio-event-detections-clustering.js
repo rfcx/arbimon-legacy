@@ -145,9 +145,7 @@ router.post('/:aedJobId/remove', function(req, res, next) {
 
     q.resolve().then(function(){
         if(!req.haveAccess(project_id, 'manage AED and Clustering job')){
-            throw new Error({
-                error: "You don't have permission to remove Audio Event Detection job"
-            });
+            throw new Error("You don't have permission to remove Audio Event Detection job");
         }
     }).then(function(){
         return model.AudioEventDetectionsClustering.delete(job_id);
