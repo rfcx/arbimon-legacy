@@ -212,8 +212,8 @@ angular.module('a2.settings',[
         const user = $scope.users[$index]
         $scope.popup = {
             messages : message.concat(user.firstname + ' ' + user.lastname + ' ' + '(' + user.email + ')'),
-            btnOk: "Yes, do it!",
-            btnCancel: "No",
+            btnOk: "Delete",
+            btnCancel: "Cancel",
         };
 
         var modalInstance = $modal.open({

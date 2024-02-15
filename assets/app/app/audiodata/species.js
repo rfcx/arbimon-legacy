@@ -22,10 +22,6 @@ angular.module('a2.audiodata.species', [
 
     $scope.searchSpecies = { q: '' };
 
-    $scope.isShowSearch = function () {
-        return ($scope.classes && $scope.classes.length && $scope.classes.length < 10) || $scope.searchSpecies.q.trim().length > 0
-    }
-
     $scope.getProjectClasses = function() {
         $scope.loading = true;
         const opts = {
@@ -34,15 +30,15 @@ angular.module('a2.audiodata.species', [
             offset: $scope.pagination.offset * $scope.pagination.limit
         }
 
-        Project.getClasses(opts).then(classes => {
-            $scope.pagination.totalItems = classes.count
-            $scope.classes = classes.list;
-            if ($scope.classes.length) {
+        Project.getClasses(opts).then(data => {
+            $scope.pagination.totalItems = data.count
+            const classes = data.list;
+            if (classes.length) {
                 a2Templates.getList({projectTemplates: true}).then(function(templates) {
                     const redirectLink = '/project/' + Project.getUrl() + '/analysis/patternmatching?tab=projectTemplates'
-                    const classes = $scope.classes
+                    const cl = classes
                     $scope.templates = templates;
-                    classes.forEach(cl => {
+                    cl.forEach(cl => {
                         const temp = $scope.templates.filter(template => template.songtype === cl.songtype && template.species === cl.species)
                         if (temp && temp.length) {
                             if (temp.length >= 3) {
@@ -53,14 +49,14 @@ angular.module('a2.audiodata.species', [
                         }
                     })
                 });
-                const classIds = $scope.classes.map(function(cl) {
+                const classIds = classes.map(function(cl) {
                     return cl.id
                 });
                 a2Templates.getTemplatesByClass({classIds: classIds}).then(function(templates) {
                     const redirectLink = '/project/' + Project.getUrl() + '/analysis/patternmatching?tab=publicTemplates'
-                    const classes = $scope.classes
+                    const cl = classes
                     const publicTemplates = templates;
-                    classes.forEach(cl => {
+                    cl.forEach(cl => {
                         const temp = publicTemplates.filter(template => template.songtype === cl.songtype && template.species === cl.species)
                         if (temp && temp.length) {
                             if (temp.length >= 3) {
@@ -70,8 +66,8 @@ angular.module('a2.audiodata.species', [
                             cl.publicTemplates = temp.slice(0, 3);
                         }
                     })
-                    $scope.classes = classes
                     $scope.loading = false;
+                    $scope.classes = classes
                 });
             } else {
                 $scope.loading = false;
@@ -211,7 +207,7 @@ angular.module('a2.audiodata.species', [
         });
     };
 
-    $scope.del = function() {
+    $scope.removeSpecies = function() {
         if(!$scope.checked || !$scope.checked.length)
             return;
 
@@ -229,8 +225,8 @@ angular.module('a2.audiodata.species', [
 
         $scope.popup = {
             messages: message.concat(message2, speciesClasses),
-            btnOk: "Yes, do it!",
-            btnCancel: "No",
+            btnOk: "Delete",
+            btnCancel: "Cancel",
         };
 
         var modalInstance = $modal.open({
