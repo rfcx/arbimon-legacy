@@ -19,16 +19,16 @@
         <input ng-if="isShowSearch()" type="text" class="form-control mt-4" ng-model="searchSpecies.q" style="width: 380px;" placeholder="Search species by name" ng-change="onFilterChanged()">
         <div class="mt-2 row-flex flex-direction-row"><loader ng-if="loading"></loader></div>
         <a2-table ng-if="!loading && classes && classes.length" rows="classes" data-checked="checked" no-select class="species-table">
-            <field title="Species" key="species_name" tdclass="is-v-middle width-25">
-                <span title="{{row.species_name}}" class="em">{{ row.species_name }}</span>
+            <field title="Species" key="species_name" tdclass="is-v-middle width-20">
+                <span title="{{row.species_name}}" class="em hidelongtext">{{ row.species_name }}</span>
             </field>
             <field title="Taxon" key="taxon" tdclass="is-v-middle width-15">
-                <span title="{{ row.taxon }}" class="em">{{ row.taxon }}</span>
+                <span class="hidelongtext" title="{{ row.taxon }}">{{ row.taxon }}</span>
             </field>
-            <field title="Sound" key="songtype_name" tdclass="is-v-middle width-15">
-                {{ row.songtype_name }}
+            <field title="Sound" key="songtype_name" tdclass="is-v-middle width-18">
+                <span class="hidelongtext" title="{{ row.songtype_name }}">{{ row.songtype_name }}</span>
             </field>
-            <field title="Project Templates" tdclass="is-v-middle width-45">
+            <field title="Project Templates" tdclass="is-v-middle width-35">
                 <div class="row-flex flex-direction-column flex-space-start">
 
                     <div class="row-flex flex-direction-row flex-align-middle">
@@ -65,7 +65,7 @@
                     <p ng-if="row.extraTemplatesLink" class="row-flex flex-direction-column mt-4 mb-0">
                         <span>More templates in <a ng-click="showExtraTemplates(row.species_name, row.extraTemplatesLink)" style="color: #ADFF2C; cursor:pointer;">Project Templates</a></span>
                     </p>
-                    <p ng-if="!row.templates" class="mb-0">
+                    <p ng-if="!row.templates" class="mb-0 hidelongtext">
                         No templates available for this species
                         <a id="popoverTemplates-{{row.id}}"
                             class="btn ml-1"
@@ -83,7 +83,7 @@
                     </p>
                 </div>
             </field>
-            <field title="Public Templates" tdclass="is-v-middle width-45">
+            <field title="Public Templates" tdclass="is-v-middle width-35">
                 <div class="row-flex flex-direction-column flex-space-start">
 
                     <div class="row-flex flex-direction-row flex-align-middle">
@@ -114,9 +114,9 @@
                                     style="font-size: 16px;">
                                 </i>
                             </a>
-                            <a class="roi-btn-tr" ng-click="addTemplate(template)"
+                            <a class="btn roi-btn-tr" ng-click="addTemplate(template)" style="right:0"
                                 title="Add templates to project" ng-disabled="isAdding === true || checkUserPermissions(template)"
-                                ng-style="{'opacity': isAdding === true || checkUserPermissions(template) ? 0.4 : 1, 'cursor': isAdding === true || checkUserPermissions(template) ? 'default' : 'pointer' }"
+                                ng-style="{'row-disabled': isAdding === true || checkUserPermissions(template)}"
                             >
                                 <i ng-if="template.isAddingTemplate" style="font-size: 16px;" class="fa fa-spinner fa-spin"></i>
                                 <i ng-if="!template.isAddingTemplate" style="font-size: 16px;" class="fa fa-plus"></i>
@@ -127,14 +127,13 @@
                     <p ng-if="row.extraPublicTemplatesLink" class="row-flex flex-direction-column mb-0 mt-4">
                         <span>More templates in <a ng-click="showExtraTemplates(row.species_name, row.extraPublicTemplatesLink)" style="color: #ADFF2C; cursor:pointer;">Public Templates</a></span>
                     </p>
-                    <p ng-if="!row.publicTemplates" class="mb-0">
+                    <p ng-if="!row.publicTemplates" class="mb-0 hidelongtext">
                         No templates available for this species
                         <a id="popoverPublicTemplates-{{row.id}}"
                             class="btn ml-1"
                             style="border:none;outline:none;"
                             role="button"
-                            popover-html="'There are no public templates for this species.<br />
-                            <a class=\'text-frequency\' href={{supportLink}}>Learn how to contribute</a>'"
+                            popover-html="'There are no public templates for this species.'"
                             popover-trigger="focus"
                             popover-append-to-body="true"
                             data-placement="right"
