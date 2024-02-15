@@ -28,7 +28,7 @@ async function uploadAsStream ({ filePath, Bucket, Key, ContentType }, { clientT
   return s3.upload({ Bucket, Key, ContentType, Body }).promise()
 }
 
-async function getSignedUrl ({ Bucket, Key, Expires = 86400 }, { clientType = 'arbimon' }) {
+async function getSignedUrl ({ Bucket, Key, Expires = 604800 }, { clientType = 'arbimon' }) {
   const s3 = getClient(clientType)
   return new Promise((resolve, reject) => {
     s3.getSignedUrl('getObject', { Bucket, Key, Expires }, (err, data) => {
