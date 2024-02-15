@@ -1941,7 +1941,7 @@ var Recordings = {
                 async function getData () {
                     let results = [];
                     for (let builder in summaryBuilders) {
-                        const baseSql = summaryBuilders[builder].getSQL().replace(';', '')
+                        const baseSql = summaryBuilders[builder].getSQL().replace(';', '').replace('SELECT', 'SELECT /*+ MAX_EXECUTION_TIME(840000) */')
                         const sql = `${baseSql} LIMIT ${chunkSize} OFFSET ${chunkSize * index};`
                         const queryResult = await dbpool.query({ sql, typecast: sqlutil.parseUtcDatetime })
                         results.push(...queryResult)
