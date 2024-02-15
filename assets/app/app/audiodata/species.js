@@ -125,10 +125,46 @@ angular.module('a2.audiodata.species', [
         }));
     },
 
+    $scope.checkDeleteTemplatePermissions = function(template) {
+        if (!a2UserPermit.can('manage templates')) {
+            return true;
+        }
+        else return false
+    }
+
+    $scope.deleteTemplate = function(template) {
+        template.isRemovingTemplate = true;
+        $scope.isRemoving = true
+
+        $scope.popup = {
+            title: 'Delete template',
+            messages: ['Are you sure you want to delete this template?'],
+            btnOk: 'Delete',
+            btnCancel: 'Cancel',
+        };
+
+        var modalInstance = $modal.open({
+            templateUrl: '/common/templates/pop-up.html',
+            scope: $scope
+        });
+
+        modalInstance.result.then(function(confirmed) {
+            if(confirmed){
+                return a2Templates.delete(template.id).then(function() {
+                    template.isRemovingTemplate = false;
+                    $scope.isRemoving = false;
+                    $scope.resetPagination()
+                    $scope.getProjectClasses()
+                });
+            }
+        });
+
+    }
+
     $scope.onFilterChanged = function () {
         clearTimeout(timeout);
         timeout = setTimeout(() => {
-            if ($scope.searchSpecies.q.trim().length > 0 && $scope.searchSpecies.q.trim().length < 4) return
+            if ($scope.searchSpecies.q.trim().length > 0 && $scope.searchSpecies.q.trim().length < 3) return
             $scope.resetPagination()
             $scope.getProjectClasses()
         }, 1000);
