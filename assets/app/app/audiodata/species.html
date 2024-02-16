@@ -70,25 +70,27 @@
                                 </a>
                             </div>
                         </div>
-                        <p ng-if="row.extraTemplatesLink" class="row-flex flex-direction-column mt-4 mb-0">
-                            <span>More templates in <a ng-click="showExtraTemplates(row.species_name, row.extraTemplatesLink)" style="color: #ADFF2C; cursor:pointer;">Project Templates</a></span>
-                        </p>
-                        <p ng-if="!row.templates" class="mb-0 hidelongtext">
-                            No templates available for this species
-                            <a id="popoverTemplates-{{row.id}}"
-                                class="btn ml-1"
-                                style="border:none;outline:none;"
-                                role="button"
-                                popover-html="'There are no project templates for this species.<br />
-                                <a class=\'text-frequency\' href={{supportLink}}>Learn how to create a template</a>'"
-                                popover-trigger="focus"
-                                popover-append-to-body="true"
-                                data-placement="right"
-                                tabindex="0"
-                            >
-                                <img src="/images/fi-info.svg">
-                            </a>
-                        </p>
+                        <div ng-class="{'h-35': row.publicTemplates && row.extraPublicTemplatesLink}">
+                            <p ng-if="row.extraTemplatesLink" class="row-flex flex-direction-column mt-4 mb-0">
+                                <span>More templates in <a ng-click="showExtraTemplates(row.species_name, row.extraTemplatesLink)" style="color: #ADFF2C; cursor:pointer;">Project Templates</a></span>
+                            </p>
+                            <p ng-if="!row.templates" class="mb-0 hidelongtext">
+                                No templates available for this species
+                                <a id="popoverTemplates-{{row.id}}"
+                                    class="btn ml-1"
+                                    style="border:none;outline:none;"
+                                    role="button"
+                                    popover-html="'There are no project templates for this species.<br />
+                                    <a class=\'text-frequency\' href={{supportLink}}>Learn how to create a template</a>'"
+                                    popover-trigger="focus"
+                                    popover-append-to-body="true"
+                                    data-placement="right"
+                                    tabindex="0"
+                                >
+                                    <img src="/images/fi-info.svg">
+                                </a>
+                            </p>
+                        </div>
                     </div>
                 </field>
                 <field title="Public Templates" tdclass="is-v-middle width-35">
@@ -131,24 +133,26 @@
                                 </a>
                             </div>
                         </div>
-                        <p ng-if="row.extraPublicTemplatesLink" class="row-flex flex-direction-column mb-0 mt-4">
-                            <span>More templates in <a ng-click="showExtraTemplates(row.species_name, row.extraPublicTemplatesLink)" style="color: #ADFF2C; cursor:pointer;">Public Templates</a></span>
-                        </p>
-                        <p ng-if="!row.publicTemplates" class="mb-0 hidelongtext">
-                            No templates available for this species
-                            <a id="popoverPublicTemplates-{{row.id}}"
-                                class="btn ml-1"
-                                style="border:none;outline:none;"
-                                role="button"
-                                popover-html="'There are no public templates for this species.'"
-                                popover-trigger="focus"
-                                popover-append-to-body="true"
-                                data-placement="right"
-                                tabindex="0"
-                            >
-                                <img src="/images/fi-info.svg">
-                            </a>
-                        </p>
+                        <div ng-class="{'h-35': row.templates && row.extraTemplatesLink}">
+                            <p ng-if="row.extraPublicTemplatesLink" class="row-flex flex-direction-column mb-0 mt-4">
+                                <span>More templates in <a ng-click="showExtraTemplates(row.species_name, row.extraPublicTemplatesLink)" style="color: #ADFF2C; cursor:pointer;">Public Templates</a></span>
+                            </p>
+                            <p ng-if="!row.publicTemplates" class="mb-0 hidelongtext">
+                                No templates available for this species
+                                <a id="popoverPublicTemplates-{{row.id}}"
+                                    class="btn ml-1"
+                                    style="border:none;outline:none;"
+                                    role="button"
+                                    popover-html="'There are no public templates for this species.'"
+                                    popover-trigger="focus"
+                                    popover-append-to-body="true"
+                                    data-placement="right"
+                                    tabindex="0"
+                                >
+                                    <img src="/images/fi-info.svg">
+                                </a>
+                            </p>
+                        </div>
                     </div>
                 </field>
             </a2-table>
