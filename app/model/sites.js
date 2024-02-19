@@ -854,8 +854,11 @@ var Sites = {
                     if (validationIds.length) {
                         await this.resetRecValidationById(project_id, validationIds.map(v => v.recording_validation_id))
                     }
-                    const recIds = await this.getRecordingIdsbySite(site_id)
-                    await this.deleteRecordingInAnalyses(recIds.map(rec => rec.recording_id))
+                    const recIdsBySite = await this.getRecordingIdsbySite(site_id)
+                    const recIds = recIdsBySite.map(rec => rec.recording_id)
+                    if (recIds && recIds.length) {
+                        await this.deleteRecordingInAnalyses(recIdsBySite.map(rec => rec.recording_id))
+                    }
                     await this.removeFromProjectAsync(site_id, project_id, db);
                     if (rfcxConfig.coreAPIEnabled) {
                         await this.deleteInCoreAPI(site_id, idToken)

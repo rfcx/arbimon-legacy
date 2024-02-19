@@ -32,7 +32,7 @@
                         <table class="table">
                             <tr>
                                 <td><b>Name</b></td>
-                                <td><a ng-click="$close()" ng-href="/project/{{ project.url }}/analysis/random-forest-models/model/{{model.id}}">{{model.name}}</a></td>
+                                <td class="hidelongtext" style="white-space:nowrap"><a title="{{model.name}}" ng-click="$close()" ng-href="/project/{{ project.url }}/analysis/random-forest-models/model/{{model.id}}">{{model.name}}</a></td>
                             </tr>
                             <tr>
                                 <td><b>Species</b></td>
@@ -67,7 +67,9 @@
 
             <div class="row">
                 <div class="col-sm-12">
-                    <c3-chart data-columns="results" width="300" height="300" type="donut"></c3-chart>
+                    <div class="row-flex flex-space-center">
+                        <c3-chart data-columns="results" width="300" height="300" type="donut"></c3-chart>
+                    </div>
                     <table class="table">
                         <tr>
                             <td><b>Absent</b></td>

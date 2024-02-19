@@ -21,7 +21,7 @@ angular.module('a2.analysis.random-forest-models.models', [
         templateUrl: '/app/analysis/random-forest-models/models/modelinfo.html'
     });
 })
-.controller('ModelsCtrl', function($scope, $modal, $filter, ngTableParams, Project, a2Models, JobsData, $location, notify, a2UserPermit, $state) {
+.controller('ModelsCtrl', function($scope, $modal, $filter, ngTableParams, Project, a2Playlists, a2Models, JobsData, $location, notify, a2UserPermit, $state, $localStorage, $window) {
     $scope.infoInfo = "Loading...";
     $scope.showInfo = true;
     $scope.loading = true;
@@ -257,6 +257,81 @@ angular.module('a2.analysis.random-forest-models.models', [
     if (isNewJob) {
         $scope.newModel()
     }
+
+    $scope.createNewClassification = function () {
+        if(!a2UserPermit.can('manage models and classification')) {
+            notify.error('You do not have permission to create classifications');
+            return;
+        }
+
+        var modalInstanceClassification = $modal.open({
+            templateUrl: '/app/analysis/random-forest-models/classification/createnewclassification.html',
+            controller: 'CreateNewClassificationInstanceCtrl',
+            resolve: {
+                data: function($q){
+                    var d = $q.defer();
+                    Project.getModels(function(err, data){
+                        if(err){
+                            console.error(err);
+                        }
+
+                        d.resolve(data || []);
+
+                    });
+                    return d.promise;
+                },
+                playlists:function($q){
+                    var d = $q.defer();
+                    a2Playlists.getList().then(function(data) {
+                        d.resolve(data || []);
+                    });
+                    return d.promise;
+                },
+                projectData:function()
+                {
+                    return $scope.projectData;
+                }
+            }
+        });
+
+        modalInstanceClassification.result.then(function (result) {
+            data = result;
+            if (data.ok) {
+                JobsData.updateJobs();
+                notify.log("Your new classification is waiting to start processing.<br> Check its status on <b>Jobs</b>.");
+            }
+
+            if (data.error) {
+                notify.error("Error: "+data.error);
+            }
+
+            if (data.url) {
+                $location.path(data.url);
+            }
+        });
+    };
+
+    $scope.getTrainingSetList = function() {
+        $localStorage.setItem('audiodata.trainingSets', true);
+        $window.location.href = '/project/'+Project.getUrl()+'/analysis/random-forest-models/models?tab=trainingSets';
+    }
+
+
+    $scope.addNewTrainingSet = function() {
+        if(!a2UserPermit.can('manage training sets')) {
+            notify.error('You do not have permission to create training sets');
+            return;
+        }
+
+        var modalInstance = $modal.open({
+            templateUrl : '/app/visualizer/layers/training-data/add_tset_modal.html',
+            controller  : 'a2VisualizerAddTrainingSetModalController'
+        });
+
+        modalInstance.result.then(function (result) {
+            $scope.getTrainingSetList()
+        });
+    };
 })
 .controller('NewModelInstanceCtrl', function($scope, $modalInstance, a2Models, Project, projectData, types, trainings, notify, $http) {
     $scope.types = types;
@@ -816,5 +891,68 @@ angular.module('a2.analysis.random-forest-models.models', [
         scope : { },
         controller : 'ClassificationCtrl',
         templateUrl: '/app/analysis/random-forest-models/classification/list.html'
+    };
+})
+
+.controller('CreateNewClassificationInstanceCtrl', function($scope, $modalInstance, a2Classi, data, projectData, playlists) {
+    $scope.data = data;
+    $scope.projectData = projectData;
+    $scope.recselected = '';
+    $scope.showselection = false;
+    $scope.playlists = playlists;
+    $scope.nameMsg = '';
+    $scope.datas = {
+        name : '' ,
+        classifier: '',
+        playlist:''
+    };
+
+
+    $scope.$watch('recselected', function() {
+        if ($scope.recselected === 'selected') {
+            $scope.showselection = true;
+        }
+        else {
+            $scope.showselection = false;
+        }
+    });
+
+
+    $scope.ok = function () {
+        $scope.nameMsg = '';
+        var url = $scope.projectData.url;
+        $scope.all = 0;
+        $scope.selectedSites = [];
+
+        if(!$scope.datas.classifier.enabled) return;
+
+        var classiData = {
+            n: $scope.datas.name,
+            c: $scope.datas.classifier.model_id,
+            a: $scope.all,
+            s: $scope.selectedSites.join(),
+            p: $scope.datas.playlist
+        };
+
+        a2Classi.create(classiData, function(data) {
+            if (data.name) {
+                $scope.nameMsg = 'Name exists';
+            }
+            else {
+                $modalInstance.close( data );
+            }
+        });
+    };
+
+    $scope.buttonEnable = function () {
+        return  !(
+            typeof $scope.datas.playlist !== 'string' &&
+            $scope.datas.name.length &&
+            typeof $scope.datas.classifier !== 'string'
+        );
+    };
+
+    $scope.cancel = function (url) {
+        $modalInstance.close({url: url});
     };
 })

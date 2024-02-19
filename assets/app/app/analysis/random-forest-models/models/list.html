@@ -3,10 +3,22 @@
         <h1 class="mt-0" style="margin-bottom: 24px;">
             Random Forest Models
             <a class="btn btn-sm btn-default ml-3"
+                tooltip="Create New Classification Job"
+                tooltip-placement="right"
+                ng-click="createNewClassification() | trackEvent:'Analysis-Classification-List':'Create new classification'">
+                <i class="fa fa-plus"></i> New Classification Job
+            </a>
+            <a class="btn btn-sm btn-default ml-3"
                 tooltip="Create New Model"
                 tooltip-placement="right"
                 ng-click="newModel() | trackEvent:'Analysis-Model list':'new model'">
-                <i class="fa fa-plus"></i> New Job
+                <i class="fa fa-plus"></i> New RFM Job
+            </a>
+            <a class="btn btn-sm btn-default ml-3"
+                tooltip="Create New Training Job"
+                tooltip-placement="right"
+                ng-click="addNewTrainingSet() | trackEvent:trackEvent:'Audiodata-Training Sets':'add_new_tset'">
+                <i class="fa fa-plus"></i> New Training Set
             </a>
         </h1>
         <div class="row panel-body">

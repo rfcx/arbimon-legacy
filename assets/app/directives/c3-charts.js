@@ -6,7 +6,6 @@ angular.module('c3-charts', [])
             columns: '='
         },
         link: function(scope, element, attrs) {
-            console.log('corri');
             $window.chart = scope.chart = $window.c3.generate({
                 bindto: element[0],
                 size: {
