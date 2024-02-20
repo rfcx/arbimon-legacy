@@ -114,6 +114,12 @@
                         </ui-select-choices>
                     </ui-select>
                 </div>
+                <div ng-if="!loadingTemplates.value" class="flex" style="align-items: center; display: flex; justify-content: flex-end;">
+                    <span>
+                        Project templates shared in public library
+                    </span>
+                    <switch name="onOff" ng-model="onOff" on="ON" off="OFF" style="margin-left:5px;"></switch>
+                </div>
                 <loader ng-if="loadingTemplates.value"></loader>
                 <div ng-if="!loadingTemplates.value && templatesData && templatesData.length">
                     <a2-table rows="templatesData" no-checkbox>
