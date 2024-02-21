@@ -217,6 +217,7 @@ router.post('/:projectUrl/info/update', function(req, res, next) {
                 url: joi.string(),
                 description: joi.string().allow(null, '').optional(),
                 is_private: joi.number(),
+                public_templates_enabled: joi.number(),
             };
 
             joi.validate(req.body.project, schema, { stripUnknown: true },
