@@ -152,7 +152,7 @@ var Templates = {
             // Find an original templates, not copied
             q += ` ${where} AND T.source_project_id IS NULL`
             if (!isRfcxUser) {
-                q += ' AND P.is_private = 0'
+                q += ' AND P.public_templates_enabled = 1'
             }
         }
         else {
@@ -213,7 +213,7 @@ var Templates = {
                 "P.`name` as `project_name`, P.`url` as `project_url`",
             );
             tables.push('JOIN projects P ON T.project_id = P.project_id');
-            constraints.push('P.is_private = 0')
+            constraints.push('P.public_templates_enabled = 1')
             constraints.push('T.source_project_id IS NULL');
             tables.push('JOIN project_classes pc ON pc.species_id = T.species_id AND pc.songtype_id = T.songtype_id');
             constraints.push(`pc.project_class_id = ${cl}`);
