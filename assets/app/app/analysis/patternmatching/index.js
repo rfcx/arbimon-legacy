@@ -138,6 +138,8 @@ angular.module('a2.analysis.patternmatching', [
     }
 
     $scope.togglePublicTemplatesEnabled = function() {
+        $scope.onOff = $scope.onOff === 0 ? 1 : 0
+
         if(!a2UserPermit.can('manage project settings')) {
             notify.error('You do not have permission to manage manage project settings');
             return;

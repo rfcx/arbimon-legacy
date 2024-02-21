@@ -118,7 +118,7 @@
                     <span>
                         Project templates shared in public library
                     </span>
-                    <switch name="onOff" ng-model="onOff" on="ON" off="OFF" style="margin-left:5px;" disabled="disableToggle()"></switch>
+                    <switch name="onOff" ng-change="togglePublicTemplatesEnabled()" ng-model="onOff" on="ON" off="OFF" style="margin-left:5px;" disabled="disableToggle()"></switch>
                 </div>
                 <loader ng-if="loadingTemplates.value"></loader>
                 <div ng-if="!loadingTemplates.value && templatesData && templatesData.length">
