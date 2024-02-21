@@ -2129,3 +2129,86 @@ search-bar {
     flex-wrap: wrap;
   }
 }
+
+.switch {
+  background: #4B4B4B;
+  border: 1px solid #4B4B4B;
+  position: relative;
+  display: inline-block;
+  box-sizing: content-box;
+  overflow: visible;
+  width: 53px;
+  height: 20px;
+  padding: 0px;
+  margin: 0px;
+  border-radius: 20px;
+  cursor: pointer;
+  box-shadow: rgb(223, 223, 223) 0px 0px 0px 0px inset;
+  transition: 0.3s ease-out all;
+  -webkit-transition: 0.3s ease-out all;
+}
+/*adding a wide width for larger switch text*/
+.switch.wide {
+  width:80px;
+}
+.switch small {
+  background: #fff;
+  border-radius: 100%;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+  width: 20px;
+  height: 20px;
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  border: 2px solid #000;
+  transition: 0.3s ease-out all;
+  -webkit-transition: 0.3s ease-out all;
+}
+.switch.checked {
+  background: #ADFF2C;
+  border-color: #ADFF2C;
+}
+.switch.checked small {
+  left: 33px;
+  background: #000;
+}
+/*wider switch text moves small further to the right*/
+.switch.wide.checked small {
+  left:52px;
+}
+/*styles for switch-text*/
+.switch .switch-text {
+  font-family:Arial, Helvetica, sans-serif;
+  font-size:13px;
+  color: #000;
+  margin-top: 1px;
+}
+
+.switch .off {
+  display:flex;
+  position: absolute;
+  right: 7%;
+  z-index: 0;
+  top: 8%;
+}
+
+.switch .on {
+  display:none;
+  z-index: 0;
+  position: absolute;
+  left: 13%;
+  top: 8%;
+}
+
+.switch.checked .off {
+  display:none;
+}
+
+.switch.checked .on {
+  display:flex;
+}
+
+.switch.disabled {
+  opacity: .50;
+  cursor: not-allowed;
+}

@@ -117,6 +117,7 @@ router.get('/:projecturl?/', function(req, res, next) {
                         aed: !!project.aed_enabled,
                         clustering: !!project.clustering_enabled,
                         reports_enabled: !!project.reports_enabled,
+                        public_templates_enabled: !!project.public_templates_enabled,
                     },
                     super: !!req.session.user.isSuper,
                     isAuthorized: !req.session.isAnonymousGuest,
