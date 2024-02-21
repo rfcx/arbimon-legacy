@@ -315,6 +315,7 @@ var Projects = {
         project.aed_enabled = 1;
         project.clustering_enabled = 1;
         project.reports_enabled = 1;
+        project.public_templates_enabled = 1;
 
         if (!db) {
             db = await dbpool.getConnection()
@@ -376,9 +377,9 @@ var Projects = {
             cnn_enabled: [joi.number().valid(0,1), joi.boolean()],
             aed_enabled: [joi.number().valid(0,1), joi.boolean()],
             clustering_enabled: [joi.number().valid(0,1), joi.boolean()],
-            reports_enabled: [joi.number().valid(0,1), joi.boolean()]
+            reports_enabled: [joi.number().valid(0,1), joi.boolean()],
+            public_templates_enabled: [joi.number().valid(0,1), joi.boolean()]
         };
-
         return q.ninvoke(joi, 'validate', project, schema).then(function(projectInfo){
             var projectId = projectInfo.project_id;
             delete projectInfo.project_id;
