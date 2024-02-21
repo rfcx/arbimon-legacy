@@ -101,7 +101,7 @@ var Templates = {
 
         if (options.publicTemplates) {
             if (!options.isRfcxUser) {
-                constraints.push('P.is_private = 0')
+                constraints.push('P.public_templates_enabled = 1')
             }
             constraints.push('T.source_project_id IS NULL');
         }

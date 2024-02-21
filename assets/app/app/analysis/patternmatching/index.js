@@ -1,30 +1,3 @@
-angular.module('uiSwitch', [])
-.directive('switch', function(){
-    return {
-      restrict: 'AE'
-    , replace: true
-    , transclude: true
-    , template: function(element, attrs) {
-        var html = '';
-        html += '<span';
-        html +=   ' class="switch' + (attrs.class ? ' ' + attrs.class : '') + '"';
-        html +=   attrs.ngModel ? ' ng-click="' + attrs.disabled + ' ? ' + attrs.ngModel + ' : ' + attrs.ngModel + '=!' + attrs.ngModel + (attrs.ngChange ? '; ' + attrs.ngChange + '()"' : '"') : '';
-        html +=   ' ng-class="{ checked:' + attrs.ngModel + ', disabled:' + attrs.disabled + ' }"';
-        html +=   '>';
-        html +=   '<small></small>';
-        html +=   '<input type="checkbox"';
-        html +=     attrs.id ? ' id="' + attrs.id + '"' : '';
-        html +=     attrs.name ? ' name="' + attrs.name + '"' : '';
-        html +=     attrs.ngModel ? ' ng-model="' + attrs.ngModel + '"' : '';
-        html +=     ' style="display:none" />';
-        html +=     '<span class="switch-text">'; /*adding new container for switch text*/
-        html +=     attrs.on ? '<span class="on">'+attrs.on+'</span>' : ''; /*switch text on value set by user in directive html markup*/
-        html +=     attrs.off ? '<span class="off">'+attrs.off + '</span>' : ' ';  /*switch text off value set by user in directive html markup*/
-        html += '</span>';
-        return html;
-      }
-    }
-  })
 angular.module('a2.analysis.patternmatching', [
     'ui.bootstrap',
     'a2.directive.audio-bar',
@@ -68,8 +41,6 @@ angular.module('a2.analysis.patternmatching', [
     Project,
     SpeciesTaxons
 ) {
-    $scope.onOff = true;
-
     $scope.selectedPatternMatchingId = $stateParams.patternMatchingId;
     $scope.loading = { rows: false, showRefreshBtn: false };
     $scope.pagination = {
@@ -153,6 +124,31 @@ angular.module('a2.analysis.patternmatching', [
         Project.getProjectById(projectId, function(data) {
             if (data) {
                 $window.location.pathname = "/project/"+data.url+"/audiodata/templates";
+            }
+        });
+    }
+
+    Project.getInfo(function(data) {
+        $scope.project = data;
+        $scope.onOff = data.public_templates_enabled;
+    })
+
+    $scope.disableToggle = function() {
+        return !a2UserPermit.can('manage project settings');
+    }
+
+    $scope.togglePublicTemplatesEnabled = function() {
+        if(!a2UserPermit.can('manage project settings')) {
+            notify.error('You do not have permission to manage manage project settings');
+            return;
+        }
+        $scope.project.public_templates_enabled = $scope.onOff;
+        Project.updateInfo({ project: $scope.project }, function(err, result){
+            if(err) {
+                return notify.serverError();
+            }
+            if(result.error) {
+                return notify.error(result.error);
             }
         });
     }
@@ -981,3 +977,31 @@ angular.module('a2.analysis.patternmatching', [
     });
     this.initialize();
 });
+
+angular.module('uiSwitch', [])
+.directive('switch', function(){
+    return {
+        restrict: 'AE',
+        replace: true,
+        transclude: true,
+    template: function(element, attrs) {
+        var html = '';
+        html += '<span';
+        html +=   ' class="switch' + (attrs.class ? ' ' + attrs.class : '') + '"';
+        html +=   attrs.ngModel ? ' ng-click="' + attrs.disabled + ' ? ' + attrs.ngModel + ' : ' + attrs.ngModel + '=!' + attrs.ngModel + (attrs.ngChange ? '; ' + attrs.ngChange + '()"' : '"') : '';
+        html +=   ' ng-class="{ checked:' + attrs.ngModel + ', disabled:' + attrs.disabled + ' }"';
+        html +=   '>';
+        html +=   '<small></small>';
+        html +=   '<input type="checkbox"';
+        html +=     attrs.id ? ' id="' + attrs.id + '"' : '';
+        html +=     attrs.name ? ' name="' + attrs.name + '"' : '';
+        html +=     attrs.ngModel ? ' ng-model="' + attrs.ngModel + '"' : '';
+        html +=     ' style="display:none" />';
+        html +=     '<span class="switch-text">'; /*adding new container for switch text*/
+        html +=     attrs.on ? '<span class="on">'+attrs.on+'</span>' : ''; /*switch text on value set by user in directive html markup*/
+        html +=     attrs.off ? '<span class="off">'+attrs.off + '</span>' : ' ';  /*switch text off value set by user in directive html markup*/
+        html += '</span>';
+        return html;
+      }
+    }
+  })
