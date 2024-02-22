@@ -167,7 +167,7 @@ angular.module('a2.directive.side-bar', [])
         if (page == 'citizen-scientist'){
             return '/citizen-scientist/' + projectUrl + '/';
         } else if (page == 'reports') {
-            return $scope.arbimonUrl + '/p/' + projectUrl
+            return $scope.arbimonUrl
         } else if (page == 'my-projects') {
             return $scope.arbimonUrl + '/my-projects'
         }
