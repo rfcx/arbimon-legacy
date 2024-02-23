@@ -1,11 +1,12 @@
 <div style="width:200;height:110;">
     <ul class="list-unstyled">
-        <li class="btn btn-default border-default"
+        <li class="btn text-left ui-btn-toggle mb-4"
+            style="width: 278px;"
             ng-class="{'active': selected == aggr.id }"
             ng-repeat="aggr in aggregations"
             ng-click="select(aggr)">
 
-            <a2-draw-aggregation aggregation="aggr"></a2-draw-aggregation>
+            <span>{{ aggr.name }}</span>
         <li>
     </ul>
 </div>

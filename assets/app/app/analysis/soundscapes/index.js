@@ -410,32 +410,32 @@ angular.module('a2.analysis.soundscapes', [
 
             $scope.aggregations = [
                 {
-                    name: 'Hour in Day',
+                    name: 'Hours (e.g. 0:00, 1:00,..., 23:00)',
                     scale: ['00:00', '01:00', '......', '22:00', '23:00'],
                     id: 'time_of_day'
                 },
                 {
-                    name: 'Day in Week',
+                    name: 'Weekdays (e.g. Sun, Mon,..., Sat)',
                     scale: ['Sun', 'Mon', '......', 'Fri', 'Sat'],
                     id: 'day_of_week'
                 },
                 {
-                    name: 'Day in Month',
+                    name: 'Days of Month (e.g. 1, 2,...31)',
                     scale: ['1', '2', '......', '30', '31'],
                     id: 'day_of_month'
                 },
                 {
-                    name: 'Month in Year',
+                    name: 'Months (e.g. Jan, Feb,..., Dec)',
                     scale: ['Jan', 'Feb', '......', 'Nov', 'Dec'],
                     id: 'month_in_year'
                 },
                 {
-                    name: 'Day in Year',
+                    name: 'Days of Year (e.g. 1, 2, ..., 365, 366)',
                     scale: ['1', '2', '......', '365', '366'],
                     id: 'day_of_year'
                 },
                 {
-                    name: 'Year',
+                    name: 'Years (e.g. 2021, 2022, ..., 2024',
                     scale: ['2010', '2011', '......', '2016', '2017'],
                     id: 'year'
                 }

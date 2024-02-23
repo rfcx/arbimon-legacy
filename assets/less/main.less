@@ -297,16 +297,80 @@ h5 {
   }
 }
 
-// Buttons, imputs
+// Buttons, inputs
 
 .btn {
   font-family: 'ABCFavoritExtended';
+}
+
+.ui-input {
+  border-color: @cloud !important;
+  background-color: @pitch !important;
+  &:focus {
+    border-color: @frequency !important;
+    box-shadow: none !important;
+  }
+  &:hover {
+    background-color: @echo !important;
+    border-color: @util-gray-02 !important;
+    box-shadow: none !important;
+  }
+}
+
+.new-form-control input.form-control {
+  border-radius: 4px;
+  border-color: @cloud;
+  color: @insight !important;
+  background-color: @pitch;
+  &:focus {
+    border-color: @frequency !important;
+    box-shadow: none !important;
+  }
+  &:hover {
+    background-color: @echo !important;
+    border-color: @util-gray-02 !important;
+    box-shadow: none !important;
+  }
+}
+
+.new-form-control span.form-control {
+  border-radius: 4px;
+  border-color: @cloud;
+  color: @insight !important;
+  background-color: @pitch;
+  &:focus {
+    border-color: @frequency !important;
+    box-shadow: none !important;
+  }
+  &:hover {
+    background-color: @echo !important;
+    border-color: @util-gray-02 !important;
+    box-shadow: none !important;
+  }
 }
 
 .ui-select-toggle {
   border-radius: 4px;
   border-color: @cloud;
   color: @insight !important;
+}
+
+.ui-btn-toggle {
+  border-radius: 4px;
+  border-color: @cloud;
+  color: @insight;
+  background-color: @echo;
+  &:hover {
+    color: @pitch !important;
+    border-color: lighten(@frequency, 25%) !important;
+    background-color: lighten(@frequency, 25%) !important;
+  }
+}
+
+.ui-btn-toggle.active {
+  color: @pitch !important;
+  border-color: @frequency !important;
+  background-color: @frequency !important;
 }
 
 .border-frequency {

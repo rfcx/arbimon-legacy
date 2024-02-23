@@ -6,7 +6,7 @@
     <form role="form">
       <div class="form-group">
         <label for="modelName">Soundscape name:</label>
-        <input type="text" ng-model="datasubmit.name"  class="form-control" placeholder="Enter soundscape name"/>
+        <input type="text" ng-model="datasubmit.name"  class="form-control ui-input"/>
         <span ng-bind="nameMsg" class="nameExistsSpan"></span>
       </div>
       <div class="form-group">
@@ -19,12 +19,22 @@
             </button>
             and create a playlist.
         </div>
-        <ui-select ng-if="playlists && playlists.length" ng-model="datasubmit.playlist" ng-disabled="disabled">
+        <ui-select ng-if="playlists && playlists.length" ng-model="datasubmit.playlist" ng-disabled="disabled" class="new-form-control">
             <ui-select-match placeholder="Select or search a playlist...">{{$select.selected.name}}</ui-select-match>
             <ui-select-choices repeat="playlist in playlists | filter: $select.search">
               {{playlist.name}} <span class="pull-right"><small><em> <strong >Count:</strong>({{playlist.count}})</em></small></span>
             </ui-select-choices>
         </ui-select>
+      </div>
+      <div class="form-group">
+          <label for="aggregation">Bin bandwidth (Hz):</label>
+          <ol class="binhzpadding">
+            <li btn-radio="21" ng-model="datasubmit.bin" class="btn ui-btn-toggle btn-sm mr-2"><span class="spacedhz">21</span></li>
+            <li btn-radio="43" ng-model="datasubmit.bin" class="btn ui-btn-toggle btn-sm mr-2"><span class="spacedhz">43</span></li>
+            <li btn-radio="86" ng-model="datasubmit.bin" class="btn ui-btn-toggle btn-sm mr-2"><span class="spacedhz">86</span></li>
+            <li btn-radio="172" ng-model="datasubmit.bin" class="btn ui-btn-toggle btn-sm mr-2"><span class="spacedhz">172</span></li>
+            <li btn-radio="344" ng-model="datasubmit.bin" class="btn ui-btn-toggle btn-sm"><span class="spacedhz">344</span></li>
+          </ol>
       </div>
       <div class="row">
         <div class="col-sm-6">
@@ -42,16 +52,6 @@
                     tooltip="Check to normalize each value in the soundscape using the number of recordings in the playlist that fall in that column."
                     tooltip-placement="right">
                 </i>
-            </div>
-            <div class="row container-fluid " >
-                <label for="aggregation">Bin bandwidth (Hz):</label>
-                <ol id="" class="binhzpadding">
-                  <li btn-radio="21" ng-model="datasubmit.bin" class="btn btn-default border-default btn-xs mt-1 text-insight"><span class="spacedhz">21</span></li>
-                  <li btn-radio="43" ng-model="datasubmit.bin" class="btn btn-default border-default btn-xs mt-1 text-insight"><span class="spacedhz">43</span></li>
-                  <li btn-radio="86" ng-model="datasubmit.bin" class="btn btn-default border-default btn-xs mt-1 text-insight"><span class="spacedhz">86</span></li>
-                  <li btn-radio="172" ng-model="datasubmit.bin" class="btn btn-default border-default btn-xs mt-1 text-insight"><span class="spacedhz">172</span></li>
-                  <li btn-radio="344" ng-model="datasubmit.bin" class="btn btn-default border-default btn-xs mt-1 text-insight"><span class="spacedhz">344</span></li>
-                </ol>
             </div>
             <div class="row container-fluid" >
                 <label for="aggregation">Peak filtering:</label>

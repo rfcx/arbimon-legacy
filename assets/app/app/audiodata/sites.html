@@ -65,7 +65,7 @@
                     {{ row.lon | number:3 }}
                 </field>
                 <field title="Elevation" key="alt">
-                    {{ row.alt | number:2 }}
+                    {{ row.alt | number:0 }}
                 </field>
                 <field title="Current Timezone" key="timezone" tdclass="timezone hidelongtext">
                     <span title="{{ row.timezone }}">{{ row.utc }}</span>
