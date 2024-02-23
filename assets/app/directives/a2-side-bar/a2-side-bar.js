@@ -43,7 +43,7 @@ angular.module('a2.directive.side-bar', [])
                     title: 'Overview',
                     iconRaw: 'fi-grid',
                     public: true,
-                    route: $scope.arbimonUrl + '/p/' + url + '/dashboard'
+                    route: $scope.arbimonUrl + '/p/' + url + '/overview'
                 },
                 {
                     title: 'Import',

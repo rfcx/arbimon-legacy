@@ -92,5 +92,4 @@ var a2 = angular.module('a2.app', [
         }
     }
     $scope.citizenScientistUser = a2UserPermit.all && a2UserPermit.all.length === 1 && a2UserPermit.all.includes('use citizen scientist interface') && !a2UserPermit.can('delete project') && !a2UserPermit.isSuper();
-    $scope.isAppPage = $window.location.pathname.startsWith('/project/');
 });

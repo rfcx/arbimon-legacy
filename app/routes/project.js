@@ -80,7 +80,7 @@ router.get('/:projecturl?/', function(req, res, next) {
                 const isEmptyPath = req._parsedOriginalUrl && (req._parsedOriginalUrl.path === `/project/${project_url}` || req._parsedOriginalUrl.path ===`/project/${project_url}/`);
 
                 if (isEmptyPath && (permissionsMap['view project'] || req.session.user.isSuper)) {
-                    return res.redirect(`/p/${project_url}/dashboard`)
+                    return res.redirect(`/p/${project_url}/overview`)
                 }
 
                 if (isEmptyPath && (!project.is_private && !permissionsMap['view project'])) {
