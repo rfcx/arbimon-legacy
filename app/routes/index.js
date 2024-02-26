@@ -17,7 +17,7 @@ const model = require('../model');
 const authentication = require('../middleware/jwt');
 const parseTokenData = authentication.parseTokenData;
 
-router.get('/alive', function(req, res, next) { // for health checks
+router.get('/legacy-api/alive', function(req, res, next) { // for health checks
     res.type('json');
     queryHandler("SELECT project_id FROM projects LIMIT 1", function (err){
         if (err) {
