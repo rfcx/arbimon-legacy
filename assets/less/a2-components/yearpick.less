@@ -1,7 +1,7 @@
 @cal-level-cl-0: white;
-@cal-level-cl-1: lighten(@util-gray-03, 50%);
-@cal-level-cl-50: lighten(@util-gray-03, 25%);
-@cal-level-cl-100: @util-gray-03;
+@cal-level-cl-1: lighten(@frequency, 50%);
+@cal-level-cl-50: lighten(@frequency, 25%);
+@cal-level-cl-100: @frequency;
 @cal-sel-cl: #003455;
 
 .calendar {
@@ -79,11 +79,11 @@
 
   .selected {
     rect {
-      stroke: @util-gray-03;
+      stroke: @frequency;
     }
 
     text {
-      fill: @util-gray-03;
+      fill: @pitch;
     }
 
   }
