@@ -134,8 +134,8 @@ angular.module('a2.analysis.patternmatching', [
     })
 
     $scope.disableToggle = function() {
-        let isDisable = !a2UserPermit.can('manage project settings');
-        if(isDisable) { $scope.onOff = 0 }
+        const isDisable = !a2UserPermit.can('manage project settings');
+        if (isDisable) { $scope.onOff = 0 }
         return isDisable
     }
 
