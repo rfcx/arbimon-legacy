@@ -14,12 +14,6 @@
                 ng-click="newModel() | trackEvent:'Analysis-Model list':'new model'">
                 <i class="fa fa-plus"></i> New Training Job
             </a>
-            <a class="btn btn-sm btn-default ml-3"
-                tooltip="Create New Training Job"
-                tooltip-placement="right"
-                ng-click="addNewTrainingSet() | trackEvent:trackEvent:'Audiodata-Training Sets':'add_new_tset'">
-                <i class="fa fa-plus"></i> New Training Set
-            </a>
         </h1>
         <div class="row panel-body">
             <ul class="nav nav-tabs col-md-12">
@@ -78,7 +72,7 @@
             <div class="jumbotron" ng-show="(!modelsDataOrig || !modelsDataOrig.length > 0) && !loading">
                 <h3>{{ infopanedata }}
                     <a ng-click="newModel() | trackEvent:'Analysis-Model list':'new model'">
-                        Create a model
+                        New Training Job
                     </a>
                 </h3>
             </div>

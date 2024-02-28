@@ -310,28 +310,6 @@ angular.module('a2.analysis.random-forest-models.models', [
             }
         });
     };
-
-    $scope.getTrainingSetList = function() {
-        $localStorage.setItem('audiodata.trainingSets', true);
-        $window.location.href = '/project/'+Project.getUrl()+'/analysis/random-forest-models/models?tab=trainingSets';
-    }
-
-
-    $scope.addNewTrainingSet = function() {
-        if(!a2UserPermit.can('manage training sets')) {
-            notify.error('You do not have permission to create training sets');
-            return;
-        }
-
-        var modalInstance = $modal.open({
-            templateUrl : '/app/visualizer/layers/training-data/add_tset_modal.html',
-            controller  : 'a2VisualizerAddTrainingSetModalController'
-        });
-
-        modalInstance.result.then(function (result) {
-            $scope.getTrainingSetList()
-        });
-    };
 })
 .controller('NewModelInstanceCtrl', function($scope, $modalInstance, a2Models, Project, projectData, types, trainings, notify, $http) {
     $scope.types = types;
