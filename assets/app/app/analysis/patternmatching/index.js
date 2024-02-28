@@ -134,10 +134,13 @@ angular.module('a2.analysis.patternmatching', [
     })
 
     $scope.disableToggle = function() {
-        return !a2UserPermit.can('manage project settings');
+        let isDisable = !a2UserPermit.can('manage project settings');
+        if(isDisable) { $scope.onOff = 0 }
+        return isDisable
     }
 
     $scope.togglePublicTemplatesEnabled = function() {
+        if (disableToggle) return
         $scope.onOff = $scope.onOff === 0 ? 1 : 0
 
         if(!a2UserPermit.can('manage project settings')) {
