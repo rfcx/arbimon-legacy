@@ -133,6 +133,70 @@ angular.module('a2.analysis.random-forest-models.classification', [
         });
     };
 
+    $scope.createNewClassification = function () {
+        if(!a2UserPermit.can('manage models and classification')) {
+            notify.error('You do not have permission to create classifications');
+            return;
+        }
+
+        $scope.loading = true;
+        $scope.infoInfo = "Loading...";
+        $scope.showInfo = true;
+
+
+        var modalInstance = $modal.open({
+            templateUrl: '/app/analysis/random-forest-models/classification/createnewclassification.html',
+            controller: 'CreateNewClassificationInstanceCtrl',
+            resolve: {
+                data: function($q){
+                    var d = $q.defer();
+                    Project.getModels(function(err, data){
+                        if(err){
+                            console.error(err);
+                        }
+
+                        d.resolve(data || []);
+
+                    });
+                    return d.promise;
+                },
+                playlists:function($q){
+                    var d = $q.defer();
+                    a2Playlists.getList().then(function(data) {
+                        d.resolve(data || []);
+                    });
+                    return d.promise;
+                },
+                projectData:function()
+                {
+                    return $scope.projectData;
+                }
+            }
+        });
+
+        modalInstance.opened.then(function() {
+            $scope.infoInfo = "";
+            $scope.showInfo = false;
+            $scope.loading = false;
+        });
+
+        modalInstance.result.then(function (result) {
+            data = result;
+            if (data.ok) {
+                JobsData.updateJobs();
+                notify.log("Your new classification is waiting to start processing.<br> Check its status on <b>Jobs</b>.");
+            }
+
+            if (data.error) {
+                notify.error("Error: "+data.error);
+            }
+
+            if (data.url) {
+                $location.path(data.url);
+            }
+        });
+    };
+
     $scope.deleteClassification = function(id,name) {
         if(!a2UserPermit.can('manage models and classification')) {
             notify.error('You do not have permission to delete classifications');
@@ -341,6 +405,73 @@ angular.module('a2.analysis.random-forest-models.classification', [
                     $scope.loading = false;
                 });
         });
+})
+
+.controller('CreateNewClassificationInstanceCtrl', function($scope, $modalInstance, a2Classi, data, projectData, playlists) {
+    $scope.data = data;
+    $scope.projectData = projectData;
+    $scope.recselected = '';
+    $scope.showselection = false;
+    $scope.playlists = playlists;
+    $scope.nameMsg = '';
+    $scope.datas = {
+        name : '' ,
+        classifier: '',
+        playlist:''
+    };
+
+
+    $scope.$watch('recselected', function() {
+        if ($scope.recselected === 'selected') {
+            $scope.showselection = true;
+        }
+        else {
+            $scope.showselection = false;
+        }
+    });
+
+
+    $scope.ok = function () {
+        $scope.nameMsg = '';
+        var url = $scope.projectData.url;
+        $scope.all = 0;
+        $scope.selectedSites = [];
+
+        // NOTE temporary block disabled model types
+        if(!$scope.datas.classifier.enabled) return;
+
+        var classiData = {
+            n: $scope.datas.name,
+            c: $scope.datas.classifier.model_id,
+            a: $scope.all,
+            s: $scope.selectedSites.join(),
+            p: $scope.datas.playlist
+        };
+
+        a2Classi.create(classiData, function(data) {
+            if (data.name) {
+                $scope.nameMsg = 'Name exists';
+            }
+            else {
+                $modalInstance.close( data );
+            }
+        });
+    };
+
+    $scope.buttonEnable = function () {
+
+        return  !(
+                    typeof $scope.datas.playlist !== 'string' &&
+                    $scope.datas.name.length &&
+                    typeof $scope.datas.classifier !== 'string'
+                );
+    };
+
+    $scope.cancel = function (url) {
+        $modalInstance.close({url: url});
+    };
+
+
 })
 
 .directive('a2Vectorchart', function() {

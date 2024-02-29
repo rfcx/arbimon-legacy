@@ -71,15 +71,14 @@
                 </a2-table>
             </div>
             <div ng-show="!loading.rows && soundscapesOriginal && !soundscapesOriginal.length" class="help-wrapper col-sm-12 row-flex flex-direction-column flex-space-center flex-align-middle" style="text-align: center;">
-                <h3>
-                    {{ infopanedata }}
-                    <a class="btn btn-sm btn-default"
-                        tooltip="Create New Soundscape job"
-                        tooltip-placement="top"
-                        ng-click="createNewSoundscape() | trackEvent:'Analysis-Soundscapes':'Create new soundscape'">
-                        <i class="fa fa-plus mr-1" ></i> New Soundscape Job
-                    </a>
-                </h3>
+                <a class="btn btn-sm btn-default"
+                    tooltip="Create New Soundscape job"
+                    tooltip-placement="top"
+                    ng-click="createNewSoundscape() | trackEvent:'Analysis-Soundscapes':'Create new soundscape'">
+                    <i class="fa fa-plus mr-1" ></i> New Soundscape Job
+                </a>
+                <p class="mt-3 mb-0">Learn more:</p>
+                <p class="mb-0"><a href="https://help.arbimon.org/article/220-creating-a-soundscape-job" target="_blank">What is a Soundscape Job?<i class="ml-2 fa fa-external-link"></i></a></p>
             </div>
         </div>
         <div ng-if="currentTab === 'sounscapeCompCl'">

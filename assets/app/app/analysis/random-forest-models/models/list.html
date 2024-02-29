@@ -69,12 +69,16 @@
                     </field>
                 </a2-table>
             </div>
-            <div class="jumbotron" ng-show="(!modelsDataOrig || !modelsDataOrig.length > 0) && !loading">
-                <h3>{{ infopanedata }}
-                    <a ng-click="newModel() | trackEvent:'Analysis-Model list':'new model'">
-                        New Training Job
-                    </a>
-                </h3>
+            <div ng-show="!loading && modelsDataOrig && !modelsDataOrig.length" class="help-wrapper col-sm-12 row-flex flex-direction-column flex-space-center flex-align-middle" style="text-align: center;">
+                <a class="btn btn-sm btn-default"
+                    tooltip="Create New Training Job"
+                    tooltip-placement="top"
+                    ng-click="newModel() | trackEvent:'Analysis-Model list':'new model'">
+                    <i class="fa fa-plus mr-1" ></i> New Training Job
+                </a>
+                <p class="mt-3 mb-0">Learn more:</p>
+                <p class="mb-0"><a href="https://help.arbimon.org/article/231-what-is-a-random-forest-model" target="_blank">1. What is a Training Job?<i class="ml-2 fa fa-external-link"></i></a></p>
+                <p class="mb-0"><a href="https://help.arbimon.org/article/234-creating-a-random-forest-model-job" target="_blank">2. How to create the Training Job?<i class="ml-2 fa fa-external-link"></i></a></p>
             </div>
         </div>
 

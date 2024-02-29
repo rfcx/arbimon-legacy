@@ -4,7 +4,6 @@ angular.module('a2.analysis', [
     'a2.analysis.random-forest-models',
     'a2.analysis.cnn',
     'a2.analysis.soundscapes',
-    'a2.analysis.audio-event-detection',
     'a2.analysis.audio-event-detections-clustering',
     'a2.analysis.clustering-jobs',
     'ui.router',

@@ -36,13 +36,15 @@
                 </field>
             </a2-table>
         </div>
-        <div class="jumbotron" ng-show="(!classificationsOriginal || !classificationsOriginal.length > 0) && !loading">
-            <h3>
-                {{ infopanedata }}
-                <a ng-click="createNewClassification() | trackEvent:'Analysis-Classification-List':'Create new classification'">
-                    Classify recordings
-                </a>
-            </h3>
+        <div ng-show="!loading && classificationsOriginal && !classificationsOriginal.length" class="help-wrapper col-sm-12 row-flex flex-direction-column flex-space-center flex-align-middle" style="text-align: center;">
+            <a class="btn btn-sm btn-default"
+                tooltip="Create New Classification Job"
+                tooltip-placement="top"
+                ng-click="createNewClassification() |trackEvent:'Analysis-Classification-List':'Create new classification'">
+                <i class="fa fa-plus mr-1" ></i>New Classification Job
+            </a>
+            <p class="mt-3 mb-0">Learn more:</p>
+            <p class="mb-0"><a href="https://help.arbimon.org/article/236-creating-an-rfm-classification-job" target="_blank">How to create a Classification Job?<i class="ml-2 fa fa-external-link"></i></a></p>
         </div>
     </div>
 </div>
