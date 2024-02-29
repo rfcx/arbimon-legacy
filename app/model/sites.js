@@ -782,6 +782,12 @@ var Sites = {
                         alt: site.alt,
                         project_id: site.project_id
                     }, idToken)
+                    const coreSite = {
+                        name: site.name,
+                        project_id: options.projectExternalId
+                    }
+                    let { countryCode } = await this.getCountryCodeCoreAPI(coreSite, idToken);
+                    await this.setCountryCode(site.site_id, countryCode, connection);
                 };
                 const { originalProjectId } = options
                 if (site.project_id !== undefined && originalProjectId !== site.project_id) {

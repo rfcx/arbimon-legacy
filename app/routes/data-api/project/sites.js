@@ -91,7 +91,8 @@ router.post('/update', function(req, res, next) {
         }
 
         const options = {
-            originalProjectId: project.project_id
+            originalProjectId: project.project_id,
+            projectExternalId: project.external_id
         }
         model.sites.updateSite(site, options, req.session.idToken).then(function() {
             res.json({ message: 'Site updated' });
