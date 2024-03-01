@@ -49,6 +49,7 @@ router.get('/:projecturl?/', function(req, res, next) {
             return res.redirect('/');
         }).then(function(rows) {
             if(!project || (project.is_private && !rows.length && req.session.user.isSuper === 0)){
+                console.log('\n\n---TEMP: /projects 52 string', project, req.session.user)
                 // if not authorized to see project send 404
                 return next();
             } else {
@@ -58,9 +59,11 @@ router.get('/:projecturl?/', function(req, res, next) {
     }
 
     model.projects.find({ url: project_url, publicTemplates: true}, function(err, rows) {
-            if(err) return next(err);
-
-            if(!rows.length) return next(); // handled by 404
+            if (err) return next(err);
+            if (!rows.length)  {
+                console.log('\n\n---TEMP: /projects 62 string', rows)
+                return next(); // handled by 404
+            }
 
             var project = rows[0];
 
