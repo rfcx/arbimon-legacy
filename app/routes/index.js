@@ -48,6 +48,7 @@ router.use('/', acmeChallenge);
 // are available only to logged users
 router.use(function(req, res, next) {
     if (!req.user) {
+        console.log('\n\n---TEMP: auth req.originalUrl', req.originalUrl)
         req.session.currentPath = req.protocol + '://' + req.get('host') + req.originalUrl;
         res.redirect('/legacy-login')
     } else return next();
