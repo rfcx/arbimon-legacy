@@ -156,6 +156,7 @@ angular.module('a2.audiodata.species', [
     });
 
     $scope.showExtraTemplates = function(species, extraTemplatesLink) {
+        console.log(species)
         $scope.removeFromLocalStorage();
         $localStorage.setItem('audiodata.templates', JSON.stringify(species));
         $window.location.href = extraTemplatesLink;
