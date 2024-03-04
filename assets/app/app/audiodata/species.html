@@ -35,14 +35,15 @@
                     <div class="row-flex flex-direction-column flex-space-start">
                         <div class="row-flex flex-direction-row flex-align-middle">
                             <div ng-repeat="template in row.templates" class="roi-thumbnail mr-3"
-                                ng-style="{'opacity': template.disabled ? 0.6 : 1}" style="border-color: transparent;background-color:transparent">
+                                ng-style="{'opacity': template.disabled ? 0.6 : 1}" style="border-color: transparent;background-color:transparent"
+                            >
                                 <div ng-if="template.disabled" class="muted-layer-message" style="left: 10%; top: 30%"
                                     tooltip="Unable to visualize your template due to corrupted data"
                                 >
                                     <span class="glyphicon glyphicon-ban-circle fa-xs" style="color: white;" aria-hidden="true"></span>
                                     <span class="pl-1 fa-xs" style="color: white;">Unavailable</span>
                                 </div>
-                                <img ng-src="{{template.uri}}" class="roi-img is-middle" style="border-radius: 4px;"/>
+                                <img ng-src="{{template.uri}}" class="roi-img is-middle" ng-class="{'border-selected': template.addedTemplate === true }" style="border-radius: 4px;"/>
                                 <a class="roi-btn-bl cs-pointer p-1" ng-click="playTemplateAudio(template, $event)"
                                     ng-class="{'row-disabled': template.disabled}" title="Play sound" style="left: 5px"
                                 >

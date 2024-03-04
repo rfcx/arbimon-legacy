@@ -21,9 +21,10 @@ angular.module('a2.audiodata.species', [
     }
 
     $scope.searchSpecies = { q: '' };
+    var timeout
 
-    $scope.getProjectClasses = function() {
-        $scope.loading = true;
+    $scope.getProjectClasses = function(isLoading, isTimeout) {
+       if (isLoading === true) $scope.loading = true;
         const opts = {
             q: $scope.searchSpecies.q,
             limit: $scope.pagination.limit,
@@ -46,6 +47,7 @@ angular.module('a2.audiodata.species', [
                             }
                             cl.redirectLink = redirectLink
                             cl.templates = temp.slice(0, 3);
+                            cl.templates[0].addedTemplate = $scope.addedTemplate && cl.templates[0].id === $scope.addedTemplate.id ? true : false
                         }
                     })
                 });
@@ -66,21 +68,28 @@ angular.module('a2.audiodata.species', [
                             cl.publicTemplates = temp.slice(0, 3);
                         }
                     })
-                    $scope.loading = false;
+                    if (isLoading === true) $scope.loading = false;
                     $scope.classes = classes
+                    if (isLoading == false && isTimeout == true) {
+                        $scope.addedTemplate = undefined
+                        clearTimeout(timeout);
+                        timeout = setTimeout(() => {
+                            $scope.getProjectClasses(false, false)
+                        }, 1000)
+                    }
                 });
             } else {
-                $scope.loading = false;
+                if (isLoading === true) $scope.loading = false;
             }
         });
 
     }
 
-    $scope.getProjectClasses()
+    $scope.getProjectClasses(true)
 
     $scope.setCurrentPage = function() {
         $scope.pagination.offset = $scope.pagination.page - 1;
-        $scope.getProjectClasses()
+        $scope.getProjectClasses(true)
     };
 
     $scope.checkUserPermissions = function(publicTemplate) {
@@ -121,12 +130,12 @@ angular.module('a2.audiodata.species', [
         }).then((function(data){
             console.log('new template', data);
             template.isAddingTemplate = false;
-            $scope.isAdding = false
+            $scope.isAdding = false;
+            $scope.addedTemplate = data;
             if (data.id === 0) notify.error('The template already exists in the project templates.');
             else if (data.error) notify.error('You do not have permission to manage templates');
-            else notify.log('The template is added to the project.');
             $scope.resetPagination()
-            $scope.getProjectClasses()
+            $scope.getProjectClasses(false, true)
         })).catch((function(err){
             console.log('err', err);
             template.isAddingTemplate = false;
@@ -140,7 +149,7 @@ angular.module('a2.audiodata.species', [
         timeout = setTimeout(() => {
             if ($scope.searchSpecies.q.trim().length > 0 && $scope.searchSpecies.q.trim().length < 3) return
             $scope.resetPagination()
-            $scope.getProjectClasses()
+            $scope.getProjectClasses(true)
         }, 1000);
     }
 
@@ -256,7 +265,7 @@ angular.module('a2.audiodata.species', [
 
             Project.removeClasses(params)
                 .success(function(result) {
-                    $scope.getProjectClasses()
+                    $scope.getProjectClasses(true)
                 })
                 .error(function(data, status) {
                     if(status < 500)

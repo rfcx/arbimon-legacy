@@ -221,7 +221,7 @@ var Templates = {
             const sql = `(SELECT ${select.join(', ')}
                 FROM ${tables.join(' ')}
                 WHERE ${constraints.join(' AND ')}
-                ORDER BY date_created ASC
+                ORDER BY date_created DESC
                 LIMIT 3)`
             query += index === classIds.length - 1 ? sql : `${sql} UNION `
         })
