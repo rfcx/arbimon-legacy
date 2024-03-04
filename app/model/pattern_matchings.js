@@ -854,7 +854,7 @@ var PatternMatchings = {
     }),
 
     requestNewPatternMatchingJob: function(data){
-        const isPrivileged = data.user && data.user.email && data.user.email.endsWith('@rfcx.org')
+        const isPrivileged = data.user && data.user.email && data.user.email.endsWith('@rfcx.org') ? 1 : 0
         data.user = data.user.id
         return q.ninvoke(joi, 'validate', data, PatternMatchings.JOB_SCHEMA).then(() => lambda.invoke({
             FunctionName: config('lambdas').pattern_matching,
