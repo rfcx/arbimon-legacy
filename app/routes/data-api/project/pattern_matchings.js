@@ -296,7 +296,7 @@ router.post('/new', function(req, res, next) {
     }).then(function(){
         return model.patternMatchings.requestNewPatternMatchingJob({
             project    : project_id,
-            user       : req.session.user,
+            user       : req.session.user.id,
             name       : req.body.name,
             template   : req.body.template,
             playlist   : req.body.playlist,
