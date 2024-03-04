@@ -242,7 +242,14 @@ angular.module('a2.analysis.patternmatching', [
             $scope.isAddingTemplate.value = false
             if (data.id === 0) notify.error('The template already exists in the project templates.');
             else if (data.error) notify.error('You do not have permission to manage templates');
-            else notify.log('The template is added to the project.');
+            else {
+                notify.log('The template is added to the project.');
+                var cls = {
+                    species: template.species_name,
+                    songtype: template.songtype_name
+                }
+                Project.addClass(cls)
+            }
         })).catch((function(err){
             console.log('err', err);
             template.isAddingTemplate = false

@@ -7,7 +7,6 @@ angular.module('a2.audiodata.species', [
 .controller('SpeciesCtrl', function($scope, Project, $modal, notify, a2UserPermit, a2Templates, a2AudioBarService, $localStorage, $state, $window) {
     $scope.loading = false;
     $scope.isAdding = false;
-    $scope.isRemoving = false;
     $scope.selected = {};
     $scope.supportLink = 'https://support.rfcx.org/article/34-pattern-matching-template'
 
@@ -135,40 +134,6 @@ angular.module('a2.audiodata.species', [
             notify.error(err);
         }));
     },
-
-    $scope.checkDeleteTemplatePermissions = function(template) {
-        if (!a2UserPermit.can('manage templates')) {
-            return true;
-        }
-        else return false
-    }
-
-    $scope.deleteTemplate = function(template) {
-        $scope.popup = {
-            title: 'Delete template',
-            messages: ['Are you sure you want to delete this template?'],
-            btnOk: 'Delete',
-            btnCancel: 'Cancel',
-        };
-
-        var modalInstance = $modal.open({
-            templateUrl: '/common/templates/pop-up.html',
-            scope: $scope
-        });
-
-        modalInstance.result.then(function(confirmed) {
-            template.isRemovingTemplate = true;
-            $scope.isRemoving = true
-            if(confirmed){
-                return a2Templates.delete(template.id).then(function() {
-                    template.isRemovingTemplate = false;
-                    $scope.isRemoving = false;
-                    $scope.getProjectClasses()
-                });
-            }
-        });
-
-    }
 
     $scope.onFilterChanged = function () {
         clearTimeout(timeout);
