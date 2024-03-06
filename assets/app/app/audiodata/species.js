@@ -47,38 +47,38 @@ angular.module('a2.audiodata.species', [
                             }
                             cl.redirectLink = redirectLink
                             cl.templates = temp.slice(0, 3);
-                            console.log('addedTemplate', $scope.addedTemplate, cl.templates[0].id)
+                            console.log('--addedTemplate', $scope.addedTemplate, cl.templates[0].id)
                             cl.templates[0].addedTemplate = $scope.addedTemplate && cl.templates[0].id === $scope.addedTemplate.id ? true : false
                         }
                     })
-                });
-                const classIds = classes.map(function(cl) {
-                    return cl.id
-                });
-                a2Templates.getTemplatesByClass({classIds: classIds}).then(function(templates) {
-                    const redirectLink = '/project/' + Project.getUrl() + '/analysis/patternmatching?tab=publicTemplates'
-                    const cl = classes
-                    const publicTemplates = templates;
-                    cl.forEach(cl => {
-                        const temp = publicTemplates.filter(template => template.songtype === cl.songtype && template.species === cl.species)
-                        if (temp && temp.length) {
-                            if (temp.length >= 3) {
-                                cl.extraPublicTemplatesLink = redirectLink
+                    const classIds = classes.map(function(cl) {
+                        return cl.id
+                    });
+                    a2Templates.getTemplatesByClass({classIds: classIds}).then(function(templates) {
+                        const redirectLink = '/project/' + Project.getUrl() + '/analysis/patternmatching?tab=publicTemplates'
+                        const cl = classes
+                        const publicTemplates = templates;
+                        cl.forEach(cl => {
+                            const temp = publicTemplates.filter(template => template.songtype === cl.songtype && template.species === cl.species)
+                            if (temp && temp.length) {
+                                if (temp.length >= 3) {
+                                    cl.extraPublicTemplatesLink = redirectLink
+                                }
+                                cl.redirectPublicLink = redirectLink
+                                cl.publicTemplates = temp.slice(0, 3);
                             }
-                            cl.redirectPublicLink = redirectLink
-                            cl.publicTemplates = temp.slice(0, 3);
+                        })
+                        if (isLoading === true) $scope.loading = false;
+                        $scope.classes = classes
+                        if (isLoading == false && isTimeout == true) {
+                            console.log('--getProjectClasses after adding')
+                            $scope.addedTemplate = undefined
+                            clearTimeout(timeout);
+                            timeout = setTimeout(() => {
+                                $scope.getProjectClasses(false, false)
+                            }, 1500)
                         }
-                    })
-                    if (isLoading === true) $scope.loading = false;
-                    $scope.classes = classes
-                    if (isLoading == false && isTimeout == true) {
-                        console.log('--getProjectClasses after adding')
-                        $scope.addedTemplate = undefined
-                        clearTimeout(timeout);
-                        timeout = setTimeout(() => {
-                            $scope.getProjectClasses(false, false)
-                        }, 1500)
-                    }
+                    });
                 });
             } else {
                 if (isLoading === true) $scope.loading = false;
