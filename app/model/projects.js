@@ -770,13 +770,14 @@ var Projects = {
                         "SET role_id = %s \n"+
                         "WHERE user_id = %s \n"+
                         "AND project_id = %s";
-                        q = util.format(q, role_id, user_id, project_id);
-                        return connection ? connection.query(q, callback) : queryHandler(q, callback);
+                        q = util.format(q, role_id, user.user_id, project_id);
+                        connection ? connection.query(q, callback) : queryHandler(q, callback);
+                    }  else {
+                        var q = 'INSERT INTO user_project_role \n'+
+                        'SET user_id = %s, role_id = %s, project_id = %s';
+                        q = util.format(q, user.user_id, role_id, project_id);
+                        connection ? connection.query(q, callback) : queryHandler(q, callback);
                     }
-                    var q = 'INSERT INTO user_project_role \n'+
-                    'SET user_id = %s, role_id = %s, project_id = %s';
-                    q = util.format(q, user.user_id, role_id, project_id);
-                    connection ? connection.query(q, callback) : queryHandler(q, callback);
                 }
             });
         });
