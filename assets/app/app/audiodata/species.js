@@ -47,6 +47,7 @@ angular.module('a2.audiodata.species', [
                             }
                             cl.redirectLink = redirectLink
                             cl.templates = temp.slice(0, 3);
+                            console.log('addedTemplate', $scope.addedTemplate.id, cl.templates[0].id)
                             cl.templates[0].addedTemplate = $scope.addedTemplate && cl.templates[0].id === $scope.addedTemplate.id ? true : false
                         }
                     })
@@ -71,6 +72,7 @@ angular.module('a2.audiodata.species', [
                     if (isLoading === true) $scope.loading = false;
                     $scope.classes = classes
                     if (isLoading == false && isTimeout == true) {
+                        console.log('--getProjectClasses after adding')
                         $scope.addedTemplate = undefined
                         clearTimeout(timeout);
                         timeout = setTimeout(() => {
