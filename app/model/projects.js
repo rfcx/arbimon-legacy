@@ -764,10 +764,15 @@ var Projects = {
                     return callback(err)
                 }
                 if (d) {
-                    if (d && d.length) {
-                        return callback(new APIError("User already attached to the project", 404));
-                    }
                     const [user] = await Projects.findByEmailAsync(user_email)
+                    if (d && d.length) {
+                        var q = "UPDATE user_project_role \n"+
+                        "SET role_id = %s \n"+
+                        "WHERE user_id = %s \n"+
+                        "AND project_id = %s";
+                        q = util.format(q, role_id, user_id, project_id);
+                        connection ? connection.query(q, callback) : queryHandler(q, callback);
+                    }
                     var q = 'INSERT INTO user_project_role \n'+
                     'SET user_id = %s, role_id = %s, project_id = %s';
                     q = util.format(q, user.user_id, role_id, project_id);
@@ -848,7 +853,7 @@ var Projects = {
                     await connection.rollback();
                     await connection.release();
                 }
-                throw new APIError('Failed to set user role');
+                throw new APIError('Failed to set user role', err.status ? err.status : 500);
             })
     },
 

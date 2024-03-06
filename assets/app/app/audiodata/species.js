@@ -75,7 +75,7 @@ angular.module('a2.audiodata.species', [
                         clearTimeout(timeout);
                         timeout = setTimeout(() => {
                             $scope.getProjectClasses(false, false)
-                        }, 1000)
+                        }, 1500)
                     }
                 });
             } else {
