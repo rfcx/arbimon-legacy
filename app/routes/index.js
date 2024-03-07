@@ -16,6 +16,7 @@ const auth0Service = require('../model/auth0')
 const model = require('../model');
 const authentication = require('../middleware/jwt');
 const parseTokenData = authentication.parseTokenData;
+const { getCachedMetrics } = require('../utils/cached-metrics');
 
 router.get('/legacy-api/alive', function(req, res, next) { // for health checks
     res.type('json');
@@ -47,7 +48,11 @@ router.use('/', acmeChallenge);
 // all routes after this middleware
 // are available only to logged users
 router.use(function(req, res, next) {
-    if (!req.user) {
+    if (req.originalUrl.includes('/legacy-api/recordings-species-count') || req.originalUrl.includes('/legacy-api/projects-count')
+        || req.originalUrl.includes('/legacy-api/jobs-count') || req.originalUrl.includes('/legacy-api/recordings-count')) {
+        return next();
+    }
+    else if (!req.user) {
         console.log('\n\n---TEMP: auth req.originalUrl', req.originalUrl)
         req.session.currentPath = req.protocol + '://' + req.get('host') + req.originalUrl;
         res.redirect('/legacy-login')
@@ -89,6 +94,32 @@ router.get('/user-settings', function(req, res) {
     } else {
         res.redirect('/');
     }
+});
+
+// Home page metrics
+
+router.get('/legacy-api/projects-count', function(req, res, next) {
+    res.type('json');
+    const key = { 'project-count': 'project-count' }
+    getCachedMetrics(req, res, key, null, next);
+});
+
+router.get('/legacy-api/jobs-count', function(req, res, next) {
+    res.type('json');
+    const key = { 'job-count': 'job-count' }
+    getCachedMetrics(req, res, key, null, next);
+});
+
+router.get('/legacy-api/recordings-species-count', function(req, res, next) {
+    res.type('json');
+    const key = { 'species-count': 'species-count' }
+    getCachedMetrics(req, res, key, null, next);
+});
+
+router.get('/legacy-api/recordings-count', function(req, res, next) {
+    res.type('json');
+    const key = { 'recording-count': 'recording-count' }
+    getCachedMetrics(req, res, key, null, next);
 });
 
 router.use('/legacy-api', dataApi);
