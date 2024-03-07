@@ -5,7 +5,7 @@
     <div class="col-12 mt-4">
         <button class="btn btn-default"
             ng-click="add() | trackEvent:'Dashboard-species':'add species'"
-            tooltip="Select a species sound"
+            tooltip="Add a new species + call type"
             tooltip-trigger="mouseenter">
             <i class="fa fa-plus mr-2"></i> New species
         </button>
@@ -17,7 +17,7 @@
             <i class="fa fa-trash mr-2"></i> Remove species
         </button>
         <div class="row-flex flex-direction-row flex-space-start flex-align-middle mt-4 mb-3">
-            <input ng-if="classes.length" type="text" class="form-control" ng-model="searchSpecies.q" style="width: 380px;" placeholder="Search species by name" ng-change="onFilterChanged()">
+            <input ng-if="classes.length" type="text" class="form-control" ng-model="searchSpecies.q" style="width: 380px;" placeholder="Search species by scientific name or family" ng-change="onFilterChanged()">
             <div class="ml-3 self-center"><loader ng-if="loading"></loader></div>
         </div>
         <div ng-hide="loading">
