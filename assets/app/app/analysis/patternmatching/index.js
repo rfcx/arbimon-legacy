@@ -85,6 +85,7 @@ angular.module('a2.analysis.patternmatching', [
     $scope.projecturl = Project.getUrl();
 
     $scope.getTemplates = function() {
+        $scope.getProjectInfo()
         $scope.loadingTemplates.value = true;
         const opts = {
             showRecordingUri: true,
@@ -128,10 +129,14 @@ angular.module('a2.analysis.patternmatching', [
         });
     }
 
-    Project.getInfo(function(data) {
-        $scope.project = data;
-        $scope.onOff = data.public_templates_enabled;
-    })
+    $scope.getProjectInfo = function() {
+        Project.getInfo(function(data) {
+            $scope.project = data;
+            $scope.onOff = data.public_templates_enabled;
+        })
+    }
+
+    $scope.getProjectInfo()
 
     $scope.disableToggle = function() {
         const isDisable = !a2UserPermit.can('manage project settings');
@@ -140,7 +145,7 @@ angular.module('a2.analysis.patternmatching', [
     }
 
     $scope.togglePublicTemplatesEnabled = function() {
-        if (disableToggle) return
+        if ($scope.disableToggle()) return
         $scope.onOff = $scope.onOff === 0 ? 1 : 0
 
         if(!a2UserPermit.can('manage project settings')) {
