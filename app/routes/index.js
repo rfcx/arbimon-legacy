@@ -48,12 +48,12 @@ router.use('/', acmeChallenge);
 // all routes after this middleware
 // are available only to logged users
 router.use(function(req, res, next) {
-    if (req.originalUrl.includes('/legacy-api/recordings-species-count') || req.originalUrl.includes('/legacy-api/projects-count')
-        || req.originalUrl.includes('/legacy-api/jobs-count') || req.originalUrl.includes('/legacy-api/recordings-count')) {
-        return next();
-    }
-    else if (!req.user) {
-        console.log('\n\n---TEMP: auth req.originalUrl', req.originalUrl)
+    // if (req.originalUrl.includes('/legacy-api/recordings-species-count') || req.originalUrl.includes('/legacy-api/projects-count')
+    //     || req.originalUrl.includes('/legacy-api/jobs-count') || req.originalUrl.includes('/legacy-api/recordings-count')) {
+    //     return next();
+    // }
+    console.log('\n\n---TEMP: auth req.originalUrl', req.originalUrl)
+    if (!req.user) {
         req.session.currentPath = req.protocol + '://' + req.get('host') + req.originalUrl;
         res.redirect('/legacy-login')
     } else return next();
