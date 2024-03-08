@@ -880,6 +880,11 @@ angular.module('a2.analysis.patternmatching', [
             songtype: this.patternMatching.songtype_name
         };
 
+        if (roiIds && !roiIds.length) {
+            notify.log('Please select PM ROI before validation.');
+            return;
+        }
+
         return a2PatternMatching.validateRois(this.id, roiIds, validation, cls).then((function(){
             rois.forEach(function(roi){
                 val_delta[roi.validated] -= 1;
