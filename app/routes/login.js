@@ -144,6 +144,7 @@ router.post('/login', function(req, res, next) {
 
 router.get('/legacy-login', (req, res, next) => {
     if (!req.user) {
+        req.session.currentPath = req.protocol + '://' + req.get('host') + req.originalUrl;
         return res.redirect(auth0Service.universalLoginUrl)
     }
 })
