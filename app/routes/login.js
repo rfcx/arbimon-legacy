@@ -155,11 +155,11 @@ router.get('/legacy-login-callback', async function(req, res, next) {
             return next(new Error(query.error_description))
         }
         if (!query.code) {
-            return next(new Error('Invalid authentication data'))
+            return next(new Error('Invalid authentication data: query code'))
         }
         const tokens = await auth0Service.getTokensByCode(query.code)
         if (!tokens) {
-            return next(new Error('Invalid authentication data'))
+            return next(new Error('Invalid authentication data: user token'))
         }
         const profile = auth0Service.parseTokens(tokens)
         model.users.sendTouchAPI(tokens.id_token)

@@ -9,6 +9,10 @@ var dbpool = {
         if (!dbpool.pool) {
             console.log("MySQL pool is being created")
             dbpool.pool = mysql.createPool({
+                connectionLimit : 30,
+                connectTimeout  : 30 * 1000,
+                acquireTimeout  : 30 * 1000,
+                timeout         : 30 * 1000,
                 host : config('db').host,
                 port : config('db').port || 3306,
                 user : config('db').user,

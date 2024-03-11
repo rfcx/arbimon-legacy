@@ -223,6 +223,10 @@ router.post('/:patternMatching/validate', function(req, res, next) {
     const validation = req.body.validation
     model.patternMatchings.getRoi(req.params.patternMatching, req.body.rois).then(async function(rois) {
         const updatedRois = rois.filter(function(roi) { return roi.validated != validation });
+        if (!updatedRois || !updatedRois.length) {
+            console.log('--500 status: patternMatchings.getRoi', updatedRois.length)
+            return next(new Error('Error to get PM data'));
+        }
         const updatedRoiIds = updatedRois.map(function(roi) { return roi.pattern_matching_roi_id });
         let options = {};
         options.speciesId = updatedRois[0].species_id;
