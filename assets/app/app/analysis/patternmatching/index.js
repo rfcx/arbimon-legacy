@@ -84,6 +84,15 @@ angular.module('a2.analysis.patternmatching', [
 
     $scope.projecturl = Project.getUrl();
 
+    $scope.getProjectInfo = function() {
+        Project.getInfo(function(data) {
+            $scope.project = data;
+            $scope.onOff = data.public_templates_enabled;
+        })
+    }
+
+    $scope.getProjectInfo()
+
     $scope.getTemplates = function() {
         $scope.getProjectInfo()
         $scope.loadingTemplates.value = true;
@@ -128,15 +137,6 @@ angular.module('a2.analysis.patternmatching', [
             }
         });
     }
-
-    $scope.getProjectInfo = function() {
-        Project.getInfo(function(data) {
-            $scope.project = data;
-            $scope.onOff = data.public_templates_enabled;
-        })
-    }
-
-    $scope.getProjectInfo()
 
     $scope.disableToggle = function() {
         const isDisable = !a2UserPermit.can('manage project settings');
