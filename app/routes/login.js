@@ -164,8 +164,10 @@ router.get('/legacy-login-callback', async function(req, res, next) {
         model.users.sendTouchAPI(tokens.id_token)
         await model.users.auth0Login(req, profile, tokens);
         if (!req.session === undefined && !req.session.currentPath) {
-            res.redirect('/projects');
-        } else res.redirect(req.session.currentPath)
+            return res.redirect('/projects');
+        }
+        console.log('\n\n---TEMP: legacy-login-callback session.currentPath', req.session.currentPath)
+        res.redirect(req.session.currentPath)
     } catch (e) {
         next(e)
     }
