@@ -59,13 +59,13 @@
                     {{ row.rec_count }}
                 </field>
                 <field title="Latitude" key="lat">
-                    {{ row.lat | number:3 }}
+                    {{ row.lat ? (row.lat | number:3) : 0}}
                 </field>
                 <field title="Longitude" key="lon">
-                    {{ row.lon | number:3 }}
+                    {{ row.lon ? (row.lon | number:3) : 0}}
                 </field>
                 <field title="Elevation" key="alt">
-                    {{ row.alt | number:0 }}
+                    {{ row.alt ? (row.alt | number:0) : 0}}
                 </field>
                 <field title="Current Timezone" key="timezone" tdclass="timezone hidelongtext">
                     <span title="{{ row.timezone }}">{{ row.utc }}</span>
@@ -118,7 +118,7 @@
                             ng-model="temp.lat"
                             placeholder="Latitude"
                             pattern="^-?\d+\.?\d*$"
-                            required>
+                        >
                     </div>
                 </div>
                 <div class="form-group">
@@ -130,7 +130,7 @@
                             ng-model="temp.lon"
                             placeholder="Longitude"
                             pattern="^-?\d+\.?\d*$"
-                            required>
+                        >
                     </div>
                 </div>
                 <div class="form-group">
@@ -142,7 +142,7 @@
                             ng-model="temp.alt"
                             placeholder="Elevation"
                             pattern="^-?\d+\.?\d*$"
-                            required>
+                        >
                     </div>
                 </div>
                 <div ng-if="editing" class="form-group">

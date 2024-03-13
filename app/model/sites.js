@@ -77,15 +77,20 @@ var Sites = {
         return dbpool.query(`SELECT timezone FROM sites WHERE site_id=${site_id}`).get(0).get('timezone');
     },
 
+    isEmptyCoordinate: function(l) {
+        if (!l || l === null || l === undefined) return true
+        return Number(l) === 0
+    },
+
     insert: function(site, db, callback) {
         var values = [];
 
         var schema = {
             project_id: joi.number(),
             name: joi.string(),
-            lat: joi.number(),
-            lon: joi.number(),
-            alt: joi.number(),
+            lat: joi.number().optional().default(null),
+            lon: joi.number().optional().default(null),
+            alt: joi.number().optional().default(null),
             site_type_id: joi.number().optional().default(2), // default mobile recorder
             external_id: joi.string().optional().default(null),
         };
@@ -100,14 +105,9 @@ var Sites = {
         }
 
         site = result.value;
-
-        if (site.lat !== undefined && site.lon !== undefined) {
-            try {
-                site.timezone = tzlookup(site.lat, site.lon);
-            } catch(err) {
-                site.timezone = 'UTC';
-            }
-        }
+        if (site['lat'] !== undefined && Sites.isEmptyCoordinate(site.lat)) site.lat = null
+        if (site['lon'] !== undefined && Sites.isEmptyCoordinate(site.lon)) site.lon = null
+        if (site['alt'] !== undefined && Sites.isEmptyCoordinate(site.alt)) site.alt = null
 
         for(var j in site) {
             if(j !== 'id') {
@@ -140,14 +140,9 @@ var Sites = {
         if(typeof site.site_id === "undefined")
             return callback(new Error("required field 'site_id' missing"));
 
-        if (site.lat !== undefined && site.lon !== undefined && !site.timezone_locked) {
-            try {
-                site.timezone = tzlookup(site.lat, site.lon);
-            } catch(err) {
-                console.log(err)
-                site.timezone = 'UTC';
-            }
-        }
+        if (site['lat'] !== undefined && Sites.isEmptyCoordinate(site.lat)) site.lat = null
+        if (site['lon'] !== undefined && Sites.isEmptyCoordinate(site.lon)) site.lon = null
+        if (site['alt'] !== undefined && Sites.isEmptyCoordinate(site.alt)) site.alt = null
 
         if (site.name !== undefined) {
             site['updated_at'] = moment.utc(new Date()).format();
@@ -699,8 +694,8 @@ var Sites = {
                     }
                     let siteExternalId = await this.createInCoreAPI(coreSite, token);
                     await this.setExternalId(result.insertId, siteExternalId, connection);
-                    let { countryCode } = await this.getCountryCodeCoreAPI(coreSite, token);
-                    await this.setCountryCode(result.insertId, countryCode, connection);
+                    let { countryCode, timezone } = await this.getCountryCodeAndTimezoneCoreAPI(coreSite, token);
+                    await this.setCountryCodeAndTimezone(result.insertId, countryCode, timezone, connection);
                 }
                 await connection.commit();
                 await connection.release();
@@ -748,7 +743,7 @@ var Sites = {
         })
     },
 
-    getCountryCodeCoreAPI: async function(coreSite, idToken) {
+    getCountryCodeAndTimezoneCoreAPI: async function(coreSite, idToken) {
         const options = {
             method: 'GET',
             url: `${rfcxConfig.apiBaseUrl}/streams?projects[]=${coreSite.project_id}&name[]=${coreSite.name}`,
@@ -761,7 +756,7 @@ var Sites = {
           return rp(options).then((response) => {
             if (response.body && !response.body.error) {
                 const body  = response.body
-                return { countryCode: body[0].country_code }
+                return { countryCode: body[0].country_code, timezone: body[0].timezone }
             } else throw new Error('Failed to get site data')
         })
     },
@@ -786,8 +781,8 @@ var Sites = {
                         name: site.name,
                         project_id: options.projectExternalId
                     }
-                    let { countryCode } = await this.getCountryCodeCoreAPI(coreSite, idToken);
-                    await this.setCountryCode(site.site_id, countryCode, connection);
+                    let { countryCode, timezone } = await this.getCountryCodeAndTimezoneCoreAPI(coreSite, idToken);
+                    await this.setCountryCodeAndTimezone(site.site_id, countryCode, timezone, connection);
                 };
                 const { originalProjectId } = options
                 if (site.project_id !== undefined && originalProjectId !== site.project_id) {
@@ -948,8 +943,9 @@ var Sites = {
         return (connection? connection.query : dbpool.query)(`UPDATE sites SET external_id = "${externalId}" WHERE site_id = ${siteId}`, [])
     },
 
-    setCountryCode: function (siteId, countryCode, connection) {
-        return (connection? connection.query : dbpool.query)(`UPDATE sites SET country_code = "${countryCode}" WHERE site_id = ${siteId}`, [])
+    setCountryCodeAndTimezone: function (siteId, countryCode, timezone, connection) {
+        const isCountryCodeNull = countryCode === null
+        return (connection? connection.query : dbpool.query)(`UPDATE sites SET country_code = ${isCountryCodeNull ? null : ('"' + countryCode + '"')}, timezone = "${timezone}" WHERE site_id = ${siteId}`, [])
     },
 
     /**
