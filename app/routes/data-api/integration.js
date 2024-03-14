@@ -69,6 +69,7 @@ router.post('/sites', verifyToken(), hasRole(['appUser', 'rfcxUser', 'guardianCr
     converter.convert('project_external_id').optional().toString();
     const params = await converter.validate();
     const user = await model.users.ensureUserExistFromAuth0(req.user);
+    const isSuperUser = user.is_super
 
     let project
     if (!params.project_id && !params.project_external_id) {
@@ -84,7 +85,7 @@ router.post('/sites', verifyToken(), hasRole(['appUser', 'rfcxUser', 'guardianCr
         throw new EmptyResultError('Project with given parameters not found.');
       }
       const hasPermission = await model.projects.userHasPermission(project.project_id, user.user_id)
-      if (!hasPermission) {
+      if (!hasPermission && !isSuperUser) {
         throw new ForbiddenError(`You don't have permission to manage project sites`);
       }
     }
