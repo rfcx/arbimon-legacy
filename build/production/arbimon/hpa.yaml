@@ -9,12 +9,12 @@ spec:
     kind: Deployment
     name: arbimon
   minReplicas: 1
-  maxReplicas: 5
+  maxReplicas: 3
   metrics:
     - type: Resource
       resource:
         name: cpu
-        targetAverageUtilization: 40
+        targetAverageUtilization: 90
 ---
 kind: HorizontalPodAutoscaler
 apiVersion: autoscaling/v2beta1
@@ -32,4 +32,4 @@ spec:
     - type: Resource
       resource:
         name: cpu
-        targetAverageUtilization: 30
+        targetAverageUtilization: 90
