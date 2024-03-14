@@ -61,9 +61,9 @@ router.post('/sites', verifyToken(), hasRole(['appUser', 'rfcxUser', 'guardianCr
   try {
     const converter = new Converter(req.body, {});
     converter.convert('name').toString();
-    converter.convert('latitude').toFloat().minimum(-90).maximum(90);
-    converter.convert('longitude').toFloat().minimum(-180).maximum(180);
-    converter.convert('altitude').toFloat();
+    converter.convert('latitude').optional().minimum(-90).maximum(90);
+    converter.convert('longitude').optional().minimum(-180).maximum(180);
+    converter.convert('altitude').optional();
     converter.convert('external_id').toString();
     converter.convert('project_id').optional().toString();
     converter.convert('project_external_id').optional().toString();

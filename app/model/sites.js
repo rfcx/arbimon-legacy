@@ -107,7 +107,6 @@ var Sites = {
         site = result.value;
         if (site['lat'] !== undefined && Sites.isEmptyCoordinate(site.lat)) site.lat = null
         if (site['lon'] !== undefined && Sites.isEmptyCoordinate(site.lon)) site.lon = null
-        if (site['alt'] !== undefined && Sites.isEmptyCoordinate(site.alt)) site.alt = null
 
         for(var j in site) {
             if(j !== 'id') {
@@ -142,7 +141,6 @@ var Sites = {
 
         if (site['lat'] !== undefined && Sites.isEmptyCoordinate(site.lat)) site.lat = null
         if (site['lon'] !== undefined && Sites.isEmptyCoordinate(site.lon)) site.lon = null
-        if (site['alt'] !== undefined && Sites.isEmptyCoordinate(site.alt)) site.alt = null
 
         if (site.name !== undefined) {
             site['updated_at'] = moment.utc(new Date()).format();
