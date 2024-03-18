@@ -131,7 +131,10 @@
                         </div>
 
                         <div class="btn-group btn-group-margin">
-                            <button class="btn btn-primary" ng-click="controller.validate()">Submit</button>
+                            <button class="btn btn-primary" style="width:80px" ng-click="controller.validate(patternMatchingId)" ng-disabled="controller.isValidating.disableBtn === true">
+                                <i ng-if="controller.isValidating.disableBtn === true" class="fa fa-spinner fa-spin" style="font-size: 16px;"></i>
+                                <span ng-if="controller.isValidating.disableBtn === false">Submit</span>
+                            </button>
                         </div>
                     </div>
                     <div class="pull-right">

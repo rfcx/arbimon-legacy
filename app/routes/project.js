@@ -32,7 +32,7 @@ router.use('/', function(req, res, next){
 });
 
 router.get('/:projecturl?/', function(req, res, next) {
-    res.type('html');
+    // res.type('html');
     const project_url = req.params.projecturl;
     if(!project_url){
         res.redirect('/projects');

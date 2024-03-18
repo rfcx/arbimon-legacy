@@ -468,6 +468,7 @@ angular.module('a2.analysis.patternmatching', [
         this.total = {rois:0, pages:0};
         this.paginationTotal = 0;
         this.loading = {details: false, rois: true};
+        this.isValidating = { disableBtn: false };
         this.validation = this.lists.validation[2];
         this.thumbnailClass = this.lists.thumbnails[0].value;
         this.search = this.lists.search[6];
@@ -855,7 +856,7 @@ angular.module('a2.analysis.patternmatching', [
         });
     },
 
-    validate: function(validation, rois){
+    validate: function(patternMatchingId, validation, rois) {
         if(!a2UserPermit.can('validate pattern matchings')) {
             notify.error('You do not have permission to validate the matched rois.');
             return;
@@ -885,7 +886,11 @@ angular.module('a2.analysis.patternmatching', [
             return;
         }
 
-        return a2PatternMatching.validateRois(this.id, roiIds, validation, cls).then((function(){
+        this.isValidating.disableBtn = true
+
+        if (!patternMatchingId) patternMatchingId = this.id
+        return a2PatternMatching.validateRois(patternMatchingId, roiIds, validation, cls).then((function(){
+            this.isValidating.disableBtn = false
             rois.forEach(function(roi){
                 val_delta[roi.validated] -= 1;
                 val_delta[validation] += 1;
@@ -895,10 +900,15 @@ angular.module('a2.analysis.patternmatching', [
             });
             this.patternMatching.absent += val_delta[0];
             this.patternMatching.present += val_delta[1];
+        }).bind(this)).catch((function(err){
+            this.isValidating.disableBtn = false
+            console.error('Err validate PM', err)
+            return notify.serverError(err);
         }).bind(this));
     }
 
-}); this.initialize($scope.patternMatchingId);
+    });
+    this.initialize($scope.patternMatchingId);
 })
 .controller('DeletePatternMatchingInstanceCtrl',
     function($scope, $modalInstance, a2PatternMatching, patternMatching) {

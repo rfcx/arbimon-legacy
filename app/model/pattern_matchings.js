@@ -805,7 +805,7 @@ var PatternMatchings = {
             "SELECT *\n" +
             "FROM pattern_matching_rois\n" +
             "WHERE pattern_matching_id = ? AND pattern_matching_roi_id IN (?)", [
-            patternMatchingId, roisId
+            Number(patternMatchingId), roisId
         ]);
     },
 
