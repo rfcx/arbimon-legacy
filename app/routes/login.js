@@ -166,7 +166,10 @@ router.get('/legacy-login-callback', async function(req, res, next) {
         if (!req.session === undefined && !req.session.currentPath) {
             return res.redirect('/projects');
         }
-        console.log('\n\n---TEMP: legacy-login-callback session.currentPath', req.session.currentPath)
+        if (!req.session.currentPath) {
+            console.log('\n\n---TEMP: legacy-login-callback session.currentPath', req.session.currentPath)
+            return res.redirect('/projects');
+        }
         res.redirect(req.session.currentPath)
     } catch (e) {
         next(e)
