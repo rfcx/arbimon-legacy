@@ -54,7 +54,7 @@ router.use(function(req, res, next) {
         if (req.session) {
             req.session.currentPath = req.protocol + '://' + req.get('host') + req.originalUrl;
         }
-        res.redirect('/legacy-login')
+        return res.redirect('/legacy-login')
     }
     return next();
 });
