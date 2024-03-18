@@ -102,7 +102,7 @@ router.get('/:projecturl?/', function(req, res, next) {
                     }
                 } else {
                     // if not authorized to see project send 404
-                    return res.redirect('/');
+                    return res.redirect('/projects')
                 }
 
                 if(!req.session.user.permissions)
