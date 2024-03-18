@@ -170,7 +170,7 @@ router.get('/legacy-login-callback', async function(req, res, next) {
             console.log('\n\n---TEMP: legacy-login-callback session.currentPath', req.session.currentPath)
             return res.redirect('/projects');
         }
-        res.redirect(req.session.currentPath)
+        return res.redirect(req.session.currentPath)
     } catch (e) {
         next(e)
     }

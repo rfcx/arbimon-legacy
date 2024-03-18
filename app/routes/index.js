@@ -51,7 +51,9 @@ router.use(function(req, res, next) {
     console.log('\n\n---TEMP: auth req.originalUrl', req.originalUrl)
     if (['/legacy-api/recordings-species-count', '/legacy-api/projects-count', '/legacy-api/jobs-count', '/legacy-api/recordings-count'].includes(req.originalUrl)) { return next(); }
     if (!req.user) {
-        req.session.currentPath = req.protocol + '://' + req.get('host') + req.originalUrl;
+        if (req.session) {
+            req.session.currentPath = req.protocol + '://' + req.get('host') + req.originalUrl;
+        }
         res.redirect('/legacy-login')
     }
     return next();
