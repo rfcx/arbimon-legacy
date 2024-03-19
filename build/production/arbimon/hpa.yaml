@@ -8,7 +8,7 @@ spec:
     apiVersion: apps/v1beta1
     kind: Deployment
     name: arbimon
-  minReplicas: 1
+  minReplicas: 2
   maxReplicas: 3
   metrics:
     - type: Resource
@@ -26,7 +26,7 @@ spec:
     apiVersion: apps/v1beta1
     kind: Deployment
     name: arbimon-ingest-consumer
-  minReplicas: 1
+  minReplicas: 2
   maxReplicas: 20
   metrics:
     - type: Resource
