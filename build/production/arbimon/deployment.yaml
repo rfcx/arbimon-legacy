@@ -56,7 +56,7 @@ spec:
           imagePullPolicy: Always
           readinessProbe:
             httpGet:
-              path: legacy-api/alive
+              path: /legacy-api/alive
               port: 3000
             initialDelaySeconds: 5
             timeoutSeconds: 2
