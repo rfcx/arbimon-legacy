@@ -156,8 +156,9 @@
                                 <p class="m-0 is-v-middle no-wrap hidelongtext" title="{{ row.name }}">{{ row.name }}</p>
                                 <a class="is-v-middle"
                                     ng-if="currentTab === 'projectTemplates' && row.project !== row.source_project_id && row.source_project_id !== null"
-                                    ng-click="goToSourceProject(row.source_project_id)">
-                                    <i aria-hidden="true" class="glyphicon glyphicon-link pl-2"></i>linked
+                                    ng-click="goToSourceProject(row.source_project_id, row.name)">
+                                    <i aria-hidden="true" class="glyphicon glyphicon-link text-frequency pl-2"></i>
+                                    <span class="text-frequency">linked</span>
                                 </a>
                             </div>
                         </field>

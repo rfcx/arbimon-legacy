@@ -129,11 +129,14 @@ angular.module('a2.analysis.patternmatching', [
         $scope.getTemplates()
     } else $scope.currentTab = 'patternMatchings'
 
-    $scope.goToSourceProject = function(projectId) {
+    $scope.goToSourceProject = function(projectId, species) {
         if (!projectId) return;
         Project.getProjectById(projectId, function(data) {
             if (data) {
-                $window.location.pathname = "/project/"+data.url+"/audiodata/templates";
+                $scope.removeFromLocalStorage();
+                $localStorage.setItem('audiodata.templates', JSON.stringify(species));
+                console.log("/project/"+data.url+"/analysis/patternmatching?tab=projectTemplates")
+                $window.location.href = "/project/"+data.url+"/analysis/patternmatching?tab=projectTemplates";
             }
         });
     }

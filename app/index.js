@@ -167,10 +167,10 @@ app.use(function(err, req, res, next) {
     // json APIs have more error-handling possibilities
     if (/application\/json/.test(res.getHeader('Content-Type'))) {
         if(err instanceof APIError){
-            res.json(err.message);
+            return res.json(err.message);
         } else {
             console.error(err.stack);
-            res.json('Server error');
+            return res.json('Server error');
         }
     } else {
         console.error(err.stack);
