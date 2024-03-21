@@ -53,7 +53,9 @@ router.use(function(req, res, next) {
     if (!req.user) {
         if (req.session) {
             req.session.currentPath = req.protocol + '://' + req.get('host') + req.originalUrl;
+            console.log('\n\n---TEMP: set path to session', req.session.currentPath)
         }
+        console.log('\n\n---TEMP: middleware to legacy-login')
         return res.redirect('/legacy-login')
     }
     return next();

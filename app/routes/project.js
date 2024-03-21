@@ -35,6 +35,7 @@ router.get('/:projecturl?/', function(req, res, next) {
     res.type('html');
     const project_url = req.params.projecturl;
     if(!project_url){
+        console.log('\n\n---TEMP: project url undefined')
         res.redirect('/projects');
         return;
     }
