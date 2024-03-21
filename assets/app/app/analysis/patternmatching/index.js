@@ -589,7 +589,7 @@ angular.module('a2.analysis.patternmatching', [
         var headerTop = $controller.anchors.header.offset().top;
 
         this.headerTop = headerTop | 0;
-        this.scrolledPastHeader = scrollPos >= headerTop;
+        this.scrolledPastHeader = scrollPos >= 450;
     },
 
     onSelect: function($item){
