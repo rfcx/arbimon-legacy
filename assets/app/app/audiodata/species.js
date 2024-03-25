@@ -8,7 +8,7 @@ angular.module('a2.audiodata.species', [
     $scope.loading = false;
     $scope.isAdding = false;
     $scope.selected = {};
-    $scope.supportLink = 'https://support.rfcx.org/article/34-pattern-matching-template'
+    $scope.supportLink = 'https://help.arbimon.org/article/226-creating-a-template'
 
     var timeout;
 
