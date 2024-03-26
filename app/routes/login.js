@@ -121,9 +121,12 @@ router.get('/legacy-api/email_available', function(req, res, next) {
 router.get('/login', function(req, res) {
     res.type('html');
     if(req.session) {
-        if(req.session.loggedIn) return res.redirect('/projects');
+        if (req.session.loggedIn) {
+            console.log('\n\n---TEMP: /login redirect to my projects loggedIn user')
+            return res.redirect('/projects');
+        }
     }
-    res.redirect('/');
+    return res.redirect('/');
 });
 
 
