@@ -72,8 +72,7 @@ angular.module('a2.srv.templates', ['a2.srv.project'])
             return $http.get('/legacy-api/project/' + Project.getUrl() + '/templates/data/' + templateId + '/image').then(function(response) {
                 return response.data;
             });
-        },
-
+        }
     };
 })
 ;

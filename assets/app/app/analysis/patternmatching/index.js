@@ -208,6 +208,20 @@ angular.module('a2.analysis.patternmatching', [
 
     }
 
+    $scope.downloadTemplate = function(template) {
+        if ((a2UserPermit.all && !a2UserPermit.all.length) || !a2UserPermit.can('manage templates')) {
+            return notify.error('You do not have permission to download template');
+        }
+        const form = document.createElement('form')
+        form.style.display = 'none'
+        form.method = 'GET'
+        const url = '/legacy-api/project/' + Project.getUrl() + '/templates/download/' + template.name + '/' + template.id + '.wav';
+        form.action = url
+        document.body.appendChild(form)
+        form.submit()
+        document.body.removeChild(form)
+    }
+
     $scope.removeFromLocalStorage = function () {
         $localStorage.setItem('audiodata.templates', null);
         $routeParams= null;

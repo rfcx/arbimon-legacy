@@ -3,11 +3,14 @@
         <h1 class="mt-0" style="margin-bottom: 24px;">
             Clustering Jobs
             <span class="beta-badge">BETA</span>
-            <a class="btn btn-sm btn-default ml-3"
+            <a class="btn btn-primary btn-rounded-full row-flex-inline flex-align-middle ml-3"
                 tooltip="Create New Clustering job"
                 tooltip-placement="right"
                 ng-click="createNewClusteringJob() | trackEvent:'Analysis-ClusteringModel-List':'Create new Clustering Job'">
-                <i class="fa fa-plus"></i> New Clustering Job
+                New Clustering Job
+                <span class="ml-3" style="width: 16px">
+                    <img src="/images/fi-plus.svg">
+                </span>
             </a>
         </h1>
         <button ng-if="showRefreshBtn"
@@ -46,12 +49,12 @@
                     {{ row.user }}
                 </field>
                 <field tdclass="is-v-middle">
-                    <button class="btn btn-default btn-xs" tooltip="Show Clustering Job's details"
+                    <button class="btn btn-default" tooltip="Show Clustering Job's details"
                         ng-click="selectItem(row) | trackEvent:'Analysis-Clustering-Data-List':' show clustering job details'"
                     >
                             Show Details
                     </button>
-                    <button class="btn btn-default btn-xs"
+                    <button class="btn btn-danger"
                         ng-click="deleteClusteringJob(row, $event) | trackEvent:'Analysis-Clustering-Data-List':'delete clustering job'"
                         tooltip="Delete"
                         tooltip-trigger="mouseenter">

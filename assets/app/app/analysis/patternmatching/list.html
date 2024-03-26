@@ -2,11 +2,14 @@
     <div class="col-sm-12 col-lg-11 padded-view-div" ng-if="!selectedPatternMatchingId">
         <h1 class="mt-0" style="margin-bottom: 24px;">
             Pattern Matching
-            <a class="btn btn-sm btn-default ml-3"
-                tooltip="Create New Pattern Matching job"
+            <a class="btn btn-primary btn-rounded-full row-flex-inline flex-align-middle ml-3"
+                tooltip="New PM Job"
                 tooltip-placement="right"
                 ng-click="createNewPatternMatching() | trackEvent:'Analysis-Pattern-Matching-List':'Create new pattern matching'">
-                <i class="fa fa-plus"></i> New PM Job
+                New PM Job
+                <span class="ml-3" style="width: 16px">
+                    <img src="/images/fi-plus.svg">
+                </span>
             </a>
         </h1>
         <div class="row panel-body">
@@ -29,13 +32,20 @@
             </ul>
         </div>
         <div ng-if="currentTab === 'patternMatchings'">
-            <div>
-              <input ng-if="isShowSearch()" type="text" class="form-control pull-left" ng-model="search.q" style="width: 380px;" placeholder="Search jobs by name, template, species, song type" ng-change="onFilterChanged()">
-              <button ng-if="loading.showRefreshBtn" class="btn btn-default pull-right btn-sm"
-                  tooltip="Refresh list"
-                  ng-click="loadPatternMatchings()">
-                      <i class="fa fa-refresh"></i> Refresh List
-              </button>
+            <div class="row-flex flex-direction-row flex-align-middle flex-space-between mt-3 mb-6">
+                <div class="row-flex flex-direction-row flex-align-middle">
+                    <div ng-if="isShowSearch()" class="mr-4" style="width:470px">
+                        <input type="text" class="form-control input-search" ng-model="search.q" placeholder="&#xF002;  Search jobs by name, template, species, song type" ng-change="onFilterChanged()">
+                    </div>
+                </div>
+                <div class="row-flex flex-direction-row flex-align-middle">
+                    <button ng-if="loading.showRefreshBtn" class="btn btn-default btn-rounded-full"
+                        tooltip="Refresh list"
+                        ng-click="loadPatternMatchings()">
+                            Refresh List
+                            <i class="fa fa-refresh ml-3"></i>
+                    </button>
+                </div>
             </div>
             <div class="ml-2"><loader ng-show="loading.rows"></loader></div>
             <div ng-show="!loading.rows && patternmatchingsData && !patternmatchingsData.length" class="help-wrapper col-sm-12 row-flex flex-direction-column flex-space-center flex-align-middle" style="text-align: center;">
@@ -89,7 +99,7 @@
                         {{ row.user }}
                     </field>
                     <field tdclass="is-v-middle">
-                        <button class="btn btn-default btn-xs"
+                        <button class="btn btn-danger"
                             ng-click="deletePatternMatching(row, $event) | trackEvent:'Analysis-Pattern-Matching-list':'delete pattern matching'"
                             tooltip="Delete"
                             tooltip-trigger="mouseenter">
@@ -101,24 +111,31 @@
         </div>
         <div class="row templates" ng-if="currentTab === 'projectTemplates' || currentTab === 'publicTemplates'">
             <div class="col-md-12">
-                <div class="mb-2 pull-left">
-                    <input type="text" class="form-control" ng-model="searchTemplates.q" style="width: 320px;" placeholder="Search templates by name, species or project" ng-change="onSearchChanged()">
-                </div>
-                <div class="col-sm-2">
-                    <ui-select ng-model="searchTemplates.taxon" theme="bootstrap" ng-change="onSearchChanged()">
-                        <ui-select-match placeholder="Taxon" title="{{ $select.selected.taxon }}">
-                            {{ $select.selected.taxon }}
-                        </ui-select-match>
-                        <ui-select-choices repeat="item in taxons | filter:$select.search">
-                            {{ item.taxon }}
-                        </ui-select-choices>
-                    </ui-select>
-                </div>
-                <div ng-if="!loadingTemplates.value && currentTab === 'projectTemplates'" class="flex" style="align-items: center; display: flex; justify-content: flex-end;">
-                    <span>
-                        Project templates shared in public library
-                    </span>
-                    <switch name="onOff" ng-change="togglePublicTemplatesEnabled()" ng-model="onOff" on="ON" off="OFF" style="margin-left:5px;" disabled="disableToggle()"></switch>
+                <div class="row-flex flex-direction-row flex-align-middle flex-space-between mt-3 mb-6">
+                    <div class="row-flex flex-direction-row flex-align-middle">
+                        <div class="mr-4" style="width:368px">
+                            <input type="text" class="form-control input-search" ng-model="searchTemplates.q" placeholder="&#xF002;  Search templates by name or species" ng-change="onSearchChanged()">
+                        </div>
+                        <div class="row-flex flex-direction-row flex-align-middle">
+                            <span for="taxa" class="text-util-gray-01 mr-3">Filter by:</span>
+                            <div style="width:86px">
+                                <ui-select id="taxa" ng-model="searchTemplates.taxon" theme="bootstrap" ng-change="onSearchChanged()">
+                                    <ui-select-match placeholder="Taxon" title="{{ $select.selected.taxon }}">
+                                        {{ $select.selected.taxon === 'All taxons' ? 'Taxa' : $select.selected.taxon }}
+                                    </ui-select-match>
+                                    <ui-select-choices repeat="item in taxons | filter:$select.search">
+                                        {{ item.taxon }}
+                                    </ui-select-choices>
+                                </ui-select>
+                            </div>
+                        </div>
+                    </div>
+                    <div ng-if="!loadingTemplates.value && currentTab === 'projectTemplates'" class="flex" style="align-items: center; display: flex; justify-content: flex-end;">
+                        <span>
+                            Project templates shared in public library
+                        </span>
+                        <switch name="onOff" ng-change="togglePublicTemplatesEnabled()" ng-model="onOff" on="ON" off="OFF" style="margin-left:5px;" disabled="disableToggle()"></switch>
+                    </div>
                 </div>
                 <loader ng-if="loadingTemplates.value"></loader>
                 <div ng-if="!loadingTemplates.value && templatesData && templatesData.length">
@@ -188,12 +205,19 @@
                             </span>
                         </field>
                         <field tdclass="is-v-middle">
-                            <button class="btn btn-default"
+                            <button class="btn btn-default mr-4"
+                                ng-if="currentTab === 'projectTemplates'"
+                                ng-click="downloadTemplate(row)"
+                                tooltip="Download template (.wav)"
+                                tooltip-trigger="mouseenter">
+                                <i class="fa fa-download" style="font-size: 13px;"></i>
+                            </button>
+                            <button class="btn btn-danger"
                                 ng-if="currentTab === 'projectTemplates'"
                                 ng-click="deleteTemplate(row.id) | trackEvent:'Audiodata-template':'del clicked'"
                                 tooltip="Delete Template"
                                 tooltip-trigger="mouseenter">
-                                <i class="fa fa-trash"></i>
+                                <i class="fa fa-trash" style="font-size: 15px;"></i>
                             </button>
                             <button class="btn btn-default"
                                 ng-if="currentTab === 'publicTemplates'"

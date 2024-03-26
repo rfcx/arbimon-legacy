@@ -2,17 +2,23 @@
     <div class="col-sm-12 col-lg-11 padded-view-div" >
         <h1 class="mt-0" style="margin-bottom: 24px;">
             Random Forest Models
-            <a class="btn btn-sm btn-default ml-3"
-                tooltip="Create New Classification Job"
+            <a class="btn btn-primary btn-rounded-full row-flex-inline flex-align-middle ml-3"
+                tooltip=" New Classification Job"
                 tooltip-placement="right"
-                ng-click="createNewClassification() | trackEvent:'Analysis-Classification-List':'Create new classification'">
-                <i class="fa fa-plus"></i> New Classification Job
+                ng-click="createNewClassification() | trackEvent:'Analysis-Classification-List':' New Classification Job'">
+                New Classification Job
+                <span class="ml-3">
+                    <img src="/images/fi-plus.svg">
+                </span>
             </a>
-            <a class="btn btn-sm btn-default ml-3"
-                tooltip="Create New Model"
+            <a class="btn btn-success btn-rounded-full row-flex-inline flex-align-middle ml-3"
+                tooltip="New Training Job"
                 tooltip-placement="right"
-                ng-click="newModel() | trackEvent:'Analysis-Model list':'new model'">
-                <i class="fa fa-plus"></i> New Training Job
+                ng-click="newModel() | trackEvent:'Analysis-Model list':'New Training Job'">
+                New Training Job
+                <span class="ml-3">
+                    <img src="/images/fi-plus-primary.svg">
+                </span>
             </a>
         </h1>
         <div class="row panel-body">
@@ -37,10 +43,11 @@
         <div ng-if="currentTab === 'rfm'">
             <div>
                 <loader ng-show="loading"></loader>
-                <button class="btn btn-default pull-right btn-sm"
+                <button class="btn btn-default pull-right btn-rounded-full"
                     tooltip="Refresh list"
                     ng-click="loadModels()">
-                    <i class="fa fa-refresh"></i> Refresh List
+                    Refresh List
+                    <i class="fa fa-refresh ml-3"></i>
                 </button>
             </div>
             <div ng-hide="loading">

@@ -58,10 +58,10 @@
                     nv-file-select uploader="uploader" type="file" multiple>
             </div>
             <div class="btn-group mr-1" dropdown>
-                <button type="button" class="btn btn-default dropdown-toggle"
+                <button type="button" class="btn btn-danger dropdown-toggle"
                     ng-disabled="!uploader.queue.length"
                     dropdown-toggle>
-                    <i class="fa fa-trash mr-1"></i>Clear
+                    <i class="fa fa-trash mr-1"></i>
                     <i class="fa fa-caret-down"></i>
                 </button>
                 <ul class="dropdown-menu" role="menu">
@@ -127,11 +127,11 @@
                             </span>
                         </td>
                         <td nowrap>
-                            <button type="button" class="btn btn-warning btn-xs" ng-click="item.cancel() | trackEvent:'Audiodata-Upload':'item.cancel'" ng-disabled="!item.isUploading">
+                            <button type="button" class="btn btn-warning" ng-click="item.cancel() | trackEvent:'Audiodata-Upload':'item.cancel'" ng-disabled="!item.isUploading">
                                 <i class="fa fa-ban"></i>Stop
                             </button>
-                            <button type="button" class="btn btn-default btn-xs" ng-click="item.remove() | trackEvent:'Audiodata-Upload':'item.remove'">
-                                <i class="fa fa-trash"></i>Remove
+                            <button type="button" class="btn btn-danger" ng-click="item.remove() | trackEvent:'Audiodata-Upload':'item.remove'">
+                                <i class="fa fa-trash"></i>
                             </button>
                         </td>
                     </tr>
