@@ -72,7 +72,7 @@ angular.module('a2.audiodata.sites', [
         const bounds = new google.maps.LatLngBounds();
 
         angular.forEach($scope.sites, function(site) {
-            if (site.lat > 85 || site.lat < -85 || site.lon > 180 || site.lon < -180) {
+            if (site.lat > 85 || site.lat < -85 || site.lon > 180 || site.lon < -180 || site.hidden) {
                 return;
             }
             var marker
@@ -506,6 +506,10 @@ angular.module('a2.audiodata.sites', [
         $scope.fitBounds()
     };
 
+    $scope.isLocationEmpty = function(lat, lon) {
+        return(lat === 0 && lon === 0) || (lat === null && lon === null)
+    }
+
     $scope.edit = function() {
         if(!$scope.selected) return;
         if(!a2UserPermit.can('manage project sites')) {
@@ -515,6 +519,7 @@ angular.module('a2.audiodata.sites', [
         $scope.set_show('map');
         $scope.temp = angular.copy($scope.selected);
         $scope.temp.published = ($scope.temp.published === 1);
+        $scope.temp.hidden = ($scope.temp.hidden === 1);
         Project.getProjectsList('my', function(data) {
             $scope.projects = data.map(project => {
                 return {

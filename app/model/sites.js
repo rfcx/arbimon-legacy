@@ -84,6 +84,7 @@ var Sites = {
 
     insert: function(site, db, callback) {
         var values = [];
+        site.hidden = (site.hidden === 1 || site.hidden === true || site.hidden === 'true') ? 1 : 0
 
         var schema = {
             project_id: joi.number(),
@@ -93,6 +94,7 @@ var Sites = {
             alt: joi.number().optional().default(null),
             site_type_id: joi.number().optional().default(2), // default mobile recorder
             external_id: joi.string().optional().default(null),
+            hidden: joi.number().optional().default(0)
         };
 
         var result = joi.validate(site, schema, {
@@ -156,6 +158,8 @@ var Sites = {
             site['updated_at'] = nowFormatted
         }
 
+        site.hidden = (site.hidden === 1 || site.hidden === true || site.hidden === 'true') ? 1 : 0
+
         var tableFields = [
             "project_id",
             "name",
@@ -166,7 +170,8 @@ var Sites = {
             "site_type_id",
             "timezone",
             "updated_at",
-            "deleted_at"
+            "deleted_at",
+            "hidden"
         ];
 
         for( var i in tableFields) {

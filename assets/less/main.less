@@ -215,8 +215,28 @@ h5 {
   color: @util-gray-01;
 }
 
+.border-util-gray-03 {
+  border-color: @util-gray-03;
+}
+
+.border-gray-600 {
+  border-color: #4B5563;
+}
+
+.bg-echo {
+  background-color: @echo;
+}
+
+.bg-moss {
+  background-color: @moss;
+}
+
 .font-size-base {
   font-size: @font-size-base
+}
+
+.rounded-lg {
+  border-radius: 8px;
 }
 
 // Container
@@ -361,6 +381,34 @@ h5 {
     border-color: @util-gray-02 !important;
     box-shadow: none !important;
   }
+}
+
+.sites-settings input[type=checkbox] {
+  width: 16px;
+  height: 16px;
+  border-radius: 2px;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  -o-appearance: none;
+  appearance: none;
+  outline: none;
+  border: 2px solid @insight !important;
+  background-color: @echo !important;
+}
+
+.sites-settings input[type=checkbox]:checked {
+  color: @echo !important;
+  opacity: 1;
+  -webkit-appearance: checkbox;
+  -moz-appearance: checkbox;
+  -o-appearance: checkbox;
+  appearance: checkbox;
+  border: 2px solid @frequency !important;
+  accent-color: @frequency !important;
+  width: 16px;
+  height: 16px;
+  border-radius: 2px;
+  background-image: url("data:image/svg+xml,%3Csvg width='13' height='10' viewBox='0 0 13 10' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11.5 1.25L4.625 8.125L1.5 5' stroke='%23ADFF2C' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
 }
 
 .ui-select-toggle {
