@@ -1,11 +1,11 @@
 <div class="layer layer_gray-dark"
-    ng-click="selection.select(layer) | trackEvent:'Visualizer-Default':'selection layer'"
+    ng-click="selection.select(layer)"
     ng-class="{selected: selection.layer == layer, 'hide-btns' : layer.hide_visibility}"
 >
 
     <div class="gripper"></div>
     <div class="layer-btns">
-        <button class="layer-btn" ng-click="layer.visible = !layer.visible | trackEvent:'Visualizer-Default':'layer visibility'"
+        <button class="layer-btn" ng-click="layer.visible = !layer.visible"
             ng-class="{'layer-btn_active': layer.templates && (layer.templates.recordingTemplates && layer.templates.recordingTemplates.length)
                 || (layer.training_data.data.rois.length || layer.training_data.data.editor.roi) || (layer.species_presence.speciesPresence.length && layer.species_presence.speciesPresence)
                 || (layer.audio_events.audioEvents && layer.audio_events.audioEvents.length)}">

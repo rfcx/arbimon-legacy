@@ -9,7 +9,6 @@ var a2 = angular.module('a2.cs-app', [
     'a2.directive.sidenav-bar',
     'a2.settings',
     'a2.login',
-    'angularytics',
     'ui.router',
     'ct.ui.router.extras',
     'a2.filters',
@@ -18,9 +17,8 @@ var a2 = angular.module('a2.cs-app', [
     'a2.injected.data',
     'a2.directive.search-bar'
 ])
-.run(function($rootScope, Angularytics, a2UserPermit, notify, $state) {
+.run(function($rootScope, a2UserPermit, notify, $state) {
     $rootScope.Math = Math; // export math library to angular :-)
-    Angularytics.init();
 
     $rootScope.$on('$stateChangeStart', function(e, to, params) {
         // only check permissions if state have allowAccess
@@ -38,9 +36,8 @@ var a2 = angular.module('a2.cs-app', [
         }
     });
 })
-.config(function($urlRouterProvider, $locationProvider, AngularyticsProvider, a2GoogleMapsLoaderProvider, a2InjectedData) {
+.config(function($urlRouterProvider, $locationProvider, a2GoogleMapsLoaderProvider, a2InjectedData) {
     a2GoogleMapsLoaderProvider.setAPIKey(a2InjectedData.googleAPI.key);
-    AngularyticsProvider.setEventHandlers(['GoogleUniversal']);
     $locationProvider.html5Mode(true);
     $urlRouterProvider.otherwise("/citizen-scientist/patternmatching/");
 })

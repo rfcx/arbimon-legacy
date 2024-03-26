@@ -1,5 +1,5 @@
 <div>
-    <h5  class="collapse-title"  ng-click="layer.is_tset_open = !layer.is_tset_open | trackEvent:'Visualizer-Roi-Set':'open layer'">
+    <h5  class="collapse-title"  ng-click="layer.is_tset_open = !layer.is_tset_open">
         <i class="fa" ng-class="layer.is_tset_open ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
         <a2-species species="layer.training_data.tset.species"></a2-species>
         <small>
@@ -19,7 +19,7 @@
             <tr><th>x1</th><th>y1</th><th>x2</th><th>y2</th></tr>
             <tr ng-repeat="roi in layer.training_data.data.rois" 
                 ng-class ="{'active':layer.training_data.data.selected == roi}"
-                ng-click ="layer.training_data.data.selected = roi | trackEvent:'Visualizer-Roi-Set':'select roi'"
+                ng-click ="layer.training_data.data.selected = roi"
             >
                 <td>{{roi.x1         | number:2}}&nbsp;s</td>
                 <td>{{roi.y1 /1000.0 | number:2}}&nbsp;kHz</td>

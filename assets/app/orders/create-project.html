@@ -1,6 +1,6 @@
 <form name="projectForm" 
     role="form" 
-    ng-submit="create() | trackEvent:'Home-Create-Project':'ok'">
+    ng-submit="create()">
 
     <div class="modal-header">
         <h2 class="modal-title">Create project</h2>
@@ -15,7 +15,7 @@
             Create project
         </button>
         <button class="btn btn-default" type="button" 
-            ng-click="$dismiss() | trackEvent:'Home-Create-Project':'close'">
+            ng-click="$dismiss()">
             Cancel
         </button>
     </div>

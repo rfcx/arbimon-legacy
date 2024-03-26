@@ -3,18 +3,18 @@
     <div class="col-lg-5 col-sm-12 mt-4">
         <div class="row-flex flex-space-between">
             <div class="row-flex flex-align-middle">
-                <button ng-click="controller.addNewTrainingSet() | trackEvent:'Audiodata-Training Sets':'add_new_tset'" class="btn btn-default"
+                <button ng-click="controller.addNewTrainingSet()" class="btn btn-default"
                     tooltip="Create Training Set">
                     <i class="fa fa-plus"></i> New Training Set
                 </button>
                 <button class="btn btn-default ml-2"
-                    ng-click="controller.editSelectedTrainingSet() | trackEvent:'Audiodata-Training Sets':'edit training set'"
+                    ng-click="controller.editSelectedTrainingSet()"
                     ng-disabled="!controller.selected.trainingSet"
                     tooltip="Edit Training Set">
                     <i class="fa fa-pencil"></i>
                 </button>
                 <button class="btn btn-default ml-2"
-                    ng-click="controller.deleteSelectedTrainingSet() | trackEvent:'Audiodata-Training Sets':'delete training set'"
+                    ng-click="controller.deleteSelectedTrainingSet()"
                     ng-disabled="!controller.selected.trainingSet"
                     tooltip="Remove Training Set">
                     <i class="fa fa-trash"></i>
@@ -119,10 +119,10 @@
                     <div class="col-sm-offset-2 col-sm-8">
                         <div class="toolbar pull-right">
                             <div class="btn-group" ng-show="controller.total.pages > 1 || controller.detailedView">
-                                <a class="btn btn-default" ng-click="controller.prev() | trackEvent:'Audiodata-Training Sets':'prevPage'">Previous</a>
+                                <a class="btn btn-default" ng-click="controller.prev()">Previous</a>
                                 <a class="btn btn-default" ng-hide="controller.detailedView">{{controller.selected.page + 1}} of {{controller.total.pages}}</a>
                                 <a class="btn btn-default" ng-show="controller.detailedView">{{controller.selected.roi_index + 1}} of {{controller.total.rois}}</a>
-                                <a class="btn btn-default" ng-click="controller.next() | trackEvent:'Audiodata-Training Sets':'nextPage'">Next</a>
+                                <a class="btn btn-default" ng-click="controller.next()">Next</a>
                             </div>
 
                             <div class="btn-group">
@@ -139,7 +139,7 @@
                             <div class="btn-group">
                                 <a class="btn btn-default btn-sm"
                                     ng-href="{{controller.selected.trainingSet.export_url}}"
-                                    ng-click="controller.exportTSReport($event) | trackEvent:'Audiodata-Training Sets':'export training set'"
+                                    ng-click="controller.exportTSReport($event)"
                                     tooltip="Export Training Set Data">
                                     <i class="fa fa-download"></i>
                                 </a>
@@ -157,7 +157,7 @@
                         popover-trigger="mouseenter"
                         popover-append-to-body="true"
                     >
-                        <button ng-click="controller.removeRoi(roi.id) | trackEvent:'Audiodata-Training Sets':'removeRoi'"
+                        <button ng-click="controller.removeRoi(roi.id)"
                             class="roi-btn-tr roi-delete"
                             tooltip-placement="left"
                             tooltip-append-to-body="true"
@@ -189,7 +189,7 @@
                                     </div>
                                     <div class="col-sm-1" class="roi-div-inline-remove-detail" >
                                         <button class="roi-delete"
-                                            ng-click="controller.removeRoi(controller.selected.roi.id) | trackEvent:'Audiodata-Training Sets':'removeRoi'"
+                                            ng-click="controller.removeRoi(controller.selected.roi.id)"
                                             tooltip="Delete ROI">
                                             <i class="fa fa-times"></i>
                                         </button>
@@ -219,7 +219,7 @@
         <a class="btn btn-sm btn-default"
             tooltip="Create Training Set"
             tooltip-placement="top"
-            ng-click="controller.addNewTrainingSet() | trackEvent:'Audiodata-Training Sets':'addNewTrainingSet'">
+            ng-click="controller.addNewTrainingSet()">
             <i class="fa fa-plus mr-1" ></i> New Training Set
         </a>
         <p class="mt-3 mb-0">Learn more:</p>

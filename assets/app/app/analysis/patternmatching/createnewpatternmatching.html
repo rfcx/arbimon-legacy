@@ -16,7 +16,7 @@
             <div class="mb-3 flex row-flex flex-align-middle" ng-if="controller.list.templates && !controller.list.templates.length">
                 <em class="pr-2">No templates found.</em>
                 Go to
-                <button class="btn btn-sm btn-default ml-2 mr-2" ng-click="controller.cancel('/visualizer') | trackEvent:'Analysis-PatternMatching-new pattern matching modal':'Cancel-Create template'">
+                <button class="btn btn-sm btn-default ml-2 mr-2" ng-click="controller.cancel('/visualizer')">
                     Visualizer
                 </button>
                 and create a template.
@@ -101,11 +101,11 @@
     </form>
 </div>
 <div class="modal-footer">
-    <button class="btn btn-primary" ng-click="controller.ok() | trackEvent:'Analysis-PatternMatching-new pattern matching modal':'Submit'" ng-disabled="controller.isSaving || !controller.isJobValid()">
+    <button class="btn btn-primary" ng-click="controller.ok()" ng-disabled="controller.isSaving || !controller.isJobValid()">
         <i class="fa fa-cogs"></i>
         Create
     </button>
-    <button class="btn btn-default" ng-click="controller.cancel() | trackEvent:'Analysis-PatternMatching-new pattern matching modal':'Cancel'">
+    <button class="btn btn-default" ng-click="controller.cancel()">
         <i class="fa fa-times"></i>
         Close
     </button>

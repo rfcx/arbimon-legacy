@@ -23,7 +23,7 @@
                     </button>
                     <ul class="dropdown-menu dropdown-height-7" role="menu" aria-labelledby="dLabel">
                         <li ng-repeat="type in tset_types">
-                            <a ng-click="data.type = type | trackEvent:'Visualizer-Add-Training-Set':'setting data-type'">{{type.name}}</a>
+                            <a ng-click="data.type = type">{{type.name}}</a>
                         </li>
                     </ul>
                 </div>
@@ -54,9 +54,9 @@
 </div>
 <div class="modal-footer">
     <button class="btn btn-primary"
-        ng-click="ok()| trackEvent:'Visualizer-Add-Training-Set':'Ok'"
+        ng-click="ok()"
         ng-disabled="creating">
         {{ creating ? 'Creating...' : 'Create' }}
     </button>
-    <button class="btn btn-default" ng-click="$dismiss() | trackEvent:'Visualizer-Add-Training-Set':'Cancel'">Close</button>
+    <button class="btn btn-default" ng-click="$dismiss()">Close</button>
 </div>

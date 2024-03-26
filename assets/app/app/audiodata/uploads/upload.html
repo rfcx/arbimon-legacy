@@ -65,7 +65,7 @@
                     <i class="fa fa-caret-down"></i>
                 </button>
                 <ul class="dropdown-menu" role="menu">
-                    <li><a ng-click="uploader.clearQueue(); clearQueue() | trackEvent:'Audiodata-Upload':'uploader.clearQueue'">All</a></li>
+                    <li><a ng-click="uploader.clearQueue(); clearQueue()">All</a></li>
                     <li><a ng-click="removeCompleted()">Completed</a></li>
                 </ul>
             </div>
@@ -76,12 +76,12 @@
     <div class="row">
         <div class="col-md-12 row-flex flex-direction-row flex-align-middle">
             <button type="button" class="btn btn-primary mr-2"
-                ng-click="verifyAndUpload() | trackEvent:'Audiodata-Upload':'verifyAndUpload'"
+                ng-click="verifyAndUpload()"
                 ng-disabled="isStartUploadDisabled()">
                 <i class="fa fa-cloud-upload mr-1"></i>Start upload
             </button>
             <button type="button" class="btn btn-default mr-3"
-                ng-click="stopQueue() | trackEvent:'Audiodata-Upload':'uploader.cancelAll'"
+                ng-click="stopQueue()"
                 ng-disabled="!uploading">
                 <i class="fa fa-ban mr-1"></i>Stop all
             </button>
@@ -127,10 +127,10 @@
                             </span>
                         </td>
                         <td nowrap>
-                            <button type="button" class="btn btn-warning btn-xs" ng-click="item.cancel() | trackEvent:'Audiodata-Upload':'item.cancel'" ng-disabled="!item.isUploading">
+                            <button type="button" class="btn btn-warning btn-xs" ng-click="item.cancel()" ng-disabled="!item.isUploading">
                                 <i class="fa fa-ban"></i>Stop
                             </button>
-                            <button type="button" class="btn btn-default btn-xs" ng-click="item.remove() | trackEvent:'Audiodata-Upload':'item.remove'">
+                            <button type="button" class="btn btn-default btn-xs" ng-click="item.remove()">
                                 <i class="fa fa-trash"></i>Remove
                             </button>
                         </td>

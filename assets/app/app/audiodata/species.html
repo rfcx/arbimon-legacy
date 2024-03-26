@@ -4,14 +4,14 @@
     </h1>
     <div class="col-12 mt-4">
         <button class="btn btn-default"
-            ng-click="add() | trackEvent:'Dashboard-species':'add species'"
+            ng-click="add()"
             tooltip="Add a new species + call type"
             tooltip-trigger="mouseenter">
             <i class="fa fa-plus mr-2"></i> New species
         </button>
         <button class="btn btn-default ml-3"
             ng-disabled="!checked || !checked.length"
-            ng-click="removeSpecies() | trackEvent:'Dashboard-species':'delete species'"
+            ng-click="removeSpecies()"
             tooltip="Remove species sound"
             tooltip-trigger="mouseenter">
             <i class="fa fa-trash mr-2"></i> Remove species

@@ -11,7 +11,7 @@
             <label for="template">Model:</label>
             <span class="red" ng-hide="controller.loading.models || controller.list.models.length">
                 <em>No models found.
-                    <a class="red cs-pointer linodeco" ng-click="controller.cancel('/audiodata/random-forest-models/models') | trackEvent:'Analysis-CNN-new cnn modal':'Cancel-Create model'">Create one.</a>
+                    <a class="red cs-pointer linodeco" ng-click="controller.cancel('/audiodata/random-forest-models/models')">Create one.</a>
                 </em>
             </span>
             <ui-select ng-disabled="disabled" ng-model="controller.data.model" theme="/common/templates/a2-ui-select">
@@ -64,11 +64,11 @@
     </form>
 </div>
 <div class="modal-footer">
-    <button class="btn btn-primary" ng-click="controller.ok() | trackEvent:'Analysis-CNN-new cnn modal':'Submit'" ng-disabled="buttonEnable()">
+    <button class="btn btn-primary" ng-click="controller.ok()" ng-disabled="buttonEnable()">
         <i class="fa fa-cogs"></i>
         Create
     </button>
-    <button class="btn btn-default" ng-click="controller.cancel() | trackEvent:'Analysis-CNN-new cnn modal':'Cancel'">
+    <button class="btn btn-default" ng-click="controller.cancel()">
         <i class="fa fa-times"></i>
         Close
     </button>

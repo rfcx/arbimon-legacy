@@ -1,5 +1,5 @@
 <div class="layer">
-    <h5  class="collapse-title"  ng-click="layer.is_open = !layer.is_open | trackEvent:'Visualizer-Soundscapes-region-tags':'select tag'">
+    <h5  class="collapse-title"  ng-click="layer.is_open = !layer.is_open">
         <i class="fa" ng-class="layer.is_open ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
         {{layer.ctrl.soundscape.name}}, {{layer.ctrl.region.name}} Tags
         <span class="badge pull-right">{{layer.ctrl.tags.length}}</span>
@@ -16,7 +16,7 @@
         <div class="input-group input-group-sm" style="width:50%">
             <input type="text" class="form-control" ng-model="layer.ctrl.tag.name" ng-keypress="($event.which == 13) && layer.ctrl.tag.add()" />
             <span class="input-group-btn">
-                <button class="btn btn-default btn-sm input-btn" ng-click="layer.ctrl.tag.add() | trackEvent:'Visualizer-Soundscapes-region-tags':'add tag'"><i class="fa fa-plus"></i></button>
+                <button class="btn btn-default btn-sm input-btn" ng-click="layer.ctrl.tag.add()"><i class="fa fa-plus"></i></button>
             </span>
         </div>
     </div>

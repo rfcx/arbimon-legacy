@@ -1,11 +1,11 @@
 <div class="layer">
-    <h5 class="collapse-title" tooltip="Used for Pattern Matching Analysis" ng-click="layer.is_open = !layer.is_open  | trackEvent:'Visualizer-Training-Data':'open template layer'">
+    <h5 class="collapse-title" tooltip="Used for Pattern Matching Analysis" ng-click="layer.is_open = !layer.is_open">
         <i class="fa" ng-class="layer.is_open ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
         Templates (Pattern Matching Analysis)
     </h5>
     <div ng-show="layer.is_open">
         <!-- <div>
-            <h5  class="collapse-title"  ng-click="layer.is_tset_open = !layer.is_tset_open | trackEvent:'Visualizer-Roi-Set':'open layer'">
+            <h5  class="collapse-title"  ng-click="layer.is_tset_open = !layer.is_tset_open">
                 <i class="fa" ng-class="layer.is_tset_open ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
                 <a2-species species="layer.templates.tset.species"></a2-species>
                 <small>
@@ -23,7 +23,7 @@
             <table class="bg table table-condensed">
                 <tr ng-repeat-start="roi in layer.templates.recordingTemplates"
                     ng-class ="{'active':layer.templates.selected == roi}"
-                    ng-click ="layer.templates.selected = roi | trackEvent:'Visualizer-Templates':'select template'"
+                    ng-click ="layer.templates.selected = roi"
                 >
                     <td colspan="2">
                         {{roi.name}}<br />

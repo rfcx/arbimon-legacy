@@ -20,7 +20,7 @@
                         typeahead-no-results="noResults">
                     <span class="input-group-btn">
                         <button class="btn btn-default input-btn"
-                            ng-click="add() | trackEvent:'Dashboard-users':'add user'"
+                            ng-click="add()"
                             tooltip="Add user"
                             tooltip-trigger="mouseenter">
                             <i class="fa fa-plus"></i>
@@ -30,7 +30,7 @@
                 </div>
                 <div class="well well-sm" style="position: absolute; top: 100%; left: 15px; width: calc(100% - 30px); z-index: 100;" ng-show="noResults">
                     <span style="display: inline-block; vertical-align: middle;">No users found</span>
-                    <button style="display: inline-block; vertical-align: middle; margin-left: 5px;" class="btn btn-primary btn-sm" ng-click="invite() | trackEvent:'Dashboard-users':'invite user'">Invite</button>
+                    <button style="display: inline-block; vertical-align: middle; margin-left: 5px;" class="btn btn-primary btn-sm" ng-click="invite()">Invite</button>
                 </div>
             </div>
         </div>
@@ -51,7 +51,7 @@
                                         <option ng-repeat="role in roles">{{ role.name }}</option>
                                     </select>
                                     <button class="btn btn-default ml-3 py-0"
-                                        ng-click="del($index) | trackEvent:'Dashboard-users':'delete user'"
+                                        ng-click="del($index)"
                                         tooltip="Remove user"
                                         tooltip-trigger="mouseenter">
                                         <i class="fa fa-times"></i>

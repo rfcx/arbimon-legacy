@@ -4,7 +4,7 @@
         <th ng-hide="noCheck">
             <input type="checkbox" ng-disabled="!rows.length" ng-model="checkall" ng-change="toggleAll()">
         </th>
-        <th ng-repeat="field in fields" ng-click="sortBy(field) | trackEvent:'Directives-Table':'sort table'">
+        <th ng-repeat="field in fields" ng-click="sortBy(field)">
             {{ field.name }}
             <i class="fa" ng-class="{ 'fa-chevron-up': (sortKey === field.key) && (!reverse), 'fa-chevron-down': (sortKey === field.key) && (reverse) }"></i>
         </th>
@@ -12,12 +12,12 @@
 </thead>
 <tbody>
     <tr ng-repeat="row in rows | filter: query | orderBy: sort : reverse"
-        ng-click="sel(row, $index) | trackEvent:'Directives-Table':'select row'"
+        ng-click="sel(row, $index)"
         ng-class="{ 'active': selected == row }">
         <td ng-hide="noCheck">
             <input type="checkbox"
                 ng-model="row.checked"
-                ng-click="check($event, $index) | trackEvent:'Directives-Table':'check row'"
+                ng-click="check($event, $index)"
                 stop-click>
         </td>
         <td ng-repeat="field in fields" ng-class="field.tdclass ? field.tdclass : null">{{ formatString(row[field.key]) }}</td>

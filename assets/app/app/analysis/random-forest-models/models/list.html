@@ -5,13 +5,13 @@
             <a class="btn btn-sm btn-default ml-3"
                 tooltip="Create New Classification Job"
                 tooltip-placement="right"
-                ng-click="createNewClassification() | trackEvent:'Analysis-Classification-List':'Create new classification'">
+                ng-click="createNewClassification()">
                 <i class="fa fa-plus"></i> New Classification Job
             </a>
             <a class="btn btn-sm btn-default ml-3"
                 tooltip="Create New Model"
                 tooltip-placement="right"
-                ng-click="newModel() | trackEvent:'Analysis-Model list':'new model'">
+                ng-click="newModel()">
                 <i class="fa fa-plus"></i> New Training Job
             </a>
         </h1>
@@ -63,7 +63,7 @@
                             Show details
                         </button>
                         <button class="btn btn-default btn-xs"
-                            ng-click="deleteModel(row.model_id,row.mname) | trackEvent:'Analysis-Model list':'delete model'">
+                            ng-click="deleteModel(row.model_id,row.mname)">
                             Delete
                         </button>
                     </field>
@@ -73,7 +73,7 @@
                 <a class="btn btn-sm btn-default"
                     tooltip="Create New Training Job"
                     tooltip-placement="top"
-                    ng-click="newModel() | trackEvent:'Analysis-Model list':'new model'">
+                    ng-click="newModel()">
                     <i class="fa fa-plus mr-1" ></i> New Training Job
                 </a>
                 <p class="mt-3 mb-0">Learn more:</p>

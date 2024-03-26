@@ -15,7 +15,7 @@
                     <th>Annotation</th>
                 </tr>
                 <tr ng-repeat="cls in byTaxon[taxon]" 
-                    ng-click="select(taxon, cls, $event) | trackEvent:'Visualizer-Validator-Main':'Select'" 
+                    ng-click="select(taxon, cls, $event)" 
                     ng-class="is_selected[cls.id] ? 'active' : ''">
                         <td class="no-select"> {{ cls.species_name }}</td>
                         <td class="no-select"> {{ cls.songtype_name }} </td>
@@ -32,7 +32,7 @@
                                 </button>
                                 <ul class="dropdown-menu dropdown-height-7" role="menu">
                                     <li ng-repeat="option in val_options">
-                                        <a ng-click="validate(option.val) | trackEvent:'Visualizer-Validator-Main':'Validate'">
+                                        <a ng-click="validate(option.val)">
                                             <i class="fa" ng-class="'val-'+option.val"></i> 
                                             {{ option.label }}
                                         </a>

@@ -1,7 +1,7 @@
 <div>
     <div class="roi" ng-repeat="roi in layer.templates.recordingTemplates"
         ng-class="{'roi-selected':layer.templates.selected == roi}"
-        ng-click="$event.stopPropagation(); layer.templates.selected = roi  | trackEvent:'Visualizer-Templates':'selecting roi'"
+        ng-click="$event.stopPropagation(); layer.templates.selected = roi"
         ng-style="{
             left:layout.sec2x(roi.x1, 1) + 'px',
             top:layout.hz2y(roi.y2, 1) + 'px',
@@ -78,11 +78,11 @@
                 </div>
             </div>
             <button id="submit-btn" class="btn btn-sm btn-default"
-                ng-click=" $event.stopPropagation(); layer.templates.editor.submit() | trackEvent:'Visualizer-Templates':'create template'" ng-disabled="!!layer.templates.editor.submitting">
+                ng-click=" $event.stopPropagation(); layer.templates.editor.submit()" ng-disabled="!!layer.templates.editor.submitting">
                 <i class="fa text-success" ng-class="{'fa-plus' : !layer.templates.editor.submitting , 'fa-spinner fa-spin': layer.templates.editor.submitting }"></i> Create Template
             </button>
             <button class="btn btn-sm btn-default"
-                ng-click=" $event.stopPropagation(); layer.templates.editor.reset() | trackEvent:'Visualizer-Templates':'cancel template'">
+                ng-click=" $event.stopPropagation(); layer.templates.editor.reset()">
                 <i class="fa fa-ban text-danger"></i> Cancel
             </button>
         </div>

@@ -3,14 +3,7 @@ angular.module('a2.user-settings', [
     'a2.forms',
     'ui.bootstrap', 
     'humane', 
-    'angularytics', 
 ])
-.config(function(AngularyticsProvider) {
-    AngularyticsProvider.setEventHandlers(['Console', 'GoogleUniversal']);
-})
-.run(function(Angularytics) {
-    Angularytics.init();
-})
 .controller('UserSettingsCtrl', function($scope, $modal, $http, notify){
     this.data={};
     

@@ -13,7 +13,7 @@
             <div class="mb-3 flex flex-row flex-align-middle" ng-if="data && !data.length">
                 <em class="pr-2">No models found.</em>
                 Go to
-                <button class="btn btn-sm btn-default" ng-click="cancel('/analysis/random-forest-models/models') | trackEvent:'Analysis-Classification-new classification modal':'Cancel-Go to models'">
+                <button class="btn btn-sm btn-default" ng-click="cancel('/analysis/random-forest-models/models')">
                     Create model
                 </button>
                 and create a model.
@@ -56,11 +56,11 @@
     </form>
 </div>
 <div class="modal-footer">
-    <button class="btn btn-primary" ng-click="ok() | trackEvent:'Analysis-Classification-new classification modal':'Submit'" ng-disabled="buttonEnable()">
+    <button class="btn btn-primary" ng-click="ok()" ng-disabled="buttonEnable()">
         <i class="fa fa-cogs"></i>
         Create
     </button>
-    <button class="btn btn-default" ng-click="cancel() | trackEvent:'Analysis-Classification-new classification modal':'Cancel'">
+    <button class="btn btn-default" ng-click="cancel()">
         <i class="fa fa-times"></i>
         Close
     </button>

@@ -1,28 +1,3 @@
-try {
-    angular.module("angularytics"); // this throws if GA script is not loaded
-} catch(e){
-    console.error("GA not available, likely adblocker", e);
-    (function () {
-        angular.module('angularytics', []).provider('Angularytics', function () {
-            this.setEventHandlers = function () {
-            };
-            this.$get = [
-                function () {
-                    var service = {};
-                    service.init = function () {
-                    };
-                    return service;
-                }
-            ];
-        }).filter('trackEvent', ['Angularytics', function () {
-            return function () {
-                return null;
-            };
-        }
-      ]);
-  }());
-}
-
 var a2 = angular.module('a2.app', [
     'a2.permissions',
     'templates-arbimon2',
@@ -35,7 +10,6 @@ var a2 = angular.module('a2.app', [
     'a2.directive.sidenav-bar',
     'a2.settings',
     'a2.login',
-    'angularytics',
     'ui.router',
     'ct.ui.router.extras',
     'a2.filters',
@@ -45,9 +19,8 @@ var a2 = angular.module('a2.app', [
     'a2.directive.search-bar',
     'a2.directive.side-bar'
 ])
-.run(function($rootScope, Angularytics, a2UserPermit, notify, $state) {
+.run(function($rootScope, a2UserPermit, notify, $state) {
     $rootScope.Math = Math; // export math library to angular :-)
-    Angularytics.init();
 
     $rootScope.$on('$stateChangeStart', function (e, to, params) {
         if (to.name.startsWith('visualizer')) {
@@ -71,9 +44,8 @@ var a2 = angular.module('a2.app', [
         }
     });
 })
-.config(function($urlRouterProvider, $locationProvider, AngularyticsProvider, a2GoogleMapsLoaderProvider, a2InjectedData) {
+.config(function($urlRouterProvider, $locationProvider, a2GoogleMapsLoaderProvider, a2InjectedData) {
     a2GoogleMapsLoaderProvider.setAPIKey(a2InjectedData.googleAPI.key);
-    AngularyticsProvider.setEventHandlers(['GoogleUniversal']);
     $locationProvider.html5Mode(true);
     $urlRouterProvider.otherwise("/audiodata");
 })

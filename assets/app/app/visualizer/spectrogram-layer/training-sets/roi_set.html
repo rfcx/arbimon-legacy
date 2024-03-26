@@ -1,7 +1,7 @@
 <div>
     <div class="roi set" ng-repeat="roi in layer.training_data.data.rois"
         ng-class="{'roi-selected':layer.training_data.data.selected == roi}"
-        ng-click="$event.stopPropagation(); layer.training_data.data.selected = roi  | trackEvent:'Visualizer-Roi-Set':'setting roi'"
+        ng-click="$event.stopPropagation(); layer.training_data.data.selected = roi"
         ng-style="{
             left:layout.sec2x(roi.x1, 1) + 'px',
             top:layout.hz2y(roi.y2, 1) + 'px',
@@ -57,12 +57,12 @@
             </h3>
             <div class="popover-content">
                 <button class="btn btn-sm btn-default"
-                    ng-click=" $event.stopPropagation(); layer.training_data.data.editor.submit() | trackEvent:'Visualizer-Roi-Set':'add roi'">
+                    ng-click=" $event.stopPropagation(); layer.training_data.data.editor.submit()">
                     <i ng-if="isAddingTS" class="fa fa-spinner fa-spin"></i>
                     <i ng-if="!isAddingTS" class="fa fa-plus text-success"></i> Add Data
                 </button>
                 <button class="btn btn-sm btn-default"
-                    ng-click=" $event.stopPropagation(); layer.training_data.data.editor.reset() | trackEvent:'Visualizer-Roi-Set':'cancel roi'">
+                    ng-click=" $event.stopPropagation(); layer.training_data.data.editor.reset()">
                     <i class="fa fa-ban text-danger"></i> Cancel
                 </button>
             </div>

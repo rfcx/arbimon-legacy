@@ -9,11 +9,11 @@
         </div>
         <div class="col-md-6 col-md-pull-6 toolbar">
             <button class="btn btn-default mr-1 mb-1"
-                ng-click="create() | trackEvent:'Dashboard-sites':'add site'">
+                ng-click="create()">
                 Create
             </button>
             <button class="btn btn-default mr-1 mb-1"
-                ng-click="edit() | trackEvent:'Dashboard-sites':'edit site'"
+                ng-click="edit()"
                 ng-disabled="!selected || selected.imported">
                 Edit
             </button>
@@ -103,7 +103,7 @@
     </ul>
     <div ng-show="editing || creating" class="panel panel-default">
         <div class="panel-body">
-            <form class="form" ng-submit="save() | trackEvent:'Dashboard-sites':'save site'" name="siteForm">
+            <form class="form" ng-submit="save()" name="siteForm">
                 <div class="form-group">
                     <label>Name:</label>
                     <input class="form-control" type="text" ng-model="temp.name" placeholder="Site name" required>
@@ -162,7 +162,7 @@
                 </button>
                 <button class="btn btn-default"
                     type="button"
-                    ng-click="close() | trackEvent:'Dashboard-sites':'close site edit create'">
+                    ng-click="close()">
                     <i class="fa fa-times"></i> Close
                 </button>
             </form>
@@ -172,7 +172,7 @@
         <div class="a2-filter a2-filter-text toolbar">
             <div class="col-sm-4">
                 <ui-select ng-model="status_controller.selected.series" theme="bootstrap" style="width: 150px;" append-to-body="true"
-                ng-change="status_controller.set_series(status_controller.selected.series) | trackEvent:'Audiodata-Site-Status':'set series'" >
+                ng-change="status_controller.set_series(status_controller.selected.series)" >
                     <ui-select-match placeholder="Series">
                         <i ng-class="$select.selected.icon"></i>
                         {{$select.selected.name}}
@@ -185,7 +185,7 @@
             </div>
             <div class="col-sm-4">
                 <ui-select ng-model="status_controller.selected.time_range" theme="bootstrap" style="width: 150px;" append-to-body="true"
-                ng-change="status_controller.set_time_range(status_controller.selected.time_range) | trackEvent:'Audiodata-Site-Status':'set time range'" >
+                ng-change="status_controller.set_time_range(status_controller.selected.time_range)" >
                     <ui-select-match placeholder="View">
                         <i class="fa fa-clock-o"></i>
                         {{$select.selected.text}}
@@ -197,7 +197,7 @@
             </div>
             <div class="col-sm-4">
                 <ui-select ng-model="status_controller.selected.period" theme="bootstrap" style="width: 150px;" append-to-body="true"
-                ng-change="status_controller.set_period(status_controller.selected.period) | trackEvent:'Audiodata-Site-Status':'set period'" >
+                ng-change="status_controller.set_period(status_controller.selected.period)" >
                     <ui-select-match placeholder="Detail">
                         <i class="fa fa-hourglass-3"></i>
                         {{$select.selected.text}}

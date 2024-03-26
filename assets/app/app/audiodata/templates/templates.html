@@ -99,14 +99,14 @@
                     <field tdclass="is-v-middle">
                         <button class="btn btn-default"
                             ng-if="controller.currentTab === 'projectTemplates'"
-                            ng-click="controller.deleteTemplate(row.id) | trackEvent:'Audiodata-template':'del clicked'"
+                            ng-click="controller.deleteTemplate(row.id)"
                             tooltip="Delete Template"
                             tooltip-trigger="mouseenter">
                             <i class="fa fa-trash"></i>
                         </button>
                         <button class="btn btn-default"
                             ng-if="controller.currentTab === 'publicTemplates'"
-                            ng-click="controller.addTemplate(row) | trackEvent:'Audiodata-template':'add clicked'"
+                            ng-click="controller.addTemplate(row)"
                             tooltip="Add Template"
                             ng-disabled="controller.isAdding === true"
                             tooltip-trigger="mouseenter">

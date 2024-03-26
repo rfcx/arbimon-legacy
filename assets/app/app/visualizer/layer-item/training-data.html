@@ -1,5 +1,5 @@
 <div class="layer">
-    <h5 class="collapse-title"  tooltip="Used for Random Forest Algorithm" ng-click="layer.is_open = !layer.is_open  | trackEvent:'Visualizer-Training-Data':'open training data layer'">
+    <h5 class="collapse-title"  tooltip="Used for Random Forest Algorithm" ng-click="layer.is_open = !layer.is_open">
         <i class="fa" ng-class="layer.is_open ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
         Training Sets (RF Algorithm)
     </h5>
@@ -15,7 +15,7 @@
             tooltip="Create a new training set" 
             tooltip-placement="right" 
             tooltip-append-to-body="true" 
-            ng-click="layer.training_data.add_new_tset() | trackEvent:'Visualizer-Training-Data':'add new training set'">
+            ng-click="layer.training_data.add_new_tset()">
             <i class="fa fa-plus"></i>
         </button>
     </div>
