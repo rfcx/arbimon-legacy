@@ -22,9 +22,10 @@
                     <div class="mb-3" style="font-size: 12px;">
                         Are you shure to remove species: {{roi.name}}?
                     </div>
-                    <button id="submit-btn" class="btn btn-danger"
+                    <button id="submit-btn" class="btn btn-default"
                         ng-click="layer.species_presence.confirmPopup(roi)" ng-disabled="!!layer.species_presence.isRemoving">
                         <i class="fa text-success" ng-class="{'fa-trash' : !layer.species_presence.isRemoving , 'fa-spinner fa-spin': layer.species_presence.isRemoving }"></i>
+                        Delete
                     </button>
                     <button class="btn btn-default"
                         ng-click="roi.isPopupOpened = false">

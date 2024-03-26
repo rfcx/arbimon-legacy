@@ -40,10 +40,10 @@
                     {{ row.timestamp | moment : 'lll' }}
                 </field>
                 <field title="Audio Event Detection Job" key="aed_job" filter tdclass="no-wrap-table-cell is-v-middle">
-                    {{row.name_aed}}
+                    <div class="hidelongtext" style="width: 250px;">{{row.name_aed}}</div>
                 </field>
-                <field title="Parameters" key="parameters" filter="parameters.$" tdclass="no-wrap-table-cell is-v-middle">
-                    {{row.parameters | asCSV }}
+                <field title="Parameters" key="parameters" filter="parameters.$" tdclass="is-v-middle">
+                    <div class="hidelongtext text-wrap" style="width: 350px;">{{row.parameters | asCSV }}</div>
                 </field>
                 <field title="User" key="user" tdclass="is-v-middle">
                     {{ row.user }}

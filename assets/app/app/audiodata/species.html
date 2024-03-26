@@ -9,12 +9,12 @@
             tooltip-trigger="mouseenter">
             <i class="fa fa-plus mr-2"></i> New species
         </button>
-        <button class="btn btn-danger ml-3"
+        <button class="btn btn-default ml-3"
             ng-disabled="!checked || !checked.length"
             ng-click="removeSpecies() | trackEvent:'Dashboard-species':'delete species'"
             tooltip="Remove species sound"
             tooltip-trigger="mouseenter">
-            <i class="fa fa-trash mr-2"></i>
+            <i class="fa fa-trash mr-2"></i> Remove species
         </button>
         <div class="row-flex flex-direction-row flex-space-start flex-align-middle mt-4 mb-3">
             <input ng-if="classes.length" type="text" class="form-control" ng-model="searchSpecies.q" style="width: 380px;" placeholder="Search species by scientific name or family" ng-change="onFilterChanged()">

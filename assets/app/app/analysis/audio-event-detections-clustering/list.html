@@ -52,12 +52,12 @@
                     {{ row.aed_count }}
                 </field>
                 <field tdclass="is-v-middle">
-                    <a class="btn btn-default btn-xs"
+                    <a class="btn btn-default"
                         ng-click="onSelectedJob(row.playlist_id, row.job_id, row.first_playlist_recording)"
                         title="View in Visualizer">
                         <i class="fa fa-cubes"></i>
                     </a>
-                    <button class="btn btn-danger btn-xs"
+                    <button class="btn btn-danger"
                         ng-click="deleteAedJob(row, $event) | trackEvent:'Analysis-Audio-Event-Detection-List':'delete aed job'"
                         tooltip="Delete"
                         tooltip-trigger="mouseenter">
