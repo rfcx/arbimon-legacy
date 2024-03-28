@@ -83,8 +83,8 @@
                     </span>
                 </field>
                 <field title="Deployed" key="deployment" tdclass="date hidelongtext">
-                    <span title="{{ row.deployment }}">
-                        {{ row.deployment }}
+                    <span title="{{ row.deployment ? (row.deployment | moment : 'lll' : row.timezone) : 'no data' }}">
+                        {{ row.deployment ? (row.deployment | moment : 'lll' : row.timezone) : 'no data' }}
                     </span>
                 </field>
             </a2-table>
