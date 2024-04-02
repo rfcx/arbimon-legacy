@@ -363,11 +363,10 @@ angular.module('a2.audiodata.sites', [
 
             Project.getSites({ count: true, logs: true, deployment: true }, function(sites) {
                 $scope.sortByLastUpdated(sites);
-                $scope.sel(action === 'create' ? $scope.temp : tempObj).then(function(){
-                    if(p.show){
-                        $scope.set_show(p.show, p.show_path);
-                    }
-                });
+                $state.params.site = ''
+                $state.params.show = ''
+                $scope.selected = undefined
+                $state.transitionTo($state.current.name, {site: '', show: ''}, { notify: false });
                 // rebuild map pins
                 $scope.deleteMarkers()
                 $scope.fitBounds()
@@ -491,7 +490,7 @@ angular.module('a2.audiodata.sites', [
             }
 
             $scope.show[new_show] = true;
-
+            console.log('finally here', $state.params.site)
             return $state.transitionTo($state.current.name, {site:$state.params.site, show:show_state_param}, {notify:false});
         });
     };
@@ -538,8 +537,6 @@ angular.module('a2.audiodata.sites', [
         });
         $scope.editing = true;
         // rebuild map pins
-        $state.params.site = null
-        $state.params.show = null
         $scope.deleteMarkers()
         $scope.fitBounds()
     };
