@@ -72,7 +72,7 @@ angular.module('a2.audiodata.sites', [
         const bounds = new google.maps.LatLngBounds();
 
         angular.forEach($scope.sites, function(site) {
-            if (site.lat > 85 || site.lat < -85 || site.lon > 180 || site.lon < -180 || site.hidden) {
+            if (site.lat > 85 || site.lat < -85 || site.lon > 180 || site.lon < -180 || site.hidden || site.lon === 0 && site.lat === 0 || site.lon === null || site.lat === null) {
                 return;
             }
             var marker
@@ -286,6 +286,9 @@ angular.module('a2.audiodata.sites', [
         $scope.editing = false;
         if($scope.marker){
             a2GoogleMapsLoader.then(function(google){
+                if (site.hidden || site.lon === 0 && site.lat === 0 || site.lon === null || site.lat === null) {
+                    return;
+                }
                 var position = new google.maps.LatLng($scope.selected && $scope.selected.lat, $scope.selected && $scope.selected.lon);
                 $scope.marker.setDraggable(false);
                 $scope.marker.setPosition(position);
@@ -516,6 +519,7 @@ angular.module('a2.audiodata.sites', [
             notify.error("You do not have permission to edit sites");
             return;
         }
+        $scope.supportLink = 'https://help.arbimon.org/article/206-adding-a-site';
         $scope.set_show('map');
         $scope.temp = angular.copy($scope.selected);
         $scope.temp.published = ($scope.temp.published === 1);
@@ -530,10 +534,12 @@ angular.module('a2.audiodata.sites', [
             })
         });
         Project.getInfo(function(data) {
-            $scope.temp.project = data;
+            if ($scope.temp) $scope.temp.project = data;
         });
         $scope.editing = true;
         // rebuild map pins
+        $state.params.site = null
+        $state.params.show = null
         $scope.deleteMarkers()
         $scope.fitBounds()
     };
@@ -586,6 +592,9 @@ angular.module('a2.audiodata.sites', [
             // zoom in to the selected pin
             if ($scope.selected) {
                 a2GoogleMapsLoader.then(function(google) {
+                    if (site.hidden || site.lon === 0 && site.lat === 0 || site.lon === null || site.lat === null) {
+                        return;
+                    }
                     var position = new google.maps.LatLng($scope.selected.lat, $scope.selected.lon);
                     $scope.map.panTo(position);
                     $scope.map.setZoom(12)
