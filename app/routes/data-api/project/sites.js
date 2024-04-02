@@ -34,8 +34,8 @@ router.get('/', function(req, res, next) {
             const reg = /^(.\d*[\d:]*?)\.?:00*$/.exec(utc)
             row.utc = reg && reg[1] ? `UTC${reg[1]}` : `UTC${utc}`
             if (deploymentBySite && deploymentBySite[row.external_id]) {
-                row.deployment = deploymentBySite[row.external_id].deployedAt ? deploymentBySite[row.external_id].deployedAt : null
-            } else row.deployment = null
+                row.deployment = deploymentBySite[row.external_id].deployedAt ? deploymentBySite[row.external_id].deployedAt : 0
+            } else row.deployment = 0
         }
         res.json(rows);
     }).catch(next);
