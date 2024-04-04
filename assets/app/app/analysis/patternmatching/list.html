@@ -204,9 +204,9 @@
                                 {{ row.project !== row.source_project_id && row.source_project_id !== null ? row.author + ' / ' + row.source_project_name : '-' }}
                             </span>
                         </field>
-                        <field tdclass="is-v-middle">
+                        <field tdclass="is-v-middle text-right">
                             <button class="btn btn-default mr-4"
-                                ng-if="currentTab === 'projectTemplates'"
+                                ng-if="currentTab === 'projectTemplates' && row.source_project_id === null"
                                 ng-click="downloadTemplate(row)"
                                 tooltip="Download template (.wav)"
                                 tooltip-trigger="mouseenter">

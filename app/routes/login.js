@@ -186,7 +186,7 @@ router.get('/legacy-logout', function(req, res, next) {
         if(err) return next(err);
         console.log('\n\n----TEMP: /legacy-logout req.query', req.query)
         if (req.query && req.query.redirect && (req.query.redirect === 'false' || req.query.redirect === false)) { 
-            return res.status(200);
+            return res.status(200).json({message: 'legacy session destroyed'});
         }
         console.log('\n\n----TEMP: /legacy-logout redirect to logoutUrl')
         return res.redirect(auth0Service.logoutUrl)
