@@ -49,11 +49,11 @@
             <a2-table rows="sites" on-select="sel(row)" data-checked="checked" no-checkbox>
                 <field title="Name" key="name" tdclass="name hidelongtext">
                     <div class="row-flex flex-direction-row flex-align-middle">
-                        <div class="row-flex-inline" style="width:20%">
-                            <img ng-if="row.hidden" title="Excluded site from analyses and Insights" src="/images/fi-eye-off.svg">
+                        <div class="hidelongtext" id="site-{{row.id}}" data-external-id="{{ row.external_id }}" title="{{ row.name }}">{{ row.name }}</div>
+                        <span ng-if="!row.external_id" class="hidelongtext a2-badge ml-2" title="LEGACY">LEGACY</span>
+                        <div class="row-flex-inline flex-space-center ml-2">
+                            <img ng-if="row.hidden" style="width: 14px; opacity: 0.75" title="Excluded site from analyses and Insights" src="/images/fi-eye-off.svg">
                         </div>
-                        <div class="hidelongtext" style="width:50%" id="site-{{row.id}}" data-external-id="{{ row.external_id }}" title="{{ row.name }}">{{ row.name }}</div>
-                        <div class="hidelongtext a2-badge" style="width:30%" title="ARBIMON ONLY" ng-if="!row.external_id">ARBIMON ONLY</div>
                     </div>
                 </field>
                 <ng-container ng-if="!row.imported && (row.has_logs || row.token_created_on)">
