@@ -103,6 +103,12 @@ router.post('/sites', verifyToken(), hasRole(['appUser', 'rfcxUser', 'guardianCr
       return res.json(existingSite);
     }
     const insertData = await model.sites.insertAsync(siteData);
+    const coreSite = {
+        name: params.name,
+        project_id: project.external_id
+    }
+    let { countryCode, timezone } = await model.sites.getCountryCodeAndTimezoneCoreAPI(coreSite, req.session.idToken);
+    await model.sites.setCountryCodeAndTimezone(insertData.insertId, countryCode, timezone);
     const site = await model.sites.findByIdAsync(insertData.insertId);
     res.status(201).json(site[0]);
   } catch (e) {
