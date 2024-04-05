@@ -229,6 +229,34 @@ angular.module('a2.analysis.patternmatching', [
         this.speciesData = JSON.parse($localStorage.getItem('audiodata.templates'));
     }
 
+    $scope.exportData = function() {
+        if (a2UserPermit.isSuper()) {
+            return $scope.openExportPopup()
+        }
+        if ((a2UserPermit.all && !a2UserPermit.all.length) || !a2UserPermit.can('export report')) {
+            return notify.error('You do not have permission to export data');
+        }
+        $scope.openExportPopup()
+    };
+
+    $scope.openExportPopup = function() {
+        $scope.params.userEmail = a2UserPermit.getUserEmail() || '';
+        const modalInstance = $modal.open({
+            controller: 'ExportPMmodalInstanceCtrl',
+            templateUrl: '/app/audiodata/export-report.html',
+            resolve: {
+                data: function() {
+                    return { params: $scope.params }
+                }
+            },
+            backdrop: false
+        });
+
+        modalInstance.result.then(function() {
+            notify.log('Your Export Report is processing <br> and will be sent by email.');
+        });
+    };
+
     $scope.toggleTab = function(tab) {
         $scope.removeFromLocalStorage()
         $scope.currentTab = tab;
@@ -470,6 +498,26 @@ angular.module('a2.analysis.patternmatching', [
         controllerAs: 'controller',
         templateUrl: '/app/analysis/patternmatching/details.html'
     };
+})
+.controller('ExportPMmodalInstanceCtrl', function($scope, $modalInstance, Project, data) {
+    $scope.userEmail = data.params.userEmail
+    $scope.exportRecordings = function(email) {
+        data.params.userEmail = email
+        $scope.isExportingRecs = true
+        $scope.errMess = ''
+        Project.exportAllPMdata(data.params).then(data => {
+            $scope.isExportingRecs = false
+            if (data.error) {
+                $scope.errMess = data.error;
+            }
+            else {
+                $modalInstance.close();
+            }
+        })
+    }
+    $scope.changeUserEmail = function() {
+        $scope.errMess = null;
+    }
 })
 .controller('PatternMatchingDetailsCtrl' , function($scope, $q, a2PatternMatching, a2Templates, a2UserPermit, Project, a2AudioBarService, notify, $anchorScroll, $modal) {
     Object.assign(this, {

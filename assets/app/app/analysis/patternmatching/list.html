@@ -39,11 +39,20 @@
                     </div>
                 </div>
                 <div class="row-flex flex-direction-row flex-align-middle">
-                    <button ng-if="loading.showRefreshBtn" class="btn btn-default btn-rounded-full"
+                    <button type="download" class="btn btn-success btn-rounded-full"
+                        tooltip="Export Result"
+                        ng-disabled="isExportDisabled()"
+                        ng-click="exportData()"
+                    >
+                        Export Result (.csv)
+                        <i class="fa fa-download ml-2"></i>
+                    </button>
+                    <button ng-if="loading.showRefreshBtn" class="btn btn-default btn-rounded-full ml-3"
                         tooltip="Refresh list"
-                        ng-click="loadPatternMatchings()">
-                            Refresh List
-                            <i class="fa fa-refresh ml-3"></i>
+                        ng-click="loadPatternMatchings()"
+                    >
+                        Refresh List
+                        <i class="fa fa-refresh ml-2"></i>
                     </button>
                 </div>
             </div>

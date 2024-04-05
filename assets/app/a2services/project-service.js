@@ -103,7 +103,13 @@ angular.module('a2.srv.project', [
                     (projection && projection.grouped ? 'grouped-detections-export' : 'recordings-export'));
                 return $http.post(getUrl, params).then(function(response) {
                     return response.data;
-                }).catch(notify.serverError);;
+                }).catch(notify.serverError);
+            },
+            exportAllPMdata: function(filters){
+                var params={filters, show:{pm: 'all'}};
+                return $http.post('/legacy-api/project/'+url+'/recordings/pm-export', params).then(function(response) {
+                    return response.data;
+                }).catch(notify.serverError);
             },
             getSitesExportUrl: function() {
                 return '/legacy-api/project/' + url + '/sites-export.csv';
