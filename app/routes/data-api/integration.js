@@ -107,7 +107,8 @@ router.post('/sites', verifyToken(), hasRole(['appUser', 'rfcxUser', 'guardianCr
         name: params.name,
         project_id: project.external_id
     }
-    let { countryCode, timezone } = await model.sites.getCountryCodeAndTimezoneCoreAPI(coreSite, req.session.idToken);
+    const token = req.headers.authorization || req.session.idToken || req.cookies.id_token
+    let { countryCode, timezone } = await model.sites.getCountryCodeAndTimezoneCoreAPI(coreSite, token);
     await model.sites.setCountryCodeAndTimezone(insertData.insertId, countryCode, timezone);
     const site = await model.sites.findByIdAsync(insertData.insertId);
     res.status(201).json(site[0]);
