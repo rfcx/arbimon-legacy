@@ -948,7 +948,8 @@ var Sites = {
 
     setCountryCodeAndTimezone: function (siteId, countryCode, timezone, connection) {
         const isCountryCodeNull = countryCode === null
-        return (connection? connection.query : dbpool.query)(`UPDATE sites SET country_code = ${isCountryCodeNull ? null : ('"' + countryCode + '"')}, timezone = "${timezone}" WHERE site_id = ${siteId}`, [])
+        const isTimezoneNull = timezone === null || timezone === ''
+        return (connection? connection.query : dbpool.query)(`UPDATE sites SET country_code = ${isCountryCodeNull ? null : ('"' + countryCode + '"')}, timezone = ${isTimezoneNull ? "UTC" : ('"' + timezone + '"')} WHERE site_id = ${siteId}`, [])
     },
 
     /**

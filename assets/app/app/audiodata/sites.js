@@ -490,7 +490,6 @@ angular.module('a2.audiodata.sites', [
             }
 
             $scope.show[new_show] = true;
-            console.log('finally here', $state.params.site)
             return $state.transitionTo($state.current.name, {site:$state.params.site, show:show_state_param}, {notify:false});
         });
     };
