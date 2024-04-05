@@ -947,10 +947,12 @@ var Sites = {
     },
 
     setCountryCodeAndTimezone: async function (siteId, countryCode, timezone, connection) {
-        console.log('------setCountryCodeAndTimezone', countryCode, timezone)
-        const isCountryCodeNull = countryCode === null || countryCode === '' || countryCode === undefined || countryCode === 'undefined'
-        const isTimezoneNull = !timezone || timezone === null || timezone === '' || timezone === undefined || timezone === 'undefined'
-        return (connection? connection.query : dbpool.query)(`UPDATE sites SET country_code = ${isCountryCodeNull ? null : ("'" + countryCode + "'")}, timezone = ${isTimezoneNull ? 'UTC' : ("'" + timezone + "'")} WHERE site_id = ${siteId}`, [])
+        console.log('------setCountryCodeAndTimezone', countryCode, timezone);
+        const isCountryCodeNull = countryCode === null || countryCode === '' || countryCode === undefined || countryCode === 'undefined';
+        const isTimezoneNull = !timezone || timezone === null || timezone === '' || timezone === undefined || timezone === 'undefined';
+        const timezoneToInsert = isTimezoneNull ? 'UTC' : timezone
+        console.log('------timezoneToInsert', timezoneToInsert);
+        return (connection? connection.query : dbpool.query)(`UPDATE sites SET country_code = ${isCountryCodeNull ? null : ('"' + countryCode + '"')}, timezone = "${timezoneToInsert}" WHERE site_id = ${siteId}`, [])
     },
 
     /**
