@@ -240,13 +240,15 @@ angular.module('a2.analysis.patternmatching', [
     };
 
     $scope.openExportPopup = function() {
-        $scope.params.userEmail = a2UserPermit.getUserEmail() || '';
+        var params = {
+            userEmail: a2UserPermit.getUserEmail() || ''
+        }
         const modalInstance = $modal.open({
             controller: 'ExportPMmodalInstanceCtrl',
             templateUrl: '/app/audiodata/export-report.html',
             resolve: {
                 data: function() {
-                    return { params: $scope.params }
+                    return { params: params }
                 }
             },
             backdrop: false
