@@ -946,9 +946,13 @@ var Sites = {
         return (connection? connection.query : dbpool.query)(`UPDATE sites SET external_id = "${externalId}" WHERE site_id = ${siteId}`, [])
     },
 
-    setCountryCodeAndTimezone: function (siteId, countryCode, timezone, connection) {
-        const isCountryCodeNull = countryCode === null
-        return (connection? connection.query : dbpool.query)(`UPDATE sites SET country_code = ${isCountryCodeNull ? null : ('"' + countryCode + '"')}, timezone = "${timezone}" WHERE site_id = ${siteId}`, [])
+    setCountryCodeAndTimezone: async function (siteId, countryCode, timezone, connection) {
+        console.log('------setCountryCodeAndTimezone', countryCode, timezone);
+        const isCountryCodeNull = countryCode === null || countryCode === '' || countryCode === undefined || countryCode === 'undefined';
+        const isTimezoneNull = !timezone || timezone === null || timezone === '' || timezone === undefined || timezone === 'undefined';
+        const timezoneToInsert = isTimezoneNull ? 'UTC' : timezone
+        console.log('------timezoneToInsert', timezoneToInsert);
+        return (connection? connection.query : dbpool.query)(`UPDATE sites SET country_code = ${isCountryCodeNull ? null : ('"' + countryCode + '"')}, timezone = "${timezoneToInsert}" WHERE site_id = ${siteId}`, [])
     },
 
     /**
