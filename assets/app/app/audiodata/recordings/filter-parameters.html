@@ -65,7 +65,8 @@
             <ui-select-match placeholder="Hours...">{{ $item.string }}</ui-select-match>
             <ui-select-choices class="has-badges" repeat="item in controller.options.hours | filter: $select.search">
                 {{ item.string }}
-                <span class="badge">{{ item.count }}</span>
+                <span class="badge" style="right: 20px;">{{ item.count }}</span>
+                <i class="fa fa-check text-insight" ng-hide="!$select.isDisabled(this)" style="position: absolute; right: 3px; top: 10%;" ></i>
             </ui-select-choices>
         </ui-select>
     </div>
