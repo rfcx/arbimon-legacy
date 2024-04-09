@@ -63,7 +63,7 @@
     <div class="a2-filter">
         <ui-select multiple ng-model="controller.params.hours" theme="bootstrap" style="width: 125px;">
             <ui-select-match placeholder="Hours...">{{ $item.string }}</ui-select-match>
-            <ui-select-choices class="has-badges" repeat="item in controller.options.hours | filter:$select.search">
+            <ui-select-choices class="has-badges" repeat="item in controller.options.hours | filter: $select.search">
                 {{ item.string }}
                 <span class="badge">{{ item.count }}</span>
             </ui-select-choices>
