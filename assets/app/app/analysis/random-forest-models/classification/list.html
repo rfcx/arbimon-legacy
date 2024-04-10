@@ -11,16 +11,16 @@
         <div ng-hide="loading">
             <a2-table rows="classificationsData" no-checkbox="true">
                 <field title="Name" tdclass="hidelongtext widthtd is-v-middle" key="cname" filter>
-                    {{row.cname}}
+                    <span>{{row.cname}}</span>
                 </field>
                 <field title="Date" key="date" tdclass="is-v-middle">
                     {{ row.date | moment : 'lll' }}
                 </field>
-                <field title="Model" key="modname" filter tdclass="no-wrap-table-cell is-v-middle">
-                    {{row.modname}}
+                <field title="Model" key="modname" filter tdclass="no-wrap-table-cell is-v-middle hidelongtext">
+                    <span>{{row.modname}}</span>
                 </field>
-                <field title="Playlist" key="playlist_name" filter tdclass="no-wrap-table-cell is-v-middle">
-                    {{row.playlist_name}}
+                <field title="Playlist" key="playlist_name" filter tdclass="is-v-middle hidelongtext widthtd">
+                    <span>{{row.playlist_name}}</span>
                 </field>
                 <field title="User" key="muser" filter tdclass="no-wrap-table-cell is-v-middle">
                     {{ row.muser }}

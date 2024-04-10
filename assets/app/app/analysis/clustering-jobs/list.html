@@ -1,5 +1,5 @@
 <div class="row">
-    <div class="col-sm-12 col-lg-11 padded-view-div" ng-if="!selectedClusteringJobId">
+    <div class="col-sm-12 padded-view-div" ng-if="!selectedClusteringJobId">
         <h1 class="mt-0" style="margin-bottom: 24px;">
             Clustering Jobs
             <span class="beta-badge">BETA</span>
@@ -42,8 +42,8 @@
                 <field title="Audio Event Detection Job" key="aed_job" filter tdclass="no-wrap-table-cell is-v-middle">
                     <div class="hidelongtext" style="width: 250px;">{{row.name_aed}}</div>
                 </field>
-                <field title="Parameters" key="parameters" filter="parameters.$" tdclass="is-v-middle">
-                    <div class="hidelongtext text-wrap" style="width: 350px;">{{row.parameters | asCSV }}</div>
+                <field title="Parameters" key="parameters" filter="parameters.$" tdclass="is-v-middle widthtd">
+                    <div class="hidelongtext text-wrap">{{row.parameters | asCSV }}</div>
                 </field>
                 <field title="User" key="user" tdclass="is-v-middle">
                     {{ row.user }}

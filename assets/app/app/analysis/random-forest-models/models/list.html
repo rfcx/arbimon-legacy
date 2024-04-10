@@ -1,5 +1,5 @@
 <div class="row">
-    <div class="col-sm-12 col-lg-11 padded-view-div" >
+    <div class="col-sm-12 padded-view-div">
         <h1 class="mt-0" style="margin-bottom: 24px;">
             Random Forest Models
             <a class="btn btn-primary btn-rounded-full row-flex-inline flex-align-middle ml-3"
@@ -55,8 +55,8 @@
                     <field title="Date" key="date" tdclass="is-v-middle">
                         {{ row.date | moment : 'lll' }}
                     </field>
-                    <field title="Name" tdclass="hidelongtext widthtd is-v-middle" key="mname" filter>
-                        {{row.mname}}
+                    <field title="Name" tdclass="is-v-middle hidelongtext widthtd" key="mname" filter>
+                        <span>{{row.mname}}</span>
                     </field>
                     <field title="Type" key="mtname" tdclass="is-v-middle" filter>
                         {{row.mtname}}

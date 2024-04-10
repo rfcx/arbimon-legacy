@@ -517,7 +517,6 @@ angular.module('a2.audiodata.sites', [
             notify.error("You do not have permission to edit sites");
             return;
         }
-        $scope.supportLink = 'https://help.arbimon.org/article/206-adding-a-site';
         $scope.set_show('map');
         $scope.temp = angular.copy($scope.selected);
         $scope.temp.published = ($scope.temp.published === 1);
