@@ -79,7 +79,7 @@
             <field title="Uploaded" key="upload_time" >{{ (row.upload_time | momentTz : 'YYYY-MM-DD' : row.timezone) }}</field>
             <field title="Recorder" key="recorder">{{ row.recorder }}</field>
             <field title="Comments" key="comments" tdclass="comments hidelongtext seconds-div-center widthtd">
-                <span ng-if="row.comments && ['AudioMoth', 'Song Meter', 'SongMeter'].includes(row.recorder)" title="{{row.comments}}">{{row.comments}}</span>
+                <span ng-if="row.comments && ['AudioMoth', 'Song Meter', 'SongMeter'].includes(row.recorder)" title="{{row.meta.comment ? row.meta.comment : row.comments}}">{{row.comments}}</span>
                 <span ng-if="!['AudioMoth', 'Song Meter', 'SongMeter'].includes(row.recorder) && row.mic !== 'Unknown' && row.version !== 'Unknown'" title="{{ 'Microphone: ' + row.mic + ' / ' +  'Software: ' + row.version }}">{{ 'Microphone: ' + row.mic + ' / ' +  'Software: ' + row.version }}</span>
             </field>
             <expand-select>
