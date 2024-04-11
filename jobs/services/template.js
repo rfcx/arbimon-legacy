@@ -7,7 +7,7 @@ async function getProjectTemplate (options = {}) {
     select t.name, sp.species_id, sp.scientific_name, st.songtype,
       t.x1 minimum_time, t.x2 maximum_time,
       t.y1 minimum_frequency, t.y2 maximum_frequency,
-      CONCAT('${config_hosts.publicUrl}/legacy-api/project/${options.projectUrl}/templates/download/', ('t.name' + '/' + t.template_id + '.wav')) as template_url
+      CONCAT('${config_hosts.publicUrl}/legacy-api/project/${options.projectUrl}/templates/download/', t.name, '/', t.template_id, '.wav') as template_url
     from templates t
       left join species sp on t.species_id = sp.species_id
       left join songtypes st on t.songtype_id = st.songtype_id
