@@ -106,8 +106,16 @@ angular.module('a2.srv.project', [
                 }).catch(notify.serverError);
             },
             exportAllPMdata: function(filters){
+                delete filters.exportReport
                 var params = { filters: filters, show: { pm: 'all' } };
                 return $http.post('/legacy-api/project/'+url+'/recordings/pm-export', params).then(function(response) {
+                    return response.data;
+                }).catch(notify.serverError);
+            },
+            exportAllProjectTemplateData: function(filters){
+                delete filters.exportReport
+                var params = { filters: filters, show: { projectTemplate: 'all' } };
+                return $http.post('/legacy-api/project/'+url+'/recordings/project-template-export', params).then(function(response) {
                     return response.data;
                 }).catch(notify.serverError);
             },

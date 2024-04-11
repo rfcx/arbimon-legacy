@@ -44,7 +44,7 @@
                         class="btn btn-success btn-rounded-full"
                         tooltip="Export all results"
                         ng-disabled="isExportDisabled()"
-                        ng-click="exportData()"
+                        ng-click="exportData('pm')"
                     >
                         Export all results (.csv)
                         <i class="fa fa-download ml-2"></i>
@@ -142,11 +142,21 @@
                             </div>
                         </div>
                     </div>
-                    <div ng-if="!loadingTemplates.value && currentTab === 'projectTemplates'" class="flex" style="align-items: center; display: flex; justify-content: flex-end;">
-                        <span>
-                            Project templates shared in public library
-                        </span>
-                        <switch name="onOff" ng-change="togglePublicTemplatesEnabled()" ng-model="onOff" on="ON" off="OFF" style="margin-left:5px;" disabled="disableToggle()"></switch>
+                    <div ng-if="!loadingTemplates.value && currentTab === 'projectTemplates'" class="row-flex flex-align-middle flex-space-end">
+                        <div class="row-flex flex-align-middle">
+                            <span>
+                                Project templates shared in public library
+                            </span>
+                            <switch name="onOff" ng-change="togglePublicTemplatesEnabled()" ng-model="onOff" on="ON" off="OFF" style="margin-left:5px;" disabled="disableToggle()"></switch>
+                        </div>
+                        <button type="download" class="btn btn-success btn-rounded-full ml-3"
+                            tooltip="Export all templates"
+                            ng-disabled="isExportDisabled()"
+                            ng-click="exportData('projectTemplate')"
+                        >
+                            Export all templates
+                            <i class="fa fa-download ml-2"></i>
+                        </button>
                     </div>
                 </div>
                 <loader ng-if="loadingTemplates.value"></loader>

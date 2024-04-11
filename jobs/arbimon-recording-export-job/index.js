@@ -14,6 +14,7 @@ const config_hosts = require('../../config/hosts');
 const { saveLatestData, combineFilename, uploadAsStream, getSignedUrl } = require('../services/storage')
 const recordingsExport = require('./recordings')
 const patternMatching = require('./pattern-matching')
+const template = require('./template')
 const { streamToBuffer, zipDirectory } = require('../services/file-helper')
 
 const S3_BUCKET_ARBIMON = process.env.S3_BUCKET_ARBIMON
@@ -112,7 +113,27 @@ async function main () {
                 resolve()
             })
         })
-    } else {
+    }   else if (projection_parameters && projection_parameters.projectTemplate) {
+            //----------------Arbimon export all project templates----------------
+            return new Promise((resolve, reject) => {
+                template.collectData(projection_parameters, filters, async (err, filePath) => {
+                    if (err) {
+                        console.error('Arbimon Export job error', err)
+                        fs.unlink(filePath, () => {})
+                        reject(err)
+                    }
+                    console.log('Arbimon Export job: uploading file to S3')
+                    const url = await saveFile(filePath, currentTime, rowData.project_id)
+                    console.log('Arbimon Export job: file is accessible by url', url)
+                    await sendEmail('Arbimon Export all project template report', 'arbimon-export-project-template.csv', rowData, url, true)
+                    await updateExportRecordings(rowData, { processed_at: currentTime })
+                    await recordings.closeConnection()
+                    fs.unlink(filePath, () => {})
+                    console.log(`Arbimon Export job finished: export recordings report for ${message}`)
+                    resolve()
+                })
+            })
+    }   else {
         //----------------Arbimon export recordings----------------
         return new Promise((resolve, reject) => {
             recordingsExport.collectData(projection_parameters, filters, async (err, filePath) => {

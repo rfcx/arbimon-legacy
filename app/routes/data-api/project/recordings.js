@@ -101,6 +101,25 @@ router.post('/pm-export', function(req, res, next) {
     }).catch(next);
 });
 
+router.post('/project-template-export', function(req, res, next) {
+    let filters, projection
+    try {
+        filters = req.body.filters ? req.body.filters : {}
+        projection = req.body.show ? req.body.show : {};
+    } catch(e){
+        return next(e);
+    }
+    filters.project_id = req.project.project_id
+    projection.projectUrl = req.project.url
+    const userEmail = filters.userEmail
+    delete filters.userEmail
+    const userId = req.session.user.id;
+
+    model.recordings.writeExportParams(projection, filters, userId, userEmail).then(function(data) {
+        res.json({ success: true })
+    }).catch(next);
+});
+
 router.post('/occupancy-models-export', function(req, res, next) {
     let filters, projection
     try {

@@ -229,19 +229,20 @@ angular.module('a2.analysis.patternmatching', [
         this.speciesData = JSON.parse($localStorage.getItem('audiodata.templates'));
     }
 
-    $scope.exportData = function() {
+    $scope.exportData = function(exportReport) {
         if (a2UserPermit.isSuper()) {
-            return $scope.openExportPopup()
+            return $scope.openExportPopup(exportReport)
         }
         if ((a2UserPermit.all && !a2UserPermit.all.length) || !a2UserPermit.can('export report')) {
             return notify.error('You do not have permission to export data');
         }
-        $scope.openExportPopup()
+        $scope.openExportPopup(exportReport)
     };
 
-    $scope.openExportPopup = function() {
+    $scope.openExportPopup = function(exportReport) {
         var params = {
-            userEmail: a2UserPermit.getUserEmail() || ''
+            userEmail: a2UserPermit.getUserEmail() || '',
+            exportReport: exportReport
         }
         const modalInstance = $modal.open({
             controller: 'ExportPMmodalInstanceCtrl',
@@ -503,19 +504,32 @@ angular.module('a2.analysis.patternmatching', [
 })
 .controller('ExportPMmodalInstanceCtrl', function($scope, $modalInstance, Project, data) {
     $scope.userEmail = data.params.userEmail
+    const isPMexport = data.params.exportReport === 'pm'
     $scope.exportRecordings = function(email) {
         data.params.userEmail = email
         $scope.isExportingRecs = true
         $scope.errMess = ''
-        Project.exportAllPMdata(data.params).then(data => {
-            $scope.isExportingRecs = false
-            if (data.error) {
-                $scope.errMess = data.error;
-            }
-            else {
-                $modalInstance.close();
-            }
-        })
+        if (isPMexport) {
+            Project.exportAllPMdata(data.params).then(data => {
+                $scope.isExportingRecs = false
+                if (data.error) {
+                    $scope.errMess = data.error;
+                }
+                else {
+                    $modalInstance.close();
+                }
+            })
+        } else {
+            Project.exportAllProjectTemplateData(data.params).then(data => {
+                $scope.isExportingRecs = false
+                if (data.error) {
+                    $scope.errMess = data.error;
+                }
+                else {
+                    $modalInstance.close();
+                }
+            })
+        }
     }
     $scope.changeUserEmail = function() {
         $scope.errMess = null;
