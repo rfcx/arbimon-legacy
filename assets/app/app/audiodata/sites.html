@@ -78,13 +78,13 @@
                     <span title="{{ row.hidden ? 'Excluded site from analyses and Insights' : row.timezone }}">{{ row.hidden || isLocationEmpty(row.lat, row.lon) ? '-' : row.utc }}</span>
                 </field>
                 <field title="Updated" key="date" tdclass="date hidelongtext">
-                    <span title="{{ row.updated_at | moment : 'lll' : row.timezone }}">
-                        {{ row.updated_at | moment : 'lll' : row.timezone }}
+                    <span title="{{ row.updated_at | momentTz : 'lll' : row.timezone }}">
+                        {{ row.updated_at | momentTz : 'lll' : row.timezone }}
                     </span>
                 </field>
                 <field title="Deployed" key="deployment" tdclass="date hidelongtext">
-                    <span title="{{ row.deployment ? (row.deployment | moment : 'lll' : row.timezone) : 'no data' }}">
-                        {{ row.deployment ? (row.deployment | moment : 'lll' : row.timezone) : 'no data' }}
+                    <span title="{{ row.deployment ? (row.deployment | momentTz : 'lll' : row.timezone) : 'no data' }}">
+                        {{ row.deployment ? (row.deployment | momentTz : 'lll' : row.timezone) : 'no data' }}
                     </span>
                 </field>
             </a2-table>

@@ -12,6 +12,7 @@ const rfcxConfig = config('rfcx');
 const csv_stringify = require('csv-stringify');
 const { getCachedMetrics } = require('../../../utils/cached-metrics');
 var model = require('../../../model');
+const moment = require('moment-timezone');
 
 // routes
 var sites = require('./sites');
@@ -378,10 +379,41 @@ router.get('/:projectUrl/users', function(req, res, next) {
 router.get('/:projectUrl/sites-export.csv', function(req, res, next) {
     res.type('text/csv');
     const project = req.project.project_id;
-    model.projects.exportProjectSites(project).then((results) => {
+    model.projects.exportProjectSites(project).then(async (results) => {
         const datastream = results[0];
-        const fields = results[1].map(f => f.name);
+        let fields = results[1].map(f => f.name)
+        const updated_at_idx = fields.indexOf('updated_at');
+        if (updated_at_idx !== -1) {
+            fields.splice(updated_at_idx, 1);
+        }
+        const external_idx = fields.indexOf('external_id');
+        if (external_idx !== -1) {
+            fields.splice(external_idx, 1);
+        }
+        fields.push('Deployed')
+        fields.push('Updated')
+
+        let deploymentData, deploymentBySite = {}
+        try {
+            deploymentData = await model.sites.getDeployedData(req.project.external_id, req.session.idToken)
+            deploymentData = JSON.parse(deploymentData)
+            if (deploymentData && deploymentData.length) {
+                deploymentData.forEach(data => { return deploymentBySite[data.streamId] = {
+                    streamId: data.streamId,
+                    deployedAt: data.deployedAt
+                }})
+            }
+        } catch (e) {}
+
         datastream
+            .on('data', (data) => {
+                if (deploymentBySite && deploymentBySite[data.external_id]) {
+                    data['Deployed'] = deploymentBySite[data.external_id].deployedAt ? deploymentBySite[data.external_id].deployedAt : 0
+                } else data['Deployed'] = 'no data'
+                delete data.external_id
+                data['Updated'] = moment.tz(moment.utc(data.updated_at), data.Timezone).format('YYYY-MM-DD HH:mm:ss')
+                delete data.updated_at
+            })
             .pipe(csv_stringify({ header: true, columns:fields }))
             .pipe(res);
     }).catch(next);
