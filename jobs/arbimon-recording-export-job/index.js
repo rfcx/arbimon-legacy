@@ -426,12 +426,12 @@ async function processGroupedDetectionsStream (results, rowData, projection_para
 }
 
 // Send report to the user
+// Thanks so much for using Arbimon! Your export report for the project “xxxx” has been completed. Please note that this link will expire in 7 days. If you have any questions about Arbimon, check out our support docs.
 async function sendEmail (subject, title, rowData, content, isSignedUrl) {
     const textHeader = `<p style="color:black;margin-top:0">Hello,</p>
       <p style="color:black;">Thanks so much for using Arbimon! Your export report for the project "${rowData.name}" has been completed.`
     const textExpires = ` Please note that this link will expire in 7 days.`
-    const textSupport = ` If you have any questions about Arbimon, check out our <a href="https://support.rfcx.org/">support documentation</a> or
-        reach out to us by clicking the <span style="color:green;font-size: 16px;">&#63;</span> icon, on the bottom right of any Arbimon page.
+    const textSupport = ` If you have any questions about Arbimon, check out our <a href="https://help.arbimon.org/">support docs</a>.
       </p>`
     const textFooter = `<p style="color:black;">
         <span> - The Arbimon Team </span>
@@ -442,10 +442,18 @@ async function sendEmail (subject, title, rowData, content, isSignedUrl) {
         to: [{
             email: rowData.user_email
         }],
-        subject: subject
+        subject: 'Arbimon export'
     }
     if (isSignedUrl) {
-        message.html = textHeader + textExpires + textSupport + `<button style="background:#31984f;border-color:#31984f;padding: 6px 12px;border-radius:4px;cursor:pointer;margin: 10px 0"> <a style="text-decoration:none;color:#e9e6e3" href="${content}">Download report</a> </button>` + textFooter
+        message.html = textHeader + textExpires + textSupport +
+            `<button style="background:#ADFF2C;border-color:#ADFF2C;padding:6px 12px;;border-radius:9999px;cursor:pointer;margin: 10px 0">
+                <a style="text-decoration:none;color:#14130D;white-space:nowrap;text-align:center;vertical-align:middle;align-items:center;display:inline-flex;display: -webkit-inline-flex;" href="${content}">
+                    Download
+                    <span style="width: 16px; height: 16px;margin-left: 6px">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    </span>
+                </a>
+            </button>` + textFooter
     } else {
         message.attachments = [{
             type: 'text/csv',
