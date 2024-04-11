@@ -5,7 +5,7 @@
     <div class="col-sm-12 toolbar mt-4">
         <span class="dropdown a2-filters-box" dropdown  dropdown-append-to-body="true" a2-auto-close-on-outside-click>
             <button class="btn btn-default" dropdown-toggle ng-disabled="loading"><i class="fa fa-filter"></i> Filters <i class="fa fa-caret-down"></i></button>
-            <div class="dropdown-form dropdown-menu a2-filters-box-dropdown datepicker" role="menu">
+            <div class="dropdown-form dropdown-menu set-pop-up-bg filter-form-control close-color a2-filters-box-dropdown datepicker" role="menu">
                 <recording-filter-parameters on-apply-filters="controller.applyFilters(filters)" on-create-playlist="controller.createPlaylist(filters)"
                     max-date="maxDate" min-date="minDate" rec-total="totalRecs" is-loading="loading"
                 ></recording-filter-parameters>

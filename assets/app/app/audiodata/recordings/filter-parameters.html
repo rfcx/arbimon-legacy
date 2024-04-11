@@ -198,11 +198,11 @@
         </ui-select>
     </div>
 </div>
-<div class="a2-filter-row">
-    <button class="btn btn-default" ng-click="resetFilters() | trackEvent:'Audiodata-Recordings':'resetFilters'" ng-disabled="isLoading">
-        <i class="fa fa-undo"></i> Reset
+<div class="row-flex justify-between padding-button-group">
+    <button class="btn btn-success btn-rounded-full" ng-click="resetFilters() | trackEvent:'Audiodata-Recordings':'resetFilters'" ng-disabled="isLoading">
+        <i class="fa fa-undo"></i> Reset filters
     </button>
-    <button class="btn btn-primary" ng-click="applyFilters() | trackEvent:'Audiodata-Recordings':'applyFilters'" ng-disabled="isLoading">
+    <button class="btn btn-primary btn-rounded-full" ng-click="applyFilters() | trackEvent:'Audiodata-Recordings':'applyFilters'" ng-disabled="isLoading">
         Apply filters
     </button>
 </div>

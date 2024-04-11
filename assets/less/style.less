@@ -1607,6 +1607,24 @@ a.ui-select-choices-row-inner {
     overflow-y: auto;
   }
 }
+.close-color {
+  .ui-select-match {
+    > span {
+      .btn-primary {
+          .close {
+            color: #000;
+            opacity: 0.5;
+          }
+        }
+      }
+  }
+}
+
+.filter-form-control {
+    .form-control {
+      background-color: @moss !important;
+    }
+}
 
 :focus {
   outline: none;
@@ -1656,6 +1674,14 @@ a.ui-select-choices-row-inner {
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 280px;
+}
+
+.padding-button-group {
+  padding: 10px 4px;
+}
+
+.set-pop-up-bg {
+  background-color: @echo !important;
 }
 
 /* END: Override ui-select style */
