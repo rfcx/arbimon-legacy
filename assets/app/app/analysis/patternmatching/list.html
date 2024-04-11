@@ -41,7 +41,7 @@
                 <div class="row-flex flex-direction-row flex-align-middle">
                     <button  ng-if="loading.showRefreshBtn"
                         type="download"
-                        class="btn btn-success btn-rounded-full"
+                        class="btn btn-success btn-rounded-full export-form-control"
                         tooltip="Export all results"
                         ng-disabled="isExportDisabled()"
                         ng-click="exportData('pm')"
@@ -149,7 +149,7 @@
                             </span>
                             <switch name="onOff" ng-change="togglePublicTemplatesEnabled()" ng-model="onOff" on="ON" off="OFF" style="margin-left:5px;" disabled="disableToggle()"></switch>
                         </div>
-                        <button type="download" class="btn btn-success btn-rounded-full ml-3"
+                        <button type="download" class="btn btn-success btn-rounded-full ml-3 export-form-control"
                             tooltip="Export all templates"
                             ng-disabled="isExportDisabled()"
                             ng-click="exportData('projectTemplate')"
