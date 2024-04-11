@@ -3,7 +3,7 @@
         <i class="fa fa-spinner fa-spin" style="font-size: 26px; margin-top: 2px;"></i>
     </span>
     <div class="a2-filter a2-filter-text">
-        Range:
+        Date range:
     </div>
     <div class="a2-filter">
         <button class="btn btn-default" type="text"
@@ -27,20 +27,6 @@
             <span ng-hide="controller.params.range.to"> Select Date </span>
             {{ controller.params.range.to | moment: 'll' }}
         </button>
-    </div>
-</div>
-<div class="a2-filter-row">
-    <div class="a2-filter a2-filter-text">
-        Sites:
-    </div>
-    <div class="a2-filter">
-        <ui-select multiple ng-model="controller.params.sites" theme="bootstrap" style="width: 300px;">
-            <ui-select-match placeholder="Site1, Site2, ...">{{$item.value}}</ui-select-match>
-            <ui-select-choices class="has-badges" repeat="item in controller.options.sites | filter:$select.search">
-                {{item.value}}
-                <span class="badge" ng-if="item.count !== null">{{ item.count }}</span>
-            </ui-select-choices>
-        </ui-select>
     </div>
 </div>
 <div class="a2-filter-row">
@@ -75,11 +61,28 @@
         </ui-select>
     </div>
     <div class="a2-filter">
-        <ui-select multiple ng-model="controller.params.hours" theme="bootstrap" style="width: 125px;">
+        <ui-select multiple ng-model="controller.params.hours" theme="bootstrap" close-on-select="false" remove-selected="false" on-select="controller.onSelectClick($select.selected)">
             <ui-select-match placeholder="Hours...">{{ $item.string }}</ui-select-match>
-            <ui-select-choices class="has-badges" repeat="item in controller.options.hours | filter:$select.search">
+            <ui-select-choices class="has-badges" ng-class="{'custom-select-ui-filter-param': (controller.params.hours.includes(item) || controller.params.hours.length === 24)}" repeat="item in controller.options.hours | filter: $select.search">
                 {{ item.string }}
-                <span class="badge">{{ item.count }}</span>
+                <span class="badge" style="right: 20px;">{{ item.count }}</span>
+                <i class="fa fa-check text-insight" ng-show="controller.params.hours.includes(item)" style="position: absolute; right: 3px; top: 20%;" ></i>
+                <i class="fa fa-check text-insight" ng-show="controller.params.hours.length === 24 && item.value === -1" style="position: absolute; right: 3px; top: 20%;" ></i>
+            </ui-select-choices>
+        </ui-select>
+    </div>
+</div>
+<div class="my-2 border-t-1 border-util-gray-02"></div>
+<div class="a2-filter-row">
+    <div class="a2-filter a2-filter-text">
+        Sites:
+    </div>
+    <div class="a2-filter">
+        <ui-select multiple ng-model="controller.params.sites" theme="bootstrap" style="width: 300px;">
+            <ui-select-match placeholder="Site1, Site2, ...">{{$item.value}}</ui-select-match>
+            <ui-select-choices class="has-badges" repeat="item in controller.options.sites | filter:$select.search">
+                {{item.value}}
+                <span class="badge" ng-if="item.count !== null">{{ item.count }}</span>
             </ui-select-choices>
         </ui-select>
     </div>
@@ -98,6 +101,24 @@
         </ui-select>
     </div>
 </div>
+<div class="a2-filter-row">
+    <div class="a2-filter a2-filter-text">
+        Tags:
+    </div>
+    <div class="a2-filter">
+        <ui-select multiple ng-model="controller.params.tags" theme="bootstrap" style="width: 350px;">
+            <ui-select-match placeholder="Tags...">
+                <a2-tag tag="$item"></a2-tag>
+                <span class="badge">{{ $item.count }}</span>
+            </ui-select-match>
+            <ui-select-choices class="has-badges" repeat="$item in controller.options.tags | filter:$select.search">
+                <a2-tag tag="$item"></a2-tag>
+                <span class="badge">{{ $item.count }}</span>
+            </ui-select-choices>
+        </ui-select>
+    </div>
+</div>
+<div class="my-2 border-t-1 border-util-gray-02"></div>
 <div class="a2-filter-row">
     <div class="a2-filter a2-filter-text">
         Validations:
@@ -177,28 +198,11 @@
         </ui-select>
     </div>
 </div>
-<div class="a2-filter-row">
-    <div class="a2-filter a2-filter-text">
-        Tags:
-    </div>
-    <div class="a2-filter">
-        <ui-select multiple ng-model="controller.params.tags" theme="bootstrap" style="width: 350px;">
-            <ui-select-match placeholder="Tags...">
-                <a2-tag tag="$item"></a2-tag>
-                <span class="badge">{{ $item.count }}</span>
-            </ui-select-match>
-            <ui-select-choices class="has-badges" repeat="$item in controller.options.tags | filter:$select.search">
-                <a2-tag tag="$item"></a2-tag>
-                <span class="badge">{{ $item.count }}</span>
-            </ui-select-choices>
-        </ui-select>
-    </div>
-</div>
-<div class="a2-filter-row">
-    <button class="btn btn-default" ng-click="applyFilters() | trackEvent:'Audiodata-Recordings':'applyFilters'" ng-disabled="isLoading">
-        Apply filters
+<div class="row-flex justify-between padding-button-group">
+    <button class="btn btn-success btn-rounded-full" ng-click="resetFilters() | trackEvent:'Audiodata-Recordings':'resetFilters'" ng-disabled="isLoading">
+        <i class="fa fa-undo"></i> Reset filters
     </button>
-    <button class="btn btn-default" ng-click="resetFilters() | trackEvent:'Audiodata-Recordings':'resetFilters'" ng-disabled="isLoading">
-        <i class="fa fa-undo"></i> Reset
+    <button class="btn btn-primary btn-rounded-full" ng-click="applyFilters() | trackEvent:'Audiodata-Recordings':'applyFilters'" ng-disabled="isLoading">
+        Apply filters
     </button>
 </div>
