@@ -1627,6 +1627,39 @@ a.ui-select-choices-row-inner {
     }
 }
 
+.export-form-control {
+  background-color: @moss !important;
+}
+
+.export-form {
+  background-color: @echo !important;
+  border-radius: 10px;
+  .modal-header {
+    > h3 {
+      margin-top: 0px;
+      margin-bottom: 0px;
+      font-size: 20px;
+    }
+  }
+  .form-group {
+    > label {
+      font-weight: normal !important;
+    }
+    > span {
+      margin-top: 10px;
+      margin-bottom: 8px;
+      display: flex;
+    }
+    > input {
+      background-color: @moss !important;
+      height: 48px;
+    }
+  }
+  .row-flex {
+    padding: 5px 15px 15px 15px;
+  }
+}
+
 :focus {
   outline: none;
 }
