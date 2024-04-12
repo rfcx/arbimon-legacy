@@ -446,12 +446,10 @@ async function sendEmail (subject, title, rowData, content, isSignedUrl) {
     }
     if (isSignedUrl) {
         message.html = textHeader + textExpires + textSupport +
-            `<button style="background:#ADFF2C;border:1px solid #ADFF2C;padding:6px 12px;;border-radius:9999px;cursor:pointer;margin: 10px 0">
+            `<button style="font-family:'Poppins'!important;background:#ADFF2C;border:1px solid #ADFF2C;padding:6px 12px;;border-radius:9999px;cursor:pointer;margin: 10px 0">
                 <a style="text-decoration:none;color:#14130D;white-space:nowrap;text-align:center;vertical-align:middle;align-items:center;display:inline-flex;display: -webkit-inline-flex;" href="${content}">
                     Download
-                    <span style="width: 16px; height: 16px;margin-left: 6px">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke="#14130D"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                    </span>
+                    <img style="width: 16px; height: 16px; margin-left:6px" src="https://static.rfcx.org/arbimon/download-icon.png">
                 </a>
             </button>` + textFooter
     } else {
