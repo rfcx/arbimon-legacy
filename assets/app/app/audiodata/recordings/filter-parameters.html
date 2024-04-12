@@ -52,7 +52,7 @@
         </ui-select>
     </div>
     <div class="a2-filter">
-        <ui-select multiple ng-model="controller.params.days" theme="bootstrap" style="width: 125px;">
+        <ui-select multiple ng-model="controller.params.days" theme="bootstrap" style="width: 150px;">
             <ui-select-match placeholder="Days...">{{ $item.value }}</ui-select-match>
             <ui-select-choices class="has-badges" repeat="item in controller.options.days | filter:$select.search">
                 {{ item.value }}
