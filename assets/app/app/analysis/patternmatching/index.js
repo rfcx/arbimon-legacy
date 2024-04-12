@@ -247,6 +247,7 @@ angular.module('a2.analysis.patternmatching', [
         const modalInstance = $modal.open({
             controller: 'ExportPMmodalInstanceCtrl',
             templateUrl: '/app/audiodata/export-report.html',
+            windowClass: 'export-pop-up-window',
             resolve: {
                 data: function() {
                     return { params: params }

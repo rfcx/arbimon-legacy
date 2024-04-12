@@ -994,6 +994,7 @@ angular.module('a2.analysis.clustering-jobs', [
         const modalInstance = $modal.open({
             controller: 'ExportReportModalCtrl',
             templateUrl: '/app/analysis/clustering-jobs/export-report.html',
+            windowClass: 'export-pop-up-window',
             resolve: {
                 data: function() {
                     return listParams
