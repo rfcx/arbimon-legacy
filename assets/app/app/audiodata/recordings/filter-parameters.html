@@ -34,7 +34,7 @@
         Date and Time:
     </div>
     <div class="a2-filter">
-        <ui-select multiple ng-model="controller.params.years" theme="bootstrap" style="width: 125px;">
+        <ui-select multiple ng-model="controller.params.years" theme="bootstrap" style="width: 150px;">
             <ui-select-match placeholder="Years...">{{$item.value}}</ui-select-match>
             <ui-select-choices class="has-badges" repeat="item in controller.options.years | filter:$select.search">
                 {{ item.value }}
