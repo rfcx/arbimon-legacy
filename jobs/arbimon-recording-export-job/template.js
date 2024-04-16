@@ -1,9 +1,11 @@
 require('dotenv').config()
 const path = require('path')
-const { getProjectTemplate } = require('../services/template')
+const { getProjectTemplate, getTemplateDataForAudio } = require('../services/template')
 const fs = require('fs')
 const stream = require('stream');
 const csv_stringify = require('csv-stringify');
+const { zipDirectory } = require('../services/file-helper')
+const recordings = require('../../app/model/recordings')
 
 async function collectData (projection_parameters, filters, cb) {
   let isFirstChunk = true
@@ -25,6 +27,10 @@ async function collectData (projection_parameters, filters, cb) {
   }).catch((e) => {
     cb(e)
   })
+}
+
+async function buildTemplateFolder() {
+    await zipDirectory('./tmpfilecache', './tmpfilecache/template-export.zip')
 }
 
 async function exportAllProjectTemplate (projectId, projectUrl, cb) {
@@ -60,23 +66,58 @@ async function exportAllProjectTemplate (projectId, projectUrl, cb) {
 }
 
 async function writeChunk (results, targetFile, isFirstChunk) {
-  return new Promise(function (resolve, reject) {
+  return new Promise(async function (resolve, reject) {
       let fields = [];
       results.forEach(result => {
           fields.push(...Object.keys(result).filter(f => !fields.includes(f)))
       });
 
+      const templateId = fields.indexOf('template_id');
+        if (templateId !== -1) {
+            fields.splice(templateId, 1);
+        }
+
       let datastream = new stream.Readable({objectMode: true});
       let _buf = []
 
-      results.forEach(result => {
-        fields.forEach(f => {
+      for (let result of results) {
+        fields.forEach(async (f) => {
           if (result[f] === undefined || result[f] === null) {
-            result[f] = '---'}
-          }
+              result[f] = '---'}
+            }
         )
+        const templateId = result.template_id
+        delete result.template_id
+
+        await getTemplateDataForAudio({ templateId: templateId})
+        .then(async template => {
+          const opts = {
+              uri: template.recUri,
+              site_id: template.recSiteId,
+              external_id: template.external_id,
+              datetime: template.datetime,
+              datetime_utc: template.datetime_utc
+          }
+          const filter = {
+              maxFreq: Math.max(template.y1, template.y2),
+              minFreq: Math.min(template.y1, template.y2),
+              gain: 5,
+              trim: {
+                  from: Math.min(template.x1, template.x2),
+                  to: Math.max(template.x1, template.x2)
+              },
+              format: '.wav'
+          }
+          await recordings.fetchAudioFileAsync(opts, filter).then(audio => {
+            console.log('fetchAudioFileAsync', audio)
+            const ext = path.extname(audio.path)
+            const audioName = path.basename(audio.path, ext);
+            const newName = audio.path.replace(audioName, result.name);
+            fs.renameSync(audio.path, newName);
+          })
+        })
         datastream.push(result)
-      });
+      }
       datastream.push(null);
 
       datastream.on('data', (d) => {
@@ -96,6 +137,7 @@ async function writeChunk (results, targetFile, isFirstChunk) {
 }
 
 module.exports = {
-  collectData
+  collectData,
+  buildTemplateFolder
 }
 

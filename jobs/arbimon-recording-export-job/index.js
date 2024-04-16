@@ -117,19 +117,9 @@ async function main () {
             //----------------Arbimon export all project templates----------------
             return new Promise((resolve, reject) => {
                 template.collectData(projection_parameters, filters, async (err, filePath) => {
-                    if (err) {
-                        console.error('Arbimon Export job error', err)
-                        fs.unlink(filePath, () => {})
-                        reject(err)
-                    }
-                    console.log('Arbimon Export job: uploading file to S3')
-                    const url = await saveFile(filePath, currentTime, rowData.project_id)
-                    console.log('Arbimon Export job: file is accessible by url', url)
-                    await sendEmail('Arbimon Export all project template report', 'arbimon-export-project-template.csv', rowData, url, true)
-                    await updateExportRecordings(rowData, { processed_at: currentTime })
-                    await recordings.closeConnection()
-                    fs.unlink(filePath, () => {})
-                    console.log(`Arbimon Export job finished: export recordings report for ${message}`)
+                    await template.buildTemplateFolder()
+                    await sendZipFolderToTheUser(rowData, currentTime, jobName, message, 'template-export')
+                    console.log(`Arbimon Export job finished: export templates for ${message}`)
                     resolve()
                 })
             })
@@ -233,25 +223,26 @@ async function getMultipleOccupancyModelsData(projection_parameters, filters, ro
         })
     }
     await buildOccupancyFolder()
-    await sendFolderToTheUser(rowData, currentTime, jobName, message)
+    await sendZipFolderToTheUser(rowData, currentTime, jobName, message, 'occupancy-export')
 }
 
 async function buildOccupancyFolder() {
     await zipDirectory('jobs/arbimon-recording-export-job/tmpfilecache', 'jobs/arbimon-recording-export-job/tmpfilecache/occupancy-export.zip')
 }
 
-async function sendFolderToTheUser(rowData, currentTime, jobName, message) {
-    await streamToBuffer().then(async (buffer) => {
+async function sendZipFolderToTheUser(rowData, currentTime, jobName, message, reportName) {
+    await streamToBuffer(reportName).then(async (buffer) => {
         try {
-            const filePath = await saveLatestData(S3_BUCKET_ARBIMON, buffer, rowData.project_id, currentTime, 'occupancy-export', '.zip', 'application/zip')
+            console.log(S3_BUCKET_ARBIMON, buffer, rowData.project_id, currentTime, reportName, '.zip', 'application/zip')
+            const filePath = await saveLatestData(S3_BUCKET_ARBIMON, buffer, rowData.project_id, currentTime, reportName, '.zip', 'application/zip')
             const url = await getSignedUrl({ Bucket: S3_BUCKET_ARBIMON, Key: filePath })
             console.log('\n\n--------url-------', url)
-            await sendEmail('Arbimon Export Occupancy model', 'Occupancy export', rowData, url, true)
+            await sendEmail('Arbimon export', 'Arbimon export', rowData, url, true)
             await updateExportRecordings(rowData, { processed_at: currentTime })
             fs.rmSync(tmpFilePath, { recursive: true, force: true });
             await recordings.closeConnection()
         } catch(error) {
-            console.error('Error while sending occupancy-model email.', error)
+            console.error('Error while sending zip folder email.', error)
             await errorMessage(message, jobName)
             fs.rmSync(tmpFilePath, { recursive: true, force: true });
             await updateExportRecordings(rowData, { error: JSON.stringify(error) })
@@ -446,10 +437,10 @@ async function sendEmail (subject, title, rowData, content, isSignedUrl) {
     }
     if (isSignedUrl) {
         message.html = textHeader + textExpires + textSupport +
-            `<button style="font-family:'Poppins'!important;background:#ADFF2C;border:1px solid #ADFF2C;padding:6px 12px;;border-radius:9999px;cursor:pointer;margin: 10px 0">
+            `<button style="font-family: 'ABCFavoritExtended' !important;background:#ADFF2C;border:1px solid #ADFF2C;padding:6px 14px;;border-radius:9999px;cursor:pointer;margin: 10px 0">
                 <a style="text-decoration:none;color:#14130D;white-space:nowrap;text-align:center;vertical-align:middle;align-items:center;display:inline-flex;display: -webkit-inline-flex;" href="${content}">
                     Download
-                    <img style="width: 16px; height: 16px; margin-left:6px" src="https://static.rfcx.org/arbimon/download-icon.png">
+                    <img style="width: 14px; height: 14px; margin-left:8px" src="https://static.rfcx.org/arbimon/download-icon.png">
                 </a>
             </button>` + textFooter
     } else {

@@ -4,7 +4,7 @@ const config_hosts = require('../../config/hosts');
 async function getProjectTemplate (options = {}) {
   const connection = await mysql.getConnection()
   const sql = `
-    select t.name, sp.species_id, sp.scientific_name, st.songtype,
+    select t.template_id, t.name, sp.species_id, sp.scientific_name, st.songtype,
       t.x1 minimum_time, t.x2 maximum_time,
       t.y1 minimum_frequency, t.y2 maximum_frequency,
       CONCAT('${config_hosts.publicUrl}/legacy-api/project/${options.projectUrl}/templates/download/', t.name, '/', t.template_id, '.wav') as template_url
@@ -19,6 +19,24 @@ async function getProjectTemplate (options = {}) {
   return rows
 }
 
+async function getTemplateDataForAudio (options = {}) {
+  const connection = await mysql.getConnection()
+  const sql = `
+    SELECT T.template_id as id, T.project_id as project, T.recording_id as recording, T.species_id as species,
+      T.songtype_id as songtype, T.name, CONCAT('https://arbimon2.s3.us-east-1.amazonaws.com/', T.uri) as uri,
+      T.x1, T.y1, T.x2, T.y2, T.date_created, T.user_id, T.disabled, R.uri as recUri, R.site_id as recSiteId,
+      R.sample_rate, R.datetime, R.datetime_utc, S.external_id
+    FROM templates T
+      JOIN recordings R ON T.recording_id = R.recording_id
+      JOIN sites S ON S.site_id = R.site_id
+    WHERE T.template_id = ${options.templateId}
+      ORDER BY date_created DESC
+  `
+  const [rows, fields] = await connection.execute(sql)
+  return rows[0]
+}
+
 module.exports = {
-  getProjectTemplate
+  getProjectTemplate,
+  getTemplateDataForAudio
 }
