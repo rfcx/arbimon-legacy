@@ -98,6 +98,13 @@ router.get('/:projectUrl/info/source-project', function(req, res, next) {
 });
 
 // Dasboard page metrics
+router.get('/:projectUrl/site-count', function(req, res, next) {
+    res.type('json');
+    let p = req.query.project_id? req.query.project_id : req.project.project_id;
+    const key = { 'project-site-count': `project-${p}-si` }
+    getCachedMetrics(req, res, key, p, next);
+});
+
 router.get('/:projectUrl/playlist-count', function(req, res, next) {
     res.type('json');
     let p = req.query.project_id? req.query.project_id : req.project.project_id;
