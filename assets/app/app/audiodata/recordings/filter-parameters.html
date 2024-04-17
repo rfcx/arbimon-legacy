@@ -61,7 +61,7 @@
         </ui-select>
     </div>
     <div class="a2-filter">
-        <ui-select multiple ng-model="controller.params.hours" theme="bootstrap" close-on-select="false" remove-selected="false" on-select="controller.onSelectClick($select.selected)">
+        <ui-select multiple ng-model="controller.params.hours" theme="bootstrap" close-on-select="false" remove-selected="false" on-select="controller.onSelectClick($select.selected)" style="width: 155px;">
             <ui-select-match placeholder="Hours...">{{ $item.string }}</ui-select-match>
             <ui-select-choices class="has-badges" ng-class="{'custom-select-ui-filter-param': (controller.params.hours.includes(item) || controller.params.hours.length === 24)}" repeat="item in controller.options.hours | filter: $select.search">
                 {{ item.string }}
