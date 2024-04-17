@@ -9,7 +9,7 @@ const recordings = require('../../app/model/recordings')
 
 async function collectData (projection_parameters, filters, cb) {
   let isFirstChunk = true
-  const filePath = path.join('./tmpfilecache', `${(new Date()).toISOString()}.csv`)
+  const filePath = path.join('jobs/arbimon-recording-export-job/tmpfilecache', `${(new Date()).toISOString()}.csv`)
   const targetFile = fs.createWriteStream(filePath, { flags: 'a' })
   // 1. Export .csv file
   await exportAllProjectTemplate(filters.project_id, projection_parameters.projectUrl, async (e, data) => {
@@ -35,7 +35,7 @@ async function collectData (projection_parameters, filters, cb) {
 }
 
 async function buildTemplateFolder() {
-    await zipDirectory('./tmpfilecache', './tmpfilecache/template-export.zip')
+    await zipDirectory('jobs/arbimon-recording-export-job/tmpfilecache', 'jobs/arbimon-recording-export-job/tmpfilecache/template-export.zip')
 }
 
 async function exportAllProjectTemplate (projectId, projectUrl, cb) {

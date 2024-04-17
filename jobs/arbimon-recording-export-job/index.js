@@ -116,9 +116,14 @@ async function main () {
     }   else if (projection_parameters && projection_parameters.projectTemplate) {
             //----------------Arbimon export all project templates----------------
             return new Promise((resolve, reject) => {
+                if (!fs.existsSync(tmpFilePath, { recursive: true })) {
+                    fs.mkdirSync(tmpFilePath);
+                }
+                console.log('folder jobs/arbimon-recording-export-job/tmpfilecache exists', fs.existsSync(tmpFilePath))
                 template.collectData(projection_parameters, filters, async (err, filePath) => {
-                    console.log('template.buildTemplateFolder', filePath);
+                    console.log('--start buildTemplateFolder', filePath);
                     await template.buildTemplateFolder()
+                    console.log('--end buildTemplateFolder');
                     await sendZipFolderToTheUser(rowData, currentTime, jobName, message, 'template-export')
                     console.log(`Arbimon Export job finished: export templates for ${message}`)
                     resolve()
