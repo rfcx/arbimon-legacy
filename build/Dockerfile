@@ -18,6 +18,11 @@ RUN mkdir -p /app
 COPY app/config.js /app/app/config.js
 RUN mkdir -p /app/utils
 COPY app/utils /app/app/utils
+RUN apt update \
+    && apt install -y \
+    sox \
+    libsox-fmt-all \
+    libsox-dev
 RUN mkdir -p /app/model
 RUN mkdir -p /app/k8s/job
 COPY app/k8s/job /app/app/k8s/job

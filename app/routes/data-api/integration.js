@@ -65,6 +65,8 @@ router.post('/sites', verifyToken(), hasRole(['appUser', 'rfcxUser', 'guardianCr
     converter.convert('longitude').optional().toFloat().minimum(-180).maximum(180)
     converter.convert('altitude').optional().toFloat()
     converter.convert('external_id').toString();
+    converter.convert('country_code').toString();
+    converter.convert('timezone').toString();
     converter.convert('project_id').optional().toString();
     converter.convert('project_external_id').optional().toString();
     const params = await converter.validate();
@@ -103,13 +105,7 @@ router.post('/sites', verifyToken(), hasRole(['appUser', 'rfcxUser', 'guardianCr
       return res.json(existingSite);
     }
     const insertData = await model.sites.insertAsync(siteData);
-    const coreSite = {
-        name: params.name,
-        project_id: project.external_id
-    }
-    const token = req.headers.authorization || req.session.idToken || req.cookies.id_token
-    let { countryCode, timezone } = await model.sites.getCountryCodeAndTimezoneCoreAPI(coreSite, token);
-    await model.sites.setCountryCodeAndTimezone(insertData.insertId, countryCode, timezone);
+    await model.sites.setCountryCodeAndTimezone(insertData.insertId, params.country_code, params.timezone);
     const site = await model.sites.findByIdAsync(insertData.insertId);
     res.status(201).json(site[0]);
   } catch (e) {
