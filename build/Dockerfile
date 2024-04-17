@@ -37,10 +37,6 @@ COPY app/model/classifications.js /app/app/model/classifications.js
 RUN apt update \
     && apt install -y \
         curl \
-        gnupg \
-        gcc \
-        g++ \
-        make \
         sox \
         imagemagick \
         python-dev \
@@ -53,16 +49,10 @@ RUN apt update \
         libopus-dev \
         libopusfile-dev \
         libtool \
-        opus-tools \
         pkg-config \
         libflac-dev \
         autoconf \
-        automake \
-        git \
-        virtualenv \
-        libpng-dev \
-        libfreetype6-dev \
-        libmysqlclient-dev
+        automake
 CMD ["node", "--max_old_space_size=8192", "jobs/arbimon-recording-export-job/index.js"]
 
 # ---
