@@ -689,7 +689,7 @@ var Sites = {
                         name: site.name,
                         lat: site.lat,
                         lon: site.lon,
-                        alt: site.alt,
+                        alt: site['alt'] !== undefined && Sites.isEmptyCoordinate(site.alt) ? null : site.alt,
                         is_public: !project.is_private
                     }
                     if (project.external_id) {
@@ -777,7 +777,7 @@ var Sites = {
                         name: site.name,
                         lat: site.lat,
                         lon: site.lon,
-                        alt: site.alt,
+                        alt: site['alt'] !== undefined && Sites.isEmptyCoordinate(site.alt) ? null : site.alt,
                         project_id: site.project_id
                     }, idToken)
                     const coreSite = {
