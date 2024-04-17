@@ -75,6 +75,7 @@ async function createToken() {
       grant_type: 'client_credentials'
     })
   }
+  console.log('createToken options',  options.body)
   const data = await rp(options)
   const body = JSON.parse(data.body)
   console.log('createToken body', body)
