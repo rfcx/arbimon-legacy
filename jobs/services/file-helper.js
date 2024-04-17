@@ -27,7 +27,7 @@ async function zipDirectory (sourceDir, outPath) {
 
 async function streamToBuffer (reportName) {
   return new Promise((resolve, reject) => {
-    const stream = fs.createReadStream(`jobs/arbimon-recording-export-job/tmpfilecache/${reportName}.zip`);
+    const stream = fs.createReadStream(`jobs/arbimon-recording-export-job/${reportName}.zip`);
     const data = [];
 
     stream.on('data', (chunk) => {

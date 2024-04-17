@@ -119,7 +119,7 @@ async function main () {
                 if (!fs.existsSync(tmpFilePath, { recursive: true })) {
                     fs.mkdirSync(tmpFilePath);
                 }
-                console.log('folder jobs/arbimon-recording-export-job/tmpfilecache exists', fs.existsSync(tmpFilePath))
+                console.log(`folder ${tmpFilePath} exists`, fs.existsSync(tmpFilePath))
                 template.collectData(projection_parameters, filters, async (err, filePath) => {
                     console.log('--start buildTemplateFolder', filePath);
                     await template.buildTemplateFolder()
@@ -220,7 +220,7 @@ async function getMultipleOccupancyModelsData(projection_parameters, filters, ro
     if (!fs.existsSync(tmpFilePath, { recursive: true })) {
         fs.mkdirSync(tmpFilePath);
     }
-    console.log('folder jobs/arbimon-recording-export-job/tmpfilecache exists', fs.existsSync(tmpFilePath))
+    console.log(`folder ${tmpFilePath} exists`, fs.existsSync(tmpFilePath))
     for (const [i, specie] of projection_parameters.species.entries()) {
         const data = await exportOccupancyModels(specie, filters)
         rowData.species_name = filters.species_name[i] || specie
@@ -233,7 +233,7 @@ async function getMultipleOccupancyModelsData(projection_parameters, filters, ro
 }
 
 async function buildOccupancyFolder() {
-    await zipDirectory('jobs/arbimon-recording-export-job/tmpfilecache', 'jobs/arbimon-recording-export-job/tmpfilecache/occupancy-export.zip')
+    await zipDirectory(tmpFilePath, 'jobs/arbimon-recording-export-job/occupancy-export.zip')
 }
 
 async function sendZipFolderToTheUser(rowData, currentTime, jobName, message, reportName) {
@@ -334,7 +334,7 @@ async function processOccupancyModelStream (results, rowData, speciesId, filters
         datastream.on('end', async () => {
             const title = 'occupancy-' + speciesId + '-' + rowData.species_name + '.csv';
             csv_stringify(_buf, { header: true, columns: fields }, async (err, data) => {
-                fs.writeFile(`jobs/arbimon-recording-export-job/tmpfilecache/${title}`, data, function (err, result) {
+                fs.writeFile(`${tmpFilePath}/${title}`, data, function (err, result) {
                     if (err) {
                         console.log('error writing file to temp folder', err);
                         reject(err)

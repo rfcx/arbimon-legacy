@@ -16,11 +16,16 @@ Requires Docker.
     docker build -t arbimon -f build/Dockerfile .
     ```
 
-2.  Run the app
+2.  - Run the app
     ```
     docker run -it -p 3000:3000 --env-file .env --rm arbimon
     ```
+    - Run ssh tunnel, put `host.docker.internal` to the .env/mysql hostname
 
+    - Run the cron job
+    ```
+    docker run -it --env-file jobs/arbimon-recording-export-job/.env --rm arbimon
+    ```
 
 ## Kubernetes configuration
 
