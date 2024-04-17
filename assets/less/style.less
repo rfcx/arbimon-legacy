@@ -1611,7 +1611,6 @@ a.ui-select-choices-row-inner {
     }
     .ui-select-container {
       > div {
-        width: 150px;
         max-height: 80px;
         overflow-y: auto;
       }
@@ -1660,12 +1659,17 @@ a.ui-select-choices-row-inner {
 .export-form {
   background-color: @echo !important;
   border-radius: 10px;
-  .modal-header {
-    > h3 {
-      margin-top: 0px;
+  .export-form-header {
+    > span {
+      font-family: @font-family-header;
+      margin-top: 15px;
       margin-bottom: 0px;
       font-size: 20px;
     }
+  }
+  .modal-body {
+    padding: 0px 15px 15px 15px;
+
   }
   .form-group {
     > label {
