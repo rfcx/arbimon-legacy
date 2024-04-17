@@ -18,11 +18,6 @@ RUN mkdir -p /app
 COPY app/config.js /app/app/config.js
 RUN mkdir -p /app/utils
 COPY app/utils /app/app/utils
-RUN apt update \
-    && apt install -y \
-    sox \
-    libsox-fmt-all \
-    libsox-dev
 RUN mkdir -p /app/model
 RUN mkdir -p /app/k8s/job
 COPY app/k8s/job /app/app/k8s/job
@@ -39,6 +34,35 @@ COPY app/model/tags.js /app/app/model/tags.js
 COPY app/model/soundscape-composition.js /app/app/model/soundscape-composition.js
 COPY app/model/sites.js /app/app/model/sites.js
 COPY app/model/classifications.js /app/app/model/classifications.js
+RUN apt update \
+    && apt install -y \
+        curl \
+        gnupg \
+        gcc \
+        g++ \
+        make \
+        sox \
+        imagemagick \
+        python-dev \
+        software-properties-common \
+        libsox-fmt-all \
+        libsox-dev \
+        libvorbis-dev \
+        libogg-dev \
+        vorbis-tools \
+        libopus-dev \
+        libopusfile-dev \
+        libtool \
+        opus-tools \
+        pkg-config \
+        libflac-dev \
+        autoconf \
+        automake \
+        git \
+        virtualenv \
+        libpng-dev \
+        libfreetype6-dev \
+        libmysqlclient-dev
 CMD ["node", "--max_old_space_size=8192", "jobs/arbimon-recording-export-job/index.js"]
 
 # ---
