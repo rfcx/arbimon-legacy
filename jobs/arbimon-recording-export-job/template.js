@@ -26,11 +26,9 @@ async function collectData (projection_parameters, filters, cb) {
     targetFile.end()
     // 1. Export audio files
     await exportAllProjectTemplate(filters.project_id, projection_parameters.projectUrl, async (e, data) => {
-      console.log('--start downloadTemplateAudio')
       await downloadTemplateAudio(data)
-      console.log('--end downloadTemplateAudio')
+      cb(null, path.resolve(filePath))
     })
-    cb(null, path.resolve(filePath))
   }).catch((e) => {
     cb(e)
   })
@@ -151,7 +149,8 @@ async function downloadTemplateAudio (results) {
           console.log('fetchAudioFileAsync renamed')
         })
       } catch (err) {
-        console.log('Err downloadTemplateAudio', err)
+        console.log('Err download template audio.', err)
+        continue
       }
     }
     resolve()

@@ -551,7 +551,11 @@ var Recordings = {
                 Key    : recording.uri
             }
             await s3Client.getObject(opts, function(err, data){
-                if(err) { callback(err); return; }
+                if (err) {
+                    console.log('Err s3Client getObject', err);
+                    callback(err);
+                    return;
+                }
                 cache_miss.set_file_data(data.Body);
             });
         }, callback);
@@ -651,10 +655,8 @@ var Recordings = {
             return;
         }
 
-        //TODO: remove the code below after recordings' migration
-        debug('fetchAudioFile');
         var mods=[];
-        var mp3Extension = '.mp3';
+        var mp3Extension = options.format ? options.format : '.mp3';
 
         if(options){
             if(options.gain && options.gain != 1){
@@ -691,13 +693,12 @@ var Recordings = {
         }
 
         var ifMissedGetFile = function(cache_miss) {
-            debug('mp3 not found');
             Recordings.fetchRecordingFile(recording, function(err, recording_path){
                 if(err) return callback(err);
 
                 var transcode_args = {
                     sample_rate: recording.sample_rate ? recording.sample_rate : 44100,
-                    format: 'mp3',
+                    format: options.format ? 'wav' : 'mp3',
                     channels: 1
                 };
 
@@ -710,14 +711,12 @@ var Recordings = {
                         }
                     });
                 }
-                debug(transcode_args);
 
                 audioTools.transcode(
                     recording_path.path,
                     cache_miss.file,
                     transcode_args,
                     function(status_code){
-                        debug('done transcoding');
                         fs.unlink(recording_path.path, () => {}) // delete original file
                         if(status_code) {
                             return callback({ code: status_code });
