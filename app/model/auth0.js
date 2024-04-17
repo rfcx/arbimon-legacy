@@ -61,6 +61,7 @@ function isTokenValid() {
 }
 
 async function createToken() {
+  console.log('createToken', `https://${auth0BackendConfig.auth0Domain}/oauth/token`)
   const options = {
     method: 'POST',
     url: `https://${auth0BackendConfig.auth0Domain}/oauth/token`,
@@ -76,6 +77,7 @@ async function createToken() {
   }
   const data = await rp(options)
   const body = JSON.parse(data.body)
+  console.log('createToken body', body)
   if (body && body.access_token) {
     tokenData = {
       token: body.access_token,
