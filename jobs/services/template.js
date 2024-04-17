@@ -32,10 +32,8 @@ async function getTemplateDataForAudio (options = {}) {
     WHERE T.template_id = ${options.templateId}
       ORDER BY date_created DESC
   `
-  console.log('getTemplateDataForAudio sql', sql)
   try {
     const [rows, fields] = await connection.execute(sql)
-    console.log('getTemplateDataForAudio', rows[0])
     return rows[0]
   } catch (err) {
     console.log('err get template', err)

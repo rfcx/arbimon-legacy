@@ -117,6 +117,7 @@ async function main () {
             //----------------Arbimon export all project templates----------------
             return new Promise((resolve, reject) => {
                 template.collectData(projection_parameters, filters, async (err, filePath) => {
+                    console.log('template.buildTemplateFolder', filePath);
                     await template.buildTemplateFolder()
                     await sendZipFolderToTheUser(rowData, currentTime, jobName, message, 'template-export')
                     console.log(`Arbimon Export job finished: export templates for ${message}`)
