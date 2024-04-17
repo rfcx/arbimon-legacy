@@ -1556,12 +1556,12 @@ a.ui-select-choices-row-inner {
       &:focus,
       &:hover {
         border-radius: 5px;
-        background-color: @gray !important;
+        background-color: @gray;
       }
     }
     &:hover {
       border-radius: 5px;
-      background-color: @gray !important;
+      background-color: @gray;
     }
   }
 
@@ -1569,19 +1569,6 @@ a.ui-select-choices-row-inner {
     > span {
       border-radius: 5px;
       background-color: @gray !important;
-    }
-  }
-}
-
-.custom-select-ui-filter-param {
-  .ui-select-choices-row {
-    > span {
-      border-radius: 5px;
-      background-color: @gray !important;
-      &:hover {
-        border-radius: 5px;
-        background-color: @gray !important;
-      }
     }
   }
 }
@@ -1627,6 +1614,41 @@ a.ui-select-choices-row-inner {
         width: 150px;
         max-height: 80px;
         overflow-y: auto;
+      }
+    }
+    .dropdown-menu {
+      border: 1px solid #4B4B4B;
+      background-color: @moss !important;
+    }
+    .ui-select-choices-row {
+      > span {
+        color: @util-gray-01 !important;
+        background-color: @moss !important;
+        &:focus,
+        &:hover {
+          background-color: @util-gray-04 !important;
+        }
+      }
+      &:hover {
+        background-color: @util-gray-04 !important;
+      }
+    }
+    .ui-select-choices-row.disabled {
+      > span {
+        border-radius: 5px;
+        background-color: @util-gray-04 !important;
+      }
+    }
+    .custom-select-ui-filter-param {
+      .ui-select-choices-row {
+        > span {
+          border-radius: 5px;
+          background-color: @util-gray-04 !important;
+          &:hover {
+            border-radius: 5px;
+            background-color: @util-gray-04  !important;
+          }
+        }
       }
     }
 }
