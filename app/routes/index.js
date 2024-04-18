@@ -43,22 +43,34 @@ router.get(['/project/:projectUrl', '/project/:projectUrl/dashboard'], function(
     res.redirect(`/p/${req.params.projectUrl}`);
 });
 
+// Home page metrics
+router.get('/legacy-api/projects-count', function(req, res, next) {
+    res.type('json');
+    getCachedMetrics(req, res, { 'project-count': 'project-count' }, null, next);
+});
+router.get('/legacy-api/jobs-count', function(req, res, next) {
+    res.type('json');
+    getCachedMetrics(req, res, { 'job-count': 'job-count' }, null, next);
+});
+router.get('/legacy-api/recordings-species-count', function(req, res, next) {
+    res.type('json');
+    getCachedMetrics(req, res, { 'species-count': 'species-count' }, null, next);
+});
+router.get('/legacy-api/recordings-count', function(req, res, next) {
+    res.type('json');
+    getCachedMetrics(req, res, { 'recording-count': 'recording-count' }, null, next);
+});
 
 router.use('/', parseTokenData(), login);
 
 router.use('/', acmeChallenge);
 
-// all routes after this middleware
-// are available only to logged users
+// all routes after this middleware are available only to logged in users
 router.use(function(req, res, next) {
-    console.log('\n\n---TEMP: auth req.originalUrl', req.originalUrl)
-    if (['/legacy-api/recordings-species-count', '/legacy-api/projects-count', '/legacy-api/jobs-count', '/legacy-api/recordings-count'].includes(req.originalUrl)) { return next(); }
     if (!req.user) {
         if (req.session) {
             req.session.currentPath = req.protocol + '://' + req.get('host') + req.originalUrl;
-            console.log('\n\n---TEMP: set path to session', req.session.currentPath)
         }
-        console.log('\n\n---TEMP: middleware to legacy-login')
         return res.redirect('/legacy-login')
     }
     return next();
@@ -73,32 +85,6 @@ router.get('/projects/:externalId', async (req, res) => {
       catch (e) {
         return res.redirect('/');
     }
-});
-
-// Home page metrics
-
-router.get('/legacy-api/projects-count', function(req, res, next) {
-    res.type('json');
-    const key = { 'project-count': 'project-count' }
-    getCachedMetrics(req, res, key, null, next);
-});
-
-router.get('/legacy-api/jobs-count', function(req, res, next) {
-    res.type('json');
-    const key = { 'job-count': 'job-count' }
-    getCachedMetrics(req, res, key, null, next);
-});
-
-router.get('/legacy-api/recordings-species-count', function(req, res, next) {
-    res.type('json');
-    const key = { 'species-count': 'species-count' }
-    getCachedMetrics(req, res, key, null, next);
-});
-
-router.get('/legacy-api/recordings-count', function(req, res, next) {
-    res.type('json');
-    const key = { 'recording-count': 'recording-count' }
-    getCachedMetrics(req, res, key, null, next);
 });
 
 router.use('/legacy-api', dataApi);
