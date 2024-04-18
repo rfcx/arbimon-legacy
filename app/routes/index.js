@@ -38,9 +38,6 @@ router.get('/support', function(req, res) {
     res.redirect(config('hosts').support);
 });
 
-router.get('/classifiers', function(req, res) {
-    res.type('html');
-    res.render('classifiers', { user: req.session.user });
 });
 
 router.use('/', acmeChallenge);
