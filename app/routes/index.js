@@ -31,11 +31,7 @@ router.get('/legacy-api/alive', function(req, res, next) { // for health checks
     });
 });
 
-router.get('/', function(req, res) {
-    res.redirect('/my-projects');
-});
-
-router.get('/projects', function(req, res) {
+router.get(['/', '/projects'], function(req, res) {
     res.redirect('/my-projects');
 });
 
