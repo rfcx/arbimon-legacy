@@ -1,7 +1,7 @@
 const fs = require('fs')
 const AWS = require('aws-sdk');
 
-const s3 = new AWS.S3({
+const export_s3 = new AWS.S3({
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
     secretAccessKey: process.env.AWS_SECRET_KEY,
     region: process.env.AWS_REGION_ID
@@ -13,10 +13,16 @@ const legacy_s3 = new AWS.S3({
     region: process.env.AWS_REGION
 })
 
+const rfcx_s3 = new AWS.S3({
+    accessKeyId: process.env.AWS_RFCX_ACCESSKEYID,
+    secretAccessKey: process.env.AWS_RFCX_SECRETACCESSKEY,
+    region: process.env.AWS_RFCX_REGION
+})
+
 async function uploadObjToFile (bucket, filename, buf, contentType) {
     return new Promise((resolve, reject) => {
         try {
-            s3.putObject({
+            export_s3.putObject({
                 Bucket: bucket,
                 Key: filename,
                 Body: buf,
@@ -46,22 +52,22 @@ async function saveLatestData (bucket, buf, project, timeStart, reportType, repo
   return filePath
 }
 
-async function getSignedUrl ({ Bucket, Key, isLegacy = false, Expires = 604800 }) {
+async function getSignedUrl ({ Bucket, Key, isLegacy = undefined, Expires = 604800 }) {
   return new Promise((resolve, reject) => {
-    (isLegacy ? legacy_s3 : s3).getSignedUrl('getObject', { Bucket, Key, Expires }, (err, data) => {
-      if (err) {
-        console.error('Error get signed url.', err)
-        reject(err)
-        return
-      }
-      resolve(data)
-    })
+    (isLegacy === undefined ? export_s3 : isLegacy === true ? legacy_s3 : rfcx_s3)
+        .getSignedUrl('getObject', { Bucket, Key, Expires }, (err, data) => {
+            if (err) {
+                console.error('Error get signed url.', err)
+                return reject(err)
+            }
+            resolve(data)
+        })
   })
 }
 
 async function uploadAsStream ({ filePath, Bucket, Key, ContentType }) {
   const Body = fs.createReadStream(filePath)
-  return s3.upload({ Bucket, Key, ContentType, Body }).promise()
+  return export_s3.upload({ Bucket, Key, ContentType, Body }).promise()
 }
 
 module.exports = {
