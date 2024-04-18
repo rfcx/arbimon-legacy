@@ -82,11 +82,11 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-sm-5 flex-self-align-top">
-                    <div class="pull-right">
+                <div class="col-sm-5 row-flex flex-direction-column flex-self-align-top">
+                    <div>
                         <div class="btn-group btn-group-margin">
                             <button class="btn btn-default not-active" ><i class="fa fa-search"></i></button>
-                            <ui-select ng-model="controller.search" theme="bootstrap" class="btn-group-item border-left-radius" on-select="controller.onSearchChanged()">
+                            <ui-select ng-model="controller.search" theme="bootstrap" class="btn-group-item border-left-radius" on-select="controller.onSearchChanged()" style="width: 150px">
                                 <ui-select-match class="right-corners">
                                     <i ng-class="$select.selected.class"></i> {{$select.selected.text}}
                                 </ui-select-match>
@@ -106,7 +106,7 @@
                             </ui-select>
                         </div>
                     </div>
-                    <div class="pull-right row-flex flex-direction-row flex-self-align-bottom">
+                    <div class="row-flex flex-direction-row flex-self-align-bottom">
                         <div class="btn-group btn-group-margin">
                             <ui-select ng-model="controller._selection" theme="bootstrap" style="display:inline-block; width:9em;"
                                 on-select="controller.onSelect($select.selected)"
@@ -120,7 +120,7 @@
 
                         <div class="btn-group btn-group-margin row-flex flex-direction-row">
                             <button class="btn btn-default  not-active" >Validate as:</button>
-                            <ui-select ng-model="controller.validation" class="btn-group-item border-left-radius" theme="bootstrap">
+                            <ui-select ng-model="controller.validation" class="btn-group-item border-left-radius" theme="bootstrap" style="width: 150px">
                                 <ui-select-match  class="right-corners">
                                     <i ng-class="$select.selected.class"></i> {{$select.selected.text}}
                                 </ui-select-match>
@@ -137,7 +137,7 @@
                             </button>
                         </div>
                     </div>
-                    <div class="pull-right">
+                    <div>
                         <div class="btn-group btn-group-margin">
                             <button class="btn btn-default"
                                 ng-repeat="item in controller.lists.thumbnails"
