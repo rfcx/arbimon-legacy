@@ -85,19 +85,6 @@ router.get('/project/:projectUrl/dashboard', function(req, res, next) {
     return res.redirect(`/p/${req.params.projectUrl}/overview`)
 });
 
-router.get('/user-settings', function(req, res) {
-    res.type('html');
-    if (req.session.user && req.session.loggedIn) {
-        res.render('user-settings', {
-            title: "User settings",
-            user: req.session.user,
-            state: ''
-        });
-    } else {
-        res.redirect('/');
-    }
-});
-
 // Home page metrics
 
 router.get('/legacy-api/projects-count', function(req, res, next) {
