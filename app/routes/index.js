@@ -11,8 +11,6 @@ var login = require('./login');
 var acmeChallenge = require('./acme-challenge');
 var dbpool = require('../utils/dbpool');
 var queryHandler = dbpool.queryHandler;
-var config = require('../config');
-const auth0Service = require('../model/auth0')
 const model = require('../model');
 const authentication = require('../middleware/jwt');
 const parseTokenData = authentication.parseTokenData;
@@ -23,7 +21,6 @@ router.get('/legacy-api/alive', function(req, res, next) { // for health checks
     queryHandler("SELECT project_id FROM projects LIMIT 1", function (err){
         if (err) {
             next(err);
-            return;
         } else {
             res.status(200);
             res.json({ alive: true });
@@ -37,6 +34,16 @@ router.get(['/', '/projects'], function(req, res) {
 
 router.get(['/project/:projectUrl', '/project/:projectUrl/dashboard'], function(req, res) {
     res.redirect(`/p/${req.params.projectUrl}`);
+});
+
+router.get('/projects/:externalId', async (req, res) => {
+    try {
+        const project = await model.projects.find({external_id: req.params.externalId}).get(0);
+        return res.redirect(`/p/${project.url}`);
+    }
+    catch (e) {
+        return res.redirect('/');
+    }
 });
 
 // Home page metrics
@@ -61,7 +68,7 @@ router.use('/', parseTokenData(), login);
 
 router.use('/', acmeChallenge);
 
-// all routes after this middleware are available only to logged in users
+// Force login for routes after this
 router.use(function(req, res, next) {
     if (!req.user) {
         if (req.session) {
@@ -70,17 +77,6 @@ router.use(function(req, res, next) {
         return res.redirect('/legacy-login')
     }
     return next();
-});
-
-router.get('/projects/:externalId', async (req, res) => {
-    res.type('html');
-    try {
-        const project = await model.projects.find({external_id: req.params.externalId}).get(0);
-        return res.redirect(`/p/${project.url}`);
-      }
-      catch (e) {
-        return res.redirect('/');
-    }
 });
 
 router.use('/legacy-api', dataApi);
