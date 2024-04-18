@@ -17,7 +17,8 @@ const patternMatching = require('./pattern-matching')
 const template = require('./template')
 const { streamToBuffer, zipDirectory } = require('../services/file-helper')
 
-const S3_BUCKET_ARBIMON = process.env.S3_BUCKET_ARBIMON
+const S3_EXPORT_BUCKET_ARBIMON = process.env.S3_BUCKET_ARBIMON
+
 const tmpFilePath = 'jobs/arbimon-recording-export-job/tmpfilecache'
 
 async function main () {
@@ -96,20 +97,21 @@ async function main () {
     } else if (projection_parameters && projection_parameters.pm) {
         //----------------Arbimon export all project PM jobs----------------
         return new Promise((resolve, reject) => {
+            const exportReportType = 'Pattern Matchings';
             patternMatching.collectData(projection_parameters, filters, async (err, filePath) => {
                 if (err) {
-                    console.error('Arbimon Export job error', err)
+                    console.error(`Arbimon Export ${exportReportType} job error`, err)
                     fs.unlink(filePath, () => {})
                     reject(err)
                 }
-                console.log('Arbimon Export job: uploading file to S3')
+                console.log(`Arbimon Export ${exportReportType} job: uploading file to S3`)
                 const url = await saveFile(filePath, currentTime, rowData.project_id)
                 console.log('Arbimon Export job: file is accessible by url', url)
-                await sendEmail('Arbimon Export Pattern Matchings report', 'arbimon-export-pm.csv', rowData, url, true)
+                await sendEmail(`Arbimon Export ${exportReportType} report`, 'arbimon-export-pm.csv', rowData, url, true)
                 await updateExportRecordings(rowData, { processed_at: currentTime })
                 await recordings.closeConnection()
                 fs.unlink(filePath, () => {})
-                console.log(`Arbimon Export Pattern Matchings job finished: ${message}`)
+                console.log(`Arbimon Export ${exportReportType} job finished: ${message}`)
                 resolve()
             })
         })
@@ -157,8 +159,8 @@ async function main () {
 
 async function saveFile (filePath, currentTime, projectId) {
     const s3FileKey = combineFilename(currentTime, projectId, 'arbimon-export-report', '.csv')
-    await uploadAsStream({ filePath, Bucket: S3_BUCKET_ARBIMON, Key: s3FileKey, ContentType: 'text/csv' })
-    return await getSignedUrl({ Bucket: S3_BUCKET_ARBIMON, Key: s3FileKey })
+    await uploadAsStream({ filePath, Bucket: S3_EXPORT_BUCKET_ARBIMON, Key: s3FileKey, ContentType: 'text/csv' })
+    return await getSignedUrl({ Bucket: S3_EXPORT_BUCKET_ARBIMON, Key: s3FileKey })
 }
 
 // Process Clustering report and send the email
@@ -191,8 +193,8 @@ async function processClusteringStream (cluster, results, rowData, currentTime, 
                 const contentSize = Buffer.byteLength(content)
                 const isBigContent = contentSize && contentSize > 10240 // 10MB
                 if (isBigContent) {
-                    const filePath = await saveLatestData(S3_BUCKET_ARBIMON, data, rowData.project_id, currentTime, 'clustering-rois-export', '.csv', 'text/csv')
-                    const url = await getSignedUrl({ Bucket: S3_BUCKET_ARBIMON, Key: filePath })
+                    const filePath = await saveLatestData(S3_EXPORT_BUCKET_ARBIMON, data, rowData.project_id, currentTime, 'clustering-rois-export', '.csv', 'text/csv')
+                    const url = await getSignedUrl({ Bucket: S3_EXPORT_BUCKET_ARBIMON, Key: filePath })
                     await sendEmail('Arbimon Export clustering report', null, rowData, url, true)
                 }
                 try {
@@ -239,10 +241,10 @@ async function buildOccupancyFolder() {
 async function sendZipFolderToTheUser(rowData, currentTime, jobName, message, reportName) {
     await streamToBuffer(reportName).then(async (buffer) => {
         try {
-            console.log(S3_BUCKET_ARBIMON, buffer, rowData.project_id, currentTime, reportName, '.zip', 'application/zip')
-            const filePath = await saveLatestData(S3_BUCKET_ARBIMON, buffer, rowData.project_id, currentTime, reportName, '.zip', 'application/zip')
-            const url = await getSignedUrl({ Bucket: S3_BUCKET_ARBIMON, Key: filePath })
-            console.log('\n\n--------url-------', url)
+            console.log(S3_EXPORT_BUCKET_ARBIMON, buffer, rowData.project_id, currentTime, reportName, '.zip', 'application/zip')
+            const filePath = await saveLatestData(S3_EXPORT_BUCKET_ARBIMON, buffer, rowData.project_id, currentTime, reportName, '.zip', 'application/zip')
+            const url = await getSignedUrl({ Bucket: S3_EXPORT_BUCKET_ARBIMON, Key: filePath })
+            console.log('--signed url', url)
             await sendEmail('Arbimon export', 'Arbimon export', rowData, url, true)
             await updateExportRecordings(rowData, { processed_at: currentTime })
             fs.rmSync(tmpFilePath, { recursive: true, force: true });
@@ -443,7 +445,7 @@ async function sendEmail (subject, title, rowData, content, isSignedUrl) {
     }
     if (isSignedUrl) {
         message.html = textHeader + textExpires + textSupport +
-            `<button style="font-family: 'ABCFavoritExtended' !important;background:#ADFF2C;border:1px solid #ADFF2C;padding:6px 14px;;border-radius:9999px;cursor:pointer;margin: 10px 0">
+            `<button style="background:#ADFF2C;border:1px solid #ADFF2C;padding:6px 14px;;border-radius:9999px;cursor:pointer;margin: 10px 0">
                 <a style="text-decoration:none;color:#14130D;white-space:nowrap;text-align:center;vertical-align:middle;align-items:center;display:inline-flex;display: -webkit-inline-flex;" href="${content}">
                     Download
                     <img style="width: 14px; height: 14px; margin-left:8px" src="https://static.rfcx.org/arbimon/download-icon.png">

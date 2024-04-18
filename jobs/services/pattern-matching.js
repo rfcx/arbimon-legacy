@@ -6,8 +6,7 @@ async function getPmRois (options = {}) {
   const sql = `
     select pm.pattern_matching_id job_id, pm.name job_name, sp.species_id, sp.scientific_name, st.songtype,
       s.site_id, s.name site_name, r.datetime recording_local_time, r.meta recording_meta, pmr.x1,
-      pmr.y1, pmr.x2, pmr.y2, pmr.score, pmr.validated,
-      CONCAT('${config_hosts.publicUrl}/legacy-api/project/${options.projectUrl}/recordings/download/', pmr.recording_id) as audio_url
+      pmr.y1, pmr.x2, pmr.y2, pmr.score, pmr.validated, r.uri audio_url
     from pattern_matching_rois pmr
       join pattern_matchings pm on pm.pattern_matching_id = pmr.pattern_matching_id
       left join recordings r on pmr.recording_id = r.recording_id

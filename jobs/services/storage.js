@@ -7,6 +7,12 @@ const s3 = new AWS.S3({
     region: process.env.AWS_REGION_ID
 })
 
+const legacy_s3 = new AWS.S3({
+    accessKeyId: process.env.AWS_ACCESSKEYID,
+    secretAccessKey: process.env.AWS_SECRETACCESSKEY,
+    region: process.env.AWS_REGION
+})
+
 async function uploadObjToFile (bucket, filename, buf, contentType) {
     return new Promise((resolve, reject) => {
         try {
@@ -40,10 +46,11 @@ async function saveLatestData (bucket, buf, project, timeStart, reportType, repo
   return filePath
 }
 
-async function getSignedUrl ({ Bucket, Key, Expires = 604800 }) {
+async function getSignedUrl ({ Bucket, Key, isLegacy = false, Expires = 604800 }) {
   return new Promise((resolve, reject) => {
-    s3.getSignedUrl('getObject', { Bucket, Key, Expires }, (err, data) => {
+    (isLegacy ? legacy_s3 : s3).getSignedUrl('getObject', { Bucket, Key, Expires }, (err, data) => {
       if (err) {
+        console.error('Error get signed url.', err)
         reject(err)
         return
       }
