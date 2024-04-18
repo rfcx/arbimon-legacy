@@ -82,11 +82,11 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-sm-5 row-flex flex-direction-column flex-self-align-top">
+                <div class="col-sm-5 row-flex flex-direction-column items-end flex-self-align-top">
                     <div>
                         <div class="btn-group btn-group-margin">
                             <button class="btn btn-default not-active" ><i class="fa fa-search"></i></button>
-                            <ui-select ng-model="controller.search" theme="bootstrap" class="btn-group-item border-left-radius" on-select="controller.onSearchChanged()" style="width: 150px">
+                            <ui-select ng-model="controller.search" theme="bootstrap" class="btn-group-item border-left-radius" on-select="controller.onSearchChanged()" style="width: 200px">
                                 <ui-select-match class="right-corners">
                                     <i ng-class="$select.selected.class"></i> {{$select.selected.text}}
                                 </ui-select-match>
