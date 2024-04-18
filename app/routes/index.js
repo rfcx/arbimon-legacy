@@ -31,14 +31,20 @@ router.get('/legacy-api/alive', function(req, res, next) { // for health checks
     });
 });
 
+router.get('/', function(req, res) {
+    res.redirect('/my-projects');
+});
+
+router.get('/projects', function(req, res) {
+    res.redirect('/my-projects');
+});
+
+router.get(['/project/:projectUrl', '/project/:projectUrl/dashboard'], function(req, res) {
+    res.redirect(`/p/${req.params.projectUrl}`);
+});
+
 
 router.use('/', parseTokenData(), login);
-
-router.get('/support', function(req, res) {
-    res.redirect(config('hosts').support);
-});
-
-});
 
 router.use('/', acmeChallenge);
 
@@ -67,19 +73,6 @@ router.get('/projects/:externalId', async (req, res) => {
       catch (e) {
         return res.redirect('/');
     }
-});
-
-router.get('/', function(req, res) {
-    res.redirect('/my-projects');
-});
-
-router.get('/projects', function(req, res) {
-    res.redirect('/my-projects');
-});
-
-router.get('/project/:projectUrl/dashboard', function(req, res, next) {
-    res.type('json');
-    return res.redirect(`/p/${req.params.projectUrl}/overview`)
 });
 
 // Home page metrics
