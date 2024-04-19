@@ -1,5 +1,5 @@
 {
 	"jobqueue" : "http://10.0.0.4:3007",
-	"publicUrl": "https://arbimon.rfcx.org",
-	"support": "https://support.rfcx.org"
+	"publicUrl": "https://arbimon.org",
+	"support": "https://help.arbimon.org"
 }

@@ -11,7 +11,7 @@ const tmpFilePath = 'jobs/arbimon-recording-export-job/tmpfilecache'
 
 async function collectData (projection_parameters, filters, cb) {
   let isFirstChunk = true
-  const filePath = path.join(tmpFilePath, `${(new Date()).toISOString()}.csv`)
+  const filePath = path.join(tmpFilePath, 'all-templates-export.csv')
   const targetFile = fs.createWriteStream(filePath, { flags: 'a' })
   // 1. Export .csv file
   await exportAllProjectTemplate(filters.project_id, projection_parameters.projectUrl, async (e, data) => {
