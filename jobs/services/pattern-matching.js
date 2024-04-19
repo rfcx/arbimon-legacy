@@ -4,7 +4,7 @@ const config_hosts = require('../../config/hosts');
 async function getPmRois (options = {}) {
   const connection = await mysql.getConnection()
   const sql = `
-    select pm.pattern_matching_id job_id, pm.name job_name, pm.template_id, sp.species_id, sp.scientific_name, st.songtype,
+    select /*+ MAX_EXECUTION_TIME(120000) */  pm.pattern_matching_id job_id, pm.name job_name, pm.template_id, sp.species_id, sp.scientific_name, st.songtype,
     pmr.x1, pmr.y1, pmr.x2, pmr.y2, pmr.score, pmr.validated, s.site_id, s.name site_name,
     r.recording_id, r.datetime recording_local_time, r.uri audio_url
     from pattern_matching_rois pmr
