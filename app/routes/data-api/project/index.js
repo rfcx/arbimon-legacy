@@ -542,13 +542,6 @@ router.get('/:projectUrl/validations/count', function(req, res, next) {
     });
 });
 
-router.get('/:projectUrl/usage', function(req, res, next) {
-    res.type('json');
-    model.projects.getStorageUsage(req.project.project_id).then(function(result) {
-        res.json({ min_usage: result.min_usage });
-    }).catch(next);
-});
-
 router.use('/:projectUrl/streams', require('./streams'));
 router.use('/:projectUrl/recordings', recording_routes);
 router.use('/:projectUrl/training-sets', training_set_routes);
