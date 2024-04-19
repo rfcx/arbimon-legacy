@@ -415,7 +415,7 @@ router.get('/:projectUrl/sites-export.csv', function(req, res, next) {
         datastream
             .on('data', (data) => {
                 if (deploymentBySite && deploymentBySite[data.external_id]) {
-                    data['Deployed'] = deploymentBySite[data.external_id].deployedAt ? deploymentBySite[data.external_id].deployedAt : 0
+                    data['Deployed'] = deploymentBySite[data.external_id].deployedAt ? moment.tz(moment.utc(deploymentBySite[data.external_id].deployedAt), data.Timezone).format('YYYY-MM-DD HH:mm:ss') : 0
                 } else data['Deployed'] = 'no data'
                 delete data.external_id
                 data['Updated'] = moment.tz(moment.utc(data.updated_at), data.Timezone).format('YYYY-MM-DD HH:mm:ss')
