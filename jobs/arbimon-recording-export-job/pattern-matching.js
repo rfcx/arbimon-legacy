@@ -11,9 +11,10 @@ const S3_RFCX_BUCKET_ARBIMON = process.env.AWS_RFCX_BUCKETNAME
 
 const exportReportType = 'Pattern Matchings';
 const exportReportJob = `Arbimon Export ${exportReportType} job`
+const tmpFilePath = 'jobs/arbimon-recording-export-job/tmpfilecache'
 
 async function collectData (projection_parameters, filters, cb) {
-  const filePath = path.join('./tmpfilecache', `export-pattern-matchings.csv`)
+  const filePath = path.join(tmpFilePath, `export-pattern-matchings.csv`)
   const targetFile = fs.createWriteStream(filePath, { flags: 'a' })
   await exportAllPmJobs(filters.project_id, projection_parameters.projectUrl, targetFile, async (err, data) => {
     if (err) {
