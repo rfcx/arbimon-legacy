@@ -6,53 +6,48 @@ const stream = require('stream');
 const csv_stringify = require('csv-stringify');
 
 async function collectData (projection_parameters, filters, cb) {
-  let isFirstChunk = true
-  const filePath = path.join('./tmpfilecache', `${(new Date()).toISOString()}.csv`)
+  const filePath = path.join('./tmpfilecache', `export-pattern-matchings.csv`)
   const targetFile = fs.createWriteStream(filePath, { flags: 'a' })
-  await exportAllPmJobs(filters.project_id, projection_parameters.projectUrl, async (e, data) => {
-    if (e) {
+  await exportAllPmJobs(filters.project_id, projection_parameters.projectUrl, targetFile, async (err, data) => {
+    if (err) {
+      console.err('Error export PM', err)
       targetFile.end()
-      return cb(e)
+      return cb(err)
     }
-    if (data) {
-      console.log('Arbimon Export PM job: writing chunk')
-      await writeChunk(data, targetFile, isFirstChunk)
-    }
-    isFirstChunk = false
     console.log('Arbimon Export PM job: finished collecting chunks')
     targetFile.end()
     cb(null, path.resolve(filePath))
   }).catch((e) => {
+    console.err('Error export PM', e)
     cb(e)
   })
 }
 
-async function exportAllPmJobs (projectId, projectUrl, cb) {
+async function exportAllPmJobs (projectId, projectUrl, targetFile, cb) {
   try {
     console.log('arbimon-export-all-project-pm-rois job started')
   
     const limit = 10000;
     let index = 0
     let toProcess = true;
-    let results = [];
+    let isFirstChunk = true
 
     while (toProcess === true) {
+      console.log('next chunk', limit, limit * index)
       const queryResult =  await getPmRois({
         projectId,
         projectUrl,
         limit,
         offset: limit * index
       });
-      results.push(...queryResult);
       toProcess = queryResult.length > 0;
+
+      console.log('Arbimon Export PM job: writing chunk')
+      await writeChunk(queryResult, targetFile, isFirstChunk)
+      isFirstChunk = false
       index++
     }
-    if (results.length) {
-      cb(null, results)
-      results = null
-    } else {
-      cb(null, null)
-    }
+    cb(null, null)
   } catch (e) {
     console.error(e)
     cb(null, null)
