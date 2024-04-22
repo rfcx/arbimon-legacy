@@ -6,7 +6,7 @@ async function getProjectTemplate (options = {}) {
   const sql = `
     select 'xyz.wav' saved_filename, t.template_id, t.species_id, sp.scientific_name, st.songtype,
       t.y1 freq_min_hz, t.y2 freq_max_hz, t.x2-t.x1 duration_secs,
-      t.name, concat(u.firstname, ' ', u.lastname, ' ', u.email) template_created_by,
+      t.name template_name, concat(u.firstname, ' ', u.lastname, ' ', u.email) template_created_by,
       r.datetime recording_local_time, s.name site_name, s.lat site_latitude, s.lon site_longitude, p.name project_name
     from templates t
       left join species sp on t.species_id = sp.species_id
@@ -27,7 +27,7 @@ async function getTemplateDataForAudio (options = {}) {
   const connection = await mysql.getConnection()
   const sql = `
     SELECT T.template_id as id, T.project_id as project, T.recording_id as recording, T.species_id as species,
-      T.songtype_id as songtype, T.name, CONCAT('https://arbimon2.s3.us-east-1.amazonaws.com/', T.uri) as uri,
+      T.songtype_id as songtype, T.name template_name, CONCAT('https://arbimon2.s3.us-east-1.amazonaws.com/', T.uri) as uri,
       T.x1, T.y1, T.x2, T.y2, T.date_created, T.user_id, T.disabled, R.uri as recUri, R.site_id as recSiteId,
       R.sample_rate, R.datetime, R.datetime_utc, S.external_id
     FROM templates T

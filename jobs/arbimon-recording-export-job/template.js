@@ -88,7 +88,7 @@ async function writeChunk (results, targetFile, isFirstChunk) {
 
       for (let result of results) {
         fields.forEach(f => {
-          const saved_filename = `${result.template_id}-${nameToUrl(result.name)}.wav`;
+          const saved_filename = `${result.template_id}-${nameToUrl(result.template_name)}.wav`;
           result.saved_filename = saved_filename
           if (result[f] === undefined || result[f] === null) {
             result[f] = '---'}
@@ -146,7 +146,7 @@ async function downloadTemplateAudio (results) {
           console.log('fetchAudioFileAsync', audio)
           const ext = path.extname(audio.path)
           const audioName = path.basename(audio.path, ext);
-          const saved_filename = `${templateId}-${nameToUrl(result.name)}`
+          const saved_filename = `${templateId}-${nameToUrl(result.template_name)}`
           const newName = audio.path.replace(audioName, saved_filename);
           console.log('fetchAudioFileAsync audio.path, newName', audio.path, saved_filename)
           fs.renameSync(audio.path, newName);
