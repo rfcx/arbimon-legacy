@@ -14,7 +14,7 @@ async function getExportRecordingsRow (options = {}) {
     const connection = await mysql.getConnection()
     const sql = `SELECT rep.*, p.name FROM recordings_export_parameters rep
                  JOIN projects p ON p.project_id = rep.project_id
-                 WHERE rep.created_at = '2024-04-19 16:56:43.0'
+                 WHERE rep.created_at < '${options.dateByCondition}' AND rep.processed_at is null AND error is null
                  ORDER BY rep.created_at ASC
                  LIMIT ${options.limit}`
     const [rows, fields] = await connection.execute(sql)
