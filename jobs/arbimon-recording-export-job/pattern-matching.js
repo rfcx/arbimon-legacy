@@ -83,11 +83,9 @@ async function writeChunk (results, targetFile, isFirstChunk) {
           }
         )
         const recUrl = result.audio_url
-        const filename_parsed = path.parse(recUrl)
-        const rfcxPath = path.join(filename_parsed.dir, filename_parsed.name)
         const url = await getSignedUrl({
           Bucket: isLegacy(recUrl) ? S3_LEGACY_BUCKET_ARBIMON : S3_RFCX_BUCKET_ARBIMON,
-          Key: isLegacy(recUrl) ? recUrl : rfcxPath,
+          Key: recUrl,
           isLegacy: isLegacy(recUrl)
         });
         result.audio_url = url;

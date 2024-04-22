@@ -118,6 +118,7 @@ async function main () {
     }   else if (projection_parameters && projection_parameters.projectTemplate) {
             //----------------Arbimon export all project templates----------------
             return new Promise((resolve, reject) => {
+                console.log(`Arbimon Export ${exportReportType} job`)
                 if (!fs.existsSync(tmpFilePath, { recursive: true })) {
                     fs.mkdirSync(tmpFilePath);
                 }

@@ -11,7 +11,7 @@ const tmpFilePath = 'jobs/arbimon-recording-export-job/tmpfilecache'
 
 async function collectData (projection_parameters, filters, cb) {
   let isFirstChunk = true
-  const filePath = path.join(tmpFilePath, 'all-templates-export.csv')
+  const filePath = path.join(tmpFilePath, '_templates.csv')
   const targetFile = fs.createWriteStream(filePath, { flags: 'a' })
   // 1. Export .csv file
   await exportAllProjectTemplate(filters.project_id, projection_parameters.projectUrl, async (e, data) => {
@@ -72,6 +72,10 @@ async function exportAllProjectTemplate (projectId, projectUrl, cb) {
   }
 }
 
+function nameToUrl (name) {
+  return name.replace(/[^a-z0-9A-Z-]/g, '-').replace(/-+/g,'-').replace(/(^-)|(-$)/g, '').toLowerCase()
+}
+
 async function writeChunk (results, targetFile, isFirstChunk) {
   return new Promise(function (resolve, reject) {
       let fields = [];
@@ -79,21 +83,18 @@ async function writeChunk (results, targetFile, isFirstChunk) {
           fields.push(...Object.keys(result).filter(f => !fields.includes(f)))
       });
 
-      const templateId = fields.indexOf('template_id');
-      if (templateId !== -1) {
-          fields.splice(templateId, 1);
-      }
-
       let datastream = new stream.Readable({objectMode: true});
       let _buf = []
 
       for (let result of results) {
         fields.forEach(f => {
+          const saved_filename = `${result.template_id}-${nameToUrl(result.name)}.wav`;
+          result.saved_filename = saved_filename
           if (result[f] === undefined || result[f] === null) {
-              result[f] = '---'}
-            }
+            result[f] = '---'}
+          }
         )
-        delete result.template_id
+        // delete result.template_id
         datastream.push(result)
       }
       datastream.push(null);
@@ -145,8 +146,9 @@ async function downloadTemplateAudio (results) {
           console.log('fetchAudioFileAsync', audio)
           const ext = path.extname(audio.path)
           const audioName = path.basename(audio.path, ext);
-          const newName = audio.path.replace(audioName, result.name);
-          console.log('fetchAudioFileAsync audio.path, newName', audio.path, newName)
+          const saved_filename = `${templateId}-${nameToUrl(result.name)}`
+          const newName = audio.path.replace(audioName, saved_filename);
+          console.log('fetchAudioFileAsync audio.path, newName', audio.path, saved_filename)
           fs.renameSync(audio.path, newName);
           console.log('fetchAudioFileAsync renamed')
         })
