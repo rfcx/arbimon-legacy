@@ -1594,7 +1594,8 @@ var Recordings = {
             cluster: joi.object(),
             search: joi.string(),
             pm: joi.string(),
-            projectTemplate: joi.string()
+            projectTemplate: joi.string(),
+            soundscapes: joi.string()
         }
     },
 

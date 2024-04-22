@@ -119,6 +119,12 @@ angular.module('a2.srv.project', [
                     return response.data;
                 }).catch(notify.serverError);
             },
+            exportAllProjectSoundscapes: function(filters){
+                var params = { filters: filters, show: { sounscapes: 'all' } };
+                return $http.post('/legacy-api/project/'+url+'/recordings/project-soundscape-export', params).then(function(response) {
+                    return response.data;
+                }).catch(notify.serverError);
+            },
             getSitesExportUrl: function() {
                 return '/legacy-api/project/' + url + '/sites-export.csv';
             },

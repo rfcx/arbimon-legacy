@@ -14,6 +14,7 @@ const config_hosts = require('../../config/hosts');
 const { saveLatestData, combineFilename, uploadAsStream, getSignedUrl } = require('../services/storage')
 const recordingsExport = require('./recordings')
 const patternMatching = require('./pattern-matching')
+const soundscape = require('./soundscape')
 const template = require('./template')
 const { streamToBuffer, zipDirectory } = require('../services/file-helper')
 
@@ -118,6 +119,7 @@ async function main () {
     }   else if (projection_parameters && projection_parameters.projectTemplate) {
             //----------------Arbimon export all project templates----------------
             return new Promise((resolve, reject) => {
+                const exportReportType = 'Templates';
                 console.log(`Arbimon Export ${exportReportType} job`)
                 if (!fs.existsSync(tmpFilePath, { recursive: true })) {
                     fs.mkdirSync(tmpFilePath);
@@ -128,10 +130,32 @@ async function main () {
                     await template.buildTemplateFolder()
                     console.log('--end buildTemplateFolder');
                     await sendZipFolderToTheUser(rowData, currentTime, jobName, message, 'template-export')
-                    console.log(`Arbimon Export job finished: export templates for ${message}`)
+                    console.log(`Arbimon Export ${exportReportType} job finished: export templates for ${message}`)
                     resolve()
                 })
             })
+    }   else if (projection_parameters && projection_parameters.soundscapes) {
+        //----------------Arbimon export all project soundscapes----------------
+        return new Promise((resolve, reject) => {
+            const exportReportType = 'Soundscapes';
+            console.log(`Arbimon Export ${exportReportType} job`)
+            soundscape.collectData(projection_parameters, filters, async (err, filePath) => {
+                if (err) {
+                    console.error(`Arbimon Export ${exportReportType} job error`, err)
+                    fs.unlink(filePath, () => {})
+                    reject(err)
+                }
+                console.log(`Arbimon Export ${exportReportType} job: uploading file to S3`)
+                const url = await saveFile(filePath, currentTime, rowData.project_id)
+                console.log('Arbimon Export job: file is accessible by url', url)
+                await sendEmail(`Arbimon Export ${exportReportType} report`, 'arbimon-export-soundscape.csv', rowData, url, true)
+                await updateExportRecordings(rowData, { processed_at: currentTime })
+                await recordings.closeConnection()
+                fs.unlink(filePath, () => {})
+                console.log(`Arbimon Export ${exportReportType} job finished: ${message}`)
+                resolve()
+            })
+        })
     }   else {
         //----------------Arbimon export recordings----------------
         return new Promise((resolve, reject) => {
