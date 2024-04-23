@@ -215,14 +215,6 @@ angular.module('a2.analysis.patternmatching', [
 
     }
 
-    $scope.showbuttonDownload = function(template) {
-        if ($scope.currentTab === 'projectTemplates') {
-            return template.source_project_id === null
-        } else {
-            return $scope.currentTab === 'publicTemplates'
-        }
-    }
-
     $scope.downloadTemplate = function(template) {
         if ((a2UserPermit.all && !a2UserPermit.all.length) || !a2UserPermit.can('manage templates')) {
             return notify.error('You do not have permission to download template');
