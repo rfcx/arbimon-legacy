@@ -118,8 +118,14 @@ async function main () {
     }   else if (projection_parameters && projection_parameters.projectTemplate) {
             //----------------Arbimon export all project templates----------------
             return new Promise((resolve, reject) => {
-                if (!fs.existsSync(tmpFilePath, { recursive: true })) {
-                    fs.mkdirSync(tmpFilePath);
+                const exportReportType = 'Templates';
+                console.log(`Arbimon Export ${exportReportType} job`)
+                try {
+                    if (!fs.existsSync(tmpFilePath)) {
+                        fs.mkdirSync(tmpFilePath);
+                    }
+                } catch (err) {
+                    console.error(err);
                 }
                 console.log(`folder ${tmpFilePath} exists`, fs.existsSync(tmpFilePath))
                 template.collectData(projection_parameters, filters, async (err, filePath) => {

@@ -4,14 +4,18 @@ const config_hosts = require('../../config/hosts');
 async function getProjectTemplate (options = {}) {
   const connection = await mysql.getConnection()
   const sql = `
-    select t.template_id, t.name, sp.species_id, sp.scientific_name, st.songtype,
-      t.x1 minimum_time, t.x2 maximum_time,
-      t.y1 minimum_frequency, t.y2 maximum_frequency,
-      CONCAT('${config_hosts.publicUrl}/legacy-api/project/${options.projectUrl}/templates/download/', t.name, '/', t.template_id, '.wav') as template_url
+    select 'xyz.wav' saved_filename, t.template_id, t.species_id, sp.scientific_name, st.songtype,
+      t.y1 freq_min_hz, t.y2 freq_max_hz, t.x2-t.x1 duration_secs,
+      t.name template_name, concat(u.firstname, ' ', u.lastname, ' ', u.email) template_created_by,
+      r.datetime recording_local_time, s.name site_name, s.lat site_latitude, s.lon site_longitude, p.name project_name
     from templates t
       left join species sp on t.species_id = sp.species_id
       left join songtypes st on t.songtype_id = st.songtype_id
-    where t.project_id = ${options.projectId} and t.deleted = 0 and t.source_project_id is null
+      join recordings r on t.recording_id = r.recording_id
+      join sites s on r.site_id = s.site_id
+      join projects p on s.project_id = p.project_id
+      join users u on t.user_id = u.user_id
+    where t.project_id = ${options.projectId} and t.deleted = 0
       limit ${options.limit} offset ${options.offset}
     ;
   `
@@ -23,7 +27,7 @@ async function getTemplateDataForAudio (options = {}) {
   const connection = await mysql.getConnection()
   const sql = `
     SELECT T.template_id as id, T.project_id as project, T.recording_id as recording, T.species_id as species,
-      T.songtype_id as songtype, T.name, CONCAT('https://arbimon2.s3.us-east-1.amazonaws.com/', T.uri) as uri,
+      T.songtype_id as songtype, T.name template_name, CONCAT('https://arbimon2.s3.us-east-1.amazonaws.com/', T.uri) as uri,
       T.x1, T.y1, T.x2, T.y2, T.date_created, T.user_id, T.disabled, R.uri as recUri, R.site_id as recSiteId,
       R.sample_rate, R.datetime, R.datetime_utc, S.external_id
     FROM templates T
