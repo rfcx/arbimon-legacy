@@ -10,7 +10,7 @@ var gravatar = require('gravatar');
 var config = require('../../../config');
 const rfcxConfig = config('rfcx');
 const csv_stringify = require('csv-stringify');
-const { getCachedMetrics } = require('../../../utils/cached-metrics');
+const { getMetrics, getCachedMetrics } = require('../../../utils/cached-metrics');
 var model = require('../../../model');
 const moment = require('moment-timezone');
 
@@ -102,35 +102,35 @@ router.get('/:projectUrl/site-count', function(req, res, next) {
     res.type('json');
     let p = req.query.project_id? req.query.project_id : req.project.project_id;
     const key = { 'project-site-count': `project-${p}-si` }
-    getCachedMetrics(req, res, key, p, next);
+    getMetrics(req, res, key, p, next);
 });
 
 router.get('/:projectUrl/species-count', function(req, res, next) {
     res.type('json');
     let p = req.query.project_id? req.query.project_id : req.project.project_id;
     const key = { 'project-species-count': `project-${p}-sp` }
-    getCachedMetrics(req, res, key, p, next);
+    getMetrics(req, res, key, p, next);
 });
 
 router.get('/:projectUrl/playlist-count', function(req, res, next) {
     res.type('json');
     let p = req.query.project_id? req.query.project_id : req.project.project_id;
     const key = { 'project-playlist-count': `project-${p}-pl` }
-    getCachedMetrics(req, res, key, p, next);
+    getMetrics(req, res, key, p, next);
 });
 
 router.get('/:projectUrl/pm-species-detected', function(req, res, next) {
     res.type('json');
     let p = req.query.project_id? req.query.project_id : req.project.project_id;
     const key = { 'project-pm-sp-count': `project-${p}-pm-sp` }
-    getCachedMetrics(req, res, key, p, next);
+    getMetrics(req, res, key, p, next);
 });
 
 router.get('/:projectUrl/pm-template-count', function(req, res, next) {
     res.type('json');
     let p = req.query.project_id? req.query.project_id : req.project.project_id;
     const key = { 'project-pm-t-count': `project-${p}-pm-t` }
-    getCachedMetrics(req, res, key, p, next);
+    getMetrics(req, res, key, p, next);
 });
 
 router.get('/:projectUrl/rfm-classif-job-count', function(req, res, next) {
