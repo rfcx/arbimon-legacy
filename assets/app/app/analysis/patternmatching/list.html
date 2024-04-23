@@ -154,7 +154,7 @@
                                 tooltip="Making your templates public allows everyone to use them with a CC0 license."
                             >    
                             
-                            <switch name="onOff" ng-change="togglePublicTemplatesEnabled()" ng-model="onOff" on="ON" off="OFF" style="margin-left:5px;" disabled="disableToggle()"></switch>
+                            <switch name="onOff" ng-click="togglePublicTemplatesEnabled()" ng-model="onOff" on="ON" off="OFF" style="margin-left:5px;" disabled="disableToggle()"></switch>
                         </div>
                         <button type="download" class="btn btn-success btn-rounded-full ml-3 export-form-control"
                             tooltip="Export all templates"

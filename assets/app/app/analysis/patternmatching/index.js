@@ -148,29 +148,31 @@ angular.module('a2.analysis.patternmatching', [
     }
 
     $scope.togglePublicTemplatesEnabled = function() {
+        if ($scope.disableToggle()) return
 
         if( $scope.onOff === 1) {
             $scope.onOff = 0
+            $scope.updateInfo()
         } else {
-            $scope.openShareProjectTemplatesPopup('pm')
+            $scope.onOff = 0
+            $scope.openShareProjectTemplatesPopup()
         }
+    }
 
-        // if ($scope.disableToggle()) return
-        // $scope.onOff = $scope.onOff === 0 ? 1 : 0
-
-        // if(!a2UserPermit.can('manage project settings')) {
-        //     notify.error('You do not have permission to manage manage project settings');
-        //     return;
-        // }
-        // $scope.project.public_templates_enabled = $scope.onOff;
-        // Project.updateInfo({ project: $scope.project }, function(err, result){
-        //     if(err) {
-        //         return notify.serverError();
-        //     }
-        //     if(result.error) {
-        //         return notify.error(result.error);
-        //     }
-        // });
+    $scope.updateInfo = function() {
+        if(!a2UserPermit.can('manage project settings')) {
+            notify.error('You do not have permission to manage manage project settings');
+            return;
+        }
+        $scope.project.public_templates_enabled = $scope.onOff;
+        Project.updateInfo({ project: $scope.project }, function(err, result){
+            if(err) {
+                return notify.serverError();
+            }
+            if(result.error) {
+                return notify.error(result.error);
+            }
+        });
     }
 
     $scope.onSearchChanged = function () {
@@ -268,25 +270,17 @@ angular.module('a2.analysis.patternmatching', [
         });
     };
 
-    $scope.openShareProjectTemplatesPopup = function(exportReport) {
-        var params = {
-            userEmail: a2UserPermit.getUserEmail() || '',
-            exportReport: exportReport
-        }
-        const modalInstance = $modal.open({
-            controller: 'ShareProjectTemplatesModalInstanceCtrl',
+    $scope.openShareProjectTemplatesPopup = function() {
+        var modalInstance = $modal.open({
             templateUrl: '/app/analysis/patternmatching/share-project-templates.html',
-            windowClass: 'share-project-templates-pop-up-window',
-            resolve: {
-                data: function() {
-                    return { params: params }
-                }
-            },
-            backdrop: false
+            windowClass: 'share-project-templates-pop-up-window'
         });
 
-        modalInstance.result.then(function() {
-            notify.log('Your Export Report is processing <br> and will be sent by email.');
+        modalInstance.result.then(function(confirmed) {
+            if(confirmed){
+                $scope.onOff = 1
+                $scope.updateInfo()
+            }
         });
     };
 
