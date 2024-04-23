@@ -21,13 +21,12 @@
                 </button>
                 and create a template.
             </div>
-            <ui-select ng-if="controller.list.templates && controller.list.templates.length" class="ui-select-6em" ng-disabled="disabled" ng-model="controller.data.template" theme="/common/templates/a2-ui-select">
+            <ui-select ng-if="controller.list.templates && controller.list.templates.length" class="ui-select-6em" ng-disabled="disabled" ng-model="controller.data.template">
                 <ui-select-match placeholder="Select or search a template...">
                     <div class="roi-thumbnail" >
                         <img ng-src="{{$select.selected.uri}}" class="roi-img is-small"/>
                     </div>
                     {{$select.selected.name}}
-                    [{{$select.search}}]
                 </ui-select-match>
                 <ui-select-choices repeat="template in controller.list.templates | filter: $select.search">
                     <div class="flex row-flex flex-align-middle">
@@ -58,7 +57,7 @@
             <span class="pl-1 brand-warning" ng-if="controller.isWarningMessage()">
                 <em>{{ controller.warningMessage }}</em>
             </span>
-            <ui-select ng-disabled="disabled" ng-if="controller.list.playlists && controller.list.playlists.length" ng-model="controller.data.playlist" theme="/common/templates/a2-ui-select">
+            <ui-select ng-disabled="disabled" ng-if="controller.list.playlists && controller.list.playlists.length" ng-model="controller.data.playlist">
                 <ui-select-match placeholder="Select or search a playlist...">
                     {{$select.selected.name}}
                 </ui-select-match>
