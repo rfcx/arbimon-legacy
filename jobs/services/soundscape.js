@@ -1,5 +1,4 @@
 const mysql = require('../db/mysql')
-const axios = require('axios')
 
 async function getSoundscapesForCSV (options = {}) {
   const connection = await mysql.getConnection()
@@ -20,8 +19,13 @@ async function getSoundscapesForCSV (options = {}) {
 
 async function getProjectSoundscapes (options = {}) {
   const connection = await mysql.getConnection()
-  const sql = `select soundscape_id id, s.name, project_id project, threshold, threshold_type
-    from soundscapes where project_id = ${options.projectId};`
+  const sql = `
+    select s.soundscape_id id, s.name, s.project_id project, s.threshold, s.threshold_type, s.bin_size, s.normalized, s.uri,
+      sat.identifier as aggregation, sat.name as aggr_name, sat.scale as aggr_scale
+    from soundscapes s
+      join soundscape_aggregation_types sat ON s.soundscape_aggregation_type_id = sat.soundscape_aggregation_type_id
+    where s.project_id = ${options.projectId}
+  ;`
   const [rows, fields] = await connection.execute(sql)
   return rows
 }

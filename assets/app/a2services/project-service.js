@@ -97,7 +97,7 @@ angular.module('a2.srv.project', [
                     filters.range.from = moment(filters.range.from).format('YYYY-MM-DD') + 'T00:00:00.000Z';
                     filters.range.to = moment(filters.range.to).format('YYYY-MM-DD') + 'T23:59:59.999Z';
                 }
-                var params={filters:filters, show:projection};
+                const params={filters:filters, show:projection};
                 const getUrl = '/legacy-api/project/'+url+'/recordings/'+ (
                     projection && projection.species ? 'occupancy-models-export' :
                     (projection && projection.grouped ? 'grouped-detections-export' : 'recordings-export'));
@@ -107,20 +107,20 @@ angular.module('a2.srv.project', [
             },
             exportAllPMdata: function(filters){
                 delete filters.exportReport
-                var params = { filters: filters, show: { pm: 'all' } };
+                const params = { filters: filters, show: { pm: 'all' } };
                 return $http.post('/legacy-api/project/'+url+'/recordings/pm-export', params).then(function(response) {
                     return response.data;
                 }).catch(notify.serverError);
             },
             exportAllProjectTemplateData: function(filters){
                 delete filters.exportReport
-                var params = { filters: filters, show: { projectTemplate: 'all' } };
+                const params = { filters: filters, show: { projectTemplate: 'all' } };
                 return $http.post('/legacy-api/project/'+url+'/recordings/project-template-export', params).then(function(response) {
                     return response.data;
                 }).catch(notify.serverError);
             },
             exportAllProjectSoundscapes: function(filters){
-                var params = { filters: filters, show: { sounscapes: 'all' } };
+                const params = { filters: filters, show: { soundscapes: 'all' } };
                 return $http.post('/legacy-api/project/'+url+'/recordings/project-soundscape-export', params).then(function(response) {
                     return response.data;
                 }).catch(notify.serverError);

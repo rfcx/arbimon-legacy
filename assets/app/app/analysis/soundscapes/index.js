@@ -171,8 +171,7 @@ angular.module('a2.analysis.soundscapes', [
 
     $scope.openExportPopup = function() {
         var params = {
-            userEmail: a2UserPermit.getUserEmail() || '',
-            exportReport: 'soundscapes'
+            userEmail: a2UserPermit.getUserEmail() || ''
         }
         const modalInstance = $modal.open({
             controller: 'ExportSoundscapesModalInstanceCtrl',

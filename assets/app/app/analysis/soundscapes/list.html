@@ -28,24 +28,26 @@
         </div>
         <div ng-if="currentTab === 'soundscapes'">
             <loader ng-show="loading"></loader>
-            <button
-                ng-if="isSoundscapesAvailable()"
-                type="download"
-                class="btn btn-success btn-rounded-full export-form-control"
-                tooltip="Export all results"
-                ng-click="exportData()"
-            >
-                Export all results (.csv)
-                <i class="fa fa-download ml-2"></i>
-            </button>
-            <button
-                ng-if="isSoundscapesAvailable()"
-                class="btn btn-default pull-right btn-rounded-full"
-                tooltip="Refresh list"
-                ng-click="loadSoundscapes()">
-                    Refresh List
-                    <i class="fa fa-refresh ml-3"></i>
-            </button>
+            <div class="row-flex flex-direction-row flex-align-middle flex-space-end">
+                <button
+                    ng-if="isSoundscapesAvailable()"
+                    type="download"
+                    class="btn btn-success btn-rounded-full export-form-control"
+                    tooltip="Export all soundscapes"
+                    ng-click="exportData()"
+                >
+                    Export all soundscapes
+                    <i class="fa fa-download ml-2"></i>
+                </button>
+                <button
+                    ng-if="isSoundscapesAvailable()"
+                    class="btn btn-default btn-rounded-full ml-3 "
+                    tooltip="Refresh list"
+                    ng-click="loadSoundscapes()">
+                        Refresh List
+                        <i class="fa fa-refresh ml-3"></i>
+                </button>
+            </div>
             <div ng-if="isSoundscapesAvailable()">
                 <a2-table rows="soundscapesData" no-checkbox="true">
                     <field title="Date" key="date" tdclass="no-wrap-table-cell">

@@ -6,14 +6,18 @@ const csv_stringify = require('csv-stringify');
 const q = require('q');
 const scidx = require('../../app/utils/scidx');
 const soundscapes = require('../../app/model/soundscapes');
-const { getSoundscapesForCSV, getProjectSoundscapes } = require('../services/soundscape')
+const { getSoundscapesForCSV, getProjectSoundscapes } = require('../services/soundscape');
+const { zipDirectory } = require('../services/file-helper')
+const { getObject } = require('../services/storage')
+
+const S3_LEGACY_BUCKET_ARBIMON = process.env.AWS_BUCKETNAME
 
 const exportReportType = 'Soundscape';
 const exportReportJob = `Arbimon Export ${exportReportType} job`
 const tmpFilePath = 'jobs/arbimon-recording-export-job/tmpfilecache'
 
 async function collectData (projection_parameters, filters, cb) {
-  const filePath = path.join(tmpFilePath, `export-soundscape.csv`)
+  const filePath = path.join(tmpFilePath, `_soundscape.csv`)
   const targetFile = fs.createWriteStream(filePath, { flags: 'a' })
    // 1. Export .csv file
   await exportAllSoundscapes(filters.project_id, projection_parameters.projectUrl, targetFile, async (err, data) => {
@@ -25,14 +29,18 @@ async function collectData (projection_parameters, filters, cb) {
     console.log(`${exportReportJob}: finished collecting chunks`)
     targetFile.end()
     // 2. Export matrix and images
-    await getProjectSoundscapes({ projectId: filters.project_id }, async (e, soundscapes) => {
-      await getProjectSounscapesMatrixData(soundscapes)
-      cb(null, path.resolve(filePath))
-    })
+    const soundscapes = await getProjectSoundscapes({ projectId: filters.project_id })
+    await getProjectSoundscapesMatrixData(soundscapes)
+    await getProjectSoundscapesImages(soundscapes)
+    cb(null, path.resolve(filePath))
   }).catch((e) => {
     console.err(`Error export ${exportReportType}`, e)
     cb(e)
   })
+}
+
+async function buildSoundscapeFolder() {
+  await zipDirectory(tmpFilePath, 'jobs/arbimon-recording-export-job/soundscape-export.zip')
 }
 
 async function exportAllSoundscapes (projectId, projectUrl, targetFile, cb) {
@@ -102,15 +110,36 @@ async function writeChunk (results, targetFile, isFirstChunk) {
   })
 }
 
-async function getProjectSounscapesMatrixData(soundscapes) {
+async function getProjectSoundscapesMatrixData(soundscapes) {
   for (let soundscape of soundscapes) {
+    soundscape.aggregation = {
+      id: soundscape.aggregation,
+      name: soundscape.aggr_name,
+      scale: JSON.parse(soundscape.aggr_scale)
+    };
+    console.log('soundscape matrix', soundscape)
     await getMatrixData(soundscape)
+    fs.unlink(tempPathToDelete, () => {})
   }
 }
 
+async function getProjectSoundscapesImages(soundscapes) {
+  for (let soundscape of soundscapes) {
+    console.log('soundscape  image', soundscape)
+    await getImageData(soundscape)
+  }
+}
+
+function nameToUrl (name) {
+  return name.replace(/[^a-z0-9A-Z-]/g, '-').replace(/-+/g,'-').replace(/(^-)|(-$)/g, '').toLowerCase()
+}
+
 async function getMatrixData(soundscape) {
-  function dumpSCIDXMatrix(scidx){
-    let filename = soundscape.name.replace(/[^a-zA-Z0-9-_]/g, '_').replace(/_+/g,'_')  + '.csv';
+  const filename = `${soundscape.id}-${nameToUrl(soundscape.name)}.csv`;
+  const filePath = path.join(tmpFilePath, filename)
+  const targetFile = fs.createWriteStream(filePath, { flags: 'a' })
+
+  function dumpSCIDXMatrix(scidx) {
     let cols = [];
     let matrix = [];
     let x,y;
@@ -146,16 +175,15 @@ async function getMatrixData(soundscape) {
         });
       }
     }).then(function(){
-      Object.keys(scidx.index).map(function(freq_bin){
+      Object.keys(scidx.index).map(function(freq_bin) {
         let row = scidx.index[freq_bin];
-        let freq = freq_bin * soundscape.bin_size;
         Object.keys(row).map(function(time){
           let recs = row[time][0];
           let amps = row[time][1];
           if(!threshold){
             matrix[freq_bin - scidx.offsety][time - scidx.offsetx] += recs.length;
           } else {
-            recs.map(function(rec_idx, c_idx){
+            recs.map(function(rec_idx, c_idx) {
               let amp = amps && amps[c_idx];
               if(amp && amp > threshold){
                 matrix[freq_bin - scidx.offsety][time - scidx.offsetx]++;
@@ -164,14 +192,14 @@ async function getMatrixData(soundscape) {
           }
         });
       });
-    }).then(function(){
-      if(soundscape.normalized){
-        return model.soundscapes.fetchNormVector(soundscape).then(function(normvec){
-          for(x=0; x < scidx.width; ++x){
+    }).then(function() {
+      if (soundscape.normalized) {
+        return soundscapes.fetchNormVector(soundscape).then(function(normvec) {
+          for(x=0; x < scidx.width; ++x) {
             key = '' + (x + scidx.offsetx);
             if(key in normvec){
               let val = normvec[key];
-              for(y=0; y < scidx.height; ++y){
+              for(y=0; y < scidx.height; ++y) {
                 matrix[y][x] = matrix[y][x] * 1.0 / val;
               }
             }
@@ -179,28 +207,53 @@ async function getMatrixData(soundscape) {
         });
       }
     }).then(function() {
-        // TODO: save file to tmp folder
-        let stringifier = csv_stringify({header:true, columns:['freq-min','freq-max'].concat(cols)});
-        stringifier.pipe(res);
-        for (y=matrix.length-1; y > -1; --y) {
-          let row = matrix[y];
-          let freq = (scidx.offsety + y) * soundscape.bin_size;
-          stringifier.write([freq, freq + soundscape.bin_size].concat(row));
-        }
-        stringifier.end();
+      let fields = ['freq-min','freq-max'].concat(cols);
+      let datastream = new stream.Readable({objectMode: true});
+      let _buf = [];
+
+      for (y=matrix.length-1; y > -1; --y) {
+        let row = matrix[y];
+        let freq = (scidx.offsety + y) * soundscape.bin_size;
+        datastream.push([freq, freq + soundscape.bin_size].concat(row))
+      }
+      datastream.push(null);
+
+      datastream.on('data', (d) => {
+        _buf.push(Object.values(d))
+      })
+      datastream.on('end', async () => {
+        csv_stringify(_buf, { header: true, columns: fields }, async (err, data) => {
+          if (err) {
+            console.log('Err write to csv file.', err)
+            reject(err)
+          }
+          targetFile.write(data)
+          return targetFile.end()
+        })
+      })
     });
   }
   await fetchSCIDX(soundscape).then(dumpSCIDXMatrix)
 }
 
 async function fetchSCIDX(soundscape) {
-  return soundscapes.fetchSCIDXFile(soundscape).then(function(scidx_path){
+  return soundscapes.fetchSCIDXFile(soundscape).then(function(scidx_path) {
+    console.log('scidx_path', scidx_path)
+    tempPathToDelete = scidx_path.path
     const idx = new scidx();
-    return q.ninvoke(idx, 'read', scidx_path.path);
+    return q.ninvoke(idx, 'read', scidx_path.path)
   })
 }
 
+async function getImageData(soundscape) {
+  const filename = `${soundscape.id}-${nameToUrl(soundscape.name)}.png`;
+  const filePath = path.join(tmpFilePath, filename)
+  const  s3Data = await getObject({ Bucket: S3_LEGACY_BUCKET_ARBIMON, Key: soundscape.uri, isLegacy: true });
+  fs.writeFileSync(filePath, s3Data)
+}
+
 module.exports = {
-  collectData
+  collectData,
+  buildSoundscapeFolder
 }
 
