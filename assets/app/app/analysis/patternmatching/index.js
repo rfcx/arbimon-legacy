@@ -559,12 +559,6 @@ angular.module('a2.analysis.patternmatching', [
         $scope.errMess = null;
     }
 })
-.controller('ShareProjectTemplatesModalInstanceCtrl', function($scope, $modalInstance, Project, data) {
-    $scope.shareProjectTemplates = function() {
-        console.info('ShareProjectTemplatesModalInstanceCtrl')
-        $modalInstance.close();
-    }
-})
 .controller('PatternMatchingDetailsCtrl' , function($scope, $q, a2PatternMatching, a2Templates, a2UserPermit, Project, a2AudioBarService, notify, $anchorScroll, $modal) {
     Object.assign(this, {
     id: null,
