@@ -149,8 +149,15 @@ angular.module('a2.analysis.patternmatching', [
 
     $scope.togglePublicTemplatesEnabled = function() {
         if ($scope.disableToggle()) return
-        $scope.onOff = $scope.onOff === 0 ? 1 : 0
+        $scope.onOff = 0
+        if ( $scope.onOff === 1) {
+            $scope.updateInfo()
+        } else {
+            $scope.openShareProjectTemplatesPopup()
+        }
+    }
 
+    $scope.updateInfo = function() {
         if(!a2UserPermit.can('manage project settings')) {
             notify.error('You do not have permission to manage manage project settings');
             return;
@@ -258,6 +265,20 @@ angular.module('a2.analysis.patternmatching', [
 
         modalInstance.result.then(function() {
             notify.log('Your Export Report is processing <br> and will be sent by email.');
+        });
+    };
+
+    $scope.openShareProjectTemplatesPopup = function() {
+        var modalInstance = $modal.open({
+            templateUrl: '/app/analysis/patternmatching/share-project-templates.html',
+            windowClass: 'share-project-templates-pop-up-window'
+        });
+
+        modalInstance.result.then(function(confirmed) {
+            if(confirmed){
+                $scope.onOff = 1
+                $scope.updateInfo()
+            }
         });
     };
 
