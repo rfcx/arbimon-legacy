@@ -7,6 +7,8 @@ const csv_stringify = require('csv-stringify');
 const { zipDirectory } = require('../services/file-helper')
 const recordings = require('../../app/model/recordings')
 
+const exportReportType = 'Soundscape';
+const exportReportJob = `Arbimon Export ${exportReportType} job`
 const tmpFilePath = 'jobs/arbimon-recording-export-job/tmpfilecache'
 
 async function collectData (projection_parameters, filters, cb) {
@@ -20,13 +22,12 @@ async function collectData (projection_parameters, filters, cb) {
       return cb(e)
     }
     if (data) {
-      console.log('Arbimon Export project template job: writing chunk')
+      console.log(`${exportReportJob}: finished collecting chunks`)
       await writeChunk(data, targetFile, isFirstChunk)
     }
     isFirstChunk = false
-    console.log('Arbimon Export project template job: finished collecting chunks')
     targetFile.end()
-    // 1. Export audio files
+    // 2. Export audio files
     await exportAllProjectTemplate(filters.project_id, projection_parameters.projectUrl, async (e, data) => {
       await downloadTemplateAudio(data)
       cb(null, path.resolve(filePath))
@@ -94,7 +95,6 @@ async function writeChunk (results, targetFile, isFirstChunk) {
             result[f] = '---'}
           }
         )
-        // delete result.template_id
         datastream.push(result)
       }
       datastream.push(null);

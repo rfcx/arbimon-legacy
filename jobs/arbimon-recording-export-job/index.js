@@ -126,9 +126,7 @@ async function main () {
                 }
                 console.log(`folder ${tmpFilePath} exists`, fs.existsSync(tmpFilePath))
                 template.collectData(projection_parameters, filters, async (err, filePath) => {
-                    console.log('--start buildTemplateFolder', filePath);
                     await template.buildTemplateFolder()
-                    console.log('--end buildTemplateFolder');
                     await sendZipFolderToTheUser(rowData, currentTime, jobName, message, 'template-export')
                     console.log(`Arbimon Export ${exportReportType} job finished: export templates for ${message}`)
                     resolve()
@@ -140,19 +138,11 @@ async function main () {
             const exportReportType = 'Soundscapes';
             console.log(`Arbimon Export ${exportReportType} job`)
             soundscape.collectData(projection_parameters, filters, async (err, filePath) => {
-                if (err) {
-                    console.error(`Arbimon Export ${exportReportType} job error`, err)
-                    fs.unlink(filePath, () => {})
-                    reject(err)
-                }
-                console.log(`Arbimon Export ${exportReportType} job: uploading file to S3`)
-                const url = await saveFile(filePath, currentTime, rowData.project_id)
-                console.log('Arbimon Export job: file is accessible by url', url)
-                await sendEmail(`Arbimon Export ${exportReportType} report`, 'arbimon-export-soundscape.csv', rowData, url, true)
-                await updateExportRecordings(rowData, { processed_at: currentTime })
-                await recordings.closeConnection()
-                fs.unlink(filePath, () => {})
-                console.log(`Arbimon Export ${exportReportType} job finished: ${message}`)
+                console.log('--start buildSoundscapeFolder', filePath);
+                await soundscape.buildSoundscapeFolder()
+                console.log('--end buildSoundscapeFolder');
+                await sendZipFolderToTheUser(rowData, currentTime, jobName, message, 'soundscape-export')
+                console.log(`Arbimon Export ${exportReportType} job finished: export soundscapes for ${message}`)
                 resolve()
             })
         })
