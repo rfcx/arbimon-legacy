@@ -1,7 +1,7 @@
 <div class="export-form">
     <div class="export-form-header row-flex justify-between">
         <span>Export report</span>
-        <i class="fa fa-close" style="font-size: 20px; padding:6px; margin-top: 20px;"  ng-click="$dismiss()" ng-disabled="isExportingRecs"></i>
+        <img style="width: 13px; height: 13px; margin-top: 5px;" src="/images/fi-close.svg" ng-click="$dismiss()" ng-disabled="isExportingRecs">
     </div>
     
     <div class="modal-body">
@@ -19,13 +19,13 @@
             </div>
         </form>
     </div>
-    <div class="row-flex justify-between">
+    <div class="row-flex justify-between export-form-footer">
         <button class="btn btn-success btn-rounded-full" ng-click="$dismiss() | trackEvent:'Export-Recordings':'dismiss clicked'" ng-disabled="isExportingRecs">
             Cancel
         </button>
         <div>
             <i class="fa fa-spinner fa-spin" ng-if="isExportingRecs" style="font-size: 26px; vertical-align: middle; margin-right: 5px;"></i>
-            <button class="btn btn-primary btn-rounded-full" ng-click="exportRecordings(userEmail) | trackEvent:'Export-Recordings':'close clicked'" ng-disabled="isExportingRecs" style="margin-right: 5px;">
+            <button class="btn btn-primary btn-rounded-full" ng-click="exportRecordings(userEmail) | trackEvent:'Export-Recordings':'close clicked'" ng-disabled="isExportingRecs">
                 Export
             </button>
         </div>
