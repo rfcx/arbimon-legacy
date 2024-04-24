@@ -550,7 +550,6 @@ var Recordings = {
                 Bucket : config(legacy? 'aws' : 'aws_rfcx').bucketName,
                 Key    : recording.uri
             }
-            console.log('s3Client getObject opts', opts);
             await s3Client.getObject(opts, function(err, data){
                 if (err) {
                     console.log('Err s3Client getObject', err);

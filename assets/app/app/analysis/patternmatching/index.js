@@ -223,7 +223,7 @@ angular.module('a2.analysis.patternmatching', [
         const form = document.createElement('form')
         form.style.display = 'none'
         form.method = 'GET'
-        const url = '/legacy-api/project/' + Project.getUrl() + '/templates/download/' + template.name + '/' + template.id + '.wav';
+        const url = '/legacy-api/project/' + Project.getUrl() + '/templates/download/' + template.id + '.wav';
         form.action = url
         document.body.appendChild(form)
         form.submit()

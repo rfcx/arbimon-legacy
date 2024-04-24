@@ -106,28 +106,29 @@ router.get('/audio/:templateUrl', function(req, res, next) {
     }).catch(next);
 });
 
-router.get('/download/:templateName/:templateUrl', function(req, res, next) {
-    const roiUrl = req.params.templateUrl;
-    const templateName = req.params.templateName;
-    const ext = path.extname(roiUrl)
-    const template = path.basename(roiUrl, ext);
-    model.templates.getAudioFile(template, { gain: 5 }).then(function(roiAudio) {
-        res.set({ 'Content-Disposition' : `attachment; filename=${ templateName }.wav`})
-        res.setHeader('Content-type', 'audio/wav')
-        if (!roiAudio){
-            res.sendStatus(404);
-        } if (roiAudio.path.includes('/internal')) {
-            roiAudio.pipe(res)
-        } else {
-            res.sendFile(roiAudio.path, function () {
-                if (fs.existsSync(roiAudio.path)) {
-                    fs.unlink(roiAudio.path, function (err) {
-                        if (err) console.error('Error deleting the template file.', err);
-                        console.info('Template file deleted.');
-                    })
-                }
-            })
-        }
+router.get('/download/:templateUrl', function(req, res, next) {
+    const templateUrl = req.params.templateUrl;
+    const ext = path.extname(templateUrl)
+    const templateId = path.basename(templateUrl, ext);
+    model.templates.find({ id: templateId }).then(function(template) {
+        return model.templates.getAudioFile(templateId, { gain: 5 }).then(function(roiAudio) {
+            res.set({ 'Content-Disposition' : `attachment; filename=${ template[0].name }.wav`})
+            res.setHeader('Content-type', 'audio/wav')
+            if (!roiAudio){
+                res.sendStatus(404);
+            } if (roiAudio.path.includes('/internal')) {
+                roiAudio.pipe(res)
+            } else {
+                res.sendFile(roiAudio.path, function () {
+                    if (fs.existsSync(roiAudio.path)) {
+                        fs.unlink(roiAudio.path, function (err) {
+                            if (err) console.error('Error deleting the template file.', err);
+                            console.info('Template file deleted.');
+                        })
+                    }
+                })
+            }
+        }).catch(next);
     }).catch(next);
 });
 
