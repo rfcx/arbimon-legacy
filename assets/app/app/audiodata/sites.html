@@ -145,7 +145,7 @@
                                     type="text"
                                     ng-model="temp.lat"
                                     placeholder="Latitude"
-                                    pattern="^-?\d+\.?\d*$"
+                                    pattern="^-?\d+\.?\d*(\s*)$"
                                     ng-disabled="temp.hidden === true"
                                 >
                             </div>
@@ -158,7 +158,7 @@
                                 type="text"
                                 ng-model="temp.lon"
                                 placeholder="Longitude"
-                                pattern="^-?\d+\.?\d*$"
+                                pattern="^-?\d+\.?\d*(\s*)$"
                                 ng-disabled="temp.hidden === true"
                             >
                         </div>
@@ -170,7 +170,7 @@
                                 type="text"
                                 ng-model="temp.alt"
                                 placeholder="Elevation"
-                                pattern="^-?\d+\.?\d*$"
+                                pattern="^-?\d+\.?\d*(\s*)$"
                                 ng-disabled="temp.hidden === true"
                             >
                         </div>
