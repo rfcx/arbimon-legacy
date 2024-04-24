@@ -149,10 +149,11 @@ angular.module('a2.analysis.patternmatching', [
 
     $scope.togglePublicTemplatesEnabled = function() {
         if ($scope.disableToggle()) return
-        $scope.onOff = 0
         if ( $scope.onOff === 1) {
+            $scope.onOff = 0
             $scope.updateInfo()
         } else {
+            $scope.onOff = 0
             $scope.openShareProjectTemplatesPopup()
         }
     }
