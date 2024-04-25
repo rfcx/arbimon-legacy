@@ -70,9 +70,26 @@ async function uploadAsStream ({ filePath, Bucket, Key, ContentType }) {
   return export_s3.upload({ Bucket, Key, ContentType, Body }).promise()
 }
 
+async function getObject ({ Bucket, Key, isLegacy = true }) {
+  return new Promise((resolve, reject) => {
+    (isLegacy === true ? legacy_s3 : rfcx_s3)
+      .getObject({
+        Bucket: Bucket,
+        Key: Key
+      }, (err, data) => {
+        if (err) {
+          console.error('Error get s3 data.', err)
+          return reject(err)
+        }
+        resolve(data.Body)
+      })
+  })
+}
+
 module.exports = {
   combineFilename,
   saveLatestData,
+  getObject,
   getSignedUrl,
   uploadAsStream
 }

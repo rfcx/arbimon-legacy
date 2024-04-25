@@ -155,6 +155,42 @@ angular.module('a2.analysis.soundscapes', [
         $scope.loading = false;
     }
 
+    $scope.isSoundscapesAvailable = function (id, name) {
+        return !$scope.loading && $scope.soundscapesData && $scope.soundscapesData.length
+    }
+
+    $scope.exportData = function() {
+        if (a2UserPermit.isSuper()) {
+            return $scope.openExportPopup()
+        }
+        if ((a2UserPermit.all && !a2UserPermit.all.length) || !a2UserPermit.can('export report')) {
+            return notify.error('You do not have permission to export data');
+        }
+        $scope.openExportPopup()
+    };
+
+    $scope.openExportPopup = function() {
+        var params = {
+            userEmail: a2UserPermit.getUserEmail() || ''
+        }
+        const modalInstance = $modal.open({
+            controller: 'ExportSoundscapesModalInstanceCtrl',
+            templateUrl: '/app/audiodata/export-report.html',
+            windowClass: 'export-pop-up-window',
+            resolve: {
+                data: function() {
+                    return { params: params }
+                }
+            },
+            backdrop: false
+        });
+
+        modalInstance.result.then(function() {
+            notify.log('Your Export Report is processing <br> and will be sent by email.');
+        });
+    };
+
+
     $scope.deleteSoundscape = function (id, name) {
         if(!a2UserPermit.can('manage soundscapes')) {
             notify.error('You do not have permission to delete soundscapes');
@@ -208,7 +244,6 @@ angular.module('a2.analysis.soundscapes', [
                 }
         });
     };
-
 
     $scope.createNewSoundscape = function () {
         if(!a2UserPermit.can('manage soundscapes')) {
@@ -398,6 +433,26 @@ angular.module('a2.analysis.soundscapes', [
     $scope.cancel = function (url) {
          $modalInstance.close( {url:url});
     };
+})
+.controller('ExportSoundscapesModalInstanceCtrl', function($scope, $modalInstance, Project, data) {
+    $scope.userEmail = data.params.userEmail
+    $scope.exportRecordings = function(email) {
+        data.params.userEmail = email
+        $scope.isExportingRecs = true
+        $scope.errMess = ''
+        Project.exportAllProjectSoundscapes(data.params).then(data => {
+            $scope.isExportingRecs = false
+            if (data.error) {
+                $scope.errMess = data.error;
+            }
+            else {
+                $modalInstance.close();
+            }
+        })
+    }
+    $scope.changeUserEmail = function() {
+        $scope.errMess = null;
+    }
 })
 .directive('a2Aggregationtypeselector', function() {
     return  {

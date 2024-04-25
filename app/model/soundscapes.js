@@ -107,7 +107,7 @@ var Soundscapes = {
      * @param {Function} callback(err, path) function to call back with the file's path.
      */
     fetchSCIDXFile: function(soundscape, callback){
-        var scidx_uri = "project_"+(soundscape.project|0)+"/soundscapes/"+(soundscape.id|0)+"/index.scidx";
+        const scidx_uri = "project_"+(soundscape.project|0)+"/soundscapes/"+(soundscape.id|0)+"/index.scidx";
         return q.ninvoke(tmpfilecache, 'fetch', scidx_uri, function(cache_miss){
             if(!s3){
                 s3 = new AWS.S3();
@@ -116,7 +116,10 @@ var Soundscapes = {
                 Bucket : config('aws').bucketName,
                 Key    : scidx_uri
             }, function(err, data){
-                if(err) { cache_miss.deferred.reject(err); return; }
+                if (err) {
+                    console.log('Err getting scidx file.', err)
+                    cache_miss.deferred.reject(err); return;
+                }
                 cache_miss.set_file_data(data.Body);
             });
         }).nodeify(callback);

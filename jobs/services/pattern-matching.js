@@ -1,5 +1,4 @@
 const mysql = require('../db/mysql')
-const config_hosts = require('../../config/hosts');
 
 async function getPmRois (options = {}) {
   const connection = await mysql.getConnection()

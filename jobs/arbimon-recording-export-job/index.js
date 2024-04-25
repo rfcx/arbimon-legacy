@@ -14,6 +14,7 @@ const config_hosts = require('../../config/hosts');
 const { saveLatestData, combineFilename, uploadAsStream, getSignedUrl } = require('../services/storage')
 const recordingsExport = require('./recordings')
 const patternMatching = require('./pattern-matching')
+const soundscape = require('./soundscape')
 const template = require('./template')
 const { streamToBuffer, zipDirectory } = require('../services/file-helper')
 
@@ -129,14 +130,26 @@ async function main () {
                 }
                 console.log(`folder ${tmpFilePath} exists`, fs.existsSync(tmpFilePath))
                 template.collectData(projection_parameters, filters, async (err, filePath) => {
-                    console.log('--start buildTemplateFolder', filePath);
                     await template.buildTemplateFolder()
-                    console.log('--end buildTemplateFolder');
                     await sendZipFolderToTheUser(rowData, currentTime, jobName, message, 'template-export')
-                    console.log(`Arbimon Export job finished: export templates for ${message}`)
+                    console.log(`Arbimon Export ${exportReportType} job finished: export templates for ${message}`)
                     resolve()
                 })
             })
+    }   else if (projection_parameters && projection_parameters.soundscapes) {
+        //----------------Arbimon export all project soundscapes----------------
+        return new Promise((resolve, reject) => {
+            const exportReportType = 'Soundscapes';
+            console.log(`Arbimon Export ${exportReportType} job`)
+            soundscape.collectData(projection_parameters, filters, async (err, filePath) => {
+                console.log('--start buildSoundscapeFolder', filePath);
+                await soundscape.buildSoundscapeFolder()
+                console.log('--end buildSoundscapeFolder');
+                await sendZipFolderToTheUser(rowData, currentTime, jobName, message, 'soundscape-export')
+                console.log(`Arbimon Export ${exportReportType} job finished: export soundscapes for ${message}`)
+                resolve()
+            })
+        })
     }   else {
         //----------------Arbimon export recordings----------------
         return new Promise((resolve, reject) => {
