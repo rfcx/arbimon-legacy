@@ -12,7 +12,7 @@ async function getPmRois (options = {}) {
       join sites s on r.site_id = s.site_id
       join species sp on pmr.species_id = sp.species_id
       join songtypes st on pmr.songtype_id = st.songtype_id
-    where pm.project_id = ${options.projectId} and pm.deleted = 0
+    where pm.project_id = ${options.projectId} and pm.pattern_matching_id = ${options.jobId} and pm.deleted = 0
       limit ${options.limit} offset ${options.offset}
     ;
   `
@@ -20,6 +20,19 @@ async function getPmRois (options = {}) {
   return rows
 }
 
+async function getProjectPMJobs (options = {}) {
+    const connection = await mysql.getConnection()
+    const sql = `
+      select pattern_matching_id jobId, name jobName
+      from pattern_matchings
+      where project_id = ${options.projectId} and deleted = 0
+      ;
+    `
+    const [rows, fields] = await connection.execute(sql)
+    return rows
+  }
+
 module.exports = {
-  getPmRois
+  getPmRois,
+  getProjectPMJobs
 }

@@ -99,19 +99,10 @@ async function main () {
         //----------------Arbimon export all project PM jobs----------------
         return new Promise((resolve, reject) => {
             const exportReportType = 'Pattern Matchings';
-            patternMatching.collectData(projection_parameters, filters, async (err, filePath) => {
-                if (err) {
-                    console.error(`Arbimon Export ${exportReportType} job error`, err)
-                    fs.unlink(filePath, () => {})
-                    reject(err)
-                }
-                console.log(`Arbimon Export ${exportReportType} job: uploading file to S3`)
-                const url = await saveFile(filePath, currentTime, rowData.project_id)
-                console.log('Arbimon Export job: file is accessible by url', url)
-                await sendEmail(`Arbimon Export ${exportReportType} report`, 'arbimon-export-pm.csv', rowData, url, true)
-                await updateExportRecordings(rowData, { processed_at: currentTime })
-                await recordings.closeConnection()
-                fs.unlink(filePath, () => {})
+            console.log(`Arbimon Export ${exportReportType} job`)
+            patternMatching.collectData(filters, async (err, filePath) => {
+                await patternMatching.buildPMFolder();
+                await sendZipFolderToTheUser(rowData, currentTime, jobName, message, 'pattern-matching-export')
                 console.log(`Arbimon Export ${exportReportType} job finished: ${message}`)
                 resolve()
             })

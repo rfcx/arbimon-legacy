@@ -3,7 +3,8 @@ const path = require('path')
 const fs = require('fs')
 const stream = require('stream');
 const csv_stringify = require('csv-stringify');
-const { getPmRois } = require('../services/pattern-matching')
+const { getPmRois, getProjectPMJobs } = require('../services/pattern-matching')
+const { zipDirectory } = require('../services/file-helper')
 const { getSignedUrl } = require('../services/storage')
 
 const S3_LEGACY_BUCKET_ARBIMON = process.env.AWS_BUCKETNAME
@@ -13,47 +14,57 @@ const exportReportType = 'Pattern Matchings';
 const exportReportJob = `Arbimon Export ${exportReportType} job`
 const tmpFilePath = 'jobs/arbimon-recording-export-job/tmpfilecache'
 
-async function collectData (projection_parameters, filters, cb) {
-  const filePath = path.join(tmpFilePath, `export-pattern-matchings.csv`)
-  const targetFile = fs.createWriteStream(filePath, { flags: 'a' })
-  await exportAllPmJobs(filters.project_id, projection_parameters.projectUrl, targetFile, async (err, data) => {
+async function collectData (filters, cb) {
+  await exportAllPmJobs(filters.project_id, async (err, data) => {
     if (err) {
       console.err('Error export PM', err)
-      targetFile.end()
       return cb(err)
     }
-    console.log(`${exportReportJob}: finished collecting chunks`)
-    targetFile.end()
-    cb(null, path.resolve(filePath))
+    console.log(`${exportReportJob}: finished collecting jobs`)
+    cb(null, null)
   }).catch((e) => {
     console.err('Error export PM', e)
     cb(e)
   })
 }
 
-async function exportAllPmJobs (projectId, projectUrl, targetFile, cb) {
+async function buildPMFolder() {
+  await zipDirectory(tmpFilePath, 'jobs/arbimon-recording-export-job/pattern-matchings-export.zip')
+}
+
+function nameToUrl (name) {
+  return name.replace(/[^a-z0-9A-Z-]/g, '-').replace(/-+/g,'-').replace(/(^-)|(-$)/g, '').toLowerCase()
+}
+
+async function exportAllPmJobs (projectId, cb) {
   try {
     console.log(`${exportReportJob} started`)
-  
-    const limit = 10000;
-    let index = 0
-    let toProcess = true;
-    let isFirstChunk = true
-
-    while (toProcess === true) {
-      console.log('next chunk', limit, limit * index)
-      const queryResult =  await getPmRois({
-        projectId,
-        projectUrl,
-        limit,
-        offset: limit * index
-      });
-      toProcess = queryResult.length > 0;
-
-      console.log('Arbimon Export PM job: writing chunk')
-      await writeChunk(queryResult, targetFile, isFirstChunk)
-      isFirstChunk = false
-      index++
+    const projectPMJobs = await getProjectPMJobs({projectId})
+    for (let job of projectPMJobs) {
+      const filename = `${job.jobId}-${nameToUrl(job.jobName)}.csv`;
+      const filePath = path.join(tmpFilePath, filename)
+      const targetFile = fs.createWriteStream(filePath, { flags: 'a' })
+      console.log('targetFile start', filename)
+      const limit = 10000;
+      let index = 0
+      let toProcess = true;
+      let isFirstChunk = true
+      while (toProcess === true) {
+        console.log('next chunk for', filename)
+        const queryResult =  await getPmRois({
+          projectId,
+          jobId: job.jobId,
+          limit,
+          offset: limit * index
+        });
+        toProcess = queryResult.length > 0;
+        console.log('Arbimon Export PM job: writing chunk')
+        await writeChunk(queryResult, targetFile, isFirstChunk)
+        isFirstChunk = false
+        index++
+      }
+      console.log('targetFile end', filename)
+      targetFile.end()
     }
     cb(null, null)
   } catch (e) {
@@ -105,6 +116,7 @@ async function writeChunk (results, targetFile, isFirstChunk) {
             reject(err)
           }
           targetFile.write(data)
+          console.log('targetFile write', _buf.length)
           resolve()
         })
       })
@@ -112,6 +124,7 @@ async function writeChunk (results, targetFile, isFirstChunk) {
 }
 
 module.exports = {
-  collectData
+  collectData,
+  buildPMFolder
 }
 
