@@ -29,7 +29,7 @@ async function collectData (filters, cb) {
 }
 
 async function buildPMFolder() {
-  await zipDirectory(tmpFilePath, 'jobs/arbimon-recording-export-job/pattern-matchings-export.zip')
+  await zipDirectory(tmpFilePath, 'jobs/arbimon-recording-export-job/pattern-matching-export.zip')
 }
 
 function nameToUrl (name) {
