@@ -109,7 +109,7 @@ async function writeExportParams(req, res, next) {
     const userId = req.session.user.id;
 
     model.recordings.writeExportParams(projection, filters, userId, userEmail).then(function(data) {
-        return res.json({ success: true })
+        res.json({ success: true })
     }).catch(next);
 }
 

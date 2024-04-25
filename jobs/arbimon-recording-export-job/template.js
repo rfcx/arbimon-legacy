@@ -7,7 +7,7 @@ const csv_stringify = require('csv-stringify');
 const { zipDirectory } = require('../services/file-helper')
 const recordings = require('../../app/model/recordings')
 
-const exportReportType = 'Soundscape';
+const exportReportType = 'Template';
 const exportReportJob = `Arbimon Export ${exportReportType} job`
 const tmpFilePath = 'jobs/arbimon-recording-export-job/tmpfilecache'
 
