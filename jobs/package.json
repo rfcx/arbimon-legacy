@@ -25,6 +25,7 @@
     "async": "~2.6.3",
     "aws-sdk": "^2.885.0",
     "axios": "^0.27.2",
+    "bufferpack": "~0.0.6",
     "csv-stringify": "~1.1.2",
     "debug": "^2.6.9",
     "dotenv": "^10.0.0",
