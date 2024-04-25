@@ -1616,61 +1616,83 @@ a.ui-select-choices-row-inner {
 }
 
 .filter-form-control {
-    z-index: 30;
-    width: 750px;
-    .form-control {
+  z-index: 30;
+  width: 944px;
+  border-radius: 8px !important;
+  border: solid 1px @util-gray-03;
+  .dropdown-menu.datepicker {
+    width: 944px;
+  }
+  .form-control {
+    background-color: @moss !important;
+    border-radius: 8px;
+  }
+  .ui-select-container {
+    > div {
+      max-height: 80px;
+      overflow-y: auto;
+    }
+  }
+  .dropdown-menu {
+    border: 1px solid #4B4B4B;
+    background-color: @moss !important;
+  }
+  .ui-select-choices-row {
+    > span {
+      color: @util-gray-01 !important;
       background-color: @moss !important;
-    }
-    .ui-select-container {
-      > div {
-        max-height: 80px;
-        overflow-y: auto;
-      }
-    }
-    .dropdown-menu {
-      border: 1px solid #4B4B4B;
-      background-color: @moss !important;
-    }
-    .ui-select-choices-row {
-      > span {
-        color: @util-gray-01 !important;
-        background-color: @moss !important;
-        &:focus,
-        &:hover {
-          background-color: @util-gray-04 !important;
-        }
-      }
+      &:focus,
       &:hover {
         background-color: @util-gray-04 !important;
       }
     }
-    .ui-select-choices-row.disabled {
+    &:hover {
+      background-color: @util-gray-04 !important;
+    }
+  }
+  .ui-select-choices-row.disabled {
+    > span {
+      border-radius: 5px;
+      background-color: @util-gray-04 !important;
+    }
+  }
+  .custom-select-ui-filter-param {
+    .ui-select-choices-row {
       > span {
         border-radius: 5px;
         background-color: @util-gray-04 !important;
-      }
-    }
-    .custom-select-ui-filter-param {
-      .ui-select-choices-row {
-        > span {
+        &:hover {
           border-radius: 5px;
-          background-color: @util-gray-04 !important;
-          &:hover {
-            border-radius: 5px;
-            background-color: @util-gray-04  !important;
-          }
+          background-color: @util-gray-04  !important;
         }
       }
     }
+  }
 
-    .a2-filter-text {
-      width: 18% !important;
+  .a2-filter-text {
+    width: 18% !important;
+  }
+
+  .a2-filter-row {
+    display: flex;
+    padding: 12px;
+  }
+
+  .a2-filter {
+    padding-left: 12px;
+    padding-right: 12px;
+    .btn {
+      border-radius: 8px !important;
     }
-    .a2-filter-row {
-      display: flex;
-      padding-left: 2px;
-      padding-right: 2px;
+  }
+  
+  .ui-select-multiple.ui-select-bootstrap {
+    min-height: 37px;
+    input.ui-select-search {
+      min-height: 30px;
+      margin-left: 8px;
     }
+  }
 }
 
 .export-form-control {
@@ -1765,7 +1787,11 @@ a.ui-select-choices-row-inner {
 }
 
 .padding-button-group {
-  padding: 10px 4px;
+  padding: 24px 12px;
+  > button {
+    margin-left: 12px;
+    margin-right: 12px;
+  }
 }
 
 .set-pop-up-bg {
