@@ -1,4 +1,4 @@
-<div class="a2-filter-row" style="margin-top: 12px;">
+<div class="a2-filter-row">
     <span class="pr-3" ng-if="(controller.loading && controller.loading.sites) || isLoading">
         <i class="fa fa-spinner fa-spin" style="font-size: 26px; margin-top: 2px;"></i>
     </span>
@@ -6,7 +6,7 @@
         Date range:
     </div>
     <div class="a2-filter" style="width: 45%;">
-        <button class="bg-echo set-date-btn" type="text"
+        <button class="bg-moss set-date-btn" type="text"
             yearpick
             min-date="minDate"
             max-date="controller.params.range.to || maxDate"
@@ -20,7 +20,7 @@
         to
     </div>
     <div class="a2-filter" style="width: 45%;">
-        <button class="bg-echo set-date-btn" type="text"
+        <button class="bg-moss set-date-btn" type="text"
             yearpick
             min-date="controller.params.range.from || minDate"
             max-date="maxDate"
@@ -33,7 +33,7 @@
     </div>
 </div>
 <div class="a2-filter-row">
-    <div class="a2-filter a2-filter-text" style="min-width: 116px;">
+    <div class="a2-filter a2-filter-text">
         Date and Time:
     </div>
     <div class="a2-filter" style="width: 22%;">
