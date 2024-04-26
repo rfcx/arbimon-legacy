@@ -5,27 +5,28 @@
     <div class="a2-filter a2-filter-text">
         Date range:
     </div>
-    <div class="a2-filter" style="width: 44%;">
-        <button class="btn btn-default" type="text"
+    <div class="a2-filter" style="width: 45%;">
+        <button class="bg-echo set-date-btn" type="text"
             yearpick
             min-date="minDate"
             max-date="controller.params.range.to || maxDate"
-            ng-model="controller.params.range.from"
-            style="width: 100%;">
+            ng-model="controller.params.range.from">
+            <img style="width: 16px; margin-left: 8px; margin-bottom: 3px; margin-right: 8px;" src="/images/fi-calendar.svg">
             <span ng-hide="controller.params.range.from"> Select Date </span>
             {{ controller.params.range.from | moment: 'll' }}
         </button>
     </div>
-    <div class="a2-filter  a2-filter-tex" style="width: 4%; margin-top: 6px;">
+    <div class="a2-filter  a2-filter-tex" style="margin-top: 6px;">
         to
     </div>
-    <div class="a2-filter" style="width: 44%;">
-        <button class="btn btn-default" type="text"
+    <div class="a2-filter" style="width: 45%;">
+        <button class="bg-echo set-date-btn" type="text"
             yearpick
             min-date="controller.params.range.from || minDate"
             max-date="maxDate"
             ng-model="controller.params.range.to"
             style="width: 100%;">
+            <img style="width: 16px; margin-left: 8px; margin-bottom: 3px; margin-right: 8px;" src="/images/fi-calendar.svg">
             <span ng-hide="controller.params.range.to"> Select Date </span>
             {{ controller.params.range.to | moment: 'll' }}
         </button>
@@ -74,7 +75,7 @@
         </ui-select>
     </div>
 </div>
-<div class="my-2 border-t-1 border-util-gray-02"></div>
+<div class="my-2 border-t-1 border-util-gray-02 border-line"></div>
 <div class="a2-filter-row">
     <div class="a2-filter a2-filter-text">
         Sites:
@@ -120,7 +121,7 @@
         </ui-select>
     </div>
 </div>
-<div class="my-2 border-t-1 border-util-gray-02"></div>
+<div class="my-2 border-t-1 border-util-gray-02 border-line"></div>
 <div class="a2-filter-row">
     <div class="a2-filter a2-filter-text">
         Validations:
