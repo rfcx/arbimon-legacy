@@ -103,6 +103,7 @@ router.get('/:projecturl?/', function(req, res, next) {
                     }
                 } else {
                     // if not authorized to see project send 404
+                    console.log('\n\n---TEMP: /projects 106 string - not authorized to see project')
                     return res.redirect('/projects')
                 }
 

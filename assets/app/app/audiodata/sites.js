@@ -72,7 +72,7 @@ angular.module('a2.audiodata.sites', [
         const bounds = new google.maps.LatLngBounds();
 
         angular.forEach($scope.sites, function(site) {
-            if (site.lat > 85 || site.lat < -85 || site.lon > 180 || site.lon < -180) {
+            if (site.lat > 85 || site.lat < -85 || site.lon > 180 || site.lon < -180 || site.hidden || site.lon === 0 && site.lat === 0 || site.lon === null || site.lat === null) {
                 return;
             }
             var marker
@@ -286,6 +286,9 @@ angular.module('a2.audiodata.sites', [
         $scope.editing = false;
         if($scope.marker){
             a2GoogleMapsLoader.then(function(google){
+                if (site.hidden || site.lon === 0 && site.lat === 0 || site.lon === null || site.lat === null) {
+                    return;
+                }
                 var position = new google.maps.LatLng($scope.selected && $scope.selected.lat, $scope.selected && $scope.selected.lon);
                 $scope.marker.setDraggable(false);
                 $scope.marker.setPosition(position);
@@ -360,11 +363,10 @@ angular.module('a2.audiodata.sites', [
 
             Project.getSites({ count: true, logs: true, deployment: true }, function(sites) {
                 $scope.sortByLastUpdated(sites);
-                $scope.sel(action === 'create' ? $scope.temp : tempObj).then(function(){
-                    if(p.show){
-                        $scope.set_show(p.show, p.show_path);
-                    }
-                });
+                $state.params.site = ''
+                $state.params.show = ''
+                $scope.selected = undefined
+                $state.transitionTo($state.current.name, {site: '', show: ''}, { notify: false });
                 // rebuild map pins
                 $scope.deleteMarkers()
                 $scope.fitBounds()
@@ -488,7 +490,6 @@ angular.module('a2.audiodata.sites', [
             }
 
             $scope.show[new_show] = true;
-
             return $state.transitionTo($state.current.name, {site:$state.params.site, show:show_state_param}, {notify:false});
         });
     };
@@ -506,6 +507,10 @@ angular.module('a2.audiodata.sites', [
         $scope.fitBounds()
     };
 
+    $scope.isLocationEmpty = function(lat, lon) {
+        return(lat === 0 && lon === 0) || (lat === null && lon === null)
+    }
+
     $scope.edit = function() {
         if(!$scope.selected) return;
         if(!a2UserPermit.can('manage project sites')) {
@@ -515,6 +520,7 @@ angular.module('a2.audiodata.sites', [
         $scope.set_show('map');
         $scope.temp = angular.copy($scope.selected);
         $scope.temp.published = ($scope.temp.published === 1);
+        $scope.temp.hidden = ($scope.temp.hidden === 1);
         Project.getProjectsList('my', function(data) {
             $scope.projects = data.map(project => {
                 return {
@@ -525,7 +531,7 @@ angular.module('a2.audiodata.sites', [
             })
         });
         Project.getInfo(function(data) {
-            $scope.temp.project = data;
+            if ($scope.temp) $scope.temp.project = data;
         });
         $scope.editing = true;
         // rebuild map pins
@@ -581,6 +587,9 @@ angular.module('a2.audiodata.sites', [
             // zoom in to the selected pin
             if ($scope.selected) {
                 a2GoogleMapsLoader.then(function(google) {
+                    if (site.hidden || site.lon === 0 && site.lat === 0 || site.lon === null || site.lat === null) {
+                        return;
+                    }
                     var position = new google.maps.LatLng($scope.selected.lat, $scope.selected.lon);
                     $scope.map.panTo(position);
                     $scope.map.setZoom(12)

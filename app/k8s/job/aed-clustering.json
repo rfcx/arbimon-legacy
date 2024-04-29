@@ -5,6 +5,7 @@
         "name": "{{aed-clustering-timestamp}}"
     },
     "spec": {
+        "ttlSecondsAfterFinished": 86400,
         "template": {
             "spec": {
                 "containers": [

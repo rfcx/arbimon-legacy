@@ -10,8 +10,9 @@ var gravatar = require('gravatar');
 var config = require('../../../config');
 const rfcxConfig = config('rfcx');
 const csv_stringify = require('csv-stringify');
-const { getCachedMetrics } = require('../../../utils/cached-metrics');
+const { getMetrics, getCachedMetrics } = require('../../../utils/cached-metrics');
 var model = require('../../../model');
+const moment = require('moment-timezone');
 
 // routes
 var sites = require('./sites');
@@ -97,25 +98,39 @@ router.get('/:projectUrl/info/source-project', function(req, res, next) {
 });
 
 // Dasboard page metrics
+router.get('/:projectUrl/site-count', function(req, res, next) {
+    res.type('json');
+    let p = req.query.project_id? req.query.project_id : req.project.project_id;
+    const key = { 'project-site-count': `project-${p}-si` }
+    getMetrics(req, res, key, p, next);
+});
+
+router.get('/:projectUrl/species-count', function(req, res, next) {
+    res.type('json');
+    let p = req.query.project_id? req.query.project_id : req.project.project_id;
+    const key = { 'project-species-count': `project-${p}-sp` }
+    getMetrics(req, res, key, p, next);
+});
+
 router.get('/:projectUrl/playlist-count', function(req, res, next) {
     res.type('json');
     let p = req.query.project_id? req.query.project_id : req.project.project_id;
     const key = { 'project-playlist-count': `project-${p}-pl` }
-    getCachedMetrics(req, res, key, p, next);
+    getMetrics(req, res, key, p, next);
 });
 
 router.get('/:projectUrl/pm-species-detected', function(req, res, next) {
     res.type('json');
     let p = req.query.project_id? req.query.project_id : req.project.project_id;
     const key = { 'project-pm-sp-count': `project-${p}-pm-sp` }
-    getCachedMetrics(req, res, key, p, next);
+    getMetrics(req, res, key, p, next);
 });
 
 router.get('/:projectUrl/pm-template-count', function(req, res, next) {
     res.type('json');
     let p = req.query.project_id? req.query.project_id : req.project.project_id;
     const key = { 'project-pm-t-count': `project-${p}-pm-t` }
-    getCachedMetrics(req, res, key, p, next);
+    getMetrics(req, res, key, p, next);
 });
 
 router.get('/:projectUrl/rfm-classif-job-count', function(req, res, next) {
@@ -378,10 +393,41 @@ router.get('/:projectUrl/users', function(req, res, next) {
 router.get('/:projectUrl/sites-export.csv', function(req, res, next) {
     res.type('text/csv');
     const project = req.project.project_id;
-    model.projects.exportProjectSites(project).then((results) => {
+    model.projects.exportProjectSites(project).then(async (results) => {
         const datastream = results[0];
-        const fields = results[1].map(f => f.name);
+        let fields = results[1].map(f => f.name)
+        const updated_at_idx = fields.indexOf('updated_at');
+        if (updated_at_idx !== -1) {
+            fields.splice(updated_at_idx, 1);
+        }
+        const external_idx = fields.indexOf('external_id');
+        if (external_idx !== -1) {
+            fields.splice(external_idx, 1);
+        }
+        fields.push('Deployed')
+        fields.push('Updated')
+
+        let deploymentData, deploymentBySite = {}
+        try {
+            deploymentData = await model.sites.getDeployedData(req.project.external_id, req.session.idToken)
+            deploymentData = JSON.parse(deploymentData)
+            if (deploymentData && deploymentData.length) {
+                deploymentData.forEach(data => { return deploymentBySite[data.streamId] = {
+                    streamId: data.streamId,
+                    deployedAt: data.deployedAt
+                }})
+            }
+        } catch (e) {}
+
         datastream
+            .on('data', (data) => {
+                if (deploymentBySite && deploymentBySite[data.external_id]) {
+                    data['Deployed'] = deploymentBySite[data.external_id].deployedAt ? moment.tz(moment.utc(deploymentBySite[data.external_id].deployedAt), data.Timezone).format('YYYY-MM-DD HH:mm:ss') : 0
+                } else data['Deployed'] = 'no data'
+                delete data.external_id
+                data['Updated'] = moment.tz(moment.utc(data.updated_at), data.Timezone).format('YYYY-MM-DD HH:mm:ss')
+                delete data.updated_at
+            })
             .pipe(csv_stringify({ header: true, columns:fields }))
             .pipe(res);
     }).catch(next);
@@ -501,13 +547,6 @@ router.get('/:projectUrl/validations/count', function(req, res, next) {
 
         res.json({ count: result[0].count });
     });
-});
-
-router.get('/:projectUrl/usage', function(req, res, next) {
-    res.type('json');
-    model.projects.getStorageUsage(req.project.project_id).then(function(result) {
-        res.json({ min_usage: result.min_usage });
-    }).catch(next);
 });
 
 router.use('/:projectUrl/streams', require('./streams'));

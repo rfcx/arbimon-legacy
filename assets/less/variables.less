@@ -15,6 +15,7 @@
 // Secondary
 @spoonbill: #FFAFAF;
 @flamingo: #FF6868;
+@ibis: #CC1E3D;
 @palm: #008059;
 @chirp: #D2FF8A;
 
@@ -26,16 +27,6 @@
 @util-gray-02: #7F7D78;
 @util-gray-03: #4B4B4B;
 @util-gray-04: #242424;
-
-// @gray-darkest: #131525;
-// @gray-darker: #2f3140;
-// @gray-darkest: #131525;
-// @gray-darker: #2f3140;
-// @gray-dark: #232436;
-// @gray: #45485d;
-// @gray-medium: #686a7d;
-// @gray-medium-darken: #4f5164;
-// @gray-light: #999;
 
 @gray-darker: @pitch;
 @gray-dark: @moss;
@@ -187,9 +178,10 @@
 @btn-primary-bg: @brand-primary;
 @btn-primary-border: @btn-primary-bg;
 
-@btn-success-color: @text-color;
-@btn-success-bg: @brand-success;
-@btn-success-border: @btn-success-bg;
+// Secondary button style
+@btn-success-color: @frequency;
+@btn-success-bg: @echo;
+@btn-success-border: @frequency;
 
 @btn-info-color: @text-color;
 @btn-info-bg: @brand-info;
@@ -199,9 +191,9 @@
 @btn-warning-bg: @brand-warning;
 @btn-warning-border: @btn-warning-bg;
 
-@btn-danger-color: @btn-default-color;
-@btn-danger-bg: @brand-default;
-@btn-danger-border: @btn-default-color;
+@btn-danger-color: @ibis;
+@btn-danger-bg: #F5D2D8;
+@btn-danger-border: @ibis;
 
 @btn-link-disabled-color: @util-gray-02;
 // Allows for customizing button radius independently from global border radius
@@ -214,9 +206,9 @@
 //##
 
 //** `<input>` background color
-@input-bg: @util-gray-03;
+@input-bg: @echo;
 //** `<input disabled>` background color
-@input-bg-disabled: #292d49;
+@input-bg-disabled: @util-gray-04;
 
 //** Text color for `<input>`s
 @input-color: @insight;
@@ -236,7 +228,7 @@
 @input-border-focus: #fff;
 
 //** Placeholder text color
-@input-color-placeholder: @util-gray-02;
+@input-color-placeholder: @insight;
 //** Default `.form-control` height
 @input-height-base: (@line-height-computed + (@padding-base-vertical * 2) + 2);
 //** Large `.form-control` height

@@ -84,6 +84,7 @@ var Sites = {
 
     insert: function(site, db, callback) {
         var values = [];
+        site.hidden = (site.hidden === 1 || site.hidden === true || site.hidden === 'true') ? 1 : 0
 
         var schema = {
             project_id: joi.number(),
@@ -93,6 +94,7 @@ var Sites = {
             alt: joi.number().optional().default(null),
             site_type_id: joi.number().optional().default(2), // default mobile recorder
             external_id: joi.string().optional().default(null),
+            hidden: joi.number().optional().default(0)
         };
 
         var result = joi.validate(site, schema, {
@@ -156,6 +158,8 @@ var Sites = {
             site['updated_at'] = nowFormatted
         }
 
+        site.hidden = (site.hidden === 1 || site.hidden === true || site.hidden === 'true') ? 1 : 0
+
         var tableFields = [
             "project_id",
             "name",
@@ -166,7 +170,8 @@ var Sites = {
             "site_type_id",
             "timezone",
             "updated_at",
-            "deleted_at"
+            "deleted_at",
+            "hidden"
         ];
 
         for( var i in tableFields) {
@@ -684,7 +689,7 @@ var Sites = {
                         name: site.name,
                         lat: site.lat,
                         lon: site.lon,
-                        alt: site.alt,
+                        alt: site['alt'] !== undefined && Sites.isEmptyCoordinate(site.alt) ? null : site.alt,
                         is_public: !project.is_private
                     }
                     if (project.external_id) {
@@ -772,7 +777,7 @@ var Sites = {
                         name: site.name,
                         lat: site.lat,
                         lon: site.lon,
-                        alt: site.alt,
+                        alt: site['alt'] !== undefined && Sites.isEmptyCoordinate(site.alt) ? null : site.alt,
                         project_id: site.project_id
                     }, idToken)
                     const coreSite = {
@@ -941,9 +946,13 @@ var Sites = {
         return (connection? connection.query : dbpool.query)(`UPDATE sites SET external_id = "${externalId}" WHERE site_id = ${siteId}`, [])
     },
 
-    setCountryCodeAndTimezone: function (siteId, countryCode, timezone, connection) {
-        const isCountryCodeNull = countryCode === null
-        return (connection? connection.query : dbpool.query)(`UPDATE sites SET country_code = ${isCountryCodeNull ? null : ('"' + countryCode + '"')}, timezone = "${timezone}" WHERE site_id = ${siteId}`, [])
+    setCountryCodeAndTimezone: async function (siteId, countryCode, timezone, connection) {
+        console.log('------setCountryCodeAndTimezone', countryCode, timezone);
+        const isCountryCodeNull = countryCode === null || countryCode === '' || countryCode === undefined || countryCode === 'undefined';
+        const isTimezoneNull = !timezone || timezone === null || timezone === '' || timezone === undefined || timezone === 'undefined';
+        const timezoneToInsert = isTimezoneNull ? 'UTC' : timezone
+        console.log('------timezoneToInsert', timezoneToInsert);
+        return (connection? connection.query : dbpool.query)(`UPDATE sites SET country_code = ${isCountryCodeNull ? null : ('"' + countryCode + '"')}, timezone = "${timezoneToInsert}" WHERE site_id = ${siteId}`, [])
     },
 
     /**

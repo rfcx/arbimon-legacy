@@ -1,37 +1,40 @@
 <div class="row">
     <div class="mx-4 padded-view-div">
         <loader ng-show="loading"></loader>
-        <button class="btn btn-default pull-right  btn-sm"
+        <button class="btn btn-default pull-right btn-rounded-full"
             tooltip="Refresh list"
             ng-click="loadClassifications()">
-                <i class="fa fa-refresh"></i> Refresh List
+                Refresh List
+                <i class="fa fa-refresh ml-3"></i>
         </button>
 
         <div ng-hide="loading">
             <a2-table rows="classificationsData" no-checkbox="true">
-                <field title="Name" tdclass="hidelongtext widthtd" key="cname" filter>
-                    {{row.cname}}
+                <field title="Name" tdclass="hidelongtext widthtd is-v-middle" key="cname" filter>
+                    <span>{{row.cname}}</span>
                 </field>
                 <field title="Date" key="date" tdclass="is-v-middle">
                     {{ row.date | moment : 'lll' }}
                 </field>
-                <field title="Model" key="modname" filter tdclass="no-wrap-table-cell">
-                    {{row.modname}}
+                <field title="Model" key="modname" filter tdclass="no-wrap-table-cell is-v-middle hidelongtext">
+                    <span>{{row.modname}}</span>
                 </field>
-                <field title="Playlist" key="playlist_name" filter tdclass="no-wrap-table-cell">
-                    {{row.playlist_name}}
+                <field title="Playlist" key="playlist_name" filter tdclass="is-v-middle hidelongtext widthtd">
+                    <span>{{row.playlist_name}}</span>
                 </field>
-                <field title="User" key="muser" filter tdclass="no-wrap-table-cell">
+                <field title="User" key="muser" filter tdclass="no-wrap-table-cell is-v-middle">
                     {{ row.muser }}
                 </field>
                 <field>
-                    <button class="btn btn-default btn-xs"
+                    <button class="btn btn-default"
                         ng-click="showClassificationDetails(row)">
                             Show details
                     </button>
-                    <button class="btn btn-default btn-xs"
-                        ng-click="deleteClassification(row.job_id,row.cname)">
-                            Delete
+                    <button class="btn btn-danger"
+                        ng-click="deleteClassification(row.job_id,row.cname)"
+                        tooltip="Delete"
+                        tooltip-trigger="mouseenter">
+                        <i class="fa fa-trash"></i>
                     </button>
                 </field>
             </a2-table>

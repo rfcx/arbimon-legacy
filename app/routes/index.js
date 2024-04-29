@@ -11,8 +11,6 @@ var login = require('./login');
 var acmeChallenge = require('./acme-challenge');
 var dbpool = require('../utils/dbpool');
 var queryHandler = dbpool.queryHandler;
-var config = require('../config');
-const auth0Service = require('../model/auth0')
 const model = require('../model');
 const authentication = require('../middleware/jwt');
 const parseTokenData = authentication.parseTokenData;
@@ -23,7 +21,6 @@ router.get('/legacy-api/alive', function(req, res, next) { // for health checks
     queryHandler("SELECT project_id FROM projects LIMIT 1", function (err){
         if (err) {
             next(err);
-            return;
         } else {
             res.status(200);
             res.json({ alive: true });
@@ -31,97 +28,55 @@ router.get('/legacy-api/alive', function(req, res, next) { // for health checks
     });
 });
 
-
-router.use('/', parseTokenData(), login);
-
-router.get('/support', function(req, res) {
-    res.redirect(config('hosts').support);
+router.get(['/', '/projects'], function(req, res) {
+    res.redirect('/my-projects');
 });
 
-router.get('/classifiers', function(req, res) {
-    res.type('html');
-    res.render('classifiers', { user: req.session.user });
-});
-
-router.use('/', acmeChallenge);
-
-// all routes after this middleware
-// are available only to logged users
-router.use(function(req, res, next) {
-    console.log('\n\n---TEMP: auth req.originalUrl', req.originalUrl)
-    if (['/legacy-api/recordings-species-count', '/legacy-api/projects-count', '/legacy-api/jobs-count', '/legacy-api/recordings-count'].includes(req.originalUrl)) { return next(); }
-    if (!req.user) {
-        if (req.session) {
-            req.session.currentPath = req.protocol + '://' + req.get('host') + req.originalUrl;
-            console.log('\n\n---TEMP: set path to session', req.session.currentPath)
-        }
-        console.log('\n\n---TEMP: middleware to legacy-login')
-        return res.redirect('/legacy-login')
-    }
-    return next();
+router.get(['/project/:projectUrl', '/project/:projectUrl/dashboard'], function(req, res) {
+    res.redirect(`/p/${req.params.projectUrl}`);
 });
 
 router.get('/projects/:externalId', async (req, res) => {
-    res.type('html');
     try {
         const project = await model.projects.find({external_id: req.params.externalId}).get(0);
         return res.redirect(`/p/${project.url}`);
-      }
-      catch (e) {
+    }
+    catch (e) {
         return res.redirect('/');
     }
 });
 
-router.get('/', function(req, res) {
-    res.redirect('/my-projects');
-});
-
-router.get('/projects', function(req, res) {
-    res.redirect('/my-projects');
-});
-
-router.get('/project/:projectUrl/dashboard', function(req, res, next) {
-    res.type('json');
-    return res.redirect(`/p/${req.params.projectUrl}/overview`)
-});
-
-router.get('/user-settings', function(req, res) {
-    res.type('html');
-    if (req.session.user && req.session.loggedIn) {
-        res.render('user-settings', {
-            title: "User settings",
-            user: req.session.user,
-            state: ''
-        });
-    } else {
-        res.redirect('/');
-    }
-});
-
 // Home page metrics
-
 router.get('/legacy-api/projects-count', function(req, res, next) {
     res.type('json');
-    const key = { 'project-count': 'project-count' }
-    getCachedMetrics(req, res, key, null, next);
+    getCachedMetrics(req, res, { 'project-count': 'project-count' }, null, next);
 });
-
 router.get('/legacy-api/jobs-count', function(req, res, next) {
     res.type('json');
-    const key = { 'job-count': 'job-count' }
-    getCachedMetrics(req, res, key, null, next);
+    getCachedMetrics(req, res, { 'job-count': 'job-count' }, null, next);
 });
-
 router.get('/legacy-api/recordings-species-count', function(req, res, next) {
     res.type('json');
-    const key = { 'species-count': 'species-count' }
-    getCachedMetrics(req, res, key, null, next);
+    getCachedMetrics(req, res, { 'species-count': 'species-count' }, null, next);
 });
-
 router.get('/legacy-api/recordings-count', function(req, res, next) {
     res.type('json');
-    const key = { 'recording-count': 'recording-count' }
-    getCachedMetrics(req, res, key, null, next);
+    getCachedMetrics(req, res, { 'recording-count': 'recording-count' }, null, next);
+});
+
+router.use('/', parseTokenData(), login);
+
+router.use('/', acmeChallenge);
+
+// Force login for routes after this
+router.use(function(req, res, next) {
+    if (!req.user) {
+        if (req.session) {
+            req.session.currentPath = req.protocol + '://' + req.get('host') + req.originalUrl;
+        }
+        return res.redirect('/legacy-login')
+    }
+    return next();
 });
 
 router.use('/legacy-api', dataApi);

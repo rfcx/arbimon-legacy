@@ -53,6 +53,7 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
     }
 
     var staticHours = []
+    staticHours.push({ value: -1, string: 'Select all', count: null })
     for (var hour = 0; hour < 24; hour++) {
         staticHours.push({ value: hour, string: ((hour < 10 ? '0' : '') + hour + ':00'), count: null })
     }
@@ -130,6 +131,17 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
         {name:"soundscape_composition", map: _1_get_id_mapper},
         {name:"soundscape_composition_annotation"},
     ];
+
+    this.onSelectClick = function($item) {
+        if($item.find(h => h.value === -1)) {
+            if (this.params.hours.length !== 25) {
+                this.params.hours = []
+                this.params.hours = staticHours.slice(1)
+            } else {
+                this.params.hours = []
+            }
+        }
+    }
 
     this.getFilters = function() {
         var filters = {};

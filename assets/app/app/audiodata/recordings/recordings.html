@@ -5,7 +5,7 @@
     <div class="col-sm-12 toolbar mt-4">
         <span class="dropdown a2-filters-box" dropdown  dropdown-append-to-body="true" a2-auto-close-on-outside-click>
             <button class="btn btn-default" dropdown-toggle ng-disabled="loading"><i class="fa fa-filter"></i> Filters <i class="fa fa-caret-down"></i></button>
-            <div class="dropdown-form dropdown-menu a2-filters-box-dropdown datepicker" role="menu">
+            <div class="dropdown-form dropdown-menu set-pop-up-bg filter-form-control close-color a2-filters-box-dropdown datepicker" role="menu">
                 <recording-filter-parameters on-apply-filters="controller.applyFilters(filters)" on-create-playlist="controller.createPlaylist(filters)"
                     max-date="maxDate" min-date="minDate" rec-total="totalRecs" is-loading="loading"
                 ></recording-filter-parameters>
@@ -15,7 +15,7 @@
 
         <div class="btn-group ml-3" dropdown dropdown-append-to-body="true" a2-auto-close-on-outside-click>
             <button class="btn btn-default" dropdown-toggle ng-disabled="loading || !controller.exportPermit()"><i class="fa fa-send-o"></i> Export <i class="fa fa-caret-down"></i></button>
-            <div class="dropdown-form dropdown-menu" role="menu">
+            <div class="dropdown-form dropdown-menu export-form-control" role="menu">
                 <recording-data-export-parameters on-export="controller.exportRecordings(parameters)"
                 ></recording-data-export-parameters>
             </div>
@@ -78,8 +78,8 @@
             </field>
             <field title="Uploaded" key="upload_time" >{{ (row.upload_time | momentTz : 'YYYY-MM-DD' : row.timezone) }}</field>
             <field title="Recorder" key="recorder">{{ row.recorder }}</field>
-            <field title="Comments" key="comments" tdclass="comments hidelongtext seconds-div-center widthtd">
-                <span ng-if="row.comments && ['AudioMoth', 'Song Meter', 'SongMeter'].includes(row.recorder)" title="{{row.comments}}">{{row.comments}}</span>
+            <field title="Notes" key="comments" tdclass="comments hidelongtext seconds-div-center widthtd">
+                <span ng-if="row.comments && ['AudioMoth', 'Song Meter', 'SongMeter'].includes(row.recorder)" title="{{row.meta.comment ? row.meta.comment : row.comments}}">{{row.comments}}</span>
                 <span ng-if="!['AudioMoth', 'Song Meter', 'SongMeter'].includes(row.recorder) && row.mic !== 'Unknown' && row.version !== 'Unknown'" title="{{ 'Microphone: ' + row.mic + ' / ' +  'Software: ' + row.version }}">{{ 'Microphone: ' + row.mic + ' / ' +  'Software: ' + row.version }}</span>
             </field>
             <expand-select>
@@ -87,7 +87,7 @@
                     <div style="position:absolute;z-index:10;left:45%;top: 45%">
                         <i class="fa fa-spinner fa-spin" style="font-size: 28px;"></i>
                     </div>
-                    <img id="row-{{selected.id}}" style="position:absolute;z-index:100;left:0;width: 420px; max-height: 154px;" custom-src="{{selected.thumbnail}}"/>
+                    <img id="row-{{selected.id}}" style="position:absolute;z-index:20;left:0;width: 420px; max-height: 154px;" custom-src="{{selected.thumbnail}}"/>
                 </div>
                 <a class="mt-2 btn btn-default btn-xs" ui-sref="visualizer.view({type:'rec', idA:selected.id})">
                     <i class="fa fa-cubes"></i> View in Visualizer

@@ -23,6 +23,7 @@ RUN mkdir -p /app/k8s/job
 COPY app/k8s/job /app/app/k8s/job
 COPY app/k8s/index.js /app/app/k8s/index.js
 COPY app/model/recordings.js /app/app/model/recordings.js
+COPY app/model/soundscapes.js /app/app/model/soundscapes.js
 COPY app/model/clustering-jobs.js /app/app/model/clustering-jobs.js
 COPY app/model/projects.js /app/app/model/projects.js
 COPY app/model/users.js /app/app/model/users.js
@@ -34,6 +35,25 @@ COPY app/model/tags.js /app/app/model/tags.js
 COPY app/model/soundscape-composition.js /app/app/model/soundscape-composition.js
 COPY app/model/sites.js /app/app/model/sites.js
 COPY app/model/classifications.js /app/app/model/classifications.js
+RUN apt update \
+    && apt install -y \
+        curl \
+        sox \
+        imagemagick \
+        python-dev \
+        software-properties-common \
+        libsox-fmt-all \
+        libsox-dev \
+        libvorbis-dev \
+        libogg-dev \
+        vorbis-tools \
+        libopus-dev \
+        libopusfile-dev \
+        libtool \
+        pkg-config \
+        libflac-dev \
+        autoconf \
+        automake
 CMD ["node", "--max_old_space_size=8192", "jobs/arbimon-recording-export-job/index.js"]
 
 # ---

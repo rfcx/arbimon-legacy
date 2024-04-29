@@ -92,6 +92,14 @@ const getCachedMetrics = async function(req, res, key, params, next) {
     }).catch(next);
 }
 
+const getMetrics = async function(req, res, key, params, next) {
+    const k = Object.keys(key)[0]
+    getCountForSelectedMetric(k, params).then(async function(value) {
+        res.json(value);
+    }).catch(next);
+}
+
 module.exports = {
     getCachedMetrics: getCachedMetrics,
+    getMetrics: getMetrics
 }

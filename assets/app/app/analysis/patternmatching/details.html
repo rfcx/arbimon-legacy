@@ -82,11 +82,11 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-sm-5 flex-self-align-top">
-                    <div class="pull-right">
+                <div class="col-sm-5 row-flex flex-direction-column items-end flex-self-align-top pm-button-group">
+                    <div class="row-flex">
                         <div class="btn-group btn-group-margin">
                             <button class="btn btn-default not-active" ><i class="fa fa-search"></i></button>
-                            <ui-select ng-model="controller.search" theme="bootstrap" class="btn-group-item border-left-radius" on-select="controller.onSearchChanged()">
+                            <ui-select ng-model="controller.search" theme="bootstrap" class="btn-group-item border-left-radius" on-select="controller.onSearchChanged()" style="width: 200px">
                                 <ui-select-match class="right-corners">
                                     <i ng-class="$select.selected.class"></i> {{$select.selected.text}}
                                 </ui-select-match>
@@ -106,7 +106,7 @@
                             </ui-select>
                         </div>
                     </div>
-                    <div class="pull-right row-flex flex-direction-row flex-self-align-bottom">
+                    <div class="row-flex flex-direction-row flex-self-align-bottom mt-3">
                         <div class="btn-group btn-group-margin">
                             <ui-select ng-model="controller._selection" theme="bootstrap" style="display:inline-block; width:9em;"
                                 on-select="controller.onSelect($select.selected)"
@@ -120,9 +120,10 @@
 
                         <div class="btn-group btn-group-margin row-flex flex-direction-row">
                             <button class="btn btn-default  not-active" >Validate as:</button>
-                            <ui-select ng-model="controller.validation" class="btn-group-item border-left-radius" theme="bootstrap">
+                            <ui-select ng-model="controller.validation" class="btn-group-item border-left-radius" theme="bootstrap" style="width: 150px">
                                 <ui-select-match  class="right-corners">
-                                    <i ng-class="$select.selected.class"></i> {{$select.selected.text}}
+                                    <i ng-class="$select.selected.class" style="position: absolute; top: 8px"></i>
+                                    <span style="padding-left: 18px">{{$select.selected.text}}</span>
                                 </ui-select-match>
                                 <ui-select-choices repeat="$item in controller.lists.validation | filter:$select.search">
                                     <i ng-class="$item.class"></i> {{$item.text}}
@@ -137,7 +138,7 @@
                             </button>
                         </div>
                     </div>
-                    <div class="pull-right">
+                    <div class="mt-2">
                         <div class="btn-group btn-group-margin">
                             <button class="btn btn-default"
                                 ng-repeat="item in controller.lists.thumbnails"

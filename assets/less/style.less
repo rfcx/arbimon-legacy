@@ -233,6 +233,7 @@ b, strong {
 
 .dropdown-menu {
   border: 1px solid @gray;
+  padding: 10px;
 }
 
 // -> recordings-by-site.html
@@ -484,6 +485,14 @@ textarea.fixed-width {
   }
 }
 
+.export-pop-up-window .modal-dialog {
+  width: 450px;
+  .modal-content {
+    border: 0px;
+    border-radius: 12px;
+  }
+}
+
 // -> classification.js
 .details-modal-window .modal-dialog {
   min-width: 800px;
@@ -669,13 +678,72 @@ textarea.fixed-width {
   }
 }
 
+.sites-settings {
+    .checkbox-btn {
+      margin-right: 5px;
+      margin-top: 3px !important;
+      vertical-align: top;
+    }
+    
+    .checkbox-group {
+      display: block;
+      margin-bottom: 15px;
+      color: #FFF;
+      font-family: Poppins;
+      font-style: normal;
+      font-weight: 400;
+    }
+    
+    .checkbox-group input {
+      padding: 0;
+      height: initial;
+      width: initial;
+      margin-bottom: 0;
+      display: none;
+      cursor: pointer;
+    }
+    
+    .checkbox-group label {
+      position: relative;
+      cursor: pointer;
+    }
+    
+    .checkbox-group label:before {
+      content:'';
+      -webkit-appearance: none;
+      background-color: transparent;
+      border: 2px solid #fff;
+      border-radius: 0.25rem;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05), inset 0px -15px 10px -12px rgba(0, 0, 0, 0.05);
+      padding: 6px;
+      display: inline-block;
+      position: relative;
+      vertical-align: middle;
+      cursor: pointer;
+      margin-right: 5px;
+    }
+    
+    .checkbox-group input:checked + label:after {
+      content: '';
+      display: block;
+      position: absolute;
+      top: 1px;
+      left: 7px;
+      width: 6px;
+      height: 15px;
+      border: solid #ADFF2C;
+      border-radius: 0.1rem;
+      border-width: 0 2.5px 2.5px 0;
+      transform: rotate(45deg);
+    }
+}
+
 .a2-badge {
-  background-color: @gray-darker;
-  color: #6e6f7e;
-  padding: 2px 8px;
+  background-color: @util-gray-03;
+  color: @util-gray-01;
+  padding: 2px 6px;
   font-size: smaller;
   border-radius: 10px;
-  margin-left: 2px;
 }
 
 .smaller {
@@ -773,7 +841,7 @@ textarea.fixed-width {
   .dropdown-menu
   > li.ui-select-choices-group
   > div.ui-select-choices-row
-  > a,
+  > span,
 .dropdown-menu.has-badges > li {
   position: relative;
 
@@ -1362,6 +1430,14 @@ input[type=checkbox]:indeterminate {
   .ui-select-search {
     height: 6em;
   }
+  .ui-select-match-text {
+    display: -webkit-flex;
+    align-items: center;
+    width: auto !important;
+    > span {
+      margin-left: 10px;
+    }
+  }
 }
 
 .edit-site-label {
@@ -1370,7 +1446,23 @@ input[type=checkbox]:indeterminate {
 
 .edit-site-dropdown {
   .ui-select-toggle {
-    border-radius: 4px !important;
+    border-radius: 8px !important;
+    background-color: @moss;
+    border-color: #4B5563;
+  }
+  .fa-chevron-down {
+    position: absolute;
+    height: 10px;
+    top: 50%;
+    right: 10px;
+    margin-top: -2px;
+    margin-left: 0;
+    vertical-align: middle;
+    border-top: 4px solid;
+    border-right: 4px solid transparent;
+    border-left: 4px solid transparent;
+    display: inline-block;
+    width: 0;
   }
 }
 
@@ -1468,18 +1560,26 @@ a.ui-select-choices-row-inner {
 /* START: Override ui-select style */
 .ui-select-bootstrap {
   .ui-select-choices-row {
-    > a {
+    margin: 4px 2px 4px;
+    > span {
       color: @text-color !important;
-      background-color: transparent !important;
+      background-color: @pitch !important;
+      padding: 4px 4px !important;
       &:focus,
       &:hover {
+        border-radius: 5px;
         background-color: @gray !important;
       }
     }
+    &:hover {
+      border-radius: 5px;
+      background-color: @gray;
+    }
   }
 
-  .ui-select-choices-row.active {
-    > a {
+  .ui-select-choices-row.disabled {
+    > span {
+      border-radius: 5px;
       background-color: @gray !important;
     }
   }
@@ -1500,6 +1600,162 @@ a.ui-select-choices-row-inner {
     overflow: hidden;
     text-overflow: ellipsis;
     color: @insight;
+  }
+}
+
+.close-color {
+  .ui-select-match {
+    > span {
+      .btn-primary {
+        color: #F9F6F2;
+        background-color: #4B4B4B;
+        border-color: #4B4B4B;
+      }
+    }
+  }
+}
+
+.filter-form-control {
+  z-index: 30;
+  width: 944px;
+  border-radius: 8px !important;
+  border: solid 1px @util-gray-03;
+  padding: 10px !important;
+  display: flex;
+  .dropdown-menu.datepicker {
+    width: 944px;
+  }
+  .form-control {
+    background-color: @moss !important;
+    border-radius: 8px;
+  }
+  .ui-select-container {
+    > div {
+      max-height: 80px;
+      overflow-y: auto;
+    }
+  }
+  .dropdown-menu {
+    border: 1px solid #4B4B4B;
+    background-color: @moss !important;
+  }
+  .ui-select-choices-row {
+    > span {
+      color: @util-gray-01 !important;
+      background-color: @moss !important;
+      &:focus,
+      &:hover {
+        background-color: @util-gray-04 !important;
+      }
+    }
+    &:hover {
+      background-color: @util-gray-04 !important;
+    }
+  }
+  .ui-select-choices-row.disabled {
+    > span {
+      border-radius: 5px;
+      background-color: @util-gray-04 !important;
+    }
+  }
+  .custom-select-ui-filter-param {
+    .ui-select-choices-row {
+      > span {
+        border-radius: 5px;
+        background-color: @util-gray-04 !important;
+        &:hover {
+          border-radius: 5px;
+          background-color: @util-gray-04  !important;
+        }
+      }
+    }
+  }
+
+  .a2-filter-text {
+    min-width: 120px;
+    display: flex;
+    height: 37px;
+    align-items: center;
+    padding-top: 0px;
+    width: 116px;
+  }
+
+  .a2-filter-row {
+    display: flex;
+    padding: 12px;
+  }
+
+  .a2-filter {
+    .btn {
+      border-radius: 8px !important;
+    }
+  }
+  
+  .ui-select-multiple.ui-select-bootstrap {
+    min-height: 37px;
+    input.ui-select-search {
+      min-height: 30px;
+      margin-left: 8px;
+    }
+  }
+
+  .set-date-btn {
+    width: 100%;
+    border: solid 1px @util-gray-03;
+    min-height: 37px;
+    border-radius: 8px;
+    text-align: left;
+    color: @util-gray-01;
+  }
+  
+  .border-line {
+    margin-left: 18px;
+    margin-right: 18px;
+  }
+
+  .padding-button-group {
+    padding: 12px 12px;
+  }
+}
+
+.export-form-control {
+  background-color: @moss !important;
+}
+
+.export-form {
+  padding: 24px;
+  background-color: @echo !important;
+  border-radius: 10px;
+  .export-form-header {
+    > span {
+      font-family: @font-family-header;
+      margin-bottom: 0px;
+      font-size: 20px;
+    }
+  }
+  .export-form-footer {
+    .btn {
+      padding: 8px 24px;
+      font-size: 16px !important;
+    }
+  }
+  .modal-body {
+    padding: 16px 0px 16px 0px;
+  }
+  .form-group {
+    > label {
+      font-weight: normal !important;
+    }
+    > span {
+      margin-top: 10px;
+      margin-bottom: 8px;
+      display: flex;
+    }
+    > input {
+      background-color: @moss !important;
+      height: 48px;
+      border-radius: 8px !important;
+    }
   }
 }
 
@@ -1551,6 +1807,10 @@ a.ui-select-choices-row-inner {
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 280px;
+}
+
+.set-pop-up-bg {
+  background-color: @echo !important;
 }
 
 /* END: Override ui-select style */
@@ -2211,4 +2471,72 @@ search-bar {
 .switch.disabled {
   opacity: .50;
   cursor: not-allowed;
+}
+
+.heart-icon {
+  display: flex;
+  width: 48px;
+  height: 48px;
+  background-color: #F5D2D8;
+  border: 8px solid #242424;
+  border-radius: 9999px;
+  justify-content: center;
+  align-items: center;
+}
+.share-project-templates-pop-up-window {
+  .modal-content {
+    border-radius: 12px;
+  }
+}
+.share-project-templates {
+  background-color: @echo !important;
+  border-radius: 12px;
+  padding: 24px;
+  .share-project-templates-header {
+    padding-top: 16px;
+    > span {
+      font-family: @font-family-header;
+      font-size: 20px;
+    }
+  }
+  .share-project-templates-bottom {
+    padding-top: 32px;
+    .btn {
+      padding: 12px 24px;
+      font-size: 16px;
+    }
+  }
+  .modal-body {
+    padding: 8px 0px 0px 0px !important;
+    > span {
+      font-size: 16px;
+      display: flex;
+      font-weight: 400;
+    }
+    > a {
+      font-size: 16px;
+      font-weight: 400;
+      color: @frequency;
+    }
+  }
+}
+
+.project-templates-shared-tooltip {
+  .tooltip-inner {
+    background-color: @echo !important;
+    color: @insight !important;
+    border: 1px solid #4B4B4B;
+  }
+}
+
+// patternmatching page
+.pm-button-group {
+  div {
+    .btn {
+      height: 37px;
+    }
+    .ui-select-bootstrap>.ui-select-match>.btn {
+      height: 37px;
+    }
+  }
 }

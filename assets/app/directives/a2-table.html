@@ -19,13 +19,16 @@
         ng-class="[selected == row ? 'active':'', userStyle]"
         tabindex="0"
         ng-keypress="a2TableController.keyboardSel(row, $index, $event)">
-        <td ng-hide="a2TableController.noCheck" class="is-v-middle">
+        <td ng-hide="a2TableController.noCheck" class="is-v-middle checkbox-group">
             <input type="checkbox"
+                id="row-checkbox"
                 ng-model="row.checked"
                 ng-click="a2TableController.check($event, $index)"
                 ng-change="a2TableController.onCheck(row, $index, $event)"
                 stop-click
-                class="cs-pointer">
+                class="cs-pointer checkbox-btn"
+            >
+            <label for="row-checkbox" class="is-v-middle"></label>
         </td>
     </tr>
 </tbody>

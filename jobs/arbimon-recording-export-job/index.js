@@ -13,18 +13,22 @@ const projects = require('../../app/model/projects')
 const config_hosts = require('../../config/hosts');
 const { saveLatestData, combineFilename, uploadAsStream, getSignedUrl } = require('../services/storage')
 const recordingsExport = require('./recordings')
+const patternMatching = require('./pattern-matching')
+const soundscape = require('./soundscape')
+const template = require('./template')
 const { streamToBuffer, zipDirectory } = require('../services/file-helper')
 
-const S3_BUCKET_ARBIMON = process.env.S3_BUCKET_ARBIMON
+const S3_EXPORT_BUCKET_ARBIMON = process.env.S3_BUCKET_ARBIMON
+
 const tmpFilePath = 'jobs/arbimon-recording-export-job/tmpfilecache'
 
 async function main () {
   try {
-    console.log('arbimon-recordings-export job started')
+    console.log('Arbimon export job started.')
 
     const countConnections = await getCountConnections()
     if (countConnections > 10) {
-        console.log('arbiton-export-recordings job stopped due to high db connections count')
+        console.log('Arbimon export job stopped due to high mysql db connections count.')
         return
     }
 
@@ -37,35 +41,35 @@ async function main () {
     })
 
     if (!rowData) {
-        console.log('arbimon-recording-export has not any new export report')
+        console.log('Arbimon export job has not any new export report.')
         return
     }
 
     console.log(`\n\n project = ${ rowData.name }`)
 
     const message = `project = ${ rowData.name } [${ rowData.project_id }] ${ rowData.created_at }`
-    const jobName = 'Export Recording Job'
+    const jobName = 'Arbimon Export job'
     try {
         filters = JSON.parse(rowData.filters)
         projection_parameters = JSON.parse(rowData.projection_parameters)
     } catch (error) {
-        console.error('Error parse params', error)
+        console.error('Error parse params of Arbimon export job.', error)
         await updateExportRecordings(rowData, { error: JSON.stringify(error) })
         await errorMessage(message, jobName)
         return
     }
 
-    // Process the Clustering report
+    //----------------Arbimon export Clustering report----------------
     if (projection_parameters && projection_parameters.aed) {
         let params = projection_parameters
         params.project_id = filters.project_id
         params.exportReport = true
         const data = await clusterings.findRois(params)
         return processClusteringStream(params.cluster, data, rowData, currentTime, message, jobName, projection_parameters.projectUrl).then(async () => {
-            console.log(`arbimon-recording-export job finished: clustering report for ${message}`)
+            console.log(`Arbimon Export job finished: clustering report for ${message}`)
         })
     } else if (projection_parameters && projection_parameters.grouped && projection_parameters.validation) {
-        // Combine grouped detections report
+        //----------------Arbimon export Grouped detections report----------------
         let allData
         // Get all sites, data, hours for selected project.
         if (projection_parameters.grouped === 'site') {
@@ -85,28 +89,75 @@ async function main () {
         }
         const data = await recordings.groupedDetections(projection_parameters, filters)
         return processGroupedDetectionsStream(data, rowData, projection_parameters, allData, currentTime, message, jobName).then(async () => {
-            console.log(`arbimon-recording-export job finished: grouped detections report for ${message}`)
+            console.log(`Arbimon Export job finished: grouped detections report for ${message}`)
         })
     } else if (projection_parameters && projection_parameters.species) {
+        //----------------Arbimon export Occupancy model----------------
         // Create the Occupancy model csv files, put them to .zip folder a send the folder to the user email
         await getMultipleOccupancyModelsData(projection_parameters, filters, rowData, currentTime, message, jobName)
-    } else {
-        // Recordings export
+    } else if (projection_parameters && projection_parameters.pm) {
+        //----------------Arbimon export all project PM jobs----------------
+        return new Promise((resolve, reject) => {
+            const exportReportType = 'Pattern Matchings';
+            console.log(`Arbimon Export ${exportReportType} job`)
+            patternMatching.collectData(filters, async (err, filePath) => {
+                await patternMatching.buildPMFolder();
+                await sendZipFolderToTheUser(rowData, currentTime, jobName, message, 'pattern-matching-export')
+                console.log(`Arbimon Export ${exportReportType} job finished: ${message}`)
+                resolve()
+            })
+        })
+    }   else if (projection_parameters && projection_parameters.projectTemplate) {
+            //----------------Arbimon export all project templates----------------
+            return new Promise((resolve, reject) => {
+                const exportReportType = 'Templates';
+                console.log(`Arbimon Export ${exportReportType} job`)
+                try {
+                    if (!fs.existsSync(tmpFilePath)) {
+                        fs.mkdirSync(tmpFilePath);
+                    }
+                } catch (err) {
+                    console.error(err);
+                }
+                console.log(`folder ${tmpFilePath} exists`, fs.existsSync(tmpFilePath))
+                template.collectData(projection_parameters, filters, async (err, filePath) => {
+                    await template.buildTemplateFolder()
+                    await sendZipFolderToTheUser(rowData, currentTime, jobName, message, 'template-export')
+                    console.log(`Arbimon Export ${exportReportType} job finished: export templates for ${message}`)
+                    resolve()
+                })
+            })
+    }   else if (projection_parameters && projection_parameters.soundscapes) {
+        //----------------Arbimon export all project soundscapes----------------
+        return new Promise((resolve, reject) => {
+            const exportReportType = 'Soundscapes';
+            console.log(`Arbimon Export ${exportReportType} job`)
+            soundscape.collectData(projection_parameters, filters, async (err, filePath) => {
+                console.log('--start buildSoundscapeFolder', filePath);
+                await soundscape.buildSoundscapeFolder()
+                console.log('--end buildSoundscapeFolder');
+                await sendZipFolderToTheUser(rowData, currentTime, jobName, message, 'soundscape-export')
+                console.log(`Arbimon Export ${exportReportType} job finished: export soundscapes for ${message}`)
+                resolve()
+            })
+        })
+    }   else {
+        //----------------Arbimon export recordings----------------
         return new Promise((resolve, reject) => {
             recordingsExport.collectData(projection_parameters, filters, async (err, filePath) => {
                 if (err) {
-                    console.error('arbimon-recording-export job error', err)
+                    console.error('Arbimon Export job error', err)
                     fs.unlink(filePath, () => {})
                     reject(err)
                 }
-                console.log('arbimon-recording-export job: uploading file to S3')
+                console.log('Arbimon Export job: uploading file to S3')
                 const url = await saveFile(filePath, currentTime, rowData.project_id)
-                console.log('arbimon-recording-export job: file is accessible by url', url)
-                await sendEmail('Export recording report [RFCx Arbimon]', 'export-recording.csv', rowData, url, true)
+                console.log('Arbimon Export job: file is accessible by url', url)
+                await sendEmail('Arbimon Export recording report', 'arbimon-export-recording.csv', rowData, url, true)
                 await updateExportRecordings(rowData, { processed_at: currentTime })
                 await recordings.closeConnection()
                 fs.unlink(filePath, () => {})
-                console.log(`arbimon-recording-export job finished: export recordings report for ${message}`)
+                console.log(`Arbimon Export job finished: export recordings report for ${message}`)
                 resolve()
             })
         })
@@ -117,9 +168,9 @@ async function main () {
 }
 
 async function saveFile (filePath, currentTime, projectId) {
-    const s3FileKey = combineFilename(currentTime, projectId, 'export-recording', '.csv')
-    await uploadAsStream({ filePath, Bucket: S3_BUCKET_ARBIMON, Key: s3FileKey, ContentType: 'text/csv' })
-    return await getSignedUrl({ Bucket: S3_BUCKET_ARBIMON, Key: s3FileKey })
+    const s3FileKey = combineFilename(currentTime, projectId, 'arbimon-export-report', '.csv')
+    await uploadAsStream({ filePath, Bucket: S3_EXPORT_BUCKET_ARBIMON, Key: s3FileKey, ContentType: 'text/csv' })
+    return await getSignedUrl({ Bucket: S3_EXPORT_BUCKET_ARBIMON, Key: s3FileKey })
 }
 
 // Process Clustering report and send the email
@@ -152,13 +203,13 @@ async function processClusteringStream (cluster, results, rowData, currentTime, 
                 const contentSize = Buffer.byteLength(content)
                 const isBigContent = contentSize && contentSize > 10240 // 10MB
                 if (isBigContent) {
-                    const filePath = await saveLatestData(S3_BUCKET_ARBIMON, data, rowData.project_id, currentTime, 'clustering-rois-export', '.csv', 'text/csv')
-                    const url = await getSignedUrl({ Bucket: S3_BUCKET_ARBIMON, Key: filePath })
-                    await sendEmail('Arbimon export completed', null, rowData, url, true)
+                    const filePath = await saveLatestData(S3_EXPORT_BUCKET_ARBIMON, data, rowData.project_id, currentTime, 'clustering-rois-export', '.csv', 'text/csv')
+                    const url = await getSignedUrl({ Bucket: S3_EXPORT_BUCKET_ARBIMON, Key: filePath })
+                    await sendEmail('Arbimon Export clustering report', null, rowData, url, true)
                 }
                 try {
                     if (!isBigContent) {
-                        await sendEmail('Arbimon export completed', 'clustering-rois-export.csv', rowData, content, false)
+                        await sendEmail('Arbimon Export clustering report', 'clustering-rois-export.csv', rowData, content, false)
                     }
                     await updateExportRecordings(rowData, { processed_at: currentTime })
                     await recordings.closeConnection()
@@ -181,7 +232,7 @@ async function getMultipleOccupancyModelsData(projection_parameters, filters, ro
     if (!fs.existsSync(tmpFilePath, { recursive: true })) {
         fs.mkdirSync(tmpFilePath);
     }
-    console.log('folder jobs/arbimon-recording-export-job/tmpfilecache exists', fs.existsSync(tmpFilePath))
+    console.log(`folder ${tmpFilePath} exists`, fs.existsSync(tmpFilePath))
     for (const [i, specie] of projection_parameters.species.entries()) {
         const data = await exportOccupancyModels(specie, filters)
         rowData.species_name = filters.species_name[i] || specie
@@ -190,25 +241,26 @@ async function getMultipleOccupancyModelsData(projection_parameters, filters, ro
         })
     }
     await buildOccupancyFolder()
-    await sendFolderToTheUser(rowData, currentTime, jobName, message)
+    await sendZipFolderToTheUser(rowData, currentTime, jobName, message, 'occupancy-export')
 }
 
 async function buildOccupancyFolder() {
-    await zipDirectory('jobs/arbimon-recording-export-job/tmpfilecache', 'jobs/arbimon-recording-export-job/tmpfilecache/occupancy-export.zip')
+    await zipDirectory(tmpFilePath, 'jobs/arbimon-recording-export-job/occupancy-export.zip')
 }
 
-async function sendFolderToTheUser(rowData, currentTime, jobName, message) {
-    await streamToBuffer().then(async (buffer) => {
+async function sendZipFolderToTheUser(rowData, currentTime, jobName, message, reportName) {
+    await streamToBuffer(reportName).then(async (buffer) => {
         try {
-            const filePath = await saveLatestData(S3_BUCKET_ARBIMON, buffer, rowData.project_id, currentTime, 'occupancy-export', '.zip', 'application/zip')
-            const url = await getSignedUrl({ Bucket: S3_BUCKET_ARBIMON, Key: filePath })
-            console.log('\n\n--------url-------', url)
-            await sendEmail('Arbimon export completed', 'Occupancy export', rowData, url, true)
+            console.log(S3_EXPORT_BUCKET_ARBIMON, buffer, rowData.project_id, currentTime, reportName, '.zip', 'application/zip')
+            const filePath = await saveLatestData(S3_EXPORT_BUCKET_ARBIMON, buffer, rowData.project_id, currentTime, reportName, '.zip', 'application/zip')
+            const url = await getSignedUrl({ Bucket: S3_EXPORT_BUCKET_ARBIMON, Key: filePath })
+            console.log('--signed url', url)
+            await sendEmail('Arbimon export', 'Arbimon export', rowData, url, true)
             await updateExportRecordings(rowData, { processed_at: currentTime })
             fs.rmSync(tmpFilePath, { recursive: true, force: true });
             await recordings.closeConnection()
         } catch(error) {
-            console.error('Error while sending occupancy-model email.', error)
+            console.error('Error while sending zip folder email.', error)
             await errorMessage(message, jobName)
             fs.rmSync(tmpFilePath, { recursive: true, force: true });
             await updateExportRecordings(rowData, { error: JSON.stringify(error) })
@@ -294,7 +346,7 @@ async function processOccupancyModelStream (results, rowData, speciesId, filters
         datastream.on('end', async () => {
             const title = 'occupancy-' + speciesId + '-' + rowData.species_name + '.csv';
             csv_stringify(_buf, { header: true, columns: fields }, async (err, data) => {
-                fs.writeFile(`jobs/arbimon-recording-export-job/tmpfilecache/${title}`, data, function (err, result) {
+                fs.writeFile(`${tmpFilePath}/${title}`, data, function (err, result) {
                     if (err) {
                         console.log('error writing file to temp folder', err);
                         reject(err)
@@ -366,7 +418,7 @@ async function processGroupedDetectionsStream (results, rowData, projection_para
             csv_stringify(_buf, { header: true, columns: fields }, async (err, data) => {
                 const content = Buffer.from(data).toString('base64')
                 try {
-                    await sendEmail('Arbimon export completed', 'grouped-detections-export.csv', rowData, content, false);
+                    await sendEmail('Arbimon Export Grouped detections report', 'grouped-detections-export.csv', rowData, content, false);
                     await updateExportRecordings(rowData, { processed_at: currentTime })
                     await recordings.closeConnection()
                     resolve()
@@ -383,12 +435,12 @@ async function processGroupedDetectionsStream (results, rowData, projection_para
 }
 
 // Send report to the user
+// Thanks so much for using Arbimon! Your export report for the project “xxxx” has been completed. Please note that this link will expire in 7 days. If you have any questions about Arbimon, check out our support docs.
 async function sendEmail (subject, title, rowData, content, isSignedUrl) {
     const textHeader = `<p style="color:black;margin-top:0">Hello,</p>
       <p style="color:black;">Thanks so much for using Arbimon! Your export report for the project "${rowData.name}" has been completed.`
     const textExpires = ` Please note that this link will expire in 7 days.`
-    const textSupport = ` If you have any questions about Arbimon, check out our <a href="https://support.rfcx.org/">support documentation</a> or
-        reach out to us by clicking the <span style="color:green;font-size: 16px;">&#63;</span> icon, on the bottom right of any Arbimon page.
+    const textSupport = ` If you have any questions about Arbimon, check out our <a href="https://help.arbimon.org/">support docs</a>.
       </p>`
     const textFooter = `<p style="color:black;">
         <span> - The Arbimon Team </span>
@@ -399,10 +451,16 @@ async function sendEmail (subject, title, rowData, content, isSignedUrl) {
         to: [{
             email: rowData.user_email
         }],
-        subject: subject
+        subject: 'Arbimon export'
     }
     if (isSignedUrl) {
-        message.html = textHeader + textExpires + textSupport + `<button style="background:#31984f;border-color:#31984f;padding: 6px 12px;border-radius:4px;cursor:pointer;margin: 10px 0"> <a style="text-decoration:none;color:#e9e6e3" href="${content}">Download report</a> </button>` + textFooter
+        message.html = textHeader + textExpires + textSupport +
+            `<button style="background:#ADFF2C;border:1px solid #ADFF2C;padding:6px 14px;;border-radius:9999px;cursor:pointer;margin: 10px 0">
+                <a style="text-decoration:none;color:#14130D;white-space:nowrap;text-align:center;vertical-align:middle;align-items:center;display:inline-flex;display: -webkit-inline-flex;" href="${content}">
+                    Download
+                    <img style="width: 14px; height: 14px; margin-left:8px" src="https://static.rfcx.org/arbimon/download-icon.png">
+                </a>
+            </button>` + textFooter
     } else {
         message.attachments = [{
             type: 'text/csv',

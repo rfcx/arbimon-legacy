@@ -149,8 +149,16 @@ angular.module('a2.analysis.patternmatching', [
 
     $scope.togglePublicTemplatesEnabled = function() {
         if ($scope.disableToggle()) return
-        $scope.onOff = $scope.onOff === 0 ? 1 : 0
+        if ( $scope.onOff === 1) {
+            $scope.onOff = 0
+            $scope.updateInfo()
+        } else {
+            $scope.onOff = 0
+            $scope.openShareProjectTemplatesPopup()
+        }
+    }
 
+    $scope.updateInfo = function() {
         if(!a2UserPermit.can('manage project settings')) {
             notify.error('You do not have permission to manage manage project settings');
             return;
@@ -208,12 +216,72 @@ angular.module('a2.analysis.patternmatching', [
 
     }
 
+    $scope.downloadTemplate = function(template) {
+        if ((a2UserPermit.all && !a2UserPermit.all.length) || !a2UserPermit.can('manage templates')) {
+            return notify.error('You do not have permission to download template');
+        }
+        const form = document.createElement('form')
+        form.style.display = 'none'
+        form.method = 'GET'
+        const url = '/legacy-api/project/' + Project.getUrl() + '/templates/download/' + template.id + '.wav';
+        form.action = url
+        document.body.appendChild(form)
+        form.submit()
+        document.body.removeChild(form)
+    }
+
     $scope.removeFromLocalStorage = function () {
         $localStorage.setItem('audiodata.templates', null);
         $routeParams= null;
         $state.transitionTo($state.current.name, {tab: ''}, { notify: false });
         this.speciesData = JSON.parse($localStorage.getItem('audiodata.templates'));
     }
+
+    $scope.exportData = function(exportReport) {
+        if (a2UserPermit.isSuper()) {
+            return $scope.openExportPopup(exportReport)
+        }
+        if ((a2UserPermit.all && !a2UserPermit.all.length) || !a2UserPermit.can('export report')) {
+            return notify.error('You do not have permission to export data');
+        }
+        $scope.openExportPopup(exportReport)
+    };
+
+    $scope.openExportPopup = function(exportReport) {
+        var params = {
+            userEmail: a2UserPermit.getUserEmail() || '',
+            exportReport: exportReport
+        }
+        const modalInstance = $modal.open({
+            controller: 'ExportPMmodalInstanceCtrl',
+            templateUrl: '/app/audiodata/export-report.html',
+            windowClass: 'export-pop-up-window',
+            resolve: {
+                data: function() {
+                    return { params: params }
+                }
+            },
+            backdrop: false
+        });
+
+        modalInstance.result.then(function() {
+            notify.log('Your Export Report is processing <br> and will be sent by email.');
+        });
+    };
+
+    $scope.openShareProjectTemplatesPopup = function() {
+        var modalInstance = $modal.open({
+            templateUrl: '/app/analysis/patternmatching/share-project-templates.html',
+            windowClass: 'share-project-templates-pop-up-window'
+        });
+
+        modalInstance.result.then(function(confirmed) {
+            if(confirmed){
+                $scope.onOff = 1
+                $scope.updateInfo()
+            }
+        });
+    };
 
     $scope.toggleTab = function(tab) {
         $scope.removeFromLocalStorage()
@@ -456,6 +524,39 @@ angular.module('a2.analysis.patternmatching', [
         controllerAs: 'controller',
         templateUrl: '/app/analysis/patternmatching/details.html'
     };
+})
+.controller('ExportPMmodalInstanceCtrl', function($scope, $modalInstance, Project, data) {
+    $scope.userEmail = data.params.userEmail
+    const isPMexport = data.params.exportReport === 'pm'
+    $scope.exportRecordings = function(email) {
+        data.params.userEmail = email
+        $scope.isExportingRecs = true
+        $scope.errMess = ''
+        if (isPMexport) {
+            Project.exportAllPMdata(data.params).then(data => {
+                $scope.isExportingRecs = false
+                if (data.error) {
+                    $scope.errMess = data.error;
+                }
+                else {
+                    $modalInstance.close();
+                }
+            })
+        } else {
+            Project.exportAllProjectTemplateData(data.params).then(data => {
+                $scope.isExportingRecs = false
+                if (data.error) {
+                    $scope.errMess = data.error;
+                }
+                else {
+                    $modalInstance.close();
+                }
+            })
+        }
+    }
+    $scope.changeUserEmail = function() {
+        $scope.errMess = null;
+    }
 })
 .controller('PatternMatchingDetailsCtrl' , function($scope, $q, a2PatternMatching, a2Templates, a2UserPermit, Project, a2AudioBarService, notify, $anchorScroll, $modal) {
     Object.assign(this, {

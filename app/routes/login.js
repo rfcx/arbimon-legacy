@@ -121,9 +121,12 @@ router.get('/legacy-api/email_available', function(req, res, next) {
 router.get('/login', function(req, res) {
     res.type('html');
     if(req.session) {
-        if(req.session.loggedIn) return res.redirect('/projects');
+        if (req.session.loggedIn) {
+            console.log('\n\n---TEMP: /login redirect to my projects loggedIn user')
+            return res.redirect('/projects');
+        }
     }
-    res.redirect('/');
+    return res.redirect('/');
 });
 
 
@@ -181,8 +184,12 @@ router.get('/legacy-logout', function(req, res, next) {
     res.type('json');
     req.session.destroy(function(err) {
         if(err) return next(err);
-
-        res.redirect(auth0Service.logoutUrl)
+        console.log('\n\n----TEMP: /legacy-logout req.query', req.query)
+        if (req.query && req.query.redirect && (req.query.redirect === 'false' || req.query.redirect === false)) { 
+            return res.status(200).json({message: 'legacy session destroyed'});
+        }
+        console.log('\n\n----TEMP: /legacy-logout redirect to logoutUrl')
+        return res.redirect(auth0Service.logoutUrl)
     });
 });
 

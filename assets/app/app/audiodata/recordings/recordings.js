@@ -336,6 +336,7 @@ angular.module('a2.audiodata.recordings', [
         const modalInstance = $modal.open({
             controller: 'ExportRecordingstModalInstanceCtrl',
             templateUrl: '/app/audiodata/export-report.html',
+            windowClass: 'export-pop-up-window',
             resolve: {
                 data: function() {
                     return { params: $scope.params,  listParams: listParams }

@@ -541,7 +541,6 @@ var Recordings = {
      */
     fetchRecordingFile: async function(recording, callback){
         tmpfilecache.fetch(recording.uri, async (cache_miss) => {
-            debug('fetching ', recording.uri, ' from the bucket.');
             if(!s3 || !s3RFCx){
                 defineS3Clients()
             }
@@ -551,8 +550,12 @@ var Recordings = {
                 Bucket : config(legacy? 'aws' : 'aws_rfcx').bucketName,
                 Key    : recording.uri
             }
-            s3Client.getObject(opts, function(err, data){
-                if(err) { callback(err); return; }
+            await s3Client.getObject(opts, function(err, data){
+                if (err) {
+                    console.log('Err s3Client getObject', err);
+                    callback(err);
+                    return;
+                }
                 cache_miss.set_file_data(data.Body);
             });
         }, callback);
@@ -563,6 +566,7 @@ var Recordings = {
         const isFrequency = options && (options.minFreq || options.maxFreq)
         const isGain = options && options.gain
         const isTrim = options && options.trim
+        const isFormat = options && options.format
         if (isFrequency) {
             fmin = Math.min((options.minFreq / freqFilterPrecision) * freqFilterPrecision, 22049).toFixed()
             fmax = Math.min((options.maxFreq / freqFilterPrecision) * freqFilterPrecision, 22049).toFixed()
@@ -578,7 +582,7 @@ var Recordings = {
                 asset = 'rfull_g1_fspec_mtrue_d10286.255_wdolph_z120.png'
                 break;
             case 'audio':
-                asset = `r${isFrequency ? fmin + '.' + fmax : 'full'}_g${isGain ? options.gain : 1}_fmp3.mp3`
+                asset = `r${isFrequency ? fmin + '.' + fmax : 'full'}_g${isGain ? options.gain : 1}_${isFormat ? 'fwav.wav' : 'fmp3.mp3'}`
                 break;
             case 'template':
                 asset = `r${fmin}.${fmax}_g1_fspec_mtrue_d400.400_wdolph_z120.png`
@@ -630,11 +634,15 @@ var Recordings = {
         }
 
         const isNonLegacy = !Recordings.isLegacy(recording)
+        console.log('--5 isNonLegacy', isNonLegacy)
         if (isNonLegacy) {
-            const audio_key = recording.uri.replace(audioFilePattern, '.mp3');
+            const audio_key = recording.uri.replace(audioFilePattern, options.format ? options.format : '.mp3');
             tmpfilecache.fetch(audio_key, function(cache_miss) {
                 Recordings.fetchRecordingFile(recording, async function(err, recording_path){
-                    if(err) { callback(err); return; }
+                    if (err) {
+                        callback(err);
+                        return;
+                    }
                     // Get an audio file from the Media API for the non-legacy recordings
                     Recordings.getAssetFileFromMediaAPI(recording, 'audio', options).then(res => {
                         res.pipe(fs.createWriteStream(cache_miss.file).on('close', function () {
@@ -647,10 +655,8 @@ var Recordings = {
             return;
         }
 
-        //TODO: remove the code below after recordings' migration
-        debug('fetchAudioFile');
         var mods=[];
-        var mp3Extension = '.mp3';
+        var mp3Extension = options.format ? options.format : '.mp3';
 
         if(options){
             if(options.gain && options.gain != 1){
@@ -687,13 +693,12 @@ var Recordings = {
         }
 
         var ifMissedGetFile = function(cache_miss) {
-            debug('mp3 not found');
             Recordings.fetchRecordingFile(recording, function(err, recording_path){
                 if(err) return callback(err);
 
                 var transcode_args = {
                     sample_rate: recording.sample_rate ? recording.sample_rate : 44100,
-                    format: 'mp3',
+                    format: options.format ? 'wav' : 'mp3',
                     channels: 1
                 };
 
@@ -706,14 +711,12 @@ var Recordings = {
                         }
                     });
                 }
-                debug(transcode_args);
 
                 audioTools.transcode(
                     recording_path.path,
                     cache_miss.file,
                     transcode_args,
                     function(status_code){
-                        debug('done transcoding');
                         fs.unlink(recording_path.path, () => {}) // delete original file
                         if(status_code) {
                             return callback({ code: status_code });
@@ -728,6 +731,12 @@ var Recordings = {
         // TODO: add condition for the output format: mp3 OR original extension
         // return Q.denodeify(tmpfilecache.fetch.bind(tmpfilecache))(recording.uri, ifMissedGetFile).nodeify(callback);
     },
+
+    fetchAudioFileAsync: function(recording, options) {
+        let fetchAudioFile = util.promisify(this.fetchAudioFile)
+        return fetchAudioFile(recording, options)
+    },
+
 
     /** Returns the spectrogram file of a given recording.
      * @param {Object} recording object containing the recording's data, like the ones returned in findByUrlMatch.
@@ -1582,7 +1591,10 @@ var Recordings = {
             projectUrl: joi.string(),
             aed: arrayOrSingle(joi.number()),
             cluster: joi.object(),
-            search: joi.string()
+            search: joi.string(),
+            pm: joi.string(),
+            projectTemplate: joi.string(),
+            soundscapes: joi.string()
         }
     },
 

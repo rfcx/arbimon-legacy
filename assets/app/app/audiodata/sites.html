@@ -25,7 +25,9 @@
             </button>
             <div class="btn-group mr-1 mb-1" dropdown dropdown-append-to-body="true" a2-auto-close-on-outside-click>
                 <button class="btn btn-default" dropdown-toggle>
-                    <i class="fa fa-trash"></i> Delete <i class="fa fa-caret-down"></i></button>
+                    <i class="fa fa-trash"></i>
+                    Delete
+                    <i class="fa fa-caret-down"></i></button>
                 </button>
                 <ul class="dropdown-form dropdown-menu" role="menu">
                     <li class="cs-pointer" ng-disabled="!selected">
@@ -46,8 +48,13 @@
         <div ng-class="editing || creating ? 'visible-md-block visible-lg-block' : '' ">
             <a2-table rows="sites" on-select="sel(row)" data-checked="checked" no-checkbox>
                 <field title="Name" key="name" tdclass="name hidelongtext">
-                    <span id="site-{{row.id}}" data-external-id="{{ row.external_id }}" title="{{ row.name }}">{{ row.name }}</span>
-                    <span class="a2-badge" title="ARBIMON ONLY" ng-if="!row.external_id">ARBIMON ONLY</span>
+                    <div class="row-flex flex-direction-row flex-align-middle">
+                        <div class="hidelongtext" id="site-{{row.id}}" data-external-id="{{ row.external_id }}" title="{{ row.name }}">{{ row.name }}</div>
+                        <span ng-if="!row.external_id" class="hidelongtext a2-badge ml-2" title="LEGACY">LEGACY</span>
+                        <div class="row-flex-inline flex-space-center ml-2">
+                            <img ng-if="row.hidden" style="width: 14px; opacity: 0.75" title="Excluded site from analyses and Insights" src="/images/fi-eye-off.svg">
+                        </div>
+                    </div>
                 </field>
                 <ng-container ng-if="!row.imported && (row.has_logs || row.token_created_on)">
                     <field>
@@ -59,25 +66,25 @@
                     {{ row.rec_count }}
                 </field>
                 <field title="Latitude" key="lat">
-                    {{ row.lat ? (row.lat | number:3) : 0}}
+                    {{ row.hidden || isLocationEmpty(row.lat, row.lon) ? '-' : row.lat ? (row.lat | number:3) : 0 }}
                 </field>
                 <field title="Longitude" key="lon">
-                    {{ row.lon ? (row.lon | number:3) : 0}}
+                    {{ row.hidden || isLocationEmpty(row.lat, row.lon) ? '-' : row.lon ? (row.lon | number:3) : 0 }}
                 </field>
                 <field title="Elevation" key="alt">
-                    {{ row.alt ? (row.alt | number:0) : 0}}
+                    {{ row.hidden || isLocationEmpty(row.lat, row.lon) ? '-' : row.alt ? (row.alt | number:0) : 0 }}
                 </field>
                 <field title="Current Timezone" key="timezone" tdclass="timezone hidelongtext">
-                    <span title="{{ row.timezone }}">{{ row.utc }}</span>
+                    <span title="{{ row.hidden ? 'Excluded site from analyses and Insights' : row.timezone }}">{{ row.hidden || isLocationEmpty(row.lat, row.lon) ? '-' : row.utc }}</span>
                 </field>
                 <field title="Updated" key="date" tdclass="date hidelongtext">
-                    <span title="{{ row.updated_at | moment : 'lll' : row.timezone }}">
-                        {{ row.updated_at | moment : 'lll' : row.timezone }}
+                    <span title="{{ row.updated_at | momentTz : 'lll' : row.timezone }}">
+                        {{ row.updated_at | momentTz : 'lll' : row.timezone }}
                     </span>
                 </field>
-                <field title="Deployed" key="deployed" tdclass="date hidelongtext">
-                    <span title="{{ row.deployment }}">
-                        {{ row.deployment }}
+                <field title="Deployed" key="deployment" tdclass="date hidelongtext">
+                    <span title="{{ row.deployment ? (row.deployment | momentTz : 'lll' : row.timezone) : 'no data' }}">
+                        {{ row.deployment ? (row.deployment | momentTz : 'lll' : row.timezone) : 'no data' }}
                     </span>
                 </field>
             </a2-table>
@@ -92,7 +99,7 @@
         </div>
     </div>
 </div>
-<div class="col-md-5 mt-4">
+<div class="col-md-5 mt-4 sites-settings">
     <ul class="nav nav-tabs">
         <li class="ng-isolate-scope" ng-class="{active:show.map}">
             <a id="mapHeader" ng-click="set_show('map')" href="">
@@ -101,7 +108,7 @@
             </a>
         </li>
     </ul>
-    <div ng-show="editing || creating" class="panel panel-default">
+    <div ng-show="editing || creating" class="panel panel-default bg-echo border-util-gray-03">
         <div class="panel-body">
             <form class="form" ng-submit="save()" name="siteForm">
                 <div class="form-group">
