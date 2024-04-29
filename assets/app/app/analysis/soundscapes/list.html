@@ -49,13 +49,13 @@
             </div>
             <div ng-if="isSoundscapesAvailable()">
                 <a2-table rows="soundscapesData" no-checkbox="true">
-                    <field title="Date" key="date" tdclass="no-wrap-table-cell">
+                    <field title="Date" key="date" tdclass="is-v-middle no-wrap-table-cell">
                         {{ row.date | moment : 'lll' }}
                     </field>
-                    <field title="Name" tdclass="no-wrap-table-cell hidelongtext widthtd" key="name" filter>
+                    <field title="Name" tdclass="is-v-middle no-wrap-table-cell hidelongtext widthtd" key="name" filter>
                         {{row.name}}
                     </field>
-                    <field title="User" key="user" filter tdclass="no-wrap-table-cell">
+                    <field title="User" key="user" filter tdclass="is-v-middle no-wrap-table-cell">
                         {{ row.user }}
                     </field>
                     <field title="Playlist" key="playlist" filter tdclass="is-v-middle hidelongtext widthtd">
