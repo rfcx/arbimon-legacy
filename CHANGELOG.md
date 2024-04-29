@@ -1,5 +1,131 @@
 # Arbimon Release Notes
 
+## v4.0.7 - Apr 26, 2024
+
+Enhancements ✨
+
+- Separate PM export csv files in a zip folder
+
+## v4.0.6 - Apr 24, 2024
+
+Enhancements ✨
+
+- Convert rec path to signed url
+- Export soundscapes jobs to the zip folder
+- User can download public templates and project templates added from the public library
+- Fix spectrogram thumbnail (z-index issue)
+- User should be able to save edited site with empty space in location
+
+## v4.0.5 - Apr 17, 2024
+
+Enhancements ✨
+
+- Add Updated and Deployed columns to the export sites
+- Export templates audio to the zip folder
+
+## v4.0.4 - Apr 10, 2024
+
+Enhancements ✨
+
+- Improve recordings filter
+- Add ability to export all project templates
+- Improve export popup window
+
+## v4.0.3 - Apr 08, 2024
+
+Enhancements ✨
+
+- Download individual templates as wav
+- Add ability for user to hide site
+- Add ability to export all PM jobs
+
+## v4.0.2 - Mar 21, 2024
+
+Enhancements ✨
+
+- Support to get landing metrics for non-logged in users
+- Fix redirection to public templates
+- Lat, lon, alt are optional
+- Fix header jump for the small PM jobs
+
+## v4.0.1 - Mar 06, 2024
+
+Enhancements ✨
+
+- Add toggle to enable project templates to the public library
+- Recalculate country code when site is updated
+- Species page update
+- Add animation to the adding public templates on the Species page
+
+## v4.0.0 - Feb 16, 2024
+
+Enhancements ✨
+
+- Fix site edit popup
+- Update pm rois titles
+- Update pin for new created site
+- Show zoomed-in area for new created site
+- Add metrics endpoints to support new Dashboard landing page
+- Change zoom for selected stream
+- Fix creating sample region problem. Convert wav files to flac to get correct checksum
+- Hotfix total validations in the RFM
+- Fix color indicators in classification detail popup
+- Show first page if the user changes sort by filter
+- Add Deployed date to the sites page
+- Create endpoint to get PM species and template counts
+- Fixed recording order and streams images
+- Current timezone label
+- Update logo, colour scheme and fonts
+- Update styles on basic pages
+- Fix PM/Templates audio for Safari
+- Update parsing meta data
+- Add ability to export multiple occupancy models
+- Add timezone_locked column to sites
+- When redirect user to the old Arbimon, user should be logged in
+- Implement the sidebar
+- Combine PM and Template pages
+- Combine RFM. Combine Soundscapes
+- Keep redirection path after authentication
+- Redirect not project members to the Insights page
+- Add breadcrumb on the top of PM details page
+- Implement delete templates logic from the Species page
+- PM results have option for wide spectrogram
+
+## v3.0.84 - Jun 15, 2023
+
+Enhancements ✨
+
+- Calculate map header offset when the sites page is scrolling
+- Disable creating of new jobs for disabled projects
+- Enable soundscape image for disabled projects
+- Put species name in the occupancy model export filename
+- Update recordings delete message
+- Show message for empty sites
+- Add sites id condition to the count of project recordings
+
+## v3.0.83 - Jun 13, 2023
+
+Enhancements ✨
+
+- Add muted layer for disabled thumbnails
+- Disable create new jobs for disabled projects
+- Add alternative partner warning banner
+- Disable player controls for disabled project
+- Handle the Unavailable status for the spectrogram image from the Media api
+- Do not use disabled templates in new PM jobs
+- Allow jobs to be run on disabled projects
+- Messaging on data corruption
+
+## v3.0.82 - Jun 5, 2023
+
+Enhancements ✨
+
+- Improve species label on the spectrogram
+- Fix search sites issue
+- Update popup text for deleted recordings
+- Change default gain of template to X2
+- Add error banner
+
 ## v3.0.81 - Jun 1, 2023
 
 Enhancements ✨
