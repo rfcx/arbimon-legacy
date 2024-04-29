@@ -201,11 +201,28 @@
         </ui-select>
     </div>
 </div>
-<div class="row-flex justify-between padding-button-group">
-    <button class="btn btn-success btn-rounded-full" ng-click="resetFilters() | trackEvent:'Audiodata-Recordings':'resetFilters'" ng-disabled="isLoading">
-        <i class="fa fa-undo"></i> Reset filters
-    </button>
-    <button class="btn btn-primary btn-rounded-full" ng-click="applyFilters() | trackEvent:'Audiodata-Recordings':'applyFilters'" ng-disabled="isLoading">
+<div class="a2-filter-row">
+    <div class="a2-filter a2-filter-text">
+        Tags:
+    </div>
+    <div class="a2-filter">
+        <ui-select multiple ng-model="controller.params.tags" theme="bootstrap" style="width: 350px;">
+            <ui-select-match placeholder="Tags...">
+                <a2-tag tag="$item"></a2-tag>
+                <span class="badge">{{ $item.count }}</span>
+            </ui-select-match>
+            <ui-select-choices class="has-badges" repeat="$item in controller.options.tags | filter:$select.search">
+                <a2-tag tag="$item"></a2-tag>
+                <span class="badge">{{ $item.count }}</span>
+            </ui-select-choices>
+        </ui-select>
+    </div>
+</div>
+<div class="a2-filter-row">
+    <button class="btn btn-default" ng-click="applyFilters()" ng-disabled="isLoading">
         Apply filters
+    </button>
+    <button class="btn btn-default" ng-click="resetFilters()" ng-disabled="isLoading">
+        <i class="fa fa-undo"></i> Reset
     </button>
 </div>

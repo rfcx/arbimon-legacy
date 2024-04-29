@@ -11,7 +11,7 @@
             <div class="row row-flex flex-align-middle">
                 <div class="col-sm-2 flex-self-align-top">
                     <button class="btn btn-default"
-                        ng-click="onGoBack({}) | trackEvent:'Analysis-Pattern-Matching-List':' go back'">
+                        ng-click="onGoBack({})">
                         &lt;  Go Back
                     </button>
                 </div>
@@ -107,7 +107,7 @@
                     </div>
                     <div class="toolbar pull-right">
                         <div class="btn-group" ng-show="controller.total.pages > 1">
-                            <a class="btn btn-default" ng-click="controller.prev() | trackEvent:'Pattern Matching Details':'prevPage'">Previous</a>
+                            <a class="btn btn-default" ng-click="controller.prev()">Previous</a>
                             <ui-select class="btn-group-item" ng-model="controller.selected.page" theme="bootstrap" style="display:inline-block; width:7em;"
                                 ng-change="controller.setPage($select.selected, true)"
                             >
@@ -118,7 +118,7 @@
                                     {{$item | a2PageNumberToTitle}}
                                 </ui-select-choices>
                             </ui-select>
-                            <a class="btn btn-default" ng-click="controller.next() | trackEvent:'Pattern Matching Details':'nextPage'">Next</a>
+                            <a class="btn btn-default" ng-click="controller.next()">Next</a>
                         </div>
 
                         <div class="btn-group">
@@ -132,7 +132,7 @@
                         <div class="btn-group">
                             <a class="btn btn-default"
                                 ng-href="{{controller.patternMatchingExportUrl}}"
-                                ng-click="true | trackEvent:'Pattern Matching Details':'export'"
+                                ng-click="true"
                                 ng-disabled="!controller.patternMatchingExportUrl"
                                 tooltip="Export Pattern Matching Data">
                                 <i class="fa fa-download"></i>

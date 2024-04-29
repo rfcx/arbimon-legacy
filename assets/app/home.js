@@ -5,19 +5,12 @@ angular.module('a2.home', [
     'a2.forms',
     'a2.orders',
     'humane',
-    'angularytics',
     'ui.router',
     'a2.srv.local-storage',
     'a2.filter.time-from-now',
     'a2.directive.search-bar',
     'ngSanitize'
 ])
-.config(function(AngularyticsProvider, $locationProvider) {
-    AngularyticsProvider.setEventHandlers(['GoogleUniversal']);
-})
-.run(function(Angularytics) {
-    Angularytics.init();
-})
 .service('homeSummaryStatsData', function() {
     return [
         {   title:'projects created',

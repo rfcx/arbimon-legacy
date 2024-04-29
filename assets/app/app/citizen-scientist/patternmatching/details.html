@@ -86,7 +86,7 @@
                     </div>
                     <div class="pull-right">
                         <div class="btn-group btn-group-margin" ng-show="controller.total.pages > 1">
-                            <a class="btn btn-default" ng-click="controller.prev() | trackEvent:'Pattern Matching Details':'prevPage'">Previous</a>
+                            <a class="btn btn-default" ng-click="controller.prev()">Previous</a>
                             <ui-select class="btn-group-item border-radius" ng-model="controller.selected.page" theme="bootstrap" ng-change="controller.setPage($select.selected, true)">
                                 <ui-select-match>
                                     {{$select.selected | a2PageNumberToTitle}} of {{controller.total.pages}}
@@ -95,7 +95,7 @@
                                     {{$item | a2PageNumberToTitle}}
                                 </ui-select-choices>
                             </ui-select>
-                            <a class="btn btn-default" ng-click="controller.next() | trackEvent:'Pattern Matching Details':'nextPage'">Next</a>
+                            <a class="btn btn-default" ng-click="controller.next()">Next</a>
                         </div>
 
                         <div class="btn-group btn-group-margin">

@@ -17,7 +17,7 @@
     </div>
     <div>
         <div class="rect-holder"
-        ng-click="$event.stopPropagation(); layer.soundscape.selection.select(region) | trackEvent:'Visualizer-Soundscapes-Layer':'setting selection region'"
+        ng-click="$event.stopPropagation(); layer.soundscape.selection.select(region)"
         ng-class="{selected : region == layer.soundscape.selection.bbox}"
         ng-hide="region.__hide"
         ng-repeat="region in layer.soundscape.regions" ng-style="{
@@ -85,8 +85,8 @@
                 }} <br />
                 Recordings : {{layer.soundscape.selection.bbox.q}}<br/>
                 <br />
-                <button class="btn btn-sm btn-default" ng-click="$event.stopPropagation(); layer.soundscape.selection.submit() | trackEvent:'Visualizer-Soundscapes-Layer':'Add selection'"><i class="fa fa-plus text-success"></i> Add</button>
-                <button class="btn btn-sm btn-default" ng-click="$event.stopPropagation(); layer.soundscape.selection.reset() | trackEvent:'Visualizer-Soundscapes-Layer':'Cancel selection'"><i class="fa fa-ban text-danger"></i> Cancel</button>
+                <button class="btn btn-sm btn-default" ng-click="$event.stopPropagation(); layer.soundscape.selection.submit()"><i class="fa fa-plus text-success"></i> Add</button>
+                <button class="btn btn-sm btn-default" ng-click="$event.stopPropagation(); layer.soundscape.selection.reset()"><i class="fa fa-ban text-danger"></i> Cancel</button>
             </div>
 
             <div class="popover-content" ng-show="layer.soundscape.selection.bbox.id">
@@ -105,16 +105,16 @@
                 <br />
                 <div ng-hide="layer.soundscape.selection.bbox.playlist">
                     <button class="btn btn-sm btn-default" ng-disabled="layer.soundscape.selection.bbox.count == 0"
-                    ng-click="$event.stopPropagation(); layer.soundscape.selection.sample() | trackEvent:'Visualizer-Soundscapes-Layer':'Sample'"><i class="fa fa-plus text-success"></i> Sample</button>
-                    <button class="btn btn-sm btn-default" ng-click="$event.stopPropagation(); layer.soundscape.selection.reset() | trackEvent:'Visualizer-Soundscapes-Layer':'cancel sample'"><i class="fa fa-ban text-danger"></i> Cancel</button>
+                    ng-click="$event.stopPropagation(); layer.soundscape.selection.sample()"><i class="fa fa-plus text-success"></i> Sample</button>
+                    <button class="btn btn-sm btn-default" ng-click="$event.stopPropagation(); layer.soundscape.selection.reset()"><i class="fa fa-ban text-danger"></i> Cancel</button>
                 </div>
                 <div ng-show="layer.soundscape.selection.bbox.playlist">
-                    <button class="btn btn-sm btn-default" ng-click="$event.stopPropagation(); layer.soundscape.selection.view_samples() | trackEvent:'Visualizer-Soundscapes-Layer':'View samples'"><i class="fa fa-list"></i> View</button>
-                    <button class="btn btn-sm btn-default" ng-click="$event.stopPropagation(); layer.soundscape.selection.reset()| trackEvent:'Visualizer-Soundscapes-Layer':'cancel view samples'"><i class="fa fa-ban text-danger"></i> Cancel</button>
+                    <button class="btn btn-sm btn-default" ng-click="$event.stopPropagation(); layer.soundscape.selection.view_samples()"><i class="fa fa-list"></i> View</button>
+                    <button class="btn btn-sm btn-default" ng-click="$event.stopPropagation(); layer.soundscape.selection.reset()"><i class="fa fa-ban text-danger"></i> Cancel</button>
                 </div>
                 <div style="position:absolute;top:0;right:0">
                     <button class="btn btn-default btn-sm"
-                        ng-click="layer.soundscape.selection.bbox.__hide = !layer.soundscape.selection.bbox.__hide | trackEvent:'Visualizer-Soundscapes-Region':'toggle region visibility'"
+                        ng-click="layer.soundscape.selection.bbox.__hide = !layer.soundscape.selection.bbox.__hide"
                     ><i class="fa" ng-class="layer.soundscape.selection.bbox.__hide ? 'fa-eye-slash' : 'fa-eye'" ></i></button>
                 </div>
             </div>

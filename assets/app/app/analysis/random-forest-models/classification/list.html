@@ -27,11 +27,11 @@
                 </field>
                 <field>
                     <button class="btn btn-default"
-                        ng-click="showClassificationDetails(row) | trackEvent:'Analysis-Classification-List':' show classification details'">
+                        ng-click="showClassificationDetails(row)">
                             Show details
                     </button>
                     <button class="btn btn-danger"
-                        ng-click="deleteClassification(row.job_id,row.cname) | trackEvent:'Analysis-Classification list':'delete classification'"
+                        ng-click="deleteClassification(row.job_id,row.cname)"
                         tooltip="Delete"
                         tooltip-trigger="mouseenter">
                         <i class="fa fa-trash"></i>
@@ -43,7 +43,7 @@
             <a class="btn btn-sm btn-default"
                 tooltip="Create New Classification Job"
                 tooltip-placement="top"
-                ng-click="createNewClassification() |trackEvent:'Analysis-Classification-List':'Create new classification'">
+                ng-click="createNewClassification()">
                 <i class="fa fa-plus mr-1" ></i>New Classification Job
             </a>
             <p class="mt-3 mb-0">Learn more:</p>

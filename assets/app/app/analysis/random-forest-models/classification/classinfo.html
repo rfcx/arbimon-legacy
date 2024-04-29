@@ -95,7 +95,7 @@
     <hr>
     <div class="text-center">
         <button type="button" name="button" class="btn btn-default"
-            ng-click="toggleRecDetails() | trackEvent:'Analysis-Classification-Info':'toggleRecDetails'">
+            ng-click="toggleRecDetails()">
                 <i class="fa" ng-class="showMore ? 'fa-caret-up' : 'fa-caret-down'"></i>
                 {{ showMore ? 'Hide' : 'Show' }} details per recording
         </button>
@@ -135,14 +135,14 @@
             </li>
         </ul>
         <ul class="pager">
-            <li><a ng-click="gotoc('first') | trackEvent:'Analysis-Classification-Info':'go to first'">First</a></li>
-            <li><a ng-click="prev() | trackEvent:'Analysis-Classification-Info':'go to prev'">Previous</a></li>
+            <li><a ng-click="gotoc('first')">First</a></li>
+            <li><a ng-click="prev()">Previous</a></li>
             <li><a>{{currentPage+1}} of {{totalRecs}}</a></li>
-            <li><a ng-click="next() | trackEvent:'Analysis-Classification-Info':'go to next'">Next</a></li>
-            <li><a ng-click="gotoc('last') | trackEvent:'Analysis-Classification-Info':'go to last'">Last</a></li>
+            <li><a ng-click="next()">Next</a></li>
+            <li><a ng-click="gotoc('last')">Last</a></li>
         </ul>
     </div>
 </div>
 <div class="modal-footer">
-    <button class="btn btn-primary" ng-click="ok() | trackEvent:'Analysis-Classification-Info':'ok clicked'"  ng-disabled="buttonEnable()">Close</button>
+    <button class="btn btn-primary" ng-click="ok()"  ng-disabled="buttonEnable()">Close</button>
 </div>

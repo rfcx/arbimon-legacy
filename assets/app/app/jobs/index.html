@@ -32,7 +32,7 @@
                         </div>
                     </field>
                     <field>
-                        <button ng-if="!isCompleted(row)" class="btn btn-default btn-xs" style="width: 90px;" ng-click="hide(row) | trackEvent:'Jobs':'hide job'">
+                        <button ng-if="!isCompleted(row)" class="btn btn-default btn-xs" style="width: 90px;" ng-click="hide(row)">
                             <span>{{ isWaiting(row) || isProcessing(row) ? 'Cancel' : 'Hide' }}</span>
                         </button>
                         <button ng-if="isCompleted(row)" class="btn btn-default btn-xs" style="width: 90px;" ng-click="openJob(row)">

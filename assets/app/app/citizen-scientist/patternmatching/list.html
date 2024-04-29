@@ -12,7 +12,7 @@
         </button>
 
         <div ng-hide="loading">
-            <a2-table rows="patternmatchingsData" no-checkbox="true" on-select="selectItem(row.id) | trackEvent:'Analysis-Pattern-Matching-List':' show pattern matching details'" >
+            <a2-table rows="patternmatchingsData" no-checkbox="true" on-select="selectItem(row.id)" >
                 <field title="Name" tdclass="hidelongtext widthtd" key="name" filter>
                     <div class="roi-thumbnail" >
                         <img ng-src="{{row.template.uri}}" class="roi-img is-small"/>
@@ -40,7 +40,7 @@
                 </field>
                 <field tdclass="is-v-middle">
                     <button class="btn btn-default btn-small"
-                        ng-click="selectItem(row.id) | trackEvent:'Analysis-Pattern-Matching-List':' show pattern matching details'"
+                        ng-click="selectItem(row.id)"
                         tooltip="Show Details"
                     >
                             <i class="fa fa-list-alt"></i>

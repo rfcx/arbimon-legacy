@@ -18,7 +18,7 @@
             </div>
             <ul class="dropdown-menu dropdown-height-7" role="menu" aria-labelledby="dLabel">
                 <li ng-repeat="pclass in project_classes.list">
-                    <a ng-click="data.class = pclass | trackEvent:'Visualizer-New-Roi-Set-Training-Set':'Setting pclass'">
+                    <a ng-click="data.class = pclass">
                         <a2-species class="ib w12em" species="pclass.species"></a2-species>
                         <a2-songtype songtype="pclass.songtype"></a2-songtype>
                     </a>

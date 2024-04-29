@@ -9,7 +9,7 @@
                     <div class="btn-group ml-1">
                         <button class="btn btn-default btn-sm control-border"
                             ng-disabled="!audio_player.has_recording"
-                            ng-click="audio_player.prev_recording() | trackEvent:'Visualizer-RecordingLayer':'AudioControl prev rec'" >
+                            ng-click="audio_player.prev_recording()" >
 
                             <i class="fa fa-step-backward" ></i>
                         </button>
@@ -17,13 +17,13 @@
                     <div class="btn-group ml-1">
                         <button class="btn btn-default btn-sm control-border"
                             ng-disabled="!audio_player.has_recording"
-                            ng-click="audio_player[audio_player.is_playing ? 'pause' : 'play']()  | trackEvent:'Visualizer-RecordingLayer':'AudioControl start play'" >
+                            ng-click="audio_player[audio_player.is_playing ? 'pause' : 'play']()" >
 
                             <i class="fa" ng-class="{'fa-play':!audio_player.is_playing, 'fa-pause':audio_player.is_playing}"></i>
                         </button>
                         <button class="btn btn-default btn-sm control-border"
                             ng-disabled="!audio_player.has_recording"
-                            ng-click="audio_player.stop() | trackEvent:'Visualizer-RecordingLayer':'AudioControl stop play'" >
+                            ng-click="audio_player.stop()" >
 
                             <i class="fa fa-stop"></i>
                         </button>
@@ -31,7 +31,7 @@
                     <div class="btn-group ml-1">
                         <button class="btn btn-default btn-sm control-border"
                             ng-disabled="!audio_player.has_recording"
-                            ng-click="audio_player.next_recording() | trackEvent:'Visualizer-RecordingLayer':'AudioControl next rec'" >
+                            ng-click="audio_player.next_recording()" >
 
                             <i class="fa fa-step-forward" ></i>
                         </button>
@@ -67,7 +67,7 @@
                     <div class="btn-group">
                         <button class="btn btn-default btn-sm control-border"
                             ng-disabled="!audio_player.has_recording"
-                            ng-click="audio_player.download(visobject) | trackEvent:'Visualizer-RecordingLayer':'AudioControl download rec'"
+                            ng-click="audio_player.download(visobject)"
                             tooltip="Download recording" >
                             <i class="fa fa-download"></i>
                         </button>
@@ -75,7 +75,7 @@
                     <div ng-show="audio_player.clustersData" class="btn-group ml-1" style="position: relative;">
                         <button class="btn btn-default btn-sm control-border"
                             tooltip="Save to playlist"
-                            ng-click="audio_player.togglePopup() | trackEvent:'Visualizer-RecordingLayer':'AudioControl save playlist'" >
+                            ng-click="audio_player.togglePopup()" >
                             <i class="fa fa-plus"></i>
                         </button>
                         <div class="popover left" style="display: block; transform: translateX(-100%); min-width: 16em;" ng-if="audio_player.isPopupOpened">

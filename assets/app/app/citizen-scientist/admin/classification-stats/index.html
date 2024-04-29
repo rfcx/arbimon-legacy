@@ -5,7 +5,7 @@
     </h4>
     <h4 ng-show="controller.speciesId">
         <button class="btn btn-default"
-            ng-click="controller.setSpecies() | trackEvent:'Analysis-Citizen-Scientist-Stats':' go back'">
+            ng-click="controller.setSpecies()">
             &lt;  Go Back
         </button>
         Classification Stats / {{controller.species.scientific_name}}
@@ -59,7 +59,7 @@
             <field>
                 <a class="btn btn-default btn-xs"
                     ng-href="{{controller.patternMatchingExportUrl(row)}}"
-                    ng-click="true | trackEvent:'CS Pattern Matching':'export'"
+                    ng-click="true"
                     popover-html="'Export Citizen Scientist<br />Pattern Matching Data'"
                     popover-trigger="mouseenter"
                     popover-append-to-body="true"
@@ -68,7 +68,7 @@
                 </a>
                 <a class="btn btn-default btn-xs"
                     ng-href="{{controller.patternMatchingExportUrl(row, true)}}"
-                    ng-click="true | trackEvent:'CS Pattern Matching':'export'"
+                    ng-click="true"
                     popover-html="'Export Citizen Scientist<br />Per User<br />Pattern Matching Data'"
                     popover-trigger="mouseenter"
                     popover-append-to-body="true"

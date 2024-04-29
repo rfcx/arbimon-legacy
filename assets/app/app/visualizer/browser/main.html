@@ -4,7 +4,7 @@
             <div class="btn-group" ng-repeat="type_group in browser.types">
                 <button ng-repeat="type in type_group" class="btn btn-default"
                     ng-class="browser.type == type ? 'active' : ''"
-                    ng-click="browser.setBrowserType(type) | trackEvent:'Visualizer-Main':'setting browser type'"
+                    ng-click="browser.setBrowserType(type)"
                     tooltip="{{type.tooltip}}"
                     tooltip-append-to-body="true"
                     tooltip-placement="bottom-left">
@@ -42,7 +42,7 @@
                     ng-repeat="visobj in browser.lovo.list"
                     data-index="{{$index}}"
                     ng-class=" (browser.visobj.id == visobj.id ? 'active ' : ' ') + 'visobj-'+browser.lovo.object_type"
-                    ng-click="browser.setVisObj(visobj) | trackEvent:'Visualizer-Main':'setting visobj'"
+                    ng-click="browser.setVisObj(visobj)"
                     ng-include="browser.visobjectTypes[browser.lovo.object_type].cardTemplate"
                 >
                 </div>

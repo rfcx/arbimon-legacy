@@ -5,7 +5,7 @@
         <div class="pull-right btn-group">
             <a class="btn btn-default"
                 ng-href="{{controller.userStatsExportUrl}}"
-                ng-click="true | trackEvent:'Citizen Scientist':'export user stats'"
+                ng-click="true"
                 ng-disabled="!controller.userStatsExportUrl"
                 tooltip="Export User Stats">
                 <i class="fa fa-download"></i>
@@ -14,7 +14,7 @@
     </h4>
     <h4 ng-show="controller.userId">
         <button class="btn btn-default"
-            ng-click="controller.setUser() | trackEvent:'Analysis-Citizen-Scientist-User-Stats':' go back'">
+            ng-click="controller.setUser()">
             &lt;  Go Back
         </button>
         User Stats / {{controller.user.firstname}} {{controller.user.lastname}}

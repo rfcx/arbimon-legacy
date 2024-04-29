@@ -99,7 +99,7 @@
                         </div>
                         <div class="pull-right">
                             <div class="btn-group btn-group-margin" ng-show="total.pages > 1">
-                                <a class="btn btn-default right-corners" ng-click="moveROIPage(-1) | trackEvent:'Pattern Matching Details':'prevPage'">Previous</a>
+                                <a class="btn btn-default right-corners" ng-click="moveROIPage(-1)">Previous</a>
                                 <ui-select class="btn-group-item border-radius" ng-model="selected.page" ng-change="setPage($select.selected, true)">
                                     <ui-select-match>
                                         {{$select.selected | a2PageNumberToTitle}} of {{total.pages}}
@@ -108,7 +108,7 @@
                                         {{$item | a2PageNumberToTitle}}
                                     </ui-select-choices>
                                 </ui-select>
-                                <a class="btn btn-default next-all" ng-click="moveROIPage(1) | trackEvent:'Pattern Matching Details':'nextPage'">Next</a>
+                                <a class="btn btn-default next-all" ng-click="moveROIPage(1)">Next</a>
                             </div>
                             <div class="btn-group btn-group-margin" ng-show="false">
                                 <ui-select class="btn-group-item" ng-model="selected.siteBookmark" theme="bootstrap" style="display:inline-block;"
@@ -132,7 +132,7 @@
                             <div class="export-url pull-right">
                                 <a class="btn btn-default"
                                     ng-href="{{CNNExportUrl}}"
-                                    ng-click="exportCnnReport($event) | trackEvent:'CNN Details':'export'"
+                                    ng-click="exportCnnReport($event)"
                                     tooltip="Export CNN Data">
                                     <i class="fa fa-download"></i>
                                 </a>

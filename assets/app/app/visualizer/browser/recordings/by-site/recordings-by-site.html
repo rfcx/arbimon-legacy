@@ -2,7 +2,7 @@
     <div class="col-sm-7">
         <ui-select ng-model="browser.$type.site" theme="bootstrap"
             class="has-badges custom-select-ui"
-            on-select="browser.$type.set_site($select.selected) | trackEvent:'Visualizer-Recordings-By-Site':'open site'"
+            on-select="browser.$type.set_site($select.selected)"
             append-to-body="true"
         >
             <ui-select-match class="a2-uism-btn-icon {{browser.$type.loading.sites ? 'icon-loader' : 'icon-site'}}"

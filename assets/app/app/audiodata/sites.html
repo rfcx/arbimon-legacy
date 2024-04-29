@@ -9,11 +9,11 @@
         </div>
         <div class="col-md-6 col-md-pull-6 toolbar">
             <button class="btn btn-default mr-1 mb-1"
-                ng-click="create() | trackEvent:'Dashboard-sites':'add site'">
+                ng-click="create()">
                 Create
             </button>
             <button class="btn btn-default mr-1 mb-1"
-                ng-click="edit() | trackEvent:'Dashboard-sites':'edit site'"
+                ng-click="edit()"
                 ng-disabled="!selected || selected.imported">
                 Edit
             </button>
@@ -110,95 +110,68 @@
     </ul>
     <div ng-show="editing || creating" class="panel panel-default bg-echo border-util-gray-03">
         <div class="panel-body">
-            <form class="form" ng-submit="save() | trackEvent:'Dashboard-sites':'save site'" name="siteForm">
-                <div class="row-flex flex-direction-column gap-y-8">
-                    <div>
-                        <div class="form-group">
-                            <label>Site name:</label>
-                            <input class="form-control bg-moss border-gray-600 rounded-lg" type="text" ng-model="temp.name" placeholder="Site name" required>
-                        </div>
-                        <div class="row-flex flex-direction-row flex-align-middle gap-x-3">
-                            <input type="checkbox" class="m-0" ng-model="temp.hidden">
-                            Exclude this site from Arbimon Insights
-                            <a id="popoverSitePage"
-                                class="btn p-0"
-                                style="border:none;outline:none;"
-                                role="button"
-                                popover-html="'Hide test sites or sites for <br /> importing external templates. <br /> <a href=\'https://help.arbimon.org/article/206-adding-a-site\' class=\'text-frequency cursor-pointer\'>Learn more</a>'"
-                                popover-trigger="focus"
-                                popover-append-to-body="true"
-                                data-placement="right"
-                                tabindex="0"
-                            >
-                                <img src="/images/fi-info.svg">
-                            </a>
-                        </div>
-                    </div>
-                    <div>
-                        <div class="mb-2">
-                            <label>Location:</label>
-                            <div class="input-group">
-                                <span class="input-group-addon edit-site-label bg-moss border-gray-600 rounded-lg" ng-disabled="temp.hidden === true">Lat</span>
-                                <input class="form-control bg-moss border-gray-600 rounded-lg"
-                                    style="height: 34px"
-                                    name="lat"
-                                    type="text"
-                                    ng-model="temp.lat"
-                                    placeholder="Latitude"
-                                    pattern="^-?\d+\.?\d*(\s*)$"
-                                    ng-disabled="temp.hidden === true"
-                                >
-                            </div>
-                        </div>
-                        <div class="input-group mb-2">
-                            <span class="input-group-addon edit-site-label bg-moss border-gray-600 rounded-lg" ng-disabled="temp.hidden === true">Lon</span>
-                            <input class="form-control bg-moss border-gray-600 rounded-lg"
-                                style="height: 34px"
-                                name="lon"
-                                type="text"
-                                ng-model="temp.lon"
-                                placeholder="Longitude"
-                                pattern="^-?\d+\.?\d*(\s*)$"
-                                ng-disabled="temp.hidden === true"
-                            >
-                        </div>
-                        <div class="input-group">
-                            <span class="input-group-addon edit-site-label bg-moss border-gray-600 rounded-lg" ng-disabled="temp.hidden === true">El</span>
-                            <input class="form-control bg-moss border-gray-600 rounded-lg"
-                                style="height: 34px"
-                                name="alt"
-                                type="text"
-                                ng-model="temp.alt"
-                                placeholder="Elevation"
-                                pattern="^-?\d+\.?\d*(\s*)$"
-                                ng-disabled="temp.hidden === true"
-                            >
-                        </div>
-                    </div>
-                    <div ng-if="editing">
-                        <div class="input-group" style="width: 100%;">
-                            <label>Project:</label>
-                            <ui-select ng-model="temp.project" theme="bootstrap" on-select="onSelect($select.selected)">
-                                <ui-select-match class="edit-site-dropdown" placeholder="Project">{{$select.selected.name}}</ui-select-match>
-                                <ui-select-choices repeat="project in projects | filter:$select.search">
-                                    {{project.name}}
-                                </ui-select-choices>
-                            </ui-select>
-                        </div>
-                    </div>
-                    <div class="row-flex flex-direction-row justify-between">
-                        <button class="btn btn-success btn-rounded-full"
-                            type="button"
-                            ng-click="close() | trackEvent:'Dashboard-sites':'close site edit create'">
-                            Close
-                            <i class="fa fa-times ml-3"></i>
-                        </button>
-                        <button class="btn btn-primary btn-rounded-full">
-                            Save
-                            <i class="fa fa-floppy-o ml-3"></i>
-                        </button>
+            <form class="form" ng-submit="save()" name="siteForm">
+                <div class="form-group">
+                    <label>Name:</label>
+                    <input class="form-control" type="text" ng-model="temp.name" placeholder="Site name" required>
+                </div>
+                <div class="form-group">
+                    <label>Location:</label>
+                    <div class="input-group">
+                        <span class="input-group-addon edit-site-label">Lat</span>
+                        <input class="form-control"
+                            name="lat"
+                            type="text"
+                            ng-model="temp.lat"
+                            placeholder="Latitude"
+                            pattern="^-?\d+\.?\d*$"
+                        >
                     </div>
                 </div>
+                <div class="form-group">
+                    <div class="input-group">
+                        <span class="input-group-addon edit-site-label">Lon</span>
+                        <input class="form-control"
+                            name="lon"
+                            type="text"
+                            ng-model="temp.lon"
+                            placeholder="Longitude"
+                            pattern="^-?\d+\.?\d*$"
+                        >
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="input-group">
+                        <span class="input-group-addon edit-site-label">El</span>
+                        <input class="form-control"
+                            name="alt"
+                            type="text"
+                            ng-model="temp.alt"
+                            placeholder="Elevation"
+                            pattern="^-?\d+\.?\d*$"
+                        >
+                    </div>
+                </div>
+                <div ng-if="editing" class="form-group">
+                    <div class="input-group" style="width: 100%;">
+                        <label>Project:</label>
+                        <ui-select ng-model="temp.project" theme="bootstrap"
+                            on-select="onSelect($select.selected)">
+                            <ui-select-match class="edit-site-dropdown" placeholder="Project">{{$select.selected.name}}</ui-select-match>
+                            <ui-select-choices repeat="project in projects | filter:$select.search">
+                                {{project.name}}
+                            </ui-select-choices>
+                        </ui-select>
+                    </div>
+                </div>
+                <button class="btn btn-primary">
+                    <i class="fa fa-floppy-o"></i> Save
+                </button>
+                <button class="btn btn-default"
+                    type="button"
+                    ng-click="close()">
+                    <i class="fa fa-times"></i> Close
+                </button>
             </form>
         </div>
     </div>
@@ -206,7 +179,7 @@
         <div class="a2-filter a2-filter-text toolbar">
             <div class="col-sm-4">
                 <ui-select ng-model="status_controller.selected.series" theme="bootstrap" style="width: 150px;" append-to-body="true"
-                ng-change="status_controller.set_series(status_controller.selected.series) | trackEvent:'Audiodata-Site-Status':'set series'" >
+                ng-change="status_controller.set_series(status_controller.selected.series)" >
                     <ui-select-match placeholder="Series">
                         <i ng-class="$select.selected.icon"></i>
                         {{$select.selected.name}}
@@ -219,7 +192,7 @@
             </div>
             <div class="col-sm-4">
                 <ui-select ng-model="status_controller.selected.time_range" theme="bootstrap" style="width: 150px;" append-to-body="true"
-                ng-change="status_controller.set_time_range(status_controller.selected.time_range) | trackEvent:'Audiodata-Site-Status':'set time range'" >
+                ng-change="status_controller.set_time_range(status_controller.selected.time_range)" >
                     <ui-select-match placeholder="View">
                         <i class="fa fa-clock-o"></i>
                         {{$select.selected.text}}
@@ -231,7 +204,7 @@
             </div>
             <div class="col-sm-4">
                 <ui-select ng-model="status_controller.selected.period" theme="bootstrap" style="width: 150px;" append-to-body="true"
-                ng-change="status_controller.set_period(status_controller.selected.period) | trackEvent:'Audiodata-Site-Status':'set period'" >
+                ng-change="status_controller.set_period(status_controller.selected.period)" >
                     <ui-select-match placeholder="Detail">
                         <i class="fa fa-hourglass-3"></i>
                         {{$select.selected.text}}

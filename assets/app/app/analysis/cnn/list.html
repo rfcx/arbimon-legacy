@@ -6,7 +6,7 @@
             <a class="btn btn-sm btn-default ml-2"
                 tooltip="Create CNN"
                 tooltip-placement="right"
-                ng-click="createNewCNN() | trackEvent:'Analysis-CNN-List':'Create new CNN'">
+                ng-click="createNewCNN()">
                 <i class="fa fa-plus mr-1" ></i> New CNN Analysis
             </a>
         </h3>
@@ -44,12 +44,12 @@
                 </field>
                 <field tdclass="is-v-middle">
                     <button class="btn btn-default"
-                    ng-click="selectItem(row.job_id) | trackEvent:'Analysis-CNN-List':' show cnn details'"
+                    ng-click="selectItem(row.job_id)"
                     >
                         Show Details
                     </button>
                     <button class="btn btn-danger"
-                        ng-click="deleteCNN(row, $event) | trackEvent:'Analysis-CNN-list':'delete cnn'"
+                        ng-click="deleteCNN(row, $event)"
                         tooltip="Delete"
                         tooltip-trigger="mouseenter">
                         <i class="fa fa-trash"></i>

@@ -2,16 +2,9 @@ angular.module('a2.register' , [
     'a2.forms', 
     'a2.directives',
     'ui.bootstrap',
-    'angularytics', 
     'g-recaptcha', 
     'humane', 
 ])
-.config(function(AngularyticsProvider) {
-    AngularyticsProvider.setEventHandlers(['Console', 'GoogleUniversal']);
-})
-.run(function(Angularytics) {
-    Angularytics.init();
-})
 .controller('UserRegisterCtrl', function($scope, $modal, $http, $timeout, $interval, notify){
     
     var captchaResp = '';
