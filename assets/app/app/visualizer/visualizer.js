@@ -379,10 +379,10 @@ angular.module('a2.visualizer', [
     $scope.resizeYScale = function (item) {
         $scope.deselectFrequencyOptions();
         item.active = true;
-        var originalScale = item.value === 'original_scale';
+        const originalScale = item.value === 'original_scale';
         $localStorage.setItem('visuilizer.frequencies.cache', JSON.stringify({originalScale: originalScale}));
         $scope.layout.scale.originalScale = originalScale;
-        var span = originalScale ? $scope.visobject.sampling_rate / 2 : 24000;
+        const span = originalScale ? $scope.visobject.sampling_rate / 2 : 24000;
         $scope.visobject.domain.y.to = span;
         $scope.visobject.domain.y.span = span;
     };
@@ -685,6 +685,9 @@ angular.module('a2-visualizer-spectrogram-Layout',[
                 };
             }
 
+            if (domain.x.to <= 5) {
+                domain.x.ticks = 30
+            }
             l.domain = domain;
             l.scroll_center = scroll_center;
             l.scale = {
