@@ -135,7 +135,7 @@
                                     <ui-select-match placeholder="Taxon" title="{{ $select.selected.taxon }}">
                                         <span class="hide-end-text">{{ $select.selected.taxon === 'All taxons' ? 'Taxa' : $select.selected.taxon }}</span>
                                     </ui-select-match>
-                                    <ui-select-choices class="filter-by-hide-text" repeat="item in taxons | filter:$select.search">
+                                    <ui-select-choices class="item-dropdown-hide-text" repeat="item in taxons | filter:$select.search">
                                         {{ item.taxon }}
                                     </ui-select-choices>
                                 </ui-select>

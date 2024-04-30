@@ -17,7 +17,7 @@
                 <ui-select-match>
                     <div tooltip-append-to-body="true" tooltip="{{$select.selected.description}}">{{$select.selected.caption}}</div>
                 </ui-select-match>
-                <ui-select-choices repeat="$item in amplitudeReferences">
+                <ui-select-choices class="item-dropdown-hide-text" repeat="$item in amplitudeReferences">
                     <div tooltip-append-to-body="true" tooltip="{{$item.description}}">{{$item.caption}}</div>
                 </ui-select-choices>
             </ui-select>
