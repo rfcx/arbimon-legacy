@@ -130,12 +130,12 @@
                         </div>
                         <div class="row-flex flex-direction-row flex-align-middle">
                             <span for="taxa" class="text-util-gray-01 mr-3">Filter by:</span>
-                            <div style="width:86px">
+                            <div style="max-width:130px">
                                 <ui-select id="taxa" ng-model="searchTemplates.taxon" theme="bootstrap" ng-change="onSearchChanged()">
                                     <ui-select-match placeholder="Taxon" title="{{ $select.selected.taxon }}">
-                                        {{ $select.selected.taxon === 'All taxons' ? 'Taxa' : $select.selected.taxon }}
+                                        <span class="hide-end-text">{{ $select.selected.taxon === 'All taxons' ? 'Taxa' : $select.selected.taxon }}</span>
                                     </ui-select-match>
-                                    <ui-select-choices repeat="item in taxons | filter:$select.search">
+                                    <ui-select-choices class="filter-by-hide-text" repeat="item in taxons | filter:$select.search">
                                         {{ item.taxon }}
                                     </ui-select-choices>
                                 </ui-select>
