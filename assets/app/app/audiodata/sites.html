@@ -111,67 +111,94 @@
     <div ng-show="editing || creating" class="panel panel-default bg-echo border-util-gray-03">
         <div class="panel-body">
             <form class="form" ng-submit="save()" name="siteForm">
-                <div class="form-group">
-                    <label>Name:</label>
-                    <input class="form-control" type="text" ng-model="temp.name" placeholder="Site name" required>
-                </div>
-                <div class="form-group">
-                    <label>Location:</label>
-                    <div class="input-group">
-                        <span class="input-group-addon edit-site-label">Lat</span>
-                        <input class="form-control"
-                            name="lat"
-                            type="text"
-                            ng-model="temp.lat"
-                            placeholder="Latitude"
-                            pattern="^-?\d+\.?\d*$"
-                        >
+                <div class="row-flex flex-direction-column gap-y-8">
+                    <div>
+                        <div class="form-group">
+                            <label>Site name:</label>
+                            <input class="form-control bg-moss border-gray-600 rounded-lg" type="text" ng-model="temp.name" placeholder="Site name" required>
+                        </div>
+                        <div class="row-flex flex-direction-row flex-align-middle gap-x-3">
+                            <input type="checkbox" class="m-0" ng-model="temp.hidden">
+                            Exclude this site from Arbimon Insights
+                            <a id="popoverSitePage"
+                                class="btn p-0"
+                                style="border:none;outline:none;"
+                                role="button"
+                                popover-html="'Hide test sites or sites for <br /> importing external templates. <br /> <a href=\'https://help.arbimon.org/article/206-adding-a-site\' class=\'text-frequency cursor-pointer\'>Learn more</a>'"
+                                popover-trigger="focus"
+                                popover-append-to-body="true"
+                                data-placement="right"
+                                tabindex="0"
+                            >
+                                <img src="/images/fi-info.svg">
+                            </a>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="mb-2">
+                            <label>Location:</label>
+                            <div class="input-group">
+                                <span class="input-group-addon edit-site-label bg-moss border-gray-600 rounded-lg" ng-disabled="temp.hidden === true">Lat</span>
+                                <input class="form-control bg-moss border-gray-600 rounded-lg"
+                                    style="height: 34px"
+                                    name="lat"
+                                    type="text"
+                                    ng-model="temp.lat"
+                                    placeholder="Latitude"
+                                    pattern="^-?\d+\.?\d*(\s*)$"
+                                    ng-disabled="temp.hidden === true"
+                                >
+                            </div>
+                        </div>
+                        <div class="input-group mb-2">
+                            <span class="input-group-addon edit-site-label bg-moss border-gray-600 rounded-lg" ng-disabled="temp.hidden === true">Lon</span>
+                            <input class="form-control bg-moss border-gray-600 rounded-lg"
+                                style="height: 34px"
+                                name="lon"
+                                type="text"
+                                ng-model="temp.lon"
+                                placeholder="Longitude"
+                                pattern="^-?\d+\.?\d*(\s*)$"
+                                ng-disabled="temp.hidden === true"
+                            >
+                        </div>
+                        <div class="input-group">
+                            <span class="input-group-addon edit-site-label bg-moss border-gray-600 rounded-lg" ng-disabled="temp.hidden === true">El</span>
+                            <input class="form-control bg-moss border-gray-600 rounded-lg"
+                                style="height: 34px"
+                                name="alt"
+                                type="text"
+                                ng-model="temp.alt"
+                                placeholder="Elevation"
+                                pattern="^-?\d+\.?\d*(\s*)$"
+                                ng-disabled="temp.hidden === true"
+                            >
+                        </div>
+                    </div>
+                    <div ng-if="editing">
+                        <div class="input-group" style="width: 100%;">
+                            <label>Project:</label>
+                            <ui-select ng-model="temp.project" theme="bootstrap" on-select="onSelect($select.selected)">
+                                <ui-select-match class="edit-site-dropdown" placeholder="Project">{{$select.selected.name}}</ui-select-match>
+                                <ui-select-choices repeat="project in projects | filter:$select.search">
+                                    {{project.name}}
+                                </ui-select-choices>
+                            </ui-select>
+                        </div>
+                    </div>
+                    <div class="row-flex flex-direction-row justify-between">
+                        <button class="btn btn-success btn-rounded-full"
+                            type="button"
+                            ng-click="close()">
+                            Close
+                            <i class="fa fa-times ml-3"></i>
+                        </button>
+                        <button class="btn btn-primary btn-rounded-full">
+                            Save
+                            <i class="fa fa-floppy-o ml-3"></i>
+                        </button>
                     </div>
                 </div>
-                <div class="form-group">
-                    <div class="input-group">
-                        <span class="input-group-addon edit-site-label">Lon</span>
-                        <input class="form-control"
-                            name="lon"
-                            type="text"
-                            ng-model="temp.lon"
-                            placeholder="Longitude"
-                            pattern="^-?\d+\.?\d*$"
-                        >
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="input-group">
-                        <span class="input-group-addon edit-site-label">El</span>
-                        <input class="form-control"
-                            name="alt"
-                            type="text"
-                            ng-model="temp.alt"
-                            placeholder="Elevation"
-                            pattern="^-?\d+\.?\d*$"
-                        >
-                    </div>
-                </div>
-                <div ng-if="editing" class="form-group">
-                    <div class="input-group" style="width: 100%;">
-                        <label>Project:</label>
-                        <ui-select ng-model="temp.project" theme="bootstrap"
-                            on-select="onSelect($select.selected)">
-                            <ui-select-match class="edit-site-dropdown" placeholder="Project">{{$select.selected.name}}</ui-select-match>
-                            <ui-select-choices repeat="project in projects | filter:$select.search">
-                                {{project.name}}
-                            </ui-select-choices>
-                        </ui-select>
-                    </div>
-                </div>
-                <button class="btn btn-primary">
-                    <i class="fa fa-floppy-o"></i> Save
-                </button>
-                <button class="btn btn-default"
-                    type="button"
-                    ng-click="close()">
-                    <i class="fa fa-times"></i> Close
-                </button>
             </form>
         </div>
     </div>
