@@ -1,6 +1,6 @@
 <div class="mt-1">
     <ui-select ng-model="browser.$type.playlist" theme="bootstrap"
-        class="has-badges"
+        class="has-badges custom-select-ui"
         on-select="browser.$type.set_playlist($select.selected)"
         append-to-body="true"
     >
@@ -17,7 +17,7 @@
     </ui-select>
 </div>
 
-<div class="col-sm-12">
+<div class="col-sm-12 mt-3">
     <div class="btn-toolbar text-center" ng-show="browser.lovo.paging && browser.lovo.paging.last_page > 0">
         <div class="pull-left btn-group">
             <button class="btn btn-default btn-xs"
