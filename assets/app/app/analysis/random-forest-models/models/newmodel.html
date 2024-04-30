@@ -17,7 +17,7 @@
                 <ui-select-match placeholder="Select a classifier">{{$select.selected.name}}</ui-select-match>
                 <ui-select-choices repeat="type in types | filter: $select.search" value="type.model_type_id">
                     <strong>{{type.name}}</strong>
-                    <p>
+                    <p  class="hide-end-text">
                         <em>
                             <small>{{type.description}}</small>
                         </em>
@@ -35,7 +35,7 @@
                 </button>
                 and create a training set.
             </div>
-            <ui-select ng-if="trainings && trainings.length" ng-model="data.training" theme="/common/templates/a2-ui-select" ng-disabled="disabled">
+            <ui-select ng-if="trainings && trainings.length" ng-model="data.training" theme="bootstrap" ng-disabled="disabled">
                 <ui-select-match placeholder="Search and select a training set">{{$select.selected.name}}</ui-select-match>
                 <ui-select-choices repeat="train in trainings | filter: $select.search" value="train.training_set_id">
                     {{train.name}}

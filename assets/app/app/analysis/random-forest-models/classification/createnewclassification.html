@@ -18,7 +18,7 @@
                 </button>
                 and create a model.
             </div>
-            <ui-select ng-if="data && data.length" ng-disabled="disabled" ng-model="datas.classifier" theme="/common/templates/a2-ui-select">
+            <ui-select ng-if="data && data.length" ng-disabled="disabled" ng-model="datas.classifier" theme="bootstrap">
                 <ui-select-match placeholder="Select or search a model...">{{$select.selected.mname}}</ui-select-match>
                 <ui-select-choices repeat="m in data | filter: $select.search">
                     {{m.mname}} <span ng-if="!m.enabled" class="pull-right text-danger"><i>unavailable</i></span>
@@ -39,7 +39,7 @@
                 </button>
                 and create a playlist.
             </div>
-            <ui-select ng-disabled="disabled" ng-if="playlists && playlists.length" ng-model="datas.playlist" theme="/common/templates/a2-ui-select">
+            <ui-select ng-disabled="disabled" ng-if="playlists && playlists.length" ng-model="datas.playlist" theme="bootstrap">
                 <ui-select-match placeholder="Select or search a playlist...">{{$select.selected.name}}</ui-select-match>
                 <ui-select-choices repeat="playlist in playlists | filter: $select.search">
                     {{playlist.name}}

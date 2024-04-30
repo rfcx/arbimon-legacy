@@ -1564,7 +1564,7 @@ a.ui-select-choices-row-inner {
     > span {
       color: @text-color !important;
       background-color: @pitch !important;
-      padding: 4px 4px !important;
+      padding: 4px 10px !important;
       &:focus,
       &:hover {
         border-radius: 5px;
@@ -1583,6 +1583,12 @@ a.ui-select-choices-row-inner {
       background-color: @gray !important;
     }
   }
+}
+
+.hide-end-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .custom-select-ui {

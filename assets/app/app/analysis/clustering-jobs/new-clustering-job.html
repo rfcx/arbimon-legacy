@@ -17,7 +17,7 @@
                 </button>
                 and create an audio event detection.
             </div>
-            <ui-select ng-if="controller.list.jobs && controller.list.jobs.length" ng-disabled="disabled" ng-model="controller.data.aed_job">
+            <ui-select ng-if="controller.list.jobs && controller.list.jobs.length" ng-disabled="disabled" ng-model="controller.data.aed_job" theme="bootstrap">
                 <ui-select-match placeholder="Select or search a job...">
                     {{$select.selected.name}}
                 </ui-select-match>
