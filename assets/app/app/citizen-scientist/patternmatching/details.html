@@ -57,7 +57,7 @@
                 <div class="col-sm-5 flex-self-align-bottom">
                     <div class="pull-right">
                     <div class="pull-right">
-                        <div class="btn-group btn-group-margin">
+                        <div class="btn-group btn-group-margin" style="margin-top: 10px;">
                             <ui-select ng-model="controller._selection" theme="bootstrap" style="display:inline-block; width:9em;"
                                 on-select="controller.onSelect($select.selected)"
                             >
@@ -70,7 +70,7 @@
 
                         <div class="btn-group btn-group-margin">
                             <button class="btn btn-default" >Validate as:</button>
-                            <ui-select ng-model="controller.validation" theme="bootstrap" class="btn-group-item border-left-radius">
+                            <ui-select ng-model="controller.validation" theme="bootstrap" class="btn-group-item border-left-radius" style="width: 150px">
                                 <ui-select-match>
                                     <i ng-class="$select.selected.class"></i> {{$select.selected.text}}
                                 </ui-select-match>
