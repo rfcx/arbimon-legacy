@@ -64,10 +64,10 @@
             </a2-table>
         </div>
     </div>
-    <div class="col-sm-12 col-lg-11 padded-view-div" ng-if="selectedClusteringJobId && !showViewGridPage">
+    <div class="col-sm-12 padded-view-div" ng-if="selectedClusteringJobId && !showViewGridPage">
         <a2-clustering-details clustering-job-id="selectedClusteringJobId" on-go-back="selectItem()" />
     </div>
-    <div class="col-sm-12 col-lg-11 padded-view-div" ng-if="selectedClusteringJobId && showViewGridPage">
+    <div class="col-sm-12 padded-view-div" ng-if="selectedClusteringJobId && showViewGridPage">
         <a2-grid-view clustering-job-id="selectedClusteringJobId" grid-context="gridContext" on-go-back="selectItem()"/>
     </div>
 </div>
