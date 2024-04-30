@@ -10,10 +10,9 @@ async function getPmRois (options = {}) {
       join pattern_matchings pm on pm.pattern_matching_id = pmr.pattern_matching_id
       join recordings r on pmr.recording_id = r.recording_id
       join sites s on r.site_id = s.site_id
-      join jobs j ON pm.job_id = j.job_id
       join species sp on pmr.species_id = sp.species_id
       join songtypes st on pmr.songtype_id = st.songtype_id
-    where pm.project_id = ${options.projectId} and pm.pattern_matching_id = ${options.jobId} and pm.deleted = 0 and j.state = 'completed'
+    where pm.project_id = ${options.projectId} and pm.pattern_matching_id = ${options.jobId} and pm.deleted = 0
       limit ${options.limit} offset ${options.offset}
     ;
   `
@@ -24,9 +23,10 @@ async function getPmRois (options = {}) {
 async function getProjectPMJobs (options = {}) {
     const connection = await mysql.getConnection()
     const sql = `
-      select pattern_matching_id jobId, name jobName
-      from pattern_matchings
-      where project_id = ${options.projectId} and deleted = 0
+      select pm.pattern_matching_id jobId, pm.name jobName
+      from pattern_matchings pm
+      join jobs j ON pm.job_id = j.job_id
+      where pm.project_id = ${options.projectId} and pm.deleted = 0 and j.state = 'completed'
       ;
     `
     const [rows, fields] = await connection.execute(sql)
