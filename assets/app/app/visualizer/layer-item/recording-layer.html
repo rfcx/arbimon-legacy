@@ -104,12 +104,12 @@
                 </div>
             </div>
         </div>
-        <div class="pl-0 pr-2 no-pad-r" ng-class="{'col-sm-3': !visobject.explorerUrl, 'col-sm-2': visobject.explorerUrl}">
-            <div class="">
+        <div class="pl-0 pr-1 no-pad-r" style="width: 85px" ng-class="{'col-sm-3': !visobject.explorerUrl, 'col-sm-2': visobject.explorerUrl}">
+            <div class="nowrap">
                 <i class="fa fa-sm fa-play"></i>
                 {{ audio_player.getCurrentTime() | number:2 }} s
             </div>
-            <div class="">
+            <div class="nowrap">
                 {{pointer.sec | number:2}} s,
                 {{pointer.hz / 1000 | number:1}} kHz
             </div>
