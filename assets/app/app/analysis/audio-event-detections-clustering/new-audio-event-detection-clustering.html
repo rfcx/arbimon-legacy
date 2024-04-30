@@ -20,7 +20,7 @@
                 and create a playlist.
             </div>
             <div ng-class="{'input-red-border': controller.showPlaylistLimitWarning()}">
-                <ui-select ng-disabled="disabled" ng-if="controller.list.playlists && controller.list.playlists.length" ng-model="controller.data.playlist" theme="/common/templates/a2-ui-select">
+                <ui-select ng-disabled="disabled" ng-if="controller.list.playlists && controller.list.playlists.length" ng-model="controller.data.playlist">
                     <ui-select-match placeholder="Select or search a playlist..."> {{ $select.selected.name }} </ui-select-match>
                     <ui-select-choices repeat="playlist in controller.list.playlists | filter: $select.search">
                         <div>
