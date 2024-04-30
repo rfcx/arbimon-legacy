@@ -36,7 +36,7 @@
     <div class="a2-filter a2-filter-text">
         Date and Time:
     </div>
-    <div class="a2-filter" style="width: 22%;">
+    <div class="a2-filter" style="width: 22%; max-width: 194px;">
         <ui-select multiple ng-model="controller.params.years" theme="bootstrap">
             <ui-select-match placeholder="Years">{{$item.value}}</ui-select-match>
             <ui-select-choices class="has-badges" repeat="item in controller.options.years | filter:$select.search">
@@ -45,7 +45,7 @@
             </ui-select-choices>
         </ui-select>
     </div>
-    <div class="a2-filter" style="width: 22%;">
+    <div class="a2-filter" style="width: 22%; max-width: 195px;">
         <ui-select multiple ng-model="controller.params.months" theme="bootstrap">
             <ui-select-match placeholder="Months">{{ $item.string }}</ui-select-match>
             <ui-select-choices class="has-badges" repeat="item in controller.options.months | filter:$select.search">
@@ -54,7 +54,7 @@
             </ui-select-choices>
         </ui-select>
     </div>
-    <div class="a2-filter" style="width: 22%;">
+    <div class="a2-filter" style="width: 22%; max-width: 194px;">
         <ui-select multiple ng-model="controller.params.days" theme="bootstrap">
             <ui-select-match placeholder="Days">{{ $item.value }}</ui-select-match>
             <ui-select-choices class="has-badges" repeat="item in controller.options.days | filter:$select.search">
@@ -63,7 +63,7 @@
             </ui-select-choices>
         </ui-select>
     </div>
-    <div class="a2-filter" style="width: 22%;">
+    <div class="a2-filter" style="width: 22%; max-width: 195px;">
         <ui-select multiple ng-model="controller.params.hours" theme="bootstrap" close-on-select="false" remove-selected="false" on-select="controller.onSelectClick($select.selected)">
             <ui-select-match placeholder="Hours">{{ $item.string }}</ui-select-match>
             <ui-select-choices class="has-badges" ng-class="{'custom-select-ui-filter-param': (controller.params.hours.includes(item) || controller.params.hours.length === 24)}" repeat="item in controller.options.hours | filter: $select.search">
@@ -80,7 +80,7 @@
     <div class="a2-filter a2-filter-text">
         Sites:
     </div>
-    <div class="a2-filter" style="width: 92%;">
+    <div class="a2-filter" style="width: 92%; max-width: 777px;">
         <ui-select multiple ng-model="controller.params.sites" theme="bootstrap">
             <ui-select-match placeholder="Site1, Site2, ...">{{$item.value}}</ui-select-match>
             <ui-select-choices class="has-badges" repeat="item in controller.options.sites | filter:$select.search">
@@ -94,7 +94,7 @@
     <div class="a2-filter a2-filter-text">
         Playlists:
     </div>
-    <div class="a2-filter" style="width: 92%;">
+    <div class="a2-filter" style="width: 92%; max-width: 777px;">
         <ui-select multiple ng-model="controller.params.playlists" theme="bootstrap">
             <ui-select-match placeholder="Playlist1, Playlist2, ...">{{$item.name}}</ui-select-match>
             <ui-select-choices class="has-badges" repeat="item in controller.options.playlists | filter:$select.search">
@@ -108,7 +108,7 @@
     <div class="a2-filter a2-filter-text">
         Tags:
     </div>
-    <div class="a2-filter" style="width: 92%;">
+    <div class="a2-filter" style="width: 92%; max-width: 777px;">
         <ui-select multiple ng-model="controller.params.tags" theme="bootstrap">
             <ui-select-match placeholder="Tags">
                 <a2-tag tag="$item"></a2-tag>
@@ -126,7 +126,7 @@
     <div class="a2-filter a2-filter-text">
         Validations:
     </div>
-    <div class="a2-filter" style="width: 60%;">
+    <div class="a2-filter" style="width: 60%; max-width: 515px;">
         <ui-select multiple ng-model="controller.params.validations" theme="bootstrap">
             <ui-select-match placeholder="Species - Sound...">
                 {{$item.species_name}} - {{$item.songtype_name}}
@@ -140,7 +140,7 @@
             </ui-select-choices>
         </ui-select>
     </div>
-    <div class="a2-filter" style="width: 32%;">
+    <div class="a2-filter" style="width: 32%; max-width: 260px;">
         <ui-select multiple ng-model="controller.params.presence" theme="bootstrap">
             <ui-select-match allow-clear="true" placeholder="Validation">
                 <i ng-class="'fa a2-' + $item"></i> {{ $item | wordCaps}}
@@ -155,7 +155,7 @@
     <div class="a2-filter a2-filter-text">
         Classifications:
     </div>
-    <div class="a2-filter" style="width: 60%;">
+    <div class="a2-filter" style="width: 60%; max-width: 515px;">
         <ui-select multiple ng-model="controller.params.classifications" ng-change="controller.computeClassificationResultsOptions(controller.params.classifications)" theme="bootstrap">
             <ui-select-match placeholder="Classifications...">
                 {{$item.name}} - {{$item.date | moment : 'lll' }}
@@ -165,7 +165,7 @@
             </ui-select-choices>
         </ui-select>
     </div>
-    <div class="a2-filter" style="width: 32%;">
+    <div class="a2-filter" style="width: 32%; max-width: 260px;">
         <ui-select multiple ng-model="controller.params.classification_results" theme="bootstrap">
             <ui-select-match placeholder="Results">
                 <span ng-bind-html="$item.caption" tooltip="{{$item.tooltip}}" tooltip-append-to-body="true"></span>
@@ -180,7 +180,7 @@
     <div class="a2-filter a2-filter-text">
         Soundscape Composition:
     </div>
-    <div class="a2-filter" style="width: 60%;">
+    <div class="a2-filter" style="width: 60%; max-width: 515px;">
         <ui-select multiple ng-model="controller.params.soundscape_composition" theme="bootstrap">
             <ui-select-match placeholder="Audio Classes">
                 {{$item.type}}/{{$item.name}}
@@ -190,7 +190,7 @@
             </ui-select-choices>
         </ui-select>
     </div>
-    <div class="a2-filter" style="width: 32%;">
+    <div class="a2-filter" style="width: 32%; max-width: 260px;">
         <ui-select multiple ng-model="controller.params.soundscape_composition_annotation" theme="bootstrap">
             <ui-select-match allow-clear="true" placeholder="Annotation">
                 <i ng-class="'fa a2-' + $item"></i> {{ $item | wordCaps}}
