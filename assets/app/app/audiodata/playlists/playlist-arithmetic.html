@@ -9,8 +9,8 @@
             ng-change="controller.updateNamePlaceholder()"
         >
             <ui-select-match placeholder="(select operation)">
-                <i class="fa" ng-class="$select.selected.icon"></i>
-                {{$select.selected.text}}
+                <i class="fa" style="position: absolute; top: 8px" ng-class="$select.selected.icon"></i>
+                <span style="padding-left: 18px">{{$select.selected.text}}</span>
             </ui-select-match>
             <ui-select-choices class="has-badges" repeat="item in controller.operations">
                 <i class="fa" ng-class="item.icon"></i>
