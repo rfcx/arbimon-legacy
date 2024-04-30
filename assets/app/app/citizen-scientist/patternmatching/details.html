@@ -72,7 +72,8 @@
                             <button class="btn btn-default" >Validate as:</button>
                             <ui-select ng-model="controller.validation" theme="bootstrap" class="btn-group-item border-left-radius" style="width: 150px">
                                 <ui-select-match>
-                                    <i ng-class="$select.selected.class"></i> {{$select.selected.text}}
+                                    <i ng-class="$select.selected.class" style="position: absolute; top: 8px"></i>
+                                    <span style="padding-left: 18px">{{$select.selected.text}}</span>
                                 </ui-select-match>
                                 <ui-select-choices repeat="$item in controller.lists.validation | filter:$select.search">
                                     <i ng-class="$item.class"></i> {{$item.text}}
