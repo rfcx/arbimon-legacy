@@ -344,7 +344,7 @@ async function processOccupancyModelStream (results, rowData, speciesId, filters
         datastream.push(null);
 
         datastream.on('end', async () => {
-            const title = 'occupancy-' + speciesId + '-' + rowData.species_name + '.csv';
+            const title = 'occupancy-' + rowData.species_name + '-' + speciesId + '.csv';
             csv_stringify(_buf, { header: true, columns: fields }, async (err, data) => {
                 fs.writeFile(`${tmpFilePath}/${title}`, data, function (err, result) {
                     if (err) {
