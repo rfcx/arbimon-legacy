@@ -1,8 +1,8 @@
 <div class="panel panel-dropdown">
     <ul class="list-group mb-2">
         <li class="list-group-item" ng-repeat="parameter_set in controller.parameter_set_list">
-            <div ng-hide="(parameter_set.identifier === 'species' || parameter_set.identifier === 'grouped') && !controller.isRfcx()">
-                <hr class="my-3" ng-if="(parameter_set.identifier === 'species' || parameter_set.identifier === 'grouped')" />
+            <div ng-hide="parameter_set.identifier === 'grouped' && !controller.isRfcx()">
+                <hr class="my-3" ng-if="parameter_set.identifier === 'grouped'" />
                 {{parameter_set.title}}
             </div>
             <div class="pt-1" ng-init="parameter_set.index=$index" ng-if="parameter_set.identifier !== 'grouped'" ng-class="{'red-border': (controller.isDisabled() && parameter_set.identifier === 'validation') || (controller.isRecordingEmpty() && parameter_set.identifier === 'recording')}">

@@ -87,7 +87,7 @@ angular.module('a2.audiodata.recordings.data-export-parameters', [
                 {value:'date', caption:'Date', tooltip:'Detections grouped by Date'},
             ],
         },
-        {   title:'Occupancy Model Format',
+        {   title:'Species detection matrix',
             identifier:'species',
             placeholder: 'Select species...',
             getList: function(Project){
