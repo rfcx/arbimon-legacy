@@ -31,7 +31,7 @@
                 <ui-select-match placeholder="Format (pattern)" title="{{ $select.selected.name }}">
                     {{ $select.selected.name }} {{ $select.selected.format }}
                 </ui-select-match>
-                <ui-select-choices repeat="item in formats | filter:$select.search">
+                <ui-select-choices repeat="item in formats | filter:$select.search" style="width: auto !important;">
                     {{ item.name }} {{ item.format }}
                 </ui-select-choices>
             </ui-select>
