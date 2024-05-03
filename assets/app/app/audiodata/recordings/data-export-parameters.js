@@ -140,7 +140,7 @@ angular.module('a2.audiodata.recordings.data-export-parameters', [
             if (this.isRfcx() && this.lists[1] && this.lists[1].length) {
                 this.lists[1].splice(0,0,{value: -1, caption: 'Select all species'});
             }
-            if (this.isRfcx() && this.lists[5] && this.lists[5].length) {
+            if (this.lists[5] && this.lists[5].length) {
                 this.lists[5].splice(0,0,{value: 0, caption: 'Select all species', name: 0});
             }
             this.selected = this.parameter_set_list.map(function(parameter_set, idx){
@@ -203,7 +203,7 @@ angular.module('a2.audiodata.recordings.data-export-parameters', [
         if (this.isRfcx() && selected[1] && selected[1].find(function(row){ return row.value === -1 })) {
             selected[1] = this.lists[1].filter(function(item) { if (item.value !== -1) { return item } });
         } 
-        if (this.isRfcx() && selected[5] && selected[5].find(function(row){ return row.value === 0 })) {
+        if (selected[5] && selected[5].find(function(row){ return row.value === 0 })) {
             selected[5] = this.lists[5].filter(function(item) { if (item.value !== 0) { return item } });
         }
         this.onExport(this.parameter_set_list.reduce(function(_, parameter_set, index){
