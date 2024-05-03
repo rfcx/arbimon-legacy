@@ -11,7 +11,7 @@
                         <span tooltip="{{$item.tooltip}}" tooltip-append-to-body="true">{{($item.group ? $item.group + ' / ' : '') + $item.caption}}</span>
                     </ui-select-match>
                     <ui-select-choices ui-disable-choice="controller.checkSelectedValue($select.selected)" class="has-badges export-param" repeat="$item in controller.lists[parameter_set.index] | filter:$select.search" group-by="'group'">
-                        <span tooltip="{{$item.tooltip}}" tooltip-append-to-body="true" class="item-data hide-end-text" :title="$item.caption">{{$item.caption}}</span>
+                        <span tooltip="{{$item.tooltip}}" tooltip-append-to-body="true" ng-class="parameter_set.identifier === 'validation' ? 'item-data hide-end-text' : ''" :title="$item.caption">{{$item.caption}}</span>
                         <span class="badge" ng-if="$item.badges">
                             <span ng-repeat="badge in $item.badges">
                                 <span ng-if="$index"> / </span>
