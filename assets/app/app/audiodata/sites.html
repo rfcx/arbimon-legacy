@@ -114,7 +114,7 @@
                 <div class="row-flex flex-direction-column gap-y-8">
                     <div>
                         <div class="form-group">
-                            <label>Site name:</label>
+                            <label>Site name*</label>
                             <input class="form-control bg-moss border-gray-600 rounded-lg" type="text" ng-model="temp.name" placeholder="Site name" required>
                         </div>
                         <div class="row-flex flex-direction-row flex-align-middle gap-x-3">
@@ -136,7 +136,7 @@
                     </div>
                     <div>
                         <div class="mb-2">
-                            <label>Location:</label>
+                            <label>Location*</label>
                             <div class="input-group">
                                 <span class="input-group-addon edit-site-label bg-moss border-gray-600 rounded-lg" ng-disabled="temp.hidden === true">Lat</span>
                                 <input class="form-control bg-moss border-gray-600 rounded-lg"
@@ -147,6 +147,7 @@
                                     placeholder="Latitude"
                                     pattern="^-?\d+\.?\d*(\s*)$"
                                     ng-disabled="temp.hidden === true"
+                                    required
                                 >
                             </div>
                         </div>
@@ -160,6 +161,7 @@
                                 placeholder="Longitude"
                                 pattern="^-?\d+\.?\d*(\s*)$"
                                 ng-disabled="temp.hidden === true"
+                                required
                             >
                         </div>
                         <div class="input-group">
@@ -169,7 +171,7 @@
                                 name="alt"
                                 type="text"
                                 ng-model="temp.alt"
-                                placeholder="Elevation"
+                                placeholder="Elevation (optional)"
                                 pattern="^-?\d+\.?\d*(\s*)$"
                                 ng-disabled="temp.hidden === true"
                             >
