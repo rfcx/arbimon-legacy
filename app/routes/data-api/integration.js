@@ -35,6 +35,7 @@ router.patch('/projects/:externalId', verifyToken(), hasRole(['appUser', 'rfcxUs
     const converter = new Converter(req.body, {});
     converter.convert('name').optional().toString();
     converter.convert('description').optional().toString();
+    converter.convert('url').optional().toString();
 
     const params = await converter.validate();
     const project = await model.projects.find({ external_id: req.params.externalId }).get(0);
@@ -47,7 +48,7 @@ router.patch('/projects/:externalId', verifyToken(), hasRole(['appUser', 'rfcxUs
     await model.projects.updateAsync({
       project_id: project.project_id,
       name: params.name !== undefined ? params.name : project.name,
-      url: project.url,
+      url: params.url !== undefined ? params.url : project.url,
       description: params.description !== undefined ? params.description : project.description,
       is_private: project.is_private,
     })
