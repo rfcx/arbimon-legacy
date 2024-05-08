@@ -595,7 +595,7 @@ angular.module('a2.audiodata.sites', [
                     }
                     var position = new google.maps.LatLng($scope.selected.lat, $scope.selected.lon);
                     $scope.map.panTo(position);
-                    $scope.map.setZoom(18)
+                    $scope.map.setZoom(17)
                 });
             }
         });
