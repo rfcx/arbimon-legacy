@@ -83,14 +83,17 @@ angular.module('a2.audiodata.sites', [
                     position: position,
                     title: site.name,
                     icon: {
-                        url: 'http://icons.iconarchive.com/icons/paomedia/small-n-flat/48/map-marker-icon.png',
+                        url: 'https://upload.wikimedia.org/wikipedia/commons/f/f3/Pin_selected_24.png',
                     }
                 });
             }
             else {
                 marker = new google.maps.Marker({
                     position: position,
-                    title: site.name
+                    title: site.name,
+                    icon: {
+                        url: 'https://upload.wikimedia.org/wikipedia/commons/c/cd/Pin_map_24.png',
+                    }
                 });
             }
             // add draggable layer for an editig site
