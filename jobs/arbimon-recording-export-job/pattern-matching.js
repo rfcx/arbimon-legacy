@@ -6,6 +6,7 @@ const csv_stringify = require('csv-stringify');
 const { getPmRois, getProjectPMJobs, getProjectSites } = require('../services/pattern-matching')
 const { zipDirectory } = require('../services/file-helper')
 const { getSignedUrl } = require('../services/storage')
+const { getRecordingByIds } = require('../services/recordings')
 
 const S3_LEGACY_BUCKET_ARBIMON = process.env.AWS_BUCKETNAME
 const S3_RFCX_BUCKET_ARBIMON = process.env.AWS_RFCX_BUCKETNAME
@@ -59,8 +60,10 @@ async function exportAllPmJobs (projectId, cb) {
           offset: limit * index
         });
         toProcess = queryResult.length > 0;
-        console.log('Arbimon Export PM job: writing chunk')
-        await writeChunk(queryResult, targetFile, projectSites, isFirstChunk)
+        if (toProcess) {
+          console.log('Arbimon Export PM job: writing chunk', queryResult.length)
+          await writeChunk(queryResult, targetFile, projectSites, isFirstChunk)
+        }
         isFirstChunk = false
         index++
       }
@@ -85,10 +88,14 @@ async function writeChunk (results, targetFile, projectSites, isFirstChunk) {
           fields.push(...Object.keys(result).filter(f => !fields.includes(f)))
       });
       fields.splice(13, 0, 'site_name');
+      fields.push('audio_url')
 
       let datastream = new stream.Readable({objectMode: true});
       let _buf = []
 
+      let recordingIds = results.map(r => r.recording_id)
+      recordingIds = [...new Set(recordingIds)]
+      const recs = await getRecordingByIds({ recordingIds })
       for (let result of results) {
         result.site_name = result.site_id ? projectSites.filter(s => s.site_id === result.site_id)[0].name : '---';
         fields.forEach(f => {
@@ -96,7 +103,7 @@ async function writeChunk (results, targetFile, projectSites, isFirstChunk) {
             result[f] = '---'}
           }
         )
-        const recUrl = result.audio_url
+        const recUrl = recs.filter(r => r.recording_id === result.recording_id)[0].uri;
         const url = await getSignedUrl({
           Bucket: isLegacy(recUrl) ? S3_LEGACY_BUCKET_ARBIMON : S3_RFCX_BUCKET_ARBIMON,
           Key: recUrl,

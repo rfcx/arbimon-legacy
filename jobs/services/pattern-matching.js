@@ -5,10 +5,9 @@ async function getPmRois (options = {}) {
   const sql = `
     select /*+ MAX_EXECUTION_TIME(360000) */  pm.pattern_matching_id job_id, pm.name job_name, pm.template_id, sp.species_id, sp.scientific_name, st.songtype,
     pmr.x1, pmr.y1, pmr.x2, pmr.y2, pmr.score, pmr.validated, pmr.denorm_site_id as site_id,
-    r.recording_id, r.datetime recording_local_time, r.uri audio_url
+    pmr.recording_id, pmr.denorm_recording_datetime recording_local_time
     from pattern_matching_rois pmr
       join pattern_matchings pm on pm.pattern_matching_id = pmr.pattern_matching_id
-      join recordings r on pmr.recording_id = r.recording_id
       join species sp on pmr.species_id = sp.species_id
       join songtypes st on pmr.songtype_id = st.songtype_id
     where pm.project_id = ${options.projectId} and pm.pattern_matching_id = ${options.jobId} and pm.deleted = 0

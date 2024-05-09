@@ -10,6 +10,13 @@ async function deleteRecordings (options = {}) {
   return rows
 }
 
+async function getRecordingByIds (options = {}) {
+  const connection = await mysql.getConnection()
+  const sql = `select * from recordings where recording_id in (${options.recordingIds})`
+  const [rows, fields] = await connection.execute(sql)
+  return rows
+}
+
 async function getExportRecordingsRow (options = {}) {
     const connection = await mysql.getConnection()
     const sql = `SELECT rep.*, p.name FROM recordings_export_parameters rep
@@ -87,6 +94,7 @@ module.exports = {
   deleteRecordings,
   exportOccupancyModels,
   getExportRecordingsRow,
+  getRecordingByIds,
   updateExportRecordings,
   getCountConnections,
   getCountSitesRecPerDates
