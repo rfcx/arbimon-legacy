@@ -3,7 +3,7 @@ const path = require('path')
 const fs = require('fs')
 const stream = require('stream');
 const csv_stringify = require('csv-stringify');
-const { getPmRois, getProjectPMJobs } = require('../services/pattern-matching')
+const { getPmRois, getProjectPMJobs, getProjectSites } = require('../services/pattern-matching')
 const { zipDirectory } = require('../services/file-helper')
 const { getSignedUrl } = require('../services/storage')
 
@@ -39,6 +39,7 @@ function nameToUrl (name) {
 async function exportAllPmJobs (projectId, cb) {
   try {
     console.log(`${exportReportJob} started`)
+    const projectSites = await getProjectSites({projectId})
     const projectPMJobs = await getProjectPMJobs({projectId})
     for (let job of projectPMJobs) {
       const filename = `${job.jobId}-${nameToUrl(job.jobName)}.csv`;
@@ -59,7 +60,7 @@ async function exportAllPmJobs (projectId, cb) {
         });
         toProcess = queryResult.length > 0;
         console.log('Arbimon Export PM job: writing chunk')
-        await writeChunk(queryResult, targetFile, isFirstChunk)
+        await writeChunk(queryResult, targetFile, projectSites, isFirstChunk)
         isFirstChunk = false
         index++
       }
@@ -77,17 +78,19 @@ function isLegacy (uri) {
     return uri.startsWith('project_')
 }
 
-async function writeChunk (results, targetFile, isFirstChunk) {
+async function writeChunk (results, targetFile, projectSites, isFirstChunk) {
   return new Promise(async function (resolve, reject) {
       let fields = [];
       results.forEach(result => {
           fields.push(...Object.keys(result).filter(f => !fields.includes(f)))
       });
+      fields.splice(13, 0, 'site_name');
 
       let datastream = new stream.Readable({objectMode: true});
       let _buf = []
 
       for (let result of results) {
+        result.site_name = result.site_id ? projectSites.filter(s => s.site_id === result.site_id)[0].name : '---';
         fields.forEach(f => {
           if (result[f] === undefined || result[f] === null) {
             result[f] = '---'}
