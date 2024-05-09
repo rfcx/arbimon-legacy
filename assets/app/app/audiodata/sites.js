@@ -28,6 +28,51 @@ angular.module('a2.audiodata.sites', [
     $scope.search = '';
     $scope.editing = false;
     $scope.creating = false;
+    
+    var siteNameInput = document.getElementById('siteNameInput');
+    siteNameInput.addEventListener('invalid', function(){
+        siteNameInput.setCustomValidity(!$scope.temp.lat && !$scope.temp.lon ? 'Please enter the site name, latitude, and longitude \nto create a site.' : 'Please fill in the site name to create a site.')
+    });
+    
+    siteNameInput.addEventListener('input', function(event){
+        if(event.target.value) {
+            siteNameInput.setCustomValidity('')
+            return
+        }
+    });
+
+    var latInput = document.getElementById('latInput');
+    latInput.addEventListener('invalid', function(){
+        latInput.setCustomValidity('Please enter latitude and longitude, or check \'Exclude this \nsite from Abrimon Insights\' to create a site.')
+    });
+    
+    latInput.addEventListener('input', function(event){
+        if(event.target.value) {
+            latInput.setCustomValidity('')
+            return
+        }
+    });
+
+    var lonInput = document.getElementById('lonInput');
+    lonInput.addEventListener('invalid', function(){
+        lonInput.setCustomValidity('Please enter latitude and longitude, or check \'Exclude this \nsite from Abrimon Insights\' to create a site.')
+    });
+    
+    lonInput.addEventListener('input', function(event){
+        if(event.target.value) {
+            lonInput.setCustomValidity('')
+            return
+        }
+    });
+
+    var hiddenCheckbox = document.getElementById('hiddenCheckbox');
+    hiddenCheckbox.addEventListener('change', function(event){
+        if(event.target.checked) {
+            latInput.removeAttribute('required')
+            lonInput.removeAttribute('required')
+            return
+        }
+    });
 
     Project.getInfo(function(info){
         $scope.project = info;
@@ -332,8 +377,6 @@ angular.module('a2.audiodata.sites', [
             notify.log('Please enter longitude number between -180 to 180');
             return
         }
-
-        if($scope.siteForm.$invalid) return;
 
         var tempObj = Object.assign({}, $scope.temp);
 
