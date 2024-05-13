@@ -46,8 +46,17 @@ async function streamToBuffer (reportName) {
   })
 }
 
+function nameToUrl (name) {
+  return name.replace(/[^a-z0-9A-Z-]/g, '-').replace(/-+/g,'-').replace(/(^-)|(-$)/g, '').toLowerCase()
+}
+
+function isLegacy (uri) {
+  return uri.startsWith('project_')
+}
 
 module.exports = {
   zipDirectory,
-  streamToBuffer
+  streamToBuffer,
+  nameToUrl,
+  isLegacy
 }

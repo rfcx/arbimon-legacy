@@ -127,6 +127,7 @@ angular.module('a2.audiodata.sites', [
                 marker = new google.maps.Marker({
                     position: position,
                     title: site.name,
+                    zIndex: 999,
                     icon: {
                         url: 'https://upload.wikimedia.org/wikipedia/commons/f/f3/Pin_selected_24.png',
                     }
