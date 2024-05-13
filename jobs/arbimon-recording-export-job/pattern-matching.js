@@ -19,12 +19,6 @@ const tmpFilePath = __dirname + '/tmpfilecache'
 const archive = archiver('zip', { zlib: { level: 9 }});
 const outputStreamFile = fs.createWriteStream(__dirname + '/pattern-matching-export.zip');
 
-archive.on('error', (err) => {
-  console.log('\n\n<- fileToZipDirectory error', err)
-})
-archive.on('end', () => {
-  console.log('\n\n<- fileToZipDirectory added')
-})
 archive.pipe(outputStreamFile)
 
 async function collectData (filters, cb) {
@@ -34,12 +28,27 @@ async function collectData (filters, cb) {
       return cb(err)
     }
     console.log(`${exportReportJob}: finished collecting jobs`)
-    archive.finalize().then(cb(null, null));
+    await finalizeArchive()
+    cb(null, null);
   }).catch((e) => {
     console.err('Error export PM', e)
     cb(e)
   })
 }
+
+async function finalizeArchive () {
+    return new Promise((resolve, reject) => {
+      archive.on('error', (err) => {
+        console.log('\n\n<- fileToZipDirectory error', err)
+        reject(err)
+      })
+      archive.on('end', () => {
+        console.log('\n\n<- fileToZipDirectory added')
+        resolve()
+      })
+      archive.finalize();
+    });
+  }
 
 async function buildPMFolder() {
   await zipDirectory(tmpFilePath, 'jobs/arbimon-recording-export-job/pattern-matching-export.zip')
@@ -63,7 +72,7 @@ async function exportAllPmJobs (projectId, cb) {
     const projectPMJobs = await getProjectPMJobs({projectId})
     await exportAllPmJobsCsv(projectPMJobs)
     for (let job of projectPMJobs) {
-      const fileName = `${job.job_id}-${nameToUrl(job.job_name)}.csv`;
+      const fileName = `${nameToUrl(job.job_name)}_${job.job_id}.csv`;
       const filePath = path.join(tmpFilePath, fileName)
       const targetFile = fs.createWriteStream(filePath, { flags: 'a' })
       console.log('next PM job start:', fileName)
@@ -104,7 +113,7 @@ async function exportAllPmJobs (projectId, cb) {
 }
 
 async function exportAllPmJobsCsv (results) {
-  const fileName = '_pattern-matchings.csv';
+  const fileName = '_pattern_matching.csv';
   const filePath = path.join(tmpFilePath, fileName)
   const targetFileSummaryData = fs.createWriteStream(filePath, { flags: 'a' })
   return new Promise(async function (resolve, reject) {
@@ -137,7 +146,7 @@ async function exportAllPmJobsCsv (results) {
         }
         targetFileSummaryData.write(data)
         targetFileSummaryData.end()
-        const filePath = tmpFilePath + '/_pattern-matchings.csv'
+        const filePath = tmpFilePath + '/_pattern_matching.csv'
         await fileToZipDirectory(filePath, fileName).then(() => {
           fs.unlink(filePath, function(err) {
             if (err) return console.error('<- 2. error targetFileSummaryData delete', fileName, err);
