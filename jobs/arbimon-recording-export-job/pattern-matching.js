@@ -34,8 +34,7 @@ async function collectData (filters, cb) {
       return cb(err)
     }
     console.log(`${exportReportJob}: finished collecting jobs`)
-    archive.finalize();
-    cb(null, null)
+    archive.finalize().then(cb(null, null));
   }).catch((e) => {
     console.err('Error export PM', e)
     cb(e)
