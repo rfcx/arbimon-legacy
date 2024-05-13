@@ -115,10 +115,10 @@
                     <div>
                         <div class="form-group">
                             <label>Site name:</label>
-                            <input class="form-control bg-moss border-gray-600 rounded-lg" type="text" ng-model="temp.name" placeholder="Site name" required>
+                            <input id="siteNameInput" class="form-control bg-moss border-gray-600 rounded-lg" type="text" ng-model="temp.name" placeholder="Site name" required>
                         </div>
                         <div class="row-flex flex-direction-row flex-align-middle gap-x-3">
-                            <input type="checkbox" class="m-0" ng-model="temp.hidden">
+                            <input id="hiddenCheckbox" type="checkbox" class="m-0" ng-model="temp.hidden">
                             Exclude this site from Arbimon Insights
                             <a id="popoverSitePage"
                                 class="btn p-0"
@@ -139,7 +139,9 @@
                             <label>Location:</label>
                             <div class="input-group">
                                 <span class="input-group-addon edit-site-label bg-moss border-gray-600 rounded-lg" ng-disabled="temp.hidden === true">Lat</span>
-                                <input class="form-control bg-moss border-gray-600 rounded-lg"
+                                <input
+                                    id="latInput"
+                                    class="form-control bg-moss border-gray-600 rounded-lg"
                                     style="height: 34px"
                                     name="lat"
                                     type="text"
@@ -147,12 +149,15 @@
                                     placeholder="Latitude"
                                     pattern="^-?\d+\.?\d*(\s*)$"
                                     ng-disabled="temp.hidden === true"
+                                    required
                                 >
                             </div>
                         </div>
                         <div class="input-group mb-2">
                             <span class="input-group-addon edit-site-label bg-moss border-gray-600 rounded-lg" ng-disabled="temp.hidden === true">Lon</span>
-                            <input class="form-control bg-moss border-gray-600 rounded-lg"
+                            <input
+                                id="lonInput"
+                                class="form-control bg-moss border-gray-600 rounded-lg"
                                 style="height: 34px"
                                 name="lon"
                                 type="text"
@@ -160,6 +165,7 @@
                                 placeholder="Longitude"
                                 pattern="^-?\d+\.?\d*(\s*)$"
                                 ng-disabled="temp.hidden === true"
+                                required
                             >
                         </div>
                         <div class="input-group">
