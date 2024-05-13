@@ -261,6 +261,22 @@ router.get('/project/:projectUrl/validations', function(req, res, next) {
 
 // --------------------- soundscapes routes
 
+router.post('/project/:projectUrl/soundscape/batch-run', function(req, res, next) {
+    res.type('json');
+    return model.soundscapes.requestBatchRun({
+        projectUrl: req.body.projectUrl,
+        sites: req.body.s,
+        year: req.body.y.toString(),
+        aggregation: req.body.a,
+        binSize: req.body.b.toString(),
+        normalize: req.body.nv.toString(),
+        threshold: req.body.t.toString(),
+    }, function(err) {
+        if (err) return next(err);
+        res.json({ create: true });
+    })
+})
+
 router.post('/project/:projectUrl/soundscape/new', function(req, res, next) {
     res.type('json');
     var response_already_sent;

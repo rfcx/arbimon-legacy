@@ -1,4 +1,5 @@
 {
   "namespace": "production",
-  "imagePath": "docker.io/jackgl/cluster-dev:latest"
+  "aedImagePath": "docker.io/jackgl/cluster-dev:latest",
+  "soundscapeImagePath": ""
 }

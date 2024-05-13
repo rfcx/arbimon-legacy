@@ -5,11 +5,30 @@
 
     <form role="form">
       <div class="form-group">
-        <label for="modelName">Soundscape name:</label>
-        <input type="text" ng-model="datasubmit.name"  class="form-control ui-input"/>
+        <label for="modelName" class="font-medium">Job type:</label>
+        <div class="row-flex">
+          <a class="btn btn-sm rounded-md row-flex-inline flex-align-middle"
+            ng-class="{'btn-primary': datasubmit.jobtype === 'single', 'btn-success': datasubmit.jobtype === 'multiple' }"
+            ng-model="datasubmit.jobtype"
+            ng-click="datasubmit.jobtype = 'single'"
+          >
+            Single soundscape
+          </a>
+          <a class="btn btn-sm rounded-md row-flex-inline flex-align-middle ml-3"
+            ng-class="{'btn-primary': datasubmit.jobtype === 'multiple', 'btn-success': datasubmit.jobtype === 'single' }"
+            ng-model="datasubmit.jobtype"
+            ng-click="datasubmit.jobtype = 'multiple'"
+          >
+            Multiple (by site/year)
+          </a>
+        </div>
+      </div>
+      <div ng-if="datasubmit.jobtype === 'single'" class="form-group">
+        <label for="modelName" class="font-medium">Soundscape name:</label>
+        <input type="text" ng-model="datasubmit.name"  class="form-control ui-input btn-sm"/>
         <span ng-bind="nameMsg" class="nameExistsSpan"></span>
       </div>
-      <div class="form-group">
+      <div ng-if="datasubmit.jobtype === 'single'" class="form-group">
         <label for="classifier">Select playlist:</label>
         <div class="mb-3 flex flex-row flex-align-middle" ng-if="playlists && !playlists.length">
             <em class="pr-2">No playlists found.</em>
@@ -20,10 +39,28 @@
             and create a playlist.
         </div>
         <ui-select ng-if="playlists && playlists.length" ng-model="datasubmit.playlist" ng-disabled="disabled" class="new-form-control">
-            <ui-select-match placeholder="Select or search a playlist...">{{$select.selected.name}}</ui-select-match>
-            <ui-select-choices repeat="playlist in playlists | filter: $select.search">
-              {{playlist.name}} <span class="pull-right"><small><em> <strong >Count:</strong>({{playlist.count}})</em></small></span>
-            </ui-select-choices>
+          <ui-select-match placeholder="Select or search a playlist...">{{$select.selected.name}}</ui-select-match>
+          <ui-select-choices repeat="playlist in playlists | filter: $select.search">
+            {{playlist.name}} <span class="pull-right"><small><em> <strong >Count:</strong>({{playlist.count}})</em></small></span>
+          </ui-select-choices>
+        </ui-select>
+      </div>
+      <div ng-if="datasubmit.jobtype === 'multiple'" class="form-group">
+        <label for="modelName" class="font-medium">Comma-separated list of site names: (e.g. AB1,AB2,AB3)</label>
+        <ui-select multiple ng-model="datasubmit.sites" theme="bootstrap" close-on-select="false" class="new-form-control">
+          <ui-select-match>{{$item.name}}</ui-select-match>
+          <ui-select-choices class="has-badges" repeat="site in sites | filter:$select.search">
+            {{site.name}}
+          </ui-select-choices>
+        </ui-select>
+      </div>
+      <div ng-if="datasubmit.jobtype === 'multiple'" class="form-group">
+        <label for="modelName" class="font-medium">Year:</label>
+        <ui-select ng-model="datasubmit.year" ng-disabled="disabled" class="new-form-control">
+          <ui-select-match>{{$select.selected}}</ui-select-match>
+          <ui-select-choices repeat="year in years | filter: $select.search">
+            {{year}}
+          </ui-select-choices>
         </ui-select>
       </div>
       <div class="form-group">

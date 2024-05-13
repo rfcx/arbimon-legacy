@@ -361,14 +361,18 @@ angular.module('a2.analysis.soundscapes', [
     };
 
 })
-.controller('CreateNewSoundscapeInstanceCtrl', function($scope, $modalInstance, a2Soundscapes, $timeout, projectData, playlists) {
+.controller('CreateNewSoundscapeInstanceCtrl', function($scope, $modalInstance, a2Soundscapes, Project, projectData, playlists) {
 
     $scope.projectData = projectData;
     $scope.playlists = playlists;
     $scope.buttonEnableFlag = true;
+    $scope.years = Array.from({ length: 20 }, (_, i) => new Date().getFullYear() - i);
     $scope.datasubmit = {
+        jobtype: 'single',
         name : '' ,
         playlist: '',
+        sites: [],
+        year: '',
         aggregation : '',
         threshold : 0,
         thresholdReference: 'absolute',
@@ -378,6 +382,12 @@ angular.module('a2.analysis.soundscapes', [
     };
 
     $scope.nameMsg = '';
+
+    Project.getSites(function(sites) {
+        $scope.sites = sites
+        $scope.sites.unshift({ name: 'Select all' })
+    })
+
     $scope.aggregationValue = function(val)
     {
         $scope.$apply(function () {
@@ -386,40 +396,54 @@ angular.module('a2.analysis.soundscapes', [
     };
 
     $scope.ok = function () {
-
-        var url = $scope.projectData.url;
         $scope.nameMsg = '';
-        a2Soundscapes.create({
-                n: $scope.datasubmit.name,
-                p: $scope.datasubmit.playlist,
-                a: $scope.datasubmit.aggregation,
-                t: $scope.datasubmit.threshold,
-                tr: $scope.datasubmit.thresholdReference,
-                m: 22050,
-                b: $scope.datasubmit.bin,
-                f: $scope.datasubmit.bandwidth,
-                nv:$scope.datasubmit.normalize
-            })
-            .success(function(data) {
-                if (data.name) {
-                    $scope.nameMsg = 'Name exists';
-                }
-                else {
+        var opts = {
+            a: $scope.datasubmit.aggregation,
+            t: $scope.datasubmit.threshold,
+            tr: $scope.datasubmit.thresholdReference,
+            m: 22050,
+            b: $scope.datasubmit.bin,
+            f: $scope.datasubmit.bandwidth,
+            nv:$scope.datasubmit.normalize
+        }
+        if ($scope.datasubmit.jobtype === 'single') {
+            opts.n = $scope.datasubmit.name
+            opts.p = $scope.datasubmit.playlist
+            a2Soundscapes.create(opts)
+                .success(function(data) {
+                    if (data.name) {
+                        $scope.nameMsg = 'Name exists';
+                    }
+                    else {
+                        $modalInstance.close( data );
+                    }
+                })
+                .error(function(data) {
+                    if (data.err) {
+                        $modalInstance.close( {err:"Error: "+data.err});
+                    }
+                    else {
+                        $modalInstance.close( {err:"Error: Cannot create soundscape job"});
+                    }
+                });
+        } else {
+            const siteNames = $scope.datasubmit.sites.map(s => s.name)
+            opts.s = siteNames.join(",")
+            opts.y = $scope.datasubmit.year
+            opts.projectUrl = $scope.projectData.url
+            opts.nv = $scope.datasubmit.normalize === true ? 1 : 0
+            a2Soundscapes.createBatchRun(opts)
+                .success(function(data) {
                     $modalInstance.close( data );
-                }
-            })
-            .error(function(data) {
-                if (data.err) {
-                    $modalInstance.close( {err:"Error: "+data.err});
-                }
-                else {
-                    $modalInstance.close( {err:"Error: Cannot create soundscape job"});
-                }
-            });
+                })
+                .error(function(data) {
+                    $modalInstance.close( {err:"Erro create soundscape jobs"});
+                });
+        }
     };
 
     $scope.buttonEnable = function () {
-        return  (
+        return $scope.datasubmit.jobtype === 'single' ? (
             $scope.datasubmit.bin === 0 ||
             ((typeof $scope.datasubmit.bin.length)  == 'string') ||
             $scope.datasubmit.aggregation.length  === 0 ||
@@ -427,7 +451,10 @@ angular.module('a2.analysis.soundscapes', [
             ((typeof $scope.datasubmit.bandwidth.length)  == 'string') ||
             $scope.datasubmit.name.length  === 0 ||
             ((typeof $scope.datasubmit.playlist) == 'string')
-        ) ;
+        ) : (
+            $scope.datasubmit.aggregation.length  === 0 ||
+            $scope.datasubmit.threshold.length === 0
+        )
     };
 
     $scope.cancel = function (url) {
