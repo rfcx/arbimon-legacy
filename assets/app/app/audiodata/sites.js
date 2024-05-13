@@ -43,7 +43,11 @@ angular.module('a2.audiodata.sites', [
 
     var latInput = document.getElementById('latInput');
     latInput.addEventListener('invalid', function(){
-        latInput.setCustomValidity('Please enter latitude and longitude, or check \'Exclude this \nsite from Abrimon Insights\' to create a site.')
+        if(!$scope.temp.lat && !$scope.temp.lon) {
+            latInput.setCustomValidity('Please enter latitude and longitude, or check \'Exclude this \nsite from Abrimon Insights\' to create a site.')
+        } else {
+            latInput.setCustomValidity('Please enter latitude, or check \'Exclude this \nsite from Abrimon Insights\' to create a site.')
+        }
     });
     
     latInput.addEventListener('input', function(event){
@@ -55,7 +59,11 @@ angular.module('a2.audiodata.sites', [
 
     var lonInput = document.getElementById('lonInput');
     lonInput.addEventListener('invalid', function(){
-        lonInput.setCustomValidity('Please enter latitude and longitude, or check \'Exclude this \nsite from Abrimon Insights\' to create a site.')
+        if(!$scope.temp.lat && !$scope.temp.lon) {
+            lonInput.setCustomValidity('Please enter latitude and longitude, or check \'Exclude this \nsite from Abrimon Insights\' to create a site.')
+        } else {
+            lonInput.setCustomValidity('Please enter longitude, or check \'Exclude this \nsite from Abrimon Insights\' to create a site.')
+        }
     });
     
     lonInput.addEventListener('input', function(event){
@@ -377,6 +385,10 @@ angular.module('a2.audiodata.sites', [
         if($scope.temp.lon > 180 || $scope.temp.lon < -180) {
             notify.log('Please enter longitude number between -180 to 180');
             return
+        }
+
+        if($scope.temp.lat === '0' && $scope.temp.lon === '0') {
+            $scope.temp.hidden = true
         }
 
         var tempObj = Object.assign({}, $scope.temp);
