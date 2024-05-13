@@ -14,7 +14,7 @@ const S3_RFCX_BUCKET_ARBIMON = process.env.AWS_RFCX_BUCKETNAME
 
 const exportReportType = 'Pattern Matchings';
 const exportReportJob = `Arbimon Export ${exportReportType} job`
-const tmpFilePath = 'jobs/arbimon-recording-export-job/tmpfilecache'
+const tmpFilePath = __dirname + '/tmpfilecache'
 
 const archive = archiver('zip', { zlib: { level: 9 }});
 const outputStreamFile = fs.createWriteStream(__dirname + '/pattern-matching-export.zip');
@@ -47,10 +47,12 @@ async function buildPMFolder() {
 }
 
 async function fileToZipDirectory (sourceFilePath, sourceFileName) {
+  console.log('<- start fileToZipDirectory sourceFilePath', sourceFilePath)
+  console.log('<- start fileToZipDirectory sourceFileName', sourceFileName)
   return new Promise((resolve, reject) => {
     archive.append(fs.createReadStream(sourceFilePath)
-      .on('end', function() {console.log('End fileToZipDirectory.'); resolve()})
-      .on('error', function(err) {console.log('Error fileToZipDirectory.', err); reject()})
+      .on('end', function() {console.log('<- 1. End fileToZipDirectory.', sourceFileName); resolve()})
+      .on('error', function(err) {console.log('<- 1. Error fileToZipDirectory.', sourceFileName, err); reject()})
     , { name: sourceFileName })
   });
 }
@@ -88,13 +90,12 @@ async function exportAllPmJobs (projectId, cb) {
       }
       targetFile.end()
       console.log('PM job end:', fileName)
-      await fileToZipDirectory(`${__dirname}/${filePath}`, fileName)
-        .then(() => {
-          fs.unlink(`${__dirname}/${filePath}`, function(err){
-            if(err) return console.error('error file delete', err);
-            console.log('file deleted successfully');
-          })
+      await fileToZipDirectory(filePath, fileName).then(() => {
+        fs.unlink(filePath, function(err){
+          if(err) return console.error('<- 2. error pm csv delete', fileName, err);
+          console.log('<- 2. pm csv deleted successfully', fileName);
         })
+      })
     }
     cb(null, null)
   } catch (e) {
@@ -137,10 +138,11 @@ async function exportAllPmJobsCsv (results) {
         }
         targetFileSummaryData.write(data)
         targetFileSummaryData.end()
-        await fileToZipDirectory(`${__dirname}/tmpfilecache/_pattern-matchings.csv`, fileName).then(() => {
-          fs.unlink(`${__dirname}/tmpfilecache/_pattern-matchings.csv`, function(err) {
-            if (err) return console.error('error targetFileSummaryData delete', err);
-            console.log('targetFileSummaryData deleted successfully');
+        const filePath = tmpFilePath + '/_pattern-matchings.csv'
+        await fileToZipDirectory(filePath, fileName).then(() => {
+          fs.unlink(filePath, function(err) {
+            if (err) return console.error('<- 2. error targetFileSummaryData delete', fileName, err);
+            console.log('<- 2. targetFileSummaryData deleted successfully', fileName);
           })
         })
         resolve()
