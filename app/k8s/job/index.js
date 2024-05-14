@@ -1,3 +1,4 @@
 module.exports = {
-  'aed-clustering': require('./aed-clustering.json')
+  'aed-clustering': require('./aed-clustering.json'),
+  'arbimon-soundscape': require('./arbimon-soundscape.json')
 }

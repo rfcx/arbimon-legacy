@@ -288,9 +288,9 @@ let ClusteringJobs = {
                 )
                 ).then(async () => {
                 data.kubernetesJobName = `aed-clustering-${new Date().getTime()}`;
-                let jobParam = jsonTemplates.getTemplate('aed-clustering', 'job', {
+                let jobParam = jsonTemplates.getAEDJobTemplate('aed-clustering', 'job', {
                     kubernetesJobName: data.kubernetesJobName,
-                    imagePath: k8sConfig.imagePath,
+                    imagePath: k8sConfig.aedImagePath,
                     distanceThreshold: `${data.params.distanceThreshold}`,
                     minPoints: `${data.params.minPoints}`,
                     maxClusterSize: `${data.params.maxClusterSize}`,

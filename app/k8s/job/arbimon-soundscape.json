@@ -1,0 +1,66 @@
+{
+    "apiVersion": "batch/v1",
+    "kind": "Job",
+    "metadata": {
+        "name": "{{arbimon-soundscape-timestamp}}"
+    },
+    "spec": {
+        "ttlSecondsAfterFinished": 86400,
+        "template": {
+            "spec": {
+                "containers": [
+                    {
+                        "name": "arbimon-soundscape-container",
+                        "image": "{{imagePath}}",
+                        "imagePullPolicy": "Always",
+                        "args": ["batch_legacy"],
+                        "envFrom": [
+                            {
+                                "secretRef": {
+                                    "name": "arbimon-soundscapes-secret"
+                                }
+                            },
+                            {
+                                "configMapRef": {
+                                    "name": "arbimon-soundscapes-config"
+                                }
+                            }
+                        ],
+                        "env": [
+                            {
+                                "name": "PROJECT",
+                                "value": "{{ENV_PROJECT}}"
+                            },
+                            {
+                                "name": "SITES",
+                                "value": "{{ENV_SITES}}"
+                            },
+                            {
+                                "name": "YEAR",
+                                "value": "{{ENV_YEAR}}"
+                            },
+                            {
+                                "name": "SOUNDSCAPE_AGGREGATION",
+                                "value": "{{ENV_SOUNDSCAPE_AGGREGATION}}"
+                            },
+                            {
+                                "name": "SOUNDSCAPE_BIN_SIZE",
+                                "value": "{{ENV_SOUNDSCAPE_BIN_SIZE}}"
+                            },
+                            {
+                                "name": "SOUNDSCAPE_NORMALIZE",
+                                "value": "{{ENV_SOUNDSCAPE_NORMALIZE}}"
+                            },
+                            {
+                                "name": "SOUNDSCAPE_THRESHOLD",
+                                "value": "{{ENV_SOUNDSCAPE_THRESHOLD}}"
+                            }
+                        ]
+                    }
+                ],
+                "restartPolicy": "Never"
+            }
+        },
+        "backoffLimit": 1
+    }
+}

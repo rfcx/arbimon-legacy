@@ -1,7 +1,7 @@
 const parse = require("json-templates");
 const k8s = require('../k8s')
 
-/** Simple JSON value templating for Kubernetes Job Config.
+/** Simple JSON value templating for Kubernetes AED Job Config.
  * @param {Object} options - Options defining the Kubernetes Job.
  * @param {String} opts.kubernetesJobName - The Kubernetes Job name.
  * @param {Integer} opts.distanceThreshold - Epsilon clustering parameter.
@@ -11,7 +11,7 @@ const k8s = require('../k8s')
  * @param {String} opts.aedJobId - Audio Event Detection job id clustering parameter.
 */
 
-function getTemplate (name, type, opts) {
+function getAEDJobTemplate (name, type, opts) {
     var json;
     try {
         json = k8s[type][name]
@@ -30,6 +30,40 @@ function getTemplate (name, type, opts) {
     });
 }
 
+/** Simple JSON value templating for Kubernetes Soundscape Job Config.
+ * @param {Object} options - Options defining the Kubernetes Job.
+ * @param {String} opts.kubernetesJobName - The Kubernetes Job name.
+ * @param {String} opts.ENV_PROJECT - Project identifier (core or arbimon) or url slug (e.g. puerto-rico-island-wide).
+ * @param {String} opts.ENV_SITES - Comma-separated list of site names including wildcards (e.g. AB2,AB3,CD*) - empty for all sites.
+ * @param {String} opts.ENV_YEAR - Single year (e.g. 2022) - empty for all years.
+ * @param {String} opts.ENV_SOUNDSCAPE_AGGREGATION - Time aggregration.
+ * @param {Integer} opts.ENV_SOUNDSCAPE_BIN_SIZE - Bin size/bandwidth (Hz).
+ * @param {Integer} opts.ENV_SOUNDSCAPE_NORMALIZE - Normalize results.
+ * @param {Integer} opts.ENV_SOUNDSCAPE_THRESHOLD - Peak filtering amplitude threshold.
+*/
+
+function getSoundscapeBatchRunTemplate (name, type, opts) {
+    var json;
+    try {
+        json = k8s[type][name]
+    } catch (e) {
+        throw new Error(`${type} with name ${name} doesn't exist.`)
+    }
+    var template = parse(json);
+    return template({
+        "arbimon-soundscape-timestamp": opts.kubernetesJobName,
+        "imagePath": opts.imagePath,
+        "ENV_PROJECT": opts.ENV_PROJECT,
+        "ENV_SITES": opts.ENV_SITES,
+        "ENV_YEAR": opts.ENV_YEAR,
+        "ENV_SOUNDSCAPE_AGGREGATION": opts.ENV_SOUNDSCAPE_AGGREGATION,
+        "ENV_SOUNDSCAPE_BIN_SIZE": opts.ENV_SOUNDSCAPE_BIN_SIZE,
+        "ENV_SOUNDSCAPE_NORMALIZE": opts.ENV_SOUNDSCAPE_NORMALIZE,
+        "ENV_SOUNDSCAPE_THRESHOLD": opts.ENV_SOUNDSCAPE_THRESHOLD
+    });
+}
+
 module.exports = {
-    getTemplate,
+    getAEDJobTemplate,
+    getSoundscapeBatchRunTemplate
 }
