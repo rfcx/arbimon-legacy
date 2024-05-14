@@ -66,7 +66,7 @@ router.post('/sites', verifyToken(), hasRole(['appUser', 'rfcxUser', 'guardianCr
     converter.convert('longitude').optional().toFloat().minimum(-180).maximum(180)
     converter.convert('altitude').optional().toFloat()
     converter.convert('external_id').toString();
-    converter.convert('country_code').toString();
+    converter.convert('country_code').toString().default(null)
     converter.convert('timezone').toString();
     converter.convert('project_id').optional().toString();
     converter.convert('project_external_id').optional().toString();
