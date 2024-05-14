@@ -46,7 +46,7 @@ angular.module('a2.audiodata.sites', [
         if(!$scope.temp.lat && !$scope.temp.lon) {
             latInput.setCustomValidity('Please enter latitude and longitude, or check \'Exclude this \nsite from Abrimon Insights\' to create a site.')
         } else {
-            latInput.setCustomValidity('Please enter latitude, or check \'Exclude this \nsite from Abrimon Insights\' to create a site.')
+            latInput.setCustomValidity('Please enter latitude or check \'Exclude this \nsite from Abrimon Insights\' to create a site.')
         }
     });
     
@@ -62,7 +62,7 @@ angular.module('a2.audiodata.sites', [
         if(!$scope.temp.lat && !$scope.temp.lon) {
             lonInput.setCustomValidity('Please enter latitude and longitude, or check \'Exclude this \nsite from Abrimon Insights\' to create a site.')
         } else {
-            lonInput.setCustomValidity('Please enter longitude, or check \'Exclude this \nsite from Abrimon Insights\' to create a site.')
+            lonInput.setCustomValidity('Please enter longitude or check \'Exclude this \nsite from Abrimon Insights\' to create a site.')
         }
     });
     
