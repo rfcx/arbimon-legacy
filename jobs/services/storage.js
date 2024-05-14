@@ -20,6 +20,7 @@ const rfcx_s3 = new AWS.S3({
 })
 
 async function uploadObjToFile (bucket, filename, buf, contentType) {
+    console.log('\n\n<- uploadObjToFile', bucket, filename, buf, contentType)
     return new Promise((resolve, reject) => {
         try {
             export_s3.putObject({

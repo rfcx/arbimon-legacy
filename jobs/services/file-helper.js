@@ -35,6 +35,7 @@ async function streamToBuffer (reportName) {
     });
 
     stream.on('end', () => {
+      console.log('\n\n<- streamToBuffer resolve')
       resolve(Buffer.concat(data))
     })
 
