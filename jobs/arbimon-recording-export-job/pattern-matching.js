@@ -175,7 +175,6 @@ async function writeChunk (results, targetFile, projectSites, isFirstChunk) {
       recordingIds = [...new Set(recordingIds)]
       const recs = await getRecordingByIds({ recordingIds })
       for (let result of results) {
-        console.log('project site', result.site_id)
         const curSite = projectSites.filter(s => s.site_id === result.site_id)
         result.site_name = result.site_id && curSite.length ? projectSites.filter(s => s.site_id === result.site_id)[0].name : '---';
         fields.forEach(f => {

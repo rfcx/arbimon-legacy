@@ -6,13 +6,13 @@
         <div class="col-sm-4 control-label">
             Amplitude:
         </div>
-        <div class="col-sm-4">
+        <div class="col-sm-4 soundscape-form">
             <input class="form-control input-sm" step="0.001" max="1" min="0" type="number" ng-model="threshold" />
         </div>
     </div>
     <div class="row no-gutter mt-2">
         <div class="col-sm-4">&nbsp;</div>
-        <div class="col-sm-7">
+        <div class="col-sm-7 soundscape-form">
             <ui-select ng-model="amplitudeReference" theme="bootstrap" ng-change="setAmplitudeReference(amplitudeReference)">
                 <ui-select-match>
                     <div tooltip-append-to-body="true" tooltip="{{$select.selected.description}}" class="hide-end-text">{{$select.selected.caption}}</div>
@@ -31,7 +31,7 @@
         <div class="col-sm-4 control-label">
             Frequency:
         </div>
-        <div class="col-sm-5">
+        <div class="col-sm-5 soundscape-form">
             <input class="form-control input-sm" type="number" max="1000" min="0" ng-model="bandwidth" />
         </div>
         <div class="col-sm-2 text-center">

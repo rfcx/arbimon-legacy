@@ -8,14 +8,14 @@
         <label for="modelName" class="font-medium">Job type:</label>
         <div class="row-flex">
           <a class="btn btn-sm rounded-md row-flex-inline flex-align-middle"
-            ng-class="{'btn-primary': datasubmit.jobtype === 'single', 'btn-success': datasubmit.jobtype === 'multiple' }"
+            ng-class="{'btn-primary': datasubmit.jobtype === 'single', 'btn-default btn-default-extra': datasubmit.jobtype === 'multiple' }"
             ng-model="datasubmit.jobtype"
             ng-click="datasubmit.jobtype = 'single'"
           >
             Single soundscape
           </a>
           <a class="btn btn-sm rounded-md row-flex-inline flex-align-middle ml-3"
-            ng-class="{'btn-primary': datasubmit.jobtype === 'multiple', 'btn-success': datasubmit.jobtype === 'single' }"
+            ng-class="{'btn-primary': datasubmit.jobtype === 'multiple', 'btn-default btn-default-extra': datasubmit.jobtype === 'single' }"
             ng-model="datasubmit.jobtype"
             ng-click="datasubmit.jobtype = 'multiple'"
           >
@@ -23,12 +23,12 @@
           </a>
         </div>
       </div>
-      <div ng-if="datasubmit.jobtype === 'single'" class="form-group">
+      <div ng-if="datasubmit.jobtype === 'single'" class="form-group soundscape-form">
         <label for="modelName" class="font-medium">Soundscape name:</label>
         <input type="text" ng-model="datasubmit.name"  class="form-control ui-input btn-sm"/>
         <span ng-bind="nameMsg" class="nameExistsSpan"></span>
       </div>
-      <div ng-if="datasubmit.jobtype === 'single'" class="form-group">
+      <div ng-if="datasubmit.jobtype === 'single'" class="form-group soundscape-form">
         <label for="classifier">Select playlist:</label>
         <div class="mb-3 flex flex-row flex-align-middle" ng-if="playlists && !playlists.length">
             <em class="pr-2">No playlists found.</em>
@@ -50,14 +50,14 @@
       </div>
       <div ng-if="datasubmit.jobtype === 'multiple'" class="form-group soundscape-form">
         <label for="modelName" class="font-medium">Select sites:</label>
-        <ui-select multiple ng-model="datasubmit.sites" theme="bootstrap" close-on-select="false" class="new-form-control">
+        <ui-select multiple ng-model="datasubmit.sites" theme="bootstrap" close-on-select="false" class="new-form-control" style="height: 34px;">
           <ui-select-match placeholder="Site 1, Site 2, Site 3...">{{$item.name}}</ui-select-match>
           <ui-select-choices class="has-badges" repeat="site in sites | filter:$select.search">
             {{site.name}}
           </ui-select-choices>
         </ui-select>
       </div>
-      <div ng-if="datasubmit.jobtype === 'multiple'" class="form-group">
+      <div ng-if="datasubmit.jobtype === 'multiple'" class="form-group soundscape-form">
         <label for="modelName" class="font-medium">Year:</label>
         <ui-select ng-model="datasubmit.year" ng-disabled="disabled" class="new-form-control">
           <ui-select-match placeholder="2023">{{$select.selected}}</ui-select-match>
@@ -69,11 +69,11 @@
       <div class="form-group">
           <label for="aggregation">Bin bandwidth (Hz):</label>
           <ol class="binhzpadding">
-            <li btn-radio="21" ng-model="datasubmit.bin" class="btn ui-btn-toggle btn-sm mr-2"><span class="spacedhz">21</span></li>
-            <li btn-radio="43" ng-model="datasubmit.bin" class="btn ui-btn-toggle btn-sm mr-2"><span class="spacedhz">43</span></li>
-            <li btn-radio="86" ng-model="datasubmit.bin" class="btn ui-btn-toggle btn-sm mr-2"><span class="spacedhz">86</span></li>
-            <li btn-radio="172" ng-model="datasubmit.bin" class="btn ui-btn-toggle btn-sm mr-2"><span class="spacedhz">172</span></li>
-            <li btn-radio="344" ng-model="datasubmit.bin" class="btn ui-btn-toggle btn-sm"><span class="spacedhz">344</span></li>
+            <li btn-radio="21" ng-model="datasubmit.bin" class="btn ui-btn-toggle mr-2"><span class="spacedhz">21</span></li>
+            <li btn-radio="43" ng-model="datasubmit.bin" class="btn ui-btn-toggle mr-2"><span class="spacedhz">43</span></li>
+            <li btn-radio="86" ng-model="datasubmit.bin" class="btn ui-btn-toggle mr-2"><span class="spacedhz">86</span></li>
+            <li btn-radio="172" ng-model="datasubmit.bin" class="btn ui-btn-toggle mr-2"><span class="spacedhz">172</span></li>
+            <li btn-radio="344" ng-model="datasubmit.bin" class="btn ui-btn-toggle"><span class="spacedhz">344</span></li>
           </ol>
       </div>
       <div class="row">
