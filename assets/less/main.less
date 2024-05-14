@@ -499,9 +499,8 @@ h5 {
     .ui-select-toggle::after {
       content:"\2304" !important;
       height: 10px !important;
-      top: 50% !important;
-      right: 10px !important;
-      margin-top: -2px !important;
+      margin-top: -3px !important;
+      margin-right: -1px !important;
       margin-left: 0 !important;
       float: right !important;
     }
@@ -514,9 +513,22 @@ h5 {
   .ui-select-multiple.ui-select-bootstrap::after {
     content:"\2304" !important;
     height: 10px !important;
-    margin-top: -27px !important;
-    margin-right: 9px !important;
-    float: right !important;
+    right: 11px;
+    top: 16%;
+    position: absolute;
+  }
+
+  .ui-select-multiple.ui-select-bootstrap.open::after {
+    content: none !important;
+  }
+
+  .ui-select-bootstrap {
+    .ui-select-choices-row {
+      > span {
+        color: @text-color !important;
+        background-color: @moss !important;
+      }
+    }
   }
 
   .ui-select-multiple.ui-select-bootstrap input.ui-select-search::placeholder {
@@ -541,5 +553,10 @@ h5 {
 
   .form-control.open {
     border-color: @frequency !important;
+  }
+
+  .ui-select-container > div {
+    max-height: 80px;
+    overflow-y: auto;
   }
 }
