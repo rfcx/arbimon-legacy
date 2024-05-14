@@ -528,6 +528,10 @@ h5 {
         color: @text-color !important;
         background-color: @moss !important;
       }
+      &:focus,
+      &:hover {
+        background-color: @util-gray-04 !important;
+      }
     }
   }
 
@@ -544,6 +548,11 @@ h5 {
 
   .ui-select-bootstrap .ui-select-choices-row>a {
     color: @util-gray-01;
+    &:focus,
+    &:hover {
+      border-radius: 5px;
+      background-color: @util-gray-04 !important;
+    }
   }
 
   .form-control {
@@ -556,7 +565,7 @@ h5 {
   }
 
   .ui-select-container > div {
-    max-height: 80px;
+    max-height: 77px;
     overflow-y: auto;
   }
 }
