@@ -271,9 +271,9 @@ router.post('/project/:projectUrl/soundscape/batch-run', function(req, res, next
         binSize: req.body.b.toString(),
         normalize: req.body.nv.toString(),
         threshold: req.body.t.toString(),
-    }, function(err) {
+    }, function(err, data) {
         if (err) return next(err);
-        res.json({ create: true });
+        res.json({ create: data });
     })
 })
 

@@ -433,10 +433,10 @@ angular.module('a2.analysis.soundscapes', [
             opts.nv = $scope.datasubmit.normalize === true ? 1 : 0
             a2Soundscapes.createBatchRun(opts)
                 .success(function(data) {
-                    $modalInstance.close( data );
+                    $modalInstance.close( { message: "Creating multiple soundscape jobs are in a progress." } );
                 })
                 .error(function(data) {
-                    $modalInstance.close( {err:"Erro create soundscape jobs"});
+                    $modalInstance.close({ err: "Error creating multiple soundscape jobs." });
                 });
         }
     };
