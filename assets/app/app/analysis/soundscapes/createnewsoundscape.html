@@ -46,9 +46,9 @@
         </ui-select>
       </div>
       <div ng-if="datasubmit.jobtype === 'multiple'" class="form-group">
-        <label for="modelName" class="font-medium">Comma-separated list of site names: (e.g. AB1,AB2,AB3)</label>
+        <label for="modelName" class="font-medium">Select sites:</label>
         <ui-select multiple ng-model="datasubmit.sites" theme="bootstrap" close-on-select="false" class="new-form-control">
-          <ui-select-match>{{$item.name}}</ui-select-match>
+          <ui-select-match placeholder="Site 1, Site 2, Site 3...">{{$item.name}}</ui-select-match>
           <ui-select-choices class="has-badges" repeat="site in sites | filter:$select.search">
             {{site.name}}
           </ui-select-choices>
@@ -57,7 +57,7 @@
       <div ng-if="datasubmit.jobtype === 'multiple'" class="form-group">
         <label for="modelName" class="font-medium">Year:</label>
         <ui-select ng-model="datasubmit.year" ng-disabled="disabled" class="new-form-control">
-          <ui-select-match>{{$select.selected}}</ui-select-match>
+          <ui-select-match placeholder="2023">{{$select.selected}}</ui-select-match>
           <ui-select-choices repeat="year in years | filter: $select.search">
             {{year}}
           </ui-select-choices>

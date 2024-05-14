@@ -385,7 +385,6 @@ angular.module('a2.analysis.soundscapes', [
 
     Project.getSites(function(sites) {
         $scope.sites = sites
-        $scope.sites.unshift({ name: 'Select all' })
     })
 
     $scope.aggregationValue = function(val)
