@@ -105,6 +105,7 @@ router.post('/sites', verifyToken(), hasRole(['appUser', 'rfcxUser', 'guardianCr
     if (existingSite) {
       return res.json(existingSite);
     }
+    if (!params.latitude && !params.longitude) siteData.hidden = 1
     const insertData = await model.sites.insertAsync(siteData);
     await model.sites.setCountryCodeAndTimezone(insertData.insertId, params.country_code, params.timezone);
     const site = await model.sites.findByIdAsync(insertData.insertId);
