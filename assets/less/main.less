@@ -371,8 +371,8 @@ h5 {
     box-shadow: none !important;
   }
   &:hover {
-    background-color: @echo !important;
-    border-color: @util-gray-02 !important;
+    background-color: @util-gray-04 !important;
+    border-color: @util-gray-01 !important;
     box-shadow: none !important;
   }
 }
@@ -387,8 +387,8 @@ h5 {
     box-shadow: none !important;
   }
   &:hover {
-    background-color: @echo !important;
-    border-color: @util-gray-02 !important;
+    background-color: @util-gray-04 !important;
+    border-color: @util-gray-01 !important;
     box-shadow: none !important;
   }
 }
@@ -496,31 +496,11 @@ h5 {
 .soundscape-form {
   .ui-select-bootstrap {
     .ui-select-toggle > .caret { display: none !important }
-    .ui-select-toggle::after {
-      content:"\2304" !important;
-      height: 10px !important;
-      margin-top: -3px !important;
-      margin-right: -1px !important;
-      margin-left: 0 !important;
-      float: right !important;
-    }
   }
 
   .ui-select-multiple.ui-select-bootstrap input.ui-select-search {
     margin-left: 8px !important;
     width: 95% !important;
-  }
-
-  .ui-select-multiple.ui-select-bootstrap::after {
-    content:"\2304" !important;
-    height: 10px !important;
-    right: 11px;
-    top: 16%;
-    position: absolute;
-  }
-
-  .ui-select-multiple.ui-select-bootstrap.open::after {
-    content: none !important;
   }
 
   .ui-select-bootstrap {
@@ -559,6 +539,11 @@ h5 {
   .form-control {
     background-color: @moss !important;
     border-color: @util-gray-02 !important;
+    &:hover {
+      background-color: @util-gray-04 !important;
+      border-color: @util-gray-01 !important;
+      box-shadow: none !important;
+    }
   }
 
   .form-control.open {
@@ -568,5 +553,14 @@ h5 {
   .ui-select-container > div {
     max-height: 77px;
     overflow-y: auto;
+    cursor: pointer;
+  }
+
+  .btn {
+    &:hover {
+      background-color: @chirp;
+      border-color: @chirp;
+      color: @pitch;
+    }
   }
 }
