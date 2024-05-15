@@ -452,7 +452,7 @@ angular.module('a2.analysis.soundscapes', [
             ((typeof $scope.datasubmit.playlist) == 'string')
         ) : (
             $scope.datasubmit.aggregation.length  === 0 ||
-            $scope.datasubmit.threshold.length === 0
+            $scope.datasubmit.threshold.length === 0 || $scope.datasubmit.year.length === 0
         )
     };
 

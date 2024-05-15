@@ -86,21 +86,29 @@
             </div>
         </div>
         <div class="col-sm-6">
-            <div class="row container-fluid " >
-                <input type="checkbox" ng-model="datasubmit.normalize" class="cs-pointer"/ ><label for="aggregation">Normalize Data</label>
-                <i class="fa fa-question-circle"
-                    tooltip="Check to normalize each value in the soundscape using the number of recordings in the playlist that fall in that column."
-                    tooltip-placement="right">
-                </i>
+            <div class="row container-fluid row-flex flex-align-middle mb-4">
+                <input type="checkbox" ng-model="datasubmit.normalize" class="cs-pointer mt-0" />
+                <div class="row-flex flex-align-middle gap-x-2 ml-2">
+                    <label for="aggregation" class="mb-0">Normalize Data</label>
+                    <img style="width: 16px"
+                        src="/images/fi-info.svg"
+                        tooltip-placement="top"
+                        tooltip="Check to normalize each value in the soundscape using the number of recordings in the playlist that fall in that column."
+                    >
+                </div>
             </div>
-            <div class="row container-fluid" >
-                <label for="aggregation">Peak filtering:</label>
-                <i class="fa fa-question-circle"
-                    tooltip="Only peaks above the amplitude threshold will be considered.
-                            If the frequency difference of two successive peaks is less than the frequency threshold,
-                            then only the peak of highest amplitude will be kept."
-                    tooltip-placement="right">
-                </i>
+            <div class="row container-fluid">
+                <div class="row-flex flex-align-middle mb-4">
+                    <label for="aggregation">Peak filtering</label>
+                    <img style="width: 16px"
+                        class="ml-2"
+                        src="/images/fi-info.svg"
+                        tooltip-placement="top"
+                        tooltip="Only peaks above the amplitude threshold will be considered.
+                        If the frequency difference of two successive peaks is less than the frequency threshold,
+                        then only the peak of highest amplitude will be kept."
+                    >
+                </div>
                 <a2-threshold-selector threshold="datasubmit.threshold" threshold-reference="datasubmit.thresholdReference" bandwidth="datasubmit.bandwidth" ></a2-threshold-selector>
             </div>
         </div>

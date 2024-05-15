@@ -366,13 +366,13 @@ h5 {
   border: 1px solid @util-gray-02;
   color: @insight !important;
   background-color: @moss;
-  &:focus {
-    border-color: @frequency !important;
-    box-shadow: none !important;
-  }
   &:hover {
     background-color: @util-gray-04 !important;
     border-color: @util-gray-01 !important;
+    box-shadow: none !important;
+  }
+  &:focus {
+    border-color: @frequency !important;
     box-shadow: none !important;
   }
 }
@@ -548,6 +548,12 @@ h5 {
 
   .form-control.open {
     border-color: @frequency !important;
+  }
+
+  .form-control {
+    &:focus {
+      border-color: @frequency !important;
+    }
   }
 
   .ui-select-container > div {
