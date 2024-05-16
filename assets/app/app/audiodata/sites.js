@@ -73,15 +73,6 @@ angular.module('a2.audiodata.sites', [
         }
     });
 
-    var hiddenCheckbox = document.getElementById('hiddenCheckbox');
-    hiddenCheckbox.addEventListener('change', function(event){
-        if(event.target.checked) {
-            latInput.removeAttribute('required')
-            lonInput.removeAttribute('required')
-            return
-        }
-    });
-
     Project.getInfo(function(info){
         $scope.project = info;
     });

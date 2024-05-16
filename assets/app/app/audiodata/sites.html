@@ -149,7 +149,7 @@
                                     placeholder="Latitude"
                                     pattern="^-?\d+\.?\d*(\s*)$"
                                     ng-disabled="temp.hidden === true"
-                                    required
+                                    ng-required="temp.hidden === false"
                                 >
                             </div>
                         </div>
@@ -165,7 +165,7 @@
                                 placeholder="Longitude"
                                 pattern="^-?\d+\.?\d*(\s*)$"
                                 ng-disabled="temp.hidden === true"
-                                required
+                                ng-required="temp.hidden === false"
                             >
                         </div>
                         <div class="input-group">
