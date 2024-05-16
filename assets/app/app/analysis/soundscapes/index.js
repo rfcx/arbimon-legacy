@@ -3,7 +3,8 @@ angular.module('a2.analysis.soundscapes', [
     'a2.permissions',
     'ui.bootstrap' ,
     'ui-rangeSlider',
-    'ngCsv'
+    'ngCsv',
+    'a2.filter.array-filter-with-skipping-value'
 ])
 .config(function($stateProvider, $urlRouterProvider) {
     $stateProvider.state('analysis.soundscapes', {
@@ -384,7 +385,8 @@ angular.module('a2.analysis.soundscapes', [
     $scope.nameMsg = '';
 
     Project.getSites(function(sites) {
-        $scope.sites = sites
+        $scope.sites = sites.map(s => s.name)
+        $scope.sites.unshift('Select all')
     })
 
     $scope.aggregationValue = function(val)
@@ -426,11 +428,11 @@ angular.module('a2.analysis.soundscapes', [
                     }
                 });
         } else {
-            const siteNames = $scope.datasubmit.sites.map(s => s.name)
-            opts.s = siteNames.join(",")
             opts.y = $scope.datasubmit.year
             opts.projectUrl = $scope.projectData.url
             opts.nv = $scope.datasubmit.normalize === true ? 1 : 0
+            const siteNames = $scope.datasubmit.sites
+            opts.s = siteNames.join(",")
             a2Soundscapes.createBatchRun(opts)
                 .success(function(data) {
                     $modalInstance.close( { message: "Creating multiple soundscape jobs are in a progress." } );

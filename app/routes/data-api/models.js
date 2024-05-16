@@ -263,6 +263,28 @@ router.get('/project/:projectUrl/validations', function(req, res, next) {
 
 router.post('/project/:projectUrl/soundscape/batch-run', function(req, res, next) {
     res.type('json');
+    let siteNames = req.body.s.split(',')
+    let isSearchResult = false
+    let isSearchAll = false
+    siteNames.forEach(site => {
+        if (site.includes('Select all search result')) return isSearchResult = true
+        if (site.includes('Select all')) return isSearchAll = true
+    })
+    if (isSearchResult) {
+        const names = siteNames.filter(site => !site.includes('Select all search result'))
+        const filteredSite = siteNames.filter(site => site.includes('Select all search result'))
+        const filteredSiteNames = filteredSite.map(site => {
+            const reg = /Select all search result \((.*?)\)/.exec(site)
+            return reg[1]
+        })
+        const finalArray = names.concat(filteredSiteNames)
+        siteNames = finalArray.join(",")
+    }
+    else if (isSearchAll) {
+        siteNames = ''
+    }
+    else siteNames = req.body.s
+    console.log('<- soundscape/batch-run siteNames', siteNames)
     return model.soundscapes.requestBatchRun({
         projectUrl: req.body.projectUrl,
         sites: req.body.s,

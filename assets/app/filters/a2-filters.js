@@ -7,4 +7,5 @@ angular.module('a2.filters', [
     'a2.filter.range',
     'a2.filter.round',
     'a2.filter.time-from-now',
+    'a2.filter.array-filter-with-skipping-value'
 ]);
