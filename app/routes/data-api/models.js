@@ -287,7 +287,7 @@ router.post('/project/:projectUrl/soundscape/batch-run', function(req, res, next
     console.log('<- soundscape/batch-run siteNames', siteNames)
     return model.soundscapes.requestBatchRun({
         projectUrl: req.body.projectUrl,
-        sites: req.body.s,
+        sites: siteNames,
         year: req.body.y.toString(),
         aggregation: req.body.a,
         binSize: req.body.b.toString(),
