@@ -666,7 +666,7 @@ angular.module('a2.analysis.patternmatching', [
     setupExportUrl: function() {
         const speciesName = this.patternMatching.species_name.replace(/\s+/g, '_').toLowerCase();
         const songtypeName = this.patternMatching.songtype_name.replace(/\s+/g, '_').toLowerCase();
-        const fileName = 'pm-' + this.patternMatching.species_id + '-' + speciesName + '-' + songtypeName;
+        const fileName = 'pm-' + speciesName + '-' + songtypeName + '-' + this.patternMatching.species_id ;
         this.patternMatchingExportUrl = a2PatternMatching.getExportUrl({
             patternMatching: this.patternMatching.id,
             fileName: encodeURIComponent(fileName)
