@@ -135,7 +135,7 @@ function nameToUrl (name) {
 }
 
 async function getMatrixData(soundscape) {
-  const filename = `${soundscape.id}-${nameToUrl(soundscape.name)}.csv`;
+  const filename = `${nameToUrl(soundscape.name)}-${soundscape.id}.csv`;
   const filePath = path.join(tmpFilePath, filename)
   const targetFile = fs.createWriteStream(filePath, { flags: 'a' })
 
@@ -246,7 +246,7 @@ async function fetchSCIDX(soundscape) {
 }
 
 async function getImageData(soundscape) {
-  const filename = `${soundscape.id}-${nameToUrl(soundscape.name)}.png`;
+  const filename = `${nameToUrl(soundscape.name)}-${soundscape.id}.png`;
   const filePath = path.join(tmpFilePath, filename)
   const  s3Data = await getObject({ Bucket: S3_LEGACY_BUCKET_ARBIMON, Key: soundscape.uri, isLegacy: true });
   fs.writeFileSync(filePath, s3Data)
