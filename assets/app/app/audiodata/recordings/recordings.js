@@ -99,12 +99,6 @@ angular.module('a2.audiodata.recordings', [
 
     this.createPlaylist = function() {
         var listParams = angular.merge({}, $scope.params);
-
-        if (!Object.keys(listParams).length) {
-            notify.log('Filter recordings and create a playlist');
-            return;
-        }
-
         if ($scope.totalRecs == 0) {
             notify.error('You can\'t create playlist with 0 recording');
             return;
