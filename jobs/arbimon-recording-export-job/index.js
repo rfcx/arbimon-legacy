@@ -350,16 +350,14 @@ async function processOccupancyModelStream (results, rowData, speciesId, filters
         datastreamOccupancy.on('end', async () => {
             const title = 'occupancy-' + rowData.species_name + '-' + speciesId + '.csv';
             console.log('[occupancy datastream end] title', title)
-            console.log(`[occupancy datastream end] report ${tmpFilePath}/${title} exists`, fs.existsSync(`${tmpFilePath}/${title}`))
+            console.log(`[occupancy datastream end] _bufer.length`, _bufer.length)
+            const targetFile = fs.createWriteStream(`${tmpFilePath}/${title}`, { flags: 'a' })
             csv_stringify(_bufer, { header: true, columns: fields }, async (err, data) => {
-                console.log('[occupancy csv_stringify] err, data', err, data.length)
-                fs.writeFile(`${tmpFilePath}/${title}`, data, function (err, result) {
-                    console.log('[occupancy csv_stringify] result', result)
-                    if (err) {
-                        console.log('error writing file to temp folder', err);
-                        reject(err)
-                    }
-                });
+                if (err) {
+                    console.log('Err write to csv file.', err)
+                    reject(err)
+                  }
+                targetFile.write(data)
                 console.log('[occupancy csv_stringify] resolve')
                 return resolve()
             })
