@@ -26,21 +26,23 @@ async function zipDirectory (sourceDir, outPath) {
 }
 
 async function streamToBuffer (reportName) {
+  console.log('\n\n<- [streamToBuffer] reportName', `jobs/arbimon-recording-export-job/${reportName}.zip`)
   return new Promise((resolve, reject) => {
     const stream = fs.createReadStream(`jobs/arbimon-recording-export-job/${reportName}.zip`);
     const data = [];
 
     stream.on('data', (chunk) => {
+      console.log('\n\n<- [streamToBuffer] chunk', chunk)
       data.push(chunk);
     });
 
     stream.on('end', () => {
-      console.log('\n\n<- streamToBuffer resolve')
+      console.log('\n\n<- [streamToBuffer] resolve')
       resolve(Buffer.concat(data))
     })
 
     stream.on('error', (err) => {
-      console.log('\n\n<- streamToBuffer error', err)
+      console.log('\n\n<- [streamToBuffer] error', err)
       reject(err)
     })
   

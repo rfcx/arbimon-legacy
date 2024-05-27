@@ -19,6 +19,118 @@ const rfcx_s3 = new AWS.S3({
     region: process.env.AWS_RFCX_REGION
 })
 
+const startTime = new Date();
+let numPartsLeft
+
+async function multipartUploadObjToFile (bucket, filename, buf, contentType) {
+    console.log('\n\n<- multipartUploadObjToFile', bucket, filename, buf, contentType)
+    return new Promise((resolve, reject) => {
+        const multiPartParams = {
+            Bucket: bucket,
+            Key: filename,
+            ContentType: contentType
+        };
+        // Upload
+        let partNum = 0;
+        const partSize = 1024 * 1024 * 20; // 20 Mb per part
+        numPartsLeft = Math.ceil(buf.length / partSize);
+        console.log('[multipartUploadObjToFile] numPartsLeft:', numPartsLeft, buf.length / partSize)
+        try {
+            export_s3.createMultipartUpload(multiPartParams, async function(mpErr, multipart){
+                if (mpErr) { console.log('[multipartUploadObjToFile] error:', mpErr); return reject(mpErr) }
+                let uploadId = multipart.UploadId
+                console.log('[multipartUploadObjToFile] Got upload ID', uploadId);
+                // Grab each partSize chunk and upload it as a part
+                console.log('[multipartUploadObjToFile] before a loop parts', 0, buf.length, partSize, partNum, rangeStart < buf.length);
+                for (var rangeStart = 0; rangeStart < buf.length; rangeStart += partSize) {
+                    console.log('[multipartUploadObjToFile] inside a loop parts', buf.length, rangeStart < buf.length, partSize, partNum);
+                    partNum++;
+                    let end = Math.min(rangeStart + partSize, buf.length)
+                    console.log('[multipartUploadObjToFile] end slice:', rangeStart, end, buf.slice(rangeStart, end));
+                    let partParams = {
+                        Body: buf.slice(rangeStart, end),
+                        Bucket: bucket,
+                        Key: filename,
+                        PartNumber: String(partNum),
+                        UploadId: uploadId
+                    };
+                    // Send a single part
+                    console.log('Uploading part: #', partParams.PartNumber, ', Range start:', rangeStart);
+                    await uploadPart(multipart, partParams);
+                }
+                console.log('[multipartUploadObjToFile] resolve all zip folder parts');
+                resolve()
+              });
+        } catch (err) {
+            console.log('[multipartUploadObjToFile] err:', err);
+            reject(new Error(err))
+        }
+    })
+}
+
+let multipartMap = {
+    Parts: []
+};
+
+async function uploadPart(multipart, partParams, tryNumInput) {
+    return new Promise((resolve, reject) => {
+        let tryNum = tryNumInput || 1;
+        const maxUploadTries = 3;
+        console.log('\n <- [uploadPart] partParams:', partParams)
+        export_s3.uploadPart(partParams, async function(multiErr, mData) {
+            console.log('\n <- [uploadPart] after', multiErr, mData)
+            if (multiErr) {
+                console.log('\n <- [uploadPart] multiErr, upload part error:', multiErr);
+                // reject(multiErr)
+                if (tryNum < maxUploadTries) {
+                    console.log('\n <- [uploadPart] Retrying upload of part: #', partParams.PartNumber)
+                    uploadPart(multipart, partParams, tryNum + 1);
+                } else {
+                    console.log('\n <- [uploadPart] Failed uploading part: #', partParams.PartNumber)
+                }
+                return;
+            }
+            multipartMap.Parts[Number(partParams.PartNumber) - 1] = {
+                ETag: mData.ETag,
+                PartNumber: Number(partParams.PartNumber)
+            };
+            console.log('Completed part', Number(partParams.PartNumber));
+            console.log('\n <- [uploadPart] multipartMap.Parts', multipartMap.Parts);
+            if (--numPartsLeft > 0) {
+                console.log('complete only when all parts uploaded: numPartsLeft', numPartsLeft);
+                return resolve();
+            }
+            let doneParams = {
+                Bucket: partParams.Bucket,
+                Key: partParams.Key,
+                MultipartUpload: multipartMap,
+                UploadId: multipart.UploadId
+            };
+            console.log('\n <- [uploadPart] Completing upload: multipartMap', multipartMap);
+            console.log('\n <- [uploadPart] Completing upload: multipartMap.Parts', multipartMap.Parts);
+            console.log('\n <- [uploadPart] Completing upload: doneParams', doneParams);
+            await completeMultipartUpload(doneParams);
+            resolve()
+        });
+    })
+}
+
+async function completeMultipartUpload(doneParams) {
+    return new Promise((resolve, reject) => {
+        export_s3.completeMultipartUpload(doneParams, function(err, data) {
+            if (err) {
+                console.error('\n <- completeMultipartUpload: An error occurred while completing the multipart upload', err);
+                reject(err)
+            } else {
+                let delta = (new Date() - startTime) / 1000;
+                console.log('\n <- completeMultipartUpload: Completed upload in', delta, 'seconds');
+                console.log('\n <- completeMultipartUpload: Final upload data:', data);
+                resolve()
+            }
+        });
+    })
+}
+
 async function uploadObjToFile (bucket, filename, buf, contentType) {
     console.log('\n\n<- uploadObjToFile', bucket, filename, buf, contentType)
     return new Promise((resolve, reject) => {
@@ -49,7 +161,12 @@ function combineFilename (timeStart, project, reportType, reportFormat) {
 
 async function saveLatestData (bucket, buf, project, timeStart, reportType, reportFormat, contentType) {
   const filePath = combineFilename(timeStart, project, reportType, reportFormat)
-  await uploadObjToFile(bucket, filePath, buf, contentType)
+  console.log('buf', buf, buf.length)
+  if (buf && (buf.length > 20971520)) {
+    await multipartUploadObjToFile(bucket, filePath, buf, contentType)
+    console.log('[multipartUploadObjToFile] after final')
+  }
+  else await uploadObjToFile(bucket, filePath, buf, contentType)
   return filePath
 }
 

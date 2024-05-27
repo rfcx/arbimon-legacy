@@ -142,50 +142,41 @@ router.get('/:patternMatching/:fileName?', function(req, res, next) {
 
     filters.project_id = req.project.project_id | 0;
 
-    model.patternMatchings.exportRois(req.params.patternMatching, filters).then(function(results) {
-        var datastream = results[0];
-        var fields = results[1].map(function(f){return f.name});
-        ['year', 'month', 'day', 'hour', 'minute', 'url', 'frequency'].forEach(item=> { fields.push(item) });
-        ['datetime', 'meta', 'recording_id', 'sample_rate'].forEach(item=> {
-            let index = fields.findIndex(i => i === item);
-            fields.splice(index, 1);
-        });
-
-        var colOrder={
-            id: -17,
-            recording: -16,
-            site: -15,
-            year: -14,
-            month: -13,
-            day: -12,
-            hour: -11,
-            minute: -10,
-            species: -9,
-            songtype: -8,
-            x1: -7,
-            x2: -6,
-            y1: -5,
-            y2: -4,
-            frequency: -3,
-            validated: -2,
-            url: -1
-        };
-        fields.sort(function(a, b){
-            var ca = colOrder[a] || 0, cb = colOrder[b] || 0;
-            return ca < cb ? -1 : (
-                   ca > cb ?  1 : (
-                    a <  b ? -1 : (
-                    a >  b ?  1 :
-                    0
-            )));
-        });
-
-        datastream
-            .on('data', (data) => {
-                model.patternMatchings.exportDataFormatted(data, req.project.url);
-            })
-            .pipe(csv_stringify({header:true, columns:fields}))
-            .pipe(res);
+    model.patternMatchings.getPmRoiRecordingUri(req.params.patternMatching).then(async (rows) => {
+        const recObj = {}
+        for (let row of rows) {
+            if (!recObj[row.recording_id]) {
+                const signedUrl = await model.patternMatchings.getSignedUrl(row.uri)
+                recObj[row.recording_id] = signedUrl ? signedUrl : 'no data'
+            }
+        }
+        return model.patternMatchings.exportRois(req.params.patternMatching, filters).then(function(results) {
+            const datastream = results[0];
+            const fields = results[1].map(function(f) { return f.name });
+            ['year', 'month', 'day', 'hour', 'minute', 'url', 'frequency'].forEach(item=> { fields.push(item) });
+            ['datetime', 'meta', 'recording_id', 'sample_rate'].forEach(item=> {
+                let index = fields.findIndex(i => i === item);
+                fields.splice(index, 1);
+            });
+            const colOrder= { id: -17, recording: -16, site: -15, year: -14, month: -13, day: -12, hour: -11, minute: -10,
+                species: -9, songtype: -8, x1: -7, x2: -6, y1: -5, y2: -4, frequency: -3, validated: -2,url: -1
+            };
+            fields.sort(function(a, b) {
+                var ca = colOrder[a] || 0, cb = colOrder[b] || 0;
+                return ca < cb ? -1 : (
+                       ca > cb ?  1 : (
+                        a <  b ? -1 : (
+                        a >  b ?  1 :
+                        0
+                )));
+            });
+            datastream
+                .on('data', (data) => {
+                    model.patternMatchings.exportDataFormatted(data, recObj);
+                })
+                .pipe(csv_stringify({ header: true, columns: fields }))
+                .pipe(res);
+        }).catch(next);
     }).catch(next);
 });
 

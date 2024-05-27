@@ -27,8 +27,9 @@ async function collectData (filters, cb) {
       console.err('Error export PM', err)
       return cb(err)
     }
-    console.log(`${exportReportJob}: finished collecting jobs`)
+    console.log(`${exportReportJob}: before finalizeArchive`)
     await finalizeArchive()
+    console.log(`${exportReportJob}: after finalizeArchive`)
     cb(null, null);
   }).catch((e) => {
     console.err('Error export PM', e)
@@ -48,10 +49,6 @@ async function finalizeArchive () {
       })
       archive.finalize();
     });
-  }
-
-async function buildPMFolder() {
-  await zipDirectory(tmpFilePath, 'jobs/arbimon-recording-export-job/pattern-matching-export.zip')
 }
 
 async function fileToZipDirectory (sourceFilePath, sourceFileName) {
@@ -213,7 +210,6 @@ async function writeChunk (results, targetFile, projectSites, isFirstChunk) {
 }
 
 module.exports = {
-  collectData,
-  buildPMFolder
+  collectData
 }
 

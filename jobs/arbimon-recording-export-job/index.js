@@ -101,7 +101,6 @@ async function main () {
             const exportReportType = 'Pattern Matchings';
             console.log(`Arbimon Export ${exportReportType} job`)
             patternMatching.collectData(filters, async (err, filePath) => {
-                // await patternMatching.buildPMFolder();
                 await sendZipFolderToTheUser(rowData, currentTime, jobName, message, 'pattern-matching-export')
                 console.log(`Arbimon Export ${exportReportType} job finished: ${message}`)
                 resolve()

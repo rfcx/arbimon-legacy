@@ -12,6 +12,7 @@ const Recordings = require('./recordings');
 const Templates = require('./templates');
 const models = require("./index");
 const lambda = new AWS.Lambda();
+const { getSignedUrl } = require('../utils/storage')
 
 // exports
 var PatternMatchings = {
@@ -672,13 +673,11 @@ var PatternMatchings = {
         return pmrs
     },
 
-    exportDataFormatted (pmr, projectUrl) {
+    async exportDataFormatted (pmr, recObj) {
         PatternMatchings.combineDatetime(pmr);
         delete pmr.datetime;
-        if (pmr.recording_id) {
-            pmr.url = `${config('hosts').publicUrl}/legacy-api/project/${projectUrl}/recordings/download/${pmr.recording_id}`;
-            delete pmr.recording_id;
-        }
+        pmr.url = recObj[pmr.recording_id];
+        delete pmr.recording_id;
         if (pmr.sample_rate) {
             pmr.frequency = pmr.sample_rate / 2;
             delete pmr.sample_rate;
@@ -687,6 +686,16 @@ var PatternMatchings = {
         const namePartials = pmr.recording.split('/');
         pmr.recording = pmr.meta && pmr.meta.filename? pmr.meta.filename : namePartials[namePartials.length - 1];
         delete pmr.meta;
+    },
+
+    async getSignedUrl (recUrl) {
+        const isLegacy = recUrl.startsWith('project_')
+        const url = await getSignedUrl({
+            Bucket:  config(isLegacy ? 'aws' : 'aws_rfcx').bucketName,
+            Key: recUrl,
+            isLegacy: isLegacy
+        }, { clientType: isLegacy ? 'arbimon' : 'rfcx' });
+        return url;
     },
 
     getTopRoisByScoresPerSite (opts) {
@@ -776,6 +785,16 @@ var PatternMatchings = {
                 typeCast: sqlutil.parseUtcDatetime,
             })
         );
+    },
+
+    async getPmRoiRecordingUri (patternMatchingId) {
+        const sql = `
+            select r.recording_id, r.uri
+            from pattern_matching_rois pmr
+                join recordings r on pmr.recording_id = r.recording_id
+            where pattern_matching_id = ${patternMatchingId}
+        `
+        return dbpool.query(sql)
     },
 
     validateRois(patternMatchingId, rois, validation){
