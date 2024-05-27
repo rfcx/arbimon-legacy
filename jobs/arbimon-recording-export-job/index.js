@@ -341,12 +341,13 @@ async function processOccupancyModelStream (results, rowData, speciesId, filters
             _buf.push(d)
         })
         for (let row of Object.values(streamObject)) {
-            console.log('\n\n----occupancy data---', row)
+            console.log('[occupancy datastream data]', row)
             datastream.push(row);
         }
         datastream.push(null);
 
         datastream.on('end', async () => {
+            console.log('[occupancy datastream end]', 'occupancy-' + rowData.species_name + '-' + speciesId + '.csv', `${tmpFilePath}/${title}`)
             const title = 'occupancy-' + rowData.species_name + '-' + speciesId + '.csv';
             csv_stringify(_buf, { header: true, columns: fields }, async (err, data) => {
                 fs.writeFile(`${tmpFilePath}/${title}`, data, function (err, result) {
