@@ -71,6 +71,7 @@ async function exportOccupancyModels (specie, filters) {
     `;
 
     const [rows, fields] = await connection.execute(sql)
+    console.log('[exportOccupancyModels]', rows.length)
     return rows
 }
 

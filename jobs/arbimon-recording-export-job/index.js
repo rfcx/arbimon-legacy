@@ -275,7 +275,7 @@ async function processOccupancyModelStream (results, rowData, speciesId, filters
     return new Promise(async function (resolve, reject) {
         let sitesData = await getCountSitesRecPerDates(rowData.project_id, filters);
         let allSites = sitesData.map(item => { return item.site }).filter((v, i, s) => s.indexOf(v) === i);
-        console.log('\n\n----allSites---', allSites)
+        console.log('[processOccupancyModelStream] sites length', allSites.length)
         // Get the first/last recording/date per project, not include invalid dates.
         let dates = sitesData
             .filter(s => s.year && s.month && s.day && s.year > '1970')
