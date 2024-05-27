@@ -333,23 +333,24 @@ async function processOccupancyModelStream (results, rowData, speciesId, filters
             }
         }
         fields.unshift('site', 'siteId');
-        let datastream = new stream.Readable({objectMode: true});
+        let datastreamOccupancy = new stream.Readable({objectMode: true});
 
-        let _buf = []
+        let _bufer = []
 
-        datastream.on('data', (d) => {
-            _buf.push(d)
+        datastreamOccupancy.on('data', (d) => {
+            console.log('[occupancy datastream data]', d.length)
+            _bufer.push(d)
         })
-        for (let row of Object.values(streamObject)) {
-            console.log('[occupancy datastream data]', row)
-            datastream.push(row);
+        for (let r of Object.values(streamObject)) {
+            console.log('[occupancy split streamObject]', r.length)
+            datastreamOccupancy.push(r);
         }
-        datastream.push(null);
+        datastreamOccupancy.push(null);
 
-        datastream.on('end', async () => {
-            console.log('[occupancy datastream end]', 'occupancy-' + rowData.species_name + '-' + speciesId + '.csv', `${tmpFilePath}/${title}`)
+        datastreamOccupancy.on('end', async () => {
             const title = 'occupancy-' + rowData.species_name + '-' + speciesId + '.csv';
-            csv_stringify(_buf, { header: true, columns: fields }, async (err, data) => {
+            console.log('[occupancy datastream end]', 'occupancy-' + rowData.species_name + '-' + speciesId + '.csv', `${tmpFilePath}/${title}`)
+            csv_stringify(_bufer, { header: true, columns: fields }, async (err, data) => {
                 fs.writeFile(`${tmpFilePath}/${title}`, data, function (err, result) {
                     if (err) {
                         console.log('error writing file to temp folder', err);
