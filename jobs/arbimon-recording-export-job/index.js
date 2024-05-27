@@ -231,15 +231,18 @@ async function getMultipleOccupancyModelsData(projection_parameters, filters, ro
     if (!fs.existsSync(tmpFilePath, { recursive: true })) {
         fs.mkdirSync(tmpFilePath);
     }
-    console.log(`folder ${tmpFilePath} exists`, fs.existsSync(tmpFilePath))
+    console.log(`[getMultipleOccupancyModelsData] folder ${tmpFilePath} exists`, fs.existsSync(tmpFilePath))
     for (const [i, specie] of projection_parameters.species.entries()) {
         const data = await exportOccupancyModels(specie, filters)
         rowData.species_name = filters.species_name[i] || specie
+        console.log('[getMultipleOccupancyModelsData] specie', rowData.species_name)
         await processOccupancyModelStream(data, rowData, specie, filters).then(async () => {
             console.log(`occupancy models report for ${message}, specie ${rowData.species_name}`)
         })
     }
+    console.log('[getMultipleOccupancyModelsData] before buildOccupancyFolder')
     await buildOccupancyFolder()
+    console.log('[getMultipleOccupancyModelsData] after buildOccupancyFolder')
     await sendZipFolderToTheUser(rowData, currentTime, jobName, message, 'occupancy-export')
 }
 
@@ -338,6 +341,7 @@ async function processOccupancyModelStream (results, rowData, speciesId, filters
             _buf.push(d)
         })
         for (let row of Object.values(streamObject)) {
+            console.log('\n\n----occupancy data---', row)
             datastream.push(row);
         }
         datastream.push(null);
