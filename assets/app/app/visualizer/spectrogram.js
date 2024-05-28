@@ -269,7 +269,7 @@ angular.module('visualizer-spectrogram', [
             $scope.$watch(function(){
                 return ($scope.layout.scale.sec2px * $scope.getRecordingPlaybackTime()) | 0;
             }, function (newValue, oldValue) {
-                if($scope.audio_player.is_playing) {
+                if($scope.audio_player.is_playing && $scope.layout.scale.zoom.x !== 0) {
                     var pbh = layout_tmp.axis_sizew + newValue;
                     var sl  = $element.scrollLeft(), slw = sl + $element.width()/2;
                     var dx  =  pbh - slw ;
