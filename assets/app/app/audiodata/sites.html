@@ -56,12 +56,6 @@
                         </div>
                     </div>
                 </field>
-                <ng-container ng-if="!row.imported && (row.has_logs || row.token_created_on)">
-                    <field>
-                        <i ng-if="row.has_logs" class="fa fa-book" title="Has status logs"></i>
-                        <i ng-if="row.token_created_on" class="fa fa-link" title="Has a Token"></i>
-                    </field>
-                </ng-container>
                 <field title="No. of recordings" key="rec_count" tooltip="Total # of 1min recording segments">
                     {{ row.rec_count }}
                 </field>
@@ -206,51 +200,6 @@
                     </div>
                 </div>
             </form>
-        </div>
-    </div>
-    <div class="a2-filter-row" ng-show="show.status">
-        <div class="a2-filter a2-filter-text toolbar">
-            <div class="col-sm-4">
-                <ui-select ng-model="status_controller.selected.series" theme="bootstrap" style="width: 150px;" append-to-body="true"
-                ng-change="status_controller.set_series(status_controller.selected.series)" >
-                    <ui-select-match placeholder="Series">
-                        <i ng-class="$select.selected.icon"></i>
-                        {{$select.selected.name}}
-                    </ui-select-match>
-                    <ui-select-choices repeat="series in status_controller.data.series | filter:$select.search" group-by="status_controller.itemGroup">
-                        <i ng-class="series.icon"></i>
-                        {{series.name}}
-                    </ui-select-choices>
-                </ui-select>
-            </div>
-            <div class="col-sm-4">
-                <ui-select ng-model="status_controller.selected.time_range" theme="bootstrap" style="width: 150px;" append-to-body="true"
-                ng-change="status_controller.set_time_range(status_controller.selected.time_range)" >
-                    <ui-select-match placeholder="View">
-                        <i class="fa fa-clock-o"></i>
-                        {{$select.selected.text}}
-                    </ui-select-match>
-                    <ui-select-choices repeat="time_range in status_controller.data.time_ranges | filter:$select.search" group-by="status_controller.itemGroup">
-                        {{time_range.text}}
-                    </ui-select-choices>
-                </ui-select>
-            </div>
-            <div class="col-sm-4">
-                <ui-select ng-model="status_controller.selected.period" theme="bootstrap" style="width: 150px;" append-to-body="true"
-                ng-change="status_controller.set_period(status_controller.selected.period)" >
-                    <ui-select-match placeholder="Detail">
-                        <i class="fa fa-hourglass-3"></i>
-                        {{$select.selected.text}}
-                    </ui-select-match>
-                    <ui-select-choices repeat="period in status_controller.data.periods | filter:$select.search" group-by="status_controller.itemGroup">
-                        {{period.text}}
-                    </ui-select-choices>
-                </ui-select>
-            </div>
-        </div>
-        <div class="chart-container">
-            <loader class="block" ng-hide="!status_controller.loading.data" text="Loading {{status_controller.selected.series.name}} Data"></loader>
-            <c3-chart-display data="status_controller.chart.data" axes="status_controller.chart.axes"></c3-chart-display>
         </div>
     </div>
     <div ng-show="show.map" class="panel" ng-class="{'map-position': scrollMap(), 'map-position-static': scrolledPastHeader}" ng-style="{top: getMapHeaderTop()}">
