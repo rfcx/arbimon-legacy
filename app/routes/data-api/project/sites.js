@@ -9,8 +9,7 @@ router.get('/', function(req, res, next) {
     res.type('json');
     model.projects.getProjectSites(req.project.project_id, {
         compute:{
-            rec_count: !!req.query.count,
-            has_logs: !!req.query.logs
+            rec_count: !!req.query.count
         },
         utcDiff: !!req.query.utcDiff
     }).then(async function(rows) {
@@ -125,17 +124,6 @@ router.param('siteid', function(req, res, next, siteid){
         }
         req.site = sites[0];
         return next();
-    });
-});
-
-router.get('/:siteid/logs', function(req, res, next){
-    res.type('json');
-    model.sites.getLogFileList(req.site, function(err, logFileList){
-        if(err){
-            next(err);
-        } else {
-            res.json(logFileList);
-        }
     });
 });
 
@@ -255,129 +243,5 @@ router.get('/:siteid/data.txt', function(req, res, next){
         }
     });
 });
-router.get('/:siteid/log/data.txt', function(req, res, next){
-    var options={};
-    var output='csv', groupby;
-    if (req.query) {
-        if (req.query.get && req.query.get == 'dates') {
-            options.only_dates = true;
-            output='json';
-            groupby='dates';
-        } else {
-            if(req.query.stat){
-                options.stat = req.query.stat.split(',');
-            }
-            if(req.query.from){
-                options.from = new Date(+req.query.from);
-            }
-            if(req.query.to){
-                options.to = new Date(+req.query.to);
-            }
-            if (req.query.date) {
-                options.dates = req.query.date.split(',');
-                output='csv';
-            }
-            if(req.query.q){
-                options.quantize = req.query.q;
-            }
-        }
-    }
-    model.sites.getDataLog(req.site, options, function(err, datastream, fields){
-        if(err){
-            next(err);
-        } else {
-            fields = fields.map(function(f){return f.name;});
-            switch(output){
-                case 'json':
-                    res.type('application/json');
-                    var rows;
-                    if(groupby){
-                        rows = {};
-                        fields = fields.filter(function(f){return f != groupby;});
-                        datastream.on('data', function(row){
-                            var idx = row[groupby];
-                            delete row[groupby];
-                            rows[idx] = fields.length == 1 ? row[fields[0]] : row;
-                        });
-                        datastream.on('end', function(row){
-                            res.json(rows);
-                        });
-                    }
-                break;
-                default:
-                    res.type('text/plain');
-                    datastream
-                        .pipe(csv_stringify({
-                            header:true,
-                            columns:fields
-                        }))
-                        .pipe(res);
-            }
-        }
-    });
-});
-
-router.post('/generate-token', function(req, res, next){
-    res.type('json');
-    if(!req.haveAccess(req.project.project_id, "manage project sites")) {
-        return res.json({ error: "you dont have permission to 'manage project sites'" });
-    }
-    if(!req.haveAccess(req.project.project_id, "manage project recordings")) {
-        return res.json({ error: "you dont have permission to 'manage project recordings'" });
-    }
-    var siteId = req.body.site;
-    async.waterfall([
-        function(next){
-            model.sites.findById(siteId, next);
-        },
-        function(sites){
-            var next = arguments[arguments.length-1];
-            if(sites.length){
-                model.sites.generateToken(sites[0], next);
-            } else {
-                next(new Error('Cannot find site ' + siteid));
-            }
-        }
-    ], function(err, tokenData){
-        if(err) return next(err);
-
-        tokenData.base64token = new Buffer(tokenData.token).toString('base64');
-
-        res.json(tokenData);
-    });
-});
-
-router.post('/revoke-token', function(req, res, next){
-    res.type('json');
-    if(!req.haveAccess(req.project.project_id, "manage project sites")) {
-        return res.json({ error: "you dont have permission to 'manage project sites'" });
-    }
-    else if(!req.haveAccess(req.project.project_id, "manage project recordings")) {
-        return res.json({ error: "you dont have permission to 'manage project recordings'" });
-    }
-    else {
-        var siteid = req.body.site;
-        async.waterfall([
-            function(next){
-                model.sites.findById(siteid, next);
-            },
-            function(sites){
-                var next = arguments[arguments.length-1];
-                if(sites.length){
-                    model.sites.revokeToken(sites[0], next);
-                } else {
-                    next(new Error('Cannot find site ' + siteid));
-                }
-            }
-        ], function(err){
-            if(err){
-                next(err);
-            } else {
-                res.json({message:"token revoked"});
-            }
-        });
-    }
-});
-
 
 module.exports = router;

@@ -174,7 +174,7 @@ var Projects = {
                 "       s.timezone_locked, \n"+
                 "       s.hidden, \n"+
                 "       s.project_id != ? AS imported, \n"+
-                "       s.token_created_on, s.country_code \n" +
+                "       s.country_code \n" +
                 "FROM sites AS s \n"+
                 "LEFT JOIN project_imported_sites as pis ON s.site_id = pis.site_id AND pis.project_id = ? \n"+
                 "WHERE (s.project_id = ? OR pis.project_id = ?) AND s.deleted_at is null",  typeCast: sqlutil.parseUtcDatetime },

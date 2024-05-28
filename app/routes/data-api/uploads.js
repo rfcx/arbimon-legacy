@@ -107,12 +107,6 @@ var verifySite = function(req, res, next) {
 
         var site = rows[0];
         console.log('--site  to upload', site)
-        // verify token is valid to the system
-        // note this is for site token validation, not for access token validation
-        if(req.token && (site.token_created_on !== req.token.iat)) {
-            return res.status(400).json({ error: "can not use revoked token" });
-        }
-
         if(site.project_id !== req.upload.projectId) {
             return res.status(403).json({ error: "site does not belong to project"});
         }
@@ -203,70 +197,6 @@ var receiveUpload = function(req, res, next) {
     req.pipe(req.busboy);
 };
 
-var receiveSiteLogUpload = function(req, res, next) {
-    res.type('json');
-    var params = {};
-    var error;
-    var upload_file;
-
-    if(!req.busboy) return res.status(400).json({ error: "no data" });
-
-    req.busboy.on('field', function(fieldname, val) {
-        if(fieldname === 'info') {
-            try {
-                params = JSON.parse(val);
-            } catch(err) {
-                error = { error: err.message };
-                return res.status(400).json(error);
-            }
-        }
-    });
-
-    req.busboy.on('file', function(fieldname, file, filename, encoding, mimetype) {
-        if(upload_file){
-            error = { error: "Only one log file at a time is allowed."};
-            return res.status(400).json(error);
-        } else {
-            upload_file = tmpFileCache.key2File("logfile/" + Date.now() + "/" + filename);
-            //                                 ^__ concat now() to prevent collitions
-            file.pipe(fs.createWriteStream(upload_file));
-        }
-    });
-
-    req.busboy.on('finish', function() {
-        if(error){
-            return;
-        }
-
-        if(!params.recorder || !params.from || !params.to) {
-            error = { error: "form data not complete"};
-        } else if(!/[- 0-9a-zA-Z]+/.test(params.recorder)) {
-            error = { error: "invalid recorder id format.", format:params.recorder};
-        }
-
-        if(error){
-            console.log("upload error : ", error);
-            return res.status(400).json(error);
-        }
-
-        model.sites.uploadLogFile({
-            site_id : req.upload.siteId,
-            project_id : req.upload.projectId
-        }, {
-            recorder : params.recorder,
-            from     : params.from    ,
-            to       : params.to      ,
-            file     : fs.createReadStream(upload_file),
-            filepath : upload_file
-        }).then(function(data){
-            res.status(202).json({ success: "log upload done!" });
-        }, next);
-    });
-    req.pipe(req.busboy);
-};
-
 router.post('/audio', authorize({session:true, token:true, access_token:true}), verifySite, receiveUpload);
-
-router.post('/site-log', authorize({token:true}), verifySite, receiveSiteLogUpload);
 
 module.exports = router;
