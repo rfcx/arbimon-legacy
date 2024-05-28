@@ -79,7 +79,9 @@ angular.module('visualizer-spectrogram', [
                     $element.scrollTop(max_s_h);
                 }
                 if($element.scrollLeft() > max_s_w){
-                    $element.scrollLeft(max_s_w);
+                    if(layout.scale.zoom.x !== 0) {
+                        $element.scrollLeft(max_s_w);
+                    }
                 }
 
                 layout.bbox = {
