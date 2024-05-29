@@ -53,6 +53,11 @@ var Sites = {
         ).nodeify(callback);
     },
 
+    findAsync: function(query) {
+        let find = util.promisify(this.find)
+        return find(query)
+    },
+
     findById: function (site_id, callback) {
         var query = "SELECT * FROM sites WHERE site_id = " + dbpool.escape(site_id);
 

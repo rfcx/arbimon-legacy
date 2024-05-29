@@ -1595,6 +1595,12 @@ var Recordings = {
             pm: joi.string(),
             projectTemplate: joi.string(),
             soundscapes: joi.string()
+        },
+        query: {
+            start: joi.string(),
+            end: joi.string().optional(),
+            site_external_id: joi.string(),
+            project_id: joi.number()
         }
     },
 
@@ -1744,6 +1750,16 @@ var Recordings = {
                 VALUES(${filters.project_id}, ${userId}, '${userEmail}', '${JSON.stringify(projection_parameters)}', '${JSON.stringify(filters)}', NOW(), null, null)`
                 return dbpool.query(q)
             })
+    },
+
+    query: function(params, callback) {
+        return Q.ninvoke(joi, 'validate', params, Recordings.SCHEMAS.query)
+            .then(async (parameters) => {
+                const [site] = await siteModel.findAsync({ external_id: parameters.site_external_id })
+                const q = `select recording_id from recordings
+                    where datetime = '${parameters.start}' and site_id = ${site.site_id}`
+                return dbpool.query(q).get(0).get('recording_id')
+            }).nodeify(callback)
     },
 
     groupedDetections: async function(projection, filters){

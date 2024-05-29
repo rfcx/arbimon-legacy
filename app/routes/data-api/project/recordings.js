@@ -64,6 +64,18 @@ router.get('/search', function(req, res, next) {
     });
 });
 
+router.get('/query', function(req, res, next) {
+    res.type('json');
+    var params = req.query;
+
+    params.project_id = req.project.project_id;
+
+    model.recordings.query(params, function(err, recording) {
+        if (err) return res.json(0);
+        res.json(recording);
+    });
+});
+
 router.get('/search-count', function(req, res, next) {
     res.type('json');
     var params = req.query;
