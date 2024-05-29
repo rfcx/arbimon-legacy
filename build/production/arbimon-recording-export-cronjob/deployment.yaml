@@ -35,6 +35,6 @@ spec:
                   memory: '500Mi'
                   cpu: '1'
                 limits:
-                  memory: '2000Mi'
+                  memory: '3000Mi'
                   cpu: '1'
           restartPolicy: Never
