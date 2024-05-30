@@ -1758,7 +1758,7 @@ var Recordings = {
                 const [site] = await siteModel.findAsync({ external_id: parameters.site_external_id })
                 const dateFormatted = moment.utc(parameters.start).format('YYYY-MM-DD HH:mm:ss')
                 const q = `select recording_id from recordings
-                    where datetime < '${dateFormatted}' and site_id = ${site.site_id}
+                    where datetime_utc <= '${dateFormatted}' and site_id = ${site.site_id}
                     order by datetime_utc desc limit 1`
                 console.info('<- [recording query]', q)
                 return dbpool.query(q).get(0).get('recording_id')
