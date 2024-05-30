@@ -1756,8 +1756,10 @@ var Recordings = {
         return Q.ninvoke(joi, 'validate', params, Recordings.SCHEMAS.query)
             .then(async (parameters) => {
                 const [site] = await siteModel.findAsync({ external_id: parameters.site_external_id })
+                const dateFormatted = moment.utc(parameters.start).format('YYYY-MM-DD HH:mm:ss')
                 const q = `select recording_id from recordings
-                    where datetime = '${parameters.start}' and site_id = ${site.site_id}`
+                    where datetime = '${dateFormatted}' and site_id = ${site.site_id}`
+                console.info('<- [recording query]', q)
                 return dbpool.query(q).get(0).get('recording_id')
             }).nodeify(callback)
     },
