@@ -602,13 +602,16 @@ var Recordings = {
         const attr = `${recording.external_id}_t${start}Z.${end}Z_${asset}`
         const token = await auth0Service.getToken();
         console.log('attr', attr)
-        const params = {
+        let params = {
             method: 'GET',
             url: `${rfcxConfig.mediaBaseUrl}/internal/assets/streams/${attr}`,
             headers: {
-            Authorization: `Bearer ${token}`
+                Authorization: `Bearer ${token}`
             },
             json: true
+        }
+        if (type=== 'audio') {
+            params.headers['content-type'] = 'application/json;charset=utf-8;'
         }
         return request(params)
     },
@@ -644,7 +647,7 @@ var Recordings = {
                         return;
                     }
                     // Get an audio file from the Media API for the non-legacy recordings
-                    Recordings.getAssetFileFromMediaAPI(recording, 'audio', options).then(res => {
+                    Recordings.getAssetFileFromMediaAPI(recording, 'audio', options).then(res => { //
                         res.pipe(fs.createWriteStream(cache_miss.file).on('close', function () {
                             fs.unlink(recording_path.path, () => {})
                             cache_miss.retry_get()

@@ -348,9 +348,12 @@ router.get('/tiles/:recordingId/:i/:j', function(req, res, next) {
 });
 
 router.get('/:get/:oneRecUrl?', function(req, res, next) {
-    var get       = req.params.get;
+    var get = req.params.get;
     var recording = req.recording;
 
+    if (get === 'audio') {
+        req.headers['Content-Type'] = 'application/json;charset=utf-8;'
+    }
     var returnType = {
         recording : function(err, recordings){
             if(err) return next(err);
