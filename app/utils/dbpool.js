@@ -95,6 +95,7 @@ var dbpool = {
                 var stream_args = options.stream === true ? {highWaterMark:5} : options.stream;
                 var resultstream = connection.query(query).stream(stream_args);
                 resultstream.on('error', function(err) {
+                    console.error('[queryHandler dbpool]', err)
                     callback(err);
                 });
                 resultstream.on('fields',function(fields,i) {
@@ -104,7 +105,6 @@ var dbpool = {
                     connection.release();
                 });
             } else {
-                var startTime = new Date().getTime();
                 let c = connection.query(query, options, function(err, rows, fields) {
                     if (c && !process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
                         console.log('=== SQL QUERY\n', c.sql.replace(/\n/g, ' '), '\n===')

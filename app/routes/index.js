@@ -20,6 +20,7 @@ router.get('/legacy-api/alive', function(req, res, next) { // for health checks
     res.type('json');
     queryHandler("SELECT project_id FROM projects LIMIT 1", function (err){
         if (err) {
+            console.error('[legacy-api/alive]', err)
             next(err);
         } else {
             res.status(200);

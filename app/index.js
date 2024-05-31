@@ -133,7 +133,7 @@ app.use(function (req, res, next) {
     }
     lookupSession()
   })
-app.use(systemSettings.middleware());
+// app.use(systemSettings.middleware());
 
 // routes ----------------------------------------------
 
