@@ -348,13 +348,13 @@ router.get('/tiles/:recordingId/:i/:j', function(req, res, next) {
 });
 
 router.get('/:get/:oneRecUrl?', function(req, res, next) {
-    var get = req.params.get;
-    var recording = req.recording;
-
+    let get = req.params.get;
+    let recording = req.recording;
+    let query = req.query
     if (get === 'audio') {
-        req.headers['Content-Type'] = 'application/json;charset=utf-8;'
+        req.headers['content-type'] = query.format ? 'audio/wav' : 'audio/mpeg';
     }
-    var returnType = {
+    let returnType = {
         recording : function(err, recordings){
             if(err) return next(err);
 
@@ -362,18 +362,18 @@ router.get('/:get/:oneRecUrl?', function(req, res, next) {
         },
         file : function(err, file){
             if(err || !file) return next(err);
-            res.download(file.path, recording.file, function() { fs.unlink(file.path, () => {}) })
+            res.download(file.path, recording.file, function() { fs.unlink(file.path, () => {}) });
+            if (get === 'audio') {
+                res.setHeader('content-type', query.format ? 'audio/wav' : 'audio/mpeg');
+                res.status(206);
+            }
         },
     };
 
     switch(get){
         case 'info'  :
-            var url_comps = /(.*)\/([^/]+)\/([^/]+)/.exec(req.originalUrl);
-            let recExt;
-            if (recording.file) {
-                recExt = path.extname(recording.file);
-            }
-            recording.audioUrl = url_comps[1] + "/audio/" + recording.id + (recExt ? recExt : '');
+            let url_comps = /(.*)\/([^/]+)\/([^/]+)/.exec(req.originalUrl);
+            recording.audioUrl = `${url_comps[1]}/audio/${recording.id}${query.format ? '.wav' : '.flac'}`;
             recording.imageUrl = url_comps[1] + "/image/" + recording.id;
             model.recordings.fetchValidations(recording, async function(err, validations){
                 if(err) return next(err);
@@ -396,7 +396,7 @@ router.get('/:get/:oneRecUrl?', function(req, res, next) {
                 });
             });
         break;
-        case 'audio'     : model.recordings.fetchAudioFile(recording, req.query, returnType.file); break;
+        case 'audio'     : model.recordings.fetchAudioFile(recording, query, returnType.file); break;
         case 'image'     : model.recordings.fetchSpectrogramFile(recording, returnType.file); break;
         case 'thumbnail' : model.recordings.fetchThumbnailFile(recording, returnType.file); break;
         case 'find'      : returnType.recording(null, [recording]); break;

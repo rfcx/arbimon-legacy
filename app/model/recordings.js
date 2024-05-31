@@ -647,7 +647,7 @@ var Recordings = {
                         return;
                     }
                     // Get an audio file from the Media API for the non-legacy recordings
-                    Recordings.getAssetFileFromMediaAPI(recording, 'audio', options).then(res => { //
+                    Recordings.getAssetFileFromMediaAPI(recording, 'audio', options).then(res => {
                         res.pipe(fs.createWriteStream(cache_miss.file).on('close', function () {
                             fs.unlink(recording_path.path, () => {})
                             cache_miss.retry_get()
