@@ -143,12 +143,12 @@ var admin = require('./routes/admin');
 
 app.use('/admin', admin);
 
-app.use(function(req, res, next) {
-    if(req.systemSettings('maintenance_mode') == 'on')
-        return res.status(301).render('maintenance');
+// app.use(function(req, res, next) {
+//     if(req.systemSettings('maintenance_mode') == 'on')
+//         return res.status(301).render('maintenance');
 
-    next();
-});
+//     next();
+// });
 
 app.use('/', routes);
 

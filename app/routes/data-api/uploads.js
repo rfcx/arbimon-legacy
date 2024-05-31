@@ -21,9 +21,9 @@ var deleteFile = function(filename) {
 // middleware to handle upload auth
 var authorize = function(authtype){
     return function(req, res, next) {
-        if(req.systemSettings('feature.uploads') == 'off') {
-            return res.status(503).json({ error: 'uploads are unavailable, try again later' });
-        }
+        // if(req.systemSettings('feature.uploads') == 'off') {
+        //     return res.status(503).json({ error: 'uploads are unavailable, try again later' });
+        // }
         console.log('--authorize', req.query.project)
         var accessToken = req.get('X-X-access-token-X-X') || req.body.token;
 
