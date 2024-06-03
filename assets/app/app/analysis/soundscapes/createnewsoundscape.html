@@ -6,6 +6,23 @@
     <form role="form">
       <div class="form-group">
         <label for="modelName" class="font-medium">Job type:</label>
+        <a id="multiSoundscapeJobs"
+          class="btn p-0"
+          style="border:none;outline:none;"
+          role="button"
+          popover-html="'Multi-soundscape jobs allow you to calculate soundscapes using the same parameters across multiple sites. Learn more <a href=\'https://help.arbimon.org/article/220-creating-a-soundscape-job\' class=\'text-frequency cursor-pointer\'>here</a>'"
+          popover-trigger="focus"
+          popover-append-to-body="true"
+          data-placement="right"
+          tabindex="0"
+        >
+          <img
+            class="mb-2"
+            width="16"
+            height="16"
+            src="/images/fi-info.svg"
+          >
+        </a>
         <div class="row-flex soundscape-form">
           <a class="btn rounded-md row-flex-inline flex-align-middle"
             ng-class="{'btn-primary': datasubmit.jobtype === 'single', 'btn-default btn-default-extra': datasubmit.jobtype === 'multiple' }"
