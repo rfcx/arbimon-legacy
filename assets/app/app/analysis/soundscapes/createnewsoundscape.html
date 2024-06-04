@@ -64,14 +64,17 @@
       </div>
       <div ng-if="datasubmit.jobtype === 'multiple'" class="form-group text-util-gray-01">
         <div class="row row-flex flex-space-center" ng-show="!uploader.queue.length">
-          <div class="alert alert-warning w-full row-flex flex-direction-row flex-align-middlep-2 mb-3 mx-4 p-3" role="alert">
-              <div class="mx-2">
-                  <p class="alert-heading mb-1 alert-text-color">Warning: Resource-Intensive Task</p>
-                  <p class="mb-1 alert-text-color alert-line-height"><small>
-                    Running multiple soundscape jobs will require substantial computational power and time.
-                    Make sure to test your parameters with the single-soundscape feature first.
-                  </small></p>
-              </div>
+          <div class="alert alert-warning w-full row-flex flex-direction-row flex-align-middle p-2 mb-3 mx-4 p-3" role="alert">
+            <div class="mr-2 ml-2">
+              <i class="fa fa-exclamation-triangle exclamation-triangle"></i>
+            </div>  
+            <div class="mx-2">
+              <p class="alert-heading mb-1 alert-text-color">Warning: Resource-Intensive Task</p>
+              <p class="mb-1 alert-text-color alert-line-height"><small>
+                Running multiple soundscape jobs will require substantial computational power and time.
+                Make sure to test your parameters with the single-soundscape feature first.
+              </small></p>
+            </div>
           </div>
         </div>
         Soundscape job names will be generated automatically.
