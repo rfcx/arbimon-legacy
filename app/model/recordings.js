@@ -1763,7 +1763,7 @@ var Recordings = {
                 const q = `select recording_id from recordings
                     where datetime_utc <= '${dateFormatted}' and site_id = ${site.site_id}
                     order by datetime_utc desc limit 1`
-                console.info('<- [recording query]', q)
+                console.log('<- [recording query]', q)
                 return dbpool.query(q).get(0).get('recording_id')
             }).nodeify(callback)
     },
