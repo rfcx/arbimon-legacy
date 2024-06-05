@@ -54,7 +54,7 @@ RUN apt update \
         libflac-dev \
         autoconf \
         automake
-CMD ["node", "--max_old_space_size=8192", "jobs/arbimon-recording-export-job/index.js"]
+CMD ["node", "--max-old-space-size=8192", "jobs/arbimon-recording-export-job/index.js"]
 
 # ---
 
