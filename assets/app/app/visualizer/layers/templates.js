@@ -22,16 +22,81 @@ angular.module('a2.visualizer.layers.templates', [
         visible: true,
     });
 })
-.controller('a2VisualizerTemplateLayerController', function($scope, $modal, $controller, $state, $timeout, a2Templates, a2UserPermit, a22PointBBoxEditor, Project, notify) {
+.controller('a2VisualizerTemplateLayerController', function($scope, $state, $timeout, a2Templates, a2UserPermit, a22PointBBoxEditor, Project, Species, Songtypes, notify) {
     var self = this;
     self.selected = null;
+    self.toggleSpeciesAdd = false;
+    self.toggleSpeciesSelect = false;
+    self.toggleSongtypeSelect = false;
+    self.userSearch = '';
+    self.allSpecies = [];
+    self.songtypes = [];
+    self.classToAdd = { species: null, songtype: null};
     self.templates = [];
     self.recordingTemplates = [];
     self.citizenScientistUser = a2UserPermit.all && a2UserPermit.all.length === 1 && a2UserPermit.all.includes('use citizen scientist interface') && !a2UserPermit.can('delete project') && !a2UserPermit.isSuper();
 
-    Project.getClasses().then(project_classes => {
-        self.project_classes = project_classes;
-    });
+    self.getClasses = function() {
+        Project.getClasses().then(project_classes => {
+            self.project_classes = project_classes;
+        });
+    }
+
+    self.getClasses();
+
+    self.onSpeciesExists = function(search) {
+        self.userSearch = search;
+        const classes = self.project_classes ? self.project_classes.filter(cl => cl.species_name.toLowerCase().startsWith(search.toLowerCase()) || cl.songtype_name.toLowerCase().startsWith(search.toLowerCase())) : []
+        if (classes.length === 0) {
+            self.toggleSpeciesAdd = true;
+            self.toggleSpeciesSelect = false;
+        }
+    }
+
+    self.addSpecies = function() {
+        self.toggleSpeciesAdd = false;
+        self.toggleSpeciesSelect = true;
+        Species.search(self.userSearch, function(results) {
+            self.allSpecies = results;
+        });
+    }
+
+    self.selectSpecies = function(specie) {
+        self.classToAdd.species = specie.scientific_name
+        self.toggleSpeciesSelect = false;
+        Songtypes.get(function(songs) {
+            self.songtypes = songs;
+        });
+        self.toggleSongtypeSelect = true;
+    }
+
+    self.selectSongtype = function(song) {
+        self.classToAdd.songtype = song.name
+    }
+
+    self.backToSelectSpecies = function() {
+        self.toggleSpeciesSelect = true;
+        self.toggleSongtypeSelect = false;
+    }
+
+    self.addClass = function() {
+        self.toggleSpeciesSelect = false;
+        Project.addClass(self.classToAdd)
+            .success(function(result) {
+                notify.log(self.classToAdd.species + ' ' + self.classToAdd.songtype + " added to the project");
+                self.toggleSongtypeSelect = false;
+                self.getClasses();
+                // Reload the validations list on the Species Presence
+                $scope.$broadcast('a2-persisted');
+            })
+            .error(function(data, status) {
+                self.toggleSongtypeSelect = false;
+                if (status < 500)
+                    notify.error(data.error);
+                else
+                    notify.serverError();
+            });
+    }
 
     var getTemplatesPromise = a2Templates.getList({projectTemplates: true}).then(function(templates){
         self.templates = templates;
