@@ -32,7 +32,7 @@ spec:
                   value: "#arbimon-dev"
               resources:
                 requests:
-                  memory: '500Mi'
+                  memory: '2500Mi'
                   cpu: '1'
                 limits:
                   memory: '3000Mi'
