@@ -24,7 +24,9 @@ angular.module('a2.audiodata.species', [
     var timeout
 
     $scope.getProjectClasses = function(isLoading, isTimeout) {
-       if (isLoading === true) $scope.loading = true;
+       if (isLoading === true) {
+            $scope.loading = true;
+       }
         const opts = {
             q: $scope.searchSpecies.q,
             limit: $scope.pagination.limit,
@@ -81,7 +83,9 @@ angular.module('a2.audiodata.species', [
                     });
                 });
             } else {
-                if (isLoading === true) $scope.loading = false;
+                if (isLoading === true) {
+                    $scope.loading = false;
+                }
             }
         });
 
