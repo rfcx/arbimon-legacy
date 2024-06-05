@@ -2,6 +2,81 @@
     <p ng-hide="classes.length">
         You need to add species sounds <a ui-sref="audiodata.species">here</a>
     </p>
+    <div class="form-group validator" style="position:relative;">
+        <ui-select ng-model="classes" theme="bootstrap">
+            <ui-select-match reset-search-input="false" placeholder="&#128269;&#8194; Search for species">
+                <div ng-if="$select.selected.species_name">
+                    <span class="text-insight">{{ $select.selected.species_name }}</span><br/>
+                    <span class="text-util-gray-01" style="font-size: 12px;">{{ $select.selected.songtype_name }}</span>
+                </div>
+                <div ng-if="userSearch && !$select.selected.species_name">{{ userSearch }}</div>
+            </ui-select-match>
+            <ui-select-choices repeat="class in classes | filter:$select.search | orderBy: ['species_name', 'songtype_name']" refresh="onSpeciesExists($select.search)" refresh-delay="0">
+                <span class="text-insight">{{ class.species_name }}</span><br/>
+                <span class="text-util-gray-01" style="font-size: 12px;">{{ class.songtype_name }}</span>
+            </ui-select-choices>
+        </ui-select>
+        <div class="not-found-row" ng-if="toggleSpeciesAdd === true && userSearch && toggleSpeciesSelect === false">
+            <div class="mb-2">We cannot find the species "{{ userSearch }}" in the project.</div>
+            <a class="primary-link" ng-click="addSpecies()">
+                Add species
+                <span class="ml-1" style="width: 12px">
+                    <img src="/images/fi-plus-primary.svg">
+                </span>
+            </a>
+        </div>
+        <div class="not-found-row" ng-if="toggleSpeciesAdd === false && toggleSpeciesSelect === true">
+            <div class="mb-2">Species</div>
+            <div class="my-2 border-t-1 border-util-gray-02"> </div>
+            <ul ng-if="allSpecies.length" class="ulnodeco mb-2 pl-2" style="max-height: 100px; overflow-y: auto;">
+                <li ng-repeat="specie in allSpecies"
+                    class="linodeco mb-2 p-1 cs-pointer"
+                    ng-class="{'bg-util-gray-02': specie.scientific_name === classToAdd.species}"
+                    ng-click="selectSpecies(specie)"
+                >
+                    {{specie.scientific_name}}
+                    <i class="fa fa-check text-insight" ng-show="specie.scientific_name === classToAdd.species" style="position: absolute; right: 3px; top: 20%;" ></i>
+                </li>
+            </ul>
+            <div ng-if="!allSpecies.length" class="mb-2">No species found.</div>
+            <div class="my-2 border-t-1 border-util-gray-02"> </div>
+            <div class="pl-2">
+                <div>Don't see the species you are looking for?</div>
+                <a ng-href="https://arbimon.org/contact" class="text-frequency">
+                    Contact support
+                    <i class="fa fa-external-link cs-pointer text-frequency ml-2" style="font-size: 14px"></i>
+                </a>
+            </div>
+        </div>
+        <div class="not-found-row" ng-if="toggleSpeciesAdd === false && toggleSpeciesSelect === false && toggleSongtypeSelect === true">
+            <div ng-click="backToSelectSpecies()" class="cs-pointer" style="font-size: 11px;">< Species</div>
+            <div class="my-2">Call</div>
+            <div class="my-2 border-t-1 border-util-gray-02"> </div>
+            <ul ng-if="songtypes.length" class="ulnodeco mb-2 pl-2" style="max-height: 100px; overflow-y: auto;">
+                <li ng-repeat="song in songtypes"
+                    class="linodeco mb-2 p-1 cs-pointer"
+                    ng-class="{'bg-util-gray-02': song.name === classToAdd.songtype}"
+                    ng-click="selectSongtype(song)"
+                >
+                    {{song.name}}
+                    <i class="fa fa-check text-insight" ng-show="song.name === classToAdd.songtype" style="position: absolute; right: 3px; top: 20%;" ></i>
+                </li>
+            </ul>
+            <div class="pl-2 row-flex flex-space-end mt-2">
+                <div tooltip="{{(classToAdd.songtype === null) ? 'Select a species call' : ''}}" tooltip-append-to-body="true">
+                    <button class="btn btn-sm btn-primary btn-rounded-full row-flex-inline flex-align-middle"
+                        ng-disabled="!classToAdd.songtype"
+                        ng-click="addClass()"
+                    >
+                        Add species
+                        <span class="ml-3" style="width: 16px">
+                            <img src="/images/fi-plus.svg">
+                        </span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
     <accordion close-others="false" class="accordion-group">
         <accordion-group is-open="byTaxon[taxon].open" ng-repeat="taxon in taxons" class="accordion-table">
             <accordion-heading>

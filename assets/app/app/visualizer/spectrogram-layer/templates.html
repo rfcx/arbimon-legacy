@@ -130,14 +130,17 @@
                                 </li>
                             </ul>
                             <div class="pl-2 row-flex flex-space-end mt-2">
-                                <a class="btn btn-sm btn-primary btn-rounded-full row-flex-inline flex-align-middle"
-                                    ng-click="layer.templates.addClass()"
-                                >
-                                    Add species
-                                    <span class="ml-3" style="width: 16px">
-                                        <img src="/images/fi-plus.svg">
-                                    </span>
-                                </a>
+                                <div tooltip="{{(layer.templates.classToAdd.songtype === null) ? 'Select a species call' : ''}}" tooltip-append-to-body="true">
+                                    <button class="btn btn-sm btn-primary btn-rounded-full row-flex-inline flex-align-middle"
+                                        ng-disabled="!layer.templates.classToAdd.songtype"
+                                        ng-click="layer.templates.addClass()"
+                                    >
+                                        Add species
+                                        <span class="ml-3" style="width: 16px">
+                                            <img src="/images/fi-plus.svg">
+                                        </span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>

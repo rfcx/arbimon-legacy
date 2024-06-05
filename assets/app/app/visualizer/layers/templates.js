@@ -94,7 +94,7 @@ angular.module('a2.visualizer.layers.templates', [
                 if (status < 500)
                     notify.error(data.error);
                 else
-                    notify.serverError();
+                    notify.error('There was a system error. Please try again.');
             });
     }
 

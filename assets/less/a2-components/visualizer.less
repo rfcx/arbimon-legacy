@@ -816,6 +816,31 @@ a2-img {
     }
     .ui-select-placeholder {
         color: @insight !important;
+        position: absolute;
+        top: 33%;
+        left: 10px;
+        margin-top: -2px;
+    }
+}
+
+.validator {
+    .ui-select-toggle, .ui-select-search {
+        height: 52px;
+        background-color: @moss !important;
+        border-color: @util-gray-03 !important;
+    }
+    .ui-select-container.open {
+        .ui-select-toggle, .ui-select-search {
+            height: 44px;
+        }
+    }
+    .ui-select-placeholder {
+        color: @insight !important;
+        display: block !important;
+        position: absolute;
+        top: 33%;
+        left: 10px;
+        margin-top: -2px;
     }
 }
 

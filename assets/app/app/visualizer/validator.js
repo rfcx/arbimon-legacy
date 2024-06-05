@@ -1,5 +1,5 @@
 angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags'])
-.directive('a2SpeciesValidator', function (Project, a2UserPermit, notify, $filter) {
+.directive('a2SpeciesValidator', function (Project, Species, Songtypes, a2UserPermit, notify, $filter) {
     var project = Project;
     return {
         restrict : 'E',
@@ -8,6 +8,61 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags'])
         },
         templateUrl: '/app/visualizer/validator-main.html',
         link: function($scope, $element, $attrs){
+            $scope.toggleSpeciesAdd = false;
+            $scope.toggleSpeciesSelect = false;
+            $scope.toggleSongtypeSelect = false;
+            $scope.userSearch = '';
+            $scope.allSpecies = [];
+            $scope.songtypes = [];
+            $scope.classToAdd = { species: null, songtype: null};
+
+            $scope.onSpeciesExists = function(search) {
+                $scope.userSearch = search;
+                const classes = $scope.classes ? $scope.classes.filter(cl => cl.species_name.toLowerCase().startsWith(search.toLowerCase()) || cl.songtype_name.toLowerCase().startsWith(search.toLowerCase())) : []
+                if (classes.length === 0) {
+                    $scope.toggleSpeciesAdd = true;
+                    $scope.toggleSpeciesSelect = false;
+                }
+            }
+            $scope.addSpecies = function() {
+                $scope.toggleSpeciesAdd = false;
+                $scope.toggleSpeciesSelect = true;
+                Species.search($scope.userSearch, function(results) {
+                    $scope.allSpecies = results;
+                });
+            }
+            $scope.selectSpecies = function(specie) {
+                $scope.classToAdd.species = specie.scientific_name
+                $scope.toggleSpeciesSelect = false;
+                Songtypes.get(function(songs) {
+                    $scope.songtypes = songs;
+                });
+                $scope.toggleSongtypeSelect = true;
+            }
+            $scope.selectSongtype = function(song) {
+                $scope.classToAdd.songtype = song.name
+            }
+            $scope.backToSelectSpecies = function() {
+                $scope.toggleSpeciesSelect = true;
+                $scope.toggleSongtypeSelect = false;
+            }
+            $scope.addClass = function() {
+                $scope.toggleSpeciesSelect = false;
+                Project.addClass($scope.classToAdd)
+                    .success(function(result) {
+                        notify.log($scope.classToAdd.species + ' ' + $scope.classToAdd.songtype + " added to the project");
+                        $scope.toggleSongtypeSelect = false;
+                        // Reload the validations list on the Species Presence
+                        $scope.$broadcast('a2-persisted');
+                    })
+                    .error(function(data, status) {
+                        $scope.toggleSongtypeSelect = false;
+                        if (status < 500)
+                            notify.error(data.error);
+                        else
+                            notify.error('There was a system error. Please try again.');
+                    });
+            }
             var class2key = function(project_class){
                 var cls;
                 
