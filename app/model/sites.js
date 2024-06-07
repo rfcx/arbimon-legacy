@@ -552,7 +552,7 @@ var Sites = {
                 await db.beginTransaction();
                 await this.updateAsync(site, db);
                 if (rfcxConfig.coreAPIEnabled) {
-                    await this.updateInCoreAPI({
+                    const updatedSite = await this.updateInCoreAPI({
                         site_id: site.site_id,
                         name: site.name,
                         lat: site.lat,
@@ -560,12 +560,7 @@ var Sites = {
                         alt: site['alt'] !== undefined && Sites.isEmptyCoordinate(site.alt) ? null : site.alt,
                         project_id: site.project_id
                     }, idToken)
-                    const coreSite = {
-                        name: site.name,
-                        project_id: options.projectExternalId
-                    }
-                    let { countryCode, timezone } = await this.getCountryCodeAndTimezoneCoreAPI(coreSite, idToken);
-                    await this.setCountryCodeAndTimezone(site.site_id, countryCode, timezone, connection);
+                    await this.setCountryCodeAndTimezone(site.site_id, updatedSite.country_code, updatedSite.timezone, connection);
                 };
                 const { originalProjectId } = options
                 if (site.project_id !== undefined && originalProjectId !== site.project_id) {
@@ -621,6 +616,7 @@ var Sites = {
                 if (body && body.error) {
                     throw new Error('Failed to update site');
                 }
+                return body;
             } catch (e) {
                 throw new Error('Failed to update site');
             }

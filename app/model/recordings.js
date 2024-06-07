@@ -2129,7 +2129,7 @@ var Recordings = {
             `DELETE FROM training_set_roi_set_data WHERE recording_id in (${recIds})`
         ];
 
-        for (query of queries) {
+        for (let query of queries) {
             await queryFn(query)
         }
     },
