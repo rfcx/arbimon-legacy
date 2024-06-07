@@ -4,30 +4,30 @@
     </p>
     <div class="form-group validator" style="position:relative;">
         <ui-select ng-model="selected" on-select="selectClass(selected)" theme="bootstrap">
-            <ui-select-match>
+            <ui-select-match ng-model="selected">
                 <img ng-show="!$select.selected.species_name" class="pl-absolute-icon" style="width: 16px" src="/images/fi-search.svg">
                 <span class="placeholder pl-absolute ml-1" ng-show="!$select.selected.species_name">Search for species</span>
                 <span class="text-insight">{{ $select.selected.species_name }}</span><br/>
                 <span class="text-util-gray-01" style="font-size: 12px;">{{ $select.selected.songtype_name }}</span>
             </ui-select-match>
-            <ui-select-choices repeat="class in classes | filter:$select.search | orderBy: ['species_name', 'songtype_name']" refresh="onSpeciesExists($select.search)" refresh-delay="0">
+            <ui-select-choices repeat="class in classes | filter:$select.search | orderBy: ['species_name', 'songtype_name']" refresh="onSpeciesExists($select.search)" refresh-delay="0" position="down">
                 <span class="text-insight">{{ class.species_name }}</span><br/>
                 <span class="text-util-gray-01" style="font-size: 12px;">{{ class.songtype_name }}</span>
             </ui-select-choices>
         </ui-select>
         <div class="not-found-row" ng-if="toggleSpeciesAdd === true && userSearch && toggleSpeciesSelect === false">
-            <div class="mb-2">We cannot find the species "{{ userSearch }}" in the project.</div>
-            <a class="primary-link" ng-click="addSpecies()">
+            <div class="mb-2 support">We cannot find the species "{{ userSearch }}" in the project.</div>
+            <a class="primary-link support" ng-click="addSpecies()">
                 Add species
-                <span class="ml-1" style="width: 12px">
+                <span class="ml-1" style="width: 14px">
                     <img src="/images/fi-plus-primary.svg">
                 </span>
             </a>
         </div>
         <div class="not-found-row" ng-if="toggleSpeciesAdd === false && toggleSpeciesSelect === true">
-            <div class="mb-2">Species</div>
+            <div class="mb-2 support">Species</div>
             <div class="my-2 border-t-1 border-util-gray-02"> </div>
-            <ul ng-if="allSpecies.length" class="ulnodeco mb-2 pl-2" style="max-height: 100px; overflow-y: auto;">
+            <ul ng-if="allSpecies.length" class="ulnodeco mb-2 pl-0" style="max-height: 100px; overflow-y: auto;">
                 <li ng-repeat="specie in allSpecies"
                     class="linodeco mb-2 py-1 px-2 cs-pointer"
                     ng-class="{'bg-util-gray-03': specie.scientific_name === classToAdd.species}"
@@ -39,7 +39,7 @@
             </ul>
             <div ng-if="!allSpecies.length" class="mb-2">No species found.</div>
             <div class="my-2 border-t-1 border-util-gray-02"> </div>
-            <div class="pl-2">
+            <div class="pl-2 support">
                 <div>Don't see the species you are looking for?</div>
                 <a ng-href="https://arbimon.org/contact" class="text-frequency">
                     Contact support
@@ -48,12 +48,12 @@
             </div>
         </div>
         <div class="not-found-row" ng-if="toggleSpeciesAdd === false && toggleSpeciesSelect === false && toggleSongtypeSelect === true">
-            <div ng-click="backToSelectSpecies()" class="cs-pointer" style="font-size: 11px;">< Species</div>
-            <div class="my-2">Call</div>
+            <div ng-click="backToSelectSpecies()" class="cs-pointer" style="font-size: 13px;">< Species</div>
+            <div class="my-2 support pl-2">Call</div>
             <div class="my-2 border-t-1 border-util-gray-02"> </div>
-            <ul ng-if="songtypes.length" class="ulnodeco mb-2 pl-2" style="max-height: 100px; overflow-y: auto;">
+            <ul ng-if="songtypes.length" class="ulnodeco mb-2 pl-0" style="max-height: 100px; overflow-y: auto;">
                 <li ng-repeat="song in songtypes"
-                    class="linodeco mb-2 py-1 px-2 cs-pointer"
+                    class="linodeco mb-2 py-1 px-2 cs-pointer support"
                     ng-class="{'bg-util-gray-03': song.name === classToAdd.songtype}"
                     ng-click="selectSongtype(song)"
                 >

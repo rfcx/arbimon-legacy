@@ -55,7 +55,8 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags'])
                         notify.log($scope.classToAdd.species + ' ' + $scope.classToAdd.songtype + " added to the project");
                         $scope.toggleSongtypeSelect = false;
                         load_project_classes().finally(() => {
-                            $scope.scrollToClass($scope.classToAdd.species, $scope.classToAdd.songtype)
+                            const newSelectedClass = $scope.classes.find(cl => cl.species_name === $scope.classToAdd.species && cl.songtype_name === $scope.classToAdd.songtype)
+                            $scope.selectClass(newSelectedClass)
                         })
                     })
                     .error(function(data, status) {
@@ -77,7 +78,6 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags'])
                 const taxon = $scope.classes.find(cl => cl.species_name === species && cl.songtype_name === songtype)
                 $scope.byTaxon[taxon.taxon].open = true;
                 if (taxon) {
-                    const classEl = $window.document.getElementById('id-' + taxon.species_name + '-' + taxon.songtype_name)
                     $scope.is_selected = {};
                     $scope.is_selected[taxon.id] = true;
                 }
