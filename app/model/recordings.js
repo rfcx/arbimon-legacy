@@ -1187,26 +1187,39 @@ var Recordings = {
                 artist && songMeterOptions.some(sm => artist.includes(sm))
 
             if (isAudioMoth) {
-                const regArtist = /AudioMoth (\w+)/.exec(artist);
-                const regArtistFromComment = /by AudioMoth (.*?) at gain/.exec(data);
-                text += regArtist && regArtist[1] ? regArtist[1] : regArtistFromComment && regArtistFromComment[1] ? regArtistFromComment[1] : '';
-                // Parse a gain from different formats
-                const regGainType1 = /at (\w+) gain/.exec(data);
-                const regGainType2 = /at gain setting (\w+) while/.exec(data);
-                text += regGainType1 && regGainType1[1] ?
-                    ` / ${regGainType1[1]} gain` : regGainType2 && regGainType2[1] ?
-                    ` / ${regGainType2[1]} gain` : '';
+                const isNewFormat = comment && comment.includes('GUANO')
 
-                // Parse a state from different formats
-                const regStateType1 = /state was (.*?) and/.exec(data);
-                const regStateType2 = /state was (.*?).","/.exec(data);
-                text += regStateType1 && regStateType1[1] ?
-                    ` / ${regStateType1[1]}` : regStateType2 && regStateType2[1] ?
-                    ` / ${regStateType2[1]}` : '';
+                if(isNewFormat) {
+                    const regArtist = /ID:(.*?);Firmware/.exec(comment);
+                    text += regArtist && regArtist[1] ? regArtist[1] : '';
 
-                // Parse a temperature
-                const regTemp = /temperature was (.*?)(C|F)/g.exec(data);
-                text += regTemp ? ` / ${regTemp[1]}${regTemp[2]}` : '';
+                    const regStateType = /Voltage:(.*?);/.exec(comment);
+                    text += regStateType && regStateType[1] ? ` / ${regStateType[1]}V` : '';
+
+                    const regTemp = /Int:(\w+).(\d+)/.exec(comment);
+                    text += regTemp && regTemp[1] && regTemp[2] ? ` / ${regTemp[1]}.${regTemp[2]}C` : '';
+                } else {
+                    const regArtist = /AudioMoth (\w+)/.exec(artist);
+                    const regArtistFromComment = /by AudioMoth (.*?) at gain/.exec(data);
+                    text += regArtist && regArtist[1] ? regArtist[1] : regArtistFromComment && regArtistFromComment[1] ? regArtistFromComment[1] : '';
+                    // Parse a gain from different formats
+                    const regGainType1 = /at (\w+) gain/.exec(data);
+                    const regGainType2 = /at gain setting (\w+) while/.exec(data);
+                    text += regGainType1 && regGainType1[1] ?
+                        ` / ${regGainType1[1]} gain` : regGainType2 && regGainType2[1] ?
+                        ` / ${regGainType2[1]} gain` : '';
+
+                    // Parse a state from different formats
+                    const regStateType1 = /state was (.*?) and/.exec(data);
+                    const regStateType2 = /state was (.*?).","/.exec(data);
+                    text += regStateType1 && regStateType1[1] ?
+                        ` / ${regStateType1[1]}` : regStateType2 && regStateType2[1] ?
+                        ` / ${regStateType2[1]}` : '';
+
+                    // Parse a temperature
+                    const regTemp = /temperature was (.*?)(C|F)/g.exec(data);
+                    text += regTemp ? ` / ${regTemp[1]}${regTemp[2]}` : '';
+                }
             }
 
             if (isSongMeter) {
