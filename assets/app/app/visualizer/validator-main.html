@@ -4,7 +4,9 @@
     </p>
     <div class="form-group validator" style="position:relative;">
         <ui-select ng-model="selected" on-select="selectClass(selected)" theme="bootstrap">
-            <ui-select-match placeholder="{{$select.selected.species_name || userSearch ? '' : '&#128269;&#8194; Search for species'}}">
+            <ui-select-match>
+                <img ng-show="!$select.selected.species_name" class="pl-absolute-icon" style="width: 16px" src="/images/fi-search.svg">
+                <span class="placeholder pl-absolute ml-1" ng-show="!$select.selected.species_name">Search for species</span>
                 <span class="text-insight">{{ $select.selected.species_name }}</span><br/>
                 <span class="text-util-gray-01" style="font-size: 12px;">{{ $select.selected.songtype_name }}</span>
             </ui-select-match>

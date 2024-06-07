@@ -82,6 +82,9 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags'])
                     $scope.is_selected[taxon.id] = true;
                 }
             }
+            $scope.getHeight = function(species) {
+                return species ? '56px' : '40px'
+            }
             var class2key = function(project_class){
                 var cls;
                 
