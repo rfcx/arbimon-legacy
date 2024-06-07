@@ -16,6 +16,7 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags'])
             $scope.songtypes = [];
             $scope.classToAdd = { species: null, songtype: null};
             $scope.selected = {}
+            $scope.tempSelected = {}
 
             $scope.onSpeciesExists = function(search) {
                 if (!search) return;
@@ -56,6 +57,7 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags'])
                         $scope.toggleSongtypeSelect = false;
                         load_project_classes().finally(() => {
                             const newSelectedClass = $scope.classes.find(cl => cl.species_name === $scope.classToAdd.species && cl.songtype_name === $scope.classToAdd.songtype)
+                            console.log('newSelectedClass', newSelectedClass, $scope.classToAdd)
                             $scope.selectClass(newSelectedClass)
                         })
                     })
@@ -68,7 +70,15 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags'])
                     });
             }
             $scope.selectClass = function(selected) {
+                if (!selected) {
+                    $scope.selected = {};
+                    $scope.tempSelected = {};
+                    $scope.is_selected = {};
+                    Object.values($scope.byTaxon).forEach(taxon => taxon.open = false)
+                    return;
+                }
                 $scope.selected = selected;
+                $scope.tempSelected = selected;
                 $scope.toggleSpeciesAdd = false;
                 $scope.toggleSpeciesSelect = false;
                 $scope.toggleSongtypeSelect = false;
