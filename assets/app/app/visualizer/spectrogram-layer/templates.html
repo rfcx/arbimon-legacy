@@ -97,8 +97,8 @@
                             <div class="my-2 border-t-1 border-util-gray-02"> </div>
                             <ul ng-if="layer.templates.allSpecies.length" class="ulnodeco mb-2 pl-2" style="max-height: 100px; overflow-y: auto;">
                                 <li ng-repeat="specie in layer.templates.allSpecies"
-                                    class="linodeco mb-2 p-1 cs-pointer"
-                                    ng-class="{'bg-util-gray-02': specie.scientific_name === layer.templates.classToAdd.species}"
+                                    class="linodeco mb-2 py-1 px-2 cs-pointer"
+                                    ng-class="{'bg-util-gray-03': specie.scientific_name === layer.templates.classToAdd.species}"
                                     ng-click="layer.templates.selectSpecies(specie)"
                                 >
                                     {{specie.scientific_name}}
@@ -121,8 +121,8 @@
                             <div class="my-2 border-t-1 border-util-gray-02"> </div>
                             <ul ng-if="layer.templates.songtypes.length" class="ulnodeco mb-2 pl-2" style="max-height: 100px; overflow-y: auto;">
                                 <li ng-repeat="song in layer.templates.songtypes"
-                                    class="linodeco mb-2 p-1 cs-pointer"
-                                    ng-class="{'bg-util-gray-02': song.name === layer.templates.classToAdd.songtype}"
+                                    class="linodeco mb-2 py-1 px-2 cs-pointer"
+                                    ng-class="{'bg-util-gray-03': song.name === layer.templates.classToAdd.songtype}"
                                     ng-click="layer.templates.selectSongtype(song)"
                                 >
                                     {{song.name}}

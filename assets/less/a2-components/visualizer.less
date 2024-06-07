@@ -824,10 +824,25 @@ a2-img {
 }
 
 .validator {
+    .caret {
+        display: none;
+    }
+    .ui-select-match,
+    .btn-default-focus {
+        border-radius: 8px !important;
+    }
+    .ui-select-toggle {
+        background-color: @util-gray-04 !important;
+    }
     .ui-select-toggle, .ui-select-search {
         height: 52px;
-        background-color: @moss !important;
+        border-radius: 8px;
+        background-color: @util-gray-04 !important;
         border-color: @util-gray-03 !important;
+        &:focus {
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+        }
     }
     .ui-select-container.open {
         .ui-select-toggle, .ui-select-search {
@@ -841,6 +856,13 @@ a2-img {
         top: 33%;
         left: 10px;
         margin-top: -2px;
+    }
+    .dropdown-menu {
+        background-color: @echo;
+        border-color: @util-gray-03;
+        border-radius: 0;
+        border-bottom-left-radius: 4px;
+        border-bottom-right-radius: 4px;
     }
 }
 

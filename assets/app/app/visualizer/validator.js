@@ -1,10 +1,10 @@
 angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags'])
 .directive('a2SpeciesValidator', function (Project, Species, Songtypes, a2UserPermit, notify, $filter, $window) {
-    var project = Project;
     return {
         restrict : 'E',
         scope : {
-            recording : '=recording'
+            recording: '=recording',
+            layer: '=',
         },
         templateUrl: '/app/visualizer/validator-main.html',
         link: function($scope, $element, $attrs){
@@ -68,6 +68,9 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags'])
             }
             $scope.selectClass = function(selected) {
                 $scope.selected = selected;
+                $scope.toggleSpeciesAdd = false;
+                $scope.toggleSpeciesSelect = false;
+                $scope.toggleSongtypeSelect = false;
                 $scope.scrollToClass(selected.species_name, selected.songtype_name);
             }
             $scope.scrollToClass = function(species, songtype) {
@@ -245,6 +248,14 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags'])
                     recording.validations.forEach(add_validation);
                 }
             });
+
+            $scope.$watch('layer', function(newVal, oldVal) {
+                if (newVal && newVal.is_open === false) {
+                    $scope.toggleSpeciesAdd = false;
+                    $scope.toggleSpeciesSelect = false;
+                    $scope.toggleSongtypeSelect = false;
+                }
+            }, true);
             
             load_project_classes();
         }
