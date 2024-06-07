@@ -120,6 +120,23 @@ if (app.get('env') === 'production') {
     sessionConfig.cookie = { secure: true }; // use secure cookies
 }
 
+const DEFAULT_REQUEST_TIMEOUT = 35000;
+
+app.use(function (req, res, next) {
+    let timeout = setTimeout(() => {
+        console.log(`ALERT: request to "${req.originalUrl}" did not finish in the treshold ${DEFAULT_REQUEST_TIMEOUT}`)
+    }, DEFAULT_REQUEST_TIMEOUT);
+
+    res.on('finish', () => {
+        clearTimeout(timeout)
+    });
+    res.on('close', () => {
+        clearTimeout(timeout)
+    });
+
+    next();
+})
+
 var sessionMiddleware = session(sessionConfig)
 // https://github.com/expressjs/session/issues/99#issuecomment-63853989
 app.use(function (req, res, next) {

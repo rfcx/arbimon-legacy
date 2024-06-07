@@ -154,7 +154,6 @@ async function main () {
                 console.log('Arbimon Export job: file is accessible by url', url)
                 await sendEmail('Arbimon Export recording report', 'arbimon-export-recording.csv', rowData, url, true)
                 await updateExportRecordings(rowData, { processed_at: currentTime })
-                await recordings.closeConnection()
                 fs.unlink(filePath, () => {})
                 console.log(`Arbimon Export job finished: export recordings report for ${message}`)
                 resolve()
@@ -211,13 +210,11 @@ async function processClusteringStream (cluster, results, rowData, currentTime, 
                         await sendEmail('Arbimon Export clustering report', 'clustering-rois-export.csv', rowData, content, false)
                     }
                     await updateExportRecordings(rowData, { processed_at: currentTime })
-                    await recordings.closeConnection()
                     resolve()
                 } catch(error) {
                     console.error('Error while sending clustering-rois-export email', error)
                     await errorMessage(message, jobName)
                     await updateExportRecordings(rowData, { error: JSON.stringify(error) })
-                    await recordings.closeConnection()
                     resolve()
                 }
             })
@@ -260,13 +257,11 @@ async function sendZipFolderToTheUser(rowData, currentTime, jobName, message, re
             await sendEmail('Arbimon export', 'Arbimon export', rowData, url, true)
             await updateExportRecordings(rowData, { processed_at: currentTime })
             fs.rmSync(tmpFilePath, { recursive: true, force: true });
-            await recordings.closeConnection()
         } catch(error) {
             console.error('Error while sending zip folder email.', error)
             await errorMessage(message, jobName)
             fs.rmSync(tmpFilePath, { recursive: true, force: true });
             await updateExportRecordings(rowData, { error: JSON.stringify(error) })
-            await recordings.closeConnection()
         }
     })
 }
@@ -427,13 +422,11 @@ async function processGroupedDetectionsStream (results, rowData, projection_para
                 try {
                     await sendEmail('Arbimon Export Grouped detections report', 'grouped-detections-export.csv', rowData, content, false);
                     await updateExportRecordings(rowData, { processed_at: currentTime })
-                    await recordings.closeConnection()
                     resolve()
                 } catch(error) {
                     console.error('Error while sending grouped-detections-export email.', error)
                     await errorMessage(message, jobName)
                     await updateExportRecordings(rowData, { error: JSON.stringify(error) })
-                    await recordings.closeConnection()
                     resolve()
                 }
             })

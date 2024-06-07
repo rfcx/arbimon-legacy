@@ -571,7 +571,7 @@ var Sites = {
                 if (site.project_id !== undefined && originalProjectId !== site.project_id) {
                     // Update project in validations if any site is moving to another project
                     const newProject = site.project_id
-                    const validations = await projects.getProjectValidationsBySite(originalProjectId, site.site_id)
+                    const validations = await projects.getProjectValidationsBySite(originalProjectId, site.site_id, db)
                     if (validations.length) {
                         for (let validation of validations) {
                             const projectClass = {
@@ -579,10 +579,10 @@ var Sites = {
                                 specieId: validation.species_id,
                                 songtypeId: validation.songtype_id
                             };
-                            const newProjectClass = await projects.checkClassAsync(projectClass)
-                            if (!newProjectClass.length) await projects.insertClassAsync(projectClass)
+                            const newProjectClass = await projects.checkClassAsync(projectClass, db)
+                            if (!newProjectClass.length) await projects.insertClassAsync(projectClass, db)
                         }
-                        await projects.updateProjectInAnalyses(originalProjectId, newProject, site.site_id)
+                        await projects.updateProjectInAnalyses(originalProjectId, newProject, site.site_id, db)
                     }
                 }
                 await db.commit();
@@ -636,12 +636,12 @@ var Sites = {
                 for (let site_id of siteIds) {
                     const validationIds = await this.getRecordingValidationBySiteId(site_id)
                     if (validationIds.length) {
-                        await this.resetRecValidationById(project_id, validationIds.map(v => v.recording_validation_id))
+                        await this.resetRecValidationById(project_id, validationIds.map(v => v.recording_validation_id), connection)
                     }
                     const recIdsBySite = await this.getRecordingIdsbySite(site_id)
                     const recIds = recIdsBySite.map(rec => rec.recording_id)
                     if (recIds && recIds.length) {
-                        await this.deleteRecordingInAnalyses(recIdsBySite.map(rec => rec.recording_id))
+                        await this.deleteRecordingInAnalyses(recIdsBySite.map(rec => rec.recording_id), db)
                     }
                     await this.removeFromProjectAsync(site_id, project_id, db);
                     if (rfcxConfig.coreAPIEnabled) {
@@ -661,13 +661,17 @@ var Sites = {
             })
     },
 
-    deleteRecordingInAnalyses: async function(recIds) {
-        let promises=[
-            dbpool.query(`DELETE FROM pattern_matching_rois WHERE recording_id in (${recIds})`),
-            dbpool.query(`UPDATE templates set deleted=1 WHERE recording_id in (${recIds})`),
+    deleteRecordingInAnalyses: async function(recIds, connection) {
+        let queries = [
+            `DELETE FROM pattern_matching_rois WHERE recording_id in (${recIds})`,
+            `UPDATE templates set deleted=1 WHERE recording_id in (${recIds})`,
         ];
+
         console.log('--deleteRecordingInAnalyses recIds', recIds)
-        return q.all(promises);
+        const executeQuery = connection ? (sql) => dbpool.queryWithConn(connection, sql) : dbpool.query;
+        for (const query of queries) {
+            await executeQuery(query);
+        }
     },
 
     getRecordingIdsbySite: async function(site_id) {
@@ -685,9 +689,13 @@ var Sites = {
         return dbpool.query(q);
     },
 
-    resetRecValidationById: async function(projectId, validationIds) {
+    resetRecValidationById: async function(projectId, validationIds, connection) {
         const q = `UPDATE recording_validations SET present = NULL, present_review = 0, present_aed = 0
         WHERE project_id=${projectId} AND recording_validation_id IN (${validationIds})`;
+
+        if (connection) {
+            return dbpool.queryWithConn(connection, q);
+        }
         return dbpool.query(q);
     },
 

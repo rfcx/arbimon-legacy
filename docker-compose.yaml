@@ -29,7 +29,7 @@ services:
     image: redis:6.2-alpine
     ports:
       - '6379:6379'
-    volumes: 
+    volumes:
       - data-redis:/data
 volumes:
   data-redis:
