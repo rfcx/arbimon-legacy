@@ -99,7 +99,7 @@ var dbpool = {
         });
     },
 
-    queryWithConnHandler: async function queryWithConnHandler(connection, query, options, callback) {
+    queryWithConnHandler: async function queryWithConnHandler(connection, query, options, callback, mustCloseConn = true) {
         if(callback === undefined && options instanceof Function){
             callback = options;
             options = undefined;
@@ -116,7 +116,9 @@ var dbpool = {
                 callback(null, resultstream, fields);
             });
             resultstream.on('end', function(){
-                connection.release();
+                if (mustCloseConn) {
+                    connection.release();
+                }
             });
         } else {
             let c = connection.query(query, options, function(err, rows, fields) {
@@ -124,7 +126,9 @@ var dbpool = {
                     console.log('=== SQL QUERY\n', c.sql.replace(/\n/g, ' '), '\n===')
                 }
 
-                connection.release();
+                if (mustCloseConn) {
+                    connection.release();
+                }
                 callback(err, rows, fields);
             });
         }
@@ -134,7 +138,7 @@ var dbpool = {
         dbpool.getConnection(function(err, connection) {
             if (err) return callback(err);
 
-            dbpool.queryWithConnHandler(connection, query, options, callback)
+            dbpool.queryWithConnHandler(connection, query, options, callback, true)
         });
     },
 };
@@ -144,7 +148,7 @@ dbpool.query = function(sql, options){
 };
 
 dbpool.queryWithConn = function (connection, sql, options) {
-    return q.ninvoke(dbpool, 'queryWithConnHandler', connection, sql, options).get(0);
+    return q.ninvoke(dbpool, 'queryWithConnHandler', connection, sql, options, false).get(0);
 }
 
 dbpool.streamQuery = function(sql, options){
