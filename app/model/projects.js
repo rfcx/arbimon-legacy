@@ -22,7 +22,6 @@ const roles = require('./roles')
 const projectSchema = joi.object().keys({
     name: joi.string(),
     url: joi.string(),
-    description: joi.string().optional(),
     is_private: joi.boolean(),
     external_id: joi.string().optional(),
 });
@@ -61,7 +60,7 @@ var Projects = {
     },
 
     listAll: function(callback) {
-        var q = "SELECT project_id as id, name, url, description, is_private, is_enabled \n"+
+        var q = "SELECT project_id as id, name, url, is_private \n"+
                 "FROM projects";
 
         queryHandler(q, callback);
@@ -100,11 +99,7 @@ var Projects = {
             whereExp.push("1 = 1");
         }
         if(query.hasOwnProperty('q')) {
-            whereExp.push("(p.name LIKE '%"+query.q+"%' OR p.description LIKE '%"+query.q+"%')");
-        }
-        if(query.hasOwnProperty('featured')) {
-            selectExtra += 'featured, image, '
-            whereExp.push("p.featured = 1 OR p.featured = 2");
+            whereExp.push("(p.name LIKE '%"+query.q+"%')");
         }
 
         if(!whereExp.length) {
@@ -117,10 +112,7 @@ var Projects = {
 
         if(!query.basicInfo){
             selectExtra += "   p.citizen_scientist_enabled, \n"+
-                          "   p.pattern_matching_enabled, \n"+
-                          "   p.reports_enabled, \n"+
-                          "   p.is_partner, \n"+
-                          "   p.cnn_enabled \n";
+                          "   p.is_partner \n";
         } else {
             selectExtra += "p.project_id as id \n";
         }
@@ -220,7 +212,7 @@ var Projects = {
                         const result = sites.map(s => {
                             return {
                                 ...s,
-                                utcOffset: fileHelper.formattedTzOffsetFromTimezoneName(s.timezone)
+                                utcOffset: fileHelper.formattedTzOffsetFromTimezoneName(s.timezone ? s.timezone : 'UTC')
                             }
                         })
                         return result
@@ -286,18 +278,14 @@ var Projects = {
      * @param {Object} project
      * @param {String} project.name
      * @param {String} project.url
-     * @param {String} project.description
      * @param {Number} project.owner_id - creator id
-     * @param {Number} project.project_type_id
      * @param {Boolean} project.is_private
     */
     create: async function(project, owner_id, db) {
         var schema = joi.object().keys({
             name: joi.string(),
             url: joi.string(),
-            description: joi.string().optional(),
             external_id: joi.string().optional(),
-            project_type_id: joi.number(),
             is_private: joi.boolean()
         });
 
@@ -311,13 +299,6 @@ var Projects = {
         }
 
         project = result.value;
-
-        project.storage_usage = 0;
-        project.processing_usage = 0;
-        project.pattern_matching_enabled = 1;
-        project.aed_enabled = 1;
-        project.clustering_enabled = 1;
-        project.reports_enabled = 1;
         project.public_templates_enabled = 0;
 
         if (!db) {
@@ -353,12 +334,7 @@ var Projects = {
      * @param {Number} project.project_id
      * @param {String} project.name
      * @param {String} project.url
-     * @param {String} project.description
-     * @param {Number} project.project_type_id
      * @param {Boolean} project.is_private
-     * @param {Boolean} project.is_enabled
-     * @param {Number} project.storage_usage
-     * @param {Number} project.processing_usage
      * @param {Function} callback(err, projectId)
      *
      * @return {Promise} resolved after the update.
@@ -369,18 +345,8 @@ var Projects = {
             project_id: joi.number().required(),
             name: joi.string(),
             url: joi.string(),
-            description: joi.string().allow(null, '').optional(),
-            project_type_id: joi.number(),
             is_private: [joi.number().valid(0,1), joi.boolean()],
-            is_enabled: [joi.number().valid(0,1), joi.boolean()],
-            storage_usage: joi.number().allow(null),
-            processing_usage: joi.number().allow(null),
             citizen_scientist_enabled: [joi.number().valid(0,1), joi.boolean()],
-            pattern_matching_enabled: [joi.number().valid(0,1), joi.boolean()],
-            cnn_enabled: [joi.number().valid(0,1), joi.boolean()],
-            aed_enabled: [joi.number().valid(0,1), joi.boolean()],
-            clustering_enabled: [joi.number().valid(0,1), joi.boolean()],
-            reports_enabled: [joi.number().valid(0,1), joi.boolean()],
             public_templates_enabled: [joi.number().valid(0,1), joi.boolean()]
         };
         return q.ninvoke(joi, 'validate', project, schema).then(function(projectInfo){
@@ -1134,7 +1100,7 @@ var Projects = {
     createInCoreAPI: async function(project, idToken) {
         const body = {
             name: project.name,
-            description: project.description,
+            description: '',
             is_public: !project.is_private,
             external_id: project.project_id
         }
@@ -1188,7 +1154,6 @@ var Projects = {
     updateInCoreAPI: async function(data, idToken) {
         let body = {}
         data.name !== undefined && (body.name = data.name)
-        data.description !== undefined && (body.description = data.description)
         data.is_private !== undefined && (body.is_public = !data.is_private)
         const options = {
             method: 'PATCH',
@@ -1258,14 +1223,12 @@ var Projects = {
      * Creates a project with given data
      * @param {*} data
      * @param {string} data.name
-     * @param {string} data.description
      * @param {string} data.url
      * @param {boolean} data.is_private
      * @param {integer} userId
      */
     createProject: async function (data, userId, connection) {
         const projectData = {
-            project_type_id: 1,
             ...data
         }
         await q.ninvoke(joi, 'validate', projectData, projectSchema, {
@@ -1336,9 +1299,7 @@ var Projects = {
         const projectData = {
             is_private: true,
             name: `${user.firstname} ${user.lastname}'s project`,
-            url: this.getPersonalProjectUrl(user),
-            description: `${user.firstname}'s personal project`,
-            project_type_id: 1
+            url: this.getPersonalProjectUrl(user)
         };
         await q.ninvoke(joi, 'validate', projectData, projectSchema, {
             stripUnknown: true,

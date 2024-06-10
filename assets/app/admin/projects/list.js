@@ -67,7 +67,6 @@ angular.module('a2.admin.projects.list', [
             AdminProjectsListService.getProjectRecordingCount(projectData),
         ]).then((function(all){
             this.project = all[0];
-            this.project.is_enabled = this.project.is_enabled | 0;
             this.sites = all[1];
             this.recCount = all[2];
         }).bind(this));
@@ -86,10 +85,6 @@ angular.module('a2.admin.projects.list', [
         });
     };
 
-    this.handleAedToggle = function () {
-        this.project.clustering_enabled = this.project.aed_enabled
-    }
-
     this.initialize();
 })
 .service('AdminProjectsListService', function($http){
@@ -103,7 +98,6 @@ angular.module('a2.admin.projects.list', [
         getProjectInfo : function(project) {
             return $http.get('/legacy-api/project/'+project.url+'/info').then(function(response){
                 var data = response.data;
-                data.is_enabled = !!data.is_enabled;
                 return data;
             });
         },
@@ -125,19 +119,8 @@ angular.module('a2.admin.projects.list', [
                 project_id : project.project_id,
                 name : project.name,
                 url : project.url,
-                description : project.description,
-                project_type_id : project.project_type_id,
                 is_private : project.is_private,
-                is_enabled : project.is_enabled,
-                current_plan : project.current_plan,
-                storage_usage : project.storage_usage,
-                processing_usage : project.processing_usage,
                 citizen_scientist_enabled : !!project.citizen_scientist_enabled,
-                cnn_enabled : !!project.cnn_enabled,
-                pattern_matching_enabled : !!project.pattern_matching_enabled,
-                aed_enabled : !!project.aed_enabled,
-                clustering_enabled : !!project.clustering_enabled,
-                reports_enabled : !!project.reports_enabled,
                 plan : {
                     tier: project.tier,
                     storage: project.storage_limit,

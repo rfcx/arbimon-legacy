@@ -38,7 +38,7 @@ angular.module('a2.directive.search-bar', [])
             };
 
             $scope.selectProject = function() {
-                if (!$scope.q || $scope.q && !$scope.q.is_enabled) {
+                if (!$scope.q || $scope.q) {
                     return;
                 }
                 $window.location.assign('/project/' + $scope.q.url + '/');

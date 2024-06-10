@@ -64,45 +64,9 @@
             </div>
             <label>Features</label>
             <div class="form-group">
-                <label>Pattern Matching:</label>
-                <div class="btn-group">
-                    <a2-switch ng-model="controller.project.pattern_matching_enabled" />
-                </div>
-            </div>
-            <div class="form-group">
-                <label>Convolutional Neural Networks:</label>
-                <div class="btn-group">
-                    <a2-switch ng-model="controller.project.cnn_enabled" />
-                </div>
-            </div>
-            <div class="form-group">
-                <label>Audio Event Detection:</label>
-                <div class="btn-group">
-                    <a2-switch
-                        ng-model="controller.project.aed_enabled"
-                        ng-change="controller.handleAedToggle()"
-                    />
-                </div>
-            </div>
-            <div class="form-group">
-                <label>Clustering:</label>
-                <div class="btn-group">
-                    <a2-switch
-                        ng-model="controller.project.clustering_enabled"
-                        disabled="!controller.project.aed_enabled"
-                    />
-                </div>
-            </div>
-            <div class="form-group">
                 <label>Citizen Scientist:</label>
                 <div class="btn-group">
                     <a2-switch ng-model="controller.project.citizen_scientist_enabled" />
-                </div>
-            </div>
-            <div class="form-group">
-                <label>Insights:</label>
-                <div class="btn-group">
-                    <a2-switch ng-model="controller.project.reports_enabled" />
                 </div>
             </div>
             <button class="btn btn-primary"

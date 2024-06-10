@@ -20,7 +20,6 @@ router.get('/projectlist', function(req, res, next) {
             user_id: req.session.user.id,
             publicTemplates: publicTemplates,
             ...req.query.q && { q: req.query.q },
-            ...req.query.featured && { featured: req.query.featured }
         }, function(err, rows) {
             if(err) return next(err);
             res.json(rows);
@@ -32,7 +31,6 @@ router.get('/projectlist', function(req, res, next) {
             ...includeLocation && { include_location: true },
             publicTemplates: publicTemplates,
             ...req.query.q && { q: req.query.q },
-            ...req.query.featured && type !== 'my' && { featured: req.query.featured }
         }, function(err, rows) {
             if(err) return next(err);
             res.json(rows);

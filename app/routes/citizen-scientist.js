@@ -69,14 +69,6 @@ router.get('/:projecturl?/', function(req, res, next) {
 
             var project = rows[0];
 
-            if(!project.is_enabled) {
-                return res.render('project_disabled', {
-                    project: project,
-                    user: req.session.user
-                });
-            }
-
-
             if(project.plan_period && project.plan_activated) {
                 project.plan_due = new Date(project.plan_activated);
                 project.plan_due.setFullYear(project.plan_due.getFullYear() + project.plan_period);
@@ -102,7 +94,6 @@ router.get('/:projecturl?/', function(req, res, next) {
                     authorized: true,
                     public: !project.is_private,
                     features:{
-                        pattern_matching: !!project.pattern_matching_enabled,
                         citizen_scientist: !!project.citizen_scientist_enabled,
                     },
                     super: !!req.session.user.isSuper,

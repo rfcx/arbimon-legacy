@@ -14,16 +14,6 @@ let cachedData = {
     counts: { }
 };
 
-// global project.pattern_matching_enabled check
-router.use(function(req, res, next) {
-    if(!req.project.pattern_matching_enabled) {
-        return res.status(401).json({ error: "Pattern matching features are not enabled for your project." });
-    }
-
-    next();
-});
-
-
 /** Return a list of all the pattern matchings in a project.
  */
 router.get('/', function(req, res, next) {

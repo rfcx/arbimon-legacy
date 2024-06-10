@@ -14,14 +14,13 @@ router.post('/projects', verifyToken(), hasRole(['appUser', 'rfcxUser']), async 
   try {
     const converter = new Converter(req.body, {});
     converter.convert('name').toString();
-    converter.convert('description').optional().toString();
     converter.convert('is_private').toBoolean().default(true);
     converter.convert('external_id').toString();
     const params = await converter.validate();
     const user = await model.users.ensureUserExistFromAuth0(req.user);
     const url = await model.projects.findUniqueUrl(params.name, params.external_id, user.user_id)
-    const { name, description, is_private, external_id } = params
-    const projectId = await model.projects.createProject({ name, description, is_private, external_id, url }, user.user_id);
+    const { name, is_private, external_id } = params
+    const projectId = await model.projects.createProject({ name, is_private, external_id, url }, user.user_id);
     const project = await model.projects.find({ id: projectId }).get(0);
     res.status(201).json(project);
   } catch (e) {
@@ -34,7 +33,6 @@ router.patch('/projects/:externalId', verifyToken(), hasRole(['appUser', 'rfcxUs
     const user = await model.users.ensureUserExistFromAuth0(req.user);
     const converter = new Converter(req.body, {});
     converter.convert('name').optional().toString();
-    converter.convert('description').optional().toString();
     converter.convert('url').optional().toString();
 
     const params = await converter.validate();
@@ -49,7 +47,6 @@ router.patch('/projects/:externalId', verifyToken(), hasRole(['appUser', 'rfcxUs
       project_id: project.project_id,
       name: params.name !== undefined ? params.name : project.name,
       url: params.url !== undefined ? params.url : project.url,
-      description: params.description !== undefined ? params.description : project.description,
       is_private: project.is_private,
     })
     res.sendStatus(200);
