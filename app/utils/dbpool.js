@@ -99,7 +99,7 @@ var dbpool = {
         });
     },
 
-    queryWithConnHandler: async function queryWithConnHandler(connection, query, options, callback, mustCloseConn = true) {
+    queryWithConnHandler: async function queryWithConnHandler(connection, query, options, mustCloseConn, callback) {
         if(callback === undefined && options instanceof Function){
             callback = options;
             options = undefined;
@@ -138,7 +138,7 @@ var dbpool = {
         dbpool.getConnection(function(err, connection) {
             if (err) return callback(err);
 
-            dbpool.queryWithConnHandler(connection, query, options, callback, true)
+            dbpool.queryWithConnHandler(connection, query, options, true, callback)
         });
     },
 };
