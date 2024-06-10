@@ -101,15 +101,18 @@ angular.module('a2.audiodata.sites', [
             }
         }
         a2GoogleMapsLoader.then(function(google) {
-            $scope.map = new google.maps.Map($window.document.getElementById('mapSite'), {
-                center: { lat: 0, lng: 0},
-                mapTypeId: google.maps.MapTypeId.SATELLITE,
-                zoom: 8, minZoom: 2
-            });
-            $scope.fitBounds()
+            const mapSite = $window.document.getElementById('mapSite')
+            if (mapSite) {
+                $scope.map = new google.maps.Map(mapSite, {
+                    center: { lat: 0, lng: 0},
+                    mapTypeId: google.maps.MapTypeId.SATELLITE,
+                    zoom: 8, minZoom: 2
+                });
+                $scope.fitBounds()
+            }
         });
         $scope.mapHeader = $window.document.getElementById('mapHeader')
-        $scope.mapHeaderPosition = mapHeader.getBoundingClientRect();
+        if ($scope.mapHeader) $scope.mapHeaderPosition = $scope.mapHeader.getBoundingClientRect();
     });
 
     $scope.fitBounds = function() {
@@ -162,7 +165,7 @@ angular.module('a2.audiodata.sites', [
             bounds.extend(position);
         });
 
-        $scope.map.fitBounds(bounds);
+        if ($scope.map) $scope.map.fitBounds(bounds);
 
         if ($scope.markers.length) {
             $scope.setMapOnAll($scope.map);
@@ -621,8 +624,10 @@ angular.module('a2.audiodata.sites', [
                         return;
                     }
                     var position = new google.maps.LatLng($scope.selected.lat, $scope.selected.lon);
-                    $scope.map.panTo(position);
-                    $scope.map.setZoom(17)
+                    if ($scope.map) {
+                        $scope.map.panTo(position);
+                        $scope.map.setZoom(17)
+                    }
                 });
             }
         });

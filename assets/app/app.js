@@ -1,7 +1,6 @@
 var a2 = angular.module('a2.app', [
     'a2.permissions',
     'templates-arbimon2',
-    // 'a2.app.dashboard',
     'a2.audiodata',
     'a2.visualizer',
     'a2.analysis',
