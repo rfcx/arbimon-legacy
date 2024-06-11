@@ -52,10 +52,14 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags', 'a2.directive.
                 $scope.timeout = setTimeout(() => {
                     console.log('onSearchClick', $scope.userSearch, $scope.classToAdd.species)
                     if ($scope.userSearch && $scope.classToAdd.species) {
+                        $scope.toggleSpeciesAdd = false;
+                        $scope.toggleSpeciesSelect = false;
                         $scope.toggleSongtypeSelect = true;
                         return;
                     }
                     if ($scope.userSearch && !$scope.classToAdd.species) {
+                        $scope.toggleSpeciesSelect = false;
+                        $scope.toggleSongtypeSelect = false;
                         $scope.toggleSpeciesAdd = true;
                         return;
                     }

@@ -82,10 +82,14 @@ angular.module('a2.visualizer.layers.templates', [
         self.timeout = setTimeout(() => {
             console.log('onSearchClick', self.userSearch, self.classToAdd.species)
             if (self.userSearch && self.classToAdd.species) {
+                self.toggleSpeciesAdd = false;
+                self.toggleSpeciesSelect = false;
                 self.toggleSongtypeSelect = true;
                 return;
             }
             if (self.userSearch && !self.classToAdd.species) {
+                self.toggleSpeciesSelect = false;
+                self.toggleSongtypeSelect = false;
                 self.toggleSpeciesAdd = true;
                 return;
             }
