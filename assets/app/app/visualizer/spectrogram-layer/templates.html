@@ -67,7 +67,7 @@
                 <div class="mt-4">
                     <label>Species sound</label>
                     <div class="form-group" style="position:relative;" click-outside="layer.templates.hide()">
-                        <ui-select ng-model="layer.templates.selected" on-select="layer.templates.selectClass(selected)" ng-click="layer.templates.onSearchClick()" reset-search-input="false" theme="bootstrap">
+                        <ui-select ng-model="layer.templates.selected" on-select="layer.templates.selectClass($select.selected)" ng-click="layer.templates.onSearchClick()" reset-search-input="false" theme="bootstrap">
                             <ui-select-match>
                                 <span ng-show="!layer.templates.userSearch && !$select.selected.species_name" class="placeholder pl-absolute-icon ml-1">Select a species sound</span>
                                 <div ng-show="layer.templates.userSearch && layer.templates.userSearch.length && !$select.selected.species_name" class="placeholder pl-absolute-icon ml-1">

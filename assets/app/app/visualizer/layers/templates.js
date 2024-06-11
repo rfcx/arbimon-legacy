@@ -93,7 +93,7 @@ angular.module('a2.visualizer.layers.templates', [
                 self.toggleSpeciesAdd = true;
                 return;
             }
-        }, 500);
+        }, 300);
     }
     self.addSpecies = function() {
         self.toggleSpeciesAdd = false;
@@ -140,6 +140,7 @@ angular.module('a2.visualizer.layers.templates', [
             });
     }
     self.selectClass = function(selected) {
+        console.log('selectClass', selected)
         if (!selected) {
             self.selected = {};
             self.tempSelected = {};

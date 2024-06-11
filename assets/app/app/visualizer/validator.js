@@ -63,7 +63,7 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags', 'a2.directive.
                         $scope.toggleSpeciesAdd = true;
                         return;
                     }
-                }, 500);
+                }, 300);
             }
             $scope.addSpecies = function($event) {
                 $event.stopPropagation();
