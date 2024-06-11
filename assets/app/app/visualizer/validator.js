@@ -51,9 +51,11 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags', 'a2.directive.
                 console.log('onSearchClick', $scope.userSearch, $scope.classToAdd.species)
                 if ($scope.userSearch && $scope.classToAdd.species) {
                     $scope.toggleSongtypeSelect = true;
+                    return;
                 }
                 if ($scope.userSearch && !$scope.classToAdd.species) {
                     $scope.toggleSpeciesAdd = true;
+                    return;
                 }
             }
             $scope.addSpecies = function($event) {

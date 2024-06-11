@@ -79,9 +79,11 @@ angular.module('a2.visualizer.layers.templates', [
     self.onSearchClick = function() {
         if (self.userSearch && self.classToAdd.species) {
             self.toggleSongtypeSelect = true;
+            return;
         }
         if (self.userSearch && !self.classToAdd.species) {
             self.toggleSpeciesAdd = true;
+            return;
         }
     }
     self.addSpecies = function() {
