@@ -77,6 +77,7 @@ angular.module('a2.visualizer.layers.templates', [
         self.toggleSongtypeSelect = false;
     }
     self.onSearchClick = function() {
+        console.log('onSearchClick', self.userSearch, self.classToAdd.species)
         if (self.userSearch && self.classToAdd.species) {
             self.toggleSongtypeSelect = true;
             return;

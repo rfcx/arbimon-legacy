@@ -42,7 +42,6 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags', 'a2.directive.
                 }
             }
             $scope.hide = function() {
-                console.log('hide, $scope.toggleSpeciesAdd, $scope.toggleSpeciesSelect', $scope.toggleSpeciesAdd, $scope.toggleSpeciesSelect, $scope.toggleSongtypeSelect)
                 $scope.toggleSpeciesAdd = false;
                 $scope.toggleSpeciesSelect = false;
                 $scope.toggleSongtypeSelect = false;
