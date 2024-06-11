@@ -33,6 +33,7 @@ angular.module('a2.visualizer.layers.templates', [
     self.allSpecies = [];
     self.songtypes = [];
     self.classToAdd = { species: null, songtype: null};
+    self.timeout;
     self.selected = {}
     self.tempSelected = {}
     self.templates = [];
@@ -77,15 +78,18 @@ angular.module('a2.visualizer.layers.templates', [
         self.toggleSongtypeSelect = false;
     }
     self.onSearchClick = function() {
-        console.log('onSearchClick', self.userSearch, self.classToAdd.species)
-        if (self.userSearch && self.classToAdd.species) {
-            self.toggleSongtypeSelect = true;
-            return;
-        }
-        if (self.userSearch && !self.classToAdd.species) {
-            self.toggleSpeciesAdd = true;
-            return;
-        }
+        clearTimeout(self.timeout);
+        self.timeout = setTimeout(() => {
+            console.log('onSearchClick', self.userSearch, self.classToAdd.species)
+            if (self.userSearch && self.classToAdd.species) {
+                self.toggleSongtypeSelect = true;
+                return;
+            }
+            if (self.userSearch && !self.classToAdd.species) {
+                self.toggleSpeciesAdd = true;
+                return;
+            }
+        }, 500);
     }
     self.addSpecies = function() {
         self.toggleSpeciesAdd = false;

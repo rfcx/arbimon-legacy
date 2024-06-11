@@ -17,6 +17,7 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags', 'a2.directive.
             $scope.classToAdd = { species: null, songtype: null};
             $scope.selected = {}
             $scope.tempSelected = {}
+            $scope.timeout;
 
             $scope.onSpeciesExists = function(search) {
                 console.log('species search', search)
@@ -47,15 +48,18 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags', 'a2.directive.
                 $scope.toggleSongtypeSelect = false;
             }
             $scope.onSearchClick = function() {
-                console.log('onSearchClick', $scope.userSearch, $scope.classToAdd.species)
-                if ($scope.userSearch && $scope.classToAdd.species) {
-                    $scope.toggleSongtypeSelect = true;
-                    return;
-                }
-                if ($scope.userSearch && !$scope.classToAdd.species) {
-                    $scope.toggleSpeciesAdd = true;
-                    return;
-                }
+                clearTimeout($scope.timeout);
+                $scope.timeout = setTimeout(() => {
+                    console.log('onSearchClick', $scope.userSearch, $scope.classToAdd.species)
+                    if ($scope.userSearch && $scope.classToAdd.species) {
+                        $scope.toggleSongtypeSelect = true;
+                        return;
+                    }
+                    if ($scope.userSearch && !$scope.classToAdd.species) {
+                        $scope.toggleSpeciesAdd = true;
+                        return;
+                    }
+                }, 500);
             }
             $scope.addSpecies = function($event) {
                 $event.stopPropagation();
