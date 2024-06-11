@@ -1,6 +1,7 @@
 angular.module('a2.visualizer.layers.templates', [
     'visualizer-services',
     'a2.utils',
+    'a2.directive.click-outside'
 ])
 .config(function(layer_typesProvider){
     /**
@@ -24,7 +25,7 @@ angular.module('a2.visualizer.layers.templates', [
 })
 .controller('a2VisualizerTemplateLayerController', function($scope, $state, $timeout, a2Templates, a2UserPermit, a22PointBBoxEditor, Project, Species, Songtypes, notify) {
     var self = this;
-    self.selected = null;
+    self.selectedRoi = null;
     self.toggleSpeciesAdd = false;
     self.toggleSpeciesSelect = false;
     self.toggleSongtypeSelect = false;
@@ -32,6 +33,8 @@ angular.module('a2.visualizer.layers.templates', [
     self.allSpecies = [];
     self.songtypes = [];
     self.classToAdd = { species: null, songtype: null};
+    self.selected = {}
+    self.tempSelected = {}
     self.templates = [];
     self.recordingTemplates = [];
     self.citizenScientistUser = a2UserPermit.all && a2UserPermit.all.length === 1 && a2UserPermit.all.includes('use citizen scientist interface') && !a2UserPermit.can('delete project') && !a2UserPermit.isSuper();
@@ -45,14 +48,42 @@ angular.module('a2.visualizer.layers.templates', [
     self.getClasses();
 
     self.onSpeciesExists = function(search) {
+        console.log('species search', search)
+        if (!search) {
+            self.userSearch = '';
+            return;
+        }
         self.userSearch = search;
-        const classes = self.project_classes ? self.project_classes.filter(cl => cl.species_name.toLowerCase().startsWith(search.toLowerCase()) || cl.songtype_name.toLowerCase().startsWith(search.toLowerCase())) : []
+        const classes = self.project_classes ? self.project_classes.filter(function(cl) {
+            const species = cl.species_name.toLowerCase()
+            const searchFormatted = search.toLowerCase()
+            if (species.indexOf(searchFormatted) != -1) {
+                return true;
+            } else return false;
+        }) : []
         if (classes.length === 0) {
             self.toggleSpeciesAdd = true;
             self.toggleSpeciesSelect = false;
         }
+        else {
+            self.toggleSpeciesAdd = false;
+            self.toggleSpeciesSelect = false;
+        }
     }
 
+    self.hide = function() {
+        self.toggleSpeciesAdd = false;
+        self.toggleSpeciesSelect = false;
+        self.toggleSongtypeSelect = false;
+    }
+    self.onSearchClick = function() {
+        if (self.userSearch && self.classToAdd.species) {
+            self.toggleSongtypeSelect = true;
+        }
+        if (self.userSearch && !self.classToAdd.species) {
+            self.toggleSpeciesAdd = true;
+        }
+    }
     self.addSpecies = function() {
         self.toggleSpeciesAdd = false;
         self.toggleSpeciesSelect = true;
@@ -73,12 +104,10 @@ angular.module('a2.visualizer.layers.templates', [
     self.selectSongtype = function(song) {
         self.classToAdd.songtype = song.name
     }
-
     self.backToSelectSpecies = function() {
         self.toggleSpeciesSelect = true;
         self.toggleSongtypeSelect = false;
     }
-
     self.addClass = function() {
         self.toggleSpeciesSelect = false;
         Project.addClass(self.classToAdd)
@@ -87,7 +116,9 @@ angular.module('a2.visualizer.layers.templates', [
                 self.toggleSongtypeSelect = false;
                 self.getClasses();
                 // Reload the validations list on the Species Presence
-                $scope.$broadcast('a2-persisted');
+                $scope.$broadcast('a2-persisted')
+                const newSelectedClass = self.project_classes.find(cl => cl.species_name === self.classToAdd.species && cl.songtype_name === self.classToAdd.songtype)
+                self.selectClass(newSelectedClass)
             })
             .error(function(data, status) {
                 self.toggleSongtypeSelect = false;
@@ -96,6 +127,18 @@ angular.module('a2.visualizer.layers.templates', [
                 else
                     notify.error('There was a system error. Please try again.');
             });
+    }
+    self.selectClass = function(selected) {
+        if (!selected) {
+            self.selected = {};
+            self.tempSelected = {};
+            return;
+        }
+        self.selected = selected;
+        self.tempSelected = selected;
+        self.toggleSpeciesAdd = false;
+        self.toggleSpeciesSelect = false;
+        self.toggleSongtypeSelect = false;
     }
 
     var getTemplatesPromise = a2Templates.getList({projectTemplates: true}).then(function(templates){

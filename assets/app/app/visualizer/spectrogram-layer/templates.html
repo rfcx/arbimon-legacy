@@ -1,7 +1,7 @@
 <div>
     <div class="roi" ng-repeat="roi in layer.templates.recordingTemplates"
-        ng-class="{'roi-selected':layer.templates.selected == roi}"
-        ng-click="$event.stopPropagation(); layer.templates.selected = roi"
+        ng-class="{'roi-selected':layer.templates.selectedRoi == roi}"
+        ng-click="$event.stopPropagation(); layer.templates.selectedRoi = roi"
         ng-style="{
             left:layout.sec2x(roi.x1, 1) + 'px',
             top:layout.hz2y(roi.y2, 1) + 'px',
@@ -60,42 +60,44 @@
             <div class="form">
                 <div class="mt-2">
                     <label>Name</label>
-                    <input class="form-control" ng-model="layer.templates.editor.template_name"
+                    <input class="form-control placeholder" ng-model="layer.templates.editor.template_name"
                         placeholder="{{layer.templates.editor.get_placeholder_name()}}"
                     />
                 </div>
                 <div class="mt-4">
                     <label>Species sound</label>
-                    <div class="form-group" style="position:relative;">
-                        <span class="nameExistsSpan small" ng-hide="layer.templates.project_classes.length">
-                            <em>No species sound found.<a class="ml-1" ng-style="{'cursor': 'pointer'}" ng-click="layer.templates.goToSpeciesPage()">Create one.</a></em>
-                        </span>
-                        <ui-select ng-model="layer.templates.editor.project_class" theme="bootstrap">
-                            <ui-select-match reset-search-input="false" placeholder="Select a species sound">
-                                <div ng-if="$select.selected.species_name">
-                                    <span class="text-insight">{{ $select.selected.species_name }}</span><br/>
-                                    <span class="text-util-gray-01" style="font-size: 12px;">{{ $select.selected.songtype_name }}</span>
+                    <div class="form-group" style="position:relative;" click-outside="layer.templates.hide()">
+                        <ui-select ng-model="layer.templates.selected" on-select="layer.templates.selectClass(selected)" ng-click="layer.templates.onSearchClick()" reset-search-input="false" theme="bootstrap">
+                            <ui-select-match>
+                                <span ng-show="!layer.templates.userSearch && !$select.selected.species_name" class="placeholder pl-absolute-icon ml-1">Select a species sound</span>
+                                <div ng-show="layer.templates.userSearch && layer.templates.userSearch.length && !$select.selected.species_name" class="placeholder pl-absolute-icon ml-1">
+                                    <span class="text-insight">{{ layer.templates.userSearch }}</span>
                                 </div>
-                                <div ng-if="layer.templates.userSearch && !$select.selected.species_name">{{ layer.templates.userSearch }}</div>
+                                <div class="row-flex flex-self-align-top flex-direction-column">
+                                    <span class="text-insight">{{ layer.templates.tempSelected.species_name ? layer.templates.tempSelected.species_name : $select.selected.species_name }}</span>
+                                    <span class="text-util-gray-01" style="font-size: 12px;line-height: 1.2em;">{{ layer.templates.tempSelected.songtype_name ? layer.templates.tempSelected.songtype_name : $select.selected.songtype_name }}</span>
+                                </div>
                             </ui-select-match>
-                            <ui-select-choices repeat="class in layer.templates.project_classes | filter:$select.search | orderBy: ['species_name', 'songtype_name']" refresh="layer.templates.onSpeciesExists($select.search)" refresh-delay="0">
-                                <span class="text-insight">{{ class.species_name }}</span><br/>
-                                <span class="text-util-gray-01" style="font-size: 12px;">{{ class.songtype_name }}</span>
+                            <ui-select-choices repeat="class in layer.templates.project_classes | filter:$select.search | orderBy: ['species_name']" refresh="layer.templates.onSpeciesExists($select.search)" refresh-delay="0" position="down">
+                                <div class="row-flex flex-self-align-top flex-direction-column">
+                                    <span class="text-insight">{{ class.species_name }}</span>
+                                    <span class="text-util-gray-01" style="font-size: 12px;line-height: 1.2em;">{{ class.songtype_name }}</span>
+                                </div>
                             </ui-select-choices>
                         </ui-select>
-                        <div class="not-found-row" ng-if="layer.templates.toggleSpeciesAdd === true && layer.templates.userSearch && layer.templates.toggleSpeciesSelect === false">
-                            <div class="mb-2">We cannot find the species "{{ layer.templates.userSearch }}" in the project.</div>
-                            <a class="primary-link" ng-click="layer.templates.addSpecies()">
+                        <div class="not-found-row" ng-show="layer.templates.toggleSpeciesAdd === true && layer.templates.userSearch && layer.templates.toggleSpeciesSelect === false">
+                            <div class="mb-2 support">We cannot find the species "{{ layer.templates.userSearch }}" in the project.</div>
+                            <a class="primary-link support" ng-click="layer.templates.addSpecies()">
                                 Add species
-                                <span class="ml-1" style="width: 12px">
+                                <span class="ml-1" style="width: 14px">
                                     <img src="/images/fi-plus-primary.svg">
                                 </span>
                             </a>
                         </div>
-                        <div class="not-found-row" ng-if="layer.templates.toggleSpeciesAdd === false && layer.templates.toggleSpeciesSelect === true">
-                            <div class="mb-2">Species</div>
+                        <div class="not-found-row" ng-show="layer.templates.toggleSpeciesAdd === false && layer.templates.toggleSpeciesSelect === true">
+                            <div class="mb-2 support">Species</div>
                             <div class="my-2 border-t-1 border-util-gray-02"> </div>
-                            <ul ng-if="layer.templates.allSpecies.length" class="ulnodeco mb-2 pl-2" style="max-height: 100px; overflow-y: auto;">
+                            <ul ng-if="layer.templates.allSpecies.length" class="ulnodeco mb-2 pl-0" style="max-height: 100px; overflow-y: auto;">
                                 <li ng-repeat="specie in layer.templates.allSpecies"
                                     class="linodeco mb-2 py-1 px-2 cs-pointer"
                                     ng-class="{'bg-util-gray-03': specie.scientific_name === layer.templates.classToAdd.species}"
@@ -107,7 +109,7 @@
                             </ul>
                             <div ng-if="!layer.templates.allSpecies.length" class="mb-2">No species found.</div>
                             <div class="my-2 border-t-1 border-util-gray-02"> </div>
-                            <div class="pl-2">
+                            <div class="pl-2 support">
                                 <div>Don't see the species you are looking for?</div>
                                 <a ng-href="https://arbimon.org/contact" class="text-frequency">
                                     Contact support
@@ -115,13 +117,13 @@
                                 </a>
                             </div>
                         </div>
-                        <div class="not-found-row" ng-if="layer.templates.toggleSpeciesAdd === false && layer.templates.toggleSpeciesSelect === false && layer.templates.toggleSongtypeSelect === true">
-                            <div ng-click="layer.templates.backToSelectSpecies()" class="cs-pointer" style="font-size: 11px;">< Species</div>
-                            <div class="my-2">Call</div>
+                        <div class="not-found-row" ng-show="layer.templates.toggleSpeciesAdd === false && layer.templates.toggleSpeciesSelect === false && layer.templates.toggleSongtypeSelect === true">
+                            <div ng-click="layer.templates.backToSelectSpecies()" class="cs-pointer" style="font-size: 13px;">< Species</div>
+                            <div class="my-2 support pl-2">Call</div>
                             <div class="my-2 border-t-1 border-util-gray-02"> </div>
-                            <ul ng-if="layer.templates.songtypes.length" class="ulnodeco mb-2 pl-2" style="max-height: 100px; overflow-y: auto;">
+                            <ul ng-if="layer.templates.songtypes.length" class="ulnodeco mb-2 pl-0" style="max-height: 100px; overflow-y: auto;">
                                 <li ng-repeat="song in layer.templates.songtypes"
-                                    class="linodeco mb-2 py-1 px-2 cs-pointer"
+                                    class="linodeco mb-2 py-1 px-2 cs-pointer support"
                                     ng-class="{'bg-util-gray-03': song.name === layer.templates.classToAdd.songtype}"
                                     ng-click="layer.templates.selectSongtype(song)"
                                 >
@@ -130,8 +132,8 @@
                                 </li>
                             </ul>
                             <div class="pl-2 row-flex flex-space-end mt-2">
-                                <div tooltip="{{(layer.templates.classToAdd.songtype === null) ? 'Select a species call' : ''}}" tooltip-append-to-body="true">
-                                    <button class="btn btn-sm btn-primary btn-rounded-full row-flex-inline flex-align-middle"
+                                <div tooltip="{{layer.templates.classToAdd.songtype === null ? 'Select a species call' : ''}}" tooltip-append-to-body="true">
+                                    <button class="btn btn-sm btn-primary btn-rounded-full row-flex flex-direction-row flex-space-center"
                                         ng-disabled="!layer.templates.classToAdd.songtype"
                                         ng-click="layer.templates.addClass()"
                                     >
@@ -146,12 +148,12 @@
                     </div>
                 </div>
                 <div class="row-flex flex-direction-row flex-space-between mt-5">
-                    <button class="btn btn-sm btn-success btn-rounded-full row-flex flex-direction-row flex-space-center" style="width: 160px"
+                    <button class="btn btn-sm btn-success btn-rounded-full row-flex flex-direction-row flex-space-center"
                         ng-click=" $event.stopPropagation(); layer.templates.editor.reset()">
                         Cancel
                     </button>
                     <button id="submit-btn" class="btn btn-sm btn-primary btn-rounded-full row-flex flex-direction-row flex-space-center"
-                        ng-click=" $event.stopPropagation(); layer.templates.editor.submit()" style="width: 160px" ng-disabled="!!layer.templates.editor.submitting">
+                        ng-click=" $event.stopPropagation(); layer.templates.editor.submit()" ng-disabled="!!layer.templates.editor.submitting">
                         Create template
                         <span ng-if="!layer.templates.editor.submitting" class="ml-3" style="width: 16px">
                             <img src="/images/fi-plus.svg">

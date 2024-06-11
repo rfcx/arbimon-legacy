@@ -1,4 +1,4 @@
-angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags'])
+angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags', 'a2.directive.click-outside'])
 .directive('a2SpeciesValidator', function (Project, Species, Songtypes, a2UserPermit, notify, $filter, $window) {
     return {
         restrict : 'E',
@@ -19,15 +19,45 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags'])
             $scope.tempSelected = {}
 
             $scope.onSpeciesExists = function(search) {
-                if (!search) return;
+                console.log('species search', search)
+                if (!search) {
+                    $scope.userSearch = '';
+                    return;
+                }
                 $scope.userSearch = search;
-                const classes = $scope.classes ? $scope.classes.filter(cl => cl.species_name.toLowerCase().startsWith(search.toLowerCase()) || cl.songtype_name.toLowerCase().startsWith(search.toLowerCase())) : []
+                const classes = $scope.classes ? $scope.classes.filter(function(cl) {
+                    const species = cl.species_name.toLowerCase()
+                    const searchFormatted = search.toLowerCase()
+                    if (species.indexOf(searchFormatted) != -1) {
+                        return true;
+                    } else return false;
+                }) : []
                 if (classes.length === 0) {
                     $scope.toggleSpeciesAdd = true;
                     $scope.toggleSpeciesSelect = false;
                 }
+                else {
+                    $scope.toggleSpeciesAdd = false;
+                    $scope.toggleSpeciesSelect = false;
+                }
             }
-            $scope.addSpecies = function() {
+            $scope.hide = function() {
+                console.log('hide, $scope.toggleSpeciesAdd, $scope.toggleSpeciesSelect', $scope.toggleSpeciesAdd, $scope.toggleSpeciesSelect, $scope.toggleSongtypeSelect)
+                $scope.toggleSpeciesAdd = false;
+                $scope.toggleSpeciesSelect = false;
+                $scope.toggleSongtypeSelect = false;
+            }
+            $scope.onSearchClick = function() {
+                console.log('onSearchClick', $scope.userSearch, $scope.classToAdd.species)
+                if ($scope.userSearch && $scope.classToAdd.species) {
+                    $scope.toggleSongtypeSelect = true;
+                }
+                if ($scope.userSearch && !$scope.classToAdd.species) {
+                    $scope.toggleSpeciesAdd = true;
+                }
+            }
+            $scope.addSpecies = function($event) {
+                $event.stopPropagation();
                 $scope.toggleSpeciesAdd = false;
                 $scope.toggleSpeciesSelect = true;
                 Species.search($scope.userSearch, function(results) {

@@ -2,31 +2,36 @@
     <p ng-hide="classes.length">
         You need to add species sounds <a ui-sref="audiodata.species">here</a>
     </p>
-    <div class="form-group validator" style="position:relative;">
-        <ui-select ng-model="selected" on-select="selectClass(selected)" theme="bootstrap">
+    <div class="form-group validator" style="position:relative;" click-outside="hide()">
+        <ui-select ng-model="selected" on-select="selectClass(selected)" ng-click="onSearchClick()" reset-search-input="false" theme="bootstrap">
             <ui-select-match allow-clear="{{$select.selected.species_name ? true : false}}">
                 <img ng-show="!$select.selected.species_name" class="pl-absolute-icon" style="width: 16px" src="/images/fi-search.svg">
-                <span class="placeholder pl-absolute ml-1" ng-show="!$select.selected.species_name">Search for species</span>
+                <span ng-show="!userSearch && !$select.selected.species_name" class="placeholder pl-absolute ml-1">Search for species</span>
+                <div ng-show="userSearch && userSearch.length && !$select.selected.species_name" class="placeholder pl-absolute ml-1">
+                    <span class="text-insight">{{ userSearch }}</span>
+                </div>
                 <div class="row-flex flex-self-align-top flex-direction-column">
                     <span class="text-insight">{{ tempSelected.species_name ? tempSelected.species_name : $select.selected.species_name }}</span>
                     <span class="text-util-gray-01" style="font-size: 12px;line-height: 1.2em;">{{ tempSelected.songtype_name ? tempSelected.songtype_name : $select.selected.songtype_name }}</span>
                 </div>
             </ui-select-match>
-            <ui-select-choices repeat="class in classes | filter:$select.search | orderBy: ['species_name', 'songtype_name']" refresh="onSpeciesExists($select.search)" refresh-delay="0" position="down">
-                <span class="text-insight">{{ class.species_name }}</span><br/>
-                <span class="text-util-gray-01" style="font-size: 12px;">{{ class.songtype_name }}</span>
+            <ui-select-choices repeat="class in classes | filter:$select.search | orderBy: ['species_name']" refresh="onSpeciesExists($select.search)" refresh-delay="0" position="down">
+                <div class="row-flex flex-self-align-top flex-direction-column">
+                    <span class="text-insight">{{ class.species_name }}</span>
+                    <span class="text-util-gray-01" style="font-size: 12px;line-height: 1.2em;">{{ class.songtype_name }}</span>
+                </div>
             </ui-select-choices>
         </ui-select>
-        <div class="not-found-row" ng-if="toggleSpeciesAdd === true && userSearch && toggleSpeciesSelect === false">
+        <div class="not-found-row" id="validatorAddSpecie" ng-show="toggleSpeciesAdd === true && userSearch && toggleSpeciesSelect === false">
             <div class="mb-2 support">We cannot find the species "{{ userSearch }}" in the project.</div>
-            <a class="primary-link support" ng-click="addSpecies()">
+            <a class="primary-link support" ng-click="addSpecies($event)">
                 Add species
                 <span class="ml-1" style="width: 14px">
                     <img src="/images/fi-plus-primary.svg">
                 </span>
             </a>
         </div>
-        <div class="not-found-row" ng-if="toggleSpeciesAdd === false && toggleSpeciesSelect === true">
+        <div class="not-found-row" id="validatorSpeciesList" ng-show="toggleSpeciesAdd === false && toggleSpeciesSelect === true">
             <div class="mb-2 support">Species</div>
             <div class="my-2 border-t-1 border-util-gray-02"> </div>
             <ul ng-if="allSpecies.length" class="ulnodeco mb-2 pl-0" style="max-height: 100px; overflow-y: auto;">
@@ -49,7 +54,7 @@
                 </a>
             </div>
         </div>
-        <div class="not-found-row" ng-if="toggleSpeciesAdd === false && toggleSpeciesSelect === false && toggleSongtypeSelect === true">
+        <div class="not-found-row" id="validatorCallList" ng-show="toggleSpeciesAdd === false && toggleSpeciesSelect === false && toggleSongtypeSelect === true">
             <div ng-click="backToSelectSpecies()" class="cs-pointer" style="font-size: 13px;">< Species</div>
             <div class="my-2 support pl-2">Call</div>
             <div class="my-2 border-t-1 border-util-gray-02"> </div>
