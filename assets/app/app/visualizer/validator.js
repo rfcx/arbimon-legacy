@@ -20,7 +20,7 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags', 'a2.directive.
             $scope.timeout;
 
             $scope.onSpeciesExists = function(search) {
-                console.log('species search', search)
+                console.log('[onSpeciesExists] search', search)
                 if (!search) {
                     $scope.userSearch = '';
                     return;
@@ -33,6 +33,7 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags', 'a2.directive.
                         return true;
                     } else return false;
                 }) : []
+                console.log('[onSpeciesExists] classes', classes)
                 if (classes.length === 0) {
                     $scope.toggleSpeciesAdd = true;
                     $scope.toggleSpeciesSelect = false;
@@ -60,7 +61,14 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags', 'a2.directive.
                     if ($scope.userSearch && !$scope.classToAdd.species) {
                         $scope.toggleSpeciesSelect = false;
                         $scope.toggleSongtypeSelect = false;
-                        $scope.toggleSpeciesAdd = true;
+                        const classes = $scope.classes ? $scope.classes.filter(function(cl) {
+                            const species = cl.species_name.toLowerCase()
+                            const searchFormatted = $scope.userSearch.toLowerCase()
+                            if (species.indexOf(searchFormatted) != -1) {
+                                return true;
+                            } else return false;
+                        }) : []
+                        $scope.toggleSpeciesAdd = classes.length === 0 ? true : false;
                         return;
                     }
                 }, 300);

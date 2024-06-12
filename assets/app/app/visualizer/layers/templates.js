@@ -49,7 +49,7 @@ angular.module('a2.visualizer.layers.templates', [
     self.getClasses();
 
     self.onSpeciesExists = function(search) {
-        console.log('species search', search)
+        console.log('[onSpeciesExists] search', search)
         if (!search) {
             self.userSearch = '';
             return;
@@ -62,6 +62,7 @@ angular.module('a2.visualizer.layers.templates', [
                 return true;
             } else return false;
         }) : []
+        console.log('[onSpeciesExists] classes', classes)
         if (classes.length === 0) {
             self.toggleSpeciesAdd = true;
             self.toggleSpeciesSelect = false;
@@ -90,7 +91,14 @@ angular.module('a2.visualizer.layers.templates', [
             if (self.userSearch && !self.classToAdd.species) {
                 self.toggleSpeciesSelect = false;
                 self.toggleSongtypeSelect = false;
-                self.toggleSpeciesAdd = true;
+                const classes = self.project_classes ? self.project_classes.filter(function(cl) {
+                    const species = cl.species_name.toLowerCase()
+                    const searchFormatted = self.userSearch.toLowerCase()
+                    if (species.indexOf(searchFormatted) != -1) {
+                        return true;
+                    } else return false;
+                }) : []
+                self.toggleSpeciesAdd = classes.length === 0 ? true : false;
                 return;
             }
         }, 300);
