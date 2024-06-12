@@ -41,8 +41,8 @@ angular.module('a2.visualizer.layers.templates', [
     self.citizenScientistUser = a2UserPermit.all && a2UserPermit.all.length === 1 && a2UserPermit.all.includes('use citizen scientist interface') && !a2UserPermit.can('delete project') && !a2UserPermit.isSuper();
 
     self.getClasses = function() {
-        Project.getClasses().then(project_classes => {
-            self.project_classes = project_classes;
+        return Project.getClasses().then(project_classes => {
+            self.project_classes = project_classes.list ? project_classes.list : project_classes;
         });
     }
 
@@ -125,11 +125,12 @@ angular.module('a2.visualizer.layers.templates', [
             .success(function(result) {
                 notify.log(self.classToAdd.species + ' ' + self.classToAdd.songtype + " added to the project");
                 self.toggleSongtypeSelect = false;
-                self.getClasses();
                 // Reload the validations list on the Species Presence
                 $scope.$broadcast('a2-persisted')
-                const newSelectedClass = self.project_classes.find(cl => cl.species_name === self.classToAdd.species && cl.songtype_name === self.classToAdd.songtype)
-                self.selectClass(newSelectedClass)
+                self.getClasses().then(() => {
+                    const newSelectedClass = self.project_classes.find(cl => cl.species_name === self.classToAdd.species && cl.songtype_name === self.classToAdd.songtype)
+                    self.selectClass(newSelectedClass)
+                });
             })
             .error(function(data, status) {
                 self.toggleSongtypeSelect = false;
