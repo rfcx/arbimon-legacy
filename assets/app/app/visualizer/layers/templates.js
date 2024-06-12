@@ -81,7 +81,7 @@ angular.module('a2.visualizer.layers.templates', [
     self.onSearchClick = function() {
         clearTimeout(self.timeout);
         self.timeout = setTimeout(() => {
-            console.log('onSearchClick', self.userSearch, self.classToAdd.species)
+            console.log('[onSearchClick]', self.userSearch, self.classToAdd.species)
             if (self.userSearch && self.classToAdd.species) {
                 self.toggleSpeciesAdd = false;
                 self.toggleSpeciesSelect = false;
@@ -149,7 +149,7 @@ angular.module('a2.visualizer.layers.templates', [
             });
     }
     self.selectClass = function(selected) {
-        console.log('selectClass', selected)
+        console.log('[selectClass] selected', selected)
         if (!selected) {
             self.selected = {};
             self.tempSelected = {};

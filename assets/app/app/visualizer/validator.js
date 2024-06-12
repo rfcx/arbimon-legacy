@@ -51,7 +51,7 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags', 'a2.directive.
             $scope.onSearchClick = function() {
                 clearTimeout($scope.timeout);
                 $scope.timeout = setTimeout(() => {
-                    console.log('onSearchClick', $scope.userSearch, $scope.classToAdd.species)
+                    console.log('[onSearchClick]', $scope.userSearch, $scope.classToAdd.species)
                     if ($scope.userSearch && $scope.classToAdd.species) {
                         $scope.toggleSpeciesAdd = false;
                         $scope.toggleSpeciesSelect = false;
@@ -117,6 +117,7 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags', 'a2.directive.
                     });
             }
             $scope.selectClass = function(selected) {
+                console.log('[selectClass] selected', selected)
                 if (!selected) {
                     $scope.selected = {};
                     $scope.tempSelected = {};

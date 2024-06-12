@@ -69,11 +69,11 @@
                     <div class="form-group" style="position:relative;" click-outside="layer.templates.hide()">
                         <ui-select ng-model="layer.templates.selected" on-select="layer.templates.selectClass($select.selected)" ng-click="layer.templates.onSearchClick()" reset-search-input="false" theme="bootstrap">
                             <ui-select-match>
-                                <span ng-show="!layer.templates.userSearch && !$select.selected.species_name" class="placeholder pl-absolute-icon ml-1">Select a species sound</span>
-                                <div ng-show="layer.templates.userSearch && layer.templates.userSearch.length && !$select.selected.species_name" class="placeholder pl-absolute-icon ml-1">
+                                <span ng-if="!layer.templates.tempSelected.species_name" class="placeholder pl-absolute-icon ml-1">Select a species sound</span>
+                                <div ng-if="!layer.templates.userSearch.length && !layer.templates.tempSelected.species_name" class="placeholder pl-absolute-icon ml-1">
                                     <span class="text-insight">{{ layer.templates.userSearch }}</span>
                                 </div>
-                                <div class="row-flex flex-self-align-top flex-direction-column">
+                                <div ng-if="layer.templates.tempSelected.species_name" class="row-flex flex-self-align-top flex-direction-column">
                                     <span class="text-insight">{{ layer.templates.tempSelected.species_name ? layer.templates.tempSelected.species_name : $select.selected.species_name }}</span>
                                     <span class="text-util-gray-01" style="font-size: 12px;line-height: 1.2em;">{{ layer.templates.tempSelected.songtype_name ? layer.templates.tempSelected.songtype_name : $select.selected.songtype_name }}</span>
                                 </div>

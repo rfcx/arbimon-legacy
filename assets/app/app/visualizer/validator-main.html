@@ -4,15 +4,15 @@
     </p>
     <div class="form-group validator" style="position:relative;" click-outside="hide()">
         <ui-select ng-model="selected" on-select="selectClass(selected)" ng-click="onSearchClick()" reset-search-input="false" theme="bootstrap">
-            <ui-select-match allow-clear="{{$select.selected.species_name ? true : false}}">
-                <img ng-show="!$select.selected.species_name" class="pl-absolute-icon" style="width: 16px" src="/images/fi-search.svg">
-                <span ng-show="!userSearch && !$select.selected.species_name" class="placeholder pl-absolute ml-1">Search for species</span>
-                <div ng-show="userSearch && userSearch.length && !$select.selected.species_name" class="placeholder pl-absolute ml-1">
+            <ui-select-match allow-clear="{{$select.selected.species_name || tempSelected.species_name ? true : false}}">
+                <img ng-if="!tempSelected.species_name" class="pl-absolute-icon" style="width: 16px" src="/images/fi-search.svg">
+                <span ng-if="!userSearch.length && !tempSelected.species_name" class="placeholder pl-absolute ml-1">Search for species</span>
+                <div ng-if="userSearch && userSearch.length && !$select.selected.species_name" class="placeholder pl-absolute ml-1">
                     <span class="text-insight">{{ userSearch }}</span>
                 </div>
-                <div class="row-flex flex-self-align-top flex-direction-column">
-                    <span class="text-insight">{{ tempSelected.species_name ? tempSelected.species_name : $select.selected.species_name }}</span>
-                    <span class="text-util-gray-01" style="font-size: 12px;line-height: 1.2em;">{{ tempSelected.songtype_name ? tempSelected.songtype_name : $select.selected.songtype_name }}</span>
+                <div ng-if="tempSelected.species_name" class="row-flex flex-self-align-top flex-direction-column">
+                    <span class="text-insight">{{ tempSelected.species_name ? tempSelected.species_name : selected.species_name }}</span>
+                    <span class="text-util-gray-01" style="font-size: 12px;line-height: 1.2em;">{{ tempSelected.songtype_name ? tempSelected.songtype_name : selected.songtype_name }}</span>
                 </div>
             </ui-select-match>
             <ui-select-choices repeat="class in classes | filter:$select.search | orderBy: ['species_name']" refresh="onSpeciesExists($select.search)" refresh-delay="0" position="down">
