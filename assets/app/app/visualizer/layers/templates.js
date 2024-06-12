@@ -145,6 +145,8 @@ angular.module('a2.visualizer.layers.templates', [
         if (!selected) {
             self.selected = {};
             self.tempSelected = {};
+            self.userSearch = '';
+            self.classToAdd = { species: null, songtype: null};
             return;
         }
         self.selected = selected;
@@ -153,6 +155,8 @@ angular.module('a2.visualizer.layers.templates', [
         self.toggleSpeciesAdd = false;
         self.toggleSpeciesSelect = false;
         self.toggleSongtypeSelect = false;
+        self.userSearch = '';
+        self.classToAdd = { species: null, songtype: null};
     }
 
     var getTemplatesPromise = a2Templates.getList({projectTemplates: true}).then(function(templates){

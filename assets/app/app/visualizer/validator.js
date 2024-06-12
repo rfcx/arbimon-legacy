@@ -114,6 +114,8 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags', 'a2.directive.
                     $scope.tempSelected = {};
                     $scope.is_selected = {};
                     Object.values($scope.byTaxon).forEach(taxon => taxon.open = false)
+                    $scope.userSearch = '';
+                    $scope.classToAdd = { species: null, songtype: null};
                     return;
                 }
                 $scope.selected = selected;
@@ -122,6 +124,8 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags', 'a2.directive.
                 $scope.toggleSpeciesSelect = false;
                 $scope.toggleSongtypeSelect = false;
                 $scope.scrollToClass(selected.species_name, selected.songtype_name);
+                $scope.userSearch = '';
+                $scope.classToAdd = { species: null, songtype: null};
             }
             $scope.scrollToClass = function(species, songtype) {
                 const taxon = $scope.classes.find(cl => cl.species_name === species && cl.songtype_name === songtype)
