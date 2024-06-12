@@ -149,6 +149,7 @@ angular.module('a2.visualizer.layers.templates', [
         }
         self.selected = selected;
         self.tempSelected = selected;
+        self.editor.project_class = selected;
         self.toggleSpeciesAdd = false;
         self.toggleSpeciesSelect = false;
         self.toggleSongtypeSelect = false;
