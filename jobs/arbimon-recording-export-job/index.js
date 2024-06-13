@@ -11,7 +11,7 @@ const recordings = require('../../app/model/recordings')
 const clusterings = require('../../app/model/clustering-jobs')
 const projects = require('../../app/model/projects')
 const config_hosts = require('../../config/hosts');
-const { saveLatestData, combineFilename, uploadAsStream, getSignedUrl } = require('../services/storage')
+const { saveLatestData, combineFilename, uploadAsStream, getSignedUrl, uploadFileToS3 } = require('../services/storage')
 const recordingsExport = require('./recordings')
 const patternMatching = require('./pattern-matching')
 const soundscape = require('./soundscape')
@@ -101,7 +101,16 @@ async function main () {
             const exportReportType = 'Pattern Matchings';
             console.log(`Arbimon Export ${exportReportType} job`)
             patternMatching.collectData(filters, async (err, filePath) => {
-                await sendZipFolderToTheUser(rowData, currentTime, jobName, message, 'pattern-matching-export')
+                const reportName = 'pattern-matching-export'
+                const zipPath = `jobs/arbimon-recording-export-job/${reportName}.zip`
+                const filePath = await uploadFileToS3(S3_EXPORT_BUCKET_ARBIMON, zipPath, rowData.project_id, currentTime, reportName, '.zip')
+                console.log('--filePath', filePath)
+                const url = await getSignedUrl({ Bucket: S3_EXPORT_BUCKET_ARBIMON, Key: filePath })
+                console.log('--signed url', url)
+                await sendEmail('Arbimon export', 'Arbimon export', rowData, url, true)
+                await updateExportRecordings(rowData, { processed_at: currentTime })
+                fs.rmSync(tmpFilePath, { recursive: true, force: true });
+                await recordings.closeConnection()
                 console.log(`Arbimon Export ${exportReportType} job finished: ${message}`)
                 resolve()
             })
@@ -253,7 +262,7 @@ async function buildOccupancyFolder() {
 async function sendZipFolderToTheUser(rowData, currentTime, jobName, message, reportName) {
     await streamToBuffer(reportName).then(async (buffer) => {
         try {
-            console.log(S3_EXPORT_BUCKET_ARBIMON, buffer, rowData.project_id, currentTime, reportName, '.zip', 'application/zip')
+            console.log(S3_EXPORT_BUCKET_ARBIMON, buffer, buffer.length, rowData.project_id, currentTime, reportName, '.zip', 'application/zip')
             const filePath = await saveLatestData(S3_EXPORT_BUCKET_ARBIMON, buffer, rowData.project_id, currentTime, reportName, '.zip', 'application/zip')
             const url = await getSignedUrl({ Bucket: S3_EXPORT_BUCKET_ARBIMON, Key: filePath })
             console.log('--signed url', url)

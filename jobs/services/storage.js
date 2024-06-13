@@ -1,5 +1,8 @@
-const fs = require('fs')
+const { Upload } = require("@aws-sdk/lib-storage");
+const { S3Client } = require("@aws-sdk/client-s3");
 const AWS = require('aws-sdk');
+const { createReadStream } = require("fs");
+const fs = require('fs')
 
 const export_s3 = new AWS.S3({
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
@@ -18,6 +21,42 @@ const rfcx_s3 = new AWS.S3({
     secretAccessKey: process.env.AWS_RFCX_SECRETACCESSKEY,
     region: process.env.AWS_RFCX_REGION
 })
+
+const multipart_upload_s3 = new S3Client({
+    region: process.env.AWS_REGION_ID,
+    credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_KEY
+    }
+});
+
+// Function to upload a file to S3 in chunks
+async function uploadFileInChunks(filePath, bucketName, key) {
+    const fileStream = createReadStream(filePath);
+    const uploadParams = {
+        Bucket: bucketName,
+        Key: key,
+        Body: fileStream
+    };
+
+    const parallelUploads3 = new Upload({
+        client: multipart_upload_s3,
+        params: uploadParams,
+        queueSize: 4, // Number of concurrent uploads
+        partSize: 5 * 1024 * 1024, // Each part size is 5MB
+    });
+
+    parallelUploads3.on('httpUploadProgress', (progress) => {
+        console.log(`Progress: ${progress.loaded}/${progress.total}`);
+    });
+
+    try {
+        const data = await parallelUploads3.done();
+        console.log('Upload completed:', data);
+    } catch (err) {
+        console.error('Error uploading file:', err);
+    }
+}
 
 const startTime = new Date();
 let numPartsLeft
@@ -170,6 +209,14 @@ async function saveLatestData (bucket, buf, project, timeStart, reportType, repo
   return filePath
 }
 
+async function uploadFileToS3 (bucket, filePath, project, timeStart, reportType, reportFormat) {
+    const key = `exports/${project}/${timeStart}/${reportType}${reportFormat}`
+    const bucketFormatted = bucket.split('/')[1]
+    await uploadFileInChunks(filePath, bucketFormatted, key)
+    console.log('[uploadFileToS3] after final')
+    return key
+}
+
 async function getSignedUrl ({ Bucket, Key, isLegacy = undefined, Expires = 604800 }) {
   return new Promise((resolve, reject) => {
     (isLegacy === undefined ? export_s3 : isLegacy === true ? legacy_s3 : rfcx_s3)
@@ -209,5 +256,5 @@ module.exports = {
   saveLatestData,
   getObject,
   getSignedUrl,
-  uploadAsStream
+  uploadFileToS3
 }
