@@ -72,7 +72,6 @@ angular.module('a2.visualizer.layers.templates', [
             self.toggleSpeciesSelect = false;
         }
     }
-
     self.hide = function() {
         self.toggleSpeciesAdd = false;
         self.toggleSpeciesSelect = false;
@@ -88,7 +87,7 @@ angular.module('a2.visualizer.layers.templates', [
                 self.toggleSongtypeSelect = true;
                 return;
             }
-            if (self.userSearch && !self.classToAdd.species) {
+            if (self.userSearch && self.classToAdd.species) {
                 self.toggleSpeciesSelect = false;
                 self.toggleSongtypeSelect = false;
                 const classes = self.project_classes ? self.project_classes.filter(function(cl) {
@@ -103,23 +102,24 @@ angular.module('a2.visualizer.layers.templates', [
             }
         }, 300);
     }
-    self.addSpecies = function() {
+    self.addSpecies = function($event) {
+        $event.stopPropagation();
         self.toggleSpeciesAdd = false;
         self.toggleSpeciesSelect = true;
         Species.search(self.userSearch, function(results) {
             self.allSpecies = results;
         });
     }
-
     self.selectSpecies = function(specie) {
         self.classToAdd.species = specie.scientific_name
         self.toggleSpeciesSelect = false;
+        self.selected = {};
+        self.tempSelected = {};
         Songtypes.get(function(songs) {
             self.songtypes = songs;
         });
         self.toggleSongtypeSelect = true;
     }
-
     self.selectSongtype = function(song) {
         self.classToAdd.songtype = song.name
     }
@@ -133,12 +133,17 @@ angular.module('a2.visualizer.layers.templates', [
             .success(function(result) {
                 notify.log(self.classToAdd.species + ' ' + self.classToAdd.songtype + " added to the project");
                 self.toggleSongtypeSelect = false;
-                // Reload the validations list on the Species Presence
-                $scope.$broadcast('a2-persisted')
+                // Reload the validations list on the Species Presence.
+                $scope.$broadcast('a2-persisted', {
+                    species_name: self.classToAdd.species,
+                    songtype_name: self.classToAdd.songtype
+                })
+                $scope.$broadcast('a2-persisted-validator')
                 self.getClasses().then(() => {
                     const newSelectedClass = self.project_classes.find(cl => cl.species_name === self.classToAdd.species && cl.songtype_name === self.classToAdd.songtype)
+                    console.log('newSelectedClass', newSelectedClass, self.classToAdd)
                     self.selectClass(newSelectedClass)
-                });
+                })
             })
             .error(function(data, status) {
                 self.toggleSongtypeSelect = false;

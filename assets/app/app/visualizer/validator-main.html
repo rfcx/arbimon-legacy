@@ -7,12 +7,12 @@
             <ui-select-match allow-clear="{{$select.selected.species_name || tempSelected.species_name ? true : false}}">
                 <img ng-if="!tempSelected.species_name" class="pl-absolute-icon" style="width: 16px" src="/images/fi-search.svg">
                 <span ng-if="!userSearch.length && !tempSelected.species_name" class="placeholder pl-absolute ml-1">Search for species</span>
-                <div ng-if="userSearch && userSearch.length && !$select.selected.species_name" class="placeholder pl-absolute ml-1">
+                <div ng-if="userSearch && userSearch.length" class="placeholder pl-absolute ml-1">
                     <span class="text-insight">{{ userSearch }}</span>
                 </div>
                 <div ng-if="tempSelected.species_name" class="row-flex flex-self-align-top flex-direction-column">
-                    <span class="text-insight">{{ tempSelected.species_name ? tempSelected.species_name : selected.species_name }}</span>
-                    <span class="text-util-gray-01" style="font-size: 12px;line-height: 1.2em;">{{ tempSelected.songtype_name ? tempSelected.songtype_name : selected.songtype_name }}</span>
+                    <span class="text-insight">{{ tempSelected.species_name ? tempSelected.species_name : $select.selected.species_name }}</span>
+                    <span class="text-util-gray-01" style="font-size: 12px;line-height: 1.2em;">{{ tempSelected.songtype_name ? tempSelected.songtype_name : $select.selected.songtype_name }}</span>
                 </div>
             </ui-select-match>
             <ui-select-choices repeat="class in classes | filter:$select.search | orderBy: ['species_name']" refresh="onSpeciesExists($select.search)" refresh-delay="0" position="down">
@@ -101,7 +101,7 @@
                     ng-class="is_selected[cls.id] ? 'bg-util-gray-02' : ''"
                     ng-click="select(taxon, cls, $event)"
                 >
-                    <td> {{ cls.species_name }}</td>
+                    <td id="species-{{cls.id}}"> {{ cls.species_name }}</td>
                     <td> {{ cls.songtype_name }} </td>
                     <td>
                         <div class="dropdown" dropdown>

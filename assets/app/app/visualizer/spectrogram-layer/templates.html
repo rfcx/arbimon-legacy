@@ -67,10 +67,10 @@
                 <div class="mt-4">
                     <label>Species sound</label>
                     <div class="form-group" style="position:relative;" click-outside="layer.templates.hide()">
-                        <ui-select ng-model="layer.templates.selected" on-select="layer.templates.selectClass($select.selected)" ng-click="layer.templates.onSearchClick()" reset-search-input="false" theme="bootstrap">
+                        <ui-select ng-model="layer.templates.selected" on-select="layer.templates.selectClass(layer.templates.selected)" ng-click="layer.templates.onSearchClick()" reset-search-input="false" theme="bootstrap">
                             <ui-select-match>
-                                <span ng-if="!layer.templates.tempSelected.species_name" class="placeholder pl-absolute-icon ml-1">Select a species sound</span>
-                                <div ng-if="!layer.templates.userSearch.length && !layer.templates.tempSelected.species_name" class="placeholder pl-absolute-icon ml-1">
+                                <span ng-if="!layer.templates.userSearch.length && !layer.templates.tempSelected.species_name" class="placeholder pl-absolute-icon ml-1">Select a species sound</span>
+                                <div ng-if="layer.templates.userSearch && layer.templates.userSearch.length" class="placeholder pl-absolute-icon ml-1">
                                     <span class="text-insight">{{ layer.templates.userSearch }}</span>
                                 </div>
                                 <div ng-if="layer.templates.tempSelected.species_name" class="row-flex flex-self-align-top flex-direction-column">
@@ -87,7 +87,7 @@
                         </ui-select>
                         <div class="not-found-row" ng-show="layer.templates.toggleSpeciesAdd === true && layer.templates.userSearch && layer.templates.toggleSpeciesSelect === false">
                             <div class="mb-2 support">We cannot find the species "{{ layer.templates.userSearch }}" in the project.</div>
-                            <a class="primary-link support" ng-click="layer.templates.addSpecies()">
+                            <a class="primary-link support" ng-click="layer.templates.addSpecies($event)">
                                 Add species
                                 <span class="ml-1" style="width: 14px">
                                     <img src="/images/fi-plus-primary.svg">
