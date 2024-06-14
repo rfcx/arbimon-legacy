@@ -84,6 +84,8 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags', 'a2.directive.
             $scope.selectSpecies = function(specie) {
                 $scope.classToAdd.species = specie.scientific_name
                 $scope.toggleSpeciesSelect = false;
+                $scope.selected = {};
+                $scope.tempSelected = {};
                 Songtypes.get(function(songs) {
                     $scope.songtypes = songs;
                 });
