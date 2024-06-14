@@ -211,8 +211,7 @@ async function saveLatestData (bucket, buf, project, timeStart, reportType, repo
 
 async function uploadFileToS3 (bucket, filePath, project, timeStart, reportType, reportFormat) {
     const key = `exports/${project}/${timeStart}/${reportType}${reportFormat}`
-    const bucketFormatted = bucket.split('/')[1]
-    await uploadFileInChunks(filePath, bucketFormatted, key)
+    await uploadFileInChunks(filePath, bucket, key)
     console.log('[uploadFileToS3] after final')
     return key
 }
