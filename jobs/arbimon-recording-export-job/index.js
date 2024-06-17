@@ -103,7 +103,7 @@ async function main () {
             patternMatching.collectData(filters, async (err, filePath) => {
                 const reportName = 'pattern-matching-export'
                 const zipPath = `jobs/arbimon-recording-export-job/${reportName}.zip`
-                const bucketFormatted = S3_EXPORT_BUCKET_ARBIMON.split('/')[1]
+                const bucketFormatted = S3_EXPORT_BUCKET_ARBIMON 
                 const s3filePath = await uploadFileToS3(bucketFormatted, zipPath, rowData.project_id, currentTime, reportName, '.zip')
                 console.log('--s3filePath', s3filePath)
                 const url = await getSignedUrl({ Bucket: bucketFormatted, Key: s3filePath })
