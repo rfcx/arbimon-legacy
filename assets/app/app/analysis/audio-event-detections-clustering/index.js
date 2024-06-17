@@ -77,7 +77,8 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
 
     $scope.deleteAedJob = function(aedJob, $event) {
         $event.stopPropagation();
-        if(!a2UserPermit.can('manage AED and Clustering job')) {
+        // Prevent delete job for the user/expert roles.
+        if(!a2UserPermit.can('manage AED and Clustering job') || (a2UserPermit.can('manage AED and Clustering job') && !a2UserPermit.can('export report'))) {
             notify.error('You do not have permission to delete <br> Audio Event Detection job');
             return;
         }

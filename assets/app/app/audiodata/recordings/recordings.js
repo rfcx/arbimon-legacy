@@ -94,7 +94,7 @@ angular.module('a2.audiodata.recordings', [
     };
 
     this.exportPermit = function() {
-        return a2UserPermit.can('manage project recordings')
+        return a2UserPermit.can('export report')
     };
 
     this.createPlaylist = function() {
@@ -149,7 +149,7 @@ angular.module('a2.audiodata.recordings', [
     }
 
     this.deleteRecordings = function() {
-        if (!a2UserPermit.can('manage project recordings')) {
+        if (!a2UserPermit.can('export report')) {
             notify.error('You do not have permission to delete recordings');
             return;
         }
@@ -212,7 +212,7 @@ angular.module('a2.audiodata.recordings', [
     this.deleteAllRecordings = function() {
         var filters = $scope.params;
 
-        if(!a2UserPermit.can('manage project recordings')) {
+        if(!a2UserPermit.can('export report')) {
             notify.error('You do not have permission to delete recordings');
             return;
         }

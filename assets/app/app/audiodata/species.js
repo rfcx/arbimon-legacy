@@ -236,8 +236,7 @@ angular.module('a2.audiodata.species', [
     $scope.removeSpecies = function() {
         if(!$scope.checked || !$scope.checked.length)
             return;
-
-        if(!a2UserPermit.can("manage project species")) {
+        if(!a2UserPermit.can("manage project species") || (a2UserPermit.can("manage project species") && !a2UserPermit.can('export report'))) {
             notify.error("You do not have permission to remove species");
             return;
         }

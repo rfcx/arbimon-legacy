@@ -139,7 +139,7 @@ angular.module('a2.analysis.random-forest-models.models', [
 
 
     $scope.deleteModel = function(model_id, model_name) {
-        if(!a2UserPermit.can('manage models and classification')) {
+        if(!a2UserPermit.can('manage models and classification') || (a2UserPermit.can('manage models and classification') && !a2UserPermit.can('export report'))) {
             notify.error('You do not have permission to delete models');
             return;
         }
