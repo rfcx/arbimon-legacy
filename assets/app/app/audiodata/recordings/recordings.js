@@ -94,7 +94,7 @@ angular.module('a2.audiodata.recordings', [
     };
 
     this.exportPermit = function() {
-        return a2UserPermit.can('export report')
+        return a2UserPermit.can('manage project recordings') || a2UserPermit.getUserRole() === 'User'
     };
 
     this.createPlaylist = function() {
@@ -319,7 +319,7 @@ angular.module('a2.audiodata.recordings', [
         if (a2UserPermit.isSuper()) {
             return this.openExportPopup(listParams)
         }
-        if ((a2UserPermit.all && !a2UserPermit.all.length) || !a2UserPermit.can('export report')) {
+        if (!a2UserPermit.can('manage project recordings') && a2UserPermit.getUserRole() !== 'User') {
             return notify.error('You do not have permission to export data');
         }
         this.openExportPopup(listParams)

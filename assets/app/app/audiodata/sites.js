@@ -350,7 +350,10 @@ angular.module('a2.audiodata.sites', [
 
     $scope.exportSites = function() {
         if (a2UserPermit.isSuper()) return $downloadResource(Project.getSitesExportUrl());
-        if ((a2UserPermit.all && !a2UserPermit.all.length) || !a2UserPermit.can('export report')) {
+        if (a2UserPermit.getUserRole() === 'Data Entry') {
+            $downloadResource(Project.getSitesExportUrl());
+        }
+        else if (!a2UserPermit.can('manage project sites')) {
             return notify.error('You do not have permission to export sites')
         } else $downloadResource(Project.getSitesExportUrl());
     };
