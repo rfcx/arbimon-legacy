@@ -66,6 +66,8 @@ angular.module('a2.visualizer.layers.templates', [
         if (classes.length === 0) {
             self.toggleSpeciesAdd = true;
             self.toggleSpeciesSelect = false;
+            self.selected = {};
+            self.tempSelected = {};
         }
         else {
             self.toggleSpeciesAdd = false;
@@ -133,6 +135,7 @@ angular.module('a2.visualizer.layers.templates', [
             .success(function(result) {
                 notify.log(self.classToAdd.species + ' ' + self.classToAdd.songtype + " added to the project");
                 self.toggleSongtypeSelect = false;
+                self.userSearch = '';
                 // Reload the validations list on the Species Presence.
                 $scope.$broadcast('a2-persisted', {
                     species_name: self.classToAdd.species,
@@ -158,7 +161,6 @@ angular.module('a2.visualizer.layers.templates', [
         if (!selected) {
             self.selected = {};
             self.tempSelected = {};
-            self.userSearch = '';
             self.classToAdd = { species: null, songtype: null};
             return;
         }
@@ -168,7 +170,6 @@ angular.module('a2.visualizer.layers.templates', [
         self.toggleSpeciesAdd = false;
         self.toggleSpeciesSelect = false;
         self.toggleSongtypeSelect = false;
-        self.userSearch = '';
         self.classToAdd = { species: null, songtype: null};
     }
 

@@ -37,6 +37,8 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags', 'a2.directive.
                 if (classes.length === 0) {
                     $scope.toggleSpeciesAdd = true;
                     $scope.toggleSpeciesSelect = false;
+                    $scope.selected = {};
+                    $scope.tempSelected = {};
                 }
                 else {
                     $scope.toggleSpeciesAdd = false;
@@ -104,6 +106,7 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags', 'a2.directive.
                     .success(function(result) {
                         notify.log($scope.classToAdd.species + ' ' + $scope.classToAdd.songtype + " added to the project");
                         $scope.toggleSongtypeSelect = false;
+                        $scope.userSearch = '';
                         load_project_classes().finally(() => {
                             const newSelectedClass = $scope.classes.find(cl => cl.species_name === $scope.classToAdd.species && cl.songtype_name === $scope.classToAdd.songtype)
                             console.log('newSelectedClass', newSelectedClass, $scope.classToAdd)
@@ -125,7 +128,6 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags', 'a2.directive.
                     $scope.tempSelected = {};
                     $scope.is_selected = {};
                     Object.values($scope.byTaxon).forEach(taxon => taxon.open = false)
-                    $scope.userSearch = '';
                     $scope.classToAdd = { species: null, songtype: null};
                     return;
                 }
@@ -135,7 +137,6 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags', 'a2.directive.
                 $scope.toggleSpeciesSelect = false;
                 $scope.toggleSongtypeSelect = false;
                 $scope.scrollToClass(selected.species_name, selected.songtype_name);
-                $scope.userSearch = '';
                 $scope.classToAdd = { species: null, songtype: null};
             }
             $scope.scrollToClass = function(species, songtype) {
