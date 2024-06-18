@@ -255,5 +255,6 @@ module.exports = {
   saveLatestData,
   getObject,
   getSignedUrl,
-  uploadFileToS3
+  uploadFileToS3,
+  uploadAsStream
 }
