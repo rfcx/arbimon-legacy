@@ -52,7 +52,6 @@ var a2 = angular.module('a2.app', [
     $scope.$state = $state;
     Project.getInfo(function(data) {
         $scope.bioAnalyticsBaseUrl = data.bioAnalyticsBaseUrl
-        $scope.reportsEnabled = data.reports_enabled
     })
     $scope.getUrlFor = function(page){
         const projectUrl = Project.getUrl()

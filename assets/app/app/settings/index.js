@@ -55,10 +55,6 @@ angular.module('a2.settings',[
         console.log($scope);
         if(!$scope.isValid)  return;
 
-        if (!$scope.project.description) {
-            $scope.project.description = ''
-        }
-
         Project.updateInfo({
             project: $scope.project
         },

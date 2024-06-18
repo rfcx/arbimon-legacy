@@ -157,8 +157,6 @@ router.post('/create-project', function(req, res, next) {
             })
         ]).then(function() {
             console.log('project:', project);
-            // assign project_type_id to normal type
-            project.project_type_id = 1;
 
             return model.projects.createProjectInArbimonAndCoreAPI(project, req.session.user.id, req.session.idToken).then(function (projectId) {
                 res.json({

@@ -3,12 +3,10 @@
         <ui-select-match placeholder="Select a Project">
             {{ $select.selected.name }} 
             <i class="fa" ng-class="$select.selected.is_private ? 'fa-lock' :'fa-globe'"></i>
-            <small ng-hide="$select.selected.is_enabled"><i>disabled</i></small>
         </ui-select-match>
         <ui-select-choices repeat="project in controller.projects | filter:$select.search">
             {{ project.name }} 
             <i class="fa" ng-class="project.is_private ? 'fa-lock' :'fa-globe'"></i>
-            <small ng-hide="project.is_enabled"><i>disabled</i></small>
         </ui-select-choices>
     </ui-select>
     <ui-view name="detail"></ui-view>

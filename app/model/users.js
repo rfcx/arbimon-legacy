@@ -185,7 +185,7 @@ var Users = {
         let selectExtra = '';
         let joinExtra = '';
 
-        selectExtra = "p.project_id AS id, name, url, lat, lon, description, is_private, is_enabled, u.login AS `owner`";
+        selectExtra = "p.project_id AS id, name, url, lat, lon, description, is_private, u.login AS `owner`";
 
         joinExtra = "JOIN user_project_role AS upr ON (p.project_id = upr.project_id and upr.role_id = 4) \n"+
         "JOIN user_project_role AS upr2 ON (p.project_id = upr2.project_id) \n"+
@@ -197,10 +197,6 @@ var Users = {
 
         if(query.hasOwnProperty('q')) {
             whereExp.push("p.name LIKE '%"+query.q+"%' OR p.description LIKE '%"+query.q+"%'");
-        }
-        if(query.hasOwnProperty('featured')) {
-            selectExtra += ', featured, image'
-            whereExp.push("p.featured = 1 OR p.featured = 2");
         }
         if (query.hasOwnProperty('publicTemplates')) {
             whereExp.push('p.deleted_at IS NULL');

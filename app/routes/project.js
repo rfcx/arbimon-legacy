@@ -68,12 +68,6 @@ router.get('/:projecturl?/', function(req, res, next) {
 
             var project = rows[0];
 
-            if(!project.is_enabled) {
-                return res.render('project_disabled', {
-                    project: project,
-                    user: req.session.user
-                });
-            }
             const userRole = await model.users.getProjectRole(req.session.user.id, project.project_id)
             model.users.getPermissions(req.session.user.id, project.project_id, function(err, rows) {
                 var permissionsMap = rows.reduce(function(_, p) {
@@ -116,12 +110,7 @@ router.get('/:projecturl?/', function(req, res, next) {
                     authorized: true,
                     public: !project.is_private,
                     features:{
-                        pattern_matching: !!project.pattern_matching_enabled,
-                        cnn: !!project.cnn_enabled,
                         citizen_scientist: !!project.citizen_scientist_enabled,
-                        aed: !!project.aed_enabled,
-                        clustering: !!project.clustering_enabled,
-                        reports_enabled: !!project.reports_enabled,
                         public_templates_enabled: !!project.public_templates_enabled,
                     },
                     super: !!req.session.user.isSuper,
