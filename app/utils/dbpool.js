@@ -79,7 +79,7 @@ var dbpool = {
         return connection;
     },
 
-    getConnection : function(callback){
+    getConnection: function(callback){
         return q.ninvoke(dbpool.getPool(), 'getConnection').then(function (connection){
             dbpool.enable_query_debugging(connection);
             return connection;
@@ -93,7 +93,6 @@ var dbpool = {
         return dbpool.getConnection().then(function(connection){
             var tx = new sqlutil.transaction(connection);
             return tx.perform(transactionFn).finally(function(){
-                clearTimeout(trTimeout);
                 connection.release();
             });
         });
@@ -160,8 +159,6 @@ dbpool.streamQuery = function(sql, options){
                 resolve([resultstream, fields]);
             });
             resultstream.on('end', function(){
-                clearTimeout(queryTimeout);
-
                 dbconn.release();
             });
         });
