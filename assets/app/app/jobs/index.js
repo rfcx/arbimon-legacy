@@ -125,7 +125,7 @@ angular.module('a2.jobs', [
     };
 
     $scope.hide = function(job) {
-        if (!a2UserPermit.can('manage project jobs')) {
+        if (!a2UserPermit.can('manage project jobs') || (a2UserPermit.can('manage project jobs') && !a2UserPermit.can('export report'))) {
             notify.error('You do not have permission to hide or cancel jobs');
             return;
         }

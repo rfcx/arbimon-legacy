@@ -107,7 +107,8 @@ angular.module('a2.analysis.clustering-jobs', [
 
     $scope.deleteClusteringJob = function(clusteringJob, $event) {
         $event.stopPropagation();
-        if(!a2UserPermit.can('manage AED and Clustering job')) {
+        // Prevent delete job for the user/expert roles.
+        if(!a2UserPermit.can('manage AED and Clustering job') || (a2UserPermit.can('manage AED and Clustering job') && !a2UserPermit.can('export report'))) {
             notify.log('You do not have permission to delete Clustering job');
             return;
         }

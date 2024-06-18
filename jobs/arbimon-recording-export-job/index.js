@@ -11,7 +11,7 @@ const recordings = require('../../app/model/recordings')
 const clusterings = require('../../app/model/clustering-jobs')
 const projects = require('../../app/model/projects')
 const config_hosts = require('../../config/hosts');
-const { saveLatestData, combineFilename, uploadAsStream, getSignedUrl } = require('../services/storage')
+const { saveLatestData, combineFilename, uploadAsStream, getSignedUrl, uploadFileToS3 } = require('../services/storage')
 const recordingsExport = require('./recordings')
 const patternMatching = require('./pattern-matching')
 const soundscape = require('./soundscape')
@@ -101,7 +101,17 @@ async function main () {
             const exportReportType = 'Pattern Matchings';
             console.log(`Arbimon Export ${exportReportType} job`)
             patternMatching.collectData(filters, async (err, filePath) => {
-                await sendZipFolderToTheUser(rowData, currentTime, jobName, message, 'pattern-matching-export')
+                const reportName = 'pattern-matching-export'
+                const zipPath = `jobs/arbimon-recording-export-job/${reportName}.zip`
+                const bucketFormatted = S3_EXPORT_BUCKET_ARBIMON.split('/')[0]
+                const s3filePath = await uploadFileToS3(bucketFormatted, zipPath, rowData.project_id, currentTime, reportName, '.zip')
+                console.log('--s3filePath', s3filePath)
+                const url = await getSignedUrl({ Bucket: bucketFormatted, Key: s3filePath })
+                console.log('--signed url', url)
+                await sendEmail('Arbimon export', 'Arbimon export', rowData, url, true)
+                await updateExportRecordings(rowData, { processed_at: currentTime })
+                fs.rmSync(tmpFilePath, { recursive: true, force: true });
+                await recordings.closeConnection()
                 console.log(`Arbimon Export ${exportReportType} job finished: ${message}`)
                 resolve()
             })
@@ -154,7 +164,6 @@ async function main () {
                 console.log('Arbimon Export job: file is accessible by url', url)
                 await sendEmail('Arbimon Export recording report', 'arbimon-export-recording.csv', rowData, url, true)
                 await updateExportRecordings(rowData, { processed_at: currentTime })
-                await recordings.closeConnection()
                 fs.unlink(filePath, () => {})
                 console.log(`Arbimon Export job finished: export recordings report for ${message}`)
                 resolve()
@@ -211,13 +220,11 @@ async function processClusteringStream (cluster, results, rowData, currentTime, 
                         await sendEmail('Arbimon Export clustering report', 'clustering-rois-export.csv', rowData, content, false)
                     }
                     await updateExportRecordings(rowData, { processed_at: currentTime })
-                    await recordings.closeConnection()
                     resolve()
                 } catch(error) {
                     console.error('Error while sending clustering-rois-export email', error)
                     await errorMessage(message, jobName)
                     await updateExportRecordings(rowData, { error: JSON.stringify(error) })
-                    await recordings.closeConnection()
                     resolve()
                 }
             })
@@ -253,20 +260,18 @@ async function buildOccupancyFolder() {
 async function sendZipFolderToTheUser(rowData, currentTime, jobName, message, reportName) {
     await streamToBuffer(reportName).then(async (buffer) => {
         try {
-            console.log(S3_EXPORT_BUCKET_ARBIMON, buffer, rowData.project_id, currentTime, reportName, '.zip', 'application/zip')
+            console.log(S3_EXPORT_BUCKET_ARBIMON, buffer, buffer.length, rowData.project_id, currentTime, reportName, '.zip', 'application/zip')
             const filePath = await saveLatestData(S3_EXPORT_BUCKET_ARBIMON, buffer, rowData.project_id, currentTime, reportName, '.zip', 'application/zip')
             const url = await getSignedUrl({ Bucket: S3_EXPORT_BUCKET_ARBIMON, Key: filePath })
             console.log('--signed url', url)
             await sendEmail('Arbimon export', 'Arbimon export', rowData, url, true)
             await updateExportRecordings(rowData, { processed_at: currentTime })
             fs.rmSync(tmpFilePath, { recursive: true, force: true });
-            await recordings.closeConnection()
         } catch(error) {
             console.error('Error while sending zip folder email.', error)
             await errorMessage(message, jobName)
             fs.rmSync(tmpFilePath, { recursive: true, force: true });
             await updateExportRecordings(rowData, { error: JSON.stringify(error) })
-            await recordings.closeConnection()
         }
     })
 }
@@ -427,13 +432,11 @@ async function processGroupedDetectionsStream (results, rowData, projection_para
                 try {
                     await sendEmail('Arbimon Export Grouped detections report', 'grouped-detections-export.csv', rowData, content, false);
                     await updateExportRecordings(rowData, { processed_at: currentTime })
-                    await recordings.closeConnection()
                     resolve()
                 } catch(error) {
                     console.error('Error while sending grouped-detections-export email.', error)
                     await errorMessage(message, jobName)
                     await updateExportRecordings(rowData, { error: JSON.stringify(error) })
-                    await recordings.closeConnection()
                     resolve()
                 }
             })

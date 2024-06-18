@@ -301,17 +301,27 @@ var Projects = {
         project = result.value;
         project.public_templates_enabled = 0;
 
+        let createdConnection = false;
         if (!db) {
             db = await dbpool.getConnection()
+            createdConnection = true;
             await db.beginTransaction()
         }
+
         try {
             const result = await this.runProjectCreationQueue(db, project, owner_id);
-            await db.commit()
+
+            if (createdConnection) {
+                await db.commit()
+                await db.release()
+            }
+
             return result
         } catch (e) {
-            await db.rollback();
-            await db.release();
+            if (createdConnection) {
+                await db.rollback();
+                await db.release();
+            }
         }
     },
 
@@ -618,36 +628,56 @@ var Projects = {
         }).nodeify(callback);
     },
 
-    insertClassAsync: function(projectClass) {
+    insertClassAsync: function(projectClass, connection) {
         const {projectId, specieId, songtypeId} = projectClass
         const sql = `INSERT INTO project_classes(project_id, species_id, songtype_id)
         VALUES(${projectId}, ${specieId}, ${songtypeId})`
-        return dbpool.query(sql)
+
+        if (connection) {
+            return dbpool.queryWithConn(connection, sql);
+        }
+
+        return dbpool.query(sql);
     },
 
-    checkClassAsync: function(projectClass) {
+    checkClassAsync: function(projectClass, connection) {
         const {projectId, specieId, songtypeId} = projectClass
         const sql = `SELECT * FROM project_classes
         WHERE project_id = ${projectId} AND species_id = ${specieId} AND songtype_id = ${songtypeId}`
+
+        if (connection) {
+            return dbpool.queryWithConn(connection, sql);
+        }
+
         return dbpool.query(sql)
     },
 
-    updateProjectInAnalyses: async function(originalProjectId, newProjectId, siteId) {
+    updateProjectInAnalyses: async function(originalProjectId, newProjectId, siteId, connection) {
         const sql = `UPDATE recording_validations rv
         LEFT JOIN recordings r on r.recording_id = rv.recording_id
         SET rv.project_id = ${newProjectId}
         WHERE rv.project_id = ${originalProjectId}
             AND r.site_id = ${siteId}`
-        return dbpool.query(sql);
+
+        if (connection) {
+            return dbpool.queryWithConn(connection, sql);
+        }
+
+        return dbpool.query(sql)
     },
 
-    getProjectValidationsBySite: async function(projectId, siteId) {
+    getProjectValidationsBySite: async function(projectId, siteId, connection) {
         const sql = `SELECT rv.species_id, rv.songtype_id
         FROM recording_validations rv
         LEFT JOIN recordings r on r.recording_id = rv.recording_id
         WHERE rv.project_id = ${projectId}
             AND r.site_id = ${siteId}
             AND (rv.present = 1 OR rv.present_review > 0 OR rv.present_aed > 0);`
+
+        if (connection) {
+            return dbpool.queryWithConn(connection, sql);
+        }
+
         return dbpool.query(sql);
     },
 
@@ -1074,27 +1104,25 @@ var Projects = {
 
     createProjectInArbimonAndCoreAPI: async function(project, userId, token) {
         let connection;
-        return dbpool.getConnection()
-            .then(async (con) => {
-                connection = con;
-                await connection.beginTransaction();
-                let newProjectId = await this.createProject(project, userId, connection);
-                project.project_id = newProjectId;
-                if (rfcxConfig.coreAPIEnabled) {
-                    let externalProjectId = await this.createInCoreAPI(project, token);
-                    await this.setExternalId(project.project_id, externalProjectId, connection);
-                }
-                await connection.commit()
-                await connection.release()
-            })
-            .catch(async (err) => {
-                console.log('Failed to create project', err);
-                if (connection) {
-                    await connection.rollback();
-                    await connection.release();
-                }
-                throw new APIError('Failed to create project');
-            })
+        try {
+            connection = await dbpool.getConnection();
+            await connection.beginTransaction();
+            let newProjectId = await this.createProject(project, userId, connection);
+            project.project_id = newProjectId;
+            if (rfcxConfig.coreAPIEnabled) {
+                let externalProjectId = await this.createInCoreAPI(project, token);
+                await this.setExternalId(project.project_id, externalProjectId, connection);
+            }
+            await connection.commit()
+            await connection.release()
+        } catch (error) {
+            console.log('Failed to create project', err);
+            if (connection) {
+                await connection.rollback();
+                await connection.release();
+            }
+            throw new APIError('Failed to create project');
+        }
     },
 
     createInCoreAPI: async function(project, idToken) {

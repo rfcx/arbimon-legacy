@@ -781,14 +781,18 @@ a2-img {
 }
 
 .popover.create-template {
-    padding: 6px;
     min-width: 383px;
-    height: 296px;
+    padding: 16px;
     background-color: @echo !important;
     border-radius: 8px;
     .popover-title {
         border-bottom: none;
         font-size: 16px;
+        padding: 0;
+    }
+    .popover-content {
+        padding: 0;
+        padding-top: 16px;
     }
     .label {
         font-size: 16px !important;
@@ -800,6 +804,11 @@ a2-img {
         background-color: @moss !important;
         border-color: @util-gray-03 !important;
         height: 52px;
+        font-family: Poppins;
+        font-size: 16px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: 24px;
     }
     ::placeholder {
         color: @insight !important;
@@ -811,7 +820,7 @@ a2-img {
     }
     .ui-select-container.open {
         .ui-select-toggle, .ui-select-search {
-            height: 44px;
+            height: 52px;
         }
     }
     .ui-select-placeholder {
@@ -820,6 +829,35 @@ a2-img {
         top: 33%;
         left: 10px;
         margin-top: -2px;
+    }
+    .pl-absolute-icon {
+        position: absolute;
+        top: 28%;
+        left: 10px;
+    }
+    .btn-sm {
+        padding: 7px 12px;
+        width: 167px;
+        font-size: 14px;
+        font-style: normal;
+        font-weight: 500;
+        line-height: 18px;
+    }
+    .placeholder {
+        color: @insight !important;
+        vertical-align: middle;
+        font-family: Poppins;
+        font-size: 16px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: 24px;
+    }
+    .support {
+        font-family: Poppins;
+        font-size: 14px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: 20px;
     }
 }
 
@@ -846,7 +884,7 @@ a2-img {
     }
     .ui-select-container.open {
         .ui-select-toggle, .ui-select-search {
-            height: 44px;
+            height: 52px;
         }
     }
     .pl-absolute-icon {
@@ -892,6 +930,15 @@ a2-img {
     }
     .ui-select-match-text {
         display: block !important;
+    }
+    .form-control {
+        color: @insight !important;
+        vertical-align: middle;
+        font-family: Poppins;
+        font-size: 15px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: 24px;
     }
 }
 

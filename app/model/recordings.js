@@ -2115,19 +2115,23 @@ var Recordings = {
         return query(q);
     },
 
-    deleteRecordingInAnalyses: async function(recIds) {
-        let promises=[
-            dbpool.query(`DELETE FROM audio_event_detections_clustering WHERE recording_id in (${recIds})`),
-            dbpool.query(`DELETE FROM classification_results WHERE recording_id in (${recIds})`),
-            dbpool.query(`DELETE FROM cnn_results_presence WHERE recording_id in (${recIds})`),
-            dbpool.query(`DELETE FROM cnn_results_rois WHERE recording_id in (${recIds})`),
-            dbpool.query(`DELETE FROM pattern_matching_rois WHERE recording_id in (${recIds})`),
-            dbpool.query(`DELETE FROM soundscape_region_tags WHERE recording_id in (${recIds})`),
-            dbpool.query(`UPDATE templates set deleted=1 WHERE recording_id in (${recIds})`),
-            dbpool.query(`DELETE FROM training_set_roi_set_data WHERE recording_id in (${recIds})`)
+    deleteRecordingInAnalyses: async function(recIds, queryExecutor) {
+        const queryFn = queryExecutor || dbpool.query;
+
+        let queries = [
+            `DELETE FROM audio_event_detections_clustering WHERE recording_id in (${recIds})`,
+            `DELETE FROM classification_results WHERE recording_id in (${recIds})`,
+            `DELETE FROM cnn_results_presence WHERE recording_id in (${recIds})`,
+            `DELETE FROM cnn_results_rois WHERE recording_id in (${recIds})`,
+            `DELETE FROM pattern_matching_rois WHERE recording_id in (${recIds})`,
+            `DELETE FROM soundscape_region_tags WHERE recording_id in (${recIds})`,
+            `UPDATE templates set deleted=1 WHERE recording_id in (${recIds})`,
+            `DELETE FROM training_set_roi_set_data WHERE recording_id in (${recIds})`
         ];
-        console.log('recIds', recIds)
-        return Q.all(promises);
+
+        for (let query of queries) {
+            await queryFn(query)
+        }
     },
 
     insertToRecordingsDeleted: async function(rows, query) {
@@ -2138,14 +2142,6 @@ var Recordings = {
                 return `${rec.id}, ${rec.site_id}, '${datetime}', ${rec.duration}, NOW()`
             }).join('), (\n') + ')'
         return query(q)
-    },
-
-    closeConnection: async function() {
-        return dbpool.getConnection()
-            .then(async (connection) => {
-                await connection.release();
-                console.log('Pool connection closed')
-            })
     },
 
     delete: async function(recs, project_id, token, callback) {
@@ -2178,7 +2174,7 @@ var Recordings = {
                     }
                 })
                 await this.deleteRecordingsInCoreAPI(Object.values(params), token)
-                await this.deleteRecordingInAnalyses(recIds)
+                await this.deleteRecordingInAnalyses(recIds, query)
                 await this.deleteRecordingsFromArbimon(recIds, query)
                 await this.deleteRecordingsFromS3(rows)
 

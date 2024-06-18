@@ -59,7 +59,7 @@ router.get('/:projecturl?/', function(req, res, next) {
         }).catch(next);
     }
 
-    model.projects.find({ url: project_url, publicTemplates: true}, function(err, rows) {
+    model.projects.find({ url: project_url, publicTemplates: true}, async function(err, rows) {
             if (err) return next(err);
             if (!rows.length)  {
                 console.log('\n\n---TEMP: /projects 62 string', rows)
@@ -68,6 +68,7 @@ router.get('/:projecturl?/', function(req, res, next) {
 
             var project = rows[0];
 
+            const userRole = await model.users.getProjectRole(req.session.user.id, project.project_id)
             model.users.getPermissions(req.session.user.id, project.project_id, function(err, rows) {
                 var permissionsMap = rows.reduce(function(_, p) {
                     _[p.name] = true;
@@ -105,7 +106,7 @@ router.get('/:projecturl?/', function(req, res, next) {
 
                 req.session.user.permissions[project.project_id] = rows;
                 req.session.loggedIn = true
-                var perms = {
+                let perms = {
                     authorized: true,
                     public: !project.is_private,
                     features:{
@@ -119,6 +120,7 @@ router.get('/:projecturl?/', function(req, res, next) {
                     userImage: !!req.session.user && !!req.session.user.imageUrl ? req.session.user.imageUrl : '',
                     userFullName: !!req.session.user && !!req.session.user.firstname ? req.session.user.firstname + ' ' + req.session.user.lastname : '',
                     permissions: rows.map(function(perm) { return perm.name; }),
+                    userRole: userRole ? userRole : 'Guest'
                 };
 
                 req.project = {

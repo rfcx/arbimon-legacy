@@ -1,6 +1,7 @@
 angular.module('a2.visualizer.layers.templates', [
     'visualizer-services',
     'a2.utils',
+    'a2.directive.click-outside'
 ])
 .config(function(layer_typesProvider){
     /**
@@ -24,7 +25,7 @@ angular.module('a2.visualizer.layers.templates', [
 })
 .controller('a2VisualizerTemplateLayerController', function($scope, $state, $timeout, a2Templates, a2UserPermit, a22PointBBoxEditor, Project, Species, Songtypes, notify) {
     var self = this;
-    self.selected = null;
+    self.selectedRoi = null;
     self.toggleSpeciesAdd = false;
     self.toggleSpeciesSelect = false;
     self.toggleSongtypeSelect = false;
@@ -32,62 +33,117 @@ angular.module('a2.visualizer.layers.templates', [
     self.allSpecies = [];
     self.songtypes = [];
     self.classToAdd = { species: null, songtype: null};
+    self.timeout;
+    self.selected = {}
+    self.tempSelected = {}
     self.templates = [];
     self.recordingTemplates = [];
     self.citizenScientistUser = a2UserPermit.all && a2UserPermit.all.length === 1 && a2UserPermit.all.includes('use citizen scientist interface') && !a2UserPermit.can('delete project') && !a2UserPermit.isSuper();
 
     self.getClasses = function() {
-        Project.getClasses().then(project_classes => {
-            self.project_classes = project_classes;
+        return Project.getClasses().then(project_classes => {
+            self.project_classes = project_classes.list ? project_classes.list : project_classes;
         });
     }
 
     self.getClasses();
 
     self.onSpeciesExists = function(search) {
+        console.log('[onSpeciesExists] search', search)
+        if (!search) {
+            self.userSearch = '';
+            return;
+        }
         self.userSearch = search;
-        const classes = self.project_classes ? self.project_classes.filter(cl => cl.species_name.toLowerCase().startsWith(search.toLowerCase()) || cl.songtype_name.toLowerCase().startsWith(search.toLowerCase())) : []
+        const classes = self.project_classes ? self.project_classes.filter(function(cl) {
+            const species = cl.species_name.toLowerCase()
+            const searchFormatted = search.toLowerCase()
+            if (species.indexOf(searchFormatted) != -1) {
+                return true;
+            } else return false;
+        }) : []
+        console.log('[onSpeciesExists] classes', classes)
         if (classes.length === 0) {
             self.toggleSpeciesAdd = true;
             self.toggleSpeciesSelect = false;
         }
+        else {
+            self.toggleSpeciesAdd = false;
+            self.toggleSpeciesSelect = false;
+        }
     }
-
-    self.addSpecies = function() {
+    self.hide = function() {
+        self.toggleSpeciesAdd = false;
+        self.toggleSpeciesSelect = false;
+        self.toggleSongtypeSelect = false;
+    }
+    self.onSearchClick = function() {
+        clearTimeout(self.timeout);
+        self.timeout = setTimeout(() => {
+            console.log('[onSearchClick]', self.userSearch, self.classToAdd.species)
+            if (self.userSearch && self.classToAdd.species) {
+                self.toggleSpeciesAdd = false;
+                self.toggleSpeciesSelect = false;
+                self.toggleSongtypeSelect = true;
+                return;
+            }
+            if (self.userSearch && self.classToAdd.species) {
+                self.toggleSpeciesSelect = false;
+                self.toggleSongtypeSelect = false;
+                const classes = self.project_classes ? self.project_classes.filter(function(cl) {
+                    const species = cl.species_name.toLowerCase()
+                    const searchFormatted = self.userSearch.toLowerCase()
+                    if (species.indexOf(searchFormatted) != -1) {
+                        return true;
+                    } else return false;
+                }) : []
+                self.toggleSpeciesAdd = classes.length === 0 ? true : false;
+                return;
+            }
+        }, 300);
+    }
+    self.addSpecies = function($event) {
+        $event.stopPropagation();
         self.toggleSpeciesAdd = false;
         self.toggleSpeciesSelect = true;
         Species.search(self.userSearch, function(results) {
             self.allSpecies = results;
         });
     }
-
     self.selectSpecies = function(specie) {
         self.classToAdd.species = specie.scientific_name
         self.toggleSpeciesSelect = false;
+        self.selected = {};
+        self.tempSelected = {};
         Songtypes.get(function(songs) {
             self.songtypes = songs;
         });
         self.toggleSongtypeSelect = true;
     }
-
     self.selectSongtype = function(song) {
         self.classToAdd.songtype = song.name
     }
-
     self.backToSelectSpecies = function() {
         self.toggleSpeciesSelect = true;
         self.toggleSongtypeSelect = false;
     }
-
     self.addClass = function() {
         self.toggleSpeciesSelect = false;
         Project.addClass(self.classToAdd)
             .success(function(result) {
                 notify.log(self.classToAdd.species + ' ' + self.classToAdd.songtype + " added to the project");
                 self.toggleSongtypeSelect = false;
-                self.getClasses();
-                // Reload the validations list on the Species Presence
-                $scope.$broadcast('a2-persisted');
+                // Reload the validations list on the Species Presence.
+                $scope.$broadcast('a2-persisted', {
+                    species_name: self.classToAdd.species,
+                    songtype_name: self.classToAdd.songtype
+                })
+                $scope.$broadcast('a2-persisted-validator')
+                self.getClasses().then(() => {
+                    const newSelectedClass = self.project_classes.find(cl => cl.species_name === self.classToAdd.species && cl.songtype_name === self.classToAdd.songtype)
+                    console.log('newSelectedClass', newSelectedClass, self.classToAdd)
+                    self.selectClass(newSelectedClass)
+                })
             })
             .error(function(data, status) {
                 self.toggleSongtypeSelect = false;
@@ -96,6 +152,24 @@ angular.module('a2.visualizer.layers.templates', [
                 else
                     notify.error('There was a system error. Please try again.');
             });
+    }
+    self.selectClass = function(selected) {
+        console.log('[selectClass] selected', selected)
+        if (!selected) {
+            self.selected = {};
+            self.tempSelected = {};
+            self.userSearch = '';
+            self.classToAdd = { species: null, songtype: null};
+            return;
+        }
+        self.selected = selected;
+        self.tempSelected = selected;
+        self.editor.project_class = selected;
+        self.toggleSpeciesAdd = false;
+        self.toggleSpeciesSelect = false;
+        self.toggleSongtypeSelect = false;
+        self.userSearch = '';
+        self.classToAdd = { species: null, songtype: null};
     }
 
     var getTemplatesPromise = a2Templates.getList({projectTemplates: true}).then(function(templates){

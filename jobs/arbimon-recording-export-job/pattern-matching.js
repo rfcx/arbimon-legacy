@@ -17,11 +17,12 @@ const exportReportJob = `Arbimon Export ${exportReportType} job`
 const tmpFilePath = __dirname + '/tmpfilecache'
 
 const archive = archiver('zip', { zlib: { level: 9 }});
-const outputStreamFile = fs.createWriteStream(__dirname + '/pattern-matching-export.zip');
-
-archive.pipe(outputStreamFile)
+let outputStreamFile
 
 async function collectData (filters, cb) {
+  outputStreamFile = fs.createWriteStream(__dirname + '/pattern-matching-export.zip');
+
+  archive.pipe(outputStreamFile)
   await exportAllPmJobs(filters.project_id, async (err, data) => {
     if (err) {
       console.err('Error export PM', err)

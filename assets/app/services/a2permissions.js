@@ -28,6 +28,9 @@ angular.module('a2.permissions', [
         getUserImage: function() {
             return permit.userImage;
         },
+        getUserRole: function() {
+            return permit.userRole;
+        },
         getUserFullName: function() {
             return permit.userFullName;
         },

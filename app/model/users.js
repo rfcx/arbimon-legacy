@@ -261,6 +261,14 @@ var Users = {
         ]).nodeify(callback);
     },
 
+    getProjectRole : async function(user_id, project_id) {
+        const q = `select r.name from roles r
+            join user_project_role upr on r.role_id = upr.role_id
+            where upr.user_id = ${user_id} and upr.project_id = ${project_id}`
+            console.log('qqqqq', q)
+        return dbpool.query(q).get(0).get('name');
+    },
+
     findOwnedProjects: function(user_id, query) {
         return dbpool.query(
             "SELECT p.* \n"+

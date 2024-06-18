@@ -1,5 +1,5 @@
-angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags'])
-.directive('a2SpeciesValidator', function (Project, Species, Songtypes, a2UserPermit, notify, $filter, $window) {
+angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags', 'a2.directive.click-outside'])
+.directive('a2SpeciesValidator', function (Project, Species, Songtypes, a2UserPermit, notify, $filter, $location, $anchorScroll) {
     return {
         restrict : 'E',
         scope : {
@@ -17,17 +17,64 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags'])
             $scope.classToAdd = { species: null, songtype: null};
             $scope.selected = {}
             $scope.tempSelected = {}
+            $scope.timeout;
 
             $scope.onSpeciesExists = function(search) {
-                if (!search) return;
+                console.log('[onSpeciesExists] search', search)
+                if (!search) {
+                    $scope.userSearch = '';
+                    return;
+                }
                 $scope.userSearch = search;
-                const classes = $scope.classes ? $scope.classes.filter(cl => cl.species_name.toLowerCase().startsWith(search.toLowerCase()) || cl.songtype_name.toLowerCase().startsWith(search.toLowerCase())) : []
+                const classes = $scope.classes ? $scope.classes.filter(function(cl) {
+                    const species = cl.species_name.toLowerCase()
+                    const searchFormatted = search.toLowerCase()
+                    if (species.indexOf(searchFormatted) != -1) {
+                        return true;
+                    } else return false;
+                }) : []
+                console.log('[onSpeciesExists] classes', classes)
                 if (classes.length === 0) {
                     $scope.toggleSpeciesAdd = true;
                     $scope.toggleSpeciesSelect = false;
                 }
+                else {
+                    $scope.toggleSpeciesAdd = false;
+                    $scope.toggleSpeciesSelect = false;
+                }
             }
-            $scope.addSpecies = function() {
+            $scope.hide = function() {
+                $scope.toggleSpeciesAdd = false;
+                $scope.toggleSpeciesSelect = false;
+                $scope.toggleSongtypeSelect = false;
+            }
+            $scope.onSearchClick = function() {
+                clearTimeout($scope.timeout);
+                $scope.timeout = setTimeout(() => {
+                    console.log('[onSearchClick]', $scope.userSearch, $scope.classToAdd.species)
+                    if ($scope.userSearch && $scope.classToAdd.species) {
+                        $scope.toggleSpeciesAdd = false;
+                        $scope.toggleSpeciesSelect = false;
+                        $scope.toggleSongtypeSelect = true;
+                        return;
+                    }
+                    if ($scope.userSearch && !$scope.classToAdd.species) {
+                        $scope.toggleSpeciesSelect = false;
+                        $scope.toggleSongtypeSelect = false;
+                        const classes = $scope.classes ? $scope.classes.filter(function(cl) {
+                            const species = cl.species_name.toLowerCase()
+                            const searchFormatted = $scope.userSearch.toLowerCase()
+                            if (species.indexOf(searchFormatted) != -1) {
+                                return true;
+                            } else return false;
+                        }) : []
+                        $scope.toggleSpeciesAdd = classes.length === 0 ? true : false;
+                        return;
+                    }
+                }, 300);
+            }
+            $scope.addSpecies = function($event) {
+                $event.stopPropagation();
                 $scope.toggleSpeciesAdd = false;
                 $scope.toggleSpeciesSelect = true;
                 Species.search($scope.userSearch, function(results) {
@@ -37,6 +84,8 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags'])
             $scope.selectSpecies = function(specie) {
                 $scope.classToAdd.species = specie.scientific_name
                 $scope.toggleSpeciesSelect = false;
+                $scope.selected = {};
+                $scope.tempSelected = {};
                 Songtypes.get(function(songs) {
                     $scope.songtypes = songs;
                 });
@@ -70,11 +119,14 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags'])
                     });
             }
             $scope.selectClass = function(selected) {
+                console.log('[selectClass] selected', selected)
                 if (!selected) {
                     $scope.selected = {};
                     $scope.tempSelected = {};
                     $scope.is_selected = {};
                     Object.values($scope.byTaxon).forEach(taxon => taxon.open = false)
+                    $scope.userSearch = '';
+                    $scope.classToAdd = { species: null, songtype: null};
                     return;
                 }
                 $scope.selected = selected;
@@ -83,14 +135,26 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags'])
                 $scope.toggleSpeciesSelect = false;
                 $scope.toggleSongtypeSelect = false;
                 $scope.scrollToClass(selected.species_name, selected.songtype_name);
+                $scope.userSearch = '';
+                $scope.classToAdd = { species: null, songtype: null};
             }
             $scope.scrollToClass = function(species, songtype) {
                 const taxon = $scope.classes.find(cl => cl.species_name === species && cl.songtype_name === songtype)
+                console.log('taxon', taxon)
                 $scope.byTaxon[taxon.taxon].open = true;
                 if (taxon) {
                     $scope.is_selected = {};
                     $scope.is_selected[taxon.id] = true;
+                    $scope.scrollTo(taxon.id)
                 }
+            }
+            $scope.scrollTo = function(id) {
+                clearTimeout($scope.timeout);
+                $scope.timeout = setTimeout(() => {
+                    const bookmark = 'species-' + id
+                    $location.hash(bookmark);
+                    $anchorScroll();
+                }, 1000);
             }
             $scope.getHeight = function(species) {
                 return species ? '56px' : '40px'
@@ -114,7 +178,7 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags'])
                 $scope.validations[key] = present;
             };
 
-            var load_project_classes = function() {
+            var load_project_classes = function(event, options) {
                 return Project.getClasses().then(classes => {
                     $scope.classes = classes;
                     
@@ -134,10 +198,18 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags'])
                     
                     $scope.byTaxon = taxons;
                     $scope.taxons = Object.keys($scope.byTaxon).sort();
+                    if (options) {
+                        $scope.scrollToClass(options.species_name, options.songtype_name);
+                    }
                 });
             };
+
+            var open_validator = function() {
+                $scope.layer.is_open = true
+            }
             
             $scope.$on('a2-persisted', load_project_classes);
+            $scope.$on('a2-persisted-validator', open_validator);
             
             $scope.classes = [];
             $scope.is_selected = {};
