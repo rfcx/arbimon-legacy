@@ -241,7 +241,7 @@ angular.module('a2.analysis.patternmatching', [
         if (a2UserPermit.isSuper()) {
             return $scope.openExportPopup(exportReport)
         }
-        if (!a2UserPermit.can('manage pattern matchings') || (a2UserPermit.can('manage pattern matchings') && a2UserPermit.getUserRole() !== 'User')) {
+        if (!a2UserPermit.can('manage pattern matchings') || (a2UserPermit.can('manage pattern matchings') && a2UserPermit.getUserRole() === 'User')) {
             return notify.error('You do not have permission to export data');
         }
         $scope.openExportPopup(exportReport)
@@ -676,7 +676,7 @@ angular.module('a2.analysis.patternmatching', [
     exportPmReport: function ($event) {
         $event.stopPropagation();
         if (a2UserPermit.isSuper()) return this.setupExportUrl()
-        if (!a2UserPermit.can('manage pattern matchings') || (a2UserPermit.can('manage pattern matchings') && a2UserPermit.getUserRole() !== 'User')) {
+        if (!a2UserPermit.can('manage pattern matchings') || (a2UserPermit.can('manage pattern matchings') && a2UserPermit.getUserRole() === 'User')) {
             return notify.error('You do not have permission to export Pattern Matching data');
         } else return this.setupExportUrl()
     },

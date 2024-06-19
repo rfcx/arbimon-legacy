@@ -29,6 +29,7 @@ angular.module('a2.visualizer.layers.templates', [
     self.toggleSpeciesAdd = false;
     self.toggleSpeciesSelect = false;
     self.toggleSongtypeSelect = false;
+    self.resetSearch = false;
     self.userSearch = '';
     self.allSpecies = [];
     self.songtypes = [];
@@ -48,16 +49,22 @@ angular.module('a2.visualizer.layers.templates', [
 
     self.getClasses();
 
-    self.onSpeciesExists = function(search) {
-        console.log('[onSpeciesExists] search', search)
-        if (!search) {
+    self.onSpeciesExists = function($select) {
+        console.log('[onSpeciesExists] search', $select.search)
+        if (!$select.search) {
             self.userSearch = '';
             return;
         }
-        self.userSearch = search;
+        if (self.resetSearch) {
+            $select.search = '';
+            self.userSearch = '';
+            self.resetSearch = false;
+            return;
+        }
+        self.userSearch = $select.search;
         const classes = self.project_classes ? self.project_classes.filter(function(cl) {
             const species = cl.species_name.toLowerCase()
-            const searchFormatted = search.toLowerCase()
+            const searchFormatted = $select.search.toLowerCase()
             if (species.indexOf(searchFormatted) != -1) {
                 return true;
             } else return false;
@@ -135,6 +142,7 @@ angular.module('a2.visualizer.layers.templates', [
             .success(function(result) {
                 notify.log(self.classToAdd.species + ' ' + self.classToAdd.songtype + " added to the project");
                 self.toggleSongtypeSelect = false;
+                self.resetSearch = true;
                 self.userSearch = '';
                 // Reload the validations list on the Species Presence.
                 $scope.$broadcast('a2-persisted', {

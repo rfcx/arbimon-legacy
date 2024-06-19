@@ -11,6 +11,7 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags', 'a2.directive.
             $scope.toggleSpeciesAdd = false;
             $scope.toggleSpeciesSelect = false;
             $scope.toggleSongtypeSelect = false;
+            $scope.resetSearch = false;
             $scope.userSearch = '';
             $scope.allSpecies = [];
             $scope.songtypes = [];
@@ -19,16 +20,22 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags', 'a2.directive.
             $scope.tempSelected = {}
             $scope.timeout;
 
-            $scope.onSpeciesExists = function(search) {
-                console.log('[onSpeciesExists] search', search)
-                if (!search) {
+            $scope.onSpeciesExists = function($select) {
+                console.log('[onSpeciesExists] search', $select.search)
+                if (!$select.search) {
                     $scope.userSearch = '';
                     return;
                 }
-                $scope.userSearch = search;
+                if ($scope.resetSearch) {
+                    $select.search = '';
+                    $scope.userSearch = '';
+                    $scope.resetSearch = false;
+                    return;
+                }
+                $scope.userSearch = $select.search;
                 const classes = $scope.classes ? $scope.classes.filter(function(cl) {
                     const species = cl.species_name.toLowerCase()
-                    const searchFormatted = search.toLowerCase()
+                    const searchFormatted = $select.search.toLowerCase()
                     if (species.indexOf(searchFormatted) != -1) {
                         return true;
                     } else return false;
@@ -106,6 +113,7 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags', 'a2.directive.
                     .success(function(result) {
                         notify.log($scope.classToAdd.species + ' ' + $scope.classToAdd.songtype + " added to the project");
                         $scope.toggleSongtypeSelect = false;
+                        $scope.resetSearch = true;
                         $scope.userSearch = '';
                         load_project_classes().finally(() => {
                             const newSelectedClass = $scope.classes.find(cl => cl.species_name === $scope.classToAdd.species && cl.songtype_name === $scope.classToAdd.songtype)
