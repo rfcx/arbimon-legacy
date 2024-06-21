@@ -48,10 +48,7 @@ angular.module('a2.directive.side-bar', [])
                 {
                     title: 'Import',
                     iconRaw: 'cloud-upload',
-                    children: [{
-                        title: 'Recordings',
-                        route: 'audiodata.uploads.upload'
-                    }]
+                    route: $scope.arbimonUrl + '/p/' + url + '/import-recordings'
                 },
                 {
                     title: 'Explore',
