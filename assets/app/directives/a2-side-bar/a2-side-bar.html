@@ -32,6 +32,9 @@
                             <span ng-if="item.iconRaw === 'fi-grid'" class="row-flex flex-space-center" style="width: 28px">
                                 <img src="/images/fi-grid.svg">
                             </span>
+                            <span ng-if="item.iconRaw === 'cloud-upload'" class="row-flex flex-space-center" style="width: 28px">
+                                <img src="/images/cloud-upload.svg" class="icon-fill">
+                            </span>
                             <span ng-if="item.iconRaw === 'pres-chart-bar' === true" class="row-flex flex-space-center" style="width: 28px">
                                 <img src="/images/pres-chart-bar.svg" class="icon-fill">
                             </span>
@@ -45,9 +48,6 @@
                             aria-controls="{{itemId(item.title)}}"
                             data-toggle="collapse"
                         >
-                            <span ng-if="item.iconRaw === 'cloud-upload'" class="row-flex flex-space-center" style="width: 28px">
-                                <img src="/images/cloud-upload.svg" class="icon-fill">
-                            </span>
                             <span ng-if="item.iconRaw === 'fa-search'" class="row-flex flex-space-center" style="width: 28px">
                                 <i class="fa fa-search" style="font-size: 22px;"></i>
                             </span>
