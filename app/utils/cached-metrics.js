@@ -1,6 +1,8 @@
 var model = require('../model');
 const moment = require('moment');
 
+const METRICS_CACHE_TTL_MIN = 90
+
 const getCountForSelectedMetric = async function(key, projectId) {
     let count
     switch (key) {
@@ -64,8 +66,15 @@ const getRandomMin = function(max, min) {
 }
 
 const recalculateMetrics = async function(k, v, params, isInsert) {
+    // we don't want several Pods to refresh the same value at the same time,
+    // so we'll extend expiration of an existing record for the time of our own calculation
+    if (!isInsert) {
+        const lockExpiresAt = moment.utc().add(3, 'minutes').format('YYYY-MM-DD HH:mm:ss')
+        await model.projects.updateExpirationDate({ key: v, expiresAt: lockExpiresAt })
+    }
+
     const value = await getCountForSelectedMetric(k, params)
-    const expiresAt = moment.utc().add(15, 'minutes').add(getRandomMin(0, 60), 'seconds').format('YYYY-MM-DD HH:mm:ss')
+    const expiresAt = moment.utc().add(METRICS_CACHE_TTL_MIN, 'minutes').add(getRandomMin(0, 60), 'seconds').format('YYYY-MM-DD HH:mm:ss')
     isInsert ? await model.projects.insertCachedMetrics({ key: v, value, expiresAt }) : await model.projects.updateCachedMetrics({ key: v, value, expiresAt })
 }
 
@@ -79,9 +88,9 @@ const getCachedMetrics = async function(req, res, key, params, next) {
         }
         const [result] = results
         const count = result.value
-        
+
         res.json(count)
-        
+
         const dateNow = moment.utc().valueOf()
         const dateIndb = moment.utc(result.expires_at).valueOf()
         const isExpiresAtNotValid = !moment.utc(result.expires_at).isValid()
