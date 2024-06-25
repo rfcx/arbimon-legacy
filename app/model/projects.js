@@ -41,6 +41,14 @@ var Projects = {
         return dbpool.query(q)
     },
 
+    updateExpirationDate: async function(opts) {
+        const q = `UPDATE cached_metrics cm
+                cm.expires_at = '${opts.expiresAt}'
+                WHERE cm.key = '${opts.key}'`
+
+        return dbpool.query(q)
+    },
+
     updateCachedMetrics: async function(opts) {
         const q = `UPDATE cached_metrics cm
                 SET cm.value = ${opts.value}, cm.expires_at = '${opts.expiresAt}'
