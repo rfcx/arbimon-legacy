@@ -387,11 +387,19 @@ var Projects = {
         return update(project, connection)
     },
 
+    countDecimals: function (value) {
+        if(Math.floor(value) === value) return 0;
+        return value.toString().split(".")[1].length || 0; 
+    },
+
     updateProjectLocation: async function(projectId, lat, lon) {
         if (!projectId || !lat || !lon) return
+        const latitude = this.countDecimals(lat) > 13 ? Number(lat).toFixed(13) : lat
+        const longitude = this.countDecimals(lon) > 13 ? Number(lon).toFixed(13) : lon
+
         const config = {
             method: 'get',
-            url: `https://api.geoapify.com/v1/geocode/reverse?lat=${lat}&lon=${lon}&apiKey=5a8e8fdff1f44dbda20ca67b4e99362b`,
+            url: `https://api.geoapify.com/v1/geocode/reverse?lat=${latitude}&lon=${longitude}&apiKey=5a8e8fdff1f44dbda20ca67b4e99362b`,
             headers: { }
         };
         console.log('config', config)
