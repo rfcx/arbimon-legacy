@@ -67,8 +67,12 @@ router.get('/:projecturl?/', function(req, res, next) {
             }
 
             var project = rows[0];
-
-            const userRole = !!req.session.user.isSuper ? 'Admin' : await model.users.getProjectRole(req.session.user.id, project.project_id)
+            let userRole
+            if (!!req.session.user.isSuper) userRole = 'Admin'
+            else if (req.session.user.id) {
+                const role = await model.users.getProjectRole(req.session.user.id, project.project_id)
+                userRole = role && role.name ? role.name : 'Guest'
+            }
             model.users.getPermissions(req.session.user.id, project.project_id, function(err, rows) {
                 var permissionsMap = rows.reduce(function(_, p) {
                     _[p.name] = true;

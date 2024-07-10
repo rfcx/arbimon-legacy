@@ -265,7 +265,7 @@ var Users = {
         const q = `select r.name from roles r
             join user_project_role upr on r.role_id = upr.role_id
             where upr.user_id = ${user_id} and upr.project_id = ${project_id}`
-        return dbpool.query(q).get(0).get('name');
+        return dbpool.query(q).get(0);
     },
 
     findOwnedProjects: function(user_id, query) {
