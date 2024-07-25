@@ -118,6 +118,7 @@ async function writeChunk (results, targetFile, isFirstChunk) {
 
 async function downloadTemplateAudio (results) {
   return new Promise(async function (resolve, reject) {
+    if (!results) resolve()
     console.log('--template length', results.length)
     for (let result of results) {
       console.log('--template data', result)
