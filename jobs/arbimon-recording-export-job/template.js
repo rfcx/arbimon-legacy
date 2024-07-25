@@ -118,45 +118,45 @@ async function writeChunk (results, targetFile, isFirstChunk) {
 
 async function downloadTemplateAudio (results) {
   return new Promise(async function (resolve, reject) {
-    console.log('--template results', results)
-
-    console.log('--template length', results.length)
-    for (let result of results) {
-      console.log('--template data', result)
-      const templateId = result.template_id
-      try {
-        const template = await getTemplateDataForAudio({ templateId: templateId})
-        console.log('template', template)
-        const opts = {
-          uri: template.recUri,
-          site_id: template.recSiteId,
-          external_id: template.external_id,
-          datetime: template.datetime,
-          datetime_utc: template.datetime_utc
+    if (results) {
+      console.log('--template length', results.length)
+      for (let result of results) {
+        console.log('--template data', result)
+        const templateId = result.template_id
+        try {
+          const template = await getTemplateDataForAudio({ templateId: templateId})
+          console.log('template', template)
+          const opts = {
+            uri: template.recUri,
+            site_id: template.recSiteId,
+            external_id: template.external_id,
+            datetime: template.datetime,
+            datetime_utc: template.datetime_utc
+          }
+          const filter = {
+            maxFreq: Math.max(template.y1, template.y2),
+            minFreq: Math.min(template.y1, template.y2),
+            gain: 5,
+            trim: {
+                from: Math.min(template.x1, template.x2),
+                to: Math.max(template.x1, template.x2)
+            },
+            format: '.wav'
+          }
+          await recordings.fetchAudioFileAsync(opts, filter).then(audio => {
+            console.log('fetchAudioFileAsync', audio)
+            const ext = path.extname(audio.path)
+            const audioName = path.basename(audio.path, ext);
+            const saved_filename = `${nameToUrl(result.template_name)}-${templateId}`
+            const newName = audio.path.replace(audioName, saved_filename);
+            console.log('fetchAudioFileAsync audio.path, newName', audio.path, saved_filename)
+            fs.renameSync(audio.path, newName);
+            console.log('fetchAudioFileAsync renamed')
+          })
+        } catch (err) {
+          console.log('Err download template audio.', err)
+          continue
         }
-        const filter = {
-          maxFreq: Math.max(template.y1, template.y2),
-          minFreq: Math.min(template.y1, template.y2),
-          gain: 5,
-          trim: {
-              from: Math.min(template.x1, template.x2),
-              to: Math.max(template.x1, template.x2)
-          },
-          format: '.wav'
-        }
-        await recordings.fetchAudioFileAsync(opts, filter).then(audio => {
-          console.log('fetchAudioFileAsync', audio)
-          const ext = path.extname(audio.path)
-          const audioName = path.basename(audio.path, ext);
-          const saved_filename = `${nameToUrl(result.template_name)}-${templateId}`
-          const newName = audio.path.replace(audioName, saved_filename);
-          console.log('fetchAudioFileAsync audio.path, newName', audio.path, saved_filename)
-          fs.renameSync(audio.path, newName);
-          console.log('fetchAudioFileAsync renamed')
-        })
-      } catch (err) {
-        console.log('Err download template audio.', err)
-        continue
       }
     }
     resolve()
