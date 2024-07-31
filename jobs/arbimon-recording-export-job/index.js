@@ -111,7 +111,6 @@ async function main () {
                 await sendEmail('Arbimon export', 'Arbimon export', rowData, url, true)
                 await updateExportRecordings(rowData, { processed_at: currentTime })
                 fs.rmSync(tmpFilePath, { recursive: true, force: true });
-                await recordings.closeConnection()
                 console.log(`Arbimon Export ${exportReportType} job finished: ${message}`)
                 resolve()
             })
