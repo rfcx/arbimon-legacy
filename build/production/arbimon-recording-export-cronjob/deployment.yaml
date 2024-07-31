@@ -9,10 +9,10 @@ spec:
   successfulJobsHistoryLimit: 3
   # at every 5 minute
   schedule: '*/5 * * * *'
+  startingDeadlineSeconds: 120
   jobTemplate:
     spec:
       backoffLimit: 100
-      startingDeadlineSeconds: 120
       template:
         spec:
           containers:
