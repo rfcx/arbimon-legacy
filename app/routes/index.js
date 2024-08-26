@@ -10,22 +10,19 @@ var site = require('./site');
 var login = require('./login');
 var acmeChallenge = require('./acme-challenge');
 var dbpool = require('../utils/dbpool');
-var queryHandler = dbpool.queryHandler;
 const model = require('../model');
 const authentication = require('../middleware/jwt');
 const parseTokenData = authentication.parseTokenData;
 const { getCachedMetrics } = require('../utils/cached-metrics');
 
 router.get('/legacy-api/alive', function(req, res, next) { // for health checks
-    res.type('json');
-    queryHandler("SELECT project_id FROM projects LIMIT 1", function (err){
+    model.projects.getFirstProjectId(function(err, id) {
         if (err) {
             console.error('[legacy-api/alive]', err)
-            next(err);
-        } else {
-            res.status(200);
-            res.json({ alive: true });
+            return next(err);
         }
+        res.status(200);
+        res.json({ alive: true });
     });
 });
 

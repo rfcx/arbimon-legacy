@@ -74,6 +74,11 @@ var Projects = {
         queryHandler(q, callback);
     },
 
+    getFirstProjectId: function(callback) {
+        const q = "SELECT project_id FROM projects LIMIT 1";
+        queryHandler(q, callback);
+    },
+
     find: function (query, callback) {
         var whereExp = [], data=[];
         var selectExtra = '';

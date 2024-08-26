@@ -135,8 +135,10 @@ var dbpool = {
 
     queryHandler: function (query, options, callback) {
         dbpool.getConnection(function(err, connection) {
-            console.log('[temp check dbpool callback] - query, options, callback', query, options, callback)
-            if (err) return callback(err);
+            if (err) {
+                console.log('[err getConnection] - query, options, callback', query, options, callback)
+                return callback(err);
+            }
 
             dbpool.queryWithConnHandler(connection, query, options, true, callback)
         });
