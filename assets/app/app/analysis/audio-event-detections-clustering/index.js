@@ -125,7 +125,7 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
         };
     }
 )
-.controller('CreateNewAudioEventDetectionClusteringCtrl', function($modalInstance, a2AudioEventDetectionsClustering, a2Playlists, a2UserPermit, notify) {
+.controller('CreateNewAudioEventDetectionClusteringCtrl', function($modalInstance, a2AudioEventDetectionsClustering, a2Playlists, a2UserPermit, notify, Project) {
     Object.assign(this, {
         initialize: function(){
             this.loading = {
@@ -211,9 +211,16 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
             return this.data && this.data.name && this.data.name.length > 1 && this.data.name.length < 4
         },
 
+        isProjectHasAccess: function () {
+            const projectUrl = Project.getUrl();
+            const accessedProjects = ['pogije'];
+            return accessedProjects.includes(projectUrl)
+        },
+
+
         showPlaylistLimitWarning: function () {
             if (!this.data && !this.data.playlist) return
-            return this.data && this.data.playlist && this.data.playlist.count > 2000 && !this.isRfcx()
+            return this.data && this.data.playlist && this.data.playlist.count > 2000 && !this.isRfcx() && !this.isProjectHasAccess()
         },
 
         showFrequencyWarning: function () {

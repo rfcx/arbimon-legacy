@@ -10,7 +10,7 @@
         </div>
         <div class="form-group">
             <label class="mr-1">Playlist</label>
-            <span ng-if="!controller.isRfcxUser && controller.list.playlists && controller.list.playlists.length">(maximum {{ 2000 | number }} recordings)</span>
+            <span ng-if="!controller.isRfcxUser && controller.list.playlists && controller.list.playlists.length && !controller.isProjectHasAccess()">(maximum {{ 2000 | number }} recordings)</span>
             <div class="ml-3 flex flex-row flex-align-middle" ng-if="controller.list.playlists && !controller.list.playlists.length">
                 <em class="pr-2">No playlists found.</em>
                 Go to
