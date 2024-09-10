@@ -8,6 +8,7 @@ angular.module('a2.visualizer.audio-player', [])
         this.freq_filter = undefined;
         this.is_playing = false;
         this.is_muted = false;
+        this.is_colored = false;
         this.has_recording = false;
         this.has_next_recording = false;
         this.has_prev_recording = false;
@@ -32,6 +33,18 @@ angular.module('a2.visualizer.audio-player', [])
                     this.resource_params.minFreq=fmin;
                 }
             }
+        };
+        var isSpectroColored = function() {
+            try {
+                return JSON.parse($localStorage.getItem('visuilizer.is_spectro_colored')) || false;
+            } catch(e){
+                return false;
+            }
+        }
+        var isSpectroColoredCache = isSpectroColored();
+
+        if (isSpectroColoredCache === true) {
+            this.is_colored = isSpectroColoredCache;
         }
         scope.$on('$destroy', this.discard.bind(this));
     };
@@ -47,9 +60,6 @@ angular.module('a2.visualizer.audio-player', [])
             return this.load(this.resource_url).then((function(){
                 this.freq_filter = freq_filter;
             }).bind(this));
-            // this.resource.setFrequencyFilter(filter).then((function(){
-            //     this.freq_filter = filter;
-            // }).bind(this));
         },
         setGain: function(gain){
             gain = Math.max(1, gain | 0);
@@ -61,9 +71,6 @@ angular.module('a2.visualizer.audio-player', [])
             return (this.resource_url ? this.load(this.resource_url) : $q.resolve()).then((function(){
                 this.gain = gain;
             }).bind(this));
-            // this.resource.setGain(gain).then((function(){
-            //     this.gain = gain;
-            // }).bind(this));
         },
         getVolume: function(){
             return this.resource && this.resource.audio.volume;
@@ -84,6 +91,11 @@ angular.module('a2.visualizer.audio-player', [])
         },
         closePopup: function() {
             this.isPopupOpened = false;
+        },
+        toggleSpectroColor: function() {
+            this.is_colored = !this.is_colored;
+            $localStorage.setItem('visuilizer.is_spectro_colored', this.is_colored);
+            this.scope.$broadcast('visobj-updated')
         },
         savePlaylist: function() {
             this.isSavingPlaylist = true;
