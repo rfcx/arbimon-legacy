@@ -747,7 +747,7 @@ var Recordings = {
      * @param {Function} callback(err, path) function to call back with the recording spectrogram file's path.
      */
     fetchSpectrogramFile: function (recording, callback) {
-        var spectrogram_key = recording.uri.replace(audioFilePattern, '.png');
+        const spectrogram_key = recording.uri.replace(audioFilePattern, '.png');
         tmpfilecache.fetch(spectrogram_key, function(cache_miss){
             Recordings.fetchRecordingFile(recording, async function(err, recording_path){
                 if(err) { callback(err); return; }
@@ -758,7 +758,8 @@ var Recordings = {
                         pixPerSec : config("spectrograms").spectrograms.pixPerSec,
                         height    : config("spectrograms").spectrograms.height,
                         ...recording.uri.endsWith('.opus') && recording.sample_rate && { maxfreq: recording.sample_rate * 2 },
-                        ...recording.contrast && { contrast: recording.contrast }
+                        ...recording.contrast && { contrast: recording.contrast },
+                        ...recording.is_colored && { isColored: recording.is_colored },
                     },function(status_code){
                         if(status_code) { callback({code:status_code}); return; }
                         cache_miss.retry_get();

@@ -295,6 +295,14 @@ angular.module('a2.visualizer', [
         return $scope.layers;
     };
 
+    $scope.isSpectroColored = function() {
+        try {
+            return JSON.parse($localStorage.getItem('visualizer.is_spectro_colored')) || false;
+        } catch(e){
+            return false;
+        }
+    }
+
     $scope.setVisObject = function(visobject, type, location) {
         if ($scope.isUploading) return
         $scope.isUploading = true
@@ -304,6 +312,7 @@ angular.module('a2.visualizer', [
                 $scope.location.set(location, true);
                 var visobject_loader = VisualizerObjectTypes.getLoader(type);
                 $scope.loading_visobject = visobject_loader.getCaptionFor(visobject);
+                visobject.is_colored = $scope.isSpectroColored();
                 return visobject_loader.load(visobject, $scope).then((function (visobject){
                     console.log('VisObject loaded : ', visobject);
                     $scope.$parent.$broadcast('clear-recording-data', true);

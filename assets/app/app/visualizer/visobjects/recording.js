@@ -24,7 +24,7 @@ angular.module('a2.visobjects.recording', [
 
     var isSpectroColored = function() {
         try {
-            return JSON.parse($localStorage.getItem('visuilizer.is_spectro_colored')) || false;
+            return JSON.parse($localStorage.getItem('visualizer.is_spectro_colored')) || false;
         } catch(e){
             return false;
         }
@@ -62,9 +62,11 @@ angular.module('a2.visobjects.recording', [
         }
         var isSpectroColoredCache = isSpectroColored();
         // set it to the scope
+        const randomString = Math.round(Math.random() * 100000000)
         this.tiles.set.forEach((function(tile){
             if (!!data.legacy) {
-                tile.src="/legacy-api/project/"+Project.getUrl()+"/recordings/tiles/"+this.id+"/"+tile.i+"/"+tile.j;
+
+                tile.src="/legacy-api/project/"+Project.getUrl()+"/recordings/tiles/"+this.id+"/"+tile.i+"/"+tile.j+"/"+randomString;
             } else {
                 var streamId = data.uri.split('/')[3]
                 const datetime = data.datetime_utc ? data.datetime_utc : data.datetime
@@ -79,7 +81,7 @@ angular.module('a2.visobjects.recording', [
     ];
     recording.fetch = function(visobject){
         var d = $q.defer();
-        Project.getRecordingInfo(visobject.id, function(data){
+        Project.getRecordingInfo(visobject.id, visobject.is_colored, function(data){
             if (data === 'Server error') {
                 visobject.isDisabled = true
                 data = {}

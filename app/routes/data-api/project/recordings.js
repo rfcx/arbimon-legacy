@@ -318,7 +318,7 @@ router.param('oneRecUrl', function(req, res, next, recording_url){
     });
 });
 
-router.get('/tiles/:recordingId/:i/:j', function(req, res, next) {
+router.get('/tiles/:recordingId/:i/:j/:randomString', function(req, res, next) {
     var i = req.params.i | 0;
     var j = req.params.j | 0;
     var recordingId = req.params.recordingId;
@@ -357,15 +357,22 @@ router.get('/:get/:oneRecUrl?', function(req, res, next) {
     if (get === 'audio') {
         req.headers['content-type'] = query.format ? 'audio/wav' : 'audio/mpeg';
     }
+    if (query && query.is_colored) {
+        recording.is_colored = JSON.parse(query.is_colored)
+    }
     let returnType = {
-        recording : function(err, recordings){
+        recording : function(err, recordings) {
             if(err) return next(err);
 
             res.json(recordings instanceof Array ? recordings[0] : recordings);
         },
-        file : function(err, file){
-            if(err || !file) return next(err);
-            res.download(file.path, recording.file, function() { fs.unlink(file.path, () => {}) });
+        file : function(err, file) {
+            if (err || !file) return next(err);
+
+            res.download(file.path, recording.file, function() {
+                fs.unlink(file.path, () => {})
+            });
+
             if (get === 'audio') {
                 res.setHeader('content-type', query.format ? 'audio/wav' : 'audio/mpeg');
                 res.status(206);

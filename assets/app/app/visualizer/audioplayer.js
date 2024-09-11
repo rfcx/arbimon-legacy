@@ -36,7 +36,7 @@ angular.module('a2.visualizer.audio-player', [])
         };
         var isSpectroColored = function() {
             try {
-                return JSON.parse($localStorage.getItem('visuilizer.is_spectro_colored')) || false;
+                return JSON.parse($localStorage.getItem('visualizer.is_spectro_colored')) || false;
             } catch(e){
                 return false;
             }
@@ -94,7 +94,7 @@ angular.module('a2.visualizer.audio-player', [])
         },
         toggleSpectroColor: function() {
             this.is_colored = !this.is_colored;
-            $localStorage.setItem('visuilizer.is_spectro_colored', this.is_colored);
+            $localStorage.setItem('visualizer.is_spectro_colored', this.is_colored);
             this.scope.$broadcast('visobj-updated')
         },
         savePlaylist: function() {
@@ -152,7 +152,7 @@ angular.module('a2.visualizer.audio-player', [])
                 this.resource_url = url;
                 this.has_recording = true;
                 this.clustersData = JSON.parse($localStorage.getItem('analysis.clusters'));
-                console.log('clustersData', this.clustersData);
+                console.log('clustersData2', this.clustersData);
             }).bind(this));
         },
         discard: function(){

@@ -176,8 +176,8 @@ angular.module('a2.srv.project', [
                         callback(data);
                     });
             },
-            getRecordingInfo: function(rec_id, callback) {
-                $http.get('/legacy-api/project/'+url+'/recordings/info/'+rec_id)
+            getRecordingInfo: function(rec_id, is_colored, callback) {
+                $http.get('/legacy-api/project/'+url+'/recordings/info/'+rec_id, { params: { is_colored: is_colored } })
                     .success(function(data) {
                         callback(data);
                     })

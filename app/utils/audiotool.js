@@ -198,7 +198,9 @@ var audiotools = {
         if(options.window && ['Hann', 'Hamming', 'Bartlett', 'Rectangular', 'Kaiser'].indexOf(options.window) >= 0) {
             args.push('-w', options.window); // just the raw spectrogram image
         }
-        args.push('-lm');
+        if (!options.isColored) {
+            args.push('-lm');
+        }
         args.push('-o', destination_path);
         sox(args, {}, callback);
     }
