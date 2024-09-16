@@ -48,12 +48,9 @@ var Users = {
         return findByEmail(email)
     },
 
-    findByRfcxId: function(email, callback) {
-        var q = 'SELECT * \n' +
-                'FROM users \n' +
-                'WHERE rfcx_id = %s';
-        q = util.format(q, dbpool.escape(email));
-        queryHandler(q, callback);
+    findByRfcxId: function(email) {
+        const q = `select * from users where rfcx_id = '${email}'`
+        return dbpool.query(q)
     },
 
     findById: function(user_id, callback) {
@@ -750,11 +747,11 @@ var Users = {
 
     ensureUserExistFromAuth0: async function(profile) {
         const email = this.getEmailFromAuth0Profile(profile);
-        const userByRfcxId = await q.ninvoke(Users, "findByRfcxId", email).get(0).get(0);
+        const [userByRfcxId] = await this.findByRfcxId(email);
         if (userByRfcxId) {
             return userByRfcxId;
         }
-        let userByEmail = await q.ninvoke(Users, "findByEmail", email).get(0).get(0);
+        const [userByEmail] = await this.findByEmailAsync(email)
         if (userByEmail) {
             await q.ninvoke(Users, "update", {
                 user_id: userByEmail.user_id,

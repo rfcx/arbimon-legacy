@@ -69,7 +69,6 @@ angular.module('a2.visualizer.layers.templates', [
                 return true;
             } else return false;
         }) : []
-        console.log('[onSpeciesExists] classes', classes)
         if (classes.length === 0) {
             self.toggleSpeciesAdd = true;
             self.toggleSpeciesSelect = false;
