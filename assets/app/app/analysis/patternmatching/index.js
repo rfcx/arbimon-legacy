@@ -960,6 +960,29 @@ angular.module('a2.analysis.patternmatching', [
         });
     },
 
+    clearSelectedRoi: function() {
+        this.forEachRoi(function (roi){
+            if (roi.selected){
+                roi.selected = false;
+            }
+        });
+    },
+
+    getSelectedRois: function() {
+        const rois = []
+        this.forEachRoi(function (roi){
+            if(roi.selected){
+                rois.push(roi);
+            }
+        });
+        return rois;
+    },
+
+    getSelectedRoisLength: function() {
+        const rois =  this.getSelectedRois()
+        return rois.length;
+    },
+
     validate: function(patternMatchingId, validation, rois) {
         if(!a2UserPermit.can('validate pattern matchings')) {
             notify.error('You do not have permission to validate the matched rois.');
@@ -971,12 +994,11 @@ angular.module('a2.analysis.patternmatching', [
         }
 
         if (rois === undefined){
-            rois = []
-            this.forEachRoi(function (roi){
-                if(roi.selected){
-                    rois.push(roi);
-                }
-            });
+            rois = this.getSelectedRois()
+        }
+        if (rois.length > 50){
+            notify.error('Select not more then 50 rois to validate.');
+            return;
         }
         var roiIds = rois.map(function(roi){ return roi.id; })
         var val_delta = {0:0, 1:0, null:0};
