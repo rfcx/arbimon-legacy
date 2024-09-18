@@ -18,6 +18,9 @@ angular.module('a2.visualizer.audio-player', [])
         this.isSavingPlaylist = false;
         this.playlistData = {};
         this.clustersData = null;
+
+        $localStorage.setItem('visualizer.is_spectro_colored', this.is_colored);
+
         if(options){
             if(options.gain){
                 this.gain = Math.min(Math.max(1, (options && options.gain)|0), this.gain_levels[this.gain_levels.length-1]);
