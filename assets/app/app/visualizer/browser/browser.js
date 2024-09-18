@@ -74,7 +74,7 @@ angular.module('a2.visobjectsbrowser', [
  *
  */
 .controller('a2VisObjectBrowserController', function(
-    $scope, $state, $controller, $q,
+    $scope, $state, $controller, $q, $localStorage,
     serializePromisedFn,
     BrowserLOVOs,
     BrowserVisObjects,
@@ -214,6 +214,7 @@ angular.module('a2.visobjectsbrowser', [
         this.visobj = newValue;
         var location = newValue && self.$type.get_location(newValue);
         this.cachedLocation = location;
+        $localStorage.setItem('visualizer.is_spectro_colored', false);
         this.events.send({event:'on-vis-object', context:this}, location, newValue, self.lovo ? self.lovo.object_type : null);
     };
 
