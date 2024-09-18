@@ -319,9 +319,17 @@ router.param('oneRecUrl', function(req, res, next, recording_url){
 });
 
 router.get('/tiles/:recordingId/:i/:j/:randomString', function(req, res, next) {
-    var i = req.params.i | 0;
-    var j = req.params.j | 0;
-    var recordingId = req.params.recordingId;
+    let i = req.params.i | 0;
+    let j = req.params.j | 0;
+    let recordingId = req.params.recordingId;
+    let timeout;
+
+    res.on('finish', () => {
+        clearTimeout(timeout)
+    });
+    res.on('close', () => {
+        clearTimeout(timeout)
+    });
 
     model.recordings.findByRecordingId(recordingId, function(err, recording) {
         if (err) {
@@ -337,10 +345,12 @@ router.get('/tiles/:recordingId/:i/:j/:randomString', function(req, res, next) {
                 if(err || !file){ next(err); return; }
                 res.sendFile(file.path, function () {
                     if (fs.existsSync(file.path)) {
-                        fs.unlink(file.path, function (err) {
-                            if (err) console.error('Error deleting the tile file.', err);
-                            console.info('Tile file deleted.');
-                        })
+                        timeout = setTimeout(() => {
+                            fs.unlink(file.path, function (err) {
+                                if (err) console.error('Error deleting the tile file.', err);
+                                console.info('Tile file deleted.');
+                            })
+                        }, 5000);
                     }
                 })
             });
