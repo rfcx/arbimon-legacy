@@ -81,6 +81,8 @@ var dbpool = {
 
     getConnection: function(callback){
         return q.ninvoke(dbpool.getPool(), 'getConnection').then(function (connection){
+            // Log it here since we cannot using `connection` listener
+            console.log('MySQL pool connection %d is set', connection.threadId);
             dbpool.enable_query_debugging(connection);
             return connection;
         }).catch(function (err){
