@@ -759,7 +759,7 @@ var Recordings = {
                         height    : config("spectrograms").spectrograms.height,
                         ...recording.uri.endsWith('.opus') && recording.sample_rate && { maxfreq: recording.sample_rate * 2 },
                         ...recording.contrast && { contrast: recording.contrast },
-                        ...recording.is_colored && { isColored: recording.is_colored },
+                        ...recording.spectroColor && { isColored: recording.spectroColor },
                     },function(status_code){
                         if(status_code) { callback({code:status_code}); return; }
                         cache_miss.retry_get();

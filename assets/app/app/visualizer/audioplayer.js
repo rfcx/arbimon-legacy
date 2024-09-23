@@ -8,7 +8,6 @@ angular.module('a2.visualizer.audio-player', [])
         this.freq_filter = undefined;
         this.is_playing = false;
         this.is_muted = false;
-        this.is_colored = false;
         this.has_recording = false;
         this.has_next_recording = false;
         this.has_prev_recording = false;
@@ -18,8 +17,16 @@ angular.module('a2.visualizer.audio-player', [])
         this.isSavingPlaylist = false;
         this.playlistData = {};
         this.clustersData = null;
-
-        $localStorage.setItem('visualizer.is_spectro_colored', this.is_colored);
+        this.isToggled = false;
+        this.spectroStates = [
+            { name: 'Grayscale', value: 'mtrue', uri: '/images/spectro-gray.png'},
+            { name: 'Blue-Pink', value: 'mfalse', uri: '/images/spectro-blue-pink.png'},
+            { name: 'Dark Pink', value: 'mfalse_p2', uri: '/images/spectro-pink.png'},
+            { name: 'Dark Yellow', value: 'mfalse_p3', uri: '/images/spectro-yellow.png'},
+            { name: 'Orange', value: 'mfalse_p4', uri: '/images/spectro-orange.png'},
+        ];
+        this.selectedSpectroState = this.spectroStates[0];
+        this.defaultColor = 'mtrue';
 
         if(options){
             if(options.gain){
@@ -37,18 +44,31 @@ angular.module('a2.visualizer.audio-player', [])
                 }
             }
         };
-        var isSpectroColored = function() {
-            try {
-                return JSON.parse($localStorage.getItem('visualizer.is_spectro_colored')) || false;
-            } catch(e){
-                return false;
-            }
-        }
-        var isSpectroColoredCache = isSpectroColored();
 
-        if (isSpectroColoredCache === true) {
-            this.is_colored = isSpectroColoredCache;
-        }
+        this.getSpectroColor = function() {
+            const colors = ['mtrue', 'mfalse', 'mfalse_p2', 'mfalse_p3', 'mfalse_p4']
+            try {
+                const selectedColor = $localStorage.getItem('visualizer.spectro_color');
+                return selectedColor && colors.includes(selectedColor) ? selectedColor : this.defaultColor;
+            } catch(e) {
+                return this.defaultColor;
+            }
+        };
+
+        var spectroColorFromCache = this.getSpectroColor();
+
+        this.spectroStates.forEach(state => {
+            if (state.value === spectroColorFromCache) {
+                this.selectedSpectroState  = state
+            }
+        })
+
+        $localStorage.setItem('visualizer.spectro_color', this.selectedSpectroState);
+
+        this.getActiveColor = function(index) {
+            return this.selectedSpectroState.value === this.spectroStates[index].value
+        };
+
         scope.$on('$destroy', this.discard.bind(this));
     };
     a2AudioPlayer.prototype = {
@@ -96,9 +116,13 @@ angular.module('a2.visualizer.audio-player', [])
             this.isPopupOpened = false;
         },
         toggleSpectroColor: function() {
-            this.is_colored = !this.is_colored;
-            $localStorage.setItem('visualizer.is_spectro_colored', this.is_colored);
-            this.scope.$broadcast('visobj-updated')
+            this.isToggled = !this.isToggled;
+        },
+        setSpectroColor: function($index) {
+            this.selectedSpectroState = this.spectroStates[$index];
+            $localStorage.setItem('visualizer.spectro_color', this.selectedSpectroState.value);
+            this.scope.$broadcast('visobj-updated');
+            this.isToggled = !this.isToggled;
         },
         savePlaylist: function() {
             this.isSavingPlaylist = true;

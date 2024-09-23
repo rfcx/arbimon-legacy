@@ -22,11 +22,13 @@ angular.module('a2.visobjects.recording', [
     };
     var scaleCache = getSelectedFrequencyCache();
 
-    var isSpectroColored = function() {
+    var getSpectroColor = function() {
+        const colors = ['mtrue', 'mfalse', 'mfalse_p2', 'mfalse_p3', 'mfalse_p4']
         try {
-            return JSON.parse($localStorage.getItem('visualizer.is_spectro_colored')) || false;
+            const selectedColor = $localStorage.getItem('visualizer.spectro_color')
+            return selectedColor && colors.includes(selectedColor) ? selectedColor : 'mtrue';
         } catch(e){
-            return false;
+            return 'mtrue';
         }
     };
 
@@ -60,19 +62,19 @@ angular.module('a2.visobjects.recording', [
             this.isDisabled = true
             return
         }
-        var isSpectroColoredCache = isSpectroColored();
+        var spectroColoredCache = getSpectroColor();
+
         // set it to the scope
         const randomString = Math.round(Math.random() * 100000000)
         this.tiles.set.forEach((function(tile){
             if (!!data.legacy) {
-
                 tile.src="/legacy-api/project/"+Project.getUrl()+"/recordings/tiles/"+this.id+"/"+tile.i+"/"+tile.j+"/"+randomString;
             } else {
                 var streamId = data.uri.split('/')[3]
                 const datetime = data.datetime_utc ? data.datetime_utc : data.datetime
                 var start = new Date(new Date(datetime).valueOf() + Math.round(tile.s * 1000)).toISOString()
                 var end = new Date(new Date(datetime).valueOf() + Math.round((tile.s + tile.ds) * 1000)).toISOString()
-                tile.src = '/legacy-api/ingest/recordings/' + streamId + '_t' + start.replace(/-|:|\./g, '') + '.' + end.replace(/-|:|\./g, '') + '_z95_wdolph_g1_fspec_' + (isSpectroColoredCache ? 'mfalse' : 'mtrue') + '_d1023.255.png'
+                tile.src = '/legacy-api/ingest/recordings/' + streamId + '_t' + start.replace(/-|:|\./g, '') + '.' + end.replace(/-|:|\./g, '') + '_z95_wdolph_g1_fspec_' + spectroColoredCache + '_d1023.255.png';
             }
         }).bind(this));
     };
@@ -81,7 +83,7 @@ angular.module('a2.visobjects.recording', [
     ];
     recording.fetch = function(visobject){
         var d = $q.defer();
-        Project.getRecordingInfo(visobject.id, visobject.is_colored, function(data){
+        Project.getRecordingInfo(visobject.id, visobject.spectroColor, function(data){
             if (data === 'Server error') {
                 visobject.isDisabled = true
                 data = {}

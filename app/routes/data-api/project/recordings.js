@@ -367,8 +367,8 @@ router.get('/:get/:oneRecUrl?', function(req, res, next) {
     if (get === 'audio') {
         req.headers['content-type'] = query.format ? 'audio/wav' : 'audio/mpeg';
     }
-    if (query && query.is_colored) {
-        recording.is_colored = JSON.parse(query.is_colored)
+    if (query && query.spectroColor) {
+        recording.spectroColor = query.spectroColor
     }
     let returnType = {
         recording : function(err, recordings) {

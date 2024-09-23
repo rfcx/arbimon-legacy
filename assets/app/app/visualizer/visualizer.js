@@ -153,7 +153,6 @@ angular.module('a2.visualizer', [
                 this.__expected = location;
             }
             if ($location.path() != this.prefix + location){
-                console.log('a2VisualizerLocationManager::set_location', this.prefix + location, dont_sync);
                 var search = $location.search();
                 delete search.a;
 
@@ -295,13 +294,15 @@ angular.module('a2.visualizer', [
         return $scope.layers;
     };
 
-    $scope.isSpectroColored = function() {
+    $scope.getSpectroColor = function() {
+        const colors = ['mtrue', 'mfalse', 'mfalse_p2', 'mfalse_p3', 'mfalse_p4']
         try {
-            return JSON.parse($localStorage.getItem('visualizer.is_spectro_colored')) || false;
+            const selectedColor = $localStorage.getItem('visualizer.spectro_color')
+            return selectedColor && colors.includes(selectedColor) ? selectedColor : 'mtrue';
         } catch(e){
-            return false;
+            return 'mtrue';
         }
-    }
+    };
 
     $scope.setVisObject = function(visobject, type, location) {
         if ($scope.isUploading) return
@@ -312,7 +313,7 @@ angular.module('a2.visualizer', [
                 $scope.location.set(location, true);
                 var visobject_loader = VisualizerObjectTypes.getLoader(type);
                 $scope.loading_visobject = visobject_loader.getCaptionFor(visobject);
-                visobject.is_colored = $scope.isSpectroColored();
+                visobject.spectroColor = $scope.getSpectroColor();
                 return visobject_loader.load(visobject, $scope).then((function (visobject){
                     console.log('VisObject loaded : ', visobject);
                     $scope.$parent.$broadcast('clear-recording-data', true);
