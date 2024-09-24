@@ -10,7 +10,7 @@ var dbpool = {
     pool: undefined,
     getPool: function(){
         if (!dbpool.pool) {
-            console.log("MySQL pool is being created")
+            // console.log("MySQL pool is being created")
             dbpool.pool = mysql.createPool({
                 connectionLimit : 30,
                 connectTimeout  : 30 * 1000,
@@ -23,12 +23,12 @@ var dbpool = {
                 database : config('db').database,
                 timezone: config('db').timezone
             })
-            dbpool.pool.on('connection', function (connection) {
-                console.log('MySQL pool connection %d is set', connection.threadId);
-            });
-            dbpool.pool.on('release', function(connection) {
-                console.log('MySQL pool connection %d is released', connection.threadId);
-            })
+            // dbpool.pool.on('connection', function (connection) {
+            //     console.log('MySQL pool connection %d is set', connection.threadId);
+            // });
+            // dbpool.pool.on('release', function(connection) {
+            //     console.log('MySQL pool connection %d is released', connection.threadId);
+            // })
         }
         return dbpool.pool
     },
@@ -82,7 +82,7 @@ var dbpool = {
     getConnection: function(callback){
         return q.ninvoke(dbpool.getPool(), 'getConnection').then(function (connection){
             // Log it here since we cannot using `connection` listener
-            console.log('MySQL pool connection %d is set', connection.threadId);
+            // console.log('MySQL pool connection %d is set', connection.threadId);
             dbpool.enable_query_debugging(connection);
             return connection;
         }).catch(function (err){
