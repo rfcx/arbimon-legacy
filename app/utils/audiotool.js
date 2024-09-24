@@ -41,6 +41,23 @@ function sox(args, options, callback){
     });
 }
 
+function getSpectroColor(color) {
+    switch(color)  {
+        case 'mtrue':
+            return '-lm';
+        case 'mfalse':
+            return '-h';
+        case 'mfalse_p2':
+            return '-p6';
+        case 'mfalse_p3':
+            return '-p3';
+        case 'mfalse_p4':
+            return '-lr';
+        default:
+            return '-lm';
+    }
+}
+
 var audiotools = {
 
     /** Returns information about a given audio file
@@ -198,7 +215,10 @@ var audiotools = {
         if(options.window && ['Hann', 'Hamming', 'Bartlett', 'Rectangular', 'Kaiser'].indexOf(options.window) >= 0) {
             args.push('-w', options.window); // just the raw spectrogram image
         }
-        if (!options.isColored) {
+        if (options.spectroColor) {
+            args.push(getSpectroColor(options.spectroColor));
+        }
+        if (!options.spectroColor) {
             args.push('-lm');
         }
         args.push('-o', destination_path);

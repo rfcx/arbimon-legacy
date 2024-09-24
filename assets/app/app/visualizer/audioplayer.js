@@ -1,4 +1,6 @@
-angular.module('a2.visualizer.audio-player', [])
+angular.module('a2.visualizer.audio-player', [
+    'a2.directive.click-outside'
+])
 .service('a2AudioPlayer', function(A2AudioObject, $q, notify, a2Playlists, Project, $localStorage, a2UserPermit){
     'use strict';
     var a2AudioPlayer = function(scope, options){
@@ -20,10 +22,10 @@ angular.module('a2.visualizer.audio-player', [])
         this.isToggled = false;
         this.spectroStates = [
             { name: 'Grayscale', value: 'mtrue', uri: '/images/spectro-gray.png'},
-            { name: 'Blue-Pink', value: 'mfalse', uri: '/images/spectro-blue-pink.png'},
-            { name: 'Dark Pink', value: 'mfalse_p2', uri: '/images/spectro-pink.png'},
-            { name: 'Dark Yellow', value: 'mfalse_p3', uri: '/images/spectro-yellow.png'},
-            { name: 'Orange', value: 'mfalse_p4', uri: '/images/spectro-orange.png'},
+            { name: 'Purple-Blue', value: 'mfalse', uri: '/images/spectro-blue-pink.png'},
+            { name: 'Red-Blue', value: 'mfalse_p2', uri: '/images/spectro-pink.png'},
+            { name: 'Brown-Green', value: 'mfalse_p3', uri: '/images/spectro-yellow.png'},
+            { name: 'Orange-Yellow', value: 'mfalse_p4', uri: '/images/spectro-orange.png'},
         ];
         this.selectedSpectroState = this.spectroStates[0];
         this.defaultColor = 'mtrue';
@@ -118,11 +120,14 @@ angular.module('a2.visualizer.audio-player', [])
         toggleSpectroColor: function() {
             this.isToggled = !this.isToggled;
         },
+        closeSpectroColorPopup: function() {
+            this.isToggled = false;
+        },
         setSpectroColor: function($index) {
             this.selectedSpectroState = this.spectroStates[$index];
             $localStorage.setItem('visualizer.spectro_color', this.selectedSpectroState.value);
             this.scope.$broadcast('visobj-updated');
-            this.isToggled = !this.isToggled;
+            this.closeSpectroColorPopup();
         },
         savePlaylist: function() {
             this.isSavingPlaylist = true;
