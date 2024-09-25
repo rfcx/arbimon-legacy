@@ -637,7 +637,6 @@ var Recordings = {
         }
 
         const isNonLegacy = !Recordings.isLegacy(recording)
-        console.log('--5 isNonLegacy', isNonLegacy)
         if (isNonLegacy) {
             const audio_key = recording.uri.replace(audioFilePattern, options.format ? options.format : '.mp3');
             tmpfilecache.fetch(audio_key, function(cache_miss) {

@@ -103,7 +103,6 @@ var cache = {
 
     fetch: function(key, oncachemiss, callback){
         if (filesProcessing[key]) {
-            console.log('---fetch 1-1');
             // return filesProcessing[key].nodeify(callback);
         }
         this.get(key, function(err, data){
