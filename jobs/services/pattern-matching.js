@@ -7,8 +7,7 @@ async function getPmRois (options = {}) {
       TRUNCATE(pmr.score, 3) score, pmr.validated, pmr.denorm_site_id as site_id,
       pmr.recording_id, pmr.denorm_recording_datetime recording_local_time
     from pattern_matching_rois pmr
-      join pattern_matchings pm on pm.pattern_matching_id = pmr.pattern_matching_id
-    where pm.project_id = ${options.projectId} and pm.pattern_matching_id = ${options.jobId} and pm.deleted = 0
+    where pmr.pattern_matching_id = ${options.jobId}
       limit ${options.limit} offset ${options.offset}
     ;
   `
