@@ -26,6 +26,9 @@ async function getProjectPMJobs (options = {}) {
     where pm.project_id = ${options.projectId} and pm.deleted = 0 and j.state = 'completed'
     ;
   `
+  if (options.jobs && options.jobs.length > 0) {
+    sql += `and pm.pattern_matching_id in (${options.jobs})`
+  }
   const [rows, fields] = await connection.execute(sql)
   return rows
 }

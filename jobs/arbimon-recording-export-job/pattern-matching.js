@@ -19,11 +19,11 @@ const tmpFilePath = __dirname + '/tmpfilecache'
 const archive = archiver('zip', { zlib: { level: 9 }});
 let outputStreamFile
 
-async function collectData (filters, cb) {
+async function collectData (filters, projection_parameters, cb) {
   outputStreamFile = fs.createWriteStream(__dirname + '/pattern-matching-export.zip');
 
   archive.pipe(outputStreamFile)
-  await exportAllPmJobs(filters.project_id, async (err, data) => {
+  await exportAllPmJobs(filters.project_id, projection_parameters, async (err, data) => {
     if (err) {
       console.err('Error export PM', err)
       return cb(err)
@@ -63,11 +63,11 @@ async function fileToZipDirectory (sourceFilePath, sourceFileName) {
   });
 }
 
-async function exportAllPmJobs (projectId, cb) {
+async function exportAllPmJobs (projectId, projection_parameters, cb) {
   try {
     console.log(`${exportReportJob} started`)
     const projectSites = await getProjectSites({projectId})
-    const projectPMJobs = await getProjectPMJobs({projectId})
+    const projectPMJobs = await getProjectPMJobs({projectId, jobs: projection_parameters.pm})
     await exportAllPmJobsCsv(projectPMJobs)
     for (let job of projectPMJobs) {
       const fileName = `${nameToUrl(job.job_name)}_${job.job_id}.csv`;

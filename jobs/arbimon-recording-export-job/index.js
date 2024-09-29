@@ -100,7 +100,7 @@ async function main () {
         return new Promise((resolve, reject) => {
             const exportReportType = 'Pattern Matchings';
             console.log(`Arbimon Export ${exportReportType} job`)
-            patternMatching.collectData(filters, async (err, filePath) => {
+            patternMatching.collectData(filters, projection_parameters, async (err, filePath) => {
                 const reportName = 'pattern-matching-export'
                 const zipPath = `jobs/arbimon-recording-export-job/${reportName}.zip`
                 const bucketFormatted = S3_EXPORT_BUCKET_ARBIMON.split('/')[0]
