@@ -35,21 +35,4 @@ router.put('/:projectId', function(req, res, next) {
     }).catch(next);
 });
 
-
-router.get('/codes', function(req, res, next) {
-    res.type('json');
-    model.ActivationCodes.listAll().then(function(codes){
-        res.json(codes);
-    }).catch(next);
-});
-
-
-router.post('/codes', function(req, res, next) {
-    res.type('json');
-    model.ActivationCodes.createCode(req.session.user, req.body).then(function(){
-        res.json(true);
-    }).catch(next);
-});
-
-
 module.exports = router;
