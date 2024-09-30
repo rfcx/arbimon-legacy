@@ -4,15 +4,7 @@ angular.module('a2.orders.shipping-form', [
     'ui.bootstrap',
 ])
 .controller('ShippingFormCtrl', function($scope, $http, $modalInstance, $modal, orderData, countries, a2order) {
-    if(!orderData.address) {
-        $http.get('/legacy-api/user/address')
-            .success(function(data) {
-                $scope.address = data.address || {};
-            });
-    }
-    else {
-        $scope.address = orderData.address;
-    }
+    $scope.address = orderData.address;
     
     countries.get(function(data) {
         $scope.countries = data;

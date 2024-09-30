@@ -398,18 +398,6 @@ var Users = {
         queryHandler(q, callback);
     },
 
-    getAddress: function(userId, callback) {
-        var q = "SELECT * FROM addresses WHERE user_id = ?";
-
-        queryHandler(dbpool.format(q, [userId]), callback);
-    },
-
-    updateAddress: function(userAddressData, callback) {
-        var q = "REPLACE INTO addresses SET ?";
-
-        queryHandler(dbpool.format(q, userAddressData), callback);
-    },
-
     challengeOAuth: function(credentials){
         var result = {
             user: null,

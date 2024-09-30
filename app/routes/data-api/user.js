@@ -171,33 +171,6 @@ router.post('/update', function(req, res, next){
     }).catch(next);
 });
 
-router.get('/address', function(req, res, next) {
-    res.type('json');
-    model.users.getAddress(req.session.user.id, function(err, rows) {
-        if(err) return next(err);
-
-        if(!rows.length) return res.json({ address: false });
-
-        res.json({ address: rows[0] });
-    });
-});
-
-router.put('/address', function(req, res, next) {
-    res.type('json');
-    if(!req.body.address) {
-        return res.status(400).json({ error: "missing parameters" });
-    }
-
-    var address = req.body.address;
-    address.user_id = req.session.user.id;
-
-    model.users.updateAddress(address, function(err, result) {
-        if(err) return next(err);
-
-        res.json({ address_update: true });
-    });
-});
-
 router.post('/invite', function(req, res, next){
     model.users.inviteUser(req.body)
         .then((user) => {
