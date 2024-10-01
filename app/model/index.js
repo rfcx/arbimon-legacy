@@ -23,7 +23,6 @@ exports.CNN = require('./cnns');
 exports.AudioEventDetectionsClustering = require('./audio-event-detections-clustering');
 exports.ClusteringJobs = require('./clustering-jobs');
 exports.oauth           = require('./oauth');
-exports.AudioEventDetections = require('./audio-event-detections');
 exports.AdminPlots      = require('./admin-plots');
 exports.AccessTokens    = require('./access-tokens');
 exports.CitizenScientist = require('./citizen-scientist');

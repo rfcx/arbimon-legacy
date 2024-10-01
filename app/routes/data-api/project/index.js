@@ -561,7 +561,6 @@ router.use('/:projectUrl/cnn', cnnRoutes);
 router.use('/:projectUrl/audio-event-detections-clustering', audioEventDetectionsClusteringRoutes);
 router.use('/:projectUrl/clustering-jobs', clusteringRoutes);
 router.use('/:projectUrl/tags', tagRoutes);
-router.use('/:projectUrl/audio-event-detections', require('./audio-event-detections'));
 router.use('/:projectUrl/soundscape-composition', require('./soundscape-composition'));
 router.use('/:projectUrl/citizen-scientist', require('./citizen-scientist'));
 
