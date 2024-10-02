@@ -19,7 +19,6 @@ exports.orders          = require('./orders');
 exports.settings        = require('./system-settings');
 exports.classifications = require('./classifications');
 exports.patternMatchings = require('./pattern_matchings');
-exports.CNN = require('./cnns');
 exports.AudioEventDetectionsClustering = require('./audio-event-detections-clustering');
 exports.ClusteringJobs = require('./clustering-jobs');
 exports.oauth           = require('./oauth');
