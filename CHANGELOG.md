@@ -1,5 +1,11 @@
 # Arbimon Release Notes
 
+## v4.1.0 - xx xx, 2024
+
+Enhancements ✨
+
+- Remove `site_logs` table  related codes
+
 ## v4.0.7 - Apr 26, 2024
 
 Enhancements ✨
