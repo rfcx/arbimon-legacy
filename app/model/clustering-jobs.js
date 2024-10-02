@@ -12,6 +12,7 @@ const jsonTemplates = require('../utils/json-templates');
 const { Client } = require('kubernetes-client');
 const k8sClient = new Client({ version: '1.13' });
 const s3 = new AWS.S3();
+const curEnv = config('aws').env
 
 let ClusteringJobs = {
     find: function (options) {
@@ -92,7 +93,14 @@ let ClusteringJobs = {
             options = {};
         }
         select.push(
-            "A.aed_id, A.time_min, A.time_max, A.frequency_min, A.frequency_max, A.recording_id, A.uri_image as 'uri', A.validated"
+            `A.aed_id,
+            A.time_min,
+            A.time_max,
+            A.frequency_min,
+            A.frequency_max,
+            A.recording_id,
+            CONCAT('audio_events/${curEnv}/detection/', A.job_id, '/png/', A.recording_id, '/', A.uri_param, '.png') as 'uri',
+            A.validated`
         );
 
         if (options.aed) {
