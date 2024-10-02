@@ -83,7 +83,7 @@ angular.module('a2.analysis.patternmatching', [
     $scope.isAddingTemplate = { value: false };
 
     $scope.projecturl = Project.getUrl();
-    $scope.selectedRecId = []
+    $scope.selectedJobId = []
 
     $scope.getProjectInfo = function() {
         Project.getInfo(function(data) {
@@ -270,24 +270,24 @@ angular.module('a2.analysis.patternmatching', [
         });
     };
 
-    $scope.selectRec = function(rec) {
+    $scope.selectJob = function(rec) {
         if (!rec.checked) {
             console.log('!rec.checked', rec);
 
-            const index = $scope.selectedRecId.findIndex(id => id === rec.id);
-            $scope.selectedRecId.splice(index, 1);
+            const index = $scope.selectedJobId.findIndex(id => id === rec.id);
+            $scope.selectedJobId.splice(index, 1);
             // $scope.checkedRec.splice(index, 1);
             return;
         }
         console.log('checked', rec);
 
-        if ($scope.selectedRecId.includes(rec.id)) return;
-        $scope.selectedRecId.push(rec.id);
+        if ($scope.selectedJobId.includes(rec.id)) return;
+        $scope.selectedJobId.push(rec.id);
         // $scope.checkedRec.push(rec);
     }
 
     $scope.exportMultipleData = function() {
-        console.log('selected items', $scope.selectedRecId);
+        console.log('selected items', $scope.selectedJobId);
     }
 
     $scope.openShareProjectTemplatesPopup = function() {
@@ -429,7 +429,7 @@ angular.module('a2.analysis.patternmatching', [
             $scope.patternmatchingsOriginal = data.list;
             $scope.patternmatchingsData = data.list;
             $scope.patternmatchingsData.forEach(rec => {
-                if ($scope.selectedRecId.includes(rec.id)) {
+                if ($scope.selectedJobId.includes(rec.id)) {
                     rec.checked = true
                 }
             })
