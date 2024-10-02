@@ -287,8 +287,6 @@ angular.module('a2.analysis.patternmatching', [
     }
 
     $scope.exportMultipleData = function() {
-        console.log('selected items');
-
         console.log('selected items', $scope.selectedRecId);
     }
 
@@ -430,6 +428,11 @@ angular.module('a2.analysis.patternmatching', [
         }).then(function(data) {
             $scope.patternmatchingsOriginal = data.list;
             $scope.patternmatchingsData = data.list;
+            $scope.patternmatchingsData.forEach(rec => {
+                if ($scope.selectedRecId.includes(rec.id)) {
+                    rec.checked = true
+                }
+            })
             $scope.pagination.totalItems = data.count;
             $scope.pagination.totalPages = Math.ceil($scope.pagination.totalItems / $scope.pagination.limit);
             $scope.showInfo = false;
