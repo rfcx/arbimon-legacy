@@ -41,7 +41,17 @@
                 <div class="row-flex flex-direction-row flex-align-middle">
                     <button  ng-if="loading.showRefreshBtn"
                         type="download"
-                        class="btn btn-success btn-rounded-full export-form-control"
+                        class="btn btn-primary btn-rounded-full"
+                        tooltip="Export multiples"
+                        ng-disabled="isExportDisabled()"
+                        ng-click="exportMultipleData()"
+                    >
+                        Export multiples
+                        <i class="fa fa-download ml-2"></i>
+                    </button>
+                    <button  ng-if="loading.showRefreshBtn"
+                        type="download"
+                        class="btn btn-success btn-rounded-full export-form-control ml-3"
                         tooltip="Export all results"
                         ng-disabled="isExportDisabled()"
                         ng-click="exportData('pm')"

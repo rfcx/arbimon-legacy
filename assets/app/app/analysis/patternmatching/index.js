@@ -83,6 +83,7 @@ angular.module('a2.analysis.patternmatching', [
     $scope.isAddingTemplate = { value: false };
 
     $scope.projecturl = Project.getUrl();
+    $scope.selectedRecId = []
 
     $scope.getProjectInfo = function() {
         Project.getInfo(function(data) {
@@ -268,6 +269,28 @@ angular.module('a2.analysis.patternmatching', [
             notify.log('Your Export Report is processing <br> and will be sent by email.');
         });
     };
+
+    $scope.selectRec = function(rec) {
+        if (!rec.checked) {
+            console.log('!rec.checked', rec);
+
+            const index = $scope.selectedRecId.findIndex(id => id === rec.id);
+            $scope.selectedRecId.splice(index, 1);
+            // $scope.checkedRec.splice(index, 1);
+            return;
+        }
+        console.log('checked', rec);
+
+        if ($scope.selectedRecId.includes(rec.id)) return;
+        $scope.selectedRecId.push(rec.id);
+        // $scope.checkedRec.push(rec);
+    }
+
+    $scope.exportMultipleData = function() {
+        console.log('selected items');
+
+        console.log('selected items', $scope.selectedRecId);
+    }
 
     $scope.openShareProjectTemplatesPopup = function() {
         var modalInstance = $modal.open({
