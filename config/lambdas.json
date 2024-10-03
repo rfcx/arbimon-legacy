@@ -1,6 +1,4 @@
 {
     "pattern_matching": "tm_driver",
-    "new_cnn_job_test1": "arn:aws:lambda:us-east-1:584765855847:function:call_id_testing:1",
-    "new_cnn_job_v1": "arn:aws:lambda:us-east-1:584765855847:function:call_id_driver",
     "audio_event_detections": "arn:aws:lambda:us-east-1:584765855847:function:audio-event-detection-conductor-1RQH95W7NW7VI"
 }
