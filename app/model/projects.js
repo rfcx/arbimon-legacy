@@ -1058,7 +1058,7 @@ var Projects = {
     },
 
     modelValidationUri: function(model_id, callback) {
-        var q = "SELECT vs.`uri` \n"+
+        const q = "SELECT CONCAT('project_', vs.project_id, '/validations/job_', vs.job_id, '.csv') as uri \n"+
                 "FROM `validation_set` vs, `models` m \n"+
                 "WHERE m.`validation_set_id` = vs.`validation_set_id` \n"+
                 "AND m.`model_id` = "+ dbpool.escape(model_id);
