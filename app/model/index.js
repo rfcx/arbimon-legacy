@@ -16,7 +16,6 @@ exports.playlists       = require('./playlists');
 exports.templates       = require('./templates');
 exports.soundscapes     = require('./soundscapes');
 exports.orders          = require('./orders');
-exports.settings        = require('./system-settings');
 exports.classifications = require('./classifications');
 exports.patternMatchings = require('./pattern_matchings');
 exports.CNN = require('./cnns');

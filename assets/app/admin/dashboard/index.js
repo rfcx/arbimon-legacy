@@ -41,42 +41,6 @@ angular.module('a2.admin.dashboard', [
             $scope.allProjects = data.allProjects;
             $scope.newSites = data.newSites;
         });
-
-    $scope.getSystemSettings = function() {
-        $http.get('/admin/system-settings')
-            .success(function(data) {
-                $scope.settings = data;
-            });
-    };
-    $scope.getSystemSettings();
-
-    $scope.setSetting = function(setting, value){
-        var d=$q.defer();
-
-        if(!setting){
-            d.resolve();
-        } else {
-        $http.put('/admin/system-settings', {
-                setting: setting,
-                value: value
-            })
-            .success(function(data) {
-                $scope.getSystemSettings();
-                d.resolve(data[setting]);
-            })
-            .error(function(data) {
-                console.error(data);
-                $scope.getSystemSettings();
-                d.reject(data);
-            });
-        }
-        return d.promise;
-    };
-
-    $scope.toggleSetting = function(setting) {
-        var value = $scope.settings[setting] == 'on' ? 'off' : 'on';
-        return this.setSetting(setting, value);
-    };
     
     function convertToCSV(objArray) {
         var array = typeof objArray != 'object' ? JSON.parse(objArray) : objArray;

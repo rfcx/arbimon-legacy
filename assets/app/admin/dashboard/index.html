@@ -132,44 +132,4 @@
             </li>
         </ul>
     </div>
-    <div class="col-sm-7">
-        <h4>System settings (use with caution)</h4>
-        <ul class="list-group">
-            <li class="list-group-item">
-                Maintenance Mode: {{ settings.maintenance_mode }}
-                <button type="button" class="btn btn-default"
-                    ng-click="toggleSetting('maintenance_mode')">
-                    <span class="fa" ng-class="'fa-toggle-' + settings.maintenance_mode">
-                    </span>
-                </button>
-            </li>
-            <li class="list-group-item">
-                Features
-                <ul class="list-group">
-                    <li class="list-group-item">
-                        Uploads: {{ settings['feature.uploads'] }}
-                        <button type="button" class="btn btn-default"
-                            ng-click="toggleSetting('feature.uploads')">
-                            <span class="fa" ng-class="'fa-toggle-' + settings['feature.uploads']">
-                            </span>
-                        </button>
-                    </li>
-                    <li class="list-group-item">
-                        Payments: {{ settings['feature.payments'] }}
-                        <button type="button" class="btn btn-default"
-                            ng-click="toggleSetting('feature.payments')">
-                            <span class="fa" ng-class="'fa-toggle-' + settings['feature.payments']">
-                            </span>
-                        </button>
-                    </li>
-                    <li class="list-group-item">
-                        Orders Contact Email:
-                        <input class="form-control" name="orders.contact.email" type="text" ng-model='settings["orders.contact.email"]'
-                            a2-bs-ng-model-on-dirty-save-button="setSetting($name, $modelValue).then($setPristine)"
-                        />
-                    </li>
-                </ul>
-            </li>
-        </ul>
-    </div>
 </div>

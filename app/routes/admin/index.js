@@ -151,39 +151,6 @@ router.get('/jobs', function(req, res, next) {
     });
 });
 
-router.get('/system-settings', function(req, res, next) {
-    res.type('json');
-    model.settings.get(function(err, rows) {
-        if(err) return next(err);
-
-
-        console.log(rows);
-
-        var settings = {};
-        async.each(rows,
-            function(s, callback) {
-                settings[s.key] = s.value;
-                callback();
-            },
-            function done() {
-                res.json(settings);
-            }
-        );
-
-    });
-});
-
-// update system setting value
-router.put('/system-settings', function(req, res, next) {
-    res.type('json');
-    model.settings.set(req.body.setting, req.body.value, function(err, results) {
-        if(err) return next(err);
-
-        debug('setting update:', results);
-        res.sendStatus(200);
-    });
-});
-
 router.use('/projects', require('./projects'));
 router.use('/users', require('./users'));
 
