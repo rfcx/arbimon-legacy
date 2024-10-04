@@ -39,9 +39,17 @@
                     </div>
                 </div>
                 <div class="row-flex flex-direction-row flex-align-middle">
+                    <button
+                        ng-if="selectedJobId.length > 0"
+                        class="btn bg-echo text-insight border-1 border-insight btn-rounded-full"
+                        ng-click="clearSelectedJob()"
+                    >
+                        <span>{{ selectedJobId.length }} selected</span>
+                        <img src="/images/fi-close-spoonbill.svg">
+                    </button>
                     <button  ng-if="loading.showRefreshBtn"
                         type="download"
-                        class="btn btn-success btn-rounded-full"
+                        class="btn btn-success btn-rounded-full ml-3"
                         tooltip="Export selected"
                         ng-disabled="isExportDisabled()"
                         ng-click="exportMultipleData()"

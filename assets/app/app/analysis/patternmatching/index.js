@@ -286,6 +286,15 @@ angular.module('a2.analysis.patternmatching', [
         // $scope.checkedRec.push(rec);
     }
 
+    $scope.clearSelectedJob = function() {
+        $scope.patternmatchingsData.forEach(rec => {
+            if ($scope.selectedJobId.includes(rec.id)) {
+                rec.checked = false
+            }
+        })
+        $scope.selectedJobId = []
+    }
+
     $scope.exportMultipleData = function() {
         console.log('selected items', $scope.selectedJobId);
     }
