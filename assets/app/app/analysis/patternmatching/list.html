@@ -51,7 +51,7 @@
                         type="download"
                         class="btn btn-success btn-rounded-full ml-3"
                         tooltip="Export selected"
-                        ng-disabled="isExportDisabled()"
+                        ng-disabled="selectedJobId.length == 0"
                         ng-click="exportMultipleData()"
                     >
                         Export Selected (.csv)
