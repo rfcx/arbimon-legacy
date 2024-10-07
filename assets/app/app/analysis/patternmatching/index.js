@@ -996,8 +996,8 @@ angular.module('a2.analysis.patternmatching', [
         if (rois === undefined){
             rois = this.getSelectedRois()
         }
-        if (rois.length > 50){
-            notify.error('Please reduce the number of selected ROIs <br> to 50 or fewer to proceed.');
+        if (rois.length > 100){
+            notify.error('Please reduce the number of selected ROIs <br> to 100 or fewer to proceed.');
             return;
         }
         var roiIds = rois.map(function(roi){ return roi.id; })
