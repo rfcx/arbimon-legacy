@@ -85,9 +85,6 @@ var Recordings = {
         site_id:         joi.number().required(),
         uri:             joi.string().required(),
         datetime:        joi.string().required(),
-        mic:             joi.optional(),
-        recorder:        joi.optional(),
-        version:         joi.optional(),
         sample_rate:     joi.number(),
         precision:       joi.number(),
         duration:        joi.number(),
@@ -255,9 +252,6 @@ var Recordings = {
             "R.uri, \n"+
             "R.datetime, \n"+
             "R.datetime_utc, \n"+
-            "R.mic, \n"+
-            "R.recorder, \n"+
-            "R.version, \n"+
             "R.sample_rate, \n"+
             "R.duration, \n"+
             "R.samples, \n"+
@@ -329,9 +323,6 @@ var Recordings = {
                         "R.uri, \n"+
                         "R.datetime, \n"+
                         "R.datetime_utc, \n"+
-                        "R.mic, \n"+
-                        "R.recorder, \n"+
-                        "R.version, \n"+
                         "R.sample_rate, \n"+
                         "R.duration, \n"+
                         "R.samples, \n"+
@@ -1070,10 +1061,10 @@ var Recordings = {
             if(err) return callback(err);
 
             queryHandler('INSERT INTO recordings (\n' +
-                '`site_id`, `uri`, `datetime`, `mic`, `recorder`, `version`, `sample_rate`, \n'+
+                '`site_id`, `uri`, `datetime`, `sample_rate`, \n'+
                 '`precision`, `duration`, `samples`, `file_size`, `bit_rate`, `sample_encoding`, `upload_time`, `datetime_utc`, `meta`\n' +
             ') VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);', [
-                rec.site_id, rec.uri, rec.datetime, rec.mic || '(not specified)', rec.recorder || '(not specified)', rec.version || '(not specified)', rec.sample_rate,
+                rec.site_id, rec.uri, rec.datetime, rec.sample_rate,
                 rec.precision, rec.duration, rec.samples, rec.file_size, rec.bit_rate, rec.sample_encoding, rec.upload_time, rec.datetime_utc, rec.meta
             ], callback);
         });
@@ -1088,13 +1079,13 @@ var Recordings = {
         const array = joi.array().items(Recordings.recordingInsertSchema)
         array.validate(recordings, function(err, recs) {
             const data = recs.map((rec) => {
-                return [rec.site_id, rec.uri, rec.datetime, rec.mic || '(not specified)', rec.recorder || '(not specified)', rec.version || '(not specified)', rec.sample_rate,
+                return [rec.site_id, rec.uri, rec.datetime, rec.sample_rate,
                 rec.precision, rec.duration, rec.samples, rec.file_size, rec.bit_rate, rec.sample_encoding, rec.upload_time, rec.datetime_utc, rec.meta]
             })
             if(err) return callback(err);
 
             queryHandler('INSERT INTO recordings (\n' +
-                '`site_id`, `uri`, `datetime`, `mic`, `recorder`, `version`, `sample_rate`, \n'+
+                '`site_id`, `uri`, `datetime`, `sample_rate`, \n'+
                 '`precision`, `duration`, `samples`, `file_size`, `bit_rate`, `sample_encoding`, `upload_time`, `datetime_utc`, `meta`\n' +
             ') VALUES ?;', [data], callback);
         });
@@ -1116,9 +1107,6 @@ var Recordings = {
             site_id:         joi.number(),
             uri:             joi.string(),
             datetime:        joi.date(),
-            mic:             joi.string(),
-            recorder:        joi.string(),
-            version:         joi.string(),
             sample_rate:     joi.number(),
             precision:       joi.number(),
             duration:        joi.number(),
@@ -1498,9 +1486,6 @@ var Recordings = {
                         r.datetime_utc,
                         r.upload_time,
                         r.duration,
-                        r.mic,
-                        r.recorder,
-                        r.version,
                         r.sample_rate,
                         r.meta,
                         r.site_id
@@ -1540,9 +1525,6 @@ var Recordings = {
                             }
                             _1.imported = siteData[_1.site_id].project_id !== parameters.project_id;
                             _1.comments = _1.meta ? Recordings.__parse_comments_data(_1.meta) : null;
-                            if (_1.comments && _1.recorder === "Unknown") {
-                                _1.recorder = "AudioMoth";
-                            }
                             _1.meta = _1.meta ? Recordings.__parse_meta_data(_1.meta) : null;
                             _1.filename = _1.meta? (_1.meta.filename? _1.meta.filename : 'Unknown') : null;
                             Recordings.__compute_thumbnail_path_async(_1);

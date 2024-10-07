@@ -46,9 +46,6 @@ router.post('/recordings/create', verifyToken(), hasRole(['systemUser']), async 
         site_id: site.site_id,
         uri: data.uri,
         datetime_utc: data.datetime.toISOString(),
-        mic: data.mic,
-        recorder: data.recorder,
-        version: data.sver,
         sample_rate: data.sample_rate,
         precision: data.precision,
         duration: data.duration,
@@ -59,19 +56,6 @@ router.post('/recordings/create', verifyToken(), hasRole(['systemUser']), async 
         upload_time: moment.utc().toISOString(),
         meta: metaData
       };
-      const parsedData = data.meta ? JSON.parse(data.meta) : null;
-			const artist = parsedData && parsedData.ARTIST ? parsedData.ARTIST : parsedData.artist
-      const comment = parsedData && parsedData.comment
-			const isAudioMoth = artist && artist.includes('AudioMoth')
-			const songMeterOptions = ['SongMeter', 'Song Meter']
-			const isSongMeter = comment && songMeterOptions.some(sm => comment.includes(sm)) ||
-				artist && songMeterOptions.some(sm => artist.includes(sm))
-      if (isAudioMoth) {
-        recordingData.recorder = 'AudioMoth';
-      }
-      if (isSongMeter) {
-        recordingData.recorder = 'Song Meter';
-      }
       const datetimeUtc = data.datetime;
       const format = 'YYYY-MM-DD HH:mm:ss';
       const datetimeLocal = datetimeUtc ? moment.tz(datetimeUtc, timezone).format(format) : null;
