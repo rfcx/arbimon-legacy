@@ -90,7 +90,7 @@
                 <p class="mb-0"><a href="https://help.arbimon.org/article/230-pattern-matching-best-practices" target="_blank">2. Pattern Matching best practices<i class="ml-2 fa fa-external-link"></i></a></p>
             </div>
             <div ng-if="!loading.rows && patternmatchingsData && patternmatchingsData.length" class="pm-list">
-                <a2-table rows="patternmatchingsData" data-checked="checked" on-check="selectJob(row)" on-select="selectItem(row.id)">
+                <a2-table rows="patternmatchingsData" data-checked="checked" on-check="selectJob(row)" on-select="selectItem(row.id)" on-check-all="onCheckAll()">
                     <field title="Name" tdclass="is-v-middle hidelongtext widthtd" key="name">
                         <div class="row-flex flex-align-middle flex-direction-row flex-space-start">
                             <div class="roi-thumbnail mr-3">

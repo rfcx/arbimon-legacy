@@ -296,8 +296,8 @@ angular.module('a2.analysis.patternmatching', [
         $scope.selectedJobId = []
     }
 
-    $scope.exportMultipleData = function() {
-        console.log('selected items', $scope.selectedJobId);
+    $scope.onCheckAll = function() {
+        console.log('onCheckAll');
     }
 
     $scope.openShareProjectTemplatesPopup = function() {
