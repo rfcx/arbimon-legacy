@@ -570,8 +570,11 @@ angular.module('a2.analysis.patternmatching', [
         data.params.userEmail = email
         $scope.isExportingRecs = true
         $scope.errMess = ''
-        if (isPMexport) {
-            Project.exportAllPMdata(data.params).then(data => {
+        if (isPMexport || isMultipleExport) {
+            if (isMultipleExport) {
+                data.params.selectedJobId = $scope.selectedJobId
+            }
+            Project.exportPMdata(data.params).then(data => {
                 $scope.isExportingRecs = false
                 if (data.error) {
                     $scope.errMess = data.error;
@@ -580,23 +583,6 @@ angular.module('a2.analysis.patternmatching', [
                     $modalInstance.close();
                 }
             })
-        } else if (isMultipleExport) {
-            console.log('isMultipleExport index')
-            console.log('isMultipleExport params', data.params)
-            console.log('isMultipleExport selectedJobId', $scope.selectedJobId)
-
-            $modalInstance.close();
-
-            // Project.exportMultiplePMdata(data.params, $scope.selectedJobId).then(data => {
-            //     if (data.error) {
-            //         $scope.errMess = data.error;
-            //     }
-            //     else {
-            //         console.log('isMultipleExport exportMultiplePMdata')
-
-            //         $modalInstance.close();
-            //     }
-            // })
         } else {
             Project.exportAllProjectTemplateData(data.params).then(data => {
                 $scope.isExportingRecs = false
