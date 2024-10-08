@@ -112,6 +112,13 @@ angular.module('a2.srv.project', [
                     return response.data;
                 }).catch(notify.serverError);
             },
+            exportMultiplePMdata: function(filters, jobsId){
+                delete filters.exportReport
+                const params = { filters: filters, show: { pm: jobsId } };
+                return $http.post('/legacy-api/project/'+url+'/recordings/pm-export', params).then(function(response) {
+                    return response.data;
+                }).catch(notify.serverError);
+            },
             exportAllProjectTemplateData: function(filters){
                 delete filters.exportReport
                 const params = { filters: filters, show: { projectTemplate: 'all' } };

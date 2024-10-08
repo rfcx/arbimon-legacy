@@ -251,7 +251,8 @@ angular.module('a2.analysis.patternmatching', [
     $scope.openExportPopup = function(exportReport) {
         var params = {
             userEmail: a2UserPermit.getUserEmail() || '',
-            exportReport: exportReport
+            exportReport: exportReport,
+            selectedJobId: $scope.selectedJobId
         }
         const modalInstance = $modal.open({
             controller: 'ExportPMmodalInstanceCtrl',
@@ -562,7 +563,9 @@ angular.module('a2.analysis.patternmatching', [
 })
 .controller('ExportPMmodalInstanceCtrl', function($scope, $modalInstance, Project, data) {
     $scope.userEmail = data.params.userEmail
+    $scope.selectedJobId = data.params.selectedJobId
     const isPMexport = data.params.exportReport === 'pm'
+    const isMultipleExport = data.params.exportReport === 'ExportMultiple'
     $scope.exportRecordings = function(email) {
         data.params.userEmail = email
         $scope.isExportingRecs = true
@@ -577,6 +580,23 @@ angular.module('a2.analysis.patternmatching', [
                     $modalInstance.close();
                 }
             })
+        } else if (isMultipleExport) {
+            console.log('isMultipleExport index')
+            console.log('isMultipleExport params', data.params)
+            console.log('isMultipleExport selectedJobId', $scope.selectedJobId)
+
+            $modalInstance.close();
+
+            // Project.exportMultiplePMdata(data.params, $scope.selectedJobId).then(data => {
+            //     if (data.error) {
+            //         $scope.errMess = data.error;
+            //     }
+            //     else {
+            //         console.log('isMultipleExport exportMultiplePMdata')
+
+            //         $modalInstance.close();
+            //     }
+            // })
         } else {
             Project.exportAllProjectTemplateData(data.params).then(data => {
                 $scope.isExportingRecs = false
