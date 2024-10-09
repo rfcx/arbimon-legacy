@@ -297,7 +297,15 @@ angular.module('a2.analysis.patternmatching', [
         $scope.allFalse = !$scope.allFalse
         $scope.patternmatchingsData.forEach(rec => {
             rec.checked = $scope.allFalse
+
+            if (!$scope.selectedJobId.includes(rec.id)){
+                $scope.selectedJobId.push(rec.id);
+            }
         })
+
+        if(!$scope.allFalse) {
+            $scope.selectedJobId = []
+        }
     }
 
     $scope.openShareProjectTemplatesPopup = function() {
