@@ -573,6 +573,8 @@ angular.module('a2.analysis.patternmatching', [
         if (isPMexport || isMultipleExport) {
             if (isMultipleExport) {
                 data.params.selectedJobId = $scope.selectedJobId
+            } else {
+                data.params.selectedJobId = undefined
             }
             Project.exportPMdata(data.params).then(data => {
                 $scope.isExportingRecs = false
