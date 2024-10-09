@@ -133,18 +133,6 @@ var Jobs = {
                 }
             }
         },
-        cnn_job: {
-            type_id: 7,
-            new: function(params, db) {
-                return
-            },
-            sql : {
-                report : {
-                    projections : ['CNN.name as name'],
-                    tables      : ['JOIN `job_params_cnn` as CNN ON J.job_id = CNN.job_id'],
-                }
-            }
-        },
         aed_job: {
             type_id: 8,
             new: function(params, db) {
