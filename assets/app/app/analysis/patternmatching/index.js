@@ -273,18 +273,13 @@ angular.module('a2.analysis.patternmatching', [
 
     $scope.selectJob = function(rec) {
         if (!rec.checked) {
-            console.log('!rec.checked', rec);
-
             const index = $scope.selectedJobId.findIndex(id => id === rec.id);
             $scope.selectedJobId.splice(index, 1);
-            // $scope.checkedRec.splice(index, 1);
             return;
         }
-        console.log('checked', rec);
 
         if ($scope.selectedJobId.includes(rec.id)) return;
         $scope.selectedJobId.push(rec.id);
-        // $scope.checkedRec.push(rec);
     }
 
     $scope.clearSelectedJob = function() {
@@ -296,8 +291,13 @@ angular.module('a2.analysis.patternmatching', [
         $scope.selectedJobId = []
     }
 
+    $scope.allFalse = false
+
     $scope.onCheckAll = function() {
-        console.log('onCheckAll');
+        $scope.allFalse = !$scope.allFalse
+        $scope.patternmatchingsData.forEach(rec => {
+            rec.checked = $scope.allFalse
+        })
     }
 
     $scope.openShareProjectTemplatesPopup = function() {
