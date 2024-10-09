@@ -291,6 +291,12 @@ angular.module('a2.audiodata.recordings', [
                 $scope.selectedRecId.push(rec.id);
                 $scope.checkedRec.push(rec);
             }
+
+            if(!rec.checked && $scope.selectedRecId.includes(rec.id)) {
+                const index = $scope.selectedRecId.findIndex(id => id === rec.id);
+                $scope.selectedRecId.splice(index, 1);
+                $scope.checkedRec.splice(index, 1);
+            }
         })
     }
 

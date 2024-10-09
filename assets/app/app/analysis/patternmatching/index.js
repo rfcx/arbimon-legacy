@@ -272,9 +272,6 @@ angular.module('a2.analysis.patternmatching', [
     };
 
     $scope.selectJob = function(rec) {
-        var checker = arr => arr.every(Boolean);
-        $scope.allFalse = checker($scope.patternmatchingsData.map(rec => rec.checked))
-
         if (!rec.checked) {
             const index = $scope.selectedJobId.findIndex(id => id === rec.id);
             $scope.selectedJobId.splice(index, 1);
@@ -292,24 +289,20 @@ angular.module('a2.analysis.patternmatching', [
             }
         })
         $scope.selectedJobId = []
-        $scope.allFalse = false
     }
 
-    $scope.allFalse = false
-
     $scope.onCheckAll = function() {
-        $scope.allFalse = !$scope.allFalse
         $scope.patternmatchingsData.forEach(rec => {
-            rec.checked = $scope.allFalse
 
-            if (!$scope.selectedJobId.includes(rec.id)){
+            if (rec.checked && !$scope.selectedJobId.includes(rec.id)) {
                 $scope.selectedJobId.push(rec.id);
             }
+    
+            if(!rec.checked && $scope.selectedJobId.includes(rec.id)) {
+                const index = $scope.selectedJobId.findIndex(id => id === rec.id);
+                $scope.selectedJobId.splice(index, 1);
+            }
         })
-
-        if(!$scope.allFalse) {
-            $scope.selectedJobId = []
-        }
     }
 
     $scope.openShareProjectTemplatesPopup = function() {
