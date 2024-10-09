@@ -4,7 +4,6 @@ angular.module('a2.admin.projects.list', [
     'a2.utils',
     'a2.services',
     'templates-arbimon2',
-    'a2.orders.directives.tier-select',
     'humane',
     'ui.select',
 ])

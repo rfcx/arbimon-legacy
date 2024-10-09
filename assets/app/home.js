@@ -3,7 +3,6 @@ angular.module('a2.home', [
     'ui.bootstrap',
     'a2.utils',
     'a2.forms',
-    'a2.orders',
     'humane',
     'ui.router',
     'a2.srv.local-storage',
