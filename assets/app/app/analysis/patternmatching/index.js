@@ -272,7 +272,7 @@ angular.module('a2.analysis.patternmatching', [
     };
 
     $scope.selectJob = function(rec) {
-        let checker = arr => arr.every(Boolean);
+        var checker = arr => arr.every(Boolean);
         $scope.allFalse = checker($scope.patternmatchingsData.map(rec => rec.checked))
 
         if (!rec.checked) {

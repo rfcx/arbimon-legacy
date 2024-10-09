@@ -153,7 +153,7 @@ angular.module('a2.directive.a2-table', [
         this.rows = rows;
         this.updateChecked();
         
-        let checker = arr => arr.every(Boolean);
+        var checker = arr => arr.every(Boolean);
         this.checkAll = checker(this.rows.map(r => r.checked))
     };
 
