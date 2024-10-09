@@ -67,7 +67,7 @@ async function exportAllPmJobs (projectId, projection_parameters, cb) {
   try {
     console.log(`${exportReportJob} started`)
     const projectSites = await getProjectSites({projectId})
-    const projectPMJobs = await getProjectPMJobs({projectId, jobs: projection_parameters.pm})
+    const projectPMJobs = await getProjectPMJobs({projectId, jobs: projection_parameters.pmIds})
     await exportAllPmJobsCsv(projectPMJobs)
     for (let job of projectPMJobs) {
       const fileName = `${nameToUrl(job.job_name)}_${job.job_id}.csv`;

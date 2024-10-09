@@ -1608,7 +1608,8 @@ var Recordings = {
             aed: arrayOrSingle(joi.number()),
             cluster: joi.object(),
             search: joi.string(),
-            pm: joi.string(),
+            pmAll: joi.string(),
+            pmIds: arrayOrSingle(joi.number()),
             projectTemplate: joi.string(),
             soundscapes: joi.string()
         },

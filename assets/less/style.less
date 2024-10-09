@@ -1730,6 +1730,21 @@ a.ui-select-choices-row-inner {
   }
 }
 
+.export-button {
+  .btn.disabled,
+  .btn[disabled] {
+      background-color: @util-gray-04 !important;
+      border-color: @util-gray-04 !important;
+      border: 1px solid;
+      cursor: not-allowed;
+      color: @util-gray-02;
+      opacity: 1;
+  }
+  .btn:focus {
+    outline: none;
+  }
+}
+
 .export-form-control {
   background-color: @moss !important;
 }

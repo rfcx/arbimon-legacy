@@ -42,8 +42,10 @@ angular.module('a2.directive.a2-table', [
             selected: '=?',  // able to work with $scope.selected rows
             onSelect: '&',
             onCheck: '&',
+            onCheckAll: '&',
             checked: '=?', // able to work with $scope.checked rows
             search: '=?',
+            checkAll: '=?',
             // noCheckbox: '@',    // disable row checkboxes
             // noSelect: '@',      // disable row selection
             dateFormat: '@',    // moment date format, default: 'lll'
@@ -94,6 +96,9 @@ angular.module('a2.directive.a2-table', [
                 options.onCheck = scope.onCheck && function (row){
                     return scope.onCheck({row:row});
                 };
+                options.onCheckAll = scope.onCheckAll && function (){
+                    return scope.onCheckAll();
+                };
 
                 a2TableCtrl.initialize(options);
 
@@ -139,6 +144,7 @@ angular.module('a2.directive.a2-table', [
         this.options = options;
         this.__onSelect = options.onSelect;
         this.__onCheck = options.onCheck;
+        this.__onCheckAll = options.onCheckAll;
         this.hasFilters = options.fields.reduce(function (_, field){ return _ || field.filter !== undefined; }, false);
         this.filter = {};
     };
@@ -146,6 +152,9 @@ angular.module('a2.directive.a2-table', [
     this.setRows = function(rows){
         this.rows = rows;
         this.updateChecked();
+        
+        var checker = arr => arr.every(Boolean);
+        this.checkAll = checker(this.rows.map(r => r.checked))
     };
 
     this.onFilterChanged = function(index){
@@ -177,15 +186,9 @@ angular.module('a2.directive.a2-table', [
     };
 
     this.toggleAll = function() {
-        var allFalse = this.rows.reduce(function(_, row){
-            return _ && !row.checked;
-        }, true);
-
-        this.rows.forEach(function(row){
-            row.checked = allFalse;
-        });
-
-        tableScope.checkall = allFalse;
+        if(this.__onCheckAll){
+            this.__onCheckAll();
+        }
     };
 
     this.check = function($event, $index) {

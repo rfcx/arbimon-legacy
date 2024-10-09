@@ -105,9 +105,16 @@ angular.module('a2.srv.project', [
                     return response.data;
                 }).catch(notify.serverError);
             },
-            exportAllPMdata: function(filters){
-                delete filters.exportReport
-                const params = { filters: filters, show: { pm: 'all' } };
+            exportPMdata: function(filters){
+                delete filters.exportReport;
+                var show = {};
+                if (filters.selectedJobId && filters.selectedJobId.length > 0) {
+                    show.pmIds = filters.selectedJobId;
+                } else {
+                    show.pmAll = 'all';
+                }
+                delete filters.selectedJobId
+                const params = { filters: filters, show: show };
                 return $http.post('/legacy-api/project/'+url+'/recordings/pm-export', params).then(function(response) {
                     return response.data;
                 }).catch(notify.serverError);
