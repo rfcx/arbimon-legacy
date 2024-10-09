@@ -152,6 +152,9 @@ angular.module('a2.directive.a2-table', [
     this.setRows = function(rows){
         this.rows = rows;
         this.updateChecked();
+        
+        let checker = arr => arr.every(Boolean);
+        this.checkAll = checker(this.rows.map(r => r.checked))
     };
 
     this.onFilterChanged = function(index){
@@ -238,9 +241,6 @@ angular.module('a2.directive.a2-table', [
         if(this.__onCheck){
             this.__onCheck(row);
         }
-
-        let checker = arr => arr.every(Boolean);
-        this.checkAll = checker(this.rows.map(r => r.checked))
     };
 
     this.sortBy = function(fieldIndex) {

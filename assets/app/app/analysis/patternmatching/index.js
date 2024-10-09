@@ -292,6 +292,7 @@ angular.module('a2.analysis.patternmatching', [
             }
         })
         $scope.selectedJobId = []
+        $scope.allFalse = false
     }
 
     $scope.allFalse = false
