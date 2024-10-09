@@ -45,7 +45,6 @@ angular.module('a2.directive.a2-table', [
             onCheckAll: '&',
             checked: '=?', // able to work with $scope.checked rows
             search: '=?',
-            checkAll: '=?',
             // noCheckbox: '@',    // disable row checkboxes
             // noSelect: '@',      // disable row selection
             dateFormat: '@',    // moment date format, default: 'lll'
@@ -153,8 +152,9 @@ angular.module('a2.directive.a2-table', [
         this.rows = rows;
         this.updateChecked();
         
+        if (!this.rows) return;
         var checker = arr => arr.every(Boolean);
-        this.checkAll = checker(this.rows.map(r => r.checked))
+        tableScope.checkall = checker(this.rows.map(r => r.checked))
     };
 
     this.onFilterChanged = function(index){
@@ -186,6 +186,14 @@ angular.module('a2.directive.a2-table', [
     };
 
     this.toggleAll = function() {
+        var allFalse = tableScope.checkall
+
+        this.rows.forEach(function(row){
+            row.checked = allFalse;
+        });
+
+        tableScope.checkall = allFalse;
+
         if(this.__onCheckAll){
             this.__onCheckAll();
         }
