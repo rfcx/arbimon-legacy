@@ -104,35 +104,6 @@ var Jobs = {
                 }
             }
         },
-        pattern_matching_job: {
-            type_id : 6,
-            schema : joi.object().keys({
-                project    : joi.number().integer(),
-                user       : joi.number().integer(),
-                name       : joi.string(),
-                playlist   : joi.number().integer(),
-                template   : joi.number().integer(),
-                params     : joi.object().keys({
-                    N: joi.number().integer(),
-                    threshold: joi.number(),
-                }),
-            }),
-            new: function(params, db) {
-                return q.ninvoke(db, 'query',
-                    "INSERT INTO `job_params_pattern_matching`( \n"+
-                    "   `job_id`, `name`, `playlist_id`, `template_id`, `params`\n" +
-                    ") VALUES (?, ?, ?, ?, ?)", [
-                        params.job_id, params.name, params.playlist, params.template, JSON.stringify(params.params)
-                    ]
-                );
-            },
-            sql : {
-                report : {
-                    projections : ['PMS.name as name'],
-                    tables      : ['JOIN `pattern_matchings` as PMS ON J.job_id = PMS.job_id'],
-                }
-            }
-        },
         aed_job: {
             type_id: 8,
             new: function(params, db) {
