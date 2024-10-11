@@ -38,19 +38,37 @@
                         <input type="text" class="form-control input-search" ng-model="search.q" placeholder="&#xF002;  Search jobs by name, template, species, song type" ng-change="onFilterChanged()">
                     </div>
                 </div>
-                <div class="row-flex flex-direction-row flex-align-middle">
+                <div class="row-flex flex-direction-row flex-align-middle export-button">
+                    <button
+                        ng-if="selectedJobId.length > 0"
+                        class="btn bg-echo text-insight border-1 border-insight btn-rounded-full"
+                        ng-click="clearSelectedJob()"
+                    >
+                        <span>{{ selectedJobId.length }} selected</span>
+                        <img src="/images/fi-close-spoonbill.svg">
+                    </button>
                     <button  ng-if="loading.showRefreshBtn"
                         type="download"
-                        class="btn btn-success btn-rounded-full export-form-control"
+                        class="btn btn-success btn-rounded-full ml-3"
+                        tooltip="Export selected"
+                        ng-disabled="selectedJobId.length == 0"
+                        ng-click="exportData('ExportMultiple')"
+                    >
+                        Export Selected (.csv)
+                        <i class="fa fa-download ml-2"></i>
+                    </button>
+                    <button  ng-if="loading.showRefreshBtn"
+                        type="download"
+                        class="btn btn-success btn-rounded-full ml-3"
                         tooltip="Export all results"
                         ng-disabled="isExportDisabled()"
                         ng-click="exportData('pm')"
                     >
-                        Export all results (.csv)
+                        Export All (.csv)
                         <i class="fa fa-download ml-2"></i>
                     </button>
                     <button ng-if="loading.showRefreshBtn"
-                        class="btn btn-default btn-rounded-full ml-3"
+                        class="btn btn-success btn-rounded-full ml-3"
                         tooltip="Refresh list"
                         ng-click="loadPatternMatchings()"
                     >
@@ -72,7 +90,7 @@
                 <p class="mb-0"><a href="https://help.arbimon.org/article/230-pattern-matching-best-practices" target="_blank">2. Pattern Matching best practices<i class="ml-2 fa fa-external-link"></i></a></p>
             </div>
             <div ng-if="!loading.rows && patternmatchingsData && patternmatchingsData.length" class="pm-list">
-                <a2-table rows="patternmatchingsData" no-checkbox="true" on-select="selectItem(row.id)">
+                <a2-table rows="patternmatchingsData" data-checked="checked" on-check="selectJob(row)" on-select="selectItem(row.id)" on-check-all="onCheckAll()">
                     <field title="Name" tdclass="is-v-middle hidelongtext widthtd" key="name">
                         <div class="row-flex flex-align-middle flex-direction-row flex-space-start">
                             <div class="roi-thumbnail mr-3">

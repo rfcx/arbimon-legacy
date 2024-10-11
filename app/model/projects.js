@@ -206,20 +206,6 @@ var Projects = {
                             sitesById[row.site_id].rec_count = row.rec_count;
                         });
                     }) : q(),
-                    options.compute.has_logs ? dbpool.query(
-                        "SELECT SLF.site_id, COUNT(SLF.site_log_file_id ) > 0 as has_logs \n" +
-                        "FROM site_log_files AS SLF\n" +
-                        "WHERE SLF.site_id IN (?)\n" +
-                        "GROUP BY SLF.site_id",
-                        [siteIds]
-                    ).then(function(results){
-                        sites.forEach(function(site){
-                            site.has_logs=false;
-                        });
-                        results.forEach(function(row){
-                            sitesById[row.site_id].has_logs = row.has_logs;
-                        });
-                    }): q()
                 ]).then(function(){
                     if (options.utcDiff) {
                         const result = sites.map(s => {

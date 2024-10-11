@@ -83,6 +83,7 @@ angular.module('a2.analysis.patternmatching', [
     $scope.isAddingTemplate = { value: false };
 
     $scope.projecturl = Project.getUrl();
+    $scope.selectedJobId = []
 
     $scope.getProjectInfo = function() {
         Project.getInfo(function(data) {
@@ -250,7 +251,8 @@ angular.module('a2.analysis.patternmatching', [
     $scope.openExportPopup = function(exportReport) {
         var params = {
             userEmail: a2UserPermit.getUserEmail() || '',
-            exportReport: exportReport
+            exportReport: exportReport,
+            selectedJobId: $scope.selectedJobId
         }
         const modalInstance = $modal.open({
             controller: 'ExportPMmodalInstanceCtrl',
@@ -268,6 +270,40 @@ angular.module('a2.analysis.patternmatching', [
             notify.log('Your Export Report is processing <br> and will be sent by email.');
         });
     };
+
+    $scope.selectJob = function(rec) {
+        if (!rec.checked) {
+            const index = $scope.selectedJobId.findIndex(id => id === rec.id);
+            $scope.selectedJobId.splice(index, 1);
+            return;
+        }
+
+        if ($scope.selectedJobId.includes(rec.id)) return;
+        $scope.selectedJobId.push(rec.id);
+    }
+
+    $scope.clearSelectedJob = function() {
+        $scope.patternmatchingsData.forEach(rec => {
+            if ($scope.selectedJobId.includes(rec.id)) {
+                rec.checked = false
+            }
+        })
+        $scope.selectedJobId = []
+    }
+
+    $scope.onCheckAll = function() {
+        $scope.patternmatchingsData.forEach(rec => {
+
+            if (rec.checked && !$scope.selectedJobId.includes(rec.id)) {
+                $scope.selectedJobId.push(rec.id);
+            }
+    
+            if(!rec.checked && $scope.selectedJobId.includes(rec.id)) {
+                const index = $scope.selectedJobId.findIndex(id => id === rec.id);
+                $scope.selectedJobId.splice(index, 1);
+            }
+        })
+    }
 
     $scope.openShareProjectTemplatesPopup = function() {
         var modalInstance = $modal.open({
@@ -407,6 +443,11 @@ angular.module('a2.analysis.patternmatching', [
         }).then(function(data) {
             $scope.patternmatchingsOriginal = data.list;
             $scope.patternmatchingsData = data.list;
+            $scope.patternmatchingsData.forEach(rec => {
+                if ($scope.selectedJobId.includes(rec.id)) {
+                    rec.checked = true
+                }
+            })
             $scope.pagination.totalItems = data.count;
             $scope.pagination.totalPages = Math.ceil($scope.pagination.totalItems / $scope.pagination.limit);
             $scope.showInfo = false;
@@ -527,13 +568,20 @@ angular.module('a2.analysis.patternmatching', [
 })
 .controller('ExportPMmodalInstanceCtrl', function($scope, $modalInstance, Project, data) {
     $scope.userEmail = data.params.userEmail
+    $scope.selectedJobId = data.params.selectedJobId
     const isPMexport = data.params.exportReport === 'pm'
+    const isMultipleExport = data.params.exportReport === 'ExportMultiple'
     $scope.exportRecordings = function(email) {
         data.params.userEmail = email
         $scope.isExportingRecs = true
         $scope.errMess = ''
-        if (isPMexport) {
-            Project.exportAllPMdata(data.params).then(data => {
+        if (isPMexport || isMultipleExport) {
+            if (isMultipleExport) {
+                data.params.selectedJobId = $scope.selectedJobId
+            } else {
+                data.params.selectedJobId = undefined
+            }
+            Project.exportPMdata(data.params).then(data => {
                 $scope.isExportingRecs = false
                 if (data.error) {
                     $scope.errMess = data.error;
@@ -996,8 +1044,8 @@ angular.module('a2.analysis.patternmatching', [
         if (rois === undefined){
             rois = this.getSelectedRois()
         }
-        if (rois.length > 50){
-            notify.error('Please reduce the number of selected ROIs <br> to 50 or fewer to proceed.');
+        if (rois.length > 100){
+            notify.error('Please reduce the number of selected ROIs <br> to 100 or fewer to proceed.');
             return;
         }
         var roiIds = rois.map(function(roi){ return roi.id; })
