@@ -78,6 +78,26 @@ var Jobs = {
                 }
             }
         },
+        pattern_matching_job: {
+            type_id : 6,
+            schema : joi.object().keys({
+                project    : joi.number().integer(),
+                user       : joi.number().integer(),
+                name       : joi.string(),
+                playlist   : joi.number().integer(),
+                template   : joi.number().integer(),
+                params     : joi.object().keys({
+                    N: joi.number().integer(),
+                    threshold: joi.number(),
+                }),
+            }),
+            sql : {
+                report : {
+                    projections : ['PMS.name as name'],
+                    tables      : ['JOIN `pattern_matchings` as PMS ON J.job_id = PMS.job_id'],
+                }
+            }
+        },
         audio_event_detection_job: {
             type_id : 5,
             schema : joi.object().keys({
