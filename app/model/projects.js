@@ -1095,23 +1095,6 @@ var Projects = {
         queryHandler(q, callback);
     },
 
-    // this includes recordings processing
-    getStorageUsage: function(project_id, callback) {
-        return dbpool.query(
-            "SELECT COALESCE(sum(t.duration)/60, 0) as min_usage  \n"+
-            "FROM ( \n"+
-            "    (SELECT u.duration \n"+
-            "    FROM uploads_processing as u \n"+
-            "    WHERE project_id = ? AND state != 'uploaded') \n"+
-            "    UNION ALL \n"+
-            "    (SELECT r.duration \n"+
-            "    FROM recordings AS r \n"+
-            "    JOIN sites AS s ON s.site_id = r.site_id \n"+
-            "    WHERE s.project_id = ?) \n"+
-            ") as t;", [project_id, project_id]
-        ).get(0);
-    },
-
     createProjectInArbimonAndCoreAPI: async function(project, userId, token) {
         let connection;
         try {
