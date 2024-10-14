@@ -73,34 +73,6 @@ var Users = {
         ).get(0);
     },
 
-    loginTry: function(ip, user, msg, callback) {
-
-        var q = 'INSERT INTO invalid_logins(`ip`, `user`, `reason`) \n'+
-                'VALUES ('+
-                dbpool.escape(ip) +',' +
-                dbpool.escape(user) + ',' +
-                dbpool.escape(msg) + ')';
-
-        queryHandler(q, callback);
-    },
-
-    invalidLogins: function(ip, callback) {
-        var q = 'SELECT COUNT(ip) as tries \n'+
-                'FROM invalid_logins \n'+
-                'WHERE ip = %s \n'+
-                'AND `time` BETWEEN (NOW() - interval 1 hour) and NOW()';
-        q = util.format(q, dbpool.escape(ip));
-        queryHandler(q, callback);
-    },
-
-    removeLoginTries: function(ip, callback) {
-        var q = 'DELETE ' +
-                'FROM `invalid_logins` ' +
-                'WHERE ip = %s';
-        q = util.format(q, dbpool.escape(ip));
-        queryHandler(q, callback);
-    },
-
     search: function(query, callback) {
         query = dbpool.escape('%'+query+'%');
 
@@ -443,8 +415,6 @@ var Users = {
         var result = {};
 
         return q.all([
-            //find ip invalid login tries
-            q.ninvoke(Users, "invalidLogins", ip).get(0).get(0),
             //find user
             q.ninvoke(Users, "findByUsername", username).get(0).get(0)
         ]).then(function(all){
@@ -550,12 +520,6 @@ var Users = {
                         login_tries: user.login_tries + 1
                     }).catch(console.error.bind(console));
                 }
-
-                q.ninvoke(Users, "loginTry",
-                    req.ip,
-                    auth.username,
-                    result.reason
-                ).catch(console.error.bind(console));
 
                 return {
                     success: false,
