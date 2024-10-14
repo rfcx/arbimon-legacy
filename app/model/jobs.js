@@ -78,6 +78,26 @@ var Jobs = {
                 }
             }
         },
+        pattern_matching_job: {
+            type_id : 6,
+            schema : joi.object().keys({
+                project    : joi.number().integer(),
+                user       : joi.number().integer(),
+                name       : joi.string(),
+                playlist   : joi.number().integer(),
+                template   : joi.number().integer(),
+                params     : joi.object().keys({
+                    N: joi.number().integer(),
+                    threshold: joi.number(),
+                }),
+            }),
+            sql : {
+                report : {
+                    projections : ['PMS.name as name'],
+                    tables      : ['JOIN `pattern_matchings` as PMS ON J.job_id = PMS.job_id'],
+                }
+            }
+        },
         audio_event_detection_job: {
             type_id : 5,
             schema : joi.object().keys({
@@ -101,47 +121,6 @@ var Jobs = {
                 report : {
                     projections : ['JPT.name as name'],
                     tables      : ['JOIN `job_params_audio_event_detection` as JPT ON J.job_id = JPT.job_id'],
-                }
-            }
-        },
-        pattern_matching_job: {
-            type_id : 6,
-            schema : joi.object().keys({
-                project    : joi.number().integer(),
-                user       : joi.number().integer(),
-                name       : joi.string(),
-                playlist   : joi.number().integer(),
-                template   : joi.number().integer(),
-                params     : joi.object().keys({
-                    N: joi.number().integer(),
-                    threshold: joi.number(),
-                }),
-            }),
-            new: function(params, db) {
-                return q.ninvoke(db, 'query',
-                    "INSERT INTO `job_params_pattern_matching`( \n"+
-                    "   `job_id`, `name`, `playlist_id`, `template_id`, `params`\n" +
-                    ") VALUES (?, ?, ?, ?, ?)", [
-                        params.job_id, params.name, params.playlist, params.template, JSON.stringify(params.params)
-                    ]
-                );
-            },
-            sql : {
-                report : {
-                    projections : ['PMS.name as name'],
-                    tables      : ['JOIN `pattern_matchings` as PMS ON J.job_id = PMS.job_id'],
-                }
-            }
-        },
-        cnn_job: {
-            type_id: 7,
-            new: function(params, db) {
-                return
-            },
-            sql : {
-                report : {
-                    projections : ['CNN.name as name'],
-                    tables      : ['JOIN `job_params_cnn` as CNN ON J.job_id = CNN.job_id'],
                 }
             }
         },

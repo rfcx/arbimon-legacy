@@ -95,7 +95,7 @@ async function main () {
         //----------------Arbimon export Occupancy model----------------
         // Create the Occupancy model csv files, put them to .zip folder a send the folder to the user email
         await getMultipleOccupancyModelsData(projection_parameters, filters, rowData, currentTime, message, jobName)
-    } else if (projection_parameters && projection_parameters.pm) {
+    } else if (projection_parameters && (projection_parameters.pmAll || projection_parameters.pmIds)) {
         //----------------Arbimon export all project PM jobs----------------
         return new Promise((resolve, reject) => {
             const exportReportType = 'Pattern Matchings';

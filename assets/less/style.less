@@ -60,7 +60,6 @@
 @import "a2-components/a2-audio-bar.less";
 @import "a2-components/analysis.less";
 @import "a2-components/notifications.less";
-@import "a2-components/orders.less";
 @import "a2-components/projects-list.less";
 @import "a2-components/stackedbars.less";
 @import "a2-icons.less";
@@ -97,9 +96,10 @@ b, strong {
 }
 
 .spectro-label {
-  color: #2d4ba5;
+  color: #1E1C13;
   font-size: 16px;
   font-weight: bold;
+  background: rgba(255, 255, 255, .5)
 }
 
 .alert-bar {
@@ -1727,6 +1727,21 @@ a.ui-select-choices-row-inner {
 
   .padding-button-group {
     padding: 12px 12px;
+  }
+}
+
+.export-button {
+  .btn.disabled,
+  .btn[disabled] {
+      background-color: @util-gray-04 !important;
+      border-color: @util-gray-04 !important;
+      border: 1px solid;
+      cursor: not-allowed;
+      color: @util-gray-02;
+      opacity: 1;
+  }
+  .btn:focus {
+    outline: none;
   }
 }
 

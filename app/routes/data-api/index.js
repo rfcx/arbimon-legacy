@@ -7,7 +7,6 @@ var routes = [
     '/species_taxons',
     '/songtypes',
     '/project',
-    '/orders',
     '/jobs',
     '/app-listings',
 ];

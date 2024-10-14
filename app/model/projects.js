@@ -206,20 +206,6 @@ var Projects = {
                             sitesById[row.site_id].rec_count = row.rec_count;
                         });
                     }) : q(),
-                    options.compute.has_logs ? dbpool.query(
-                        "SELECT SLF.site_id, COUNT(SLF.site_log_file_id ) > 0 as has_logs \n" +
-                        "FROM site_log_files AS SLF\n" +
-                        "WHERE SLF.site_id IN (?)\n" +
-                        "GROUP BY SLF.site_id",
-                        [siteIds]
-                    ).then(function(results){
-                        sites.forEach(function(site){
-                            site.has_logs=false;
-                        });
-                        results.forEach(function(row){
-                            sitesById[row.site_id].has_logs = row.has_logs;
-                        });
-                    }): q()
                 ]).then(function(){
                     if (options.utcDiff) {
                         const result = sites.map(s => {
@@ -392,22 +378,25 @@ var Projects = {
         return update(project, connection)
     },
 
+    isFloat: function (n) {
+        return Number(n) === n && n % 1 !== 0;
+    },
+
     countDecimals: function (value) {
-        if(Math.floor(value) === value) return 0;
+        if (Math.floor(value) === value) return 0;
         return value.toString().split(".")[1].length || 0; 
     },
 
     updateProjectLocation: async function(projectId, lat, lon) {
         if (!projectId || !lat || !lon) return
-        const latitude = this.countDecimals(lat) > 13 ? Number(lat).toFixed(13) : lat
-        const longitude = this.countDecimals(lon) > 13 ? Number(lon).toFixed(13) : lon
+        const latitude = this.isFloat(lat) && this.countDecimals(lat) > 13 ? Number(lat).toFixed(13) : lat
+        const longitude = this.isFloat(lon) && this.countDecimals(lon) > 13 ? Number(lon).toFixed(13) : lon
 
         const config = {
             method: 'get',
             url: `https://api.geoapify.com/v1/geocode/reverse?lat=${latitude}&lon=${longitude}&apiKey=5a8e8fdff1f44dbda20ca67b4e99362b`,
             headers: { }
         };
-        console.log('config', config)
         return rp(config).then((response) => {
             try {
                 const body = JSON.parse(response.body);
@@ -1104,23 +1093,6 @@ var Projects = {
         const q = `SELECT min(r.datetime) as min, max(r.datetime) as max FROM recordings r
             JOIN sites s ON r.site_id = s.site_id WHERE s.project_id = ` + dbpool.escape(project_id)
         queryHandler(q, callback);
-    },
-
-    // this includes recordings processing
-    getStorageUsage: function(project_id, callback) {
-        return dbpool.query(
-            "SELECT COALESCE(sum(t.duration)/60, 0) as min_usage  \n"+
-            "FROM ( \n"+
-            "    (SELECT u.duration \n"+
-            "    FROM uploads_processing as u \n"+
-            "    WHERE project_id = ? AND state != 'uploaded') \n"+
-            "    UNION ALL \n"+
-            "    (SELECT r.duration \n"+
-            "    FROM recordings AS r \n"+
-            "    JOIN sites AS s ON s.site_id = r.site_id \n"+
-            "    WHERE s.project_id = ?) \n"+
-            ") as t;", [project_id, project_id]
-        ).get(0);
     },
 
     createProjectInArbimonAndCoreAPI: async function(project, userId, token) {
