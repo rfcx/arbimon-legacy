@@ -109,6 +109,7 @@ router.get('/:patternMatching/rois/:paging', function(req, res, next) {
     res.type('json');
     var user = req.session.user;
     model.patternMatchings.getRoisForId({
+        projectId: req.project.project_id,
         patternMatchingId: req.params.patternMatching,
         csValidationsFor: user.id,
         whereNotConsensus: true,
@@ -128,9 +129,8 @@ router.get('/:patternMatching/expert-rois/:paging', function(req, res, next) {
             error: "You don't have permission to view expert roi details"
         }));
     }
-
-    var user = req.session.user;
     model.patternMatchings.getRoisForId({
+        projectId: req.project.project_id,
         patternMatchingId: req.params.patternMatching,
         expertCSValidations: true,
         countCSValidations: true,
