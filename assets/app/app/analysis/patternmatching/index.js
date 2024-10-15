@@ -641,7 +641,6 @@ angular.module('a2.analysis.patternmatching', [
             { class:'fa fa-bars', value:'pm-full-size'}
         ],
         search: [
-            {value:'all', text:'All', description: 'Show all matched Region of Interest.'},
             {value:'present', text:'Present', description: 'Show all Region of Interest marked as present.'},
             {value:'not_present', text:'Not Present', description: 'Show all Region of Interest marked as not present.'},
             {value:'unvalidated', text:'Unvalidated', description: 'Show all Region of Interest without validation.'},

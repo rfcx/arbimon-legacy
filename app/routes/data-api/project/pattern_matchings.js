@@ -133,7 +133,7 @@ router.get('/:patternMatching/:fileName?', function(req, res, next) {
 
     filters.project_id = req.project.project_id | 0;
 
-    model.patternMatchings.getPmRoiRecordingUri(req.params.patternMatching, req.project.project_id).then(async (rows) => {
+    model.patternMatchings.getPmRoiRecordingUri(req.params.patternMatching).then(async (rows) => {
         const recObj = {}
         for (let row of rows) {
             if (!recObj[row.recording_id]) {

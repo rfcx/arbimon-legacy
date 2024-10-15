@@ -710,7 +710,7 @@ var PatternMatchings = {
             ORDER BY PMR.score DESC LIMIT ?`
         return dbpool.query({ sql: base, typeCast: sqlutil.parseUtcDatetime }, [opts.patternMatchingId, opts.site, opts.limit || 200])
             .then((rois) => {
-                return this.getRoiUrl(rois, projectId);
+                return this.getRoiUrl(rois, opts.projectId);
             })
             .then(this.completePMRResults)
     },
@@ -731,7 +731,7 @@ var PatternMatchings = {
             WHERE PMR.pattern_matching_id = ? AND PMR.denorm_site_id = ?;`
         return dbpool.query({ sql: base, typeCast: sqlutil.parseUtcDatetime }, [pmId, site, pmId, site])
             .then((rois) => {
-                return this.getRoiUrl(rois, projectId);
+                return this.getRoiUrl(rois, opts.projectId);
             })
             .then((data) => {
                 const pmrs = this.completePMRResults(data)
@@ -797,16 +797,14 @@ var PatternMatchings = {
         );
     },
 
-    async getPmRoiRecordingUri (patternMatchingId, projectId) {
+    async getPmRoiRecordingUri (patternMatchingId) {
         const sql = `
             select r.recording_id, r.uri
             from pattern_matching_rois_new pmr
                 join recordings r on pmr.recording_id = r.recording_id
             where pattern_matching_id = ${patternMatchingId}
         `
-        return dbpool.query(sql).then((rois) => {
-            return this.getRoiUrl(rois, projectId);
-        });
+        return dbpool.query(sql)
     },
 
     validateRois(patternMatchingId, rois, validation){
@@ -894,8 +892,9 @@ var PatternMatchings = {
     },
 
     combineRoiUrl: function(opts) {
+        const detectionsFolder = process.env.NODE_ENV === 'production' ? 'detections' : 'detections_dev'
         const {projectId, jobId, uriParam1, uriParam2} = opts
-        return `https://s3.amazonaws.com/arbimon2/project_${projectId}/detections/${jobId}/${uriParam1}${uriParam2 ? '_' + uriParam2 : ''}.png`;
+        return `https://s3.amazonaws.com/arbimon2/project_${projectId}/${detectionsFolder}/${jobId}/${uriParam1}${uriParam2 ? '_' + uriParam2 : ''}.png`;
     },
 
     JOB_SCHEMA : joi.object().keys({
