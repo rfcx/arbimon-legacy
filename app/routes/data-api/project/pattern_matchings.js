@@ -23,7 +23,8 @@ router.get('/', function(req, res, next) {
 async function getPatternMatchings(req, res, next) {
     if (req.query.rec_id) {
         return model.patternMatchings.getPatternMatchingRois({
-            rec_id: req.query.rec_id,
+            projectId: req.project.project_id,
+            recId: req.query.rec_id,
             validated: req.query.validated
         })
         .then(function(data){
@@ -202,7 +203,7 @@ router.post('/:patternMatching/update', function(req, res, next) {
 router.post('/:patternMatching/validate', function(req, res, next) {
     res.type('json');
     const validation = req.body.validation
-    model.patternMatchings.getRoi(req.params.patternMatching, req.body.rois).then(async function(rois) {
+    model.patternMatchings.getRoi(req.params.patternMatching, req.body.rois, req.project.project_id).then(async function(rois) {
         const updatedRois = rois.filter(function(roi) { return roi.validated != validation });
         if (!updatedRois || !updatedRois.length) {
             console.log('--500 status: patternMatchings.getRoi', updatedRois.length)

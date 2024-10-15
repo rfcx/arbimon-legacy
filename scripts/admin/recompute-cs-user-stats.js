@@ -25,17 +25,6 @@ async function RecomputeCSUserStats(){
 
         await CitizenScientist.computeUserStatsForProjectSpeciesSongtype(project_id, species_id, songtype_id);
     }
-
-    console.log("finished")
-    //
-    // list.forEach(() => {
-    //
-    // }).get(0).then((pm) => {
-    //     return CitizenScientist.computeUserStatsForProjectSpeciesSongtype(
-    //         pm.project_id, pm.species_id, pm.songtype_id,
-    //     );
-    // });
-
 }
 
 
