@@ -156,10 +156,10 @@
                             </a>
                         </div>
                     </div>
-                    <div ng-if="controller.getSelectedRoisLength() > 0" class="row-flex flex-direction-row flex-align-middle flex-self-align-bottom mt-3">
+                    <div ng-if="controller.getSelectedRoisLength() > 0" class="row-flex flex-direction-row flex-align-middle flex-self-align-bottom mt-3 clear-button">
                         <span>{{ controller.getSelectedRoisLength() }} selected</span>
                         <button
-                            class="btn border-1 border-util-gray-03 text-spoonbill bg-spoonbill bg-opacity-10 rounded-lg py-1 px-2 row-flex flex-direction-row flex-align-middle gap-x-2 ml-2"
+                            class="btn bg-echo text-insight border-1 border-insight btn-rounded-full ml-2"
                             ng-click="controller.clearSelectedRoi()"
                         >
                             Clear
