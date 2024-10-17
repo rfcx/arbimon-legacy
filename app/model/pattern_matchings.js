@@ -894,7 +894,7 @@ var PatternMatchings = {
     combineRoiUrl: function(opts) {
         const detectionsFolder = process.env.NODE_ENV === 'production' ? 'detections' : 'detections_dev'
         const {projectId, jobId, uriParam1, uriParam2} = opts
-        return `https://s3.amazonaws.com/arbimon2/project_${projectId}/${detectionsFolder}/${jobId}/${uriParam1}${uriParam2 ? '_' + uriParam2 : ''}.png`;
+        return `https://s3.amazonaws.com/arbimon2/project_${projectId}/${detectionsFolder}/${jobId}/${uriParam1}${uriParam2 !== null ? '_' + uriParam2 : ''}.png`;
     },
 
     JOB_SCHEMA : joi.object().keys({
