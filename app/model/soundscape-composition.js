@@ -11,7 +11,7 @@ var APIError = require('../utils/apierror');
 var SoundscapeComposition = {
     getClassesFor:function(options){
         options = options || {};
-        var select=["SCC.id, SCC.name, SCC.isSystemClass as system, SCC.typeId, SCCT.type"];
+        var select=["SCC.id, SCC.name, SCC.isSystemClass as `system`, SCC.typeId, SCCT.type"];
         var tables = [
             "soundscape_composition_classes SCC",
             "JOIN soundscape_composition_class_types SCCT ON SCC.typeId = SCCT.id",
