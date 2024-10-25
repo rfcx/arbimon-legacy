@@ -11,7 +11,7 @@
           a2-scroll-on="window"
         >
             <a2-scroll-anchor name="header" class="a2-page-header-placeholder" ng-class="{ 'is-active': scrolledPastHeader }" />
-            <div ng-if="!infopanedata && !loading" class="a2-page-header clearfix" ng-class="{ 'is-fixed': scrolledPastHeader }">
+            <div ng-if="!infopanedata && !loading" class="a2-page-header clearfix" ng-class="{ 'is-fixed': scrolledPastHeader, 'scroll-past-header': scrolledPastHeader }">
                 <div class="row-flex flex-align-top clusters-filter" ng-class="{ 'panel-body': scrolledPastHeader }">
                     <div class="col-sm-4 flex-self-align-top pl-0">
                         Job Name: {{ job_details.name }}
