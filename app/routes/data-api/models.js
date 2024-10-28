@@ -301,12 +301,13 @@ router.post('/project/:projectUrl/soundscape/multiple-batch', function(req, res,
 
 router.post('/project/:projectUrl/soundscape/single-batch', function(req, res, next) {
     res.type('json');
+    const normalized = req.body.nv === true ? 1 : 0;
     return model.soundscapes.createSingleSoundscape({
         playlistId: req.body.p.id,
         jobName: req.body.n.toString(),
         aggregation: req.body.a,
         binSize: req.body.b.toString(),
-        normalize: req.body.nv.toString(),
+        normalize: normalized.toString(),
         threshold: req.body.t.toString(),
     }, function(err, data) {
         if (err) return next(err);
