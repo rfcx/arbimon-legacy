@@ -1,17 +1,23 @@
 <div class="row">
     <div class="col-sm-12 padded-view-div" ng-if="!selectedClusteringJobId">
-        <h1 class="mt-0" style="margin-bottom: 24px;">
+        <h1 class="mt-0 clear-button" style="margin-bottom: 24px;">
             Clustering Jobs
             <span class="beta-badge">BETA</span>
-            <a class="btn btn-primary btn-rounded-full row-flex-inline flex-align-middle ml-3"
-                tooltip="Create New Clustering job"
-                tooltip-placement="right"
-                ng-click="createNewClusteringJob()">
-                New Clustering Job
-                <span class="ml-3" style="width: 16px">
-                    <img src="/images/fi-plus.svg">
-                </span>
-            </a>
+            <div
+                class="row-flex-inline flex-align-middle ml-3"
+                tooltip="Currently disabled due to maintenance."
+                style="vertical-align: middle;"
+            >
+                <a class="btn btn-primary btn-rounded-full disabled"
+                    tooltip="Create New Clustering job"
+                    tooltip-placement="right"
+                    ng-click="createNewClusteringJob()">
+                    New Clustering Job
+                    <span class="ml-3" style="width: 16px">
+                        <img src="/images/fi-plus.svg">
+                    </span>
+                </a>
+            </div>
         </h1>
         <button ng-if="showRefreshBtn"
             class="btn btn-default pull-right btn-sm"
@@ -21,12 +27,16 @@
         </button>
         <loader ng-if="loading"></loader>
         <div ng-show="!loading && clusteringJobsData && !clusteringJobsData.length" class="help-wrapper col-sm-12 row-flex flex-direction-column flex-space-center flex-align-middle" style="text-align: center;">
-            <a class="btn btn-sm btn-default"
-                tooltip="Create New Clustering job"
-                tooltip-placement="top"
-                ng-click="createNewClusteringJob()">
-                <i class="fa fa-plus mr-1" ></i> New Clustering Job
-            </a>
+            <div
+                tooltip="Currently disabled due to maintenance."
+            >
+                <a class="btn btn-sm btn-default disabled"
+                    tooltip="Create New Clustering job"
+                    tooltip-placement="top"
+                    ng-click="createNewClusteringJob()">
+                    <i class="fa fa-plus mr-1" ></i> New Clustering Job
+                </a>
+            </div>
             <p class="mt-3 mb-0">Learn more:</p>
             <p class="mb-0"><a href="https://help.arbimon.org/article/222-what-is-audio-event-detection-clustering" target="_blank">1. What is a Clustering Analysis?<i class="ml-2 fa fa-external-link"></i></a></p>
             <p class="mb-0"><a href="https://help.arbimon.org/article/224-creating-a-clustering-job" target="_blank">2. How to create the Clustering Analysis?<i class="ml-2 fa fa-external-link"></i></a></p>
