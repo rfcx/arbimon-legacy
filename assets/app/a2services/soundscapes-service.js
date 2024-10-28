@@ -187,8 +187,11 @@ angular.module('a2.srv.soundscapes', [
         create: function(soundscapeData) {
             return $http.post('/legacy-api/project/'+ Project.getUrl() +'/soundscape/new', soundscapeData);
         },
-        createBatchRun: function(soundscapeData) {
-            return $http.post('/legacy-api/project/'+ Project.getUrl() +'/soundscape/batch-run', soundscapeData);
+        createSingleSoundscape: function(soundscapeData) {
+            return $http.post('/legacy-api/project/'+ Project.getUrl() +'/soundscape/single-batch', soundscapeData);
+        },
+        createMultipleSoundscape: function(soundscapeData) {
+            return $http.post('/legacy-api/project/'+ Project.getUrl() +'/soundscape/multiple-batch', soundscapeData);
         }
     };
 })

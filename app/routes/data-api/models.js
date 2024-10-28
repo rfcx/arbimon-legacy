@@ -261,7 +261,7 @@ router.get('/project/:projectUrl/validations', function(req, res, next) {
 
 // --------------------- soundscapes routes
 
-router.post('/project/:projectUrl/soundscape/batch-run', function(req, res, next) {
+router.post('/project/:projectUrl/soundscape/multiple-batch', function(req, res, next) {
     res.type('json');
     let siteNames = req.body.s.split(',')
     let isSearchResult = false
@@ -284,11 +284,26 @@ router.post('/project/:projectUrl/soundscape/batch-run', function(req, res, next
         siteNames = ''
     }
     else siteNames = req.body.s
-    console.log('<- soundscape/batch-run siteNames', siteNames)
-    return model.soundscapes.requestBatchRun({
+    console.log('<- soundscape/multiple-batch siteNames', siteNames)
+    return model.soundscapes.createMultipleSoundscape({
         projectUrl: req.body.projectUrl,
         sites: siteNames,
         year: req.body.y.toString(),
+        aggregation: req.body.a,
+        binSize: req.body.b.toString(),
+        normalize: req.body.nv.toString(),
+        threshold: req.body.t.toString(),
+    }, function(err, data) {
+        if (err) return next(err);
+        res.json({ create: data });
+    })
+})
+
+router.post('/project/:projectUrl/soundscape/single-batch', function(req, res, next) {
+    res.type('json');
+    return model.soundscapes.createSingleSoundscape({
+        playlistId: req.body.p.id,
+        jobName: req.body.n.toString(),
         aggregation: req.body.a,
         binSize: req.body.b.toString(),
         normalize: req.body.nv.toString(),

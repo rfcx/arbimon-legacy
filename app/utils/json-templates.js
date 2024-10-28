@@ -53,6 +53,8 @@ function getSoundscapeBatchRunTemplate (name, type, opts) {
     return template({
         "arbimon-soundscape-timestamp": opts.kubernetesJobName,
         "imagePath": opts.imagePath,
+        "ENV_PLAYLIST_ID": opts.ENV_PLAYLIST_ID,
+        "ENV_JOB_NAME": opts.ENV_JOB_NAME,
         "ENV_PROJECT": opts.ENV_PROJECT,
         "ENV_SITES": opts.ENV_SITES,
         "ENV_YEAR": opts.ENV_YEAR,

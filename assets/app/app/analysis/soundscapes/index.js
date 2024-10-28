@@ -410,22 +410,12 @@ angular.module('a2.analysis.soundscapes', [
         if ($scope.datasubmit.jobtype === 'single') {
             opts.n = $scope.datasubmit.name
             opts.p = $scope.datasubmit.playlist
-            a2Soundscapes.create(opts)
+            a2Soundscapes.createSingleSoundscape(opts)
                 .success(function(data) {
-                    if (data.name) {
-                        $scope.nameMsg = 'Name exists';
-                    }
-                    else {
-                        $modalInstance.close( data );
-                    }
+                    $modalInstance.close( { message: "Creating single soundscape job is in a progress." } );
                 })
                 .error(function(data) {
-                    if (data.err) {
-                        $modalInstance.close( {err:"Error: "+data.err});
-                    }
-                    else {
-                        $modalInstance.close( {err:"Error: Cannot create soundscape job"});
-                    }
+                    $modalInstance.close({ err: "Error creating single soundscape job." });
                 });
         } else {
             opts.y = $scope.datasubmit.year
@@ -433,7 +423,7 @@ angular.module('a2.analysis.soundscapes', [
             opts.nv = $scope.datasubmit.normalize === true ? 1 : 0
             const siteNames = $scope.datasubmit.sites
             opts.s = siteNames.join(",")
-            a2Soundscapes.createBatchRun(opts)
+            a2Soundscapes.createMultipleSoundscape(opts)
                 .success(function(data) {
                     $modalInstance.close( { message: "Creating multiple soundscape jobs are in a progress." } );
                 })
