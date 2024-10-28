@@ -3,10 +3,14 @@
     <div class="col-lg-5 col-sm-12 mt-4">
         <div class="row-flex flex-space-between">
             <div class="row-flex flex-align-middle">
-                <button ng-click="controller.addNewTrainingSet()" class="btn btn-default"
-                    tooltip="Create Training Set">
-                    <i class="fa fa-plus"></i> New Training Set
-                </button>
+                <div
+                    tooltip="Currently disabled due to maintenance."
+                >
+                    <button ng-click="controller.addNewTrainingSet()" class="btn btn-default disabled"
+                        tooltip="Create Training Set">
+                        <i class="fa fa-plus"></i> New Training Set
+                    </button>
+                </div>
                 <button class="btn btn-default ml-2"
                     ng-click="controller.editSelectedTrainingSet()"
                     ng-disabled="!controller.selected.trainingSet"
@@ -216,12 +220,16 @@
         </div>
     </div>
     <div ng-show="(!controller.trainingSets || !controller.trainingSets.length > 0) && !controller.loading.list" class="help-wrapper col-sm-12 row-flex flex-direction-column flex-space-center flex-align-middle" style="text-align: center;">
-        <a class="btn btn-sm btn-default"
-            tooltip="Create Training Set"
-            tooltip-placement="top"
-            ng-click="controller.addNewTrainingSet()">
-            <i class="fa fa-plus mr-1" ></i> New Training Set
-        </a>
+        <div
+            tooltip="Currently disabled due to maintenance."
+        >
+            <a class="btn btn-sm btn-default disabled"
+                tooltip="Create Training Set"
+                tooltip-placement="top"
+                ng-click="controller.addNewTrainingSet()">
+                <i class="fa fa-plus mr-1" ></i> New Training Set
+            </a>
+        </div>
         <p class="mt-3 mb-0">Learn more:</p>
         <p class="mb-0"><a href="https://help.arbimon.org/article/232-creating-a-training-set-pattern" target="_blank">What is a Training Set?<i class="ml-2 fa fa-external-link"></i></a></p>
     </div>

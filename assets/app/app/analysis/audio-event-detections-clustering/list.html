@@ -1,9 +1,9 @@
 <div class="row">
     <div class="col-sm-12 padded-view-div">
-        <h1 class="mt-0 clear-button" style="margin-bottom: 24px;">
+        <h1 class="mt-0" style="margin-bottom: 24px;">
             Audio Event Detections
             <span class="beta-badge">BETA</span>
-            <a class="btn btn-primary btn-rounded-full row-flex-inline flex-align-middle ml-3 disabled"
+            <a class="btn btn-primary btn-rounded-full row-flex-inline flex-align-middle ml-3"
                 tooltip="Create New Audio Event Detection job"
                 tooltip-placement="right"
                 ng-click="createNewClusteringModel()">
@@ -20,8 +20,8 @@
                 <i class="fa fa-refresh"></i> Refresh List
         </button>
         <loader ng-if="loading"></loader>
-        <div ng-show="!loading && audioEventDetectionsData && !audioEventDetectionsData.length" class="help-wrapper col-sm-12 row-flex flex-direction-column flex-space-center flex-align-middle clear-button" style="text-align: center;">
-            <a class="btn btn-sm btn-default disabled"
+        <div ng-show="!loading && audioEventDetectionsData && !audioEventDetectionsData.length" class="help-wrapper col-sm-12 row-flex flex-direction-column flex-space-center flex-align-middle" style="text-align: center;">
+            <a class="btn btn-sm btn-default"
                 tooltip="Create New Audio Event Detection job"
                 tooltip-placement="top"
                 ng-click="createNewClusteringModel()">

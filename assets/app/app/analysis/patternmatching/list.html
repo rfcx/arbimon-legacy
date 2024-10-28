@@ -1,8 +1,8 @@
 <div class="row">
     <div class="col-sm-12 padded-view-div project-templates-shared-tooltip" ng-if="!selectedPatternMatchingId">
-        <h1 class="mt-0 clear-button" style="margin-bottom: 24px;">
+        <h1 class="mt-0" style="margin-bottom: 24px;">
             Pattern Matching
-            <a class="btn btn-primary btn-rounded-full row-flex-inline flex-align-middle ml-3 disabled"
+            <a class="btn btn-primary btn-rounded-full row-flex-inline flex-align-middle ml-3"
                 tooltip="New PM Job"
                 tooltip-placement="right"
                 ng-click="createNewPatternMatching()">
@@ -78,8 +78,8 @@
                 </div>
             </div>
             <div class="ml-2"><loader ng-show="loading.rows"></loader></div>
-            <div ng-show="!loading.rows && patternmatchingsData && !patternmatchingsData.length" class="help-wrapper col-sm-12 row-flex flex-direction-column flex-space-center flex-align-middle clear-button" style="text-align: center;">
-                <a class="btn btn-sm btn-default disabled"
+            <div ng-show="!loading.rows && patternmatchingsData && !patternmatchingsData.length" class="help-wrapper col-sm-12 row-flex flex-direction-column flex-space-center flex-align-middle" style="text-align: center;">
+                <a class="btn btn-sm btn-default"
                     tooltip="Create New Pattern Matching job"
                     tooltip-placement="top"
                     ng-click="createNewPatternMatching()">
