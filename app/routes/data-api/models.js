@@ -13,6 +13,7 @@ const APIError = require('../../utils/apierror');
 const router = express.Router();
 const s3 = new AWS.S3();
 const { httpErrorHandler } = require('@rfcx/http-utils');
+const moment = require('moment');
 
 // ------------------------ models routes -------------------------------------
 
@@ -187,17 +188,21 @@ async function getModelsData(validationUri) {
                 const modelprec = items[2].trim(' ') == 'NA' ? '-' : ( items[2].trim(' ') == 1 ? 'yes' :'no');
                 const entryType = items[3] ? items[3].trim(' '):'';
                 const recData = await model.recordings.recordingInfoGivenUri(items[0])
-                if(recData && recData.length) {
-                    let recUriThumb = recData[0].uri.replace('.wav','.thumbnail.png');
-                    recUriThumb = recUriThumb.replace('.flac','.thumbnail.png');
-
+                if (recData && recData.length) {
+                    let recUriThumb = recData[0].uri.replace('.flac','.thumbnail.png');
+                    const isLegacy = recUriThumb.startsWith('project_');
+                    let recUriThumbForNonLegacy;
+                    if (!isLegacy) {
+                        const datetimeFormatted = moment.utc(recData[0].datetime_utc).format('YYYYMMDD_HHmmss');
+                        recUriThumbForNonLegacy = `project_${recData[0].project_id}/site_${recData[0].site_id}/${recData[0].thumbnailUri}/${datetimeFormatted}.thumbnail.png`
+                    }
                     rowSent.push({
                         site: recData[0].site,
                         date: recData[0].date,
                         presence: prec,
                         model: modelprec,
                         id: recData[0].id,
-                        url: 'https://' + config('aws').bucketName + '.s3.' + config('aws').region + '.amazonaws.com/' + recUriThumb,
+                        url: `https://${config('aws').bucketName}.s3.${config('aws').region}.amazonaws.com/${isLegacy ? recUriThumb : recUriThumbForNonLegacy}`,
                         type: entryType
                     })
                 }

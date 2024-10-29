@@ -1281,13 +1281,17 @@ var Recordings = {
     },
 
     recordingInfoGivenUri : async function(uri){
-        const q = "SELECT r.`recording_id` AS id, \n " +
-                "       date_format(r.`datetime`,'%m-%d-%Y %H:%i') as date, \n"+
-                "       s.`name` site, \n"+
-                "       r.`uri` \n" +
-                "FROM `recordings` r\n"+
-                "JOIN `sites` s ON s.`site_id` = r.`site_id`\n"+
-                "WHERE r.`uri` = " + dbpool.escape(uri);
+        const q = `SELECT r.recording_id AS id,
+                date_format(r.datetime,'%m-%d-%Y %H:%i') as date,
+                date_format(r.datetime_utc,'%Y/%m/%d') as thumbnailUri,
+                r.datetime_utc,
+                s.name site,
+                s.site_id,
+                s.project_id,
+                r.uri
+                FROM recordings r
+                JOIN sites s ON s.site_id = r.site_id
+                WHERE r.uri = ${dbpool.escape(uri)}`;
         return dbpool.query(q);
     },
 
