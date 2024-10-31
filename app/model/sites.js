@@ -659,7 +659,7 @@ var Sites = {
 
     deleteRecordingInAnalyses: async function(recIds, connection) {
         let queries = [
-            `DELETE FROM pattern_matching_rois_new WHERE recording_id in (${recIds})`,
+            `DELETE FROM pattern_matching_rois WHERE recording_id in (${recIds})`,
             `UPDATE templates set deleted=1 WHERE recording_id in (${recIds})`,
         ];
 

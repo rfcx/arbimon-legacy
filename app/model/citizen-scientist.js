@@ -28,7 +28,7 @@ var CitizenScientist = {
 
         var tables = [
             "pattern_matchings AS PM",
-            "JOIN pattern_matching_rois_new AS PMR ON PM.pattern_matching_id = PMR.pattern_matching_id",
+            "JOIN pattern_matching_rois AS PMR ON PM.pattern_matching_id = PMR.pattern_matching_id",
             "JOIN species AS Sp ON PMR.species_id = Sp.species_id",
             "JOIN songtypes AS St ON PMR.songtype_id = St.songtype_id",
         ];
@@ -223,7 +223,7 @@ var CitizenScientist = {
 
     expertValidateCSRois(userId, patternMatchingId, rois, validation){
         return rois.length ? dbpool.query(
-            "UPDATE pattern_matching_rois_new\n" +
+            "UPDATE pattern_matching_rois\n" +
             "SET expert_validated = ?,\n" +
             "    expert_validation_user_id = ?\n" +
             "WHERE pattern_matching_id = ?\n" +
@@ -247,25 +247,25 @@ var CitizenScientist = {
      */
     computeConsensusValidations(patternMatchingId, rois){
         return dbpool.query(
-            "UPDATE pattern_matching_rois_new\n" +
-            "    JOIN pattern_matchings ON pattern_matching_rois_new.pattern_matching_id = pattern_matchings.pattern_matching_id\n" +
+            "UPDATE pattern_matching_rois\n" +
+            "    JOIN pattern_matchings ON pattern_matching_rois.pattern_matching_id = pattern_matchings.pattern_matching_id\n" +
             "    LEFT JOIN (\n" +
             "        SELECT _PMV.pattern_matching_roi_id,\n" +
             "            SUM(IF(_PMV.validated = 1, 1, 0)) as cs_present,\n" +
             "            SUM(IF(_PMV.validated = 0, 1, 0)) as cs_not_present\n" +
             "        FROM pattern_matching_validations _PMV\n" +
             "        GROUP BY _PMV.pattern_matching_roi_id\n" +
-            "    ) AS PMV ON PMV.pattern_matching_roi_id = pattern_matching_rois_new.pattern_matching_roi_id\n" +
+            "    ) AS PMV ON PMV.pattern_matching_roi_id = pattern_matching_rois.pattern_matching_roi_id\n" +
             "SET \n" +
-            "    pattern_matching_rois_new.cs_val_present = COALESCE(PMV.cs_present, 0),\n" +
-            "    pattern_matching_rois_new.cs_val_not_present = COALESCE(PMV.cs_not_present, 0),\n" +
-            "    pattern_matching_rois_new.consensus_validated = (CASE\n" +
+            "    pattern_matching_rois.cs_val_present = COALESCE(PMV.cs_present, 0),\n" +
+            "    pattern_matching_rois.cs_val_not_present = COALESCE(PMV.cs_not_present, 0),\n" +
+            "    pattern_matching_rois.consensus_validated = (CASE\n" +
             "        WHEN PMV.cs_present >= pattern_matchings.consensus_number THEN 1\n" +
             "        WHEN PMV.cs_not_present >= pattern_matchings.consensus_number THEN 0\n" +
             "        ELSE NULL\n" +
             "    END)\n" +
-            "WHERE pattern_matching_rois_new.pattern_matching_id = ?\n" +
-            "  AND pattern_matching_rois_new.pattern_matching_roi_id IN (?)", [
+            "WHERE pattern_matching_rois.pattern_matching_id = ?\n" +
+            "  AND pattern_matching_rois.pattern_matching_roi_id IN (?)", [
             patternMatchingId,
             rois
         ]);
@@ -287,7 +287,7 @@ var CitizenScientist = {
     async computeUserStatsForProjectSpeciesSongtype(project_id, species_id, songtype_id) {
         // get all possible validations from all users (using DB indexes)
         let q1 = `SELECT PMR.*, PMV.user_id, PMV.validated as validated
-                    FROM pattern_matching_rois_new PMR
+                    FROM pattern_matching_rois PMR
                     JOIN pattern_matchings P ON P.pattern_matching_id = PMR.pattern_matching_id
                     JOIN pattern_matching_validations PMV ON PMR.pattern_matching_roi_id = PMV.pattern_matching_roi_id
                     WHERE P.project_id = ? AND P.species_id = ? AND P.songtype_id = ?;`;

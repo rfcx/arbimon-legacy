@@ -6,7 +6,7 @@ async function getPmRois (options = {}) {
     select /*+ MAX_EXECUTION_TIME(360000) */ TRUNCATE(pmr.x1, 3) x1, TRUNCATE(pmr.y1, 3) y1, TRUNCATE(pmr.x2, 3) x2, TRUNCATE(pmr.y2, 3) y2,
       TRUNCATE(pmr.score, 3) score, pmr.validated, pmr.denorm_site_id as site_id,
       pmr.recording_id, pmr.denorm_recording_datetime recording_local_time
-    from pattern_matching_rois_new pmr
+    from pattern_matching_rois pmr
     where pmr.pattern_matching_id = ${options.jobId}
       limit ${options.limit} offset ${options.offset}
     ;

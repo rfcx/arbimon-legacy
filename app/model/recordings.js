@@ -2126,7 +2126,7 @@ var Recordings = {
         let queries = [
             `DELETE FROM audio_event_detections_clustering WHERE recording_id in (${recIds})`,
             `DELETE FROM classification_results WHERE recording_id in (${recIds})`,
-            `DELETE FROM pattern_matching_rois_new WHERE recording_id in (${recIds})`,
+            `DELETE FROM pattern_matching_rois WHERE recording_id in (${recIds})`,
             `DELETE FROM soundscape_region_tags WHERE recording_id in (${recIds})`,
             `UPDATE templates set deleted=1 WHERE recording_id in (${recIds})`,
             `DELETE FROM training_set_roi_set_data WHERE recording_id in (${recIds})`

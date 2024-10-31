@@ -129,7 +129,7 @@ var PatternMatchings = {
             select.push("SUM(IF(PMR.pattern_matching_roi_id IS NULL, 0, 1)) as matches");
             select.push("SUM(IF(PMR.validated=1, 1, 0)) as present");
             select.push("SUM(IF(PMR.validated=0, 1, 0)) as absent");
-            tables.push("LEFT JOIN pattern_matching_rois_new PMR ON PMR.pattern_matching_id = PM.pattern_matching_id");
+            tables.push("LEFT JOIN pattern_matching_rois PMR ON PMR.pattern_matching_id = PM.pattern_matching_id");
             groupby.push("PM.pattern_matching_id");
         }
 
@@ -138,7 +138,7 @@ var PatternMatchings = {
                 "SUM(IF(PMR.pattern_matching_roi_id IS NULL, 0, 1)) as total",
             );
             if(!options.showCounts){
-                tables.push("LEFT JOIN pattern_matching_rois_new PMR ON PMR.pattern_matching_id = PM.pattern_matching_id");
+                tables.push("LEFT JOIN pattern_matching_rois PMR ON PMR.pattern_matching_id = PM.pattern_matching_id");
             }
         }
 
@@ -288,7 +288,7 @@ var PatternMatchings = {
                 builder.addProjection('PMR.`pattern_matching_id`');
             }
 
-            builder.addTable("pattern_matching_rois_new", "PMR");
+            builder.addTable("pattern_matching_rois", "PMR");
 
             builder.addTable("JOIN recordings", "R", "R.recording_id = PMR.recording_id");
             builder.addTable("JOIN sites", "S", "S.site_id = R.site_id");
@@ -459,7 +459,7 @@ var PatternMatchings = {
                 builder.addConstraint(
                     "(\n" +
                     "    SELECT COUNT(DISTINCT(sq1PMR.score))\n" +
-                    "    FROM pattern_matching_rois_new sq1PMR\n" +
+                    "    FROM pattern_matching_rois sq1PMR\n" +
                     "    WHERE sq1PMR.denorm_site_id = PMR.denorm_site_id\n" +
                     "      AND sq1PMR.pattern_matching_id = " + (parameters.patternMatching | 0) + "\n" +
                     "      AND sq1PMR.score > PMR.score\n" +
@@ -472,7 +472,7 @@ var PatternMatchings = {
                 builder.addConstraint(
                     "(\n" +
                     "    SELECT COUNT(DISTINCT(sq1PMR.score))\n" +
-                    "    FROM pattern_matching_rois_new sq1PMR\n" +
+                    "    FROM pattern_matching_rois sq1PMR\n" +
                     "    WHERE sq1PMR.denorm_site_id = PMR.denorm_site_id\n" +
                     "      AND sq1PMR.denorm_recording_date = PMR.denorm_recording_date\n" +
                     "      AND sq1PMR.pattern_matching_id = " + (parameters.patternMatching | 0) + "\n" +
@@ -485,7 +485,7 @@ var PatternMatchings = {
                 builder.addProjection(
                     "(\n" +
                     "    SELECT count(*) as count \n" +
-                    "    FROM pattern_matching_rois_new sq2PMR\n" +
+                    "    FROM pattern_matching_rois sq2PMR\n" +
                     "    WHERE sq2PMR.denorm_site_id = PMR.denorm_site_id\n" +
                     "      AND sq2PMR.pattern_matching_id = " + (parameters.patternMatching | 0)+ "\n" +
                     ") as countPerSite"
@@ -533,7 +533,7 @@ var PatternMatchings = {
 
     getPresentRois: function (patternMatchingId) {
         const q = `SELECT pattern_matching_roi_id as id, pattern_matching_id, recording_id, species_id, songtype_id, validated
-        FROM pattern_matching_rois_new
+        FROM pattern_matching_rois
         WHERE pattern_matching_id = ${patternMatchingId} AND validated = 1;`
         return dbpool.query(q)
     },
@@ -610,7 +610,7 @@ var PatternMatchings = {
 
     getSitesForPM (pmId) {
         return dbpool.query(`SELECT site_id, name as site FROM sites
-            WHERE site_id IN (SELECT DISTINCT denorm_site_id FROM pattern_matching_rois_new WHERE pattern_matching_id = ?) AND deleted_at is null;`, [pmId])
+            WHERE site_id IN (SELECT DISTINCT denorm_site_id FROM pattern_matching_rois WHERE pattern_matching_id = ?) AND deleted_at is null;`, [pmId])
             .then((sites) => {
                 return sites.sort((a, b) => a.site.localeCompare(b.site))
             })
@@ -657,7 +657,7 @@ var PatternMatchings = {
 
     pmrSqlSelect: `SELECT S.site_id, S.name as site, PMR.score, R.uri as recording, PMR.pattern_matching_roi_id as id, PMR.pattern_matching_id,
         PMR.denorm_recording_datetime as datetime, PMR.recording_id, PMR.species_id, PMR.songtype_id, PMR.x1, PMR.y1, PMR.x2, PMR.y2, 
-        PMR.uri_param1, PMR.uri_param2, PMR.score, PMR.validated FROM pattern_matching_rois_new AS PMR`,
+        PMR.uri_param1, PMR.uri_param2, PMR.score, PMR.validated FROM pattern_matching_rois AS PMR`,
 
     combineDatetime (pmr) {
         const d = pmr.datetime.toISOString()
@@ -721,7 +721,7 @@ var PatternMatchings = {
         const base = `${this.pmrSqlSelect}
             JOIN (
                 SELECT MAX(score) as max_score, denorm_recording_date
-                FROM pattern_matching_rois_new
+                FROM pattern_matching_rois
                 WHERE pattern_matching_id = ? AND denorm_site_id = ?
                 GROUP BY denorm_recording_date
             ) pmr2
@@ -746,7 +746,7 @@ var PatternMatchings = {
         return dbpool.query(
             "SELECT PMR.x1, PMR.x2, PMR.y1, PMR.y2, R.sample_rate, R.uri as recUri,\n" +
                 "R.site_id as recSiteId, R.datetime, R.datetime_utc, S.external_id\n" +
-            "FROM pattern_matching_rois_new PMR\n" +
+            "FROM pattern_matching_rois PMR\n" +
             "JOIN recordings R ON PMR.recording_id = R.recording_id\n" +
             "JOIN sites S ON S.site_id = R.site_id\n" +
             "WHERE PMR.pattern_matching_id = ? AND PMR.pattern_matching_roi_id = ?", [
@@ -800,7 +800,7 @@ var PatternMatchings = {
     async getPmRoiRecordingUri (patternMatchingId) {
         const sql = `
             select r.recording_id, r.uri
-            from pattern_matching_rois_new pmr
+            from pattern_matching_rois pmr
                 join recordings r on pmr.recording_id = r.recording_id
             where pattern_matching_id = ${patternMatchingId}
         `
@@ -809,7 +809,7 @@ var PatternMatchings = {
 
     validateRois(patternMatchingId, rois, validation){
         return rois.length ? dbpool.query(
-            "UPDATE pattern_matching_rois_new\n" +
+            "UPDATE pattern_matching_rois\n" +
             "SET validated = ?\n" +
             "WHERE pattern_matching_id = ?\n" +
             "AND pattern_matching_roi_id IN (?)", [
@@ -832,7 +832,7 @@ var PatternMatchings = {
     getRoi(patternMatchingId, roisId, projectId){
         return dbpool.query(
             "SELECT *\n" +
-            "FROM pattern_matching_rois_new\n" +
+            "FROM pattern_matching_rois\n" +
             "WHERE pattern_matching_id = ? AND pattern_matching_roi_id IN (?)", [
             Number(patternMatchingId), roisId
         ]).then((rois) => {
@@ -843,7 +843,7 @@ var PatternMatchings = {
     getCountRoisMatchByAttr(patternMatchingId, recordingId, validation){
         return dbpool.query(
             "SELECT count(*) as count\n" +
-            "FROM pattern_matching_rois_new\n" +
+            "FROM pattern_matching_rois\n" +
             "WHERE pattern_matching_id = ? AND recording_id = ?\n" +
             "AND species_id = ? AND songtype_id = ?", [
             patternMatchingId, recordingId, validation.speciesId, validation.songtypeId,
@@ -851,7 +851,7 @@ var PatternMatchings = {
     },
 
     getPatternMatchingRois: function(options) {
-        const base = `SELECT * FROM pattern_matching_rois_new`;
+        const base = `SELECT * FROM pattern_matching_rois`;
         if (options.rois) {
             return dbpool.query({ sql: `${base} WHERE pattern_matching_roi_id IN (?)` , typeCast: sqlutil.parseUtcDatetime }, [options.rois])
                 .then((rois) => {
@@ -867,7 +867,7 @@ var PatternMatchings = {
         if (options.recId && options.validated) {
             return dbpool.query(
                 { sql: `SELECT PMR.*, SP.scientific_name as species_name, ST.songtype as songtype_name
-                FROM pattern_matching_rois_new PMR
+                FROM pattern_matching_rois PMR
                 JOIN species SP ON PMR.species_id = SP.species_id
                 JOIN songtypes ST ON PMR.songtype_id = ST.songtype_id
                 WHERE recording_id = ? AND validated = ?`,
