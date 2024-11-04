@@ -423,7 +423,8 @@ var PatternMatchings = {
                     'S.`name` as `site`',
                     'COUNT(*) as `count`'
                 ]
-                builder.setGroupBy('S.site_id')
+                builder.setGroupBy('S.site_id');
+                builder.setOrderBy('S.site_id');
             }
 
             if(parameters.whereConflicted){

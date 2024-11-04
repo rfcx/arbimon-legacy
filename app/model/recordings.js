@@ -2026,7 +2026,7 @@ var Recordings = {
                 's.site_id', 's.name as site', 'pis.site_id IS NOT NULL as imported',
                 'COUNT(DISTINCT(r.recording_id)) as count'
             ]);
-            delete builder.orderBy;
+            builder.setOrderBy('s.site_id');
             builder.setGroupBy('s.site_id');
             return dbpool.query(builder.getSQL());
         });
