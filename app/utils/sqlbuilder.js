@@ -96,7 +96,7 @@ SQLBuilder.prototype = {
     },
 
     getGroupBy: function(){
-        return this.groupBy ? this.groupBy.map(item => dbpool.escapeId(item[0]) + ' ' + (item[1] ? 'ASC' : 'DESC')).join(', ') : '';
+        return this.groupBy ? this.groupBy.map(item => dbpool.escapeId(item[0])).join(', ') : '';
     },
 
     getHaving: function(){
