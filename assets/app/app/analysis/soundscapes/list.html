@@ -4,9 +4,8 @@
             Soundscapes
             <div
                 class="row-flex-inline flex-align-middle ml-3"
-                tooltip="Currently disabled due to maintenance."
             >
-                <a class="btn btn-primary btn-rounded-full disabled"
+                <a class="btn btn-primary btn-rounded-full"
                     tooltip="Create New Soundscape job"
                     tooltip-placement="right"
                     ng-click="createNewSoundscape()">
@@ -94,10 +93,8 @@
                 </a2-table>
             </div>
             <div ng-show="!loading.rows && soundscapesOriginal && !soundscapesOriginal.length" class="help-wrapper col-sm-12 row-flex flex-direction-column flex-space-center flex-align-middle clear-button" style="text-align: center;">
-                <div
-                    tooltip="Currently disabled due to maintenance."
-                >
-                    <a class="btn btn-sm btn-default disabled"
+                <div>
+                    <a class="btn btn-sm btn-default"
                         tooltip="Create New Soundscape job"
                         tooltip-placement="top"
                         ng-click="createNewSoundscape()">
