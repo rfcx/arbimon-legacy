@@ -298,7 +298,7 @@ router.post('/project/:projectUrl/soundscape/multiple-batch', function(req, res,
         binSize: req.body.b.toString(),
         normalize: req.body.nv.toString(),
         threshold: req.body.t.toString(),
-        userId: req.body.u
+        userId: req.body.u.toString()
     }, function(err, data) {
         if (err) return next(err);
         res.json({ create: data });
@@ -315,7 +315,7 @@ router.post('/project/:projectUrl/soundscape/single-batch', function(req, res, n
         binSize: req.body.b.toString(),
         normalize: normalized.toString(),
         threshold: req.body.t.toString(),
-        userId: req.body.u
+        userId: req.body.u.toString()
     }, function(err, data) {
         if (err) return next(err);
         res.json({ create: data });

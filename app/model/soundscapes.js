@@ -650,7 +650,8 @@ var Soundscapes = {
         ENV_SOUNDSCAPE_AGGREGATION: joi.string(),
         ENV_SOUNDSCAPE_BIN_SIZE: joi.string(),
         ENV_SOUNDSCAPE_NORMALIZE: joi.string(),
-        ENV_SOUNDSCAPE_THRESHOLD: joi.string()
+        ENV_SOUNDSCAPE_THRESHOLD: joi.string(),
+        ENV_CREATED_BY_USER_ID: joi.string(),
     }),
 
     createSingleSoundscape: function(data, callback){
@@ -660,11 +661,13 @@ var Soundscapes = {
                 ENV_SOUNDSCAPE_BIN_SIZE: `${data.binSize}`,
                 ENV_SOUNDSCAPE_NORMALIZE: `${data.normalize}`,
                 ENV_SOUNDSCAPE_THRESHOLD: `${data.threshold}`,
+                ENV_CREATED_BY_USER_ID: `${data.userId}`,
             }
         )
         return q.ninvoke(joi, 'validate', payload, Soundscapes.JOB_SCHEMA)
             .then(async () => {
                 data.kubernetesJobName = `arbimon-single-soundscape-${new Date().getTime()}`;
+                console.info(`userid = ${data.userId}`)
                 const jobParam = jsonTemplates.getSoundscapeBatchRunTemplate('arbimon-single-soundscape', 'job', {
                     kubernetesJobName: data.kubernetesJobName,
                     imagePath: k8sConfig.soundscapeImagePath,
@@ -690,6 +693,7 @@ var Soundscapes = {
                 ENV_SOUNDSCAPE_BIN_SIZE: `${data.binSize}`,
                 ENV_SOUNDSCAPE_NORMALIZE: `${data.normalize}`,
                 ENV_SOUNDSCAPE_THRESHOLD: `${data.threshold}`,
+                ENV_CREATED_BY_USER_ID: `${data.userId}`,
             }
         )
         return q.ninvoke(joi, 'validate', payload, Soundscapes.JOB_SCHEMA)
