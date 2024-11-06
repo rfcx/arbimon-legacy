@@ -269,6 +269,10 @@ angular.module('a2.analysis.soundscapes', [
                 projectData:function()
                 {
                     return $scope.projectData;
+                },
+                userId: function()
+                {
+                    return a2UserPermit.getUserId();
                 }
             }
         });
@@ -362,7 +366,7 @@ angular.module('a2.analysis.soundscapes', [
     };
 
 })
-.controller('CreateNewSoundscapeInstanceCtrl', function($scope, $modalInstance, a2Soundscapes, Project, projectData, playlists) {
+.controller('CreateNewSoundscapeInstanceCtrl', function($scope, $modalInstance, a2Soundscapes, Project, projectData, playlists, userId) {
 
     $scope.projectData = projectData;
     $scope.playlists = playlists;
@@ -383,6 +387,8 @@ angular.module('a2.analysis.soundscapes', [
     };
 
     $scope.nameMsg = '';
+
+    $scope.userId = userId;
 
     Project.getSites(function(sites) {
         $scope.sites = sites.map(s => s.name)
@@ -405,7 +411,8 @@ angular.module('a2.analysis.soundscapes', [
             m: 22050,
             b: $scope.datasubmit.bin,
             f: $scope.datasubmit.bandwidth,
-            nv:$scope.datasubmit.normalize
+            nv:$scope.datasubmit.normalize,
+            u: $scope.userId
         }
         if ($scope.datasubmit.jobtype === 'single') {
             opts.n = $scope.datasubmit.name

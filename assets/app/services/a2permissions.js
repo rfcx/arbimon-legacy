@@ -34,6 +34,9 @@ angular.module('a2.permissions', [
         getUserFullName: function() {
             return permit.userFullName;
         },
+        getUserId: function() {
+            return permit.userId;
+        },
         has: function(feature) {
             return permit.features && permit.features[feature];
         },
