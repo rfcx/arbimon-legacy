@@ -674,6 +674,7 @@ var Soundscapes = {
                     ENV_SOUNDSCAPE_BIN_SIZE: `${data.binSize}`,
                     ENV_SOUNDSCAPE_NORMALIZE: `${data.normalize}`,
                     ENV_SOUNDSCAPE_THRESHOLD: `${data.threshold}`,
+                    ENV_CREATED_BY_USER_ID: `${data.userId}`,
                 });
                 console.log('jobParam', jobParam, jobParam.spec.template.spec.containers[0])
                 return await k8sClient.apis.batch.v1.namespaces(k8sConfig.namespace).jobs.post({ body: jobParam });
@@ -704,6 +705,7 @@ var Soundscapes = {
                     ENV_SOUNDSCAPE_BIN_SIZE: `${data.binSize}`,
                     ENV_SOUNDSCAPE_NORMALIZE: `${data.normalize}`,
                     ENV_SOUNDSCAPE_THRESHOLD: `${data.threshold}`,
+                    ENV_CREATED_BY_USER_ID: `${data.userId}`,
                 });
                 console.log('jobParam', jobParam, jobParam.spec.template.spec.containers[0])
                 return await k8sClient.apis.batch.v1.namespaces(k8sConfig.namespace).jobs.post({ body: jobParam });

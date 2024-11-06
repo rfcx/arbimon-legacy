@@ -268,6 +268,7 @@ router.get('/project/:projectUrl/validations', function(req, res, next) {
 
 router.post('/project/:projectUrl/soundscape/multiple-batch', function(req, res, next) {
     res.type('json');
+    var user = req.session.user;
     let siteNames = req.body.s.split(',')
     let isSearchResult = false
     let isSearchAll = false
@@ -298,6 +299,7 @@ router.post('/project/:projectUrl/soundscape/multiple-batch', function(req, res,
         binSize: req.body.b.toString(),
         normalize: req.body.nv.toString(),
         threshold: req.body.t.toString(),
+        userId: user.id,
     }, function(err, data) {
         if (err) return next(err);
         res.json({ create: data });
@@ -306,6 +308,7 @@ router.post('/project/:projectUrl/soundscape/multiple-batch', function(req, res,
 
 router.post('/project/:projectUrl/soundscape/single-batch', function(req, res, next) {
     res.type('json');
+    var user = req.session.user;
     const normalized = req.body.nv === true ? 1 : 0;
     return model.soundscapes.createSingleSoundscape({
         playlistId: req.body.p.id,
@@ -314,6 +317,7 @@ router.post('/project/:projectUrl/soundscape/single-batch', function(req, res, n
         binSize: req.body.b.toString(),
         normalize: normalized.toString(),
         threshold: req.body.t.toString(),
+        userId: user.id,
     }, function(err, data) {
         if (err) return next(err);
         res.json({ create: data });

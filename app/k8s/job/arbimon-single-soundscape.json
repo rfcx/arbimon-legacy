@@ -50,6 +50,10 @@
                             {
                                 "name": "SOUNDSCAPE_THRESHOLD",
                                 "value": "{{ENV_SOUNDSCAPE_THRESHOLD}}"
+                            },
+                            {
+                                "name": "CREATED_BY_USER_ID",
+                                "value": "{{ENV_CREATED_BY_USER_ID}}"
                             }
                         ]
                     }
