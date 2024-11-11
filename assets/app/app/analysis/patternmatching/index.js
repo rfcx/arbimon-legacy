@@ -733,11 +733,11 @@ angular.module('a2.analysis.patternmatching', [
             return false
         }
         this.scrollElement = $controller.scrollElement;
-        var scrollPos = $controller.scrollElement.scrollY;
+        var scrollPos = this.scrollElement.scrollY;
         var headerTop = $controller.anchors.header.offset().top;
 
         this.headerTop = headerTop | 0;
-        this.scrolledPastHeader = scrollPos >= 450;
+        this.scrolledPastHeader = scrollPos >= 450 && this.scrollElement.innerHeight > 500;
     },
 
     onSelect: function($item){
