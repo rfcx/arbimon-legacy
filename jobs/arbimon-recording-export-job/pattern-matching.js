@@ -74,7 +74,7 @@ async function exportAllPmJobs (projectId, projection_parameters, cb) {
       const filePath = path.join(tmpFilePath, fileName)
       const targetFile = fs.createWriteStream(filePath, { flags: 'a' })
       console.log('next PM job start:', fileName)
-      const limit = 10000;
+      const limit = 5000;
       let index = 0
       let toProcess = true;
       let isFirstChunk = true
