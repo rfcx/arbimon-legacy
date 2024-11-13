@@ -250,7 +250,7 @@ module.exports = {
                 data.kubernetesJobName = `arbimon-rfm-${new Date().getTime()}`;
                 const jobParam = jsonTemplates.getRfmTemplate('arbimon-rfm', 'job', {
                     kubernetesJobName: data.kubernetesJobName,
-                    imagePath: k8sConfig.soundscapeImagePath,
+                    imagePath: k8sConfig.rfmImagePath,
                     ENV_JOB_ID: `${data.jobId}`
                 });
                 return await k8sClient.apis.batch.v1.namespaces(k8sConfig.namespace).jobs.post({ body: jobParam });

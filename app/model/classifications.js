@@ -347,7 +347,7 @@ var Classifications = {
                 data.kubernetesJobName = `arbimon-classification-job-${new Date().getTime()}`;
                 const jobParam = jsonTemplates.getClassificationJobTemplate('arbimon-classification-job', 'job', {
                     kubernetesJobName: data.kubernetesJobName,
-                    imagePath: k8sConfig.soundscapeImagePath,
+                    imagePath: k8sConfig.rfmImagePath,
                     ENV_JOB_ID: `${data.jobId}`
                 });
                 return await k8sClient.apis.batch.v1.namespaces(k8sConfig.namespace).jobs.post({ body: jobParam });
