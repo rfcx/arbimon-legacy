@@ -66,7 +66,39 @@ function getSoundscapeBatchRunTemplate (name, type, opts) {
     });
 }
 
+function getRfmTemplate (name, type, opts) {
+    var json;
+    try {
+        json = k8s[type][name]
+    } catch (e) {
+        throw new Error(`${type} with name ${name} doesn't exist.`)
+    }
+    var template = parse(json);
+    return template({
+        "arbimon-rfm-timestamp": opts.kubernetesJobName,
+        "imagePath": opts.imagePath,
+        "ENV_JOB_ID": opts.ENV_JOB_ID
+    });
+}
+
+function getClassificationJobTemplate (name, type, opts) {
+    var json;
+    try {
+        json = k8s[type][name]
+    } catch (e) {
+        throw new Error(`${type} with name ${name} doesn't exist.`)
+    }
+    var template = parse(json);
+    return template({
+        "arbimon-classification-job-timestamp": opts.kubernetesJobName,
+        "imagePath": opts.imagePath,
+        "ENV_JOB_ID": opts.ENV_JOB_ID
+    });
+}
+
 module.exports = {
     getAEDJobTemplate,
-    getSoundscapeBatchRunTemplate
+    getSoundscapeBatchRunTemplate,
+    getRfmTemplate,
+    getClassificationJobTemplate
 }

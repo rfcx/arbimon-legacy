@@ -1,16 +1,17 @@
-var util = require('util');
-var async = require('async');
-var validator = require('validator');
-var AWS = require('aws-sdk');
-var path = require('path');
-
-var dbpool = require('../utils/dbpool');
-var config = require('../config'); 
-
-var recordings = require('./recordings');
-
-var s3;
-var queryHandler = dbpool.queryHandler;
+const async = require('async');
+const AWS = require('aws-sdk');
+const path = require('path');
+const q = require('q');
+const joi = require('joi');
+const dbpool = require('../utils/dbpool');
+const config = require('../config');
+const recordings = require('./recordings');
+const k8sConfig = config('k8s');
+const jsonTemplates = require('../utils/json-templates');
+const { Client } = require('kubernetes-client');
+const k8sClient = new Client({ version: '1.13' });
+let s3;
+const queryHandler = dbpool.queryHandler;
 
 module.exports = {
     findName: function(model_id, callback) {
@@ -232,5 +233,29 @@ module.exports = {
                 " WHERE `models`.`model_id` ="+dbpool.escape(m)+";";
 
         queryHandler(q, callback);
-    }
+    },
+
+    JOB_SCHEMA : joi.object().keys({
+        ENV_JOB_ID: joi.string()
+    }),
+
+    createRFM: function(data, callback){
+        const payload = JSON.stringify(
+            {
+                ENV_JOB_ID: `${data.jobId}`
+            }
+        )
+        return q.ninvoke(joi, 'validate', payload, this.JOB_SCHEMA)
+            .then(async () => {
+                data.kubernetesJobName = `arbimon-rfm-${new Date().getTime()}`;
+                const jobParam = jsonTemplates.getRfmTemplate('arbimon-rfm', 'job', {
+                    kubernetesJobName: data.kubernetesJobName,
+                    imagePath: k8sConfig.soundscapeImagePath,
+                    ENV_JOB_ID: `${data.jobId}`
+                });
+                return await k8sClient.apis.batch.v1.namespaces(k8sConfig.namespace).jobs.post({ body: jobParam });
+            }).then(() => {
+                return true;
+            }).nodeify(callback);
+    },
 };

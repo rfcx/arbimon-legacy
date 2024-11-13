@@ -91,14 +91,18 @@ router.post('/project/:projectUrl/models/new', function(req, res, next) {
         }
 
         return model.jobs.newJob(params, 'training_job').catch(function(err){
-            throw new APIError({ name:"Could not create training job"});
+            throw new APIError({ name: 'Could not create training job' });
         });
     }).then(function get_job_id(_job_id){
         job_id = _job_id;
-
         pokeDaMonkey(); // parallel promise
-        
-        res.json({ ok:"job created trainingJob:"+job_id});
+
+        return model.models.createRFM({
+            jobId: job_id
+        }, function(err, data) {
+            if (err) return res.json({ err: 'Could not create training job' });
+            res.json({ ok: `Job created, training Job: ${job_id}` });
+        })
     }).catch(next);
 });
 
