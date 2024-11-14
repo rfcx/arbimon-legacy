@@ -2,7 +2,7 @@
     "apiVersion": "batch/v1",
     "kind": "Job",
     "metadata": {
-        "name": "{{arbimon-classification-job-timestamp}}"
+        "name": "{{arbimon-rfm-train-timestamp}}"
     },
     "spec": {
         "ttlSecondsAfterFinished": 86400,
@@ -10,10 +10,10 @@
             "spec": {
                 "containers": [
                     {
-                        "name": "arbimon-classification-job-container",
+                        "name": "arbimon-rfm-train-container",
                         "image": "{{imagePath}}",
                         "imagePullPolicy": "Always",
-                        "args": ["classify_legacy"],
+                        "args": ["train_legacy"],
                         "envFrom": [
                             {
                                 "secretRef": {

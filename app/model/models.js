@@ -247,8 +247,8 @@ module.exports = {
         )
         return q.ninvoke(joi, 'validate', payload, this.JOB_SCHEMA)
             .then(async () => {
-                data.kubernetesJobName = `arbimon-rfm-${new Date().getTime()}`;
-                const jobParam = jsonTemplates.getRfmTemplate('arbimon-rfm', 'job', {
+                data.kubernetesJobName = `arbimon-rfm-train-${new Date().getTime()}`;
+                const jobParam = jsonTemplates.getRfmTemplate('arbimon-rfm-train', 'job', {
                     kubernetesJobName: data.kubernetesJobName,
                     imagePath: k8sConfig.rfmImagePath,
                     ENV_JOB_ID: `${data.jobId}`

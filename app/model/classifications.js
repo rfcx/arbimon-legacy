@@ -344,8 +344,8 @@ var Classifications = {
         )
         return q.ninvoke(joi, 'validate', payload, Classifications.JOB_SCHEMA)
             .then(async () => {
-                data.kubernetesJobName = `arbimon-classification-job-${new Date().getTime()}`;
-                const jobParam = jsonTemplates.getClassificationJobTemplate('arbimon-classification-job', 'job', {
+                data.kubernetesJobName = `arbimon-rfm-classify-${new Date().getTime()}`;
+                const jobParam = jsonTemplates.getClassificationJobTemplate('arbimon-rfm-classify', 'job', {
                     kubernetesJobName: data.kubernetesJobName,
                     imagePath: k8sConfig.rfmImagePath,
                     ENV_JOB_ID: `${data.jobId}`
