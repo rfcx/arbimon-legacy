@@ -11,8 +11,8 @@
         </div>
         <a2-scroll-anchor name="header" class="a2-page-header-placeholder" ng-class="{ 'is-active': controller.scrolledPastHeader }" />
         <div class="panel-body a2-page-header" ng-class="{ 'is-fixed': controller.scrolledPastHeader, 'scroll-past-header': controller.scrolledPastHeader }">
-            <div class="row row-flex flex-self-align-top">
-                <div class="col-sm-3" style="padding-bottom:5px">
+            <div class="row-flex flex-space-between flex-self-align-top flex-md-wrap">
+                <div class="mr-5" style="padding-bottom:5px">
                     <div class="text-util-gray-02 roi-thumbnail" >
                         <img ng-src="{{controller.patternMatching.template.uri}}" class="roi-img"/>
                         <a class="roi-btn-bl" ng-href="{{controller.getTemplateVisualizerUrl(controller.patternMatching.template)}}" ng-click="$event.stopPropagation();"
@@ -45,7 +45,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-sm-4 is-v-middle">
+                <div class="mx-5 is-v-middle">
                     <div class="mb-3">
                         <p class="section-header mb-1">{{controller.patternMatching.timestamp | moment : 'lll' }}</p>
                         <div class="row-flex flex-align-middle flex-direction-row flex-space-start">
@@ -82,7 +82,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-sm-5 row-flex flex-direction-column items-end flex-self-align-top pm-button-group">
+                <div class="ml-5 row-flex flex-direction-column items-end flex-self-align-top pm-button-group">
                     <div class="row-flex">
                         <div class="btn-group btn-group-margin">
                             <button class="btn btn-default not-active" ><i class="fa fa-search"></i></button>
