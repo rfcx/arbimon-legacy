@@ -407,7 +407,7 @@ angular.module('a2.analysis.random-forest-models.classification', [
         });
 })
 
-.controller('CreateNewClassificationInstanceCtrl', function($scope, $modalInstance, a2Classi, data, projectData, playlists) {
+.controller('CreateNewClassificationInstanceCtrl', function($scope, $modalInstance, a2Classi, data, projectData, playlists, notify) {
     $scope.data = data;
     $scope.projectData = projectData;
     $scope.recselected = '';
@@ -433,7 +433,6 @@ angular.module('a2.analysis.random-forest-models.classification', [
 
     $scope.ok = function () {
         $scope.nameMsg = '';
-        var url = $scope.projectData.url;
         $scope.all = 0;
         $scope.selectedSites = [];
 
@@ -449,6 +448,7 @@ angular.module('a2.analysis.random-forest-models.classification', [
         };
 
         a2Classi.create(classiData, function(data) {
+            if (data.err) notify.error(data.err);
             if (data.name) {
                 $scope.nameMsg = 'Name exists';
             }

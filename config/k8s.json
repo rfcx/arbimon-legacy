@@ -1,5 +1,6 @@
 {
   "namespace": "production",
   "aedImagePath": "docker.io/jackgl/cluster-dev:latest",
-  "soundscapeImagePath": ""
+  "soundscapeImagePath": "",
+  "rfmImagePath": ""
 }

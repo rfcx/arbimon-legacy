@@ -1,0 +1,42 @@
+{
+    "apiVersion": "batch/v1",
+    "kind": "Job",
+    "metadata": {
+        "name": "{{arbimon-rfm-classify-timestamp}}"
+    },
+    "spec": {
+        "ttlSecondsAfterFinished": 86400,
+        "template": {
+            "spec": {
+                "containers": [
+                    {
+                        "name": "arbimon-rfm-classify-container",
+                        "image": "{{imagePath}}",
+                        "imagePullPolicy": "Always",
+                        "args": ["classify_legacy"],
+                        "envFrom": [
+                            {
+                                "secretRef": {
+                                    "name": "arbimon-soundscapes-secret"
+                                }
+                            },
+                            {
+                                "configMapRef": {
+                                    "name": "arbimon-soundscapes-config"
+                                }
+                            }
+                        ],
+                        "env": [
+                            {
+                                "name": "JOB_ID",
+                                "value": "{{ENV_JOB_ID}}"
+                            }
+                        ]
+                    }
+                ],
+                "restartPolicy": "Never"
+            }
+        },
+        "backoffLimit": 1
+    }
+}

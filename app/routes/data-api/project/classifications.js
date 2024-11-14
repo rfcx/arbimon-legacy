@@ -137,14 +137,14 @@ router.post('/new', function(req, res, next) {
             next();
         },
     ], function(err, data){
-        if(err){
-            if(!response_already_sent){
-                res.json({ err:"Could not create classification job"});
+        return model.classifications.createClassificationJob({
+            jobId: job_id
+        }, function(err, data) {
+            if (err) {
+                return res.json({ err: 'Could not create classification job' });
             }
-            return;
-        } else {
-            res.json({ ok:"job created classification Job:"+job_id});
-        }
+            res.json({ ok: `Job created, classification Job: ${job_id}` });
+        })
     });
 });
 

@@ -9,6 +9,12 @@ const dbpool = require('../utils/dbpool');
 const queryHandler = dbpool.queryHandler;
 const AWS = require('aws-sdk');
 const s3 = new AWS.S3();
+const q = require('q');
+const joi = require('joi');
+const k8sConfig = config('k8s');
+const jsonTemplates = require('../utils/json-templates');
+const { Client } = require('kubernetes-client');
+const k8sClient = new Client({ version: '1.13' });
 
 var Classifications = {
     // classifications -> list
@@ -323,6 +329,31 @@ var Classifications = {
         return dbpool.query(`SELECT COUNT(species_id) AS count FROM model_classes mc
             JOIN models m on m.model_id = mc.model_id
             WHERE m.project_id = ${dbpool.escape(projectId)} AND m.deleted = 0`).get(0).get('count');
+    },
+
+    JOB_SCHEMA : joi.object().keys({
+        ENV_JOB_ID: joi.string()
+    }),
+
+    createClassificationJob: function(data, callback){
+        console.log('data', data)
+        const payload = JSON.stringify(
+            {
+                ENV_JOB_ID: `${data.jobId}`
+            }
+        )
+        return q.ninvoke(joi, 'validate', payload, Classifications.JOB_SCHEMA)
+            .then(async () => {
+                data.kubernetesJobName = `arbimon-rfm-classify-${new Date().getTime()}`;
+                const jobParam = jsonTemplates.getClassificationJobTemplate('arbimon-rfm-classify', 'job', {
+                    kubernetesJobName: data.kubernetesJobName,
+                    imagePath: k8sConfig.rfmImagePath,
+                    ENV_JOB_ID: `${data.jobId}`
+                });
+                return await k8sClient.apis.batch.v1.namespaces(k8sConfig.namespace).jobs.post({ body: jobParam });
+            }).then(() => {
+                return true;
+            }).nodeify(callback);
     },
 };
 

@@ -12,13 +12,13 @@ const k8s = require('../k8s')
 */
 
 function getAEDJobTemplate (name, type, opts) {
-    var json;
+    let json;
     try {
         json = k8s[type][name]
     } catch (e) {
         throw new Error(`${type} with name ${name} doesn't exist.`)
     }
-    var template = parse(json);
+    const template = parse(json);
     return template({
         "aed-clustering-timestamp": opts.kubernetesJobName,
         "imagePath": opts.imagePath,
@@ -43,13 +43,13 @@ function getAEDJobTemplate (name, type, opts) {
 */
 
 function getSoundscapeBatchRunTemplate (name, type, opts) {
-    var json;
+    let json;
     try {
         json = k8s[type][name]
     } catch (e) {
         throw new Error(`${type} with name ${name} doesn't exist.`)
     }
-    var template = parse(json);
+    const template = parse(json);
     return template({
         "arbimon-soundscape-timestamp": opts.kubernetesJobName,
         "imagePath": opts.imagePath,
@@ -66,7 +66,39 @@ function getSoundscapeBatchRunTemplate (name, type, opts) {
     });
 }
 
+function getRfmTemplate (name, type, opts) {
+    let json;
+    try {
+        json = k8s[type][name]
+    } catch (e) {
+        throw new Error(`${type} with name ${name} doesn't exist.`)
+    }
+    const template = parse(json);
+    return template({
+        "arbimon-rfm-train-timestamp": opts.kubernetesJobName,
+        "imagePath": opts.imagePath,
+        "ENV_JOB_ID": opts.ENV_JOB_ID
+    });
+}
+
+function getClassificationJobTemplate (name, type, opts) {
+    let json;
+    try {
+        json = k8s[type][name]
+    } catch (e) {
+        throw new Error(`${type} with name ${name} doesn't exist.`)
+    }
+    const template = parse(json);
+    return template({
+        "arbimon-rfm-classify-timestamp": opts.kubernetesJobName,
+        "imagePath": opts.imagePath,
+        "ENV_JOB_ID": opts.ENV_JOB_ID
+    });
+}
+
 module.exports = {
     getAEDJobTemplate,
-    getSoundscapeBatchRunTemplate
+    getSoundscapeBatchRunTemplate,
+    getRfmTemplate,
+    getClassificationJobTemplate
 }
