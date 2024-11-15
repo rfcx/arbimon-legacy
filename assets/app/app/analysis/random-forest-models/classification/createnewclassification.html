@@ -24,6 +24,7 @@
                     <div
                         ng-show="isOldModel(m)"
                         tooltip="Legacy model unavailable. Please train a new model."
+                        tooltip-placement="bottom"
                     >
                         {{m.mname}} <span ng-if="!m.enabled || isOldModel(m)" class="pull-right text-danger"><i>unavailable</i></span>
                     </div>
