@@ -15,8 +15,8 @@ angular.module('a2.analysis.random-forest-models.models', [
         controller: 'ModelsCtrl',
         templateUrl: '/app/analysis/random-forest-models/models/list.html'
     })
-    .state('analysis.modeldetails', {
-        url: '/model/:modelId',
+    $stateProvider.state('analysis.modeldetails', {
+        url: '/models/:modelId',
         controller: 'ModelDetailsCtrl',
         templateUrl: '/app/analysis/random-forest-models/models/modelinfo.html'
     });
