@@ -20,8 +20,16 @@
             </div>
             <ui-select ng-if="data && data.length" ng-disabled="disabled" ng-model="datas.classifier" theme="bootstrap">
                 <ui-select-match placeholder="Select or search a model...">{{$select.selected.mname}}</ui-select-match>
-                <ui-select-choices repeat="m in data | filter: $select.search">
-                    {{m.mname}} <span ng-if="!m.enabled" class="pull-right text-danger"><i>unavailable</i></span>
+                <ui-select-choices repeat="m in data | filter: $select.search" ui-disable-choice="isOldModel(m)">
+                    <div
+                        ng-show="isOldModel(m)"
+                        tooltip="Legacy model unavailable. Please train a new model."
+                    >
+                        {{m.mname}} <span ng-if="!m.enabled || isOldModel(m)" class="pull-right text-danger"><i>unavailable</i></span>
+                    </div>
+                    <div ng-show="!isOldModel(m)">
+                        {{m.mname}} <span ng-if="!m.enabled" class="pull-right text-danger"><i>unavailable</i></span>
+                    </div>
                 </ui-select-choices>
             </ui-select>
             <div class="text-danger" ng-show="datas.classifier && !datas.classifier.enabled">
