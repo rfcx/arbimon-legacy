@@ -88,7 +88,7 @@ let ClusteringJobs = {
         let constraints=['1=1'];
         let select = [];
         let groupby = [];
-        let tables = ['audio_event_detections_clustering_new A'];
+        let tables = ['audio_event_detections_clustering A'];
         if(!options){
             options = {};
         }
@@ -138,7 +138,7 @@ let ClusteringJobs = {
     },
 
     getClusteringPlaylist: async function(recId) {
-        const q = `SELECT aed.aed_id, pl.name as playlist_name, pl.playlist_id FROM audio_event_detections_clustering_new aed
+        const q = `SELECT aed.aed_id, pl.name as playlist_name, pl.playlist_id FROM audio_event_detections_clustering aed
             JOIN playlist_aed ple ON aed.aed_id = ple.aed_id
             JOIN playlists pl ON ple.playlist_id = pl.playlist_id
             WHERE aed.recording_id = ${recId}`;
@@ -160,7 +160,7 @@ let ClusteringJobs = {
 
         let query = "SELECT A.time_min, A.time_max, A.frequency_min, A.frequency_max, R.`uri` as `rec_uri`, R.site_id,\n" +
         "R.datetime, R.datetime_utc, S.external_id\n" +
-        "FROM audio_event_detections_clustering_new A\n" +
+        "FROM audio_event_detections_clustering A\n" +
         "JOIN recordings R ON A.recording_id = R.recording_id\n" +
         "JOIN sites S ON S.site_id = R.site_id\n" +
         "WHERE A.recording_id = ? AND A.aed_id = ?";
@@ -232,7 +232,7 @@ let ClusteringJobs = {
 
     totalClusteringSpeciesDetected: async function(projectId) {
         const q = `SELECT COUNT(DISTINCT aedc.species_id) as count
-            FROM audio_event_detections_clustering_new aedc
+            FROM audio_event_detections_clustering aedc
             JOIN job_params_audio_event_detection_clustering jpeac on jpeac.job_id = aedc.job_id 
             WHERE jpeac.project_id = ${dbpool.escape(projectId)} and aedc.validated = 1`;
         return dbpool.query(q).get(0).get('count');

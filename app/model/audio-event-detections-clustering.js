@@ -51,7 +51,7 @@ let AudioEventDetectionsClustering = {
                 'A.aed_id', 'A.species_id', 'A.songtype_id',
                 'Sp.scientific_name as species_name', 'St.songtype as songtype_name'
             );
-            tables.push("JOIN audio_event_detections_clustering_new A ON JP.job_id = A.job_id");
+            tables.push("JOIN audio_event_detections_clustering A ON JP.job_id = A.job_id");
             tables.push('LEFT JOIN species Sp ON A.species_id = Sp.species_id');
             tables.push('LEFT JOIN songtypes St ON A.songtype_id = St.songtype_id');
         }
@@ -73,7 +73,7 @@ let AudioEventDetectionsClustering = {
         }
 
         if (options.aedCount) {
-            select.push('(SELECT COUNT(*) FROM audio_event_detections_clustering_new A WHERE JP.job_id = A.job_id) as aed_count')
+            select.push('(SELECT COUNT(*) FROM audio_event_detections_clustering A WHERE JP.job_id = A.job_id) as aed_count')
         }
 
         if (options.deleted !== undefined) {
@@ -104,21 +104,21 @@ let AudioEventDetectionsClustering = {
 
     getDetectionsByIds: function (aed) {
         return aed.length ? dbpool.query(
-            'SELECT aed_id, recording_id, species_id, songtype_id, validated FROM audio_event_detections_clustering_new\n' +
+            'SELECT aed_id, recording_id, species_id, songtype_id, validated FROM audio_event_detections_clustering\n' +
             'WHERE aed_id IN (?)', [
             aed
         ]) : Promise.resolve();
     },
 
     validateDetections(aed, speciesId, songtypeId, validated) {
-        const q = `UPDATE audio_event_detections_clustering_new
+        const q = `UPDATE audio_event_detections_clustering
             SET species_id = ${speciesId}, songtype_id = ${songtypeId}, validated = ${validated}
             WHERE aed_id IN (${aed})`
         return dbpool.query(q)
     },
 
     getAedValidation: async function(opts) {
-        const q = `SELECT COUNT(aed_id) as count FROM audio_event_detections_clustering_new
+        const q = `SELECT COUNT(aed_id) as count FROM audio_event_detections_clustering
             WHERE recording_id=${opts.recordingId} AND species_id=${opts.speciesId} AND songtype_id=${opts.songtypeId} AND validated=1`;
         return dbpool.query(q);
     },

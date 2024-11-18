@@ -506,7 +506,7 @@ var Recordings = {
         const q =
             `SELECT AED.aed_id, AED.species_id as species, AED.songtype_id as songtype, AED.recording_id as rec_id, AED.time_min as x1,
             AED.time_max as x2, AED.frequency_min as y1, AED.frequency_max as y2, Sp.scientific_name, St.songtype as songtype_name
-            FROM audio_event_detections_clustering_new AED
+            FROM audio_event_detections_clustering AED
             JOIN species Sp ON Sp.species_id = AED.species_id
             JOIN songtypes St ON St.songtype_id = AED.songtype_id
             WHERE AED.recording_id = ${dbpool.escape(recordingId)} AND AED.species_id IS NOT NULL`;
@@ -2125,7 +2125,7 @@ var Recordings = {
         const queryFn = queryExecutor || dbpool.query;
 
         let queries = [
-            `DELETE FROM audio_event_detections_clustering_new WHERE recording_id in (${recIds})`,
+            `DELETE FROM audio_event_detections_clustering WHERE recording_id in (${recIds})`,
             `DELETE FROM classification_results WHERE recording_id in (${recIds})`,
             `DELETE FROM pattern_matching_rois WHERE recording_id in (${recIds})`,
             `DELETE FROM soundscape_region_tags WHERE recording_id in (${recIds})`,
