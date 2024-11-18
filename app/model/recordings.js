@@ -1285,6 +1285,7 @@ var Recordings = {
                 date_format(r.datetime,'%m-%d-%Y %H:%i') as date,
                 date_format(r.datetime_utc,'%Y/%m/%d') as thumbnailUri,
                 r.datetime_utc,
+                r.duration,
                 s.name site,
                 s.site_id,
                 s.project_id,
