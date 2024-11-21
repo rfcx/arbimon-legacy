@@ -989,7 +989,10 @@ angular.module('a2.analysis.patternmatching', [
     },
 
     setCurrentPage: function(currentPage) {
-        if (!currentPage || currentPage === 0 || currentPage > this.totalPages) return
+        if (currentPage === null) return;
+        if (currentPage === undefined || currentPage > this.totalPages) {
+            return notify.error('Invalid page number. Please try again.');
+        }
         this.selected.page = currentPage;
         this.loadData(currentPage);
     },
