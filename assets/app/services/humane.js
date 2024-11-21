@@ -1,7 +1,7 @@
 angular.module('humane', [])
 .factory('notify', function($window) {
     var humane = $window.humane;
-    humane.timeout = 8000
+    humane.timeout = 5000
     
     humane.baseCls = "humane-original";
     humane.error = humane.spawn({ addnCls: humane.baseCls+'-error' });
