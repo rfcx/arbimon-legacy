@@ -215,33 +215,43 @@
             No results found per selected site.
         </div>
         <div class="row" ng-if="controller.patternMatching && controller.paginationTotal && controller.paginationTotal > 100 && !controller.shouldGetPerSite()">
-            <div class="col-sm-12 text-center">
+            <div class="row-flex flex-align-middle flex-space-center">
                 <pagination
                     total-items="controller.paginationTotal"
                     ng-model="controller.selected.page"
                     ng-change="controller.setPage(controller.selected.page, true)"
-                    class="pagination-sm"
                     boundary-links="true"
-                    max-size="5"
+                    max-size="10"
                     rotate="false"
+                    class="pagination-sm mr-4"
+                    num-pages="controller.totalPages"
                     ng-disabled="controller.loading.rois"
                     items-per-page="100">
                 </pagination>
+                <div>
+                    <label class="mr-2">Jump to page:</label>
+                    <input id="currentPage" class="form-control page-selector" style="text-align:left;" min="1" step="1" max="controller.totalPages" ng-change="controller.setCurrentPage(controller.selected.page)" ng-model="controller.selected.page" type="number"/>
+                </div>
             </div>
         </div>
         <div class="row" ng-if="controller.sitesList && controller.shouldGetPerSite()">
-            <div class="col-sm-12 text-center">
+            <div class="row-flex flex-align-middle flex-space-center">
                 <pagination
                     total-items="controller.sitesList.length"
                     ng-model="controller.selected.page"
                     ng-change="controller.setPage(controller.selected.page, true)"
-                    class="pagination-sm"
+                    class="pagination-sm mr-4"
                     boundary-links="true"
-                    max-size="5"
+                    max-size="10"
                     rotate="false"
+                    num-pages="controller.totalPages"
                     ng-disabled="controller.loading.rois"
                     items-per-page="controller.sitesListBatchSize">
                 </pagination>
+                <div>
+                    <label class="mr-2">Jump to page:</label>
+                    <input id="currentPage" class="form-control page-selector" style="text-align:left;" min="1" step="1" max="controller.totalPages" ng-change="controller.setCurrentPage(controller.selected.page)" ng-model="controller.selected.page" type="number"/>
+                </div>
             </div>
         </div>
     </div>

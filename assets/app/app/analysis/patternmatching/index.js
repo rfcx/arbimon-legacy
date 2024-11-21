@@ -619,6 +619,7 @@ angular.module('a2.analysis.patternmatching', [
         this.sitesBatches = [];
         this.total = {rois:0, pages:0};
         this.paginationTotal = 0;
+        this.totalPages = 0;
         this.loading = {details: false, rois: true};
         this.isValidating = { disableBtn: false };
         this.validation = this.lists.validation[2];
@@ -930,6 +931,7 @@ angular.module('a2.analysis.patternmatching', [
                 this.rois = this.parseRoisResult(rois);
                 this.selected.roi = Math.min();
                 this.recalculateTotalItems();
+                this.totalPages =  Math.ceil(this.paginationTotal / 100);
             }.bind(this))
             .catch((function(err){
                 this.loading.rois = false;
@@ -984,6 +986,12 @@ angular.module('a2.analysis.patternmatching', [
         }
 
         return $q.resolve();
+    },
+
+    setCurrentPage: function(currentPage) {
+        if (!currentPage || currentPage === 0 || currentPage > this.totalPages) return
+        this.selected.page = currentPage;
+        this.loadData(currentPage);
     },
 
     select: function(option){
