@@ -932,7 +932,7 @@ angular.module('a2.analysis.patternmatching', [
                 this.rois = this.parseRoisResult(rois);
                 this.selected.roi = Math.min();
                 this.recalculateTotalItems();
-                this.totalPages = this.search.value === 'unvalidated' ? this.sitesList.length : this.search.value === 'top_200_per_site' || this.search.value === 'best_per_site' || this.search.value === 'best_per_site_day' ? Math.ceil(this.sitesList.length / 10) : Math.ceil(this.paginationTotal / 100);
+                this.totalPages = this.search.value === 'unvalidated' || this.search.value === 'top_200_per_site' ? this.sitesList.length : this.search.value === 'best_per_site' || this.search.value === 'best_per_site_day' ? Math.ceil(this.sitesList.length / 10) : Math.ceil(this.paginationTotal / 100);
             }.bind(this))
             .catch((function(err){
                 this.loading.rois = false;
