@@ -626,6 +626,7 @@ angular.module('a2.analysis.patternmatching', [
         this.thumbnailClass = this.lists.thumbnails[0].value;
         this.search = this.lists.search[5];
         this.projecturl = Project.getUrl();
+        this.timeout;
         this.fetchDetails()
             .then(function() {
                 return this.loadSitesList();
@@ -931,7 +932,7 @@ angular.module('a2.analysis.patternmatching', [
                 this.rois = this.parseRoisResult(rois);
                 this.selected.roi = Math.min();
                 this.recalculateTotalItems();
-                this.totalPages =  Math.ceil(this.paginationTotal / 100);
+                this.totalPages = this.search.value === 'unvalidated' ? this.sitesList.length : this.search.value === 'top_200_per_site' || this.search.value === 'best_per_site' || this.search.value === 'best_per_site_day' ? Math.ceil(this.sitesList.length / 10) : Math.ceil(this.paginationTotal / 100);
             }.bind(this))
             .catch((function(err){
                 this.loading.rois = false;
@@ -989,12 +990,15 @@ angular.module('a2.analysis.patternmatching', [
     },
 
     setCurrentPage: function(currentPage) {
-        if (currentPage === null) return;
-        if (currentPage === undefined || currentPage > this.totalPages) {
-            return notify.error('Invalid page number. Please try again.');
-        }
-        this.selected.page = currentPage;
-        this.loadData(currentPage);
+        clearTimeout(this.timeout);
+        this.timeout = setTimeout(() => {
+            if (currentPage === null) return;
+            if (currentPage === undefined || currentPage > this.totalPages) {
+                return notify.error('Invalid page number. Please try again.');
+            }
+            this.selected.page = currentPage;
+            this.loadData(currentPage);
+        }, 500)
     },
 
     select: function(option){
