@@ -75,7 +75,7 @@ function getRfmTemplate (name, type, opts) {
     }
     const template = parse(json);
     return template({
-        "arbimon-rfm-train-timestamp": opts.kubernetesJobName,
+        "arbimon-rfm-train-job-timestamp": opts.kubernetesJobName,
         "imagePath": opts.imagePath,
         "ENV_JOB_ID": opts.ENV_JOB_ID
     });
@@ -90,7 +90,7 @@ function getClassificationJobTemplate (name, type, opts) {
     }
     const template = parse(json);
     return template({
-        "arbimon-rfm-classify-timestamp": opts.kubernetesJobName,
+        "arbimon-rfm-classify-job-timestamp": opts.kubernetesJobName,
         "imagePath": opts.imagePath,
         "ENV_JOB_ID": opts.ENV_JOB_ID
     });

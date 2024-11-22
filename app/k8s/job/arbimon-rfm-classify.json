@@ -2,7 +2,7 @@
     "apiVersion": "batch/v1",
     "kind": "Job",
     "metadata": {
-        "name": "{{arbimon-rfm-classify-timestamp}}"
+        "name": "{{arbimon-rfm-classify-job-timestamp}}"
     },
     "spec": {
         "ttlSecondsAfterFinished": 86400,
