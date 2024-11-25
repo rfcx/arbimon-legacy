@@ -912,7 +912,7 @@ angular.module('a2.analysis.patternmatching', [
         var params;
         if (this.search.value === 'by_score_per_site') {
             const site = this.selected.siteBookmark ? this.selected.siteBookmark.site_id : this.sitesBatches[0][0].site_id
-            params = this.combOpts({ sites: site, pageNumber: this.selected.page });
+            params = this.combOpts({ sites: site, pageNumber: this.selected.page || page });
         }
         else if (this.shouldGetPerSite()) {
             page = page || this.selected.page
@@ -922,7 +922,7 @@ angular.module('a2.analysis.patternmatching', [
             })
             params = this.combOpts({ sites: siteIds });
         } else {
-            params = this.combOpts({ pageNumber: this.selected.page });
+            params = this.combOpts({ pageNumber: this.selected.page || page });
         }
         this.rois = [];
         this.loading.rois = true;
@@ -992,13 +992,16 @@ angular.module('a2.analysis.patternmatching', [
     setCurrentPage: function(currentPage) {
         clearTimeout(this.timeout);
         this.timeout = setTimeout(() => {
-            if (currentPage === null) return;
+            if (currentPage === null) {
+                this.loadData(1)
+                return;
+            }
             if (currentPage === undefined || currentPage > this.totalPages) {
                 return notify.error('Invalid page number. Please try again.');
             }
             this.selected.page = currentPage;
             this.loadData(currentPage);
-        }, 500)
+        }, 800)
     },
 
     select: function(option){
