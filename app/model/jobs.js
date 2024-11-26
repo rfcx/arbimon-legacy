@@ -362,7 +362,7 @@ var Jobs = {
             switch (job.job_type_id) {
                 case 1:
                     const modelData = await models.models.getModelId(job.job_id)
-                    job.url = `model/${ modelData && modelData.model_id ? modelData.model_id : '' }`
+                    job.url = `models/${ modelData && modelData.model_id ? modelData.model_id : '' }`
                     break;
                 case 2:
                     job.url = `random-forest-models/classification`
