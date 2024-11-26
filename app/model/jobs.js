@@ -365,7 +365,7 @@ var Jobs = {
                     job.url = `models/${ modelData && modelData.model_id ? modelData.model_id : '' }`
                     break;
                 case 2:
-                    job.url = `random-forest-models/classification`
+                    job.url = `random-forest-models/models?tab=classifications`
                     break;
                 case 4:
                     job.url = 'soundscapes'
