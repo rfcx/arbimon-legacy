@@ -12,8 +12,17 @@ const config = require('../../config');
 const APIError = require('../../utils/apierror');
 const router = express.Router();
 const s3 = new AWS.S3();
+const s3RFCx = new AWS.S3(getS3ClientConfig('aws_rfcx'))
 const { httpErrorHandler } = require('@rfcx/http-utils');
 const moment = require('moment');
+
+function getS3ClientConfig (type) {
+    return {
+        accessKeyId: config(type).accessKeyId,
+        secretAccessKey: config(type).secretAccessKey,
+        region: config(type).region
+    }
+}
 
 // ------------------------ models routes -------------------------------------
 
@@ -43,10 +52,10 @@ router.get('/project/:projectUrl/models/forminfo', function(req, res, next) {
 
 router.post('/project/:projectUrl/models/new', function(req, res, next) {
     res.type('application/json');
-    var response_already_sent;
-    var project_id, name, train_id, classifier_id, usePresentTraining;
-    var useNotPresentTraining, usePresentValidation, useNotPresentValidation, user_id;
-    var job_id, params;
+    let response_already_sent;
+    let project_id, name, train_id, classifier_id, usePresentTraining;
+    let useNotPresentTraining, usePresentValidation, useNotPresentValidation, user_id;
+    let job_id, params;
     
     return model.projects.findByUrl(req.params.projectUrl).then(function gather_job_params(rows){
         if(!rows.length){
@@ -173,10 +182,14 @@ router.get('/project/:projectUrl/models/:modelId/validation-list', async functio
 });
 
 async function getModelsData(validationUri) {
+    const isProd = process.env.NODE_ENV === 'production';
+    const awsConfig = isProd ? config('aws') : config('aws_rfcx');
+    const awsBucket = isProd ? awsConfig.bucketName : awsConfig.bucketNameStaging;
+    const awsRegion = isProd ? awsConfig.region : awsConfig.region;
     return new Promise(async function (resolve, reject) {
-        s3.getObject({
+        (isProd ? s3 : s3RFCx).getObject({
             Key: validationUri,
-            Bucket: config('aws').bucketName
+            Bucket: awsBucket
         }, async function(err, data) {
             if (err) {
                 if (err.code == 'NoSuchKey') return reject('Validation list not found');
@@ -196,8 +209,9 @@ async function getModelsData(validationUri) {
                 const site = await model.sites.findByIdAsync(recording.site_id)
                 let recUrl;
                 if (recording.uri.startsWith('project_')) {
-                    const thumbnail = recording.uri.replace('.flac', '.thumbnail.png');
-                    recUrl = 'https://' + config('aws').bucketName + '.s3.' + config('aws').region + '.amazonaws.com/' + thumbnail;
+                    const thumbnailUri = recording.uri.replace('.flac', '.thumbnail.png');
+                    const recThumbnail = 'https://' + awsBucket + '.s3.' + awsRegion + '.amazonaws.com/' + thumbnailUri;
+                    recUrl = recThumbnail;
                 }
                 else {
                     const momentStart = moment.utc(recording.datetime_utc ? recording.datetime_utc : recording.datetime)
@@ -232,11 +246,13 @@ router.get('/project/:projectUrl/models/:modelId/training-vector/:recId', functi
     model.models.getTrainingVector(req.params.modelId, req.params.recId, function(err, result) {
         if(err) return next(err);
         
-        var vectorUri = result;
-        
-        s3.getObject({
+        const vectorUri = result;
+        const isProd = process.env.NODE_ENV === 'production';
+        const awsConfig = isProd ? config('aws') : config('aws_rfcx');
+        const awsBucket = isProd ? awsConfig.bucketName : awsConfig.bucketNameStaging;
+        (isProd ? s3 : s3RFCx).getObject({
             Key: vectorUri,
-            Bucket: config('aws').bucketName
+            Bucket: awsBucket
         },
         function(err, data){
             if(err) {
@@ -334,22 +350,22 @@ router.post('/project/:projectUrl/soundscape/single-batch', function(req, res, n
 
 router.post('/project/:projectUrl/soundscape/new', function(req, res, next) {
     res.type('json');
-    var response_already_sent;
-    var params, job_id;
+    let response_already_sent;
+    let params, job_id;
 
     async.waterfall([
         function find_project_by_url(next){
             model.projects.findByUrl(req.params.projectUrl, next);
         },
         function gather_job_params(rows){
-            var next = arguments[arguments.length -1];
+            let next = arguments[arguments.length -1];
             if(!rows.length){
                 res.status(404).json({ err: "project not found"});
                 response_already_sent = true;
                 next(new Error());
                 return;
             }
-            var project_id = rows[0].project_id;
+            let project_id = rows[0].project_id;
 
             if(!req.haveAccess(project_id, "manage soundscapes")) {
                 console.log('user cannot create soundscape');
@@ -377,7 +393,7 @@ router.post('/project/:projectUrl/soundscape/new', function(req, res, next) {
             model.jobs.soundscapeNameExists({name:params.name,pid:params.project}, next);
         },
         function abort_if_already_exists(row) {
-            var next = arguments[arguments.length -1];
+            let next = arguments[arguments.length -1];
             if(row[0].count !== 0){
                 res.json({ name:"repeated"});
                 response_already_sent = true;
@@ -391,7 +407,7 @@ router.post('/project/:projectUrl/soundscape/new', function(req, res, next) {
             model.jobs.newJob(params, 'soundscape_job', next);
         },
         function get_job_id(_job_id){
-            var next = arguments[arguments.length -1];
+            let next = arguments[arguments.length -1];
             job_id = _job_id;
             next();
         },

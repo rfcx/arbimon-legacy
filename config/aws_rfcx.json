@@ -2,5 +2,6 @@
     "accessKeyId": "",
     "secretAccessKey": "",
     "region": "eu-west-1",
-    "bucketName": "rfcx-streams-staging"
+    "bucketName": "rfcx-streams-staging",
+    "bucketNameStaging" : ""
 }

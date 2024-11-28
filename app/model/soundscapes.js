@@ -1,29 +1,29 @@
 // dependencies
-var AWS          = require('aws-sdk');
-var async        = require('async');
-var joi          = require('joi');
-var path          = require('path');
-var q          = require('q');
-var child_process = require('child_process');
-var scidx        = require('../utils/scidx');
-var sqlutil      = require('../utils/sqlutil');
-var dbpool       = require('../utils/dbpool');
-var arrays       = require('../utils/arrays');
-var config       = require('../config');
-var arrays_util  = require('../utils/arrays');
-var tmpfilecache = require('../utils/tmpfilecache');
+let AWS          = require('aws-sdk');
+let async        = require('async');
+let joi          = require('joi');
+let path          = require('path');
+let q          = require('q');
+let child_process = require('child_process');
+let scidx        = require('../utils/scidx');
+let sqlutil      = require('../utils/sqlutil');
+let dbpool       = require('../utils/dbpool');
+let arrays       = require('../utils/arrays');
+let config       = require('../config');
+let arrays_util  = require('../utils/arrays');
+let tmpfilecache = require('../utils/tmpfilecache');
 const k8sConfig = config('k8s');
 const jsonTemplates = require('../utils/json-templates');
 const { Client } = require('kubernetes-client');
 const k8sClient = new Client({ version: '1.13' });
 // local variables
-var s3;
-var queryHandler = dbpool.queryHandler;
+let s3;
+let queryHandler = dbpool.queryHandler;
 
-var set_visual_scale_path = path.resolve(__dirname, '..', '..', 'scripts', 'Soundscapes', 'set_visual_scale.py');
+let set_visual_scale_path = path.resolve(__dirname, '..', '..', 'scripts', 'Soundscapes', 'set_visual_scale.py');
 
 // exports
-var Soundscapes = {
+let Soundscapes = {
     PLAYLIST_TYPE : 2,
 
     /** Finds soundscapes, given a (non-empty) query.
@@ -35,7 +35,7 @@ var Soundscapes = {
      * @param {Function} callback called back with the queried results.
      */
     find: function (query, options, callback) {
-        var constraints=[], agregate=false;
+        let constraints=[], agregate=false;
         if(options instanceof Function){
             callback = options;
             options = null;
@@ -96,7 +96,7 @@ var Soundscapes = {
     },
 
     details: function(project, callback){
-        var q = "SELECT S.`soundscape_id`,  CONCAT(UCASE(LEFT(S.`name`, 1)), SUBSTRING(S.`name`, 2)) name , "+
+        let q = "SELECT S.`soundscape_id`,  CONCAT(UCASE(LEFT(S.`name`, 1)), SUBSTRING(S.`name`, 2)) name , "+
                 " CONCAT(UCASE(LEFT(P.`name`, 1)), SUBSTRING(P.`name`, 2)) playlist, "+
                 " UNIX_TIMESTAMP( S.`date_created` )*1000 as date , "+
                 " CONCAT(CONCAT(UCASE(LEFT( U.`firstname` , 1)), SUBSTRING( U.`firstname` , 2))  ,' ',CONCAT(UCASE(LEFT( U.`lastname` , 1)), SUBSTRING( U.`lastname` , 2))) user " +
@@ -136,7 +136,7 @@ var Soundscapes = {
      */
     fetchSCIDX : function(soundscape, filters, callback){
         return Soundscapes.fetchSCIDXFile(soundscape).then(function(scidx_path){
-            var idx = new scidx();
+            let idx = new scidx();
             return q.ninvoke(idx, 'read', scidx_path.path, filters);
         }).nodeify(callback);
     },
@@ -172,14 +172,14 @@ var Soundscapes = {
             callback(new Error('Soundscape not given'));
             return;
         }
-        var aggregation = this.aggregations[soundscape.aggregation.id];
+        let aggregation = this.aggregations[soundscape.aggregation.id];
         if(!aggregation){
             callback(new Error('Invalid soundscape aggregation ' + soundscape.aggregation.id));
             return;
         }
 
-        var proy = aggregation.projection, proylen = aggregation.projection.length;
-        var dateparts = aggregation.date.map(function(datepart){
+        let proy = aggregation.projection, proylen = aggregation.projection.length;
+        let dateparts = aggregation.date.map(function(datepart){
             return 'DATE_FORMAT(R.datetime, "'+datepart+'")';
         });
 
@@ -193,10 +193,10 @@ var Soundscapes = {
             "WHERE S.soundscape_id = " + dbpool.escape(soundscape.id) + "\n" +
             "GROUP BY " + dateparts.join(", ")
         ).then(function(rows){
-            var normvec = {};
+            let normvec = {};
             rows.forEach(function(row){
-                var date=0;
-                for(var i=0; i < proylen; ++i){
+                let date=0;
+                for(let i=0; i < proylen; ++i){
                     date += proy[i] * row['dp_' + i];
                 }
                 normvec[date] = row.count;
@@ -222,9 +222,9 @@ var Soundscapes = {
      * @param {Function} callback(err, path) function to call back with the results.
      */
     addRegion: function(soundscape, region, callback){
-        var self = this;
-        var data;
-        var x1, y1, x2, y2, count;
+        let self = this;
+        let data;
+        let x1, y1, x2, y2, count;
         async.waterfall([
             function(next){
                 joi.validate(region, self.region_schema, next);
@@ -247,7 +247,7 @@ var Soundscapes = {
                 }, next);
             },
             function(scidx, next){
-                var options = region.threshold && {threshold:{
+                let options = region.threshold && {threshold:{
                     value : soundscape.threshold,
                     type : soundscape.threshold_type,
                 }};
@@ -270,7 +270,7 @@ var Soundscapes = {
                 self.getRegions(soundscape, {region:results.insertId}, next);
             },
             function(rows, fields){
-                var next = arguments[arguments.length-1];
+                let next = arguments[arguments.length-1];
                 data = rows[0];
                 next(null, data);
             }
@@ -293,7 +293,7 @@ var Soundscapes = {
             params={};
         }
 
-        var constraints=[
+        let constraints=[
             'SCR.soundscape_id = ' + (soundscape.id | 0)
         ];
         if(params.region){
@@ -331,11 +331,11 @@ var Soundscapes = {
             params = {};
         }
 
-        var count = (params.count) | 0;
-        var db;
-        var playlist_id, rercordings;
+        let count = (params.count) | 0;
+        let db;
+        let playlist_id, rercordings;
 
-        var filters = {
+        let filters = {
             ignore_offsets : true,
             minx : ((region.x1 - soundscape.min_t)) | 0,
             maxx : ((region.x2 - soundscape.min_t)) | 0,
@@ -343,7 +343,7 @@ var Soundscapes = {
             maxy : ((region.y2 - soundscape.min_f) / soundscape.bin_size - 1) | 0
         };
 
-        var options = region.threshold && {threshold:{
+        let options = region.threshold && {threshold:{
             value: region.threshold,
             type: region.threshold_type,
         }};
@@ -352,7 +352,7 @@ var Soundscapes = {
             recordings = arrays.sample_without_replacement(scidx.flatten(options), count);
         }).then(function(){
             return dbpool.performTransaction(function(tx){
-                var db = tx.connection;
+                let db = tx.connection;
 
                 return q.resolve().then(function (){
                     if(region.playlist){
@@ -360,7 +360,7 @@ var Soundscapes = {
                         return;
                     }
 
-                    var name = soundscape.name + ', ' + region.name + ' recordings sample';
+                    let name = soundscape.name + ', ' + region.name + ' recordings sample';
                     return db.promisedQuery(
                         "INSERT INTO playlists(project_id, name, playlist_type_id, uri, status) \n" +
                         " VALUES (?, ?, ?, ?, ?)",[
@@ -407,11 +407,11 @@ var Soundscapes = {
             params={};
         }
 
-        var constraints=[
+        let constraints=[
             'SRT.soundscape_region_id = ' + (region.id)
         ];
-        var project = [];
-        var groupby = [];
+        let project = [];
+        let groupby = [];
 
         groupby.push('SRT.soundscape_region_id');
 
@@ -449,7 +449,7 @@ var Soundscapes = {
      * @param {Function} callback(err, path) function to call back with the results.
      */
     addRegionTag: function(region, recording, user, data, callback){
-        var tagtypes={'normal':1,'species_sound':1};
+        let tagtypes={'normal':1,'species_sound':1};
         if(typeof data == 'string'){
             data = {tag:data, type:'normal'};
         }
@@ -471,7 +471,7 @@ var Soundscapes = {
                 );
             },
             function or_make_tag_id(result){
-                var next = arguments[arguments.length - 1];
+                let next = arguments[arguments.length - 1];
                 if(result.length){
                     next(null, result[0].id);
                     return;
@@ -485,18 +485,18 @@ var Soundscapes = {
                 );
             },
             function insert_tag(tag_id){
-                var next = arguments[arguments.length-1];
+                let next = arguments[arguments.length-1];
                 dbpool.queryHandler(
                     "INSERT INTO soundscape_region_tags(soundscape_region_id, recording_id, soundscape_tag_id, user_id, timestamp) \n"+
                     "VALUES ("+dbpool.escape([region.id, recording, tag_id, user])+", NOW())", next
                 );
             },
             function get_tag(result){
-                var next = arguments[arguments.length-1];
+                let next = arguments[arguments.length-1];
                 Soundscapes.getRegionTags(region, {id:result.insertId}, next);
             },
             function (tags){
-                var next = arguments[arguments.length-1];
+                let next = arguments[arguments.length-1];
                 next(null, tags.shift());
             }
         ], callback);
@@ -506,7 +506,7 @@ var Soundscapes = {
      */
     delete: function (scape_id,callback)
     {
-        var q = "SELECT `uri` FROM `soundscapes` WHERE `soundscape_id` = "+scape_id;
+        let q = "SELECT `uri` FROM `soundscapes` WHERE `soundscape_id` = "+scape_id;
 
         queryHandler(q,
             function (err,rows)
@@ -517,9 +517,9 @@ var Soundscapes = {
                 if(!s3){
                     s3 = new AWS.S3();
                 }
-                var imgUri = rows[0].uri;
-                var indexUri = rows[0].uri.replace('image.png','index.scidx');
-                var params = {
+                let imgUri = rows[0].uri;
+                let indexUri = rows[0].uri.replace('image.png','index.scidx');
+                let params = {
                     Bucket: config('aws').bucketName,
                     Delete: {
                         Objects:
@@ -540,7 +540,7 @@ var Soundscapes = {
                     }
                     else
                     {
-                        var q = " DELETE FROM `playlists` WHERE `playlist_id` IN "+
+                        let q = " DELETE FROM `playlists` WHERE `playlist_id` IN "+
                         " (SELECT `sample_playlist_id` FROM `soundscape_regions` WHERE `soundscape_id` = "+scape_id+")";
                         queryHandler(q,function(err,row)
                             {
@@ -550,7 +550,7 @@ var Soundscapes = {
                                 }
                                 else
                                 {
-                                    var q = "DELETE FROM `soundscapes` WHERE `soundscape_id` = "+scape_id+"" ;
+                                    let q = "DELETE FROM `soundscapes` WHERE `soundscape_id` = "+scape_id+"" ;
                                     queryHandler(q, callback);
                                 }
                             }
@@ -567,13 +567,13 @@ var Soundscapes = {
      * @param {Function} callback(err, path) function to call back with the results.
      */
     removeRegionTag: function(region, recording, tag, callback){
-        var tagobj;
+        let tagobj;
         async.waterfall([
             function fetch_tag_to_delete(next){
                 Soundscapes.getRegionTags(region, {id:tag, recording:recording}, next);
             },
             function check_in_rec(tags){
-                var next = arguments[arguments.length - 1];
+                let next = arguments[arguments.length - 1];
                 if(!tags.length){
                     next(new Error("Invalid tag specified."));
                 } else {
@@ -589,7 +589,7 @@ var Soundscapes = {
                 );
             },
             function(){
-                var next = arguments[arguments.length - 1];
+                let next = arguments[arguments.length - 1];
                 arguments[arguments.length-1](null, tagobj);
             }
         ], callback);
@@ -607,13 +607,13 @@ var Soundscapes = {
             options = {};
         }
 
-        var max = (options.max || soundscape.max_value);
-        var palette = options.palette === undefined ?  soundscape.visual_palette : (options.palette | 0);
-        var normalized = options.normalized | 0;
-        var amplitude = +options.amplitude;
-        var amplitudeReference = options.amplitudeReference;
-        var cmd;
-        var script = child_process.spawn(
+        let max = (options.max || soundscape.max_value);
+        let palette = options.palette === undefined ?  soundscape.visual_palette : (options.palette | 0);
+        let normalized = options.normalized | 0;
+        let amplitude = +options.amplitude;
+        let amplitudeReference = options.amplitudeReference;
+        let cmd;
+        let script = child_process.spawn(
             '.env/bin/python', cmd=[
                 set_visual_scale_path,
                 (soundscape.id|0), max == '-' ? '-' : (max|0), palette,
@@ -628,8 +628,12 @@ var Soundscapes = {
         });
     },
 
-    __compute_thumbnail_path : function(soundscape, callback){
-        soundscape.thumbnail = 'https://' + config('aws').bucketName + '.s3.' + config('aws').region + '.amazonaws.com/' + soundscape.uri;
+    __compute_thumbnail_path : function(soundscape, callback) {
+        const isProd = process.env.NODE_ENV === 'production';
+        const awsConfig = isProd ? config('aws') : config('aws_rfcx');
+        const soundscapeBucket = isProd ? awsConfig.bucketName : awsConfig.bucketNameStaging;
+        const soundscapeRegion = isProd ? awsConfig.region : awsConfig.region;
+        soundscape.thumbnail = 'https://' + soundscapeBucket + '.s3.' + soundscapeRegion + '.amazonaws.com/' + soundscape.uri;
         callback();
     },
     __compute_region_tags : function(region, callback){

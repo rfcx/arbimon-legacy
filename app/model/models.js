@@ -15,7 +15,7 @@ const queryHandler = dbpool.queryHandler;
 
 module.exports = {
     findName: function(model_id, callback) {
-        var q = "SELECT name \n"+
+        let q = "SELECT name \n"+
                 "FROM models \n"+
                 "WHERE model_id = " + dbpool.escape(model_id);
 
@@ -26,7 +26,7 @@ module.exports = {
         
         async.parallel({
             model: function getModelInfo(cb) {
-                var q = "SELECT m.project_id, \n"+
+                let q = "SELECT m.project_id, \n"+
                         "       jpt.job_id \n"+
                         "FROM models AS m \n"+
                         "JOIN job_params_training AS jpt ON m.model_id = jpt.trained_model_id \n"+
@@ -47,8 +47,8 @@ module.exports = {
                 return callback(new Error('model not exist'));
             }
             
-            var filename = path.basename(results.rec[0][0].uri);
-            var vectorUri = 'project_' + results.model[0][0].project_id + 
+            let filename = path.basename(results.rec[0][0].uri);
+            let vectorUri = 'project_' + results.model[0][0].project_id + 
                             '/training_vectors/job_' + results.model[0][0].job_id + 
                             '/' + filename;
             
@@ -71,7 +71,7 @@ module.exports = {
     },
     
     details: function(model_id, callback) {
-        var q = "SELECT ms.`json_stats` as json, \n"+
+        let q = "SELECT ms.`json_stats` as json, \n"+
                 "       m.threshold , \n" +
                 "       m.model_id, \n"+
                 "       m.name, \n"+
@@ -118,10 +118,15 @@ module.exports = {
             
             if(!rows.length) return callback(new Error('model not found'));
             
-            var data = rows[0];
+            let data = rows[0];
             data.json = JSON.parse(data.json);
+            const isProd = process.env.NODE_ENV === 'production';
+            const awsConfig = isProd ? config('aws') : config('aws_rfcx');
+            const patternBucket = isProd ? awsConfig.bucketName : awsConfig.bucketNameStaging;
+            const patternRegion = isProd ? awsConfig.region : awsConfig.region;
+            const patternThumbnail = 'https://' + patternBucket + '.s3.' + patternRegion + '.amazonaws.com/' + data.json.roipng;
             
-            var model = {
+            let model = {
                 id: data.model_id,
                 name: data.name,
                 createdOn: data.date_created,
@@ -170,7 +175,7 @@ module.exports = {
                     lowfreq: data.json.roilowfreq,
                     highfreq: data.json.roihighfreq,
                     samplerate: data.json.roisamplerate,
-                    thumbnail: 'https://' + config('aws').bucketName + '.s3.' + config('aws').region + '.amazonaws.com/' + data.json.roipng,
+                    thumbnail: patternThumbnail,
                 }
             };
             callback(null, model);
@@ -178,7 +183,7 @@ module.exports = {
     },
 
     delete: function(model_id, callback) {
-        var q = "SELECT `uri` FROM `models` WHERE `model_id` ="+model_id;
+        let q = "SELECT `uri` FROM `models` WHERE `model_id` ="+model_id;
 
         queryHandler(q,
             function (err,rows)
@@ -189,9 +194,9 @@ module.exports = {
                 if(!s3){
                     s3 = new AWS.S3();
                 }
-                var uri = rows[0].uri;
-                var imgUri = rows[0].uri.replace('.mod','.png');
-                var params = {
+                let uri = rows[0].uri;
+                let imgUri = rows[0].uri.replace('.mod','.png');
+                let params = {
                     Bucket: config('aws').bucketName,
                     Delete: { 
                         Objects:
@@ -210,7 +215,7 @@ module.exports = {
                         callback();
                     }
                     else {
-                        var q = "UPDATE `models` SET deleted = 1 WHERE model_id = "+model_id;
+                        let q = "UPDATE `models` SET deleted = 1 WHERE model_id = "+model_id;
                         queryHandler(q, callback);
                     }
                 });
@@ -222,14 +227,14 @@ module.exports = {
     },
 
     types: function(callback) {
-        var q = "SELECT model_type_id, name , description, enabled \n"+
+        let q = "SELECT model_type_id, name , description, enabled \n"+
                 "FROM model_types";
 
         queryHandler(q, callback);
     },
 
     savethreshold: function(m,t,callback) {
-        var q = "UPDATE `models` SET `threshold` = "+dbpool.escape(t)+
+        let q = "UPDATE `models` SET `threshold` = "+dbpool.escape(t)+
                 " WHERE `models`.`model_id` ="+dbpool.escape(m)+";";
 
         queryHandler(q, callback);
