@@ -431,6 +431,18 @@ router.get('/:projectUrl/sites-export.csv', function(req, res, next) {
     }).catch(next);
 });
 
+router.get('/:projectUrl/species-export.csv', function(req, res, next) {
+    res.type('text/csv');
+    const project = req.project.project_id;
+    model.projects.exportProjectSpecies(project).then(async (results) => {
+        const datastream = results[0];
+        const fields = results[1].map(f => f.name)
+        datastream
+            .pipe(csv_stringify({ header: true, columns:fields }))
+            .pipe(res);
+    }).catch(next);
+})
+
 router.post('/:projectUrl/user/add', async function(req, res, next) {
     res.type('json');
     if(!req.body.user_email) {
