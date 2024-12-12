@@ -228,11 +228,11 @@ var Projects = {
             SELECT s.site_id as Id, s.name as Name, s.lat as Latitude, s.lon as Longitude, s.alt as Altitude,
                 s.timezone as Timezone, COUNT(recording_id) as Recordings_Count, s.updated_at, s.external_id
             FROM sites AS s
-                LEFT JOIN project_imported_sites as pis ON s.site_id = pis.site_id AND pis.project_id=${project_id}
+                LEFT JOIN project_imported_sites as pis ON s.site_id = pis.site_id AND pis.project_id=?
                 LEFT JOIN recordings as r ON s.site_id = r.site_id
-            WHERE (s.project_id=${project_id} OR pis.project_id=${project_id}) AND s.deleted_at is null
+            WHERE (s.project_id=? OR pis.project_id=?) AND s.deleted_at is null
             GROUP BY s.site_id ORDER by s.name;`;
-        return dbpool.streamQuery({ sql })
+        return dbpool.streamQuery({ sql }, [project_id, project_id, project_id])
     },
 
     exportProjectSpecies(project_id) {
@@ -249,9 +249,9 @@ var Projects = {
             join songtypes st on pc.songtype_id = st.songtype_id 
             join species_families sf on s.family_id = sf.family_id 
             join species_taxons t on s.taxon_id = t.taxon_id 
-            where project_id = ${project_id}
+            where project_id = ?
             `;
-        return dbpool.streamQuery({ sql })
+        return dbpool.streamQuery({ sql }, [project_id])
     },
 
     getProjectDates: function(project_id, format){
