@@ -4,7 +4,7 @@ angular.module('a2.audiodata.species', [
     'ui.bootstrap',
     'humane'
 ])
-.controller('SpeciesCtrl', function($scope, Project, $modal, notify, a2UserPermit, a2Templates, a2AudioBarService, $localStorage, $state, $window) {
+.controller('SpeciesCtrl', function($scope, Project, $modal, notify, a2UserPermit, a2Templates, a2AudioBarService, $localStorage, $state, $window, $downloadResource) {
     $scope.loading = false;
     $scope.isAdding = false;
     $scope.selected = {};
@@ -232,6 +232,16 @@ angular.module('a2.audiodata.species', [
 
         });
     };
+
+    $scope.exportSpecies = function() {
+        if (a2UserPermit.isSuper()) return $downloadResource(Project.getSpeciesExportUrl());
+        if (a2UserPermit.getUserRole() === 'Data Entry') {
+            $downloadResource(Project.getSpeciesExportUrl());
+        }
+        else if (!a2UserPermit.can('manage project species')) {
+            return notify.error('You do not have permission to export species')
+        } else $downloadResource(Project.getSpeciesExportUrl());
+    }
 
     $scope.removeSpecies = function() {
         if(!$scope.checked || !$scope.checked.length)

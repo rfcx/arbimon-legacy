@@ -10,6 +10,12 @@
             <i class="fa fa-plus mr-2"></i> New species
         </button>
         <button class="btn btn-default ml-3"
+            ng-click="exportSpecies()"
+            tooltip="Export species list"
+            tooltip-trigger="mouseenter">
+            <i class="fa fa-download mr-2"></i> Export species list
+        </button>
+        <button class="btn btn-default ml-3"
             ng-disabled="!checked || !checked.length"
             ng-click="removeSpecies()"
             tooltip="Remove species sound"

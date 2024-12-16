@@ -135,6 +135,9 @@ angular.module('a2.srv.project', [
             getSitesExportUrl: function() {
                 return '/legacy-api/project/' + url + '/sites-export.csv';
             },
+            getSpeciesExportUrl: function() {
+                return '/legacy-api/project/' + url + '/species-export.csv';
+            },
             getRecTotalQty: function(callback) {
                 return a2APIService.get('/recordings/count').then(function(data) {
                     if(callback){
