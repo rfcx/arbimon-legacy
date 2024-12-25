@@ -1289,7 +1289,7 @@ var Recordings = {
                 s.name site,
                 s.site_id,
                 s.project_id,
-                r.uri
+                r.uri, r.meta
                 FROM recordings r
                 JOIN sites s ON s.site_id = r.site_id
                 WHERE r.uri = ${dbpool.escape(uri)}`;

@@ -206,6 +206,8 @@ async function getModelsData(validationUri) {
                 const entryType = items[3] ? items[3].trim(' '):'';
                 const [recording] = await model.recordings.recordingInfoGivenUri(items[0]);
                 if (!recording) continue
+                const meta = recording.meta ? model.recordings.__parse_meta_data(recording.meta) : null;
+                const filename = meta && meta.filename ? meta.filename : meta && meta.file ? meta.file : '---';
                 const site = await model.sites.findByIdAsync(recording.site_id)
                 let recUrl;
                 if (recording.uri.startsWith('project_')) {
@@ -223,6 +225,7 @@ async function getModelsData(validationUri) {
                 }
                 rowSent.push({
                     site: recording.site,
+                    recording: filename,
                     date: recording.date,
                     presence: prec,
                     model: modelprec,
