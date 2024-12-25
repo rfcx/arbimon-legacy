@@ -825,6 +825,7 @@ angular.module('a2.analysis.random-forest-models.models', [
         for(var i = 0; i < $scope.validations.length; i++) {
             vals.push({
                 site: $scope.validations[i].site,
+                recording: $scope.validations[i].recording,
                 date: $scope.validations[i].date,
                 user: $scope.validations[i].presence,
                 model: $scope.validations[i].model,
