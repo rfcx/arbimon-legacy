@@ -312,7 +312,7 @@
                 <div ng-if="isExport()"
                     class="btn btn-default"
                     ng-csv="getValidations()"
-                    filename="getFileName()"
+                    filename="{{ model ? getFileName() : 'matrixValues.csv' }}"
                     csv-header="['Site', 'Recording', 'Date', 'User presence','Model presence','Threshold presence' ,'Threshold value']">
                     <i class="fa fa-download"
                         tooltip="Download Values in CSV"
