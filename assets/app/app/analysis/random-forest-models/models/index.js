@@ -837,7 +837,7 @@ angular.module('a2.analysis.random-forest-models.models', [
     };
 
     $scope.getFileName = function() {
-        return 'matrixValues' + '_' + $scope.model.trainingSet.name + '.csv'
+        return 'matrixValues' + '_' + $scope.model.name + '.csv'
     }
 
     $scope.recDetails = function(rec) {
