@@ -604,7 +604,7 @@ var PatternMatchings = {
             return dbpool.query(builder.getSQL())
         })
         .then((rois) => {
-            const useBackupData =  options.patternMatchingId && syncedPMjobs.includes(options.patternMatchingId);
+            const useBackupData =  options.patternMatchingId && syncedPMjobs.includes(+options.patternMatchingId);
             if (useBackupData) return rois
             else return this.getRoiUrl(rois, options.projectId);
         })
@@ -754,7 +754,7 @@ var PatternMatchings = {
     },
 
     getRoiAudioFile(patternMatching, roiId, options) {
-        const useBackupData = patternMatching && syncedPMjobs.includes(patternMatching);
+        const useBackupData = patternMatching && syncedPMjobs.includes(+patternMatching);
         options = options || {};
         return dbpool.query(
             "SELECT PMR.x1, PMR.x2, PMR.y1, PMR.y2, R.sample_rate, R.uri as recUri,\n" +
