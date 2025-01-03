@@ -605,8 +605,8 @@ var PatternMatchings = {
         })
         .then((rois) => {
             const useBackupData =  options.patternMatchingId && syncedPMjobs.includes(options.patternMatchingId);
-            if (useBackupData) return this.getRoiUrl(rois, options.projectId)
-            else return rois;
+            if (useBackupData) return rois
+            else return this.getRoiUrl(rois, options.projectId);
         })
         .then(this.completePMRResults)
         .then(function (results) {
