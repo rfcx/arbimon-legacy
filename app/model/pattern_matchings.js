@@ -314,9 +314,8 @@ var PatternMatchings = {
             if (show.url) {
                 builder.addProjection('R.`recording_id` as recording_id');
             }
-            if (!show.url && !useBackupData) {
-                builder.addProjection('PMR.`uri_param1`, PMR.`uri_param2`');
-            } else builder.addProjection('PMR.`uri`');
+            if (useBackupData) builder.addProjection('PMR.uri');
+            if (!show.url && !useBackupData) builder.addProjection('PMR.`uri_param1`, PMR.`uri_param2`')
 
             if (show.showSpecies) {
                 builder.addTable('JOIN species Sp ON PMR.species_id = Sp.species_id');
