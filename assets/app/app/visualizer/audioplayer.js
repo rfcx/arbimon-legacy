@@ -228,7 +228,7 @@ angular.module('a2.visualizer.audio-player', [
         },
         download: function(visobject) {
             if (a2UserPermit.isSuper()) return this.getExportUrl(visobject);
-            if (!a2UserPermit.can('manage project recordings') || !a2UserPermit.getUserRole() === 'User') {
+            if (!a2UserPermit.can('manage project recordings')) {
                 return notify.error('You do not have permission to download recording');
             }
             return this.getExportUrl(visobject);
