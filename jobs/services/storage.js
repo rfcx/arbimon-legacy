@@ -250,8 +250,25 @@ async function getObject ({ Bucket, Key, isLegacy = true }) {
   })
 }
 
+async function copyObject ({ Bucket, newPath, oldPath, isLegacy = true }) {
+    return new Promise((resolve, reject) => {
+      legacy_s3.copyObject({
+          Bucket: Bucket,
+          CopySource: encodeURI(`${Bucket}/${oldPath}`),
+          Key: newPath
+        }, (err, data) => {
+          if (err) {
+            console.error('Error copy s3 data.', err)
+            return reject(err)
+          }
+          resolve(data.Body)
+        })
+    })
+}
+
 module.exports = {
   combineFilename,
+  copyObject,
   saveLatestData,
   getObject,
   getSignedUrl,
