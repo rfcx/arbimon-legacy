@@ -14,8 +14,6 @@ const models = require("./index");
 const lambda = new AWS.Lambda();
 const { getSignedUrl } = require('../utils/storage')
 
-const syncedPMjobs = [59442,59443,59444,59445,59446,59447,59448,59449,59450,59451,59452,59453,59454,59455,59456,59457,59458,59459,59460,59461,59462,59463,59464,59465,59466,59467,59468,59469,59470];
-
 // exports
 var PatternMatchings = {
     /** Finds playlists, given a (non-empty) query.
@@ -128,12 +126,10 @@ var PatternMatchings = {
         }
 
         if (options.showCounts) {
-            const useBackupData =  options.id && syncedPMjobs.includes(Number(options.id));
             select.push("SUM(IF(PMR.pattern_matching_roi_id IS NULL, 0, 1)) as matches");
             select.push("SUM(IF(PMR.validated=1, 1, 0)) as present");
             select.push("SUM(IF(PMR.validated=0, 1, 0)) as absent");
-            if (useBackupData) tables.push("LEFT JOIN pattern_matching_rois_synced_backup PMR ON PMR.pattern_matching_id = PM.pattern_matching_id");
-            else tables.push("LEFT JOIN pattern_matching_rois PMR ON PMR.pattern_matching_id = PM.pattern_matching_id");
+            tables.push("LEFT JOIN pattern_matching_rois PMR ON PMR.pattern_matching_id = PM.pattern_matching_id");
             groupby.push("PM.pattern_matching_id");
         }
 
@@ -281,7 +277,6 @@ var PatternMatchings = {
     buildRoisQuery(parameters) {
         let builder = new SQLBuilder();
         return q.ninvoke(joi, 'validate', parameters, PatternMatchings.SEARCH_ROIS_SCHEMA).then(function(parameters){
-            const useBackupData = parameters.patternMatching && syncedPMjobs.includes(parameters.patternMatching);
             let show = parameters.show || {};
             let presteps=[];
 
@@ -293,8 +288,7 @@ var PatternMatchings = {
                 builder.addProjection('PMR.`pattern_matching_id`');
             }
 
-            if (useBackupData) builder.addTable("pattern_matching_rois_synced_backup", "PMR")
-            else builder.addTable("pattern_matching_rois", "PMR")
+            builder.addTable("pattern_matching_rois", "PMR")
 
             builder.addTable("JOIN recordings", "R", "R.recording_id = PMR.recording_id");
             builder.addTable("JOIN sites", "S", "S.site_id = R.site_id");
@@ -314,8 +308,8 @@ var PatternMatchings = {
             if (show.url) {
                 builder.addProjection('R.`recording_id` as recording_id');
             }
-            if (useBackupData) builder.addProjection('PMR.uri');
-            if (!show.url && !useBackupData) builder.addProjection('PMR.`uri_param1`, PMR.`uri_param2`')
+
+            if (!show.url) builder.addProjection('PMR.`uri_param1`, PMR.`uri_param2`')
 
             if (show.showSpecies) {
                 builder.addTable('JOIN species Sp ON PMR.species_id = Sp.species_id');
@@ -492,7 +486,7 @@ var PatternMatchings = {
                 builder.addProjection(
                     "(\n" +
                     "    SELECT count(*) as count \n" +
-                    `    FROM ${useBackupData ? 'pattern_matching_rois_synced_backup sq2PMR' : 'pattern_matching_rois sq2PMR'}\n` +
+                    "    FROM pattern_matching_rois sq2PMR\n" +
                     "    WHERE sq2PMR.denorm_site_id = PMR.denorm_site_id\n" +
                     "      AND sq2PMR.pattern_matching_id = " + (parameters.patternMatching | 0)+ "\n" +
                     ") as countPerSite"
@@ -539,9 +533,8 @@ var PatternMatchings = {
     },
 
     getPresentRois: function (patternMatchingId) {
-        const useBackupData = patternMatchingId && syncedPMjobs.includes(patternMatchingId);
         const q = `SELECT pattern_matching_roi_id as id, pattern_matching_id, recording_id, species_id, songtype_id, validated
-        FROM ${useBackupData ? 'pattern_matching_rois_synced_backup' : 'pattern_matching_rois'}
+        FROM pattern_matching_rois
         WHERE pattern_matching_id = ${patternMatchingId} AND validated = 1;`
         return dbpool.query(q)
     },
@@ -603,9 +596,7 @@ var PatternMatchings = {
             return dbpool.query(builder.getSQL())
         })
         .then((rois) => {
-            const useBackupData =  options.patternMatchingId && syncedPMjobs.includes(+options.patternMatchingId);
-            if (useBackupData) return rois
-            else return this.getRoiUrl(rois, options.projectId);
+            return this.getRoiUrl(rois, options.projectId);
         })
         .then(this.completePMRResults)
         .then(function (results) {
@@ -619,9 +610,8 @@ var PatternMatchings = {
     },
 
     getSitesForPM (pmId) {
-        const useBackupData = pmId && syncedPMjobs.includes(pmId);
         return dbpool.query(`SELECT site_id, name as site FROM sites
-            WHERE site_id IN (SELECT DISTINCT denorm_site_id FROM ${useBackupData ? 'pattern_matching_rois_synced_backup' : 'pattern_matching_rois'} WHERE pattern_matching_id = ?) AND deleted_at is null;`, [pmId])
+            WHERE site_id IN (SELECT DISTINCT denorm_site_id FROM pattern_matching_rois WHERE pattern_matching_id = ?) AND deleted_at is null;`, [pmId])
             .then((sites) => {
                 return sites.sort((a, b) => a.site.localeCompare(b.site))
             })
@@ -753,12 +743,11 @@ var PatternMatchings = {
     },
 
     getRoiAudioFile(patternMatching, roiId, options) {
-        const useBackupData = patternMatching && syncedPMjobs.includes(+patternMatching);
         options = options || {};
         return dbpool.query(
             "SELECT PMR.x1, PMR.x2, PMR.y1, PMR.y2, R.sample_rate, R.uri as recUri,\n" +
                 "R.site_id as recSiteId, R.datetime, R.datetime_utc, S.external_id\n" +
-            `FROM ${useBackupData ? 'pattern_matching_rois_synced_backup PMR' : 'pattern_matching_rois PMR'}\n` +
+            `FROM pattern_matching_rois PMR\n` +
             "JOIN recordings R ON PMR.recording_id = R.recording_id\n" +
             "JOIN sites S ON S.site_id = R.site_id\n" +
             "WHERE PMR.pattern_matching_id = ? AND PMR.pattern_matching_roi_id = ?", [
@@ -810,10 +799,9 @@ var PatternMatchings = {
     },
 
     async getPmRoiRecordingUri (patternMatchingId) {
-        const useBackupData = patternMatchingId && syncedPMjobs.includes(patternMatchingId);
         const sql = `
             select r.recording_id, r.uri
-            from ${useBackupData ? 'pattern_matching_rois_synced_backup pmr' : 'pattern_matching_rois pmr'}
+            from pattern_matching_rois pmr
                 join recordings r on pmr.recording_id = r.recording_id
             where pattern_matching_id = ${patternMatchingId}
         `
@@ -821,9 +809,8 @@ var PatternMatchings = {
     },
 
     validateRois(patternMatchingId, rois, validation) {
-        const useBackupData = patternMatchingId && syncedPMjobs.includes(patternMatchingId);
         return rois.length ? dbpool.query(
-            `UPDATE ${useBackupData ? 'pattern_matching_rois_synced_backup' : 'pattern_matching_rois'}\n` +
+            `UPDATE pattern_matching_rois\n` +
             "SET validated = ?\n" +
             "WHERE pattern_matching_id = ?\n" +
             "AND pattern_matching_roi_id IN (?)", [
@@ -844,10 +831,9 @@ var PatternMatchings = {
     },
 
     getRoi(patternMatchingId, roisId, projectId){
-        const useBackupData = patternMatchingId && syncedPMjobs.includes(patternMatchingId);
         return dbpool.query(
             "SELECT *\n" +
-            `FROM ${useBackupData ? 'pattern_matching_rois_synced_backup' : 'pattern_matching_rois'}\n` +
+            `FROM pattern_matching_rois\n` +
             "WHERE pattern_matching_id = ? AND pattern_matching_roi_id IN (?)", [
             Number(patternMatchingId), roisId
         ]).then((rois) => {
@@ -856,10 +842,9 @@ var PatternMatchings = {
     },
 
     getCountRoisMatchByAttr(patternMatchingId, recordingId, validation){
-        const useBackupData = patternMatchingId && syncedPMjobs.includes(patternMatchingId);
         return dbpool.query(
             "SELECT count(*) as count\n" +
-            `FROM ${useBackupData ? 'pattern_matching_rois_synced_backup' : 'pattern_matching_rois'}\n` +
+            `FROM pattern_matching_rois\n` +
             "WHERE pattern_matching_id = ? AND recording_id = ?\n" +
             "AND species_id = ? AND songtype_id = ?", [
             patternMatchingId, recordingId, validation.speciesId, validation.songtypeId,
