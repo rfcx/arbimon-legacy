@@ -40,6 +40,7 @@
         </div>
         <div class="form-group">
             <label for="classifier">Playlist</label>
+            <span ng-if="playlists && playlists.length">(maximum {{ 10000 | number }} recordings)</span>
             <div class="mb-3 flex flex-row flex-align-middle" ng-if="playlists && !playlists.length">
                 <em class="pr-2">No playlists found.</em>
                 Go to
@@ -48,24 +49,27 @@
                 </button>
                 and create a playlist.
             </div>
-            <ui-select ng-disabled="disabled" ng-if="playlists && playlists.length" ng-model="datas.playlist" theme="bootstrap">
-                <ui-select-match placeholder="Select or search a playlist...">{{$select.selected.name}}</ui-select-match>
-                <ui-select-choices repeat="playlist in playlists | filter: $select.search">
-                    {{playlist.name}}
-                    <span class="pull-right">
-                        <small>
-                            <em>
-                                <strong >Count:</strong>({{playlist.count}})
-                            </em>
-                        </small>
-                    </span>
-                </ui-select-choices>
-            </ui-select>
+            <div ng-class="{'input-red-border': showPlaylistLimitWarning()}">
+                <ui-select ng-disabled="disabled" ng-if="playlists && playlists.length" ng-model="datas.playlist" theme="bootstrap">
+                    <ui-select-match placeholder="Select or search a playlist...">{{$select.selected.name}}</ui-select-match>
+                    <ui-select-choices repeat="playlist in playlists | filter: $select.search">
+                        {{playlist.name}}
+                        <span class="pull-right">
+                            <small>
+                                <em>
+                                    <strong >Count:</strong>({{playlist.count}})
+                                </em>
+                            </small>
+                        </span>
+                    </ui-select-choices>
+                </ui-select>
+            </div>
+            <error-message ng-if="showPlaylistLimitWarning()" message="'Please select a playlist with less than 10,000 recordings.'"></error-message>
         </div>
     </form>
 </div>
 <div class="modal-footer">
-    <button class="btn btn-primary" ng-click="ok()" ng-disabled="buttonEnable()">
+    <button class="btn btn-primary" ng-click="ok()" ng-disabled="buttonEnable() || showPlaylistLimitWarning()">
         <i class="fa fa-cogs"></i>
         Create
     </button>
