@@ -259,6 +259,10 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags', 'a2.directive.
             };
             
             $scope.validations = {};
+
+            $scope.validateAll = function(val) {
+
+            }
             
             $scope.validate = function(val) {
                 if(!a2UserPermit.can('validate species')) {
@@ -313,6 +317,15 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags', 'a2.directive.
                 { label: "Present", val: 1 }, 
                 { label: "Absent",  val: 0 }, 
             ];
+
+            $scope.val_all_options = [
+                { label: "Clear all validations",   val: 2 },
+                { label: "Mark unvalidated as 'Absent'", val: 0 }
+            ];
+
+            $scope.val_all_state = function(val_all_options){
+                
+            };
             
             $scope.val_state = function(project_class, val_options){
                 if(!val_options) { 
