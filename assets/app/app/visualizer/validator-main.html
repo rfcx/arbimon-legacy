@@ -89,6 +89,30 @@
                 <i class="fa" ng-class="byTaxon[taxon].open ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
                 {{ taxon }}
             </accordion-heading>
+            <div style="margin-top: 10px; margin-bottom: 10px;">
+                <div class="col-sm-9" style="padding-left: 4px !important;">
+                    Species validations
+                </div>
+                <div class="dropdown row-flex flex-space-end" dropdown>
+                    <div ng-show="val_state(cls.id).showDropdown" >
+                        <i class="fa"  ng-class="'val-'+val_state(cls.id).val"></i>
+                        {{val_state(cls.id).label}}
+                    </div>
+                    <button class="btn-a2-validate btn btn-default btn-xs btn-block text-insight" role="button" dropdown-toggle ng-show="!val_state(cls.id).showDropdown" style="margin-right: 6px;">
+                        <i class="fa"  ng-class="'val-'+val_state(cls.id).val"></i>
+                        {{ val_state(cls.id).label || "---"}}
+                        <i class="fa fa-caret-down" ng-show = "!val_state(cls.id).label"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-height-7" role="menu">
+                        <li ng-repeat="option in val_options">
+                            <a ng-click="validate(option.val)">
+                                <i class="fa" ng-class="'val-'+option.val"></i>
+                                {{ option.label }}
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
             <table class="table table-condensed">
                 <tr>
                     <th>Species</th>
