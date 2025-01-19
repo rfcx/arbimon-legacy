@@ -261,7 +261,8 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags', 'a2.directive.
             $scope.validations = {};
 
             $scope.validateAll = function(val) {
-
+                // on click select option 'val' -> 0 or 2
+                console.info(val)
             }
             
             $scope.validate = function(val) {
@@ -324,7 +325,7 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags', 'a2.directive.
             ];
 
             $scope.val_all_state = function(val_all_options){
-                
+                // set selected option
             };
             
             $scope.val_state = function(project_class, val_options){

@@ -103,7 +103,7 @@
                         {{ val_all_state(cls.id).label || "---"}}
                         <i class="fa fa-caret-down" ng-show = "!val_all_state(cls.id).label"></i>
                     </button>
-                    <ul class="dropdown-menu dropdown-height-7" role="menu">
+                    <ul class="dropdown-menu dropdown-height-7 dropdown-menu-right-align" role="menu">
                         <li ng-repeat="option in val_all_options">
                             <a ng-click="validateAll(option.val)">
                                 <i class="fa" ng-class="'val-'+option.val"></i>
