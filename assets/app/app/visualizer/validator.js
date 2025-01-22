@@ -260,39 +260,33 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags', 'a2.directive.
             
             $scope.validations = {};
 
-            $scope.validateAll = function(val) {
-                // on click select option 'val' -> 0 or 2
-                console.info(val)
+            $scope.validateAll = function(val, taxon) {
+                $scope.validate(val, true, taxon)
             }
             
-            $scope.validate = function(val) {
+            $scope.validate = function(val, isClearOrAbsentAll, taxon) {
                 if(!a2UserPermit.can('validate species')) {
                     notify.error('You do not have permission to validate species');
                     return;
                 }
-                
-                var keys = [],
-                    key_idx = {};
-                    
                 var k;
-                // var k = class2key(project_class);
-                
-                // if (k && !key_idx[k]) {
-                //     key_idx[k] = true;
-                //     keys.push(k);
-                // }
-                
-                // sel_pc_id -> selected project class id
-                for (var sel_pc_id in $scope.is_selected) {
-                    if ($scope.is_selected[sel_pc_id]) {
-                        k = class2key(sel_pc_id);
-                        if (k && !key_idx[k]) {
-                            key_idx[k] = true;
-                            keys.push(k);
+                var keys = [], key_idx = {};
+                if (isClearOrAbsentAll) {
+                    for (var cl in $scope.byTaxon[taxon]) {
+                        k = class2key($scope.byTaxon[taxon][cl].id);
+                        if (k) keys.push(k);
+                    }
+                } else {
+                    for (var sel_pc_id in $scope.is_selected) {
+                        if ($scope.is_selected[sel_pc_id]) {
+                            k = class2key(sel_pc_id);
+                            if (k && !key_idx[k]) {
+                                key_idx[k] = true;
+                                keys.push(k);
+                            }
                         }
                     }
                 }
-
                 if (keys.length > 0) {
                     Project.validateRecording($scope.recording.id, {
                         'class': keys.join(','),
