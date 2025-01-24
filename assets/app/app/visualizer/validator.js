@@ -274,11 +274,11 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags', 'a2.directive.
                 if (isClearOrAbsentAll) {
                     for (var cl in $scope.byTaxon[taxon]) {
                         k = class2key($scope.byTaxon[taxon][cl].id);
-                        var val = $scope.validations[k];
-                        if(typeof val === 'undefined') {
+                        var validationItem = $scope.validations[k];
+                        if(typeof validationItem === 'undefined') {
                             if (k) keys.push(k);
                         } else {
-                            if (val[0] !== 1) {
+                            if (validationItem[0] !== 1) {
                                 if (k) keys.push(k);
                             }
                         }
