@@ -274,7 +274,13 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags', 'a2.directive.
                 if (isClearOrAbsentAll) {
                     for (var cl in $scope.byTaxon[taxon]) {
                         k = class2key($scope.byTaxon[taxon][cl].id);
-                        if (k) keys.push(k);
+                        if(typeof val === 'undefined') {
+                            if (k) keys.push(k);
+                        } else {
+                            if (val[0] !== 1) {
+                                if (k) keys.push(k);
+                            }
+                        }
                     }
                 } else {
                     for (var sel_pc_id in $scope.is_selected) {
@@ -318,10 +324,6 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags', 'a2.directive.
                 { label: "Mark unvalidated as 'Absent'", val: 0 }
             ];
 
-            $scope.val_all_state = function(val_all_options){
-                // set selected option
-            };
-            
             $scope.val_state = function(project_class, val_options){
                 if(!val_options) { 
                     val_options = $scope.val_options;
