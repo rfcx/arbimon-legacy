@@ -198,7 +198,7 @@ angular.module('a2.analysis.random-forest-models.models', [
     $scope.model_id = null;
     $scope.validationdata = null;
 
-    $scope.newModel = function() {
+    $scope.newModel = function(model, isRetrain) {
         if(!a2UserPermit.can('manage models and classification')) {
             notify.error('You do not have permission to create models');
             return;
@@ -207,7 +207,20 @@ angular.module('a2.analysis.random-forest-models.models', [
         $scope.infoInfo = "Loading...";
         $scope.showInfo = true;
         $scope.loading = true;
-        // var url = $scope.projectData.url;
+        if (isRetrain) {
+            a2Models.findById(model.model_id)
+                .success(function(modelDetails) {
+                    Object.assign(model, modelDetails);
+                })
+                .error(function(data, status) {
+                    if(status == 404) {
+                        $scope.notFound = true;
+                    }
+                    else {
+                        notify.serverError();
+                    }
+                });
+        }
 
         a2Models.getFormInfo(function(data) {
 
@@ -227,6 +240,9 @@ angular.module('a2.analysis.random-forest-models.models', [
                     },
                     trainings: function() {
                         return data.trainings;
+                    },
+                    oldModel: function() {
+                        return model;
                     }
                 }
             });
@@ -311,22 +327,23 @@ angular.module('a2.analysis.random-forest-models.models', [
         });
     };
 })
-.controller('NewModelInstanceCtrl', function($scope, $modalInstance, a2Models, Project, projectData, types, trainings, notify, $http) {
+.controller('NewModelInstanceCtrl', function($scope, $modalInstance, a2Models, Project, projectData, types, trainings, oldModel, $http) {
     $scope.types = types;
     $scope.projectData = projectData;
     $scope.trainings = trainings;
     $scope.nameMsg = '';
+    $scope.isRetrain = oldModel && oldModel.mname;
     $scope.data = {
-        training: '',
-        classifier: '',
-        name: '',
+        training: $scope.isRetrain ? $scope.trainings.find(t => t.training_set_id === oldModel.trainingSet.id) : '',
+        classifier: $scope.isRetrain ? $scope.types[0] : '',
+        name: $scope.isRetrain ? oldModel.mname : '',
         totalValidations: 'Retrieving...',
         presentValidations: '-',
         absentsValidations: '-',
-        usePresentTraining: '',
-        useNotPresentTraining: '',
-        usePresentValidation: -1,
-        useNotPresentValidation: -1
+        usePresentTraining: $scope.isRetrain ? oldModel.validations.use_in_training.present : '',
+        useNotPresentTraining: $scope.isRetrain ? oldModel.validations.use_in_training.notPresent : '',
+        usePresentValidation: $scope.isRetrain ? oldModel.validations.use_in_validation.present : -1,
+        useNotPresentValidation: $scope.isRetrain ? oldModel.validations.use_in_validation.notPresent : -1
     };
 
 
@@ -342,9 +359,10 @@ angular.module('a2.analysis.random-forest-models.models', [
             $scope.jobDisabled = !training[0].enabled;
         });
 
-    $scope.totalPresentValidation = 0;
+    $scope.totalPresentValidation = $scope.isRetrain ? oldModel.validations.use_in_validation.present : 0;
 
     $scope.$watch('data.usePresentTraining', function() {
+        if ($scope.isRetrain) return
         var val = $scope.data.presentValidations - $scope.data.usePresentTraining;
 
         if (val > -1) {
@@ -361,9 +379,10 @@ angular.module('a2.analysis.random-forest-models.models', [
         $scope.totalPresentValidation = $scope.data.usePresentValidation;
     });
 
-    $scope.totalNotPresentValidation = 0;
+    $scope.totalNotPresentValidation = $scope.isRetrain ? oldModel.validations.use_in_validation.notPresent : 0;
 
     $scope.$watch('data.useNotPresentTraining', function() {
+            if ($scope.isRetrain) return
             var val = $scope.data.absentsValidations - $scope.data.useNotPresentTraining;
             if (val > -1) {
                 $scope.data.useNotPresentValidation = val;
@@ -379,6 +398,7 @@ angular.module('a2.analysis.random-forest-models.models', [
     });
 
      $scope.$watch('data.usePresentValidation', function() {
+        if ($scope.isRetrain) return
         if ($scope.data.usePresentValidation > $scope.totalPresentValidation) {
            $scope.data.usePresentValidation = $scope.totalPresentValidation;
         }
@@ -386,6 +406,7 @@ angular.module('a2.analysis.random-forest-models.models', [
     });
 
     $scope.$watch('data.useNotPresentValidation', function() {
+        if ($scope.isRetrain) return
         if ($scope.data.useNotPresentValidation > $scope.totalNotPresentValidation) {
            $scope.data.useNotPresentValidation = $scope.totalNotPresentValidation;
         }

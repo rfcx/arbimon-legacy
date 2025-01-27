@@ -88,6 +88,7 @@ module.exports = {
                 "       jobs.`last_update`, \n"+
                 "       CONCAT(UCASE(LEFT(s.`scientific_name`, 1)), SUBSTRING(s.`scientific_name`, 2)) as species, \n"+
                 "       CONCAT(UCASE(LEFT(st.`songtype`, 1)), SUBSTRING(st.`songtype`, 2)) as songtype, \n"+
+                "       ts.training_set_id, \n"+
                 "       ts.`name` as trainingSetName, \n"+
                 "       ts.date_created as trainingSetcreated, \n"+
                 "       TIMESTAMPDIFF(SECOND, jobs.`date_created`, m.`date_created` ) as joblength \n"+
@@ -166,6 +167,7 @@ module.exports = {
                     }
                 },
                 trainingSet: {
+                    id: data.training_set_id,
                     name: data.trainingSetName,
                     createdOn: data.trainingSetcreated,
                     roiCount: data.json.roicount,
