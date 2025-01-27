@@ -321,7 +321,7 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags', 'a2.directive.
             ];
 
             $scope.val_all_options = [
-                { label: "Clear all validations",   val: 2 },
+                { label: "Clear all Absent",   val: 2 },
                 { label: "Mark unvalidated as 'Absent'", val: 0 }
             ];
 
