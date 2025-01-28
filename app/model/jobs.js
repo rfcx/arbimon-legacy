@@ -336,10 +336,13 @@ var Jobs = {
             .then((jobs) => {
                 jobs.sort((a, b) => b.last_update - a.last_update)
                     .forEach(j => {
-                        j.name = capitalize(j.name)
-                        j.percentage = j.progress_steps ? Math.round(j.progress/j.progress_steps * 1000)/10 : 0
-                        delete j.progress
-                        delete j.progress_steps
+                        j.name = capitalize(j.name);
+                        j.percentage = j.progress_steps ? Math.round(j.progress/j.progress_steps * 1000)/10 : 0;
+                        const last24hours = moment.utc().subtract(1, 'days').valueOf();
+                        const lastUpdate = moment.utc(j.last_update).valueOf();
+                        j.state = (lastUpdate < last24hours) && j.state === 'processing' ? 'error' : j.state;
+                        delete j.progress;
+                        delete j.progress_steps;
                     })
                 return jobs
             }).nodeify(callback)
