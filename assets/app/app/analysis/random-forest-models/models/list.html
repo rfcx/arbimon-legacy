@@ -77,6 +77,12 @@
                             ui-sref="analysis.modeldetails({ modelId: row.model_id })">
                             Show details
                         </button>
+                        <button class="btn btn-default"
+                            ng-click="newModel(row, true)"
+                            tooltip="Retrain RFM"
+                            tooltip-trigger="mouseenter">
+                            Retrain
+                        </button>
                         <button class="btn btn-danger"
                             ng-click="deleteModel(row.model_id,row.mname)"
                             tooltip="Delete"

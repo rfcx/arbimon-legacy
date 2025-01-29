@@ -1,19 +1,19 @@
 <form name="modelForm" role="form">
     <div class="modal-header">
-        <h3 class="modal-title">Create a new model</h3>
+        <h3 class="modal-title">{{ isRetrain ? 'Retrain the model' : 'Create a new model' }}</h3>
     </div>
     <div class="modal-body">
-        <p ng-show="jobDisabled" class="text-danger">
+        <p ng-show="jobDisabled && !isRetrain" class="text-danger">
             Model training is disable at the moment, please try again later
         </p> 
         <div class="form-group">
             <label for="modelName">Model name</label>
-            <input name="modelName" ng-model="data.name" type="text" class="form-control" placeholder="Enter model name" />
+            <input name="modelName" ng-model="data.name" type="text" class="form-control" placeholder="Enter model name" ng-disabled="isRetrain"/>
             <span ng-bind="nameMsg" class="nameExistsSpan"></span>
         </div>
         <div class="form-group">
             <label for="classifier">Classifier</label>
-            <ui-select ng-model="data.classifier" theme="bootstrap" ng-disabled="disabled">
+            <ui-select ng-model="data.classifier" theme="bootstrap" ng-disabled="isRetrain">
                 <ui-select-match placeholder="Select a classifier">{{$select.selected.name}}</ui-select-match>
                 <ui-select-choices repeat="type in types | filter: $select.search" value="type.model_type_id">
                     <strong>{{type.name}}</strong>
@@ -35,7 +35,7 @@
                 </button>
                 and create a training set.
             </div>
-            <ui-select ng-if="trainings && trainings.length" ng-model="data.training" theme="bootstrap" ng-disabled="disabled">
+            <ui-select ng-if="trainings && trainings.length" ng-model="data.training" theme="bootstrap" ng-disabled="isRetrain">
                 <ui-select-match placeholder="Search and select a training set">{{$select.selected.name}}</ui-select-match>
                 <ui-select-choices repeat="train in trainings | filter: $select.search" value="train.training_set_id">
                     {{train.name}}
@@ -72,20 +72,20 @@
                                     <td class="text-right">Present: </td>
                                     <td>{{data.presentValidations}}</td>
                                     <td>
-                                        <input class="form-control" size="10" type="text" name="usePresentTraining" ng-model="data.usePresentTraining" />
+                                        <input class="form-control" size="10" type="text" name="usePresentTraining" ng-model="data.usePresentTraining" ng-disabled="isRetrain" />
                                     </td>
                                     <td>
-                                        <input class="form-control" size="10" type="text" name="usePresentValidation" ng-model="data.usePresentValidation" />/{{totalPresentValidation}}
+                                        <input class="form-control" size="10" type="text" name="usePresentValidation" ng-model="data.usePresentValidation" ng-disabled="isRetrain" />/{{totalPresentValidation}}
                                     </td>
                                 </tr>
                                 <tr>
                                     <td class="text-right">Absent: </td>
                                     <td>{{data.absentsValidations}}</td>
                                     <td>
-                                        <input class="form-control" size="10" type="text" name="usePresentTraining" ng-model="data.useNotPresentTraining" />
+                                        <input class="form-control" size="10" type="text" name="usePresentTraining" ng-model="data.useNotPresentTraining" ng-disabled="isRetrain" />
                                     </td>
                                     <td>
-                                        <input class="form-control" size="10" type="text" name="usePresentValidation" ng-model="data.useNotPresentValidation" />/{{totalNotPresentValidation}}
+                                        <input class="form-control" size="10" type="text" name="usePresentValidation" ng-model="data.useNotPresentValidation" ng-disabled="isRetrain" />/{{totalNotPresentValidation}}
                                     </td>
                                 </tr>
                         </table>
@@ -96,7 +96,7 @@
     </div>
     <div class="modal-footer">
         <button class="btn btn-primary" ng-click="ok()" ng-disabled="disableCreateButton()">
-            <i class="fa fa-cogs"></i> Create
+            <i class="fa fa-cogs"></i> {{ isRetrain ? 'Retrain' : 'Create' }}
         </button>
         <button class="btn btn-default" ng-click="cancel()">
             <i class="fa fa-times"></i> Close
