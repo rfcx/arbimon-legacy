@@ -70,6 +70,10 @@
     z-index: 1000;
     border: 1px solid @util-gray-02;
     background-color: @moss;
+    left: 51px;
+    right: auto;
+    top: 0;
+    bottom: 0;
     @media (min-width: @screen-md-min) {
         > .thumb{
             display: none;
@@ -77,11 +81,6 @@
         >.scroller{
             margin-top:0;
         }
-        position: absolute;
-        left: 51px;
-        right: auto;
-        top: 0;
-        bottom: 0;
     }
 
     &.has-footer{
@@ -946,6 +945,22 @@ a2-img {
     left: auto;
     right: 0;
     margin-right: -5px;
+}
+
+.dropdown-menu-align {
+    left: auto;
+    right: 0;
+    margin-right: -5px;
+    @media (min-width: 297px) {
+        left: 0;
+        right: auto;
+        margin-left: -5px;
+    }
+    @media (min-width: 396px) {
+        left: auto;
+        right: 0;
+        margin-right: -5px;
+    }
 }
 
 .validator-class:hover {

@@ -81,7 +81,7 @@
                         </button>
                         <ul
                             ng-if="audio_player.isToggled === true"
-                            class="spectro-dropdown py-2 px-0 bg-echo border-util-gray-02 gap-y-1 row-flex flex-direction-column"
+                            class="spectro-dropdown py-2 px-0 bg-echo border-util-gray-02 gap-y-1 row-flex flex-direction-column dropdown-menu-align"
                         >
                             <li
                                 ng-repeat="state in audio_player.spectroStates track by $index"
@@ -128,7 +128,7 @@
                 </div>
             </div>
         </div>
-        <div class="pl-0 pr-1 no-pad-r" style="width: 85px" ng-class="{'col-sm-3': !visobject.explorerUrl, 'col-sm-2': visobject.explorerUrl}">
+        <div class="padding-l pr-1 no-pad-r" style="width: 85px" ng-class="{'col-sm-3': !visobject.explorerUrl, 'col-sm-2': visobject.explorerUrl}">
             <div class="nowrap">
                 <i class="fa fa-sm fa-play"></i>
                 {{ audio_player.getCurrentTime() | number:2 }} s
