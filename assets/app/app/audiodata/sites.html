@@ -1,5 +1,5 @@
 <div class="row">
-    <div class="row-flex justify-between">
+    <div class="row-flex">
         <div class="row-flex">
             <h1 class="navbar-rfcx-link-m mt-0">
                 Sites
@@ -15,30 +15,22 @@
                 </button>
             </div>
         </div>
-        <div>
-            <button class="btn btn btn-success btn-rounded-full mr-1 mb-1" ng-click="exportSites()">
-                Export Sites
-                <img src="/images/fi-download.svg" class="ml-2">
-            </button>
-        </div>
     </div>
-    <div class="col-md-7 mt-4">
-    <div class="row" a2-scroll="onScroll($event, $controller)" a2-scroll-on="window">
-        <div class="col-md-push-6 col-md-6 toolbar">
-            <input class="form-control" type="text" placeholder="Search by site name" ng-model="search" ng-change="onFilterChanged()">
-        </div>
-        <div class="col-md-6 col-md-pull-6 toolbar">
+    <div class="col-md-8 mt-4">
+    <div class="row mb-4" a2-scroll="onScroll($event, $controller)" a2-scroll-on="window" style="display: flex; justify-content: center; align-items: center;">
+        <span class="flex col-md-2 toolbar">
+            108 sites
+        </span>
+        <div class="col-md-6 toolbar">
             <button class="btn btn btn-success btn-rounded-full mr-1 mb-1"
                 ng-click="edit()"
                 ng-disabled="!selected || selected.imported">
                 Edit
-                <img src="/images/fi-edit.svg" class="ml-2">
             </button>
             <div class="btn-group mr-1 mb-1" dropdown dropdown-append-to-body="true" a2-auto-close-on-outside-click>
                 <button class="btn btn btn-success btn-rounded-full" dropdown-toggle>
-                    <img src="/images/fi-trash.svg">
                     Delete
-                    <img src="/images/fi-chevron-down-primary.svg" class="ml-2">
+                    <img src="/images/fi-chevron-down-primary.svg" class="ml-1">
                 </button>
                 <ul class="dropdown-form dropdown-menu" role="menu">
                     <li class="cs-pointer" ng-disabled="!selected">
@@ -53,6 +45,12 @@
                     </li>
                 </ul>
             </div>
+            <button class="btn btn btn-success btn-rounded-full mr-1 mb-1" ng-click="exportSites()">
+                Export Sites
+            </button>
+        </div>
+        <div class="col-md-4 toolbar">
+            <input class="form-control" type="text" placeholder="Search by site name" ng-model="search" ng-change="onFilterChanged()">
         </div>
     </div>
     <div class="row sites">
@@ -104,7 +102,7 @@
         </div>
     </div>
 </div>
-<div class="col-md-5 mt-4 sites-settings">
+<div class="col-md-4 mt-4 sites-settings">
     <ul class="nav nav-tabs">
         <li class="ng-isolate-scope" ng-class="{active:show.map}">
             <a id="mapHeader" ng-click="set_show('map')" href="">
