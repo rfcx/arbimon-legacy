@@ -4,14 +4,14 @@
             <h1 class="navbar-rfcx-link-m mt-0">
                 Sites
             </h1>
-            <div class="ml-4">
-                <button class="btn btn-primary btn-rounded-full mr-1 mb-1" ng-click="importSite()">
-                    Import
-                    <img src="/images/fi-upload.svg" class="ml-2">
-                </button>
-                <button class="btn btn btn-success btn-rounded-full mr-1 mb-1" ng-click="create()">
+            <div class="ml-5">
+                <button class="btn btn btn-primary btn-rounded-full mr-1 mb-1" ng-click="create()">
                     Create
-                    <img class="ml-2" src="/images/fi-plus-primary.svg">
+                    <img class="ml-1" src="/images/fi-plus.svg">
+                </button>
+                <button class="btn btn-success btn-rounded-full mr-1 mb-1" ng-click="importSite()">
+                    Bulk Import sites
+                    <img class="ml-1" src="/images/fi-plus-primary.svg">
                 </button>
             </div>
         </div>
@@ -25,7 +25,7 @@
     <div class="col-md-7 mt-4">
     <div class="row" a2-scroll="onScroll($event, $controller)" a2-scroll-on="window">
         <div class="col-md-push-6 col-md-6 toolbar">
-            <input class="form-control" type="text" placeholder="Search species by name, family or alias" ng-model="search" ng-change="onFilterChanged()">
+            <input class="form-control" type="text" placeholder="Search by site name" ng-model="search" ng-change="onFilterChanged()">
         </div>
         <div class="col-md-6 col-md-pull-6 toolbar">
             <button class="btn btn btn-success btn-rounded-full mr-1 mb-1"
