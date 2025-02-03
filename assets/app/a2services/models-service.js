@@ -35,6 +35,9 @@ angular.module('a2.srv.models', [
         create: function(modelData) {
             return $http.post('/legacy-api/project/' + Project.getUrl() + '/models/new', modelData);
         },
+        shareModel: function(modelData) {
+            return $http.post('/legacy-api/project/' + Project.getUrl() + '/models/share-model', modelData)
+        },
         delete: function(modelId, callback) {
             $http.get( '/legacy-api/project/' + Project.getUrl() + '/models/' + modelId + "/delete")
                 .success(callback)

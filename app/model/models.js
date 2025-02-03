@@ -69,8 +69,18 @@ module.exports = {
             WHERE m.model_id = ${model_id}`
         return dbpool.query(sql).get(0);
     },
+
+    getModelById: function (model_id, callback) {
+        const sql = `SELECT * from models WHERE model_id = ${model_id}`;
+        return queryHandler(sql, callback);
+    },
+
+    getModelByUri: async function (projectId, uri) {
+        const sql = `SELECT * from models WHERE project_id = ${projectId} and uri = '${uri}'`;
+        return dbpool.query(sql).get(0);
+    },
     
-    details: function(model_id, callback) {
+    details: function(model_id, opts, callback) {
         let q = "SELECT ms.`json_stats` as json, \n"+
                 "       m.threshold , \n" +
                 "       m.model_id, \n"+
@@ -104,13 +114,13 @@ module.exports = {
                 "WHERE m.model_id = ? \n"+
                 "AND m.`model_type_id` = mt.`model_type_id` \n"+
                 "AND m.user_id = u.user_id \n"+
-                "AND jpt.`trained_model_id` = m.model_id \n"+
-                "AND jobs.job_id = jpt.job_id \n"+
-                "AND mc.`model_id` = m.`model_id` \n"+
+                `AND jpt.trained_model_id = ${opts.isSharedModel ? opts.sourceModelId : 'm.model_id'} \n`+
+                `AND jobs.job_id = ${opts.isSharedModel ? opts.sourceJobId : 'jpt.job_id'} \n`+
+                `AND mc.model_id = ${opts.isSharedModel ? opts.sourceModelId : 'm.model_id'} \n`+
                 "AND mc.`species_id` = s.`species_id` \n"+
                 "AND st.`songtype_id` = mc.`songtype_id` \n"+
-                "AND ms.`model_id` = m.`model_id` \n" +
-                "AND jpt.`training_set_id` = ts.`training_set_id`";
+                `AND ms.model_id = ${opts.isSharedModel ? opts.sourceModelId : 'm.model_id'} \n` +
+                `AND jpt.training_set_id = ${opts.isSharedModel ? opts.sourceTrainingSetId : 'ts.training_set_id'}`;
         
         q = dbpool.format(q, [model_id]);
         queryHandler(q, function(err, rows) {
@@ -180,6 +190,20 @@ module.exports = {
             };
             callback(null, model);
         });
+    },
+
+    checkExistingModel: function(opts, callback) {
+        const q = `select * from models where project_id = ${opts.projectIdTo} and name = '${opts.modelName}';`;
+        queryHandler(q, callback);
+    },
+
+    shareModel: function(opts, callback) {
+        const q = `insert into models(name, model_type_id, uri, date_created, project_id, user_id, training_set_id, validation_set_id, deleted, threshold)
+            select  m2.name, m2.model_type_id, m2.uri, m2.date_created, ${opts.projectIdTo}, m2.user_id, m2.training_set_id, m2.validation_set_id, m2.deleted, m2.threshold
+            from models m2
+            where m2.model_id = ${opts.modelId};
+        `;
+        queryHandler(q, callback);
     },
 
     delete: function(model_id, callback) {

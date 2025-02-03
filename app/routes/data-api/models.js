@@ -117,17 +117,33 @@ router.post('/project/:projectUrl/models/new', function(req, res, next) {
 
 router.get('/project/:projectUrl/models/:mid', function(req, res, next) {
     res.type('json');
-    model.models.details(req.params.mid, function(err, model) {
-        if(err) {
-            if(err.message == "model not found") {
-                return res.status(404).json({ error: err.message });
-            }
-            else {
-                return next(err);
-            }
+    model.models.getModelById(req.params.mid, async function(err, modelData) {
+        const [data] = modelData;
+        const isSharedModel = !data.uri.startsWith(`project_${data.project_id}`)
+        let opts = {
+            isSharedModel
+        };
+        if (isSharedModel) {
+            opts.sourceTrainingSetId = data.training_set_id;
+            const regexResult = /project_(\d+)/.exec(data.uri);
+            const sourceProjectId = +regexResult[1];
+            const sourceModelData = await model.models.getModelByUri(sourceProjectId, data.uri);
+            opts.sourceModelId = sourceModelData.model_id;
+            const reg = /job_(\d+)_/.exec(data.uri);
+            opts.sourceJobId = +reg[1];
         }
-        res.json(model);
-    });
+        model.models.details(req.params.mid, opts, function(err, model) {
+            if(err) {
+                if(err.message == "model not found") {
+                    return res.status(404).json({ error: err.message });
+                }
+                else {
+                    return next(err);
+                }
+            }
+            res.json(model);
+        });
+    })
 });
 
 router.post('/project/:projectUrl/models/savethreshold', function(req, res, next) {
@@ -136,6 +152,23 @@ router.post('/project/:projectUrl/models/savethreshold', function(req, res, next
         if(err) return next(err);
 
         res.json({ok:'saved'});
+    });
+});
+
+router.post('/project/:projectUrl/models/share-model', function(req, res, next) {
+    res.type('json');
+    const opts = {
+        modelId: req.body.modelId,
+        modelName: req.body.modelName,
+        projectIdTo: req.body.projectId,
+    }
+    model.models.checkExistingModel(opts, function(err, result) {
+        if (err) return next(err);
+        if (result.length) return res.json({ ok:'This model has been shared to selected project.' });
+        return model.models.shareModel(opts, function(err, result) {
+            if(err) return next(err);
+            res.json({ ok:'Model is shared to selected project.' });
+        });
     });
 });
 
@@ -245,34 +278,42 @@ router.get('/project/:projectUrl/models/:modelId/training-vector/:recId', functi
     if(!req.params.modelId || !req.params.recId) {
         return res.status(400).json({ error: 'missing parameters'});
     }
-    
-    model.models.getTrainingVector(req.params.modelId, req.params.recId, function(err, result) {
-        if(err) return next(err);
-        
-        const vectorUri = result;
-        const isProd = process.env.NODE_ENV === 'production';
-        const awsConfig = isProd ? config('aws') : config('aws_rfcx');
-        const awsBucket = isProd ? awsConfig.bucketName : awsConfig.bucketNameStaging;
-        (isProd ? s3 : s3RFCx).getObject({
-            Key: vectorUri,
-            Bucket: awsBucket
-        },
-        function(err, data){
-            if(err) {
-                if(err.code == 'NoSuchKey'){
-                    return res.status(404).json({ err:'vector-not-found' });
-                }
-                else {
-                    return next(err);
-                }
-            }
+    model.models.getModelById(req.params.modelId, async function(err, modelData) {
+        const [data] = modelData;
+        const isSharedModel = !data.uri.startsWith(`project_${data.project_id}`);
+        let sourceModelId;
+        if (isSharedModel) {
+            const regexResult = /project_(\d+)/.exec(data.uri);
+            const sourceProjectId = +regexResult[1];
+            const sourceModelData = await model.models.getModelByUri(sourceProjectId, data.uri);
+            sourceModelId = sourceModelData.model_id;
+        }
+        model.models.getTrainingVector(isSharedModel ? sourceModelId : req.params.modelId, req.params.recId, function(err, result) {
+            if(err) return next(err);
             
-            async.map(String(data.Body).split(','), function(number, next) {
-                next(null, parseFloat(number));
-            }, function done(err, vector) {
-                res.json({ vector: vector });
+            const vectorUri = result;
+            const isProd = process.env.NODE_ENV === 'production';
+            const awsConfig = isProd ? config('aws') : config('aws_rfcx');
+            const awsBucket = isProd ? awsConfig.bucketName : awsConfig.bucketNameStaging;
+            (isProd ? s3 : s3RFCx).getObject({
+                Key: vectorUri,
+                Bucket: awsBucket
+            },
+            function(err, data){
+                if(err) {
+                    if(err.code == 'NoSuchKey'){
+                        return res.status(404).json({ err:'vector-not-found' });
+                    }
+                    else {
+                        return next(err);
+                    }
+                }
+                async.map(String(data.Body).split(','), function(number, next) {
+                    next(null, parseFloat(number));
+                }, function done(err, vector) {
+                    res.json({ vector: vector });
+                });
             });
-
         });
     });
 

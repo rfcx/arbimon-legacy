@@ -32,6 +32,12 @@ angular.module('a2.srv.project', [
                         callback(data);
                     });
             },
+            getProjectsToShareModel: function(callback) {
+                $http.get('/legacy-api/project/'+url+'/get-projects-by-role')
+                    .success(function(data) {
+                        callback(data);
+                    });
+            },
             updateInfo: function(info, callback) {
                 $http.post('/legacy-api/project/'+url+'/info/update', info)
                 .success(function(data){

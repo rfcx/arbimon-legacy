@@ -57,6 +57,16 @@
                     Refresh List
                     <i class="fa fa-refresh ml-3"></i>
                 </button>
+                <button class="btn btn-primary pull-right btn-rounded-full mr-3"
+                    tooltip="Share Model"
+                    ng-click="shareModel()"
+                    ng-disabled="isShareModelDisabled()"
+                >
+                    <span class="row-flex flex-space-center gap-x-2">
+                        Share Model
+                        <img src="/images/fa-share.svg" style="height: 20px; margin-top: 2px;">
+                    </span>
+                </button>
             </div>
             <div ng-hide="loading">
                 <a2-table rows="modelsData" no-checkbox="true">
@@ -65,6 +75,13 @@
                     </field>
                     <field title="Name" tdclass="is-v-middle hidelongtext widthtd" key="mname" filter>
                         <span>{{row.mname}}</span>
+                        <a class="is-v-middle cursor-pointer linodeco"
+                            ng-if="row.shared === true"
+                            ng-click="goToSourceProject(row)"
+                        >
+                            <i aria-hidden="true" class="glyphicon glyphicon-link text-frequency pl-2"></i>
+                            <span class="text-frequency">linked</span>
+                        </a>
                     </field>
                     <field title="Type" key="mtname" tdclass="is-v-middle" filter>
                         {{row.mtname}}

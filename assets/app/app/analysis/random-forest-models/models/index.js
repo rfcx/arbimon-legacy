@@ -194,6 +194,45 @@ angular.module('a2.analysis.random-forest-models.models', [
         );
     };
 
+    $scope.isShareModelDisabled = function() {
+        return !a2UserPermit.can('manage models and classification') || (a2UserPermit.can('manage models and classification') && !a2UserPermit.can('export report'))
+    }
+
+    $scope.shareModel = function() {
+        if (!a2UserPermit.can('manage models and classification') || (a2UserPermit.can('manage models and classification') && !a2UserPermit.can('export report'))) {
+            notify.error('You do not have permission to share models');
+            return;
+        }
+
+        const modalInstance = $modal.open({
+            templateUrl: '/app/analysis/random-forest-models/models/sharemodel.html',
+            controller: 'ShareModelInstanceCtrl',
+            resolve: {
+                models: function() {
+                    return $scope.modelsData;
+                }
+            }
+        });
+
+        modalInstance.result.then(
+            function(res) {
+                if (res.error) {
+                    notify.error("Error: " + res.error);
+                }
+                else notify.log(res.ok);
+            }
+        );
+    };
+
+    $scope.goToSourceProject = function(row) {
+        if (!row.source_project_id) return;
+        Project.getProjectById(row.source_project_id, function(data) {
+            if (data) {
+                console.log("/project/"+data.url+"/analysis/random-forest-models/models")
+                $window.location.href = "/project/"+data.url+"/analysis/random-forest-models/models";
+            }
+        });
+    }
 
     $scope.model_id = null;
     $scope.validationdata = null;
@@ -465,6 +504,33 @@ angular.module('a2.analysis.random-forest-models.models', [
     };
 
     $scope.cancel = function() {
+        $modalInstance.dismiss('cancel');
+    };
+
+})
+.controller('ShareModelInstanceCtrl', function($scope, $modalInstance, a2Models, models, Project) {
+    $scope.models = models.filter(m => !m.source_project_id);
+    $scope.isShareModel = false;
+    $scope.selectedData = { project: {}, model: {} };
+    Project.getProjectsToShareModel(function(data) {
+        $scope.projects = data;
+    });
+
+    $scope.ok = function() {
+        $scope.isShareModel = true;
+        a2Models.shareModel({ modelId: $scope.selectedData.model.model_id, modelName: $scope.selectedData.model.mname, projectId: $scope.selectedData.project.project_id })
+            .success(function(data) {
+                $scope.isShareModel = false;
+                $modalInstance.close(data);
+            })
+            .error(function(err) {
+                $scope.isShareModel = false;
+                $modalInstance.close(err);
+            });
+    };
+
+    $scope.cancel = function() {
+        $scope.isShareModel = false;
         $modalInstance.dismiss('cancel');
     };
 

@@ -96,6 +96,16 @@ router.get('/:projectUrl/info/source-project', function(req, res, next) {
 
 });
 
+router.get('/:projectUrl/get-projects-by-role', function(req, res, next) {
+    res.type('json');
+    const userId = req.session.user.id;
+    model.projects.getProjectsToShareModel(userId, function(err, result) {
+        if(err) return next(err);
+        res.json(result.filter(project => project.project_id !== req.project.project_id));
+    });
+
+});
+
 // Dasboard page metrics
 router.get('/:projectUrl/site-count', function(req, res, next) {
     res.type('json');
