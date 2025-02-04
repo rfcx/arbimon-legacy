@@ -5,6 +5,7 @@
 <div class="modal-body">
     <div class="form-group">
         <label for="modelName">Model from Job</label>
+        <span ng-if="isModelEmpty" class="text-danger small mb-1 ml-3">Please select a model.</span>
         <ui-select ng-if="models && models.length" ng-model="selectedData.model" theme="bootstrap" ng-disabled="disabled">
             <ui-select-match placeholder="Select or search a model...">{{$select.selected.mname}}</ui-select-match>
             <ui-select-choices repeat="model in models | filter: $select.search" value="model.model_id">
@@ -18,8 +19,9 @@
                 Copy to project
             </label>
             <span style="width: 16px" class="mb-2">
-                <img style="width: 16px" tooltip="You can share a model to any project that you are a member with the Expert or Adninistrator role." src="/images/fi-info.svg">
+                <img style="width: 16px" tooltip="You can share a model to any project that you are a member with the Expert or Administrator role." src="/images/fi-info.svg">
             </span>
+            <span ng-if="isProjectEmpty" class="text-danger small mb-1">Please select a project to copy to.</span>
         </div>
         <ui-select ng-if="projects && projects.length" ng-model="selectedData.project" theme="bootstrap" ng-disabled="disabled">
             <ui-select-match placeholder="Select or search a project...">{{$select.selected.name}}</ui-select-match>
@@ -31,8 +33,8 @@
 </div>
 <div class="modal-footer">
     <i class="fa fa-spinner fa-spin" ng-if="isShareModel" style="font-size: 26px; vertical-align: middle; margin-right: 5px;"></i>
-    <button class="btn btn-primary btn-rounded-full" ng-disabled="isShareModel" ng-click="ok()">Share</button>
-    <button class="btn btn-default btn-rounded-full" ng-click="cancel()">
+    <button class="btn btn-primary btn-rounded-full" ng-disabled="isShareModel" ng-click="ok()" style="width: 80px;">Share</button>
+    <button class="btn btn-default btn-rounded-full" ng-click="cancel()" style="width: 80px;">
         <div class="row-flex flex-space-center flex-align-middle gap-x-2">
             <img style="height: 8px;" src="/images/fi-close.svg">
             <span>Close</span>

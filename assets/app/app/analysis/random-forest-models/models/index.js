@@ -535,19 +535,28 @@ angular.module('a2.analysis.random-forest-models.models', [
     $scope.models = models.filter(m => !m.source_project_id);
     $scope.isShareModel = false;
     $scope.selectedData = { project: {}, model: {} };
+    $scope.isModelEmpty = false;
+    $scope.isProjectEmpty = false;
     Project.getProjectsToShareModel(function(data) {
         $scope.projects = data;
     });
 
     $scope.ok = function() {
+        $scope.isModelEmpty = !$scope.selectedData.model.model_id;
+        $scope.isProjectEmpty = !$scope.selectedData.project.project_id;
+        if ($scope.isModelEmpty || $scope.isProjectEmpty) return;
         $scope.isShareModel = true;
         a2Models.shareModel({ modelId: $scope.selectedData.model.model_id, modelName: $scope.selectedData.model.mname, projectId: $scope.selectedData.project.project_id })
             .success(function(data) {
                 $scope.isShareModel = false;
+                $scope.isModelEmpty = false;
+                $scope.isProjectEmpty = false;
                 $modalInstance.close(data);
             })
             .error(function(err) {
                 $scope.isShareModel = false;
+                $scope.isModelEmpty = false;
+                $scope.isProjectEmpty = false;
                 $modalInstance.close(err);
             });
     };

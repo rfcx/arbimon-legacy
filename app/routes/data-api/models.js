@@ -175,7 +175,7 @@ router.post('/project/:projectUrl/models/share-model', function(req, res, next) 
         if (result.length) return res.json({ ok:'This model has been shared to selected project.' });
         return model.models.shareModel(opts, function(err, result) {
             if(err) return next(err);
-            res.json({ ok:'Model is shared to selected project.' });
+            res.json({ ok:'The model was successfully shared with the selected project.' });
         });
     });
 });
