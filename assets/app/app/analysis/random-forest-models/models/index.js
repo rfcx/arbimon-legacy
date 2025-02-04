@@ -295,7 +295,7 @@ angular.module('a2.analysis.random-forest-models.models', [
             modalInstance.result.then(function(result) {
                 if (result.ok) {
                     JobsData.updateJobs();
-                    notify.log("Your new model training is waiting to start processing.<br> Check its status on <b>Jobs</b>.");
+                    notify.log("Your new model " + (isRetrain? 'retraining' : 'training') + "is waiting to start processing.<br> Check its status on <b>Jobs</b>.");
                 }
 
                 if (result.error) {

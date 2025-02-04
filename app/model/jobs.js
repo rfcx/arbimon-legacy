@@ -401,6 +401,9 @@ var Jobs = {
                 case 9:
                     job.url = `clustering-jobs/${ job.job_id }`
                     break;
+                case 10:
+                    job.url = 'random-forest-models/models'
+                    break;
             }
             return resolve(job)
         })
