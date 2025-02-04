@@ -98,6 +98,7 @@ module.exports = {
                 "       jobs.`last_update`, \n"+
                 "       CONCAT(UCASE(LEFT(s.`scientific_name`, 1)), SUBSTRING(s.`scientific_name`, 2)) as species, \n"+
                 "       CONCAT(UCASE(LEFT(st.`songtype`, 1)), SUBSTRING(st.`songtype`, 2)) as songtype, \n"+
+                "       ts.training_set_id, \n"+
                 "       ts.`name` as trainingSetName, \n"+
                 "       ts.date_created as trainingSetcreated, \n"+
                 "       TIMESTAMPDIFF(SECOND, jobs.`date_created`, m.`date_created` ) as joblength \n"+
@@ -176,6 +177,7 @@ module.exports = {
                     }
                 },
                 trainingSet: {
+                    id: data.training_set_id,
                     name: data.trainingSetName,
                     createdOn: data.trainingSetcreated,
                     roiCount: data.json.roicount,
@@ -268,7 +270,8 @@ module.exports = {
         ENV_JOB_ID: joi.string()
     }),
 
-    createRFM: function(data, callback){
+    createRFM: function(data, callback) {
+        const isRetrain = data.isRetrain === true
         const payload = JSON.stringify(
             {
                 ENV_JOB_ID: `${data.jobId}`
@@ -276,8 +279,11 @@ module.exports = {
         )
         return q.ninvoke(joi, 'validate', payload, this.JOB_SCHEMA)
             .then(async () => {
-                data.kubernetesJobName = `arbimon-rfm-train-${data.jobId}-${new Date().getTime()}`;
-                const jobParam = jsonTemplates.getRfmTemplate('arbimon-rfm-train', 'job', {
+                const jobName = `arbimon-rfm-${isRetrain ? 'retrain' : 'train'}`;
+                data.kubernetesJobName = `${jobName}-${data.jobId}-${new Date().getTime()}`;
+                const rfmJsonTemplate = jsonTemplates.getRfmTemplate
+                const rfmRetrainJsonTemplate = jsonTemplates.getRfmRetrainTemplate
+                const jobParam = (isRetrain ? rfmRetrainJsonTemplate : rfmJsonTemplate)(jobName, 'job', {
                     kubernetesJobName: data.kubernetesJobName,
                     imagePath: k8sConfig.rfmImagePath,
                     ENV_JOB_ID: `${data.jobId}`
