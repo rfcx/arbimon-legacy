@@ -28,6 +28,7 @@ angular.module('a2.audiodata.sites', [
     $scope.search = '';
     $scope.editing = false;
     $scope.creating = false;
+    $scope.totalSites = 0;
     
     var siteNameInput = document.getElementById('siteNameInput');
     siteNameInput.addEventListener('invalid', function(){
@@ -89,6 +90,7 @@ angular.module('a2.audiodata.sites', [
     Project.getSites({ count: true, logs: true, deployment: true }, function(sites) {
         $scope.sortByLastUpdated(sites);
         $scope.loading = false;
+        $scope.totalSites = sites.length
 
         if (p.site) {
             var site = sites.filter(function(s){return s.id == p.site;}).shift();

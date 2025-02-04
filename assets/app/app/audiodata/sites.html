@@ -18,8 +18,8 @@
     </div>
     <div class="col-md-8 mt-4">
     <div class="row mb-4" a2-scroll="onScroll($event, $controller)" a2-scroll-on="window" style="display: flex; justify-content: center; align-items: center;">
-        <span class="flex col-md-2 toolbar pt-3">
-            108 sites
+        <span class="flex col-md-2 toolbar pt-3 text-left reclist-total">
+            {{ totalSites }} {{totalSites > 1 ? "sites" : "site"}}
         </span>
         <div class="col-md-6 toolbar pt-3">
             <button class="btn btn btn-success btn-rounded-full mr-1 mb-1"
