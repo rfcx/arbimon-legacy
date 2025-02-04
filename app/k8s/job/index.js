@@ -3,5 +3,6 @@ module.exports = {
   'arbimon-single-soundscape': require('./arbimon-single-soundscape.json'),
   'arbimon-multiple-soundscape': require('./arbimon-multiple-soundscape.json'),
   'arbimon-rfm-train': require('./arbimon-rfm-train.json'),
+  'arbimon-rfm-retrain': require('./arbimon-rfm-retrain.json'),
   'arbimon-rfm-classify': require('./arbimon-rfm-classify.json'),
 }

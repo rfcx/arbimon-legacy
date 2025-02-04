@@ -2,7 +2,7 @@
     "apiVersion": "batch/v1",
     "kind": "Job",
     "metadata": {
-        "name": "{{arbimon-rfm-train-job-timestamp}}"
+        "name": "{{arbimon-rfm-retrain-job-timestamp}}"
     },
     "spec": {
         "ttlSecondsAfterFinished": 86400,
@@ -10,7 +10,7 @@
             "spec": {
                 "containers": [
                     {
-                        "name": "arbimon-rfm-train-container",
+                        "name": "arbimon-rfm-retrain-container",
                         "image": "{{imagePath}}",
                         "imagePullPolicy": "Always",
                         "args": ["retrain"],

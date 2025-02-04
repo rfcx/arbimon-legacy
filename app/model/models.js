@@ -246,7 +246,8 @@ module.exports = {
         ENV_JOB_ID: joi.string()
     }),
 
-    createRFM: function(data, callback){
+    createRFM: function(data, callback) {
+        const isRetrain = data.isRetrain === true
         const payload = JSON.stringify(
             {
                 ENV_JOB_ID: `${data.jobId}`
@@ -254,8 +255,11 @@ module.exports = {
         )
         return q.ninvoke(joi, 'validate', payload, this.JOB_SCHEMA)
             .then(async () => {
-                data.kubernetesJobName = `arbimon-rfm-train-${data.jobId}-${new Date().getTime()}`;
-                const jobParam = jsonTemplates.getRfmTemplate('arbimon-rfm-train', 'job', {
+                const jobName = `arbimon-rfm-${isRetrain ? 'retrain' : 'train'}`;
+                data.kubernetesJobName = `${jobName}-${data.jobId}-${new Date().getTime()}`;
+                const rfmJsonTemplate = jsonTemplates.getRfmTemplate
+                const rfmRetrainJsonTemplate = jsonTemplates.getRfmRetrainTemplate
+                const jobParam = (isRetrain ? rfmRetrainJsonTemplate : rfmJsonTemplate)(jobName, 'job', {
                     kubernetesJobName: data.kubernetesJobName,
                     imagePath: k8sConfig.rfmImagePath,
                     ENV_JOB_ID: `${data.jobId}`

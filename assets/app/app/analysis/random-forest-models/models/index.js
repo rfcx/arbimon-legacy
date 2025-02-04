@@ -332,7 +332,7 @@ angular.module('a2.analysis.random-forest-models.models', [
     $scope.projectData = projectData;
     $scope.trainings = trainings;
     $scope.nameMsg = '';
-    $scope.isRetrain = oldModel && oldModel.mname;
+    $scope.isRetrain = oldModel && oldModel.mname !== undefined;
     $scope.data = {
         training: $scope.isRetrain ? $scope.trainings.find(t => t.training_set_id === oldModel.trainingSet.id) : '',
         classifier: $scope.isRetrain ? $scope.types[0] : '',
@@ -457,7 +457,9 @@ angular.module('a2.analysis.random-forest-models.models', [
                 tp: parseInt($scope.data.usePresentTraining),
                 tn: parseInt($scope.data.useNotPresentTraining),
                 vp: parseInt($scope.data.usePresentValidation),
-                vn: parseInt($scope.data.useNotPresentValidation)
+                vn: parseInt($scope.data.useNotPresentValidation),
+                isRetrain: $scope.isRetrain,
+                modelUri: $scope.isRetrain ? oldModel.pattern.thumbnail : ''
             })
             .success(function(data) {
                 if (data.name) {

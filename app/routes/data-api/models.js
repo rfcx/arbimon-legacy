@@ -52,10 +52,9 @@ router.get('/project/:projectUrl/models/forminfo', function(req, res, next) {
 
 router.post('/project/:projectUrl/models/new', function(req, res, next) {
     res.type('application/json');
-    let response_already_sent;
     let project_id, name, train_id, classifier_id, usePresentTraining;
     let useNotPresentTraining, usePresentValidation, useNotPresentValidation, user_id;
-    let job_id, params;
+    let job_id, params1, params2, trainedJobId, isRetrain;
     
     return model.projects.findByUrl(req.params.projectUrl).then(function gather_job_params(rows){
         if(!rows.length){
@@ -67,7 +66,7 @@ router.post('/project/:projectUrl/models/new', function(req, res, next) {
         if(!req.haveAccess(project_id, "manage models and classification")){
             throw new APIError({ error: "you dont have permission to 'manage models and classification'"});
         }
-        
+        isRetrain = req.body.isRetrain;
         name = (req.body.n);
         train_id = req.body.t;
         classifier_id = req.body.c;
@@ -76,7 +75,11 @@ router.post('/project/:projectUrl/models/new', function(req, res, next) {
         usePresentValidation = req.body.vp;
         useNotPresentValidation  = req.body.vn;
         user_id = req.session.user.id;
-        params = {
+        if (isRetrain) {
+            const reg = /job_(\d+)_/.exec(req.body.modelUri);
+            trainedJobId = +reg[1];
+        }
+        params1 = {
             name: name,
             train: train_id,
             classifier: classifier_id,
@@ -87,7 +90,12 @@ router.post('/project/:projectUrl/models/new', function(req, res, next) {
             upv: usePresentValidation,
             unv: useNotPresentValidation,
         };
-        
+        params2 = {
+            trained_job_id: trainedJobId,
+            user: user_id,
+            project: project_id
+        };
+        if (isRetrain) return;
         return q.ninvoke(model.jobs, 'modelNameExists', {
             name: name,
             classifier: classifier_id,
@@ -95,22 +103,22 @@ router.post('/project/:projectUrl/models/new', function(req, res, next) {
             pid: project_id
         }).get(0);
     }).then(function abort_if_already_exists(row) {
-        if(row[0].count !== 0){
+        if (row && row[0] && row[0].count !== 0 && !isRetrain) {
             throw new APIError({ error:"Name is repeated"});
         }
-
-        return model.jobs.newJob(params, 'training_job').catch(function(err){
-            throw new APIError({ name: 'Could not create training job' });
+        return model.jobs.newJob(isRetrain ? params2 : params1, isRetrain ? 'retraining_job' : 'training_job').catch(function(err) {
+            throw new APIError({ name: `Could not create ${isRetrain ? 'retraining' : 'training'} job` });
         });
-    }).then(function get_job_id(_job_id){
+    }).then(function get_job_id(_job_id) {
         job_id = _job_id;
         pokeDaMonkey(); // parallel promise
 
         return model.models.createRFM({
-            jobId: job_id
+            jobId: job_id,
+            isRetrain: true
         }, function(err, data) {
-            if (err) return res.json({ err: 'Could not create training job' });
-            res.json({ ok: `Job created, training Job: ${job_id}` });
+            if (err) return res.json({ err: `Could not create ${isRetrain ? 'retraining' : 'training'} job` });
+            res.json({ ok: `Job created, ${isRetrain ? 'retraining' : 'training'} Job: ${job_id}` });
         })
     }).catch(next);
 });
