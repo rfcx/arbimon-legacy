@@ -195,11 +195,11 @@ angular.module('a2.analysis.random-forest-models.models', [
     };
 
     $scope.isShareModelDisabled = function() {
-        return !a2UserPermit.can('manage models and classification') || (a2UserPermit.can('manage models and classification') && !a2UserPermit.can('export report'))
+        return (!a2UserPermit.getUserRole() === 'Expert' || !a2UserPermit.getUserRole() === 'Admin' || !a2UserPermit.getUserRole() === 'Owner');
     }
 
     $scope.shareModel = function() {
-        if (!a2UserPermit.can('manage models and classification') || (a2UserPermit.can('manage models and classification') && !a2UserPermit.can('export report'))) {
+        if (!a2UserPermit.getUserRole() === 'Expert' || !a2UserPermit.getUserRole() === 'Admin' || !a2UserPermit.getUserRole() === 'Owner') {
             notify.error('You do not have permission to share models');
             return;
         }
