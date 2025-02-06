@@ -491,6 +491,7 @@ angular.module('a2.analysis.patternmatching', [
         var modalInstance = $modal.open({
             templateUrl: '/app/analysis/patternmatching/createnewpatternmatching.html',
             controller: 'CreateNewPatternMatchingInstanceCtrl as controller',
+            windowClass: 'modal-bg-echo'
         });
 
         modalInstance.result.then(function (result) {

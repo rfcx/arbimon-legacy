@@ -1,6 +1,6 @@
 <div class="modal-header row-flex flex-space-between">
     <h3 class="modal-title">Create a new pattern matching</h3>
-    <p class="mb-0 flex-self-align-bottom"><a class="help" href="https://help.arbimon.org/article/230-pattern-matching-best-practices" target="_blank">Learn more<i class="ml-1 fa fa-external-link"></i></a></p>
+    <p class="mb-0 flex-self-align-bottom"><a class="help text-primary" href="https://help.arbimon.org/article/230-pattern-matching-best-practices" target="_blank">Learn more<i class="ml-1 fa fa-external-link"></i></a></p>
 </div>
 <div class="modal-body">
     <form role="form">
@@ -100,12 +100,10 @@
     </form>
 </div>
 <div class="modal-footer">
-    <button class="btn btn-primary" ng-click="controller.ok()" ng-disabled="controller.isSaving || !controller.isJobValid()">
-        <i class="fa fa-cogs"></i>
-        Create
+    <button class="btn btn-primary btn-rounded-full" ng-click="controller.ok()" ng-disabled="controller.isSaving || !controller.isJobValid()">
+        Create <img class="ml-1" src="/images/fi-plus.svg">
     </button>
-    <button class="btn btn-default" ng-click="controller.cancel()">
-        <i class="fa fa-times"></i>
-        Close
+    <button class="btn btn-success btn-rounded-full" ng-click="controller.cancel()">
+        Close <i class="fa fa-times"></i>
     </button>
 </div>
