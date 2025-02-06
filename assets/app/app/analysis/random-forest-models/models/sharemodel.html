@@ -1,0 +1,42 @@
+<div class="modal-header">
+    <h3 class="modal-title">Share Model</h3>
+    <div>Share to another project to be able to run classification jobs in other projects using models from this project.</div>
+</div>
+<div class="modal-body">
+    <div class="form-group">
+        <label for="modelName">Model from Job</label>
+        <span ng-if="isModelEmpty" class="text-danger small mb-1 ml-3">Please select a model.</span>
+        <ui-select ng-if="models && models.length" ng-model="selectedData.model" theme="bootstrap" ng-disabled="disabled">
+            <ui-select-match placeholder="Select or search a model...">{{$select.selected.mname}}</ui-select-match>
+            <ui-select-choices repeat="model in models | filter: $select.search" value="model.model_id">
+                {{model.mname}}
+            </ui-select-choices>
+        </ui-select>
+    </div>
+    <div class="form-group">
+        <div class="row-flex flex-direction-row flex-align-middle gap-x-3">
+            <label for="projectName">
+                Copy to project
+            </label>
+            <span style="width: 16px" class="mb-2">
+                <img style="width: 16px" tooltip="You can share a model to any project that you are a member with the Expert or Administrator role." src="/images/fi-info.svg">
+            </span>
+            <span ng-if="isProjectEmpty" class="text-danger small mb-1">Please select a project to copy to.</span>
+        </div>
+        <ui-select ng-if="projects && projects.length" ng-model="selectedData.project" theme="bootstrap" ng-disabled="disabled">
+            <ui-select-match placeholder="Select or search a project...">{{$select.selected.name}}</ui-select-match>
+            <ui-select-choices repeat="project in projects | filter: $select.search" value="project.project_id">
+                {{project.name}}
+            </ui-select-choices>
+        </ui-select>
+    </div>
+</div>
+<div class="modal-footer">
+    <div class="row-flex flex-direction-row flex-space-between">
+        <button class="btn btn-success btn-rounded-full bg-moss" style="padding: 8px 24px;" ng-click="cancel()">Cancel</button>
+        <div class="row-flex flex-direction-row flex-space-center">
+            <i class="fa fa-spinner fa-spin" ng-if="isShareModel" style="font-size: 26px; vertical-align: middle; margin-right: 5px;"></i>
+            <button class="btn btn-primary btn-rounded-full" style="padding: 8px 24px;" ng-disabled="isShareModel" ng-click="ok()">Share Model</button>
+        </div>
+    </div>
+</div>

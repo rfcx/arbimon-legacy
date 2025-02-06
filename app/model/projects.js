@@ -68,9 +68,18 @@ var Projects = {
     },
 
     listAll: function(callback) {
-        var q = "SELECT project_id as id, name, url, is_private \n"+
+        const q = "SELECT project_id as id, name, url, is_private \n"+
                 "FROM projects";
 
+        queryHandler(q, callback);
+    },
+
+    getProjectsToShareModel: function(userId, callback) {
+        const q = `select p.project_id, p.name, p.url, upr.role_id
+            from arbimon2.projects p
+            join user_project_role upr on p.project_id = upr.project_id
+            where p.deleted_at is null and upr.role_id in (1,6,4) and upr.user_id = ${userId};
+        `;
         queryHandler(q, callback);
     },
 
@@ -945,6 +954,8 @@ var Projects = {
                 "SELECT m.model_id, \n"+
                 "   CONCAT(UCASE(LEFT(m.name, 1)), \n"+
                 "   SUBSTRING(m.name, 2)) as mname, \n"+
+                "   m.uri, \n"+
+                "   m.project_id, \n"+
                 "   UNIX_TIMESTAMP( m.`date_created` )*1000 as date, \n"+
                 "   m.date_created, \n"+
                 "   CONCAT( \n"+
@@ -967,6 +978,8 @@ var Projects = {
                 "SELECT m.model_id, \n"+
                 "   CONCAT(UCASE(LEFT(m.name, 1)), \n"+
                 "   SUBSTRING(m.name, 2)) as mname, \n"+
+                "   m.project_id, \n"+
+                "   m.uri, \n"+
                 "   UNIX_TIMESTAMP( m.`date_created` )*1000 as date, \n"+
                 "   m.date_created, \n"+
                 "   CONCAT( \n"+
@@ -987,7 +1000,24 @@ var Projects = {
                 "AND pim.model_id = m.model_id \n"+
                 "AND pim.project_id = p.project_id \n"+
                 ") ORDER BY date_created DESC\n";
-            queryHandler(q, callback);
+            queryHandler(q, function(err, rows) {
+                if(err) return callback(err);
+                callback(null, Projects.processModelList(rows));
+            });
+    },
+
+    processModelList: function(models) {
+        for (let model of models) {
+            model.shared = false;
+            if (!model.uri.startsWith(`project_${model.project_id}`)) {
+                model.shared = true;
+                const regexResult = /project_(\d+)/.exec(model.uri);
+                if (regexResult) {
+                    model.source_project_id = +regexResult[1];
+                }
+            }
+        }
+        return models;
     },
 
     trainingSets: function(project_url, callback) {

@@ -163,7 +163,7 @@ router.get('/:classiId/vector/:recId', function(req, res, next) {
         }
 
         var vectorUri = rows[0].vect;
-
+        // TODO: new jobs are located in a new bucket.
         s3.getObject({
             Key: vectorUri,
             Bucket: config('aws').bucketName

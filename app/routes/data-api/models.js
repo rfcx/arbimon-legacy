@@ -52,10 +52,9 @@ router.get('/project/:projectUrl/models/forminfo', function(req, res, next) {
 
 router.post('/project/:projectUrl/models/new', function(req, res, next) {
     res.type('application/json');
-    let response_already_sent;
     let project_id, name, train_id, classifier_id, usePresentTraining;
     let useNotPresentTraining, usePresentValidation, useNotPresentValidation, user_id;
-    let job_id, params;
+    let job_id, params1, params2, trainedJobId, isRetrain;
     
     return model.projects.findByUrl(req.params.projectUrl).then(function gather_job_params(rows){
         if(!rows.length){
@@ -67,7 +66,7 @@ router.post('/project/:projectUrl/models/new', function(req, res, next) {
         if(!req.haveAccess(project_id, "manage models and classification")){
             throw new APIError({ error: "you dont have permission to 'manage models and classification'"});
         }
-        
+        isRetrain = req.body.isRetrain;
         name = (req.body.n);
         train_id = req.body.t;
         classifier_id = req.body.c;
@@ -76,7 +75,11 @@ router.post('/project/:projectUrl/models/new', function(req, res, next) {
         usePresentValidation = req.body.vp;
         useNotPresentValidation  = req.body.vn;
         user_id = req.session.user.id;
-        params = {
+        if (isRetrain) {
+            const reg = /job_(\d+)_/.exec(req.body.modelUri);
+            trainedJobId = +reg[1];
+        }
+        params1 = {
             name: name,
             train: train_id,
             classifier: classifier_id,
@@ -87,7 +90,12 @@ router.post('/project/:projectUrl/models/new', function(req, res, next) {
             upv: usePresentValidation,
             unv: useNotPresentValidation,
         };
-        
+        params2 = {
+            trained_job_id: trainedJobId,
+            user: user_id,
+            project: project_id
+        };
+        if (isRetrain) return;
         return q.ninvoke(model.jobs, 'modelNameExists', {
             name: name,
             classifier: classifier_id,
@@ -95,39 +103,55 @@ router.post('/project/:projectUrl/models/new', function(req, res, next) {
             pid: project_id
         }).get(0);
     }).then(function abort_if_already_exists(row) {
-        if(row[0].count !== 0){
+        if (row && row[0] && row[0].count !== 0 && !isRetrain) {
             throw new APIError({ error:"Name is repeated"});
         }
-
-        return model.jobs.newJob(params, 'training_job').catch(function(err){
-            throw new APIError({ name: 'Could not create training job' });
+        return model.jobs.newJob(isRetrain ? params2 : params1, isRetrain ? 'retraining_job' : 'training_job').catch(function(err) {
+            throw new APIError({ name: `Could not create ${isRetrain ? 'retraining' : 'training'} job` });
         });
-    }).then(function get_job_id(_job_id){
+    }).then(function get_job_id(_job_id) {
         job_id = _job_id;
         pokeDaMonkey(); // parallel promise
 
         return model.models.createRFM({
-            jobId: job_id
+            jobId: job_id,
+            isRetrain: true
         }, function(err, data) {
-            if (err) return res.json({ err: 'Could not create training job' });
-            res.json({ ok: `Job created, training Job: ${job_id}` });
+            if (err) return res.json({ err: `Could not create ${isRetrain ? 'retraining' : 'training'} job` });
+            res.json({ ok: `Job created, ${isRetrain ? 'retraining' : 'training'} Job: ${job_id}` });
         })
     }).catch(next);
 });
 
 router.get('/project/:projectUrl/models/:mid', function(req, res, next) {
     res.type('json');
-    model.models.details(req.params.mid, function(err, model) {
-        if(err) {
-            if(err.message == "model not found") {
-                return res.status(404).json({ error: err.message });
-            }
-            else {
-                return next(err);
-            }
+    model.models.getModelById(req.params.mid, async function(err, modelData) {
+        const [data] = modelData;
+        const isSharedModel = !data.uri.startsWith(`project_${data.project_id}`)
+        let opts = {
+            isSharedModel
+        };
+        if (isSharedModel) {
+            opts.sourceTrainingSetId = data.training_set_id;
+            const regexResult = /project_(\d+)/.exec(data.uri);
+            const sourceProjectId = +regexResult[1];
+            const sourceModelData = await model.models.getModelByUri(sourceProjectId, data.uri);
+            opts.sourceModelId = sourceModelData.model_id;
+            const reg = /job_(\d+)_/.exec(data.uri);
+            opts.sourceJobId = +reg[1];
         }
-        res.json(model);
-    });
+        model.models.details(req.params.mid, opts, function(err, model) {
+            if(err) {
+                if(err.message == "model not found") {
+                    return res.status(404).json({ error: err.message });
+                }
+                else {
+                    return next(err);
+                }
+            }
+            res.json(model);
+        });
+    })
 });
 
 router.post('/project/:projectUrl/models/savethreshold', function(req, res, next) {
@@ -136,6 +160,23 @@ router.post('/project/:projectUrl/models/savethreshold', function(req, res, next
         if(err) return next(err);
 
         res.json({ok:'saved'});
+    });
+});
+
+router.post('/project/:projectUrl/models/share-model', function(req, res, next) {
+    res.type('json');
+    const opts = {
+        modelId: req.body.modelId,
+        modelName: req.body.modelName,
+        projectIdTo: req.body.projectId,
+    }
+    model.models.checkExistingModel(opts, function(err, result) {
+        if (err) return next(err);
+        if (result.length) return res.json({ ok:'This model has been shared to selected project.' });
+        return model.models.shareModel(opts, function(err, result) {
+            if(err) return next(err);
+            res.json({ ok:'The model was successfully shared with the selected project.' });
+        });
     });
 });
 
@@ -245,34 +286,42 @@ router.get('/project/:projectUrl/models/:modelId/training-vector/:recId', functi
     if(!req.params.modelId || !req.params.recId) {
         return res.status(400).json({ error: 'missing parameters'});
     }
-    
-    model.models.getTrainingVector(req.params.modelId, req.params.recId, function(err, result) {
-        if(err) return next(err);
-        
-        const vectorUri = result;
-        const isProd = process.env.NODE_ENV === 'production';
-        const awsConfig = isProd ? config('aws') : config('aws_rfcx');
-        const awsBucket = isProd ? awsConfig.bucketName : awsConfig.bucketNameStaging;
-        (isProd ? s3 : s3RFCx).getObject({
-            Key: vectorUri,
-            Bucket: awsBucket
-        },
-        function(err, data){
-            if(err) {
-                if(err.code == 'NoSuchKey'){
-                    return res.status(404).json({ err:'vector-not-found' });
-                }
-                else {
-                    return next(err);
-                }
-            }
+    model.models.getModelById(req.params.modelId, async function(err, modelData) {
+        const [data] = modelData;
+        const isSharedModel = !data.uri.startsWith(`project_${data.project_id}`);
+        let sourceModelId;
+        if (isSharedModel) {
+            const regexResult = /project_(\d+)/.exec(data.uri);
+            const sourceProjectId = +regexResult[1];
+            const sourceModelData = await model.models.getModelByUri(sourceProjectId, data.uri);
+            sourceModelId = sourceModelData.model_id;
+        }
+        model.models.getTrainingVector(isSharedModel ? sourceModelId : req.params.modelId, req.params.recId, function(err, result) {
+            if(err) return next(err);
             
-            async.map(String(data.Body).split(','), function(number, next) {
-                next(null, parseFloat(number));
-            }, function done(err, vector) {
-                res.json({ vector: vector });
+            const vectorUri = result;
+            const isProd = process.env.NODE_ENV === 'production';
+            const awsConfig = isProd ? config('aws') : config('aws_rfcx');
+            const awsBucket = isProd ? awsConfig.bucketName : awsConfig.bucketNameStaging;
+            (isProd ? s3 : s3RFCx).getObject({
+                Key: vectorUri,
+                Bucket: awsBucket
+            },
+            function(err, data){
+                if(err) {
+                    if(err.code == 'NoSuchKey'){
+                        return res.status(404).json({ err:'vector-not-found' });
+                    }
+                    else {
+                        return next(err);
+                    }
+                }
+                async.map(String(data.Body).split(','), function(number, next) {
+                    next(null, parseFloat(number));
+                }, function done(err, vector) {
+                    res.json({ vector: vector });
+                });
             });
-
         });
     });
 
