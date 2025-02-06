@@ -40,6 +40,20 @@ var Jobs = {
                 }
             }
         },
+        retraining_job : {
+            type_id : 10,
+            new : function(params, db) {
+                return q.ninvoke(db, 'query', `INSERT INTO job_params_retraining (job_id, trained_job_id) VALUES (${params.job_id}, ${params.trained_job_id})`);
+            },
+            sql : {
+                report : {
+                    projections : ['JPT.name as name'],
+                    tables      : ['JOIN `job_params_retraining` as JPR ON J.job_id = JPR.job_id',
+                        'join job_params_training JPT ON JPR.trained_job_id = JPT.job_id'
+                    ],
+                }
+            }
+        },
         classification_job : {
             type_id : 2,
             new: function(params, db) {
@@ -386,6 +400,9 @@ var Jobs = {
                     break;
                 case 9:
                     job.url = `clustering-jobs/${ job.job_id }`
+                    break;
+                case 10:
+                    job.url = 'random-forest-models/models'
                     break;
             }
             return resolve(job)

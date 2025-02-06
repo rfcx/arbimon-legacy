@@ -1,20 +1,17 @@
-var debug = require('debug')('arbimon2:route:user');
-var express = require('express');
-var router = express.Router();
-var gravatar = require('gravatar');
-var async = require('async');
-var sprintf = require("sprintf-js").sprintf;
+let debug = require('debug')('arbimon2:route:user');
+let express = require('express');
+let router = express.Router();
+let gravatar = require('gravatar');
 
-var model = require('../../model');
-var sha256 = require('../../utils/sha256');
-var APIError = require('../../utils/apierror');
+let model = require('../../model');
+let sha256 = require('../../utils/sha256');
 
 router.get('/projectlist', function(req, res, next) {
     res.type('json');
-    var user = req.session.user;
-    var type = req.query.type;
-    var includeLocation = req.query.include_location === 'true';
-    let publicTemplates = req.query.publicTemplates === 'true';
+    const user = req.session.user;
+    const type = req.query.type;
+    const includeLocation = req.query.include_location === 'true';
+    const publicTemplates = req.query.publicTemplates === 'true';
     if ((user.isAnonymousGuest || user.isSuper !== 1) && !type) {
         model.users.projectList({
             user_id: req.session.user.id,
@@ -51,14 +48,14 @@ router.get('/feed/formats', function(req, res, next) {
 router.get('/feed/:page', function(req, res, next) {
     res.type('json');
 
-    var page = req.params.page || 0;
+    let page = req.params.page || 0;
 
     ( (req.session.user.isSuper === 1) ?
         model.news.getFor({page:page, pageCount:10}) :
         model.news.userFeed(req.session.user.id, page)
     ).then(function(news) {
         res.json(news.map(function(newsItem) {
-            var data = JSON.parse(newsItem.data);
+            let data = JSON.parse(newsItem.data);
             data.project = [newsItem.project_id, newsItem.project];
             return {
                 type: newsItem.type,
@@ -80,7 +77,7 @@ router.get('/info/:userId', function(req, res, next) {
 
 router.get('/info', function(req, res) {
     res.type('json');
-    var user = req.session.user;
+    let user = req.session.user;
 
     res.json({
         username: user.username,
@@ -95,7 +92,7 @@ router.get('/info', function(req, res) {
 
 router.get('/search/:query?', function(req, res, next) {
     res.type('json');
-    var query = req.params.query;
+    let query = req.params.query;
 
     if(!query){
         return res.json({ error: "empty query" });
@@ -104,7 +101,7 @@ router.get('/search/:query?', function(req, res, next) {
     model.users.search(query, function(err, rows){
         if(err) return next(err);
 
-        var users = rows.map(function(row){
+        let users = rows.map(function(row){
             row.imageUrl = gravatar.url(row.email, { d: 'monsterid', s: 60 }, req.secure);
 
             return row;
@@ -116,8 +113,8 @@ router.get('/search/:query?', function(req, res, next) {
 
 router.post('/update/password', function(req, res, next){
     res.type('json');
-    var userData = req.body.userData;
-    var password = req.body.password;
+    let userData = req.body.userData;
+    let password = req.body.password;
 
     if(!userData || !userData.newPass || !password) {
         return res.json({ error: "missing parameters" });
@@ -145,11 +142,11 @@ router.post('/update/password', function(req, res, next){
 
 router.post('/update', function(req, res, next){
     res.type('json');
-    var userData = req.body.userData;
+    let userData = req.body.userData;
 
     model.users.findById(req.session.user.id).get(0).then(function(user){
         if(userData){
-            var updateData = {
+            let updateData = {
                 user_id: req.session.user.id,
                 firstname: userData.name,
                 lastname: userData.lastname
