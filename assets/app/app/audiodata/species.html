@@ -3,24 +3,24 @@
         Species
     </h1>
     <div class="col-12 mt-4">
-        <button class="btn btn-default"
+        <button class="btn btn-primary btn-rounded-full"
             ng-click="add()"
             tooltip="Add a new species + call type"
             tooltip-trigger="mouseenter">
-            <i class="fa fa-plus mr-2"></i> New species
+            New species <img class="ml-1" src="/images/fi-plus.svg">
         </button>
-        <button class="btn btn-default ml-3"
+        <button class="btn btn-success btn-rounded-full ml-3"
             ng-click="exportSpecies()"
             tooltip="Export species list"
             tooltip-trigger="mouseenter">
-            <i class="fa fa-download mr-2"></i> Export species list
+            Export species list <i class="fa fa-download mr-2"></i>
         </button>
-        <button class="btn btn-default ml-3"
+        <button class="btn btn-success btn-rounded-full ml-3"
             ng-disabled="!checked || !checked.length"
             ng-click="removeSpecies()"
             tooltip="Remove species sound"
             tooltip-trigger="mouseenter">
-            <i class="fa fa-trash mr-2"></i> Remove species
+            Remove species <i class="fa fa-trash mr-2"></i>
         </button>
         <div class="row-flex flex-direction-row flex-space-start flex-align-middle mt-4 mb-3">
             <input ng-if="classes.length" type="text" class="form-control" ng-model="searchSpecies.q" style="width: 380px;" placeholder="Search species by scientific name or family" ng-change="onFilterChanged()">
