@@ -373,7 +373,7 @@ angular.module('a2.analysis.random-forest-models.models', [
     $scope.nameMsg = '';
     $scope.isRetrain = oldModel && oldModel.mname !== undefined;
     $scope.data = {
-        training: $scope.isRetrain ? $scope.trainings.find(t => t.training_set_id === oldModel.trainingSet.id) : '',
+        training: $scope.isRetrain ? trainings.find(t => t.training_set_id === oldModel.trainingSet.id) : '',
         classifier: $scope.isRetrain ? $scope.types[0] : '',
         name: $scope.isRetrain ? oldModel.mname : '',
         totalValidations: 'Retrieving...',
