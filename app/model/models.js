@@ -10,6 +10,7 @@ const k8sConfig = config('k8s');
 const jsonTemplates = require('../utils/json-templates');
 const { Client } = require('kubernetes-client');
 const k8sClient = new Client({ version: '1.13' });
+const moment = require('moment');
 let s3;
 const queryHandler = dbpool.queryHandler;
 
@@ -132,8 +133,11 @@ module.exports = {
             let data = rows[0];
             data.json = JSON.parse(data.json);
             const isProd = process.env.NODE_ENV === 'production';
-            const awsConfig = isProd ? config('aws') : config('aws_rfcx');
-            const patternBucket = isProd ? awsConfig.bucketName : awsConfig.bucketNameStaging;
+            const jobDate = moment.utc(data.trainingSetcreated).valueOf();
+            const bucketUpdateDate = moment.utc('2024-11-22 00:00:00').valueOf();
+            const isOldJob = jobDate < bucketUpdateDate;
+            const awsConfig = (isProd || isOldJob) ? config('aws') : config('aws_rfcx');
+            const patternBucket = (isProd || isOldJob) ? awsConfig.bucketName : awsConfig.bucketNameStaging;
             const patternRegion = isProd ? awsConfig.region : awsConfig.region;
             const patternThumbnail = 'https://' + patternBucket + '.s3.' + patternRegion + '.amazonaws.com/' + data.json.roipng;
             

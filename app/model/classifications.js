@@ -308,9 +308,10 @@ var Classifications = {
                 "           '_', \n"+
                 "           SUBSTRING_INDEX(r.uri, '/', -1), \n"+
                 "           '.vector' \n"+
-                "       ) as vect \n"+
+                "       ) as vect, j.date_created \n"+
                 "FROM classification_results AS cr \n"+
                 "JOIN job_params_classification AS jpc ON jpc.job_id = cr.job_id \n"+
+                "JOIN jobs AS j ON jpc.job_id = j.job_id \n"+
                 "JOIN models AS m ON m.model_id = jpc.model_id \n"+
                 "JOIN recordings AS r ON r.recording_id = cr.recording_id \n"+
                 "WHERE cr.job_id = ? \n"+
