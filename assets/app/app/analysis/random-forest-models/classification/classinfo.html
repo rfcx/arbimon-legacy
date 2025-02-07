@@ -52,7 +52,7 @@
                 <div class="col-sm-12">
                     <h4>
                         Results
-                        <a class="btn btn-default"
+                        <a class="btn btn-success btn-rounded-full"
                             ng-if="showDownload"
                             target="_blank"
                             ng-href="{{csvUrl}}">
@@ -94,7 +94,7 @@
     </div>
     <hr>
     <div class="text-center">
-        <button type="button" name="button" class="btn btn-default"
+        <button type="button" name="button" class="btn btn-success btn-rounded-full"
             ng-click="toggleRecDetails()">
                 <i class="fa" ng-class="showMore ? 'fa-caret-up' : 'fa-caret-down'"></i>
                 {{ showMore ? 'Hide' : 'Show' }} details per recording
@@ -144,5 +144,5 @@
     </div>
 </div>
 <div class="modal-footer">
-    <button class="btn btn-primary" ng-click="ok()"  ng-disabled="buttonEnable()">Close</button>
+    <button class="btn btn-success btn-rounded-full" ng-click="ok()"  ng-disabled="buttonEnable()">Close</button>
 </div>

@@ -150,6 +150,7 @@ angular.module('a2.analysis.random-forest-models.models', [
         var modalInstance = $modal.open({
             templateUrl: '/app/analysis/random-forest-models/models/deletemodel.html',
             controller: 'DeleteModelInstanceCtrl',
+            windowClass: 'modal-bg-echo',
             resolve: {
                 model_name: function() {
                     return model_name;
@@ -207,6 +208,7 @@ angular.module('a2.analysis.random-forest-models.models', [
         const modalInstance = $modal.open({
             templateUrl: '/app/analysis/random-forest-models/models/sharemodel.html',
             controller: 'ShareModelInstanceCtrl',
+            windowClass: 'modal-bg-echo',
             resolve: {
                 models: function() {
                     return $scope.modelsData;
@@ -266,6 +268,7 @@ angular.module('a2.analysis.random-forest-models.models', [
             var modalInstance = $modal.open({
                 templateUrl: '/app/analysis/random-forest-models/models/newmodel.html',
                 controller: 'NewModelInstanceCtrl',
+                windowClass: 'modal-bg-echo',
                 resolve: {
                     projectData: function() {
                         return $scope.projectData;
@@ -322,6 +325,7 @@ angular.module('a2.analysis.random-forest-models.models', [
         var modalInstanceClassification = $modal.open({
             templateUrl: '/app/analysis/random-forest-models/classification/createnewclassification.html',
             controller: 'CreateNewClassificationInstanceCtrl',
+            windowClass: 'modal-bg-echo',
             resolve: {
                 data: function($q){
                     var d = $q.defer();

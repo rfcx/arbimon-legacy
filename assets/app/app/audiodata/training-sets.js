@@ -317,7 +317,8 @@ angular.module('a2.audiodata.training-sets', [
                 this.btnOk = "Yes, do it!";
                 this.btnCancel = "No";
             },
-            controllerAs: 'popup'
+            controllerAs: 'popup',
+            windowClass: 'modal-bg-echo'
         }).result.then((function() {
             a2TrainingSets.delete(trainingSet.id, (function(data){
                 this.trainingSets.splice(this.trainingSets.indexOf(trainingSet), 1);

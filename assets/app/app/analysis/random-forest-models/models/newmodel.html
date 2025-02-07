@@ -30,7 +30,7 @@
             <div class="mb-3 flex flex-row flex-align-middle" ng-if="trainings && !trainings.length">
                 <em class="pr-2">No training sets found.</em>
                 Go to
-                <button class="btn btn-sm btn-default" ng-click="cancel('/audiodata/training-sets')">
+                <button class="btn btn-sm btn-success btn-rounded-full" ng-click="cancel('/audiodata/training-sets')">
                     Training sets
                 </button>
                 and create a training set.
@@ -95,11 +95,11 @@
 
     </div>
     <div class="modal-footer">
-        <button class="btn btn-primary" ng-click="ok()" ng-disabled="disableCreateButton()">
-            <i class="fa fa-cogs"></i> {{ isRetrain ? 'Retrain' : 'Create' }}
+        <button class="btn btn-primary btn-rounded-full" ng-click="ok()" ng-disabled="disableCreateButton()">
+            {{ isRetrain ? 'Retrain' : 'Create' }} <i class="fa fa-cogs"></i>
         </button>
-        <button class="btn btn-default" ng-click="cancel()">
-            <i class="fa fa-times"></i> Close
+        <button class="btn btn-success btn-rounded-full" ng-click="cancel()">
+            Close <i class="fa fa-times"></i>
         </button>
     </div>
 </form>

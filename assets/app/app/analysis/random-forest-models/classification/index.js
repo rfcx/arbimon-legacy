@@ -147,6 +147,7 @@ angular.module('a2.analysis.random-forest-models.classification', [
         var modalInstance = $modal.open({
             templateUrl: '/app/analysis/random-forest-models/classification/createnewclassification.html',
             controller: 'CreateNewClassificationInstanceCtrl',
+            windowClass: 'modal-bg-echo',
             resolve: {
                 data: function($q){
                     var d = $q.defer();
@@ -210,6 +211,7 @@ angular.module('a2.analysis.random-forest-models.classification', [
         var modalInstance = $modal.open({
             templateUrl: '/app/analysis/random-forest-models/classification/deleteclassification.html',
             controller: 'DeleteClassificationInstanceCtrl',
+            windowClass: 'modal-bg-echo',
             resolve: {
                 name: function() {
                     return name;
