@@ -419,7 +419,8 @@ angular.module('a2.analysis.patternmatching', [
         $scope.pmName = patternMatching.name
         const modalInstance = $modal.open({
             templateUrl: '/app/analysis/patternmatching/edit-patternmatching.html',
-            scope: $scope
+            scope: $scope,
+            windowClass: 'modal-bg-echo'
         });
 
         modalInstance.result.then(function(name) {
@@ -523,6 +524,7 @@ angular.module('a2.analysis.patternmatching', [
         var modalInstance = $modal.open({
             templateUrl: '/app/analysis/patternmatching/deletepatternmatching.html',
             controller: 'DeletePatternMatchingInstanceCtrl as controller',
+            windowClass: 'modal-bg-echo',
             resolve: {
                 patternMatching: function() {
                     return patternMatching;
@@ -702,7 +704,8 @@ angular.module('a2.analysis.patternmatching', [
         $scope.pmName = patternMatching.name
         const modalInstance = $modal.open({
             templateUrl: '/app/analysis/patternmatching/edit-patternmatching.html',
-            scope: $scope
+            scope: $scope,
+            windowClass: 'modal-bg-echo'
         });
 
         modalInstance.result.then(function(name) {
