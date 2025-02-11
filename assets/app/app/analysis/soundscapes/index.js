@@ -204,6 +204,7 @@ angular.module('a2.analysis.soundscapes', [
         var modalInstance = $modal.open({
             templateUrl: '/app/analysis/soundscapes/deletesoundscape.html',
             controller: 'DeleteSoundscapeInstanceCtrl',
+            windowClass: 'modal-bg-echo',
             resolve: {
                 name: function() {
                     return name;
@@ -258,6 +259,7 @@ angular.module('a2.analysis.soundscapes', [
         var modalInstance = $modal.open({
             templateUrl: '/app/analysis/soundscapes/createnewsoundscape.html',
             controller: 'CreateNewSoundscapeInstanceCtrl',
+            windowClass: 'modal-bg-echo',
             resolve: {
                 amplitudeReferences : function(a2Soundscapes){
                     return a2Soundscapes.getAmplitudeReferences();
@@ -314,6 +316,7 @@ angular.module('a2.analysis.soundscapes', [
                 var modalInstance = $modal.open({
                     controller: 'SoundscapesDetailsCtrl as controller',
                     templateUrl: '/app/analysis/soundscapes/details.html',
+                    windowClass: 'modal-bg-echo',
                     resolve: {
                         soundscape: function() {
                             return soundscape;
