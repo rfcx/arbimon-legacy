@@ -3,7 +3,7 @@
         User Stats
         <span class="badge">{{controller.stats.length}} users</span>
         <div class="pull-right btn-group">
-            <a class="btn btn-default"
+            <a class="btn btn-success btn-rounded-full"
                 ng-href="{{controller.userStatsExportUrl}}"
                 ng-click="true"
                 ng-disabled="!controller.userStatsExportUrl"
@@ -13,7 +13,7 @@
         </div>
     </h4>
     <h4 ng-show="controller.userId">
-        <button class="btn btn-default"
+        <button class="btn btn-success btn-rounded-full"
             ng-click="controller.setUser()">
             &lt;  Go Back
         </button>
