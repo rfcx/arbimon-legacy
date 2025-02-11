@@ -436,6 +436,7 @@ angular.module('a2.audiodata.sites', [
 
         var modalInstance = $modal.open({
             templateUrl: '/common/templates/pop-up.html',
+            windowClass: 'modal-bg-echo',
             controller: function() {
                 this.messages = [
                     "Are you sure you would like to remove the following site?",
@@ -486,6 +487,7 @@ angular.module('a2.audiodata.sites', [
         }
         var modalInstance = $modal.open({
             templateUrl: '/common/templates/pop-up.html',
+            windowClass: 'modal-bg-echo',
             controller: function() {
                 this.messages = ["Are you sure you would like to remove the following sites?"];
                 this.list = list;

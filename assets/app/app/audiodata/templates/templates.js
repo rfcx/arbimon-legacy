@@ -110,6 +110,7 @@ angular.module('a2.audiodata.templates', [
 
             var modalInstance = $modal.open({
                 templateUrl: '/common/templates/pop-up.html',
+                windowClass: 'modal-bg-echo',
                 scope: $scope
             });
 

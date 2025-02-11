@@ -204,6 +204,7 @@ angular.module('a2.analysis.patternmatching', [
 
         var modalInstance = $modal.open({
             templateUrl: '/common/templates/pop-up.html',
+            windowClass: 'modal-bg-echo',
             scope: $scope
         });
 

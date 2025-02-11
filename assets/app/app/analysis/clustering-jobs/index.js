@@ -89,6 +89,7 @@ angular.module('a2.analysis.clustering-jobs', [
         var modalInstance = $modal.open({
             templateUrl: '/app/analysis/clustering-jobs/new-clustering-job.html',
             controller: 'CreateNewClusteringJobCtrl as controller',
+            windowClass: 'modal-bg-echo'
         });
 
         modalInstance.result.then(function (result) {
@@ -116,6 +117,7 @@ angular.module('a2.analysis.clustering-jobs', [
         const modalInstance = $modal.open({
             templateUrl: '/app/analysis/clustering-jobs/delete-clustering-job.html',
             controller: 'DeleteClusteringJobCtrl as controller',
+            windowClass: 'modal-bg-echo',
             resolve: {
                 clusteringJob: function() {
                     return clusteringJob;

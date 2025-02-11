@@ -129,6 +129,7 @@ angular.module('a2.audiodata.recordings', [
         var modalInstance = $modal.open({
             controller: 'SavePlaylistModalInstanceCtrl',
             templateUrl: '/app/audiodata/create-playlist.html',
+            windowClass: 'modal-bg-echo',
             resolve: {
                 listParams: function() {
                     return listParams;
@@ -195,7 +196,8 @@ angular.module('a2.audiodata.recordings', [
                 this.btnOk =  "Delete";
                 this.btnCancel =  "Cancel";
             },
-            controllerAs: 'popup'
+            controllerAs: 'popup',
+            windowClass: 'modal-bg-echo'
         }).result.then(function() {
             return $http.post('/legacy-api/project/'+Project.getUrl()+'/recordings/delete', { recs: recs });
         }).then((function(response){
@@ -256,7 +258,8 @@ angular.module('a2.audiodata.recordings', [
                     this.btnOk =  "Delete";
                     this.btnCancel =  "Cancel";
                 },
-                controllerAs: 'popup'
+                controllerAs: 'popup',
+                windowClass: 'modal-bg-echo'
             }).result;
         }).then(function() {
             return $http.post('/legacy-api/project/'+Project.getUrl()+'/recordings/delete-matching', filters)

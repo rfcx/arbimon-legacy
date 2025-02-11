@@ -111,7 +111,8 @@ angular.module('a2.jobs', [
                     this.btnOk = "Yes, "+action+" it";
                     this.btnCancel = "No";
                 },
-                controllerAs: "popup"
+                controllerAs: "popup",
+                windowClass: 'modal-bg-echo'
             });
 
             modalInstance.opened.then(function() {

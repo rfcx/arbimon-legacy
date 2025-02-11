@@ -139,7 +139,8 @@ angular.module('a2.audiodata.training-sets', [
                 this.btnOk = "Yes, do it!";
                 this.btnCancel = "No";
             },
-            controllerAs: 'popup'
+            controllerAs: 'popup',
+            windowClass: 'modal-bg-echo'
         });
 
         modalInstance.result.then((function() {

@@ -207,6 +207,7 @@ angular.module('a2.audiodata.species', [
         var modalInstance = $modal.open({
             templateUrl: '/app/audiodata/select-species.html',
             controller: 'SelectSpeciesCtrl',
+            windowClass: 'modal-bg-echo',
             size: 'lg',
         });
 
@@ -266,6 +267,7 @@ angular.module('a2.audiodata.species', [
 
         var modalInstance = $modal.open({
             templateUrl: '/common/templates/pop-up.html',
+            windowClass: 'modal-bg-echo',
             scope: $scope
         });
 

@@ -19,7 +19,7 @@
             </div>
         </h1>
         <button ng-if="showRefreshBtn"
-            class="btn btn-default pull-right btn-sm"
+            class="btn btn-success btn-rounded-full pull-right btn-sm"
             tooltip="Refresh list"
             ng-click="loadClusteringJobs()">
                 <i class="fa fa-refresh"></i> Refresh List
@@ -27,11 +27,11 @@
         <loader ng-if="loading"></loader>
         <div ng-show="!loading && clusteringJobsData && !clusteringJobsData.length" class="help-wrapper col-sm-12 row-flex flex-direction-column flex-space-center flex-align-middle" style="text-align: center;">
             <div>
-                <a class="btn btn-sm btn-default"
+                <a class="btn btn-sm btn-primary btn-rounded-full"
                     tooltip="Create New Clustering job"
                     tooltip-placement="top"
                     ng-click="createNewClusteringJob()">
-                    <i class="fa fa-plus mr-1" ></i> New Clustering Job
+                    New Clustering Job  <img src="/images/fi-plus.svg" style="width: 16px">
                 </a>
             </div>
             <p class="mt-3 mb-0">Learn more:</p>

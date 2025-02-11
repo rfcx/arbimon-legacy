@@ -91,6 +91,7 @@ angular.module('a2.settings',[
 
         var modalInstance = $modal.open({
             templateUrl: '/common/templates/pop-up.html',
+            windowClass: 'modal-bg-echo',
             scope: $scope
         });
 
@@ -164,6 +165,7 @@ angular.module('a2.settings',[
         var modalInstance = $modal.open({
             templateUrl: '/app/settings/invitation.html',
             controller: 'UserInvitationCtrl as controller',
+            windowClass: 'modal-bg-echo',
             resolve: {
                 email: function() { return email },
                 inviteUser: function() { return $scope.inviteUser }
@@ -213,6 +215,7 @@ angular.module('a2.settings',[
 
         var modalInstance = $modal.open({
             templateUrl: '/common/templates/pop-up.html',
+            windowClass: 'modal-bg-echo',
             scope: $scope
         });
 

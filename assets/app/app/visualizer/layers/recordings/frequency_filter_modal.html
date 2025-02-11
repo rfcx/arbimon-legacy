@@ -6,16 +6,16 @@
         img-src="recording.tiles.set[0].src | a2UpdatedUrl"
         filter-min="filter.min" filter-max="filter.max" max-freq="max_freq"
     ></a2-visualizer-frequency-filter-range-control>
-    <button class="btn btn-default" style="position:absolute;top:0;right:0"
+    <button class="btn btn-success btn-rounded-full" style="position:absolute;top:0;right:0"
         ng-click="$dismiss()">
         <i class="fa fa-times-circle-o"></i>
     </button>
 </div>
 <div class="modal-footer" style="padding: 15px 8px;">
-    <button class="btn btn-primary" ng-click="apply_filter()">
-            <i class="fa fa-filter"></i> Apply Filter
+    <button class="btn btn-primary btn-rounded-full" ng-click="apply_filter()">
+        Apply Filter <i class="fa fa-filter"></i>
     </button>
-    <button class="btn btn-default" ng-click="remove_filter()" ng-if="has_previous_filter" tooltip="Remove Frequency Filter">
-        <i class="fa fa-close"></i> Cancel
+    <button class="btn btn-default btn-rounded-full" ng-click="remove_filter()" ng-if="has_previous_filter" tooltip="Remove Frequency Filter">
+        Cancel <i class="fa fa-close"></i>
     </button>
 </div>

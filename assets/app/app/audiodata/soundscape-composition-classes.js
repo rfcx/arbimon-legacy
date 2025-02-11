@@ -77,6 +77,7 @@ angular.module('a2.audiodata.soundscape-composition-classes', [
         var modalInstance = $modal.open({
             templateUrl: '/app/audiodata/select-species.html',
             controller: 'SelectSoundscapeCompositionClassesScreenCtrl',
+            windowClass: 'modal-bg-echo',
             size: 'lg',
         });
 
@@ -129,6 +130,7 @@ angular.module('a2.audiodata.soundscape-composition-classes', [
 
         var modalInstance = $modal.open({
             templateUrl: '/common/templates/pop-up.html',
+            windowClass: 'modal-bg-echo',
             scope: this
         });
 
