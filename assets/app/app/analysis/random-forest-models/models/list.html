@@ -54,15 +54,15 @@
                     <loader ng-show="loading"></loader>
                 </div>
                 <div class="row-flex flex-direction-row gap-x-3">
-                    <div tooltip="{{ isShareModelDisabled() ? 'You must be an Expert or Administrator to share this model.' : 'Share Model' }}" tooltip-append-to-body="true">
+                    <div tooltip="{{ isShareModelEnabled() ? 'Share Model' : 'You must be an Expert or Administrator to share this model.' }}" tooltip-append-to-body="true">
                         <button class="btn btn-rounded-full"
-                            ng-class="{ 'btn-default': isShareModelDisabled(), 'btn-primary': !isShareModelDisabled() }"
+                            ng-class="{ 'btn-default': !isShareModelEnabled(), 'btn-primary': isShareModelEnabled() }"
                             ng-click="shareModel()"
-                            ng-disabled="isShareModelDisabled()"
+                            ng-disabled="!isShareModelEnabled()"
                         >
                             <span class="row-flex flex-space-center gap-x-2">
                                 Share Model
-                                <img ng-src="{{ isShareModelDisabled() ? '/images/share-disabled.png' : '/images/share-normal.png' }}" style="height: 14px; margin-top: 2px;">
+                                <img ng-src="{{ isShareModelEnabled() ? '/images/share-normal.png' : '/images/share-disabled.png' }}" style="height: 14px; margin-top: 2px;">
                             </span>
                         </button>
                     </div>
