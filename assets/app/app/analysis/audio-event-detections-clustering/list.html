@@ -19,7 +19,7 @@
             </div>
         </h1>
         <button ng-if="showRefreshBtn"
-            class="btn btn-default pull-right btn-sm"
+            class="btn btn-success btn-rounded-full pull-right btn-sm"
             tooltip="Refresh list"
             ng-click="loadAudioEventDetections()">
                 <i class="fa fa-refresh"></i> Refresh List
@@ -27,7 +27,7 @@
         <loader ng-if="loading"></loader>
         <div ng-show="!loading && audioEventDetectionsData && !audioEventDetectionsData.length" class="help-wrapper col-sm-12 row-flex flex-direction-column flex-space-center flex-align-middle clear-button" style="text-align: center;">
             <div>
-                <a class="btn btn-sm btn-default"
+                <a class="btn btn-sm btn-success btn-rounded-full"
                     tooltip="Create New Audio Event Detection job"
                     tooltip-placement="top"
                     ng-click="createNewClusteringModel()">

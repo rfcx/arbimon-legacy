@@ -14,7 +14,7 @@
             <div class="ml-3 flex flex-row flex-align-middle" ng-if="controller.list.playlists && !controller.list.playlists.length">
                 <em class="pr-2">No playlists found.</em>
                 Go to
-                <button class="btn btn-sm btn-default" ng-click="controller.cancel('/audiodata/recordings')">
+                <button class="btn btn-sm btn-success btn-rounded-full" ng-click="controller.cancel('/audiodata/recordings')">
                     Recordings
                 </button>
                 and create a playlist.
@@ -71,7 +71,7 @@
             <error-message ng-if="controller.showFrequencyWarning()" message="'The maximum frequency must be greater than the minimum frequency.'"></error-message>
         </div>
         <div>
-            <button type="button" name="button" class="btn btn-default"
+            <button type="button" name="button" class="btn btn-success btn-rounded-full"
                 ng-click="controller.toggleDetails()">
                     <i class="fa" ng-class="controller.details.show ? 'fa-caret-up' : 'fa-caret-down'"></i>
                     Advanced Parameters
@@ -111,7 +111,7 @@
     </form>
 </div>
 <div class="modal-footer">
-    <button class="btn btn-primary" ng-click="controller.create()" ng-disabled="!controller.isJobValid()">
+    <button class="btn btn-primary btn-rounded-full" ng-click="controller.create()" ng-disabled="!controller.isJobValid()">
         Start Job
     </button>
 </div>

@@ -55,6 +55,7 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
         var modalInstance = $modal.open({
             templateUrl: '/app/analysis/audio-event-detections-clustering/new-audio-event-detection-clustering.html',
             controller: 'CreateNewAudioEventDetectionClusteringCtrl as controller',
+            windowClass: 'modal-bg-echo'
         });
 
         modalInstance.result.then(function (result) {
@@ -86,6 +87,7 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
         var modalInstance = $modal.open({
             templateUrl: '/app/analysis/audio-event-detections-clustering/delete-audio-event-detection-clustering-job.html',
             controller: 'DeleteAedJobCtrl as controller',
+            windowClass: 'modal-bg-echo',
             resolve: {
                 aedJob: function() {
                     return aedJob;
