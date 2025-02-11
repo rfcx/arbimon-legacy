@@ -55,13 +55,14 @@
                 </div>
                 <div class="row-flex flex-direction-row gap-x-3">
                     <div tooltip="{{ isShareModelDisabled() ? 'You must be an Expert or Administrator to share this model.' : 'Share Model' }}" tooltip-append-to-body="true">
-                        <button class="btn btn-primary btn-rounded-full"
+                        <button class="btn btn-rounded-full"
+                            ng-class="{ 'btn-default': isShareModelDisabled(), 'btn-primary': !isShareModelDisabled() }"
                             ng-click="shareModel()"
                             ng-disabled="isShareModelDisabled()"
                         >
                             <span class="row-flex flex-space-center gap-x-2">
                                 Share Model
-                                <img src="/images/fi-share.svg" style="height: 20px; margin-top: 2px;">
+                                <img ng-src="{{ isShareModelDisabled() ? '/images/share-disabled.png' : '/images/share-normal.png' }}" style="height: 14px; margin-top: 2px;">
                             </span>
                         </button>
                     </div>
