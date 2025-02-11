@@ -191,7 +191,8 @@ angular.module('a2.audiodata.training-sets', [
 
         $modal.open({
             templateUrl : '/app/visualizer/layers/training-data/add_tset_modal.html',
-            controller  : 'a2VisualizerAddTrainingSetModalController'
+            controller  : 'a2VisualizerAddTrainingSetModalController',
+            windowClass: 'modal-bg-echo'
         }).result.then(
             this.getTrainingSetList.bind(this)
         );
