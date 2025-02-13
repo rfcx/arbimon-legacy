@@ -237,7 +237,7 @@ angular.module('a2.analysis.random-forest-models.models', [
     $scope.model_id = null;
     $scope.validationdata = null;
 
-    $scope.getFormInfo = function(model) {
+    $scope.getFormInfo = function(model, isRetrain) {
         $scope.infoInfo = "Loading...";
         $scope.showInfo = true;
         $scope.loading = true;
@@ -299,7 +299,7 @@ angular.module('a2.analysis.random-forest-models.models', [
             a2Models.findById(model.model_id)
                 .success(function(modelDetails) {
                     Object.assign(model, modelDetails);
-                    $scope.getFormInfo(model);
+                    $scope.getFormInfo(model, isRetrain);
                 })
                 .error(function(data, status) {
                     if(status == 404) {
@@ -310,7 +310,7 @@ angular.module('a2.analysis.random-forest-models.models', [
                     }
                 });
         } else {
-            $scope.getFormInfo(model);
+            $scope.getFormInfo(model, false);
         }
     };
 
@@ -390,7 +390,7 @@ angular.module('a2.analysis.random-forest-models.models', [
         usePresentValidation: $scope.isRetrain ? oldModel.validations.use_in_validation.present : -1,
         useNotPresentValidation: $scope.isRetrain ? oldModel.validations.use_in_validation.notPresent : -1
     };
-
+    console.log('NewModelInstanceCtrl', $scope.data)
 
     $http.get('/legacy-api/jobs/types')
         .success(function(jobTypes) {

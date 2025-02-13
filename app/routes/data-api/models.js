@@ -115,7 +115,7 @@ router.post('/project/:projectUrl/models/new', function(req, res, next) {
 
         return model.models.createRFM({
             jobId: job_id,
-            isRetrain: true
+            isRetrain: isRetrain
         }, function(err, data) {
             if (err) return res.json({ err: `Could not create ${isRetrain ? 'retraining' : 'training'} job` });
             res.json({ ok: `Job created, ${isRetrain ? 'retraining' : 'training'} Job: ${job_id}` });
