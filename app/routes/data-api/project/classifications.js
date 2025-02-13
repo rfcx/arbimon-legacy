@@ -8,9 +8,28 @@ const config = require('../../../config');
 const model = require('../../../model');
 const pokeDaMonkey = require('../../../utils/monkey');
 const router = express.Router();
-const s3 = new AWS.S3();
 const moment = require('moment');
 const { httpErrorHandler } = require('@rfcx/http-utils');
+
+let s3, s3RFCx;
+defineS3Clients();
+
+function getS3ClientConfig (type) {
+    return {
+        accessKeyId: config(type).accessKeyId,
+        secretAccessKey: config(type).secretAccessKey,
+        region: config(type).region
+    }
+}
+
+function defineS3Clients () {
+    if (!s3) {
+        s3 = new AWS.S3(getS3ClientConfig('aws'))
+    }
+    if (!s3RFCx) {
+        s3RFCx = new AWS.S3(getS3ClientConfig('aws_rfcx'))
+    }
+}
 
 router.get('/', function(req, res, next) {
     res.type('json');
@@ -162,11 +181,17 @@ router.get('/:classiId/vector/:recId', function(req, res, next) {
             return res.status(404).json({ error: 'data not found'});
         }
 
-        var vectorUri = rows[0].vect;
-        // TODO: new jobs are located in a new bucket.
-        s3.getObject({
+        let vectorUri = rows[0].vect;
+        const jobDate = moment.utc(rows[0].date_created).valueOf();
+        const bucketUpdateDate = moment.utc('2024-11-22 00:00:00').valueOf();
+        const isOldJob = jobDate < bucketUpdateDate
+        let s3Client = isOldJob ? s3 : s3RFCx;
+        const isProd = process.env.NODE_ENV === 'production';
+        const awsConfig = (isProd || isOldJob) ? config('aws') : config('aws_rfcx');
+        const vectorBucket = (isProd || isOldJob) ? awsConfig.bucketName : awsConfig.bucketNameStaging;
+        s3Client.getObject({
             Key: vectorUri,
-            Bucket: config('aws').bucketName
+            Bucket: vectorBucket
         },
         function(err, data){
             if(err) {

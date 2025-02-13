@@ -54,14 +54,15 @@
                     <loader ng-show="loading"></loader>
                 </div>
                 <div class="row-flex flex-direction-row gap-x-3">
-                    <div tooltip="{{ isShareModelDisabled() ? 'You must be an Expert or Administrator to share this model.' : 'Share Model' }}" tooltip-append-to-body="true">
-                        <button class="btn btn-primary btn-rounded-full"
+                    <div tooltip="{{ isShareModelEnabled() ? 'Share Model' : 'You must be an Expert or Administrator to share this model.' }}" tooltip-append-to-body="true">
+                        <button class="btn btn-rounded-full"
+                            ng-class="{ 'btn-default': !isShareModelEnabled(), 'btn-primary': isShareModelEnabled() }"
                             ng-click="shareModel()"
-                            ng-disabled="isShareModelDisabled()"
+                            ng-disabled="!isShareModelEnabled()"
                         >
                             <span class="row-flex flex-space-center gap-x-2">
                                 Share Model
-                                <img src="/images/fi-share.svg" style="height: 20px; margin-top: 2px;">
+                                <img ng-src="{{ isShareModelEnabled() ? '/images/share-normal.png' : '/images/share-disabled.png' }}" style="height: 14px; margin-top: 2px;">
                             </span>
                         </button>
                     </div>
@@ -103,7 +104,7 @@
                             ng-if="!row.source_project_id"
                             class="btn btn-default"
                             ng-click="newModel(row, true)"
-                            tooltip="Retrain RFM"
+                            tooltip="Retrain the model"
                             tooltip-trigger="mouseenter">
                             Retrain
                         </button>

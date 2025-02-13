@@ -194,12 +194,12 @@ angular.module('a2.analysis.random-forest-models.models', [
         );
     };
 
-    $scope.isShareModelDisabled = function() {
-        return (!a2UserPermit.getUserRole() === 'Expert' || !a2UserPermit.getUserRole() === 'Admin' || !a2UserPermit.getUserRole() === 'Owner');
+    $scope.isShareModelEnabled = function() {
+        return a2UserPermit.getUserRole() === 'Expert' || a2UserPermit.getUserRole() === 'Admin' || a2UserPermit.getUserRole() === 'Owner';
     }
 
     $scope.shareModel = function() {
-        if (!a2UserPermit.getUserRole() === 'Expert' || !a2UserPermit.getUserRole() === 'Admin' || !a2UserPermit.getUserRole() === 'Owner') {
+        if (!$scope.isShareModelEnabled()) {
             notify.error('You do not have permission to share models');
             return;
         }
@@ -237,29 +237,10 @@ angular.module('a2.analysis.random-forest-models.models', [
     $scope.model_id = null;
     $scope.validationdata = null;
 
-    $scope.newModel = function(model, isRetrain) {
-        if(!a2UserPermit.can('manage models and classification')) {
-            notify.error('You do not have permission to create models');
-            return;
-        }
-
+    $scope.getFormInfo = function(model) {
         $scope.infoInfo = "Loading...";
         $scope.showInfo = true;
         $scope.loading = true;
-        if (isRetrain) {
-            a2Models.findById(model.model_id)
-                .success(function(modelDetails) {
-                    Object.assign(model, modelDetails);
-                })
-                .error(function(data, status) {
-                    if(status == 404) {
-                        $scope.notFound = true;
-                    }
-                    else {
-                        notify.serverError();
-                    }
-                });
-        }
 
         a2Models.getFormInfo(function(data) {
 
@@ -280,10 +261,10 @@ angular.module('a2.analysis.random-forest-models.models', [
                     trainings: function() {
                         return data.trainings;
                     },
-                    oldModel: function() {
-                        return model;
+                    modelData: function() {
+                        return {model: model};
                     }
-                }
+                },
             });
 
             modalInstance.opened.then(function() {
@@ -307,6 +288,30 @@ angular.module('a2.analysis.random-forest-models.models', [
                 }
             });
         });
+    }
+
+    $scope.newModel = function(model, isRetrain) {
+        if(!a2UserPermit.can('manage models and classification')) {
+            notify.error('You do not have permission to create models');
+            return;
+        }
+        if (isRetrain) {
+            a2Models.findById(model.model_id)
+                .success(function(modelDetails) {
+                    Object.assign(model, modelDetails);
+                    $scope.getFormInfo(model);
+                })
+                .error(function(data, status) {
+                    if(status == 404) {
+                        $scope.notFound = true;
+                    }
+                    else {
+                        notify.serverError();
+                    }
+                });
+        } else {
+            $scope.getFormInfo(model);
+        }
     };
 
     if (isNewJob) {
@@ -366,14 +371,15 @@ angular.module('a2.analysis.random-forest-models.models', [
         });
     };
 })
-.controller('NewModelInstanceCtrl', function($scope, $modalInstance, a2Models, Project, projectData, types, trainings, oldModel, $http) {
+.controller('NewModelInstanceCtrl', function($scope, $modalInstance, a2Models, Project, projectData, types, trainings, modelData, $http) {
+    const oldModel = modelData.model
     $scope.types = types;
     $scope.projectData = projectData;
     $scope.trainings = trainings;
     $scope.nameMsg = '';
     $scope.isRetrain = oldModel && oldModel.mname !== undefined;
     $scope.data = {
-        training: $scope.isRetrain ? $scope.trainings.find(t => t.training_set_id === oldModel.trainingSet.id) : '',
+        training: $scope.isRetrain ? trainings.find(t => t.training_set_id === oldModel.trainingSet.id) : '',
         classifier: $scope.isRetrain ? $scope.types[0] : '',
         name: $scope.isRetrain ? oldModel.mname : '',
         totalValidations: 'Retrieving...',
