@@ -281,6 +281,14 @@ async function getModelsData(validationUri) {
     })
 }
 
+router.get('/project/:projectUrl/models/:mid/retraining', function(req, res, next) {
+    res.type('json');
+    model.models.getModelRetrainingDates(req.query.jobId, function(err, rows) {
+        if(err) return next(err);
+        res.json(rows);
+    });
+});
+
 router.get('/project/:projectUrl/models/:modelId/training-vector/:recId', function(req, res, next) {
     res.type('json');
     if(!req.params.modelId || !req.params.recId) {

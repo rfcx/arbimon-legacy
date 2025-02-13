@@ -76,6 +76,17 @@ module.exports = {
         return queryHandler(sql, callback);
     },
 
+    getModelRetrainingDates: function (jobId, callback) {
+        const sql = `SELECT j.date_created
+            from jobs j
+            where j.job_id in (
+                select jpr.job_id from jobs j2
+                join job_params_retraining jpr on j2.job_id = jpr.trained_job_id
+                where j2.job_id = ${jobId}
+            );`;
+        return queryHandler(sql, callback);
+    },
+
     getModelByUri: async function (projectId, uri) {
         const sql = `SELECT * from models WHERE project_id = ${projectId} and uri = '${uri}'`;
         return dbpool.query(sql).get(0);

@@ -51,6 +51,12 @@ angular.module('a2.srv.models', [
         getRecVector: function(modelId, recId, callback) {
             return $http.get( '/legacy-api/project/' + Project.getUrl() + '/models/' + modelId + '/training-vector/' + recId);
         },
+        getModelRetrainingDates: function(modelId, jobId) {
+            const config = {
+                params: { jobId: jobId }
+            };
+            return $http.get( '/legacy-api/project/' + Project.getUrl() + '/models/' + modelId + '/retraining', config);
+        },
         setThreshold: function(modelId, thresholdValue) {
             var data = {
                 m: modelId,

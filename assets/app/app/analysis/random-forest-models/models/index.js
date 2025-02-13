@@ -651,9 +651,25 @@ angular.module('a2.analysis.random-forest-models.models', [
         $scope.project_id = data.project_id;
     });
 
+    var getModelRetrainingDates = function(jobId) {
+        a2Models.getModelRetrainingDates($stateParams.modelId, jobId)
+            .success(function(dates) {
+                $scope.retrainingDates = dates;
+            })
+            .error(function(data, status) {
+                if(status == 404) {
+                    $scope.notFound = true;
+                }
+                else {
+                    notify.serverError();
+                }
+            });
+    }
+
     a2Models.findById($stateParams.modelId)
         .success(function(model) {
             $scope.model = model;
+            getModelRetrainingDates(model.jobId)
             $scope.loading = null;
         })
         .error(function(data, status) {
