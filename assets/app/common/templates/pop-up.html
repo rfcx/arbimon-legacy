@@ -7,6 +7,8 @@
     <p ng-if="popup.note" class="em" ng-bind-html="popup.note"></p>
 </div>
 <div class="modal-footer">
-    <button class="btn btn-danger" ng-click="$close(true)">{{ popup.btnOk }}</button>
-    <button class="btn btn-primary" ng-click="$dismiss()">{{ popup.btnCancel }}</button>
+    <div class="row-flex flex-direction-row flex-space-between">
+        <button class="btn btn-success" ng-click="$dismiss()">{{ popup.btnCancel }}</button>
+        <button class="btn btn-primary" ng-click="$close(true)">{{ popup.btnOk }}</button>
+    </div>
 </div>

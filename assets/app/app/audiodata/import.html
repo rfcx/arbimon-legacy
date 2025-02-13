@@ -13,8 +13,10 @@ Site_5,33.00309,10.7892,0</pre>
    
   </div>
   <div class="modal-footer">
-    <button class="btn btn-primary btn-file"><i class="fa fa-file-text"></i> Select file
+    <div class="row-flex flex-direction-row flex-space-between">
+      <button class="btn btn-success" ng-click="cancel()">Cancel</button>
+      <button class="btn btn-primary btn-file">Select file
         <input accept=".csv" file-change="handler($event,files)" type="file" ng-model="files">
-    </button>
-    <button class="btn btn-default" ng-click="cancel()"><i class="fa fa-times"></i> Close</button>
+      </button>
+    </div>
   </div>
