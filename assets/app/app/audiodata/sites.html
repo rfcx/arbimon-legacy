@@ -19,11 +19,13 @@
     <div class="col-md-8 mt-4">
     <div class="row mb-4" a2-scroll="onScroll($event, $controller)" a2-scroll-on="window">
         <div class="col-md-8 mt-1 toolbar">
-            <button class="btn btn btn-success btn-rounded-full mr-1 mb-1"
-                ng-click="edit()"
-                ng-disabled="!selected || selected.imported">
-                Edit Site
-            </button>
+            <span tooltip="Select a site to edit">
+                <button class="btn btn btn-success btn-rounded-full mr-1 mb-1"
+                    ng-click="edit()"
+                    ng-disabled="!selected || selected.imported">
+                    Edit Site
+                </button>
+            </span>
             <div class="btn-group mr-1 mb-1" dropdown dropdown-append-to-body="true" a2-auto-close-on-outside-click>
                 <button class="btn btn btn-success btn-rounded-full" dropdown-toggle>
                     Delete
@@ -202,12 +204,10 @@
                         <button class="btn btn-success btn-rounded-full"
                             type="button"
                             ng-click="close()">
-                            Close
-                            <i class="fa fa-times ml-3"></i>
+                            Cancel
                         </button>
                         <button class="btn btn-primary btn-rounded-full">
                             Save
-                            <i class="fa fa-floppy-o ml-3"></i>
                         </button>
                     </div>
                 </div>
