@@ -265,7 +265,8 @@ angular.module('a2.audiodata.sites', [
 
         var modalInstance =  $modal.open({
           templateUrl: "/app/audiodata/import.html",
-          controller: "ImportSiteInstanceCtrl"
+          controller: "ImportSiteInstanceCtrl",
+          windowClass: 'modal-bg-echo'
         });
 
         modalInstance.result.then(function(response) {
@@ -444,7 +445,8 @@ angular.module('a2.audiodata.sites', [
                 this.btnOk = "Delete";
                 this.btnCancel = "Cancel";
             },
-            controllerAs: 'popup'
+            controllerAs: 'popup',
+            windowClass: 'modal-bg-echo'
         });
 
         modalInstance.result.then(function() {
@@ -492,7 +494,8 @@ angular.module('a2.audiodata.sites', [
                 this.btnOk = "Delete";
                 this.btnCancel = "Cancel";
             },
-            controllerAs: 'popup'
+            controllerAs: 'popup',
+            windowClass: 'modal-bg-echo'
         });
 
         modalInstance.result.then(function() {
