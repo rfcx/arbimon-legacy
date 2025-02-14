@@ -438,15 +438,16 @@ angular.module('a2.audiodata.sites', [
         var modalInstance = $modal.open({
             templateUrl: '/common/templates/pop-up.html',
             controller: function() {
+                this.title = "Delete selected site"
                 this.messages = [
-                    "Are you sure you would like to remove the following site?",
-                    $scope.selected.name
+                    "Are you sure you would like to delete the following site?"
                 ];
+                this.list = [$scope.selected.name];
                 this.btnOk = "Delete";
                 this.btnCancel = "Cancel";
             },
             controllerAs: 'popup',
-            windowClass: 'modal-bg-echo'
+            windowClass: 'modal-bg-echo width-490'
         });
 
         modalInstance.result.then(function() {
@@ -486,16 +487,18 @@ angular.module('a2.audiodata.sites', [
             list = list.slice(0, 3)
             list.push(msg)
         }
+
         var modalInstance = $modal.open({
             templateUrl: '/common/templates/pop-up.html',
             controller: function() {
-                this.messages = ["Are you sure you would like to remove the following sites?"];
+                this.title = "Delete all empty sites"
+                this.messages = ["Are you sure you would like to delete the following site?"];
                 this.list = list;
                 this.btnOk = "Delete";
                 this.btnCancel = "Cancel";
             },
             controllerAs: 'popup',
-            windowClass: 'modal-bg-echo'
+            windowClass: 'modal-bg-echo width-490'
         });
 
         modalInstance.result.then(function() {
