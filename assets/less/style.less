@@ -2596,6 +2596,19 @@ search-bar {
   .modal-content {
     background-color: #14130d !important;
     border-radius: 12 px;
+    .modal-icon {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 48px;
+      width: 48px;
+      border-radius: 28px;
+      background-color: @util-gray-01;
+      border: 8px solid @util-gray-04;
+      margin-left: 24px;
+      margin-top: 24px;
+    }
+
     .modal-header {
       border-bottom: 1px solid #14130d;
       font-size: 24px !important;
@@ -2619,6 +2632,16 @@ search-bar {
       padding: 8px 24px 24px 24px !important;
       .btn {
         border-radius: 9999px !important;
+        padding: 12px 24px;
+        font-size: 16px !important;
+        line-height: 18px !important;
+        font-weight: 500 !important;
+      }
+
+      .btn-red {
+        color: #FFFEFC;
+        background-color: #CC1E3D;
+        border-color: #CC1E3D;
       }
     }
   }

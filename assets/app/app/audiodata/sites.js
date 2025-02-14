@@ -439,9 +439,8 @@ angular.module('a2.audiodata.sites', [
             templateUrl: '/common/templates/pop-up.html',
             controller: function() {
                 this.title = "Delete selected site"
-                this.messages = [
-                    "Are you sure you would like to delete the following site?"
-                ];
+                this.isForDeletePopup = true;
+                this.messages = ["Are you sure you would like to delete the following site?"];
                 this.list = [$scope.selected.name];
                 this.btnOk = "Delete";
                 this.btnCancel = "Cancel";
@@ -494,6 +493,7 @@ angular.module('a2.audiodata.sites', [
                 this.title = "Delete all empty sites"
                 this.messages = ["Are you sure you would like to delete the following site?"];
                 this.list = list;
+                this.isForDeletePopup = true;
                 this.btnOk = "Delete";
                 this.btnCancel = "Cancel";
             },
