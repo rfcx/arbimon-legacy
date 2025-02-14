@@ -297,8 +297,7 @@
         </div>
     </div>
 
-    <div class="col-xs-12">
-        <!-- ng-if="isRetrain" -->
+    <div ng-if="retrainingDates && retrainingDates.length" class="col-xs-12">
         <h3>Model retraining history</h3>
         <div class="model-info-column">
             <a2-table rows="retrainingDates" no-checkbox="true">
