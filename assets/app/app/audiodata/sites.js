@@ -304,6 +304,7 @@ angular.module('a2.audiodata.sites', [
             var data = allTextLines[i].split(',');
             if (data.length == headers.length) {
                 var site = {};
+                const titles = ['name', 'lat', 'lon', 'alt'];
                 for (var j=0; j<headers.length; j++) {
                     if(headers[j] === "lat" && (data[j] > 85 ||  data[j] < -85)) {
                         return notify.log('Please enter latitude number between -85 to 85');
@@ -311,7 +312,9 @@ angular.module('a2.audiodata.sites', [
                     if(headers[j] === "lon" && (data[j] > 180 ||  data[j] < -180)) {
                         return notify.log('Please enter longitude number between -180 to 180');
                     }
-                    site[headers[j]] = data[j]
+                    if (titles.includes(headers[j])) {
+                        site[headers[j]] = data[j]
+                    }
                 }
                 sites.push(site);
             }

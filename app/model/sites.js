@@ -463,6 +463,7 @@ var Sites = {
                 connection = con;
                 await connection.beginTransaction();
                 let result = await this.insertAsync(site, connection);
+                console.log('site, result', site, result)
                 if (rfcxConfig.coreAPIEnabled) {
                     const coreSite = {
                         site_id: result.insertId,
@@ -529,7 +530,7 @@ var Sites = {
     getCountryCodeAndTimezoneCoreAPI: async function(coreSite, idToken) {
         const options = {
             method: 'GET',
-            url: `${rfcxConfig.apiBaseUrl}/streams?projects[]=${coreSite.project_id}&name[]=${coreSite.name}`,
+            url: `${rfcxConfig.apiBaseUrl}/streams?projects[]=${coreSite.project_id}&name[]=${encodeURIComponent(coreSite.name)}`,
             headers: {
                 'content-type': 'application/json',
                 Authorization: `Bearer ${idToken}`
