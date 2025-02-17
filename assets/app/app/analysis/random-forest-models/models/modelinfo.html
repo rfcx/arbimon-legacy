@@ -118,6 +118,16 @@
                 </div>
             </div>
         </div>
+        <div ng-if="retrainingDates && retrainingDates.length" class="col-xs-12">
+            <h3>Model retraining history</h3>
+            <div class="model-info-column">
+                <a2-table rows="retrainingDates" no-checkbox="true">
+                    <field title="Retraining Dates">
+                        {{ row.date_created | moment : 'lll' }}
+                    </field>
+                </a2-table>
+            </div>
+        </div>
         <div class="col-xs-12">
             <h3>Model validation details</h3>
             <div class="model-info-column">
@@ -294,17 +304,6 @@
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <div ng-if="retrainingDates && retrainingDates.length" class="col-xs-12">
-        <h3>Model retraining history</h3>
-        <div class="model-info-column">
-            <a2-table rows="retrainingDates" no-checkbox="true">
-                <field title="Retraining Dates">
-                    {{ row.date_created | moment : 'lll' }}
-                </field>
-            </a2-table>
         </div>
     </div>
 
