@@ -1,21 +1,17 @@
 <div class="modal-header">
-    <h3>
-        Species Library
-    </h3>
+    Species Library
 </div>
 <div class="modal-body">
     <div class="row">
-        <div class="col-sm-6">
-            <div class="input-group">
-                <input class="form-control" style="height: 36px;" type="search" placeholder="Search species by name, family or alias" ng-model="search" ng-keyup="searchSpecies()">
-                <span class="input-group-btn">
-                    <button class="btn btn-default input-btn" style="height: 36px;" type="button" ng-click="searchSpecies()"><i class="fa fa-search"></i></button>
-                </span>
+        <div class="mt-1 ml-3 search">
+            <div class="form-element">
+                <i class="fa fa-search mt-3"></i>
+                <input class="form-control" style="height: 36px; width: 450px;" type="search" placeholder="Search species by name, family or alias" ng-model="search" ng-keyup="searchSpecies()">
             </div>
         </div>
     </div>
     <div class="row">
-        <div class="col-sm-8 species-lib">
+        <div class="col-sm-8 species-lib mt-3">
             <a2-table rows="species" data-selected="selected.species" no-checkbox>
                 <field title="Species" key="scientific_name">
                     {{ row.scientific_name }}
@@ -28,7 +24,7 @@
                 </field>
             </a2-table>
             <div class="jumbotron" ng-hide="species.length">
-                <h4>Select a species, then select a sound type</h4>
+                <span>Select a species, then select a sound type</span>
             </div>
         </div>
         <div class="col-sm-4 species-lib" ng-show="selected.species">
@@ -41,6 +37,8 @@
     </div>
 </div>
 <div class="modal-footer">
-    <button class="btn btn-primary" ng-disabled="!selected.species || !selected.song" ng-click="$close(selected)">Select</button>
-    <button class="btn btn-default" ng-click="$dismiss()">Close</button>
+    <div class="row-flex flex-direction-row flex-space-between">
+        <button class="btn btn-success" ng-click="$dismiss()">Cancel</button>
+        <button class="btn btn-primary" ng-disabled="!selected.species || !selected.song" ng-click="$close(selected)">Select</button>
+    </div>
 </div>

@@ -3,27 +3,28 @@
         Species
     </h1>
     <div class="col-12 mt-4">
-        <button class="btn btn-default"
+        <button class="btn btn-primary btn-rounded-full"
             ng-click="add()"
             tooltip="Add a new species + call type"
             tooltip-trigger="mouseenter">
-            <i class="fa fa-plus mr-2"></i> New species
+            New species <img class="ml-1" src="/images/fi-plus.svg">
         </button>
-        <button class="btn btn-default ml-3"
+        <button class="btn btn-success btn-rounded-full ml-3"
             ng-click="exportSpecies()"
             tooltip="Export species list"
             tooltip-trigger="mouseenter">
-            <i class="fa fa-download mr-2"></i> Export species list
+            Export species list
         </button>
-        <button class="btn btn-default ml-3"
+        <span tooltip="Delete species sound">
+            <button class="btn btn-success btn-rounded-full ml-3"
             ng-disabled="!checked || !checked.length"
-            ng-click="removeSpecies()"
-            tooltip="Remove species sound"
-            tooltip-trigger="mouseenter">
-            <i class="fa fa-trash mr-2"></i> Remove species
-        </button>
-        <div class="row-flex flex-direction-row flex-space-start flex-align-middle mt-4 mb-3">
-            <input ng-if="classes.length" type="text" class="form-control" ng-model="searchSpecies.q" style="width: 380px;" placeholder="Search species by scientific name or family" ng-change="onFilterChanged()">
+            ng-click="removeSpecies()">
+            Delete species
+            </button>
+        </span>
+        <div class="row-flex flex-direction-row flex-space-start flex-align-middle mt-4 mb-3 search form-element">
+            <i ng-if="classes.length" class="fa fa-search mt-3"></i>
+            <input ng-if="classes.length" type="text" class="form-control" ng-model="searchSpecies.q" style="width: 505px;" placeholder="Search species by scientific name or family" ng-change="onFilterChanged()">
             <div class="ml-3 self-center"><loader ng-if="loading"></loader></div>
         </div>
         <div ng-if="classes.length && pagination.totalItems > 0" class="mt-4 mb-3 reclist-total text-left">{{ pagination.totalItems }} species</div>

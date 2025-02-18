@@ -208,6 +208,7 @@ angular.module('a2.audiodata.species', [
             templateUrl: '/app/audiodata/select-species.html',
             controller: 'SelectSpeciesCtrl',
             size: 'lg',
+            windowClass: 'modal-bg-echo width-900'
         });
 
         modalInstance.result.then(function(selected) {
@@ -255,18 +256,21 @@ angular.module('a2.audiodata.species', [
             return '"'+row.species_name +' | ' + row.songtype_name+'"';
         });
 
-        var message = ["Are you sure you would like to remove the following species call from this project?"];
-        var message2 = ["Note: validations for this species call will also be removed from this project."];
+        var message = ["Are you sure you would like to delete the following species call from this project?"];
 
         $scope.popup = {
-            messages: message.concat(message2, speciesClasses),
+            title: "Delete species",
+            messages: message.concat(speciesClasses),
             btnOk: "Delete",
             btnCancel: "Cancel",
+            note: "Note: validations for this species call will also be deleted from this project.",
+            isForDeletePopup: true
         };
 
         var modalInstance = $modal.open({
             templateUrl: '/common/templates/pop-up.html',
-            scope: $scope
+            scope: $scope,
+            windowClass: 'modal-bg-echo'
         });
 
         modalInstance.result.then(function() {
