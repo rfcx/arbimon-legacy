@@ -208,7 +208,7 @@ angular.module('a2.audiodata.species', [
             templateUrl: '/app/audiodata/select-species.html',
             controller: 'SelectSpeciesCtrl',
             size: 'lg',
-            windowClass: 'modal-bg-echo width-900'
+            windowClass: 'modal-element width-900'
         });
 
         modalInstance.result.then(function(selected) {
@@ -270,7 +270,7 @@ angular.module('a2.audiodata.species', [
         var modalInstance = $modal.open({
             templateUrl: '/common/templates/pop-up.html',
             scope: $scope,
-            windowClass: 'modal-bg-echo'
+            windowClass: 'modal-element'
         });
 
         modalInstance.result.then(function() {

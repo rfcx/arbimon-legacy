@@ -2599,7 +2599,7 @@ search-bar {
 }
 
 
-.modal-bg-echo {
+.modal-element {
   .modal-dialog {
     position: fixed;
     top: 50%;
@@ -2613,6 +2613,13 @@ search-bar {
   .modal-content {
     background-color: @moss !important;
     border-radius: 12px;
+    .ic-close {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      padding: 10px;
+      z-index: 10;
+    }
     .modal-icon {
       display: flex;
       justify-content: center;
