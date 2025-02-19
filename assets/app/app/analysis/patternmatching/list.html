@@ -39,8 +39,11 @@
         <div ng-if="currentTab === 'patternMatchings'">
             <div class="row-flex flex-direction-row flex-align-middle flex-space-between mt-3 mb-6">
                 <div class="row-flex flex-direction-row flex-align-middle">
-                    <div ng-if="isShowSearch()" class="mr-4" style="width:470px">
-                        <input type="text" class="form-control input-search" ng-model="search.q" placeholder="&#xF002;  Search jobs by name, template, species, song type" ng-change="onFilterChanged()">
+                    <div ng-if="isShowSearch()" class="mr-4 search" style="width:470px">
+                        <div class="form-element">
+                            <i class="fa fa-search mt-3"></i>
+                            <input type="text" class="form-control" ng-model="search.q" placeholder="Search jobs by name, template, species, song type" ng-change="onFilterChanged()">
+                        </div>
                     </div>
                 </div>
                 <div class="row-flex flex-direction-row flex-align-middle clear-button">
@@ -150,17 +153,20 @@
             <div class="col-md-12">
                 <div class="row-flex flex-direction-row flex-align-middle flex-space-between mt-3 mb-6">
                     <div class="row-flex flex-direction-row flex-align-middle">
-                        <div class="mr-4" style="width:368px">
-                            <input type="text" class="form-control input-search" ng-model="searchTemplates.q" placeholder="&#xF002;  Search templates by name or species" ng-change="onSearchChanged()">
+                        <div class="mr-4 search" style="width:368px">
+                            <div class="form-element">
+                                <i class="fa fa-search mt-3"></i>
+                                <input type="text" class="form-control" ng-model="searchTemplates.q" placeholder="Search templates by name or species" ng-change="onSearchChanged()">
+                            </div>
                         </div>
                         <div class="row-flex flex-direction-row flex-align-middle">
                             <span for="taxa" class="text-util-gray-01 mr-3">Filter by:</span>
-                            <div style="max-width:130px">
+                            <div class="btn-ui-select-success" style="max-width:130px">
                                 <ui-select id="taxa" ng-model="searchTemplates.taxon" theme="bootstrap" ng-change="onSearchChanged()">
                                     <ui-select-match placeholder="Taxon" title="{{ $select.selected.taxon }}">
                                         <span class="hide-end-text">{{ $select.selected.taxon === 'All taxons' ? 'Taxa' : $select.selected.taxon }}</span>
                                     </ui-select-match>
-                                    <ui-select-choices class="item-dropdown-hide-text" repeat="item in taxons | filter:$select.search">
+                                    <ui-select-choices class="item-dropdown-hide-text dropdown-element" repeat="item in taxons | filter:$select.search">
                                         {{ item.taxon }}
                                     </ui-select-choices>
                                 </ui-select>
