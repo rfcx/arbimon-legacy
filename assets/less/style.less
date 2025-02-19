@@ -2500,54 +2500,6 @@ search-bar {
   cursor: not-allowed;
 }
 
-.heart-icon {
-  display: flex;
-  width: 48px;
-  height: 48px;
-  background-color: #F5D2D8;
-  border: 8px solid #242424;
-  border-radius: 9999px;
-  justify-content: center;
-  align-items: center;
-}
-.share-project-templates-pop-up-window {
-  .modal-content {
-    border-radius: 12px;
-  }
-}
-.share-project-templates {
-  background-color: @echo !important;
-  border-radius: 12px;
-  padding: 24px;
-  .share-project-templates-header {
-    padding-top: 16px;
-    > span {
-      font-family: @font-family-header;
-      font-size: 20px;
-    }
-  }
-  .share-project-templates-bottom {
-    padding-top: 32px;
-    .btn {
-      padding: 12px 24px;
-      font-size: 16px;
-    }
-  }
-  .modal-body {
-    padding: 8px 0px 0px 0px !important;
-    > span {
-      font-size: 16px;
-      display: flex;
-      font-weight: 400;
-    }
-    > a {
-      font-size: 16px;
-      font-weight: 400;
-      color: @frequency;
-    }
-  }
-}
-
 // patternmatching page
 .pm-button-group {
   div {
@@ -2600,14 +2552,24 @@ search-bar {
 
 
 .modal-element {
+  .learn-more-element {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    padding: 10px;
+    z-index: 10;
+    color: @frequency;
+  }
   .modal-dialog {
-    position: fixed;
+    position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%) !important;
     align-items: center;
     display: flex;
     justify-content: center;
+    overflow-x: hidden;
+    overflow-y: auto;
   }
 
   .modal-content {
@@ -2673,13 +2635,19 @@ search-bar {
 }
 
 .width-490 {
-  .modal-content {
+  .modal-dialog {
     width: 490px !important;
   }
 }
 
+.width-600 {
+  .modal-dialog {
+    width: 700px !important;
+  }
+}
+
 .width-900 {
-  .modal-content {
+  .modal-dialog {
     width: 900px !important;
   }
 }

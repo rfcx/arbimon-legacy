@@ -1,5 +1,6 @@
+<img class="ic-close" src="/images/fi-close.svg" ng-click="$dismiss()">
 <div class="modal-header">
-    <h3>Rename pattern matching job</h3>
+    Rename pattern matching job
 </div>
 
 <div class="modal-body">
@@ -15,6 +16,8 @@
     </form>
 </div>
 <div class="modal-footer">
-    <button class="btn btn-primary" ng-click="$close(pmName)"><i class="fa fa-floppy-o"></i> Save &amp; Close </button>
-    <button class="btn btn-default" ng-click="$dismiss()"><i class="fa fa-times"></i> Close</button>
+    <div class="row-flex flex-direction-row flex-space-between">
+        <button class="btn btn-success" ng-click="$dismiss()">Cancel</button>
+        <button class="btn btn-primary" ng-click="$close(pmName)">Save</button>
+    </div>
 </div>

@@ -1,5 +1,11 @@
+<img class="ic-close" src="/images/fi-close.svg" ng-click="$dismiss()">
+<div class="modal-icon">
+    <div>
+        <img src="/images/fi-delete.svg">
+    </div>
+</div>
 <div class="modal-header">
-    <h3 class="modal-title">Delete pattern matching</h3>
+    Delete pattern matching
 </div>
 <div class="modal-body">
     <div ng-hide="deletingloader">You are about to delete the pattern matching <b>{{controller.patternMatching.name}}</b>.</div>
@@ -35,6 +41,8 @@
     <div class="centeredloder"><loader ng-show="deletingloader"></loader></div>
 </div>
 <div class="modal-footer">
-    <button class="btn btn-danger" ng-click="ok()">Yes</button>
-    <button class="btn btn-default" ng-click="cancel()">No</button>
+    <div class="row-flex flex-direction-row flex-space-between">
+        <button class="btn btn-success" ng-click="cancel()">Cancel</button>
+        <button class="btn btn-red" ng-click="ok()">Delete</button>
+    </div>
 </div>

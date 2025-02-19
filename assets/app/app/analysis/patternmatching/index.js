@@ -198,13 +198,15 @@ angular.module('a2.analysis.patternmatching', [
         $scope.popup = {
             title: 'Delete template',
             messages: ['Are you sure you want to delete this template?'],
-            btnOk: 'Yes',
-            btnCancel: 'No',
+            btnOk: 'Delete',
+            btnCancel: 'Cancel',
+            isForDeletePopup: true
         };
 
         var modalInstance = $modal.open({
             templateUrl: '/common/templates/pop-up.html',
-            scope: $scope
+            scope: $scope,
+            windowClass: 'modal-element width-490'
         });
 
         modalInstance.result.then(function(confirmed) {
@@ -257,7 +259,7 @@ angular.module('a2.analysis.patternmatching', [
         const modalInstance = $modal.open({
             controller: 'ExportPMmodalInstanceCtrl',
             templateUrl: '/app/audiodata/export-report.html',
-            windowClass: 'export-pop-up-window',
+            windowClass: 'export-pop-up-window modal-element',
             resolve: {
                 data: function() {
                     return { params: params }
@@ -308,9 +310,8 @@ angular.module('a2.analysis.patternmatching', [
     $scope.openShareProjectTemplatesPopup = function() {
         var modalInstance = $modal.open({
             templateUrl: '/app/analysis/patternmatching/share-project-templates.html',
-            windowClass: 'share-project-templates-pop-up-window'
+            windowClass: 'modal-element'
         });
-
         modalInstance.result.then(function(confirmed) {
             if(confirmed){
                 $scope.onOff = 1
@@ -419,7 +420,8 @@ angular.module('a2.analysis.patternmatching', [
         $scope.pmName = patternMatching.name
         const modalInstance = $modal.open({
             templateUrl: '/app/analysis/patternmatching/edit-patternmatching.html',
-            scope: $scope
+            scope: $scope,
+            windowClass: 'modal-element'
         });
 
         modalInstance.result.then(function(name) {
@@ -491,6 +493,7 @@ angular.module('a2.analysis.patternmatching', [
         var modalInstance = $modal.open({
             templateUrl: '/app/analysis/patternmatching/createnewpatternmatching.html',
             controller: 'CreateNewPatternMatchingInstanceCtrl as controller',
+            windowClass: 'modal-element width-600'
         });
 
         modalInstance.result.then(function (result) {
@@ -526,7 +529,8 @@ angular.module('a2.analysis.patternmatching', [
                 patternMatching: function() {
                     return patternMatching;
                 },
-            }
+            },
+            windowClass: 'modal-element'
         });
 
         modalInstance.result.then(function(ret) {
@@ -701,7 +705,8 @@ angular.module('a2.analysis.patternmatching', [
         $scope.pmName = patternMatching.name
         const modalInstance = $modal.open({
             templateUrl: '/app/analysis/patternmatching/edit-patternmatching.html',
-            scope: $scope
+            scope: $scope,
+            windowClass: 'modal-element'
         });
 
         modalInstance.result.then(function(name) {

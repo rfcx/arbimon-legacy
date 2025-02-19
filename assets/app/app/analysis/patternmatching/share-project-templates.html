@@ -1,23 +1,20 @@
-<div class="share-project-templates">
-    <div class="heart-icon">
-        <img style="width: 24px; height: 24px;" src="/images/fi-heart.svg">
-    </div>
-    <div class="share-project-templates-header">
-        <span>Share project templates</span>
-    </div>
-    
-    <div class="modal-body">
-        <span>
-            Make your templates public and collaborate with others in the Arbimon community! By sharing, everyone can use them for free under a CC0 license.
-        </span>
-        <a href="https://help.arbimon.org/article/227-using-the-public-template-library">Learn more about the public template library</a>
-    </div>
-    <div class="share-project-templates-bottom row-flex justify-between">
-        <button class="btn btn-success btn-rounded-full" ng-click="$dismiss()">
-            Cancel
-        </button>
-        <button class="btn btn-primary btn-rounded-full" ng-click="$close(true)" style="margin-right: 5px;">
-            Share templates
-        </button>
+<img class="ic-close" src="/images/fi-close.svg" ng-click="$dismiss()">
+<div class="modal-icon">
+    <img style="width: 24px; height: 24px;" src="/images/fi-heart.svg">
+</div>
+<div class="modal-header">
+    Share project templates
+</div>
+
+<div class="modal-body">
+    <span>
+        Make your templates public and collaborate with others in the Arbimon community! By sharing, everyone can use them for free under a CC0 license.
+    </span>
+    <a href="https://help.arbimon.org/article/227-using-the-public-template-library">Learn more about the public template library</a>
+</div>
+<div class="modal-footer">
+    <div class="row-flex flex-direction-row flex-space-between">
+        <button class="btn btn-success btn-rounded-full" ng-click="$dismiss()">Cancel</button>
+        <button class="btn btn-primary btn-rounded-full" ng-click="$close(true)" style="margin-right: 5px;">Share templates</button>
     </div>
 </div>
