@@ -2613,6 +2613,7 @@ search-bar {
   .modal-content {
     background-color: @moss !important;
     border-radius: 12px;
+    width: 100%;
     .ic-close {
       position: absolute;
       top: 14px;
@@ -2671,12 +2672,6 @@ search-bar {
   }
 }
 
-.btn-red {
-  color: #FFFEFC;
-  background-color: #CC1E3D;
-  border-color: #CC1E3D;
-}
-
 .width-490 {
   .modal-content {
     width: 490px !important;
@@ -2687,4 +2682,19 @@ search-bar {
   .modal-content {
     width: 900px !important;
   }
+}
+
+ // Should be remove
+ .btn-red {
+  color: #FFFEFC;
+  background-color: #CC1E3D;
+  border-color: #CC1E3D;
+}
+
+.ic-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  padding: 10px;
+  z-index: 10;
 }

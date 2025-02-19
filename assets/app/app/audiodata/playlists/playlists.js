@@ -57,7 +57,8 @@ angular.module('a2.audiodata.playlists', [
         const playlist_id = $scope.checked[0].id;
         const modalInstance = $modal.open({
             templateUrl: '/app/audiodata/edit-playlist.html',
-            scope: $scope
+            scope: $scope,
+            windowClass: 'modal-element width-490'
         });
 
         modalInstance.result.then(function(playlistName) {
@@ -80,22 +81,34 @@ angular.module('a2.audiodata.playlists', [
             return;
         }
 
+        
+        var list = []
         const playlists = $scope.checked.map(function(row) {
+            list.push(row.name)
             return '"'+ row.name +'"';
         });
 
+        if (list.length > 3) {
+            const msg = '& ' + (list.length - 3) + ' other playlists'
+            list = list.slice(0, 3)
+            list.push(msg) // if need to show 3 playlists '& ... other playlists'
+        }
+
         const message = ["You are about to delete the following playlists: "];
-        const message2 = ["Are you sure?"];
         $scope.popup = {
-            messages: message.concat(playlists, message2),
+            title: "Delete playlists",
+            messages: message,
+            list: playlists,
             btnOk: "Yes",
             btnCancel: "No",
+            isForDeletePopup: true
         };
 
 
         const modalInstance = $modal.open({
             templateUrl: '/common/templates/pop-up.html',
-            scope: $scope
+            scope: $scope,
+            windowClass: 'modal-element width-490'
         });
 
         modalInstance.result.then(function() {
