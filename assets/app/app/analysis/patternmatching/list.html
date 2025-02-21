@@ -163,7 +163,7 @@
                             <span for="taxa" class="text-util-gray-01 mr-3">Filter by:</span>
                             <div class="btn-ui-select-success" style="max-width:130px">
                                 <ui-select id="taxa" ng-model="searchTemplates.taxon" theme="bootstrap" ng-change="onSearchChanged()">
-                                    <ui-select-match placeholder="Taxon" title="{{ $select.selected.taxon }}">
+                                    <ui-select-match placeholder="Taxa" title="{{ $select.selected.taxon }}">
                                         <span class="hide-end-text">{{ $select.selected.taxon === 'All taxons' ? 'Taxa' : $select.selected.taxon }}</span>
                                     </ui-select-match>
                                     <ui-select-choices class="item-dropdown-hide-text dropdown-element" repeat="item in taxons | filter:$select.search">
@@ -180,6 +180,7 @@
                             </span>
                             <img
                                 class="ml-2"
+                                style="width: 18px;"
                                 src="/images/fi-info.svg"
                                 tooltip-placement="top"
                                 tooltip="Making your templates public allows everyone to use them with a CC0 license."
