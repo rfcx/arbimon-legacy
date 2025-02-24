@@ -42,19 +42,14 @@ angular.module('a2.audiodata.playlists', [
         });
     };
 
-    this.edit = function() {
-        if(!$scope.checked.length || $scope.checked.length > 1) {
-            notify.log('Please select one playlist to edit');
-            return;
-        }
-
+    this.edit = function(item) {
         if(!a2UserPermit.can('manage playlists')) {
             notify.error('You do not have permission to edit playlists');
             return;
         }
 
-        $scope.pname = $scope.checked[0].name;
-        const playlist_id = $scope.checked[0].id;
+        $scope.pname = item.name;
+        const playlist_id = item.id;
         const modalInstance = $modal.open({
             templateUrl: '/app/audiodata/edit-playlist.html',
             scope: $scope,

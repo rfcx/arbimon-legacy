@@ -42,6 +42,12 @@
         <a2-table search="search" rows="playlists" data-checked="checked" selected="selected" default-sort="site">
             <field title="Name" key="name">
                 {{ row.name }}
+                <button class="btn btn-default btn-xs"
+                    ng-click="controller.edit(row)"
+                    tooltip="Edit Name"
+                    tooltip-trigger="mouseenter">
+                    <i class="fa fa-pencil"></i>
+                </button>
             </field>
             <field title="No. of recordings" key="count" tdclass="seconds-div-center">
                 {{ row.count }}
