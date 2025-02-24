@@ -28,8 +28,11 @@
                 <span>Select a species, then select a sound type</span>
             </div>
         </div>
-        <div class="col-sm-4 species-lib" ng-show="selected.species">
-            <a2-table rows="songtypes" selected="selected.song" no-checkbox>
+        <div class="col-sm-4 species-lib mt-3">
+            <a2-table ng-show="!selected.species" selected="selected.song" no-checkbox>
+                <field title="Sound" key="name"></field>
+            </a2-table>
+            <a2-table rows="songtypes" ng-show="selected.species" selected="selected.song" no-checkbox>
                 <field title="Sound" key="name">
                     {{ row.name }}
                 </field>
