@@ -10,9 +10,9 @@
         </div>
         <div class="form-group">
             <label for="template">Template</label>
-            <i class="fa fa-info-circle ml-2"
+            <img class="icon-info" src="/images/fi-info.svg"
                 tooltip="What to search for">
-            </i>
+            </img>
             <div class="mb-3 flex row-flex flex-align-middle" ng-if="controller.list.templates && !controller.list.templates.length">
                 <em class="pr-2">No templates found.</em>
                 Go to
@@ -43,9 +43,9 @@
         </div>
         <div class="form-group">
             <label for="template">Playlist</label>
-            <i class="fa fa-info-circle ml-2"
+            <img class="icon-info" src="/images/fi-info.svg"
                 tooltip="Which recordings to perform the search on">
-            </i>
+            </img>
             <div class="mb-3 flex row-flex flex-align-middle" ng-if="controller.list.playlists && !controller.list.playlists.length">
                 <em class="pr-2">No playlists found.</em>
                 Go to
@@ -75,23 +75,23 @@
         </div>
         <div class="form-group">
             <label for="param-N">Matches per recording</label>
-            <i class="fa fa-info-circle ml-2"
+            <img class="icon-info" src="/images/fi-info.svg"
                 tooltip="Maximum number of detections/matches in a single recording">
-            </i>
+            </img>
             <input id="param-N" class="form-control" ng-model="controller.data.params.N" placeholder="1" type="text"/>
         </div>
         <div class="form-group">
             <label for="param-persite">Matches per site</label>
-            <i class="fa fa-info-circle ml-2"
+            <img class="icon-info" src="/images/fi-info.svg"
                 tooltip="Maximum number of detections/matches in a site">
-            </i>
+            </img>
             <input id="param-persite" class="form-control" style="text-align:left;" min="0" step="1" placeholder="(no limit)" ng-model="controller.data.params.persite" type="number"/>
         </div>
         <div class="form-group">
             <label for="param-th">Threshold</label>
-            <i class="fa fa-info-circle ml-2"
+            <img class="icon-info" src="/images/fi-info.svg"
                 tooltip="Minimum confidence value of detection/match">
-            </i>
+            </img>
             <input id="param-th" class="form-control" ng-model="controller.data.params.threshold" placeholder="0.1" type="text"/>
         </div>
         <div class="form-group" ng-if="userPermit.has('citizen_scientist')">

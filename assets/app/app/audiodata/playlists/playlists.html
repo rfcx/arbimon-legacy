@@ -11,7 +11,14 @@
                 New Playlist <img class="ml-1" src="/images/fi-plus.svg">
             </button>
         </div>
-
+        <div class="ml-2">
+            <span class="dropdown" dropdown dropdown-append-to-body="true" a2-auto-close-on-outside-click>
+                <button class="btn btn-success btn-rounded-full" ng-disabled="playlists && !playlists.length" dropdown-toggle>Combine Playlists <img src="/images/fi-chevron-down-primary.svg" class="ml-1"></button>
+                <div class="dropdown-form dropdown-menu a2-filters-box-dropdown datepicker" role="menu">
+                    <playlist-arithmetic on-expression-selected="controller.operate(expression)"></playlist-arithmetic>
+                </div>
+            </span>
+        </div>
         <div class="ml-2" tooltip="Select Playlists">
             <button class="btn btn-success btn-rounded-full"
                 ng-click="del()"
@@ -19,14 +26,6 @@
                 tooltip-trigger="mouseenter">
                 Delete Playlist
             </button>
-        </div>
-        <div class="ml-2">
-            <span class="dropdown" dropdown dropdown-append-to-body="true" a2-auto-close-on-outside-click>
-                <button class="btn btn-success btn-rounded-full" ng-disabled="playlists && !playlists.length" dropdown-toggle>Combine Playlists</button>
-                <div class="dropdown-form dropdown-menu a2-filters-box-dropdown datepicker" role="menu">
-                    <playlist-arithmetic on-expression-selected="controller.operate(expression)"></playlist-arithmetic>
-                </div>
-            </span>
         </div>
         <div class="ml-2 search">
             <div class="form-element">

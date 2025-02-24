@@ -162,7 +162,7 @@
                         <div class="row-flex flex-direction-row flex-align-middle">
                             <span for="taxa" class="text-util-gray-01 mr-3">Filter by:</span>
                             <div class="btn-ui-select-success" style="max-width:130px">
-                                <ui-select id="taxa" ng-model="searchTemplates.taxon" theme="bootstrap" ng-change="onSearchChanged()">
+                                <ui-select id="taxa" ng-model="searchTemplates.taxon" theme="bootstrap" ng-change="onSearchChanged()" style="max-width:130px;">
                                     <ui-select-match placeholder="Taxa" title="{{ $select.selected.taxon }}">
                                         <span class="hide-end-text">{{ $select.selected.taxon === 'All taxons' ? 'Taxa' : $select.selected.taxon }}</span>
                                     </ui-select-match>
