@@ -23,7 +23,7 @@ angular.module('a2.audiodata.playlists', [
     this.reset = function(){
         $scope.loading = true;
         a2Playlists.getList({info:true}).then(function(data) {
-            $scope.playlists = data;
+            $scope.playlists = data.sort((a, b) => a.name.localeCompare(b.name));
             $scope.loading = false;
         });
     };

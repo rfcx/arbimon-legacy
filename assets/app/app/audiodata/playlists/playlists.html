@@ -41,34 +41,41 @@
         <a2-table search="search" rows="playlists" data-checked="checked" selected="selected" default-sort="site">
             <field title="Name" key="name">
                 {{ row.name }}
-                <button class="btn btn-default btn-xs"
-                    ng-click="controller.edit(row)"
-                    tooltip="Edit Name"
-                    tooltip-trigger="mouseenter">
-                    <i class="fa fa-pencil"></i>
-                </button>
             </field>
             <field title="No. of recordings" key="count" tdclass="seconds-div-center">
                 {{ row.count }}
             </field>
             <expand-select>
-                <h4>{{selected.name}}</h4>
-                <p class="">
-                    Type : {{selected.type}}
-                </p>
-                <div ng-if="selected.soundscape">
+                <div class="col-md-6">
+                    <h4 class="padding: 0px;">{{selected.name}}
+                        <button class="btn btn-default btn-xs ml-3"
+                            ng-click="controller.edit(selected)"
+                            tooltip="Edit Name"
+                            tooltip-trigger="mouseenter">
+                            <i class="fa fa-pencil"></i>
+                        </button>
+                    </h4>
+                    <span>
+                        Type : {{selected.type}}
+                    </span>
+                    <div ng-if="selected.soundscape">
+                        <a class="btn btn-primary btn-rounded-full mt-4" ng-href="{{'/visualizer/soundscape/' + selected.soundscape + '/' + selected.region | projectUrl}}">View Region</a>
+                    </div>
+                </div>
+                <div class="col-md-6" ng-if="selected.soundscape">
                     <img ng-src="{{selected.soundscape_thumbnail}}" alt=""
                     class="crisp-image"
                     width="300"
                     height="154"
                     /> <br>
-                    <a class="btn btn-primary btn-rounded-full mt-1" ng-href="{{'/visualizer/soundscape/' + selected.soundscape + '/' + selected.region | projectUrl}}">View Region</a>
                 </div>
-                <div ng-if="selected.term1">
-                    Playlist 1 : {{selected.term1.name}}
-                </div>
-                <div ng-if="selected.term1">
-                    Playlist 2 : {{selected.term2.name}}
+                <div class="col-md-6 mt-4"  ng-if="selected.term1 || selected.term1">
+                    <div ng-if="selected.term1">
+                        Playlist 1 : {{selected.term1.name}}
+                    </div>
+                    <div ng-if="selected.term1">
+                        Playlist 2 : {{selected.term2.name}}
+                    </div>
                 </div>
             </expand-select>
         </a2-table>
