@@ -14,7 +14,7 @@
         <div class="ml-2">
             <span class="dropdown" dropdown dropdown-append-to-body="true" a2-auto-close-on-outside-click>
                 <button class="btn btn-success btn-rounded-full" ng-disabled="playlists && !playlists.length" dropdown-toggle>Combine Playlists <img src="/images/fi-chevron-down-primary.svg" class="ml-1"></button>
-                <div class="dropdown-form dropdown-menu a2-filters-box-dropdown datepicker" role="menu">
+                <div class="dropdown-form dropdown-menu a2-filters-box-dropdown datepicker" role="menu" style="background-color: #1e1c13 !important;">
                     <playlist-arithmetic on-expression-selected="controller.operate(expression)"></playlist-arithmetic>
                 </div>
             </span>
@@ -46,35 +46,37 @@
                 {{ row.count }}
             </field>
             <expand-select>
-                <div class="col-md-6">
-                    <h4 class="padding: 0px;">{{selected.name}}
-                        <button class="btn btn-default btn-xs ml-3"
-                            ng-click="controller.edit(selected)"
-                            tooltip="Edit Name"
-                            tooltip-trigger="mouseenter">
-                            <i class="fa fa-pencil"></i>
-                        </button>
-                    </h4>
-                    <span>
-                        Type : {{selected.type}}
-                    </span>
-                    <div ng-if="selected.soundscape">
-                        <a class="btn btn-primary btn-rounded-full mt-4" ng-href="{{'/visualizer/soundscape/' + selected.soundscape + '/' + selected.region | projectUrl}}">View Region</a>
+                <div class="flex row-flex-inline">
+                    <div>
+                        <h4 class="padding: 0px;">{{selected.name}}
+                            <button class="btn btn-default btn-xs ml-3"
+                                ng-click="controller.edit(selected)"
+                                tooltip="Edit Name"
+                                tooltip-trigger="mouseenter">
+                                <i class="fa fa-pencil"></i>
+                            </button>
+                        </h4>
+                        <span>
+                            Type : {{selected.type}}
+                        </span>
+                        <div ng-if="selected.soundscape">
+                            <a class="btn btn-primary btn-rounded-full mt-4" ng-href="{{'/visualizer/soundscape/' + selected.soundscape + '/' + selected.region | projectUrl}}">View Region</a>
+                        </div>
                     </div>
-                </div>
-                <div class="col-md-6" ng-if="selected.soundscape">
-                    <img ng-src="{{selected.soundscape_thumbnail}}" alt=""
-                    class="crisp-image"
-                    width="300"
-                    height="154"
-                    /> <br>
-                </div>
-                <div class="col-md-6 mt-4"  ng-if="selected.term1 || selected.term1">
-                    <div ng-if="selected.term1">
-                        Playlist 1 : {{selected.term1.name}}
+                    <div class="ml-3" ng-if="selected.soundscape">
+                        <img ng-src="{{selected.soundscape_thumbnail}}" alt=""
+                        class="crisp-image"
+                        width="300"
+                        height="154"
+                        /> <br>
                     </div>
-                    <div ng-if="selected.term1">
-                        Playlist 2 : {{selected.term2.name}}
+                    <div class="mt-4 ml-3"  ng-if="selected.term1 || selected.term1">
+                        <div ng-if="selected.term1">
+                            Playlist 1 : {{selected.term1.name}}
+                        </div>
+                        <div ng-if="selected.term1">
+                            Playlist 2 : {{selected.term2.name}}
+                        </div>
                     </div>
                 </div>
             </expand-select>

@@ -94,8 +94,8 @@ angular.module('a2.audiodata.playlists', [
             title: "Delete playlists",
             messages: message,
             list: playlists,
-            btnOk: "Yes",
-            btnCancel: "No",
+            btnOk: "Delete",
+            btnCancel: "Cancel",
             isForDeletePopup: true
         };
 
