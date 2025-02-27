@@ -1,17 +1,15 @@
 <div class="row">
     <h1 class="navbar-rfcx-link-m mt-0">
         Playlists
+        <button class="btn btn-primary btn-rounded-full"
+            ng-click="create('/audiodata/recordings')"
+            tooltip="Create New Playlist"
+            tooltip-trigger="mouseenter" ng-disabled="loading">
+            New Playlist <img class="ml-1" src="/images/fi-plus.svg">
+        </button>
     </h1>
     <div class="col-sm-12 toolbar mt-4 flex row-flex-inline">
         <div>
-            <button class="btn btn-primary btn-rounded-full"
-                ng-click="create('/audiodata/recordings')"
-                tooltip="Create New Playlist"
-                tooltip-trigger="mouseenter" ng-disabled="loading">
-                New Playlist <img class="ml-1" src="/images/fi-plus.svg">
-            </button>
-        </div>
-        <div class="ml-2">
             <span class="dropdown" dropdown dropdown-append-to-body="true" a2-auto-close-on-outside-click>
                 <button class="btn btn-success btn-rounded-full" ng-disabled="playlists && !playlists.length" dropdown-toggle>Combine Playlists <img src="/images/fi-chevron-down-primary.svg" class="ml-1"></button>
                 <div class="dropdown-form dropdown-menu a2-filters-box-dropdown datepicker" role="menu" style="background-color: #1e1c13 !important;">
