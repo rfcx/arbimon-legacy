@@ -28,32 +28,8 @@
                         ],
                         "env": [
                             {
-                                "name": "PLAYLIST_ID",
-                                "value": "{{ENV_PLAYLIST_ID}}"
-                            },
-                            {
-                                "name": "JOB_NAME",
-                                "value": "{{ENV_JOB_NAME}}"
-                            },
-                            {
-                                "name": "SOUNDSCAPE_AGGREGATION",
-                                "value": "{{ENV_SOUNDSCAPE_AGGREGATION}}"
-                            },
-                            {
-                                "name": "SOUNDSCAPE_BIN_SIZE",
-                                "value": "{{ENV_SOUNDSCAPE_BIN_SIZE}}"
-                            },
-                            {
-                                "name": "SOUNDSCAPE_NORMALIZE",
-                                "value": "{{ENV_SOUNDSCAPE_NORMALIZE}}"
-                            },
-                            {
-                                "name": "SOUNDSCAPE_THRESHOLD",
-                                "value": "{{ENV_SOUNDSCAPE_THRESHOLD}}"
-                            },
-                            {
-                                "name": "CREATED_BY_USER_ID",
-                                "value": "{{ENV_CREATED_BY_USER_ID}}"
+                                "name": "JOB_ID",
+                                "value": "{{ENV_JOB_ID}}"
                             }
                         ]
                     }

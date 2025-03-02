@@ -393,23 +393,6 @@ router.post('/project/:projectUrl/soundscape/multiple-batch', function(req, res,
 
 router.post('/project/:projectUrl/soundscape/single-batch', function(req, res, next) {
     res.type('json');
-    const normalized = req.body.nv === true ? 1 : 0;
-    return model.soundscapes.createSingleSoundscape({
-        playlistId: req.body.p.id,
-        jobName: req.body.n.toString(),
-        aggregation: req.body.a,
-        binSize: req.body.b.toString(),
-        normalize: normalized.toString(),
-        threshold: req.body.t.toString(),
-        userId: req.body.u.toString()
-    }, function(err, data) {
-        if (err) return next(err);
-        res.json({ create: data });
-    })
-})
-
-router.post('/project/:projectUrl/soundscape/new', function(req, res, next) {
-    res.type('json');
     let response_already_sent;
     let params, job_id;
 
@@ -463,13 +446,17 @@ router.post('/project/:projectUrl/soundscape/new', function(req, res, next) {
 
             next();
         },
-        function add_job(next){
+        function add_job(next) {
+            next();
             model.jobs.newJob(params, 'soundscape_job', next);
         },
         function get_job_id(_job_id){
             let next = arguments[arguments.length -1];
             job_id = _job_id;
-            next();
+            return model.soundscapes.createSingleSoundscape(job_id, function(err, data) {
+                if (err) return next(err);
+                next();
+            })
         },
         function poke_the_monkey(next){
             pokeDaMonkey();

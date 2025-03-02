@@ -53,16 +53,7 @@ function getSoundscapeBatchRunTemplate (name, type, opts) {
     return template({
         "arbimon-soundscape-timestamp": opts.kubernetesJobName,
         "imagePath": opts.imagePath,
-        "ENV_PLAYLIST_ID": opts.ENV_PLAYLIST_ID,
-        "ENV_JOB_NAME": opts.ENV_JOB_NAME,
-        "ENV_PROJECT": opts.ENV_PROJECT,
-        "ENV_SITES": opts.ENV_SITES,
-        "ENV_YEAR": opts.ENV_YEAR,
-        "ENV_SOUNDSCAPE_AGGREGATION": opts.ENV_SOUNDSCAPE_AGGREGATION,
-        "ENV_SOUNDSCAPE_BIN_SIZE": opts.ENV_SOUNDSCAPE_BIN_SIZE,
-        "ENV_SOUNDSCAPE_NORMALIZE": opts.ENV_SOUNDSCAPE_NORMALIZE,
-        "ENV_SOUNDSCAPE_THRESHOLD": opts.ENV_SOUNDSCAPE_THRESHOLD,
-        "ENV_CREATED_BY_USER_ID": opts.ENV_CREATED_BY_USER_ID
+        "ENV_JOB_ID": opts.ENV_JOB_ID
     });
 }
 
