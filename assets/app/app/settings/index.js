@@ -38,11 +38,6 @@ angular.module('a2.settings',[
     $scope.today = new Date();
 
     Project.getInfo(function(info) {
-        if(info.plan_activated && info.plan_period) {
-            info.plan_due = new Date(info.plan_activated);
-            info.plan_due.setFullYear(info.plan_due.getFullYear()+info.plan_period);
-        }
-
         $scope.project = info;
     });
 

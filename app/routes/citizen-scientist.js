@@ -69,11 +69,6 @@ router.get('/:projecturl?/', function(req, res, next) {
 
             var project = rows[0];
 
-            if(project.plan_period && project.plan_activated) {
-                project.plan_due = new Date(project.plan_activated);
-                project.plan_due.setFullYear(project.plan_due.getFullYear() + project.plan_period);
-            }
-
             model.users.getPermissions(req.session.user.id, project.project_id, function(err, rows) {
                 if(err) {
                     next(err);
@@ -128,7 +123,6 @@ router.get('/:projecturl?/', function(req, res, next) {
                             // a2GoogleMapsLoader
                             inject_data : injected_data,
                             card: card,
-                            planAlert: project.plan_due < new Date() ? 'expired' : '',
                             perms: perms,
                             auth0UniversalLoginUrl: auth0Service.universalLoginUrl
                         });

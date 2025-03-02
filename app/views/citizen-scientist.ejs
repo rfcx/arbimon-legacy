@@ -128,16 +128,6 @@
                     <% } %>
                 </div>
             </nav>
-            <% if(planAlert == 'expired') { %>
-                <div class="alert alert-danger" ng-hide="hideAlertBar" ng-click="hideAlertBar = true">
-                    Your project data plan have expired, please renew your plan.
-                    If a new plan is not selected after 30 days of the
-                    due date, the project will be disable. (click to dismiss)
-                    <button class="close" ng-click="hideAlertBar = true">
-                        <i class="fa fa-times"></i>
-                    </button>
-                </div>
-            <% } %>
             <div id="body">
                 <div ui-view="audiodata"  ng-show="$state.includes('audiodata')"></div>
                 <div ui-view="visualizer" ng-show="$state.includes('visualizer')"></div>

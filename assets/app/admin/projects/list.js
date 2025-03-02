@@ -124,8 +124,7 @@ angular.module('a2.admin.projects.list', [
                     tier: project.tier,
                     storage: project.storage_limit,
                     processing: project.processing_limit,
-                    activation: project.plan_activated,
-                    duration_period: project.plan_period
+                    activation: project.plan_activated
                 }
             };
             return $http.put('/admin/projects/' + project.project_id, {

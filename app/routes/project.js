@@ -155,7 +155,6 @@ router.get('/:projecturl?/', function(req, res, next) {
                             // a2GoogleMapsLoader
                             inject_data : injected_data,
                             card: card,
-                            planAlert: project.plan_due < new Date() ? 'expired' : '',
                             perms: perms,
                             auth0UniversalLoginUrl: auth0Service.universalLoginUrl
                         });
