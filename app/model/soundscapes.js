@@ -664,7 +664,7 @@ let Soundscapes = {
             .then(async () => {
                 const jobName = 'arbimon-single-soundscape';
                 const kubernetesJobName = `${jobName}-${jobId}-${new Date().getTime()}`;
-                const jobParam = jsonTemplates.getSoundscapeBatchRunTemplate(jobName, 'job', {
+                const jobParam = jsonTemplates.getSingleSoundscapeTemplate(jobName, 'job', {
                     kubernetesJobName: kubernetesJobName,
                     imagePath: k8sConfig.soundscapeImagePath,
                     ENV_JOB_ID: `${jobId}`
@@ -688,7 +688,7 @@ let Soundscapes = {
         return q.ninvoke(joi, 'validate', payload, Soundscapes.JOB_SCHEMA)
             .then(async () => {
                 data.kubernetesJobName = `arbimon-multiple-soundscape-${new Date().getTime()}`;
-                const jobParam = jsonTemplates.getSoundscapeBatchRunTemplate('arbimon-multiple-soundscape', 'job', {
+                const jobParam = jsonTemplates.getMultipleSoundscapeTemplate('arbimon-multiple-soundscape', 'job', {
                     kubernetesJobName: data.kubernetesJobName,
                     imagePath: k8sConfig.soundscapeImagePath,
                     ENV_PROJECT: `${data.projectUrl}`,

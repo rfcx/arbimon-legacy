@@ -42,7 +42,31 @@ function getAEDJobTemplate (name, type, opts) {
  * @param {Integer} opts.ENV_SOUNDSCAPE_THRESHOLD - Peak filtering amplitude threshold.
 */
 
-function getSoundscapeBatchRunTemplate (name, type, opts) {
+function getMultipleSoundscapeTemplate (name, type, opts) {
+    let json;
+    try {
+        json = k8s[type][name]
+    } catch (e) {
+        throw new Error(`${type} with name ${name} doesn't exist.`)
+    }
+    const template = parse(json);
+    return template({
+        "arbimon-soundscape-timestamp": opts.kubernetesJobName,
+        "imagePath": opts.imagePath,
+        "ENV_PLAYLIST_ID": opts.ENV_PLAYLIST_ID,
+        "ENV_JOB_NAME": opts.ENV_JOB_NAME,
+        "ENV_PROJECT": opts.ENV_PROJECT,
+        "ENV_SITES": opts.ENV_SITES,
+        "ENV_YEAR": opts.ENV_YEAR,
+        "ENV_SOUNDSCAPE_AGGREGATION": opts.ENV_SOUNDSCAPE_AGGREGATION,
+        "ENV_SOUNDSCAPE_BIN_SIZE": opts.ENV_SOUNDSCAPE_BIN_SIZE,
+        "ENV_SOUNDSCAPE_NORMALIZE": opts.ENV_SOUNDSCAPE_NORMALIZE,
+        "ENV_SOUNDSCAPE_THRESHOLD": opts.ENV_SOUNDSCAPE_THRESHOLD,
+        "ENV_CREATED_BY_USER_ID": opts.ENV_CREATED_BY_USER_ID
+    });
+}
+
+function getSingleSoundscapeTemplate (name, type, opts) {
     let json;
     try {
         json = k8s[type][name]
@@ -104,7 +128,8 @@ function getClassificationJobTemplate (name, type, opts) {
 
 module.exports = {
     getAEDJobTemplate,
-    getSoundscapeBatchRunTemplate,
+    getMultipleSoundscapeTemplate,
+    getSingleSoundscapeTemplate,
     getRfmTemplate,
     getRfmRetrainTemplate,
     getClassificationJobTemplate
