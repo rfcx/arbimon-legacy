@@ -650,8 +650,16 @@ let Soundscapes = {
             WHERE project_id = ${dbpool.escape(projectId)} AND uri is not null`).get(0).get('count');
     },
 
-    JOB_SCHEMA : joi.object().keys({
+    JOB_SCHEMA_SINGLE_SOUNDSCAPE : joi.object().keys({
         ENV_JOB_ID: joi.string()
+    }),
+
+    JOB_SCHEMA_MULTIPLE_SOUNDSCAPE : joi.object().keys({
+        ENV_SOUNDSCAPE_AGGREGATION: joi.string(),
+        ENV_SOUNDSCAPE_BIN_SIZE: joi.string(),
+        ENV_SOUNDSCAPE_NORMALIZE: joi.string(),
+        ENV_SOUNDSCAPE_THRESHOLD: joi.string(),
+        ENV_CREATED_BY_USER_ID: joi.string()
     }),
 
     createSingleSoundscape: function(jobId, callback) {
@@ -660,7 +668,7 @@ let Soundscapes = {
                 ENV_JOB_ID: `${jobId}`
             }
         )
-        return q.ninvoke(joi, 'validate', payload, this.JOB_SCHEMA)
+        return q.ninvoke(joi, 'validate', payload, this.JOB_SCHEMA_SINGLE_SOUNDSCAPE)
             .then(async () => {
                 const jobName = 'arbimon-single-soundscape';
                 const kubernetesJobName = `${jobName}-${jobId}-${new Date().getTime()}`;
@@ -685,7 +693,7 @@ let Soundscapes = {
                 ENV_CREATED_BY_USER_ID: `${data.userId}`,
             }
         )
-        return q.ninvoke(joi, 'validate', payload, Soundscapes.JOB_SCHEMA)
+        return q.ninvoke(joi, 'validate', payload, Soundscapes.JOB_SCHEMA_MULTIPLE_SOUNDSCAPE)
             .then(async () => {
                 data.kubernetesJobName = `arbimon-multiple-soundscape-${new Date().getTime()}`;
                 const jobParam = jsonTemplates.getMultipleSoundscapeTemplate('arbimon-multiple-soundscape', 'job', {
