@@ -22,6 +22,7 @@ angular.module('a2.googlemaps',[])
         if(apiKey){
             params.push('key='+apiKey);
         }
+        params.push('libraries=marker');
         script.src = $window.document.location.protocol + '//maps.googleapis.com/maps/api/js?'+params.join('&');
         $window.document.body.appendChild(script);
     }
