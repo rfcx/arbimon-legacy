@@ -152,9 +152,7 @@ var Projects = {
         }).nodeify(callback);
     },
 
-    // DEPRACATED use find()
     findByUrl: function (project_url, callback) {
-        console.info('projects.findByUrl DEPRECATED');
         return Projects.find({url: project_url}, callback);
     },
 

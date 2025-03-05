@@ -9,10 +9,28 @@ var q = require('q');
 var config = require('../../../config');
 var model = require('../../../model');
 
-var s3 = new AWS.S3();
 var router = express.Router();
 var region_router = express.Router();
 
+let s3, s3RFCx;
+defineS3Clients();
+
+function getS3ClientConfig (type) {
+    return {
+        accessKeyId: config(type).accessKeyId,
+        secretAccessKey: config(type).secretAccessKey,
+        region: config(type).region
+    }
+}
+
+function defineS3Clients () {
+    if (!s3) {
+        s3 = new AWS.S3(getS3ClientConfig('aws'))
+    }
+    if (!s3RFCx) {
+        s3RFCx = new AWS.S3(getS3ClientConfig('aws_rfcx'))
+    }
+}
 
 var parse_bbox = function(bbox){
     var m=/^((\d+)?,(\d+)?-(\d+)?,(\d+)?|all)?$/.exec('' + bbox);
@@ -279,7 +297,10 @@ router.get('/:soundscape/export-list', function(req, res, next) {
 
 router.get('/:soundscape/indices', function(req, res, next) {
     res.type('json');
-    
+    const isProd = process.env.NODE_ENV === 'production';
+    const awsConfig = isProd ? config('aws') : config('aws_rfcx');
+    const awsBucket = isProd ? awsConfig.bucketName : awsConfig.bucketNameStaging;
+
     var uri = sprintf('project_%(project_id)s/soundscapes/%(soundscape_id)s/', {
         project_id: req.project.project_id,
         soundscape_id: req.soundscape.id
@@ -287,22 +308,22 @@ router.get('/:soundscape/indices', function(req, res, next) {
     
     async.parallel({
         H: function(callback) {
-            s3.getObject({
-                Bucket: config('aws').bucketName,
+            (isProd ? s3 : s3RFCx).getObject({
+                Bucket: awsBucket,
                 Key: uri + 'h.json'
             },
             callback);
         },
         ACI: function(callback) {
-            s3.getObject({
-                Bucket: config('aws').bucketName,
+            (isProd ? s3 : s3RFCx).getObject({
+                Bucket: awsBucket,
                 Key: uri + 'aci.json'
             },
             callback);
         },
         NP: function(callback) {
-            s3.getObject({
-                Bucket: config('aws').bucketName,
+            (isProd ? s3 : s3RFCx).getObject({
+                Bucket: awsBucket,
                 Key: uri + 'peaknumbers.json'
             },
             callback);

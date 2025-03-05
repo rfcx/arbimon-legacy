@@ -42,7 +42,7 @@ function getAEDJobTemplate (name, type, opts) {
  * @param {Integer} opts.ENV_SOUNDSCAPE_THRESHOLD - Peak filtering amplitude threshold.
 */
 
-function getSoundscapeBatchRunTemplate (name, type, opts) {
+function getMultipleSoundscapeTemplate (name, type, opts) {
     let json;
     try {
         json = k8s[type][name]
@@ -63,6 +63,21 @@ function getSoundscapeBatchRunTemplate (name, type, opts) {
         "ENV_SOUNDSCAPE_NORMALIZE": opts.ENV_SOUNDSCAPE_NORMALIZE,
         "ENV_SOUNDSCAPE_THRESHOLD": opts.ENV_SOUNDSCAPE_THRESHOLD,
         "ENV_CREATED_BY_USER_ID": opts.ENV_CREATED_BY_USER_ID
+    });
+}
+
+function getSingleSoundscapeTemplate (name, type, opts) {
+    let json;
+    try {
+        json = k8s[type][name]
+    } catch (e) {
+        throw new Error(`${type} with name ${name} doesn't exist.`)
+    }
+    const template = parse(json);
+    return template({
+        "arbimon-soundscape-timestamp": opts.kubernetesJobName,
+        "imagePath": opts.imagePath,
+        "ENV_JOB_ID": opts.ENV_JOB_ID
     });
 }
 
@@ -113,7 +128,8 @@ function getClassificationJobTemplate (name, type, opts) {
 
 module.exports = {
     getAEDJobTemplate,
-    getSoundscapeBatchRunTemplate,
+    getMultipleSoundscapeTemplate,
+    getSingleSoundscapeTemplate,
     getRfmTemplate,
     getRfmRetrainTemplate,
     getClassificationJobTemplate
