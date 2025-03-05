@@ -447,7 +447,6 @@ router.post('/project/:projectUrl/soundscape/single-batch', function(req, res, n
             next();
         },
         function add_job(next) {
-            next();
             model.jobs.newJob(params, 'soundscape_job', next);
         },
         function get_job_id(_job_id){
