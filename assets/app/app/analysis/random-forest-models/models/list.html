@@ -96,20 +96,23 @@
                         {{row.muser}}
                     </field>
                     <field>
-                        <button
+                        <div class="row-flex flex-direction-row">
+                            <button
                             ng-disabled="row.source_project_id"
                             class="btn btn-default btn-rounded-full"
                             ng-click="$event.stopPropagation(); newModel(row, true)"
                             tooltip="Retrain the model"
                             tooltip-trigger="mouseenter">
-                            Retrain
-                        </button>
-                        <button class="btn btn-danger"
-                            ng-click="$event.stopPropagation(); deleteModel(row.model_id,row.mname)"
-                            tooltip="Delete"
-                            tooltip-trigger="mouseenter">
-                            <i class="fa fa-trash"></i>
-                        </button>
+                                Retrain
+                            </button>
+                        
+                            <div class="pl-3 pt-2 pb-2 pr-3"
+                                ng-click="$event.stopPropagation(); deleteModel(row.model_id,row.mname)"
+                                tooltip="Delete"
+                                tooltip-trigger="mouseenter">
+                                <i class="fa fa-trash"></i>
+                            </div>
+                        </div>
                     </field>
                 </a2-table>
             </div>

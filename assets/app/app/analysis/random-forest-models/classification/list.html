@@ -26,12 +26,12 @@
                     {{ row.muser }}
                 </field>
                 <field>
-                    <button class="btn btn-danger"
+                    <div class="pl-3 pt-2 pb-2 pr-3"
                         ng-click="$event.stopPropagation(); deleteClassification(row.job_id,row.cname)"
                         tooltip="Delete"
                         tooltip-trigger="mouseenter">
                         <i class="fa fa-trash"></i>
-                    </button>
+                    </div>
                 </field>
             </a2-table>
         </div>
