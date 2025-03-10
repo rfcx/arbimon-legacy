@@ -160,7 +160,8 @@ angular.module('a2.analysis.random-forest-models.models', [
                 projectData: function() {
                     return $scope.projectData;
                 }
-            }
+            },
+            windowClass: 'modal-element width-490'
         });
 
         modalInstance.opened.then(function() {
@@ -211,7 +212,8 @@ angular.module('a2.analysis.random-forest-models.models', [
                 models: function() {
                     return $scope.modelsData;
                 }
-            }
+            },
+            windowClass: 'modal-element'
         });
 
         modalInstance.result.then(
@@ -265,6 +267,7 @@ angular.module('a2.analysis.random-forest-models.models', [
                         return {model: model};
                     }
                 },
+                windowClass: 'modal-element'
             });
 
             modalInstance.opened.then(function() {
@@ -351,7 +354,8 @@ angular.module('a2.analysis.random-forest-models.models', [
                 {
                     return $scope.projectData;
                 }
-            }
+            },
+            windowClass: 'modal-element'
         });
 
         modalInstanceClassification.result.then(function (result) {

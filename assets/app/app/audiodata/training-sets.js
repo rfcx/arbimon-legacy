@@ -135,11 +135,14 @@ angular.module('a2.audiodata.training-sets', [
         var modalInstance = $modal.open({
             templateUrl: '/common/templates/pop-up.html',
             controller: function() {
+                this.title = "Delete a ROI";
                 this.messages = ["You are about to delete a ROI. Are you sure?"];
-                this.btnOk = "Yes, do it!";
-                this.btnCancel = "No";
+                this.btnOk = "Delete";
+                this.btnCancel = "Cancel";
+                this.isForDeletePopup = true;
             },
-            controllerAs: 'popup'
+            controllerAs: 'popup',
+            windowClass: 'modal-element width-490'
         });
 
         modalInstance.result.then((function() {
@@ -191,7 +194,8 @@ angular.module('a2.audiodata.training-sets', [
 
         $modal.open({
             templateUrl : '/app/visualizer/layers/training-data/add_tset_modal.html',
-            controller  : 'a2VisualizerAddTrainingSetModalController'
+            controller  : 'a2VisualizerAddTrainingSetModalController',
+            windowClass: 'modal-element'
         }).result.then(
             this.getTrainingSetList.bind(this)
         );
@@ -313,11 +317,14 @@ angular.module('a2.audiodata.training-sets', [
         $modal.open({
             templateUrl: '/common/templates/pop-up.html',
             controller: function() {
+                this.title = "Delete training set";
                 this.messages = ["You are about to delete a the training set \"" + trainingSet.name + "\". Are you sure?"];
-                this.btnOk = "Yes, do it!";
-                this.btnCancel = "No";
+                this.btnOk = "Delete";
+                this.btnCancel = "Cancel";
+                this.isForDeletePopup = true;
             },
-            controllerAs: 'popup'
+            controllerAs: 'popup',
+            windowClass: 'modal-element width-490'
         }).result.then((function() {
             a2TrainingSets.delete(trainingSet.id, (function(data){
                 this.trainingSets.splice(this.trainingSets.indexOf(trainingSet), 1);

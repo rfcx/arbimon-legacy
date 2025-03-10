@@ -114,7 +114,7 @@ angular.module('a2.analysis.random-forest-models.classification', [
         var modalInstance = $modal.open({
             templateUrl: '/app/analysis/random-forest-models/classification/classinfo.html',
             controller: 'ClassiDetailsInstanceCtrl',
-            windowClass: 'details-modal-window',
+            windowClass: 'modal-element width-900',
             backdrop: 'static',
             resolve: {
                 ClassiInfo: function () {
@@ -171,7 +171,8 @@ angular.module('a2.analysis.random-forest-models.classification', [
                 {
                     return $scope.projectData;
                 }
-            }
+            },
+            windowClass: 'modal-element'
         });
 
         modalInstance.opened.then(function() {
@@ -220,7 +221,8 @@ angular.module('a2.analysis.random-forest-models.classification', [
                 projectData: function() {
                     return $scope.projectData;
                 }
-            }
+            },
+            windowClass: 'modal-element width-490'
         });
 
         modalInstance.opened.then(function() {

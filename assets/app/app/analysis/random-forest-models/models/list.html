@@ -96,13 +96,13 @@
                         {{row.muser}}
                     </field>
                     <field>
-                        <button class="btn btn-default"
+                        <button class="btn btn-default btn-rounded-full"
                             ui-sref="analysis.modeldetails({ modelId: row.model_id })">
                             Show details
                         </button>
                         <button
                             ng-if="!row.source_project_id"
-                            class="btn btn-default"
+                            class="btn btn-default btn-rounded-full"
                             ng-click="newModel(row, true)"
                             tooltip="Retrain the model"
                             tooltip-trigger="mouseenter">
@@ -119,11 +119,14 @@
             </div>
             <div ng-show="!loading && modelsDataOrig && !modelsDataOrig.length" class="help-wrapper col-sm-12 row-flex flex-direction-column flex-space-center flex-align-middle clear-button" style="text-align: center;">
                 <div>
-                    <a class="btn btn-sm btn-default"
+                    <a class="btn btn-sm btn-success btn-rounded-full"
                         tooltip="Create New Training Job"
                         tooltip-placement="top"
                         ng-click="newModel()">
-                        <i class="fa fa-plus mr-1" ></i> New Training Job
+                        New Training Job
+                        <span class="ml-2">
+                            <img src="/images/fi-plus-primary.svg"> 
+                        </span>
                     </a>
                 </div>
                 <p class="mt-3 mb-0">Learn more:</p>

@@ -46,7 +46,8 @@ angular.module('a2.visualizer.layers.training-sets', [
 
         $modal.open({
             templateUrl : '/app/visualizer/layers/training-data/add_tset_modal.html',
-            controller  : 'a2VisualizerAddTrainingSetModalController'
+            controller  : 'a2VisualizerAddTrainingSetModalController',
+            windowClass: 'modal-element'
         }).result.then(function (new_tset) {
             if(new_tset && new_tset.id) {
                 self.tset_list.push(new_tset);
