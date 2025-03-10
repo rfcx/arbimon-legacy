@@ -9,7 +9,7 @@
         </button>
 
         <div ng-hide="loading">
-            <a2-table rows="classificationsData" no-checkbox="true">
+            <a2-table rows="classificationsData" no-checkbox="true" on-select="showClassificationDetails(row)">
                 <field title="Name" tdclass="hidelongtext widthtd is-v-middle" key="cname" filter>
                     <span>{{row.cname}}</span>
                 </field>
@@ -26,12 +26,8 @@
                     {{ row.muser }}
                 </field>
                 <field>
-                    <button class="btn btn-default btn-rounded-full"
-                        ng-click="showClassificationDetails(row)">
-                            Show details
-                    </button>
                     <button class="btn btn-danger"
-                        ng-click="deleteClassification(row.job_id,row.cname)"
+                        ng-click="$event.stopPropagation(); deleteClassification(row.job_id,row.cname)"
                         tooltip="Delete"
                         tooltip-trigger="mouseenter">
                         <i class="fa fa-trash"></i>

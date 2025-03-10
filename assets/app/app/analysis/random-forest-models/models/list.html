@@ -75,7 +75,7 @@
                 </div>
             </div>
             <div ng-hide="loading">
-                <a2-table rows="modelsData" no-checkbox="true">
+                <a2-table rows="modelsData" no-checkbox="true" ui-sref="analysis.modeldetails({ modelId: row.model_id })">
                     <field title="Date" key="date" tdclass="is-v-middle">
                         {{ row.date | moment : 'lll' }}
                     </field>
@@ -96,20 +96,16 @@
                         {{row.muser}}
                     </field>
                     <field>
-                        <button class="btn btn-default btn-rounded-full"
-                            ui-sref="analysis.modeldetails({ modelId: row.model_id })">
-                            Show details
-                        </button>
                         <button
-                            ng-if="!row.source_project_id"
+                            ng-disabled="row.source_project_id"
                             class="btn btn-default btn-rounded-full"
-                            ng-click="newModel(row, true)"
+                            ng-click="$event.stopPropagation(); newModel(row, true)"
                             tooltip="Retrain the model"
                             tooltip-trigger="mouseenter">
                             Retrain
                         </button>
                         <button class="btn btn-danger"
-                            ng-click="deleteModel(row.model_id,row.mname)"
+                            ng-click="$event.stopPropagation(); deleteModel(row.model_id,row.mname)"
                             tooltip="Delete"
                             tooltip-trigger="mouseenter">
                             <i class="fa fa-trash"></i>
