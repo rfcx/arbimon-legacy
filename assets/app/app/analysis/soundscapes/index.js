@@ -183,7 +183,8 @@ angular.module('a2.analysis.soundscapes', [
                     return { params: params }
                 }
             },
-            backdrop: false
+            backdrop: false,
+            windowClass: 'modal-element'
         });
 
         modalInstance.result.then(function() {
@@ -214,7 +215,8 @@ angular.module('a2.analysis.soundscapes', [
                 projectData: function() {
                     return $scope.projectData;
                 }
-            }
+            },
+            windowClass: 'modal-element'
         });
 
         modalInstance.opened.then(function() {
@@ -274,7 +276,8 @@ angular.module('a2.analysis.soundscapes', [
                 {
                     return a2UserPermit.getUserId();
                 }
-            }
+            },
+            windowClass: 'modal-element mt-50'
         });
 
         modalInstance.opened.then(function() {
@@ -321,7 +324,8 @@ angular.module('a2.analysis.soundscapes', [
                         playlist: function() {
                             return plist;
                         }
-                    }
+                    },
+                    windowClass: 'modal-element'
                 });
 
             });

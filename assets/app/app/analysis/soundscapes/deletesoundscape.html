@@ -1,10 +1,19 @@
+<img class="ic-close" src="/images/fi-close.svg" ng-click="cancel()">
+<div class="modal-icon">
+    <div>
+        <img src="/images/fi-delete.svg">
+    </div>
+</div>
 <div class="modal-header">
-    <h3 class="modal-title">Delete soundcape</h3>
+    Delete soundcape
 </div>
 <div class="modal-body">
-    You are about to delete soundscape <b>{{name}}</b>. Are you sure?
+    You are about to delete soundscape <b>{{name}}</b>.
+    <p>Are you sure?</p>
 </div>
 <div class="modal-footer">
-    <button class="btn btn-danger" ng-click="ok()">Yes</button>  
-    <button class="btn btn-default" ng-click="cancel()">No</button>
+    <div class="row-flex flex-direction-row flex-space-between">
+        <button class="btn btn-success" ng-click="cancel()">Cancel</button>
+        <button class="btn btn-red" ng-click="ok()">Delete</button>
+    </div>
 </div>

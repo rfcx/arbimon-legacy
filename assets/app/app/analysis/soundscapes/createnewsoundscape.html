@@ -1,5 +1,6 @@
+<img class="ic-close" src="/images/fi-close.svg" ng-click="cancel()">
 <div class="modal-header">
-    <h3 class="modal-title">Create a new soundscape</h3>
+    Create a new soundscape
 </div>
 <div class="modal-body">
 
@@ -147,10 +148,8 @@
     </form>
 </div>
 <div class="modal-footer">
-    <button class="btn btn-primary" ng-click="ok()"  ng-disabled="buttonEnable()">
-        <i class="fa fa-cogs"></i> Create
-    </button>
-    <button class="btn btn-default" ng-click="cancel()">
-        <i class="fa fa-times"></i> Close
-    </button>
+  <div class="row-flex flex-direction-row flex-space-between">
+    <button class="btn btn-success" ng-click="cancel()">Cancel</button>
+    <button class="btn btn-primary" ng-click="ok()"  ng-disabled="buttonEnable()">Create</button>
+  </div>
 </div>
