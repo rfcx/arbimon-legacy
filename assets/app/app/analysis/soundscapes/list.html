@@ -67,7 +67,7 @@
                     </field>
                     <field>
                         <div class="row-flex flex-space-end">
-                            <a class="btn btn-default btn-rounded-full mr-2" ui-sref="$event.stopPropagation(); visualizer.view({type:'soundscape', idA:row.soundscape_id})"
+                            <a class="btn btn-default btn-rounded-full mr-2" ng-click="$event.stopPropagation();" ui-sref="visualizer.view({type:'soundscape', idA:row.soundscape_id})"
                             ><i class="fa fa-cubes"></i> View</a>
                             <span class="btn-group" dropdown dropdown-append-to-body="true">
                                 <button class="btn btn-default btn-rounded-full"
@@ -86,7 +86,8 @@
                             <div class="pl-3 pt-2 pb-2 pr-3"
                                 ng-click="$event.stopPropagation(); deleteSoundscape(row.soundscape_id,row.name)"
                                 tooltip="Delete"
-                                tooltip-trigger="mouseenter">
+                                tooltip-trigger="mouseenter"
+                                style="cursor: pointer;">
                                 <i class="fa fa-trash"></i>
                             </div>
                         </div>

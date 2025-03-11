@@ -30,7 +30,7 @@
             </div>
         </h1>
         <div class="row panel-body">
-            <ul class="nav nav-tabs col-md-12">
+            <ul class="nav nav-tabs col-md-12" style="cursor: default;">
                 <li class="nav-item" ng-class="{ active: currentTab === 'classifications' }">
                     <a class="nav-link" href="" ng-click="toggleTab('classifications')">
                         Classification Results
@@ -83,7 +83,7 @@
                         <span>{{row.mname}}</span>
                         <a class="is-v-middle cursor-pointer linodeco"
                             ng-if="row.shared === true"
-                            ng-click="goToSourceProject(row)"
+                            ng-click="$event.stopPropagation(); goToSourceProject(row)"
                         >
                             <i aria-hidden="true" class="glyphicon glyphicon-link text-frequency pl-2"></i>
                             <span class="text-frequency">linked</span>
@@ -109,7 +109,8 @@
                             <div class="pl-3 pt-2 pb-2 pr-3"
                                 ng-click="$event.stopPropagation(); deleteModel(row.model_id,row.mname)"
                                 tooltip="Delete"
-                                tooltip-trigger="mouseenter">
+                                tooltip-trigger="mouseenter"
+                                style="cursor: pointer;">
                                 <i class="fa fa-trash"></i>
                             </div>
                         </div>

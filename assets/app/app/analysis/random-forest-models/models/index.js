@@ -234,7 +234,6 @@ angular.module('a2.analysis.random-forest-models.models', [
         if (!row.source_project_id) return;
         Project.getProjectById(row.source_project_id, function(data) {
             if (data) {
-                console.log("/project/"+data.url+"/analysis/random-forest-models/models")
                 $window.location.href = "/project/"+data.url+"/analysis/random-forest-models/models";
             }
         });
