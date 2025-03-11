@@ -98,6 +98,10 @@ angular.module('a2.analysis.random-forest-models.models', [
         });
     };
 
+    $scope.openModelDetails = function(model_id) {
+        $state.go('analysis.modeldetails', { modelId: model_id });
+    }
+
     $scope.loadModels = function() {
         a2Models.list(function(data) {
             $scope.modelsData = data;

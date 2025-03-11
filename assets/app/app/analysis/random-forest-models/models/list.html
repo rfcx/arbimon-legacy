@@ -75,7 +75,7 @@
                 </div>
             </div>
             <div ng-hide="loading">
-                <a2-table rows="modelsData" no-checkbox="true" ui-sref="analysis.modeldetails({ modelId: row.model_id })">
+                <a2-table rows="modelsData" no-checkbox="true" on-select="openModelDetails(row.model_id)">
                     <field title="Date" key="date" tdclass="is-v-middle">
                         {{ row.date | moment : 'lll' }}
                     </field>
