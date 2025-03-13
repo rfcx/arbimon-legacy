@@ -18,7 +18,7 @@
             </div>
         </h1>
         <div class="row panel-body">
-            <ul class="nav nav-tabs col-md-12">
+            <ul class="nav nav-tabs col-md-12" style="cursor: default;">
                 <li class="nav-item" ng-class="{ active: currentTab === 'patternMatchings' }">
                     <a class="nav-link" href="" ng-click="toggleTab('patternMatchings')">
                         Results
@@ -128,23 +128,23 @@
                     <field title="Playlist" key="playlist_name" tdclass="is-v-middle hidelongtext widthtd">
                         <span title="{{row.playlist_name}}">{{row.playlist_name}}</span>
                     </field>
-                    <field title="Template" key="template" tdclass="is-v-middle hidelongtext widthtd">
-                        <span>{{row.template.species_name}}, {{row.template.songtype_name}}</span>
-                        <div class="text-dim" title="Template name">{{row.template.name}}</div>
+                    <field title="Date" key="template" tdclass="is-v-middle hidelongtext widthtd-sm">
+                        <span class="flex-row">{{row.template.species_name}}, {{row.template.songtype_name}}</span>
+                        <p class="hidelongtext text-dim" title="Template name">{{row.template.name}}</p>
                     </field>
-                    <field title="Parameters" key="parameters" tdclass="hidelongtext no-wrap-table-cell is-v-middle">
+                    <field title="Parameters" key="parameters" tdclass="hidelongtext widthtd-xsm no-wrap-table-cell is-v-middle">
                         <span class="mr-1" title="{{row.parameters | asCSV }}">{{row.parameters | asCSV }}</span>
                     </field>
-                    <field title="User" key="user" tdclass="is-v-middle">
-                        {{ row.user }}
+                    <field title="User" key="user" tdclass="is-v-middle widthtd-xsm hidelongtext">
+                        <span title="{{ row.user }}">{{ row.user }}</span>
                     </field>
                     <field tdclass="is-v-middle">
-                        <button class="btn btn-danger"
+                        <div class="pl-3 pt-2 pb-2 pr-3"
                             ng-click="deletePatternMatching(row, $event)"
                             tooltip="Delete"
                             tooltip-trigger="mouseenter">
                             <i class="fa fa-trash"></i>
-                        </button>
+                        </div>
                     </field>
                 </a2-table>
             </div>
@@ -266,28 +266,30 @@
                             </span>
                         </field>
                         <field tdclass="is-v-middle text-right">
-                            <button class="btn btn-default mr-4"
-                                ng-click="downloadTemplate(row)"
-                                tooltip="Download template (.wav)"
-                                tooltip-trigger="mouseenter">
-                                <i class="fa fa-download" style="font-size: 13px;"></i>
-                            </button>
-                            <button class="btn btn-danger"
-                                ng-if="currentTab === 'projectTemplates'"
-                                ng-click="deleteTemplate(row.id)"
-                                tooltip="Delete Template"
-                                tooltip-trigger="mouseenter">
-                                <i class="fa fa-trash" style="font-size: 15px;"></i>
-                            </button>
-                            <button class="btn btn-default"
-                                ng-if="currentTab === 'publicTemplates'"
-                                ng-click="addTemplate(row)"
-                                tooltip="Add Template"
-                                ng-disabled="isAddingTemplate.value === true"
-                                tooltip-trigger="mouseenter">
-                                <i ng-if="row.isAddingTemplate" class="fa fa-spinner fa-spin"></i>
-                                <i ng-if="!row.isAddingTemplate" class="fa fa-plus"></i>
-                            </button>
+                            <div class="row-flex flex-direction-row">
+                                <button class="btn btn-default btn-rounded-full mr-1"
+                                    ng-if="currentTab === 'publicTemplates'"
+                                    ng-click="addTemplate(row)"
+                                    tooltip="Add Template"
+                                    ng-disabled="isAddingTemplate.value === true"
+                                    tooltip-trigger="mouseenter">
+                                    Add
+                                    <i ng-if="row.isAddingTemplate" class="fa fa-spinner fa-spin ml-1"></i>
+                                </button>
+                                <div class="pl-3 pt-3 pb-2 pr-3"
+                                    ng-click="downloadTemplate(row)"
+                                    tooltip="Download template (.wav)"
+                                    tooltip-trigger="mouseenter">
+                                    <i class="fa fa-download" style="font-size: 13px;"></i>
+                                </div>
+                                <div class="pl-3 pt-3 pb-2 pr-3"
+                                    ng-if="currentTab === 'projectTemplates'"
+                                    ng-click="deleteTemplate(row.id)"
+                                    tooltip="Delete Template"
+                                    tooltip-trigger="mouseenter">
+                                    <i class="fa fa-trash" style="font-size: 15px;"></i>
+                                </div>
+                            </div>
                         </field>
                     </a2-table>
                 </div>
