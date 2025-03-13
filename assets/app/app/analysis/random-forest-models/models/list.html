@@ -95,18 +95,22 @@
                     </field>
                     <field>
                         <div class="row-flex flex-direction-row">
-                            <button
-                            ng-disabled="row.source_project_id || !canRetrain(row)"
-                            class="btn btn-default btn-rounded-full"
-                            ng-click="$event.stopPropagation(); newModel(row, true)"
-                            tooltip="Retrain the model created before Feb 5, 2025"
-                            tooltip-trigger="mouseenter">
-                                Retrain
-                            </button>
+                            <div
+                                tooltip-append-to-body="true"
+                                tooltip="{{ !(row.source_project_id || !canRetrain(row)) ? 'Retrain the model created before Feb 5, 2025' : 'Disable retraining for models already retrained or created after Feb 5, 2025.'}}"
+                                tooltip-trigger="mouseenter">
+                                <button
+                                ng-disabled="row.source_project_id || !canRetrain(row)"
+                                class="btn btn-default btn-rounded-full"
+                                ng-click="$event.stopPropagation(); newModel(row, true)">
+                                    Retrain
+                                </button>
+                            </div>
+                            
                         
                             <div class="pl-3 pt-2 pb-2 pr-3"
                                 ng-click="$event.stopPropagation(); deleteModel(row.model_id,row.mname)"
-                                tooltip="Delete"
+                                tooltip="Delete training model"
                                 tooltip-trigger="mouseenter"
                                 style="cursor: pointer;">
                                 <i class="fa fa-trash"></i>
