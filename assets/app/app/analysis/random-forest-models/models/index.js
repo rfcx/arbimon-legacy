@@ -324,6 +324,11 @@ angular.module('a2.analysis.random-forest-models.models', [
         $scope.newModel()
     }
 
+    $scope.canRetrain = function(data) {
+        // Retrain the model created before Feb 5, 2025
+        return new Date(data.date_created) < new Date(2025, 2, 5)
+    }
+
     $scope.createNewClassification = function () {
         if(!a2UserPermit.can('manage models and classification')) {
             notify.error('You do not have permission to create classifications');

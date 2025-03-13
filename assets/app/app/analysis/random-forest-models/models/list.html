@@ -82,9 +82,7 @@
                     <field title="Name" tdclass="is-v-middle hidelongtext widthtd" key="mname" filter>
                         <span>{{row.mname}}</span>
                         <a class="is-v-middle cursor-pointer linodeco"
-                            ng-if="row.shared === true"
-                            ng-click="$event.stopPropagation(); goToSourceProject(row)"
-                        >
+                            ng-if="row.shared === true">
                             <i aria-hidden="true" class="glyphicon glyphicon-link text-frequency pl-2"></i>
                             <span class="text-frequency">linked</span>
                         </a>
@@ -98,10 +96,10 @@
                     <field>
                         <div class="row-flex flex-direction-row">
                             <button
-                            ng-disabled="row.source_project_id"
+                            ng-disabled="row.source_project_id || !canRetrain(row)"
                             class="btn btn-default btn-rounded-full"
                             ng-click="$event.stopPropagation(); newModel(row, true)"
-                            tooltip="Retrain the model"
+                            tooltip="Retrain the model created before Feb 5, 2025"
                             tooltip-trigger="mouseenter">
                                 Retrain
                             </button>
