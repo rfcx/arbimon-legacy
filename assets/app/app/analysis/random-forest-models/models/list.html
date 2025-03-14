@@ -96,14 +96,14 @@
                     <field>
                         <div class="row-flex flex-direction-row">
                             <div
+                                tooltip="{{ isRetrainDisable(row) ? 'Disable retraining for models already retrained or created after Feb 5, 2025' : 'Retrain the model created before Feb 5, 2025' }}"
                                 tooltip-append-to-body="true"
-                                tooltip="{{ !(row.source_project_id || !canRetrain(row)) ? 'Retrain the model created before Feb 5, 2025' : 'Disable retraining for models already retrained or created after Feb 5, 2025.'}}"
-                                tooltip-trigger="mouseenter">
+                            >
                                 <button
-                                ng-disabled="row.source_project_id || !canRetrain(row)"
-                                class="btn btn-default btn-rounded-full"
-                                ng-click="$event.stopPropagation(); newModel(row, true)">
-                                    Retrain
+                                    ng-disabled="isRetrainDisable(row)"
+                                    class="btn btn-default btn-rounded-full"
+                                    ng-click="$event.stopPropagation(); newModel(row, true)">
+                                        Retrain
                                 </button>
                             </div>
                             

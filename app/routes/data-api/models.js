@@ -29,9 +29,11 @@ function getS3ClientConfig (type) {
 router.get('/project/:projectUrl/models', function(req, res, next) {
     res.type('json');
 
-    model.projects.modelList(req.params.projectUrl, function(err, rows) {
-        if(err) return next(err);
-
+    model.projects.modelList(req.params.projectUrl, async function(err, rows) {
+        if (err) return next(err);
+        for (let row of rows) {
+            row.retrained = await model.models.isModelRetrained(row.job_id);
+        }
         res.json(rows);
     });
 });

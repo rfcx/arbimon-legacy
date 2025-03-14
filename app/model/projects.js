@@ -1007,6 +1007,11 @@ var Projects = {
     processModelList: function(models) {
         for (let model of models) {
             model.shared = false;
+            if (model.uri) {
+                const reg = /job_(\d+)_/.exec(model.uri);
+                const jobId = +reg[1];
+                model.job_id = jobId;
+            }
             if (!model.uri.startsWith(`project_${model.project_id}`)) {
                 model.shared = true;
                 const regexResult = /project_(\d+)/.exec(model.uri);

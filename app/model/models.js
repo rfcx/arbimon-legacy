@@ -87,6 +87,11 @@ module.exports = {
         return queryHandler(sql, callback);
     },
 
+    isModelRetrained: async function (jobId) {
+        const sql = `SELECT * from job_params_retraining where trained_job_id = ${jobId}`;
+        return dbpool.query(sql).get(0);
+    },
+
     getModelByUri: async function (projectId, uri) {
         const sql = `SELECT * from models WHERE project_id = ${projectId} and uri = '${uri}'`;
         return dbpool.query(sql).get(0);
