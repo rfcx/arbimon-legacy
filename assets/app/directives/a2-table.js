@@ -229,9 +229,9 @@ angular.module('a2.directive.a2-table', [
             return;
         }
 
-        if(tableScope.selected === row){
-            row = undefined;
-        }
+        // if(tableScope.selected === row){
+        //     row = undefined;
+        // } 
 
         tableScope.selected = row;
         scope.selected = row;
