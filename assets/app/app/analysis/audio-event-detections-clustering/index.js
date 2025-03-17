@@ -55,6 +55,7 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
         var modalInstance = $modal.open({
             templateUrl: '/app/analysis/audio-event-detections-clustering/new-audio-event-detection-clustering.html',
             controller: 'CreateNewAudioEventDetectionClusteringCtrl as controller',
+            windowClass: 'modal-element width-700'
         });
 
         modalInstance.result.then(function (result) {
@@ -90,7 +91,8 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
                 aedJob: function() {
                     return aedJob;
                 },
-            }
+            },
+            windowClass: 'modal-element width-490'
         });
 
         modalInstance.result.then(function(ret) {

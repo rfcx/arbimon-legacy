@@ -493,7 +493,7 @@ angular.module('a2.analysis.patternmatching', [
         var modalInstance = $modal.open({
             templateUrl: '/app/analysis/patternmatching/createnewpatternmatching.html',
             controller: 'CreateNewPatternMatchingInstanceCtrl as controller',
-            windowClass: 'modal-element width-600'
+            windowClass: 'modal-element width-700'
         });
 
         modalInstance.result.then(function (result) {

@@ -19,7 +19,7 @@
             </div>
         </h1>
         <button ng-if="showRefreshBtn"
-            class="btn btn-default pull-right btn-sm"
+            class="btn btn-default pull-right btn-sm btn-rounded-full"
             tooltip="Refresh list"
             ng-click="loadAudioEventDetections()">
                 <i class="fa fa-refresh"></i> Refresh List
@@ -27,7 +27,7 @@
         <loader ng-if="loading"></loader>
         <div ng-show="!loading && audioEventDetectionsData && !audioEventDetectionsData.length" class="help-wrapper col-sm-12 row-flex flex-direction-column flex-space-center flex-align-middle clear-button" style="text-align: center;">
             <div>
-                <a class="btn btn-sm btn-default"
+                <a class="btn btn-sm btn-default btn-rounded-full"
                     tooltip="Create New Audio Event Detection job"
                     tooltip-placement="top"
                     ng-click="createNewClusteringModel()">
@@ -59,17 +59,20 @@
                     {{ row.aed_count }}
                 </field>
                 <field tdclass="is-v-middle">
-                    <a class="btn btn-default"
-                        ng-click="onSelectedJob(row.playlist_id, row.job_id, row.first_playlist_recording)"
-                        title="View in Visualizer">
-                        <i class="fa fa-cubes"></i>
-                    </a>
-                    <button class="btn btn-danger"
-                        ng-click="deleteAedJob(row, $event)"
-                        tooltip="Delete"
-                        tooltip-trigger="mouseenter">
-                        <i class="fa fa-trash"></i>
-                    </button>
+                    <div class="row-flex flex-space-end">
+                        <a class="pl-3 pt-2 pb-2 pr-3"
+                            ng-click="onSelectedJob(row.playlist_id, row.job_id, row.first_playlist_recording)"
+                            tooltip-trigger="View in Visualizer"
+                            title="View in Visualizer">
+                            <i class="fa fa-cubes"></i>
+                        </a>
+                        <div class="pl-3 pt-2 pb-2 pr-3"
+                            ng-click="deleteAedJob(row, $event)"
+                            tooltip="Delete job"
+                            tooltip-trigger="mouseenter">
+                            <i class="fa fa-trash"></i>
+                        </div>
+                    </div>
                 </field>
             </a2-table>
         </div>

@@ -1,11 +1,19 @@
+<img class="ic-close" src="/images/fi-close.svg" ng-click="cancel()">
+<div class="modal-icon">
+    <div>
+        <img src="/images/fi-delete.svg">
+    </div>
+</div>
 <div class="modal-header">
     <h3 class="modal-title">Delete Audio Event Detection job</h3>
 </div>
 <div class="modal-body">
-    <div ng-hide="deletingloader">Are you sure you would like to remove the Audio Event Detection job: <br/><b>"{{controller.aedJob.name}}"</b></div>
+    <div ng-hide="deletingloader">Are you sure you would like to delete the Audio Event Detection job: <br/><b>"{{controller.aedJob.name}}"</b></div>
     <div class="centeredloder"><loader ng-show="deletingloader"></loader></div>
 </div>
 <div class="modal-footer">
-    <button class="btn btn-danger" ng-click="ok()">Delete</button>
-    <button class="btn btn-default" ng-click="cancel()">Cancel</button>
+    <div class="row-flex flex-direction-row flex-space-between">
+        <button class="btn btn-default" ng-click="cancel()">Cancel</button>
+        <button class="btn btn-red" ng-click="ok()">Delete</button>
+    </div>
 </div>
