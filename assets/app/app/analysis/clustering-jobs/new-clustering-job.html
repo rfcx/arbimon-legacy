@@ -1,5 +1,6 @@
+<img class="ic-close" src="/images/fi-close.svg" ng-click="$dismiss()">
 <div class="modal-header">
-    <h3 class="modal-title">Create a new clustering job</h3>
+    Create a new clustering job
 </div>
 <div class="modal-body">
     <form role="form">
@@ -12,7 +13,7 @@
             <div class="mb-3 flex flex-row flex-align-middle" ng-if="!controller.loading.jobs && (controller.list.jobs && !controller.list.jobs.length)">
                 <em class="pr-2">No AED found.</em>
                 Go to
-                <button class="btn btn-sm btn-default" ng-click="controller.cancel('/analysis/audio-event-detections-clustering')">
+                <button class="btn btn-sm btn-success btn-rounded-full" ng-click="controller.cancel('/analysis/audio-event-detections-clustering')">
                     AED
                 </button>
                 and create an audio event detection.
@@ -28,32 +29,36 @@
         </div>
         <div class="form-group">
             <label for="distance">Distance Threshold</label>
-            <i class="fa fa-info-circle ml-2"
+            <img class="icon-info" src="/images/fi-info.svg"
                 tooltip="The maximum distance between neighboring AEDs in a cluster. Smaller values will result in smaller, more homogenous clusters, and vice versa">
-            </i>
+            </img>
             <input id="distance" class="form-control" style="text-align:left;" min="0" step="0.1" ng-model="controller.data.params.distanceThreshold" type="number"/>
         </div>
         <div class="form-group">
             <label for="minPoints">Min. Points</label>
-            <i class="fa fa-info-circle ml-2"
+            <img class="icon-info" src="/images/fi-info.svg"
                 tooltip="The minimum number of points required to form a cluster">
-            </i>
+            </img>
             <input id="minPoints" class="form-control" style="text-align:left;" min="0" step="1" ng-model="controller.data.params.minPoints" type="number"/>
         </div>
         <div class="form-group">
             <label for="maxClusterSize">Max. Cluster Size</label>
-            <i class="fa fa-info-circle ml-2"
+            <img class="icon-info" src="/images/fi-info.svg"
                 tooltip="The maximum number of points to retain in each cluster">
-            </i>
+            </img>
             <input id="maxClusterSize" class="form-control" style="text-align:left;" min="5" step="1" max="5000" ng-model="controller.data.params.maxClusterSize" type="number"/>
         </div>
     </form>
 </div>
 <div class="modal-footer">
-    <span class="pr-3" ng-if="!!controller.loading.saving">
-        <i class="fa fa-spinner fa-spin is-v-middle" style="font-size: 22px;"></i>
-    </span>
-    <button class="btn btn-primary" ng-click="controller.create()" ng-disabled="!controller.isJobValid()">
-        Run
-    </button>
+    <div class="row-flex flex-direction-row flex-space-between">
+        <button class="btn btn-success" ng-click="$dismiss()">Cancel</button>
+        <span class="pr-3" ng-if="!!controller.loading.saving">
+            <i class="fa fa-spinner fa-spin is-v-middle" style="font-size: 22px;"></i>
+        </span>
+        <button class="btn btn-primary" ng-click="controller.create()" ng-disabled="!controller.isJobValid()">
+            Run
+        </button>
+    </div>
+    
 </div>

@@ -89,6 +89,7 @@ angular.module('a2.analysis.clustering-jobs', [
         var modalInstance = $modal.open({
             templateUrl: '/app/analysis/clustering-jobs/new-clustering-job.html',
             controller: 'CreateNewClusteringJobCtrl as controller',
+            windowClass: 'modal-element'
         });
 
         modalInstance.result.then(function (result) {
@@ -120,7 +121,8 @@ angular.module('a2.analysis.clustering-jobs', [
                 clusteringJob: function() {
                     return clusteringJob;
                 },
-            }
+            },
+            windowClass: 'modal-element width-490'
         });
 
         modalInstance.result.then(function(ret) {
@@ -995,7 +997,7 @@ angular.module('a2.analysis.clustering-jobs', [
         const modalInstance = $modal.open({
             controller: 'ExportReportModalCtrl',
             templateUrl: '/app/analysis/clustering-jobs/export-report.html',
-            windowClass: 'export-pop-up-window',
+            windowClass: 'modal-element',
             resolve: {
                 data: function() {
                     return listParams
