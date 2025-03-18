@@ -634,12 +634,12 @@ angular.module('a2.analysis.clustering-jobs', [
         var modalInstance = $modal.open({
             templateUrl : '/app/analysis/clustering-jobs/frequency-filter.html',
             controller  : 'a2ClusterFrequencyFilterModalController',
-            size        : 'sm',
             resolve     : {
                 data : function() { return {
                     frequency: $scope.frequencyFilter
                 }; }
-            }
+            },
+            windowClass: 'modal-element width-400'
         });
 
         modalInstance.result.then(function (result) {
