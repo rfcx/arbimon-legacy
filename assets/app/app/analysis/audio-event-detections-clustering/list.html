@@ -65,14 +65,16 @@
                     <div class="row-flex flex-space-end">
                         <a class="pl-3 pt-2 pb-2 pr-3"
                             ng-click="onSelectedJob(row.playlist_id, row.job_id, row.first_playlist_recording)"
-                            tooltip-trigger="View in Visualizer"
-                            title="View in Visualizer">
+                            tooltip-trigger="mouseenter"
+                            tooltip="View in Visualizer"
+                            style="cursor: pointer;">
                             <i class="fa fa-cubes"></i>
                         </a>
                         <div class="pl-3 pt-2 pb-2 pr-3"
                             ng-click="deleteAedJob(row, $event)"
                             tooltip="Delete job"
-                            tooltip-trigger="mouseenter">
+                            tooltip-trigger="mouseenter"
+                            style="cursor: pointer;">
                             <i class="fa fa-trash"></i>
                         </div>
                     </div>
