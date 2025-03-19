@@ -1,29 +1,32 @@
 <div class="row">
     <div class="col-sm-12 padded-view-div">
-        <h1 class="mt-0 clear-button" style="margin-bottom: 24px;">
-            Audio Event Detections
-            <span class="beta-badge">BETA</span>
-            <div
-                class="row-flex-inline flex-align-middle ml-3"
-                style="vertical-align: middle;"
-            >
-                <a class="btn btn-primary btn-rounded-full"
-                    tooltip="Create New Audio Event Detection job"
-                    tooltip-placement="right"
-                    ng-click="createNewClusteringModel()">
-                    New AED Job
-                    <span class="ml-3" style="width: 16px">
-                        <img src="/images/fi-plus.svg">
-                    </span>
-                </a>
-            </div>
-        </h1>
-        <button ng-if="showRefreshBtn"
-            class="btn btn-default pull-right btn-sm btn-rounded-full"
+        <div class="row-flex flex-direction-row flex-space-between">
+            <h1 class="mt-0 clear-button" style="margin-bottom: 24px;">
+                Audio Event Detections
+                <span class="beta-badge">BETA</span>
+                <div
+                    class="row-flex-inline flex-align-middle ml-3"
+                    style="vertical-align: middle;"
+                >
+                    <a class="btn btn-primary btn-rounded-full"
+                        tooltip="Create New Audio Event Detection job"
+                        tooltip-placement="right"
+                        ng-click="createNewClusteringModel()">
+                        New AED Job
+                        <span class="ml-3" style="width: 16px">
+                            <img src="/images/fi-plus.svg">
+                        </span>
+                    </a>
+                </div>
+            </h1>
+            <button ng-if="showRefreshBtn"
+            class="btn btn-default pull-right btn-sm btn-rounded-full mt-1"
             tooltip="Refresh list"
-            ng-click="loadAudioEventDetections()">
+            ng-click="loadAudioEventDetections()"
+            style="margin-bottom:5rem !important;">
                 <i class="fa fa-refresh"></i> Refresh List
-        </button>
+            </button>
+        </div>
         <loader ng-if="loading"></loader>
         <div ng-show="!loading && audioEventDetectionsData && !audioEventDetectionsData.length" class="help-wrapper col-sm-12 row-flex flex-direction-column flex-space-center flex-align-middle clear-button" style="text-align: center;">
             <div>
@@ -43,22 +46,22 @@
         </div>
         <div ng-if="!loading && audioEventDetectionsData && audioEventDetectionsData.length" class="aed">
             <a2-table rows="audioEventDetectionsData" no-checkbox="true" on-select="selectItem(row.id)">
-                <field title="Name" key="name" tdclass="hidelongtext widthtd is-v-middle">
+                <field title="Name" key="name" tdclass="hidelongtext widthtd-sm is-v-middle">
                     <span title="{{ row.name }}">{{ row.name }}</span>
                 </field>
                 <field title="Timestamp" key="timestamp" tdclass="is-v-middle">
                     {{ row.timestamp | moment : 'lll' }}
                 </field>
-                <field title="Playlist" key="playlist_name" filter tdclass="no-wrap-table-cell is-v-middle">
-                    {{row.playlist_name}}
+                <field title="Playlist" key="playlist_name" filter tdclass="hidelongtext is-v-middle widthtd-sm">
+                    <span title="{{ row.playlist_name }}">{{ row.playlist_name }}</span>
                 </field>
-                <field title="Parameters" key="parameters" filter="parameters.$" tdclass="widthtd is-v-middle">
+                <field title="Parameters" key="parameters" filter="parameters.$" tdclass="widthtd-sm is-v-middle">
                     <span title="{{row.parameters | asCSV }}">{{row.parameters | asCSV }}</span>
                 </field>
                 <field title="User" key="user" filter tdclass="is-v-middle">
                     {{ row.user }}
                 </field>
-                <field title="Detected AEDs" key="count" filter tdclass="is-v-middle">
+                <field title="Detected AEDs" key="count" filter tdclass="is-v-middle item-center">
                     {{ row.aed_count }}
                 </field>
                 <field tdclass="is-v-middle">
