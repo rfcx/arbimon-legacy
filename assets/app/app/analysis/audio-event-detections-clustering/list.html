@@ -54,13 +54,13 @@
                 <field title="Playlist" key="playlist_name" filter tdclass="hidelongtext is-v-middle widthtd-sm">
                     <span title="{{ row.playlist_name }}">{{ row.playlist_name }}</span>
                 </field>
-                <field title="Parameters" key="parameters" filter="parameters.$" tdclass="widthtd-sm is-v-middle">
+                <field title="Parameters" key="parameters" tdclass="widthtd-sm is-v-middle">
                     <span title="{{row.parameters | asCSV }}">{{row.parameters | asCSV }}</span>
                 </field>
                 <field title="User" key="user" filter tdclass="is-v-middle">
                     {{ row.user }}
                 </field>
-                <field title="Detected AEDs" key="count" filter tdclass="is-v-middle item-center">
+                <field title="Detected AEDs" key="count" tdclass="is-v-middle item-center">
                     {{ row.aed_count }}
                 </field>
                 <field tdclass="is-v-middle">
