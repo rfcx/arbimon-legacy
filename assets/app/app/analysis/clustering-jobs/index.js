@@ -392,7 +392,7 @@ angular.module('a2.analysis.clustering-jobs', [
                     color: 'white'
                 }
             },
-            paper_bgcolor: '#232436',
+            paper_bgcolor: '#14130D',
             plot_bgcolor: '#232436',
             xaxis: {
                 color: 'white',
