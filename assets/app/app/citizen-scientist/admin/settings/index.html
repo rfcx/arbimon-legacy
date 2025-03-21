@@ -1,6 +1,6 @@
 <div class="row">
     <div class="col-sm-12">
-        <h4>Settings</h4>
+        <h4 class="mb-4">Settings</h4>
         <a2-table
             rows="controller.patternmatchings" no-checkbox="true"
             default-sort="user"
@@ -20,7 +20,7 @@
                 <input id="param-cn-{{row.id}}" ng-model="row.consensus_number" type="number" ng-disabled="!row.citizen_scientist" />
             </field>
         </a2-table>
-        <button class="btn btn-primary" type="submit" ng-click="controller.save()" ng-disabled="!!controller.saving">
+        <button class="btn btn-primary btn-rounded-full" type="submit" ng-click="controller.save()" ng-disabled="!!controller.saving">
             <i class="fa fa-floppy-o"></i> Save
         </button>
         <span class="pl-3" ng-if="!!controller.saving">

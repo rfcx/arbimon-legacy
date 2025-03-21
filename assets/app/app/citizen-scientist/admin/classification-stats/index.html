@@ -4,14 +4,14 @@
         <span class="badge">{{controller.stats.length}} species</span>
     </h4>
     <h4 ng-show="controller.speciesId">
-        <button class="btn btn-default"
+        <button class="btn btn-success btn-rounded-full"
             ng-click="controller.setSpecies()">
             &lt;  Go Back
         </button>
         Classification Stats / {{controller.species.scientific_name}}
     </h4>
 </div>
-<div class="row">
+<div class="row mt-4">
     <div class="col-sm-12" ng-show="!controller.speciesId">
         <a2-table
             rows="controller.stats" no-checkbox="true"
