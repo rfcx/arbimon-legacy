@@ -11,24 +11,23 @@
             <div class="col-sm-6 row-flex flex-space-end panel-body pr-0 pb-0">
                 <div class="flex-self-align-bottom btn-group-margin">
                     <div class="btn-group">
-                        <button class="btn btn-default" ng-class="audio_player.freq_filter ? 'active' : ''" ng-click="openFreqFilterModal()" ng-disabled="!frequencyFilter && !frequencyFilter.min && !frequencyFilter.max"
+                        <button class="btn btn-default mr-2 btn-rounded-full" ng-class="audio_player.freq_filter ? 'active' : ''" ng-click="openFreqFilterModal()" ng-disabled="!frequencyFilter && !frequencyFilter.min && !frequencyFilter.max"
                             title="Cluster audio frequency filter">
-                            <i class="fa fa-filter" ></i>
-                            <span class="fa fa-ellipsis-h fa-concat-sub"></span>
+                            Filter by frequency
                         </button>
                     </div>
-                    <button class="btn btn-default" ng-click="onGridViewSelected()">
+                    <button class="btn btn-default btn-rounded-full" ng-click="onGridViewSelected()">
                         View All Clusters
                     </button>
                 </div>
-                <div class="input-group btn-group-margin row-flex flex-self-align-bottom" title="Select one cluster">
-                    <button class="btn btn-default btn-sm" style="border-top-right-radius: 0; border-bottom-right-radius: 0;" type="button" ng-click="decrementClusters()">
+                <div class="input-group btn-group-margin row-flex flex-self-align-bottom ml-2" title="Select one cluster">
+                    <button class="btn btn-default btn-sm btn-rounded-full" style="border-top-right-radius: 0; border-bottom-right-radius: 0;" type="button" ng-click="decrementClusters()">
                         <i class="fa fa-minus"></i>
                     </button>
                     <div style="padding:0;">
                         <input type="number" class="form-control hide-input-arrow" style="text-align:center; width: 80px" ng-change="selectCluster()" ng-model="selectedCluster" min="1" max="layout.shapes.length">
                     </div>
-                    <button class="btn btn-default btn-sm" style="border-top-left-radius: 0; border-bottom-left-radius: 0;" type="button" ng-click="incrementClusters()">
+                    <button class="btn btn-default btn-sm btn-rounded-full" style="border-top-left-radius: 0; border-bottom-left-radius: 0;" type="button" ng-click="incrementClusters()">
                         <i class="fa fa-plus"></i>
                     </button>
                 </div>
