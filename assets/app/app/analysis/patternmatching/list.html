@@ -76,7 +76,7 @@
                         <i class="fa fa-download ml-2"></i>
                     </button>
                     <button ng-if="loading.showRefreshBtn"
-                        class="btn btn-success btn-rounded-full ml-3"
+                        class="btn btn-success btn-rounded-full ml-2"
                         tooltip="Refresh list"
                         ng-click="loadPatternMatchings()"
                     >
@@ -189,7 +189,7 @@
                             
                             <switch name="onOff" ng-click="togglePublicTemplatesEnabled()" ng-model="onOff" on="ON" off="OFF" style="margin-left:5px;" disabled="disableToggle()"></switch>
                         </div>
-                        <button type="download" class="btn btn-success btn-rounded-full ml-3 export-form-control"
+                        <button type="download" class="btn btn-success btn-rounded-full ml-3"
                             tooltip="Export all templates"
                             ng-disabled="isExportDisabled()"
                             ng-click="exportData('projectTemplate')"
