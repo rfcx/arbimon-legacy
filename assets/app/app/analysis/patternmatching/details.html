@@ -83,11 +83,28 @@
                     </div>
                 </div>
                 <div class="ml-5 row-flex flex-direction-column items-end flex-self-align-top pm-button-group">
-                    <div class="row-flex">
+                    <div class="mb-3">
                         <div class="btn-group btn-group-margin">
-                            <button class="btn btn-default not-active" ><i class="fa fa-search"></i></button>
-                            <ui-select ng-model="controller.search" theme="bootstrap" class="btn-group-item border-left-radius" on-select="controller.onSearchChanged()" style="width: 200px">
-                                <ui-select-match class="right-corners">
+                            <button class="btn btn-from"
+                                ng-repeat="item in controller.lists.thumbnails"
+                                ng-click="controller.thumbnailClass = item.value"
+                                ng-class="{active: controller.thumbnailClass == item.value}"
+                            ><i ng-class="item.class"></i></button>
+                        </div>
+
+                        <div class="btn-group-margin pull-right">
+                                <a class="btn btn-success btn-rounded-full"
+                                ng-href="{{controller.patternMatchingExportUrl}}"
+                                ng-click="controller.exportPmReport($event)"
+                                tooltip="Export Pattern Matching Data">
+                                Export
+                            </a>
+                        </div>
+                    </div>
+                    <div class="row-flex">
+                        <div>
+                            <ui-select ng-model="controller.search" theme="bootstrap" class="btn-group-margin" on-select="controller.onSearchChanged()" style="width: 200px">
+                                <ui-select-match>
                                     <i ng-class="$select.selected.class"></i> {{$select.selected.text}}
                                 </ui-select-match>
                                 <ui-select-choices repeat="$item in controller.lists.search | filter:$select.search">
@@ -97,18 +114,18 @@
                             </ui-select>
                         </div>
                         <div class="btn-group btn-group-margin">
-                            <ui-select class="btn-group-item" ng-model="controller.selected.siteBookmark" theme="bootstrap" style="display:inline-block; width:4em;"
+                            <ui-select class="btn-group-item" ng-model="controller.selected.siteBookmark" theme="bootstrap" style="display:inline-block; width: 200px;"
                                 ng-change="controller.setSiteBookmark($select.selected)">
-                                <ui-select-match class="a2-uism-btn-icon icon-site"> </ui-select-match>
+                                <ui-select-match placeholder="Filter by Site"> </ui-select-match>
                                 <ui-select-choices repeat="$item in controller.sitesList | filter:$select.search">
-                                    <span class="text-wrap"><i class="fa fa-map-marker"></i> {{$item.site}}</span>
+                                    <span class="text-wrap"> {{$item.site}}</span>
                                 </ui-select-choices>
                             </ui-select>
                         </div>
                     </div>
                     <div class="row-flex flex-direction-row flex-self-align-bottom mt-3">
                         <div class="btn-group btn-group-margin">
-                            <ui-select ng-model="controller._selection" theme="bootstrap" style="display:inline-block; width:9em;"
+                            <ui-select ng-model="controller._selection" theme="bootstrap" style="display:inline-block; width: 135px;"
                                 on-select="controller.onSelect($select.selected)"
                             >
                                 <ui-select-match placeholder="Select">Select</ui-select-match>
@@ -119,9 +136,8 @@
                         </div>
 
                         <div class="btn-group btn-group-margin row-flex flex-direction-row">
-                            <button class="btn btn-default  not-active" >Validate as:</button>
-                            <ui-select ng-model="controller.validation" class="btn-group-item border-left-radius" theme="bootstrap" style="width: 150px">
-                                <ui-select-match  class="right-corners">
+                            <ui-select ng-model="controller.validation"  theme="bootstrap" style="width: 180px;">
+                                <ui-select-match>
                                     <i ng-class="$select.selected.class" style="position: absolute; top: 8px"></i>
                                     <span style="padding-left: 18px">{{$select.selected.text}}</span>
                                 </ui-select-match>
@@ -132,28 +148,10 @@
                         </div>
 
                         <div class="btn-group btn-group-margin">
-                            <button class="btn btn-primary" style="width:80px" ng-click="controller.validate(patternMatchingId)" ng-disabled="controller.isValidating.disableBtn === true">
+                            <button class="btn btn-success btn-rounded-full" style="width:80px" ng-click="controller.validate(patternMatchingId)" ng-disabled="controller.isValidating.disableBtn === true">
                                 <i ng-if="controller.isValidating.disableBtn === true" class="fa fa-spinner fa-spin" style="font-size: 16px;"></i>
-                                <span ng-if="controller.isValidating.disableBtn === false">Submit</span>
+                                <span ng-if="controller.isValidating.disableBtn === false">Apply</span>
                             </button>
-                        </div>
-                    </div>
-                    <div class="mt-2">
-                        <div class="btn-group btn-group-margin">
-                            <button class="btn btn-default"
-                                ng-repeat="item in controller.lists.thumbnails"
-                                ng-click="controller.thumbnailClass = item.value"
-                                ng-class="{active: controller.thumbnailClass == item.value}"
-                            ><i ng-class="item.class"></i></button>
-                        </div>
-
-                        <div class="export-url pull-right">
-                                <a class="btn btn-default"
-                                ng-href="{{controller.patternMatchingExportUrl}}"
-                                ng-click="controller.exportPmReport($event)"
-                                tooltip="Export Pattern Matching Data">
-                                <i class="fa fa-download"></i>
-                            </a>
                         </div>
                     </div>
                     <div ng-if="controller.getSelectedRoisLength() > 0" class="row-flex flex-direction-row flex-align-middle flex-self-align-bottom mt-3 clear-button">

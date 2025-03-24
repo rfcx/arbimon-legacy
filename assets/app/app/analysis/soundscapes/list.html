@@ -67,7 +67,7 @@
                     </field>
                     <field>
                         <div class="row-flex flex-space-end">
-                            <a class="btn btn-default btn-rounded-full mr-2" ng-click="$event.stopPropagation();" ui-sref="visualizer.view({type:'soundscape', idA:row.soundscape_id})"
+                            <a class="btn btn-default btn-rounded-full mr-2" tooltip-append-to-body="true" tooltip="View in Visualizer" ng-click="$event.stopPropagation();" ui-sref="visualizer.view({type:'soundscape', idA:row.soundscape_id})"
                             ><i class="fa fa-cubes"></i> View</a>
                             <span class="btn-group" dropdown dropdown-append-to-body="true">
                                 <button class="btn btn-default btn-rounded-full" dropdown-toggle ng-click="$event.stopPropagation();">Export <i class="fa fa-chevron-down self-center ml-1" style="font-size: 12px;"></i></button>
