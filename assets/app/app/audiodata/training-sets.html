@@ -27,7 +27,11 @@
                 </div>
             </div>
         </div>
-
+        <div class="py-3">
+            <span ng-if="!controller.loading.list" class="text-left reclist-total ml-2">
+                {{ controller.trainingSets ? controller.trainingSets.length : 0 }} {{controller.trainingSets.length > 1 ? "training sets" : "training set"}}
+            </span>
+        </div>
         <div class="row">
             <div class="col-md-12">
                 <a2-table search="search" rows="controller.trainingSets" no-checkbox on-select="controller.selectTrainingSet(row)">

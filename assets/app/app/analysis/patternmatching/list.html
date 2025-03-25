@@ -86,6 +86,11 @@
                 </div>
             </div>
             <div class="ml-2"><loader ng-show="loading.rows"></loader></div>
+            <div class="pb-3">
+                <span ng-if="!loading.rows" class="text-left reclist-total">
+                    {{ totalPatternmatchings }} {{totalPatternmatchings > 1 ? "jobs" : "job"}}
+                </span>
+            </div>
             <div ng-show="!loading.rows && patternmatchingsData && !patternmatchingsData.length" class="help-wrapper col-sm-12 row-flex flex-direction-column flex-space-center flex-align-middle clear-button" style="text-align: center;">
                 <div>
                     <a class="btn btn-sm btn-default"
@@ -200,6 +205,11 @@
                     </div>
                 </div>
                 <loader ng-if="loadingTemplates.value"></loader>
+                <div class="pb-3">
+                    <span ng-if="!loadingTemplates.value" class="text-left reclist-total">
+                        {{ totalProjectTemplates }} {{totalProjectTemplates > 1 ? "templates" : "template"}}
+                    </span>
+                </div>
                 <div ng-if="!loadingTemplates.value && templatesData && templatesData.length">
                     <a2-table rows="templatesData" no-checkbox>
                         <field tdclass="is-v-middle" tdclass="spectrogram-img">

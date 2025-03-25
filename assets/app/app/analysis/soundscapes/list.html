@@ -30,26 +30,33 @@
                 </li>
             </ul>
         </div>
-        <div ng-if="currentTab === 'soundscapes'">
-            <loader ng-show="loading"></loader>
-            <div class="row-flex flex-direction-row flex-align-middle flex-space-end">
-                <button
-                    ng-if="isSoundscapesAvailable()"
-                    type="download"
-                    class="btn btn-success btn-rounded-full"
-                    tooltip="Export all soundscapes"
-                    ng-click="exportData()"
-                >
-                    Export all soundscapes
-                    <i class="fa fa-download ml-2"></i>
-                </button>
-                <button
-                    class="btn btn-success btn-rounded-full ml-3 "
-                    tooltip="Refresh list"
-                    ng-click="loadSoundscapes()">
-                        Refresh List
-                        <i class="fa fa-refresh ml-2"></i>
-                </button>
+        <div ng-if="currentTab === 'soundscapes'" class="">
+            <div class="row-flex flex-space-between">
+                <div>
+                    <loader ng-show="loading"></loader>
+                    <span ng-if="!loading" class="text-left reclist-total">
+                        {{ soundscapesData ? soundscapesData.length : 0 }} {{soundscapesData.length > 1 ? "jobs" : "job"}}
+                    </span>
+                </div>
+                <div class="row-flex flex-direction-row flex-align-middle flex-space-end">
+                    <button
+                        ng-if="isSoundscapesAvailable()"
+                        type="download"
+                        class="btn btn-success btn-rounded-full"
+                        tooltip="Export all soundscapes"
+                        ng-click="exportData()"
+                    >
+                        Export all soundscapes
+                        <i class="fa fa-download ml-2"></i>
+                    </button>
+                    <button
+                        class="btn btn-success btn-rounded-full ml-3 "
+                        tooltip="Refresh list"
+                        ng-click="loadSoundscapes()">
+                            Refresh List
+                            <i class="fa fa-refresh ml-2"></i>
+                    </button>
+                </div>
             </div>
             <div ng-if="isSoundscapesAvailable()">
                 <a2-table rows="soundscapesData" no-checkbox="true" on-select="showDetails(row.soundscape_id)">

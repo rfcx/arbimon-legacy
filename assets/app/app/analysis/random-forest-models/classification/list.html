@@ -1,6 +1,9 @@
 <div class="row">
     <div class="mx-4 padded-view-div">
         <loader ng-show="loading"></loader>
+        <span ng-if="!loading" class="text-left reclist-total">
+            {{ classificationsData ? classificationsData.length : 0 }} {{classificationsData.length > 1 ? "jobs" : "job"}}
+        </span>
         <button class="btn btn-success pull-right btn-rounded-full"
             tooltip="Refresh list"
             ng-click="loadClassifications()">

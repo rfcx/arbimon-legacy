@@ -43,6 +43,8 @@ angular.module('a2.analysis.patternmatching', [
 ) {
     $scope.selectedPatternMatchingId = $stateParams.patternMatchingId;
     $scope.loading = { rows: false, showRefreshBtn: false };
+    $scope.totalPatternmatchings = 0;
+    $scope.totalProjectTemplates = 0;
     $scope.pagination = {
         page: 1,
         limit: 10,
@@ -109,6 +111,7 @@ angular.module('a2.analysis.patternmatching', [
             $scope.loadingTemplates.value = false;
             $scope.templatesData = data.list;
             $scope.paginationTemplates.totalItems = data.count;
+            $scope.totalProjectTemplates = data.count;
             $scope.paginationTemplates.totalPages = Math.ceil($scope.paginationTemplates.totalItems / $scope.paginationTemplates.limit);
         }.bind(this))).catch((function(err){
             $scope.loadingTemplates.value = false;
@@ -445,6 +448,7 @@ angular.module('a2.analysis.patternmatching', [
         }).then(function(data) {
             $scope.patternmatchingsOriginal = data.list;
             $scope.patternmatchingsData = data.list;
+            $scope.totalPatternmatchings = $scope.patternmatchingsData.length;
             $scope.patternmatchingsData.forEach(rec => {
                 if ($scope.selectedJobId.includes(rec.id)) {
                     rec.checked = true

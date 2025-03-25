@@ -43,6 +43,11 @@
             <p class="mb-0"><a href="https://help.arbimon.org/article/222-what-is-audio-event-detection-clustering" target="_blank">1. What is a Clustering Analysis?<i class="ml-2 fa fa-external-link"></i></a></p>
             <p class="mb-0"><a href="https://help.arbimon.org/article/224-creating-a-clustering-job" target="_blank">2. How to create the Clustering Analysis?<i class="ml-2 fa fa-external-link"></i></a></p>
         </div>
+        <div class="py-3">
+            <span ng-if="!loading" class="text-left reclist-total">
+                {{ clusteringJobsData ? clusteringJobsData.length : 0 }} {{clusteringJobsData.length > 1 ? "jobs" : "job"}}
+            </span>
+        </div>
         <div ng-if="!loading && clusteringJobsData && clusteringJobsData.length">
             <a2-table rows="clusteringJobsData" no-checkbox="true" on-select="selectItem(row)">
                 <field title="Name" key="name" tdclass="hidelongtext widthtd is-v-middle">

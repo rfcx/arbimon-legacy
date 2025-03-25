@@ -43,6 +43,11 @@
             <p class="mb-0"><a href="https://help.arbimon.org/article/222-what-is-audio-event-detection-clustering" target="_blank">1. What is an Audio Event Detection?<i class="ml-2 fa fa-external-link"></i></a></p>
             <p class="mb-0"><a href="https://help.arbimon.org/article/223-creating-an-audio-event-detection-job" target="_blank">2. How to create the Audio Event Detection?<i class="ml-2 fa fa-external-link"></i></a></p>
         </div>
+        <div class="py-3">
+            <span ng-if="!loading" class="text-left reclist-total">
+                {{ audioEventDetectionsData ? audioEventDetectionsData.length : 0 }} {{audioEventDetectionsData.length > 1 ? "jobs" : "job"}}
+            </span>
+        </div>
         <div ng-if="!loading && audioEventDetectionsData && audioEventDetectionsData.length" class="aed">
             <a2-table rows="audioEventDetectionsData" no-checkbox="true" on-select="selectItem(row.id)">
                 <field title="Name" key="name" tdclass="hidelongtext widthtd-sm is-v-middle">

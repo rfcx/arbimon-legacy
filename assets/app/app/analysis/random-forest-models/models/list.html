@@ -52,6 +52,9 @@
             <div class="row-flex flex-space-between flex-direction-row">
                 <div>
                     <loader ng-show="loading"></loader>
+                    <span ng-if="!loading" class="text-left reclist-total">
+                        {{ modelsData ? modelsData.length : 0 }} {{modelsData.length > 1 ? "models" : "model"}}
+                    </span>
                 </div>
                 <div class="row-flex flex-direction-row gap-x-3">
                     <div tooltip="{{ isShareModelEnabled() ? 'Share Model' : 'You must be an Expert or Administrator to share this model.' }}" tooltip-append-to-body="true">
