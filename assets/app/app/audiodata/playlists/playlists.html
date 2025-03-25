@@ -36,6 +36,11 @@
 <div class="row">
     <div class="col-sm-12">
         <loader ng-if="loading"></loader>
+        <div class="py-3">
+            <span ng-if="!loading" class="text-left reclist-total">
+                {{ totalPlaylists }} {{totalPlaylists > 1 ? "playlists" : "playlist"}}
+            </span>
+        </div>
         <a2-table search="search" rows="playlists" data-checked="checked" selected="selected" default-sort="site">
             <field title="Name" key="name">
                 {{ row.name }}

@@ -42,7 +42,7 @@
                                         </ui-select>
                                     </div>
                                     <div class="row-flex mr-2" style="position: relative;">
-                                        <button type="button" class="btn btn-success btn-rounded-full" tooltip="Save to playlist" ng-click="togglePopup()">
+                                        <button type="button" class="btn btn-success btn-rounded-full py-2" tooltip="Save to playlist" ng-click="togglePopup()" style="padding-right: 16px !important; padding-left: 16px !important;">
                                             Save to playlist
                                         </button>
                                         <div class="popover modal-element" style="display: block;" ng-if="isPopupOpened">
@@ -72,7 +72,8 @@
                                     <div class="row-flex flex-self-align-bottom">
                                         <button class="btn btn-success btn-rounded-full px-4"
                                         ng-click="exportReport($event)"
-                                        tooltip="Export Clustering ROIs Data">
+                                        tooltip="Export Clustering ROIs Data"
+                                        style="padding-right: 17px !important; padding-left: 17px !important;">
                                             Export
                                         </button>
                                     </div>

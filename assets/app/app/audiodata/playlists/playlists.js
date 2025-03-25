@@ -13,6 +13,7 @@ angular.module('a2.audiodata.playlists', [
     });
 })
 .controller('PlaylistCtrl', function($scope, a2Playlists, $modal, notify, a2UserPermit, $location) {
+    $scope.totalPlaylists = 0;
     this.initialize = function(){
         removeOnInvalidateHandler = a2Playlists.$on('invalidate-list', (function(){
             this.reset();
@@ -24,6 +25,7 @@ angular.module('a2.audiodata.playlists', [
         $scope.loading = true;
         a2Playlists.getList({info:true}).then(function(data) {
             $scope.playlists = data.sort((a, b) => a.name.localeCompare(b.name));
+            $scope.totalPlaylists = $scope.playlists.length
             $scope.loading = false;
         });
     };
