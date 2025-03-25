@@ -2722,8 +2722,16 @@ search-bar {
     align-items: center;
   }
 
+  .form-control[disabled], .form-control[readonly], fieldset[disabled] .form-control {
+    color: #FFFEFC !important;
+    background-color: #14130D !important;
+    border-color: #4B4B4B !important;
+    display: flex !important;
+    align-items: center;
+  }
+
   .ui-select-match-text {
-    display: flex;
+    display: flex !important;
     align-items: center;
     i {
       top: 10px !important;
