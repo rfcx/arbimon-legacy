@@ -26,12 +26,12 @@
                             <div>
                                 <div class="btn-group btn-group-margin row-flex flex-direction-row mb-4">
                                     <div class="row-flex mr-2">
-                                        <button class="btn btn-from" type="button" tooltip="Switch to square images" ng-click="toggleBoxSize()">
+                                        <button class="btn btn-from" type="button" tooltip="Switch to square images" ng-click="toggleBoxSize()" style="height: 34px;">
                                             <i class="fa fa-th"></i>
                                         </button>
                                     </div>
                                     <div class="btn-group row-flex flex-self-align-bottom mr-2">
-                                        <ui-select ng-model="selectedFilterData" theme="bootstrap" on-select="onSearchChanged($select.selected)" style="width: 150px; height: 37px;">
+                                        <ui-select ng-model="selectedFilterData" theme="bootstrap" on-select="onSearchChanged($select.selected)" style="width: 165px; height: 34px;">
                                             <ui-select-match>
                                                 <i ng-class="$select.selected.class"></i>{{$select.selected.text}}
                                             </ui-select-match>
@@ -42,7 +42,7 @@
                                         </ui-select>
                                     </div>
                                     <div class="row-flex mr-2" style="position: relative;">
-                                        <button type="button" class="btn btn-success btn-rounded-full py-2" tooltip="Save to playlist" ng-click="togglePopup()" style="padding-right: 16px !important; padding-left: 16px !important;">
+                                        <button type="button" class="btn btn-success btn-rounded-full py-2" tooltip="Save to playlist" ng-click="togglePopup()" style="padding-right: 16px !important; padding-left: 16px !important; height: 34px;">
                                             Save to playlist
                                         </button>
                                         <div class="popover modal-element" style="display: block;" ng-if="isPopupOpened">
@@ -73,7 +73,7 @@
                                         <button class="btn btn-success btn-rounded-full px-4"
                                         ng-click="exportReport($event)"
                                         tooltip="Export Clustering ROIs Data"
-                                        style="padding-right: 17px !important; padding-left: 17px !important;">
+                                        style="padding-right: 17px !important; padding-left: 17px !important; height: 34px;">
                                             Export
                                         </button>
                                     </div>
@@ -101,7 +101,7 @@
                                     </span>
                                 </div>
                                 <div class="mr-2">
-                                    <ui-select ng-disabled="!selected.species" ng-model="selected.songtype" style="width: 150px;" theme="bootstrap">
+                                    <ui-select ng-disabled="!selected.species" ng-model="selected.songtype" style="width: 165px;" theme="bootstrap">
                                         <ui-select-match placeholder="Songtype">
                                             {{selected.songtype.name}}
                                         </ui-select-match>
@@ -112,7 +112,7 @@
                                 </div>
                                 <div class="mr-2">
                                     <ui-select ng-model="validation.status" theme="bootstrap" style="width: 147px;">
-                                        <ui-select-match>
+                                        <ui-select-match placeholder="Validation">
                                             <i ng-class="$select.selected.class" style="position: absolute; top: 8px"></i> 
                                             <span style="padding-left: 18px">{{$select.selected.text}}</span>
                                         </ui-select-match>

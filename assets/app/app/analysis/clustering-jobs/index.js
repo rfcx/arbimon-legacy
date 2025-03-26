@@ -840,7 +840,7 @@ angular.module('a2.analysis.clustering-jobs', [
             { class:"fa val-null", text: 'Clear', value: -1 },
         ],
     };
-    $scope.validation = { status: $scope.lists.validation[2] };
+    $scope.validation = { status: null };
 
     $scope.selectedFilterData = $scope.lists.search[1];
     
