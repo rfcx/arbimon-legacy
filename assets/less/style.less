@@ -2720,11 +2720,20 @@ search-bar {
     border-color: #4B4B4B;
   }
 
-  .btn:focus, .btn:active:focus, .btn.active:focus {
+  .btn-from:focus, .btn-from:active:focus, .btn-from.active:focus {
     outline: none !important;
     background-color: #14130D;
     border-color: #65698a !important;
     box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(255, 255, 255, 0.3);
+  }
+
+  .btn-success[disabled] {
+    background-color: #242424 !important;
+    border-color: #242424 !important;
+    border: 1px solid;
+    cursor: not-allowed;
+    color: #7F7D78;
+    opacity: 1;
   }
 
   .form-control[disabled], .form-control[readonly], fieldset[disabled] .form-control {

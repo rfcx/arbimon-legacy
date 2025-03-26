@@ -1010,6 +1010,24 @@ angular.module('a2.analysis.clustering-jobs', [
         });
     };
 
+    $scope.createPlaylistPopup = function() {
+        var modalInstance = $modal.open({
+            controller: 'SavePlaylistInstanceCtrl',
+            templateUrl: '/app/audiodata/create-playlist.html',
+            windowClass: 'modal-element',
+            resolve: {
+                listParams: function() {
+                    return $scope.selectedRois;
+                }
+            },
+            backdrop: false
+        });
+
+        modalInstance.result.then(function(data) {
+            $scope.isSavingPlaylist = false;
+        });
+    }
+
     $scope.getStatusForEmptyData = function() {
         $scope.loading = false;
         $scope.isRoisLoading = false;
@@ -1128,39 +1146,12 @@ angular.module('a2.analysis.clustering-jobs', [
     }
 
     $scope.isPlaylistDataValid = function() {
-        return $scope.selectedRois && $scope.selectedRois.length && $scope.playlistData.playlistName && $scope.playlistData.playlistName.trim().length > 0;
+        return $scope.selectedRois && $scope.selectedRois.length;
     }
 
     $scope.closePopup = function() {
         $scope.isPopupOpened = false;
     }
-
-    $scope.savePlaylist = function() {
-        if ($scope.selectedRois.length) {
-            $scope.isSavingPlaylist = true;
-            // Create a new playlist with aed boxes.
-            a2Playlists.create({
-                playlist_name: $scope.playlistData.playlistName,
-                params: $scope.selectedRois,
-                recIdsIncluded: true
-            },
-            function(data) {
-                $scope.isSavingPlaylist = false;
-                $scope.closePopup();
-                 // Attach aed to the new playlist.
-                if (data && data.playlist_id) {
-                    a2Playlists.attachAedToPlaylist({
-                        playlist_id: data.playlist_id,
-                        aed: $scope.selectedRois
-                    },
-                    function(data) {
-                        $scope.playlistData = {};
-                        notify.log('Audio event detections are saved in the playlist. <br> Navigates to the Visualizer page to see Audio Event boxes on the spectrogram');
-                    });
-                }
-            });
-        }
-    };
 
     $scope.isValidationAccessible = function() {
         return a2UserPermit.can('manage AED and Clustering job')
@@ -1359,5 +1350,48 @@ angular.module('a2.analysis.clustering-jobs', [
                 index++
             })
         })
+    }
+})
+.controller('SavePlaylistInstanceCtrl', function($scope, $modalInstance, a2Playlists, listParams, notify) {
+    var result
+    $scope.savePlaylist = function(name) {
+        $scope.isSavingPlaylist = true
+        a2Playlists.create({
+            playlist_name: name,
+            params: listParams,
+            recIdsIncluded: true
+        },
+        function(data) {
+            $scope.isSavingPlaylist = false
+            if (data.error) {
+                $scope.errMess = data.error;
+            }
+            else {
+                result = data
+                $modalInstance.close({message: 'Playlist created'});
+                if (data && data.playlist_id) {
+                    a2Playlists.attachAedToPlaylist({
+                        playlist_id: data.playlist_id,
+                        aed: listParams
+                    },
+                    function(data) {
+                        $scope.playlistData = {};
+                        notify.log('Audio event detections are saved in the playlist. <br> Navigates to the Visualizer page to see Audio Event boxes on the spectrogram');
+                    });
+                }
+            }
+        });
+        var timeout;
+        clearTimeout(timeout);
+        timeout = setTimeout(() => {
+            $scope.isSavingPlaylist = false
+            $modalInstance.close({message: 'Playlist creating'});
+            if (!$scope.errMess && !result) {
+                notify.log('Your playlist is being created. <br> Check it in the project playlists');
+            }
+        }, 60000)
+    };
+    $scope.changePlaylistName = function() {
+        $scope.errMess = null;
     }
 })

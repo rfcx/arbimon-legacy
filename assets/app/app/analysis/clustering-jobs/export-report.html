@@ -1,25 +1,24 @@
-<div class="export-form">
-    <div class="export-form-header row-flex justify-between">
-        <span>Export report</span>
-        <img style="width: 13px; height: 13px; margin-top: 5px;" src="/images/fi-close.svg" ng-click="$dismiss()" ng-disabled="isExportingRecs">
-    </div>
-    
-    <div class="modal-body">
-        <form>
-            <div class="form-group">
-                <label for="name">Enter your email to get the report delivered to your inbox.</label><span class="text-danger small pull-right">{{errMess}}</span>
-                <span>Email</span>
-                <input type="text"
-                    name="name"
-                    id="name"
-                    class="form-control"
-                    ng-model="userEmail"
-                    ng-change="changedUserEmail()"
-                    ng-disabled="isExporting">
-            </div>
-        </form>
-    </div>
-    <div class="row-flex justify-between export-form-footer">
+<img class="ic-close" src="/images/fi-close.svg" ng-click="$dismiss()">
+<div class="modal-header">
+    Export report
+</div>
+<div class="modal-body">
+    <form>
+        <div class="form-group">
+            <label for="name">Enter your email to get the report delivered to your inbox.</label><span class="text-danger small pull-right">{{errMess}}</span>
+            <span>Email</span>
+            <input type="text"
+                name="name"
+                id="name"
+                class="form-control"
+                ng-model="userEmail"
+                ng-change="changedUserEmail()"
+                ng-disabled="isExporting">
+        </div>
+    </form>
+</div>
+<div class="modal-footer">
+    <div class="row-flex flex-direction-row flex-space-between">
         <button class="btn btn-success btn-rounded-full" ng-click="$dismiss()" ng-disabled="isExportingRecs">
             Cancel
         </button>

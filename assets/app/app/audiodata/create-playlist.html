@@ -1,5 +1,6 @@
+<img class="ic-close" src="/images/fi-close.svg" ng-click="$dismiss()">
 <div class="modal-header">
-    <h3>Create playlist</h3>
+    Create playlist
 </div>
 
 <div class="modal-body">
@@ -17,11 +18,11 @@
     </form>
 </div>
 <div class="modal-footer">
-    <i class="fa fa-spinner fa-spin" ng-if="isSavingPlaylist" style="font-size: 26px; vertical-align: middle; margin-right: 5px;"></i>
-    <button class="btn btn-primary" ng-click="savePlaylist(pname)" ng-disabled="isSavingPlaylist">
-        <i class="fa fa-floppy-o"></i>Save &amp; Close
-    </button>
-    <button class="btn btn-default" ng-click="$dismiss()" ng-disabled="isSavingPlaylist">
-        <i class="fa fa-times"></i>Close
-    </button>
+    <div class="row-flex flex-direction-row flex-space-between">
+        <button class="btn btn-success" ng-click="$dismiss()" ng-disabled="isSavingPlaylist">Cancel</button>
+        <button class="btn btn-primary" ng-click="savePlaylist(pname)" ng-disabled="isSavingPlaylist">
+            <i class="fa fa-spinner fa-spin" ng-if="isSavingPlaylist" style="font-size: 16px; vertical-align: middle; margin-right: 5px;"></i>
+            Save
+        </button>
+    </div>
 </div>
