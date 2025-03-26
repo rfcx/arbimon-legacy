@@ -630,7 +630,7 @@ angular.module('a2.analysis.patternmatching', [
         this.totalPages = 0;
         this.loading = {details: false, rois: true};
         this.isValidating = { disableBtn: false };
-        this.validation = this.lists.validation[2];
+        this.validation = null;
         this.thumbnailClass = this.lists.thumbnails[0].value;
         this.search = this.lists.search[5];
         this.projecturl = Project.getUrl();
@@ -646,9 +646,9 @@ angular.module('a2.analysis.patternmatching', [
 
     lists: {
         thumbnails: [
-            { class:'fa fa-th-large', value:''},
-            { class:'fa fa-th', value:'is-small'},
-            { class:'fa fa-bars', value:'pm-full-size'}
+            { class:'fa fa-th-large', value:'', tooltip: 'Square view'},
+            { class:'fa fa-th', value:'is-small', tooltip: 'Small view'},
+            { class:'fa fa-bars', value:'pm-full-size', tooltip: 'Card view'}
         ],
         search: [
             {value:'present', text:'Present', description: 'Show all Region of Interest marked as present.'},
