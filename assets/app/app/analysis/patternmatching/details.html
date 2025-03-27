@@ -93,7 +93,7 @@
                                 style="margin-left: .5rem;"
                             ><i ng-class="item.class"></i></button>
                         </div>
-                        <div class="btn-group-margin pull-right">
+                        <div class="pull-right" style="margin-left: .5rem !important; margin-top: 5px;">
                                 <a class="btn btn-success btn-rounded-full"
                                 ng-href="{{controller.patternMatchingExportUrl}}"
                                 ng-click="controller.exportPmReport($event)"
@@ -115,7 +115,7 @@
                             </ui-select>
                         </div>
                         <div class="btn-group btn-group-margin">
-                            <ui-select class="btn-group-item" ng-model="controller.selected.siteBookmark" theme="bootstrap" style="display:inline-block; width: 200px;"
+                            <ui-select class="btn-group-item" ng-model="controller.selected.siteBookmark" theme="bootstrap" style="display:inline-block; width: 208px;"
                                 ng-change="controller.setSiteBookmark($select.selected)">
                                 <ui-select-match placeholder="Filter by Site"> </ui-select-match>
                                 <ui-select-choices repeat="$item in controller.sitesList | filter:$select.search">
@@ -126,7 +126,7 @@
                     </div>
                     <div class="row-flex flex-direction-row flex-self-align-bottom mt-3">
                         <div class="btn-group btn-group-margin">
-                            <ui-select ng-model="controller._selection" theme="bootstrap" style="display:inline-block; width: 140px;"
+                            <ui-select ng-model="controller._selection" theme="bootstrap" style="display:inline-block; width: 148px;"
                                 on-select="controller.onSelect($select.selected)"
                             >
                                 <ui-select-match placeholder="Select">{{ $select.selected.text }}</ui-select-match>
@@ -136,7 +136,7 @@
                             </ui-select>
                         </div>
 
-                        <div class="btn-group btn-group-margin row-flex flex-direction-row">
+                        <div class="btn-group row-flex flex-direction-row">
                             <ui-select ng-model="controller.validation"  theme="bootstrap" style="width: 180px;">
                                 <ui-select-match placeholder="Validation">
                                     <i ng-class="$select.selected.class" style="position: absolute; top: 8px"></i>
@@ -148,7 +148,7 @@
                             </ui-select>
                         </div>
 
-                        <div class="btn-group btn-group-margin">
+                        <div class="btn-group">
                             <button class="btn btn-success btn-rounded-full" style="width:80px" ng-click="controller.validate(patternMatchingId)" ng-disabled="controller.isValidating.disableBtn === true">
                                 <i ng-if="controller.isValidating.disableBtn === true" class="fa fa-spinner fa-spin" style="font-size: 16px;"></i>
                                 <span ng-if="controller.isValidating.disableBtn === false">Apply</span>
