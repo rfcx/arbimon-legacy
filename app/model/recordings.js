@@ -1982,7 +1982,7 @@ var Recordings = {
                         promises.push(tagsModel.getFor({id:projection_parameters.tag}).then(function(tags){
                             tags.forEach(function(tag, idx){
                                 var prtid = "p_RT_" + idx;
-                                const tagQuery = `(SELECT COUNT(*) FROM recording_tags AS ${prtid} WHERE r.recording_id = ${prtid}.recording_id AND ${prtid}.tag_id = ${tag.tag_id}) AS 'tag<${tag.tag}>'`;
+                                const tagQuery = `(SELECT COUNT(*) FROM recording_tags AS ${prtid} WHERE r.recording_id = ${prtid}.recording_id AND ${prtid}.tag_id = ${tag.tag_id}) AS 'tag<${dbpool.escape(tag.tag)}>'`;
                                 summaryBuilders[c].addProjection(tagQuery);
                             });
                         }));
