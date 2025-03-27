@@ -1141,8 +1141,8 @@ angular.module('a2.analysis.clustering-jobs', [
         $scope.isPopupOpened = !$scope.isPopupOpened;
     }
 
-    $scope.toggleBoxSize = function() {
-      $scope.isSquareSize = !$scope.isSquareSize;
+    $scope.toggleBoxSize = function(isSquare) {
+      $scope.isSquareSize = isSquare;
     }
 
     $scope.isPlaylistDataValid = function() {
