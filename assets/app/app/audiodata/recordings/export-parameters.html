@@ -1,6 +1,6 @@
 <div class="panel panel-dropdown">
     <ul class="list-group mb-2">
-        <li class="list-group-item" ng-repeat="parameter_set in controller.parameter_set_list">
+        <li class="pt-3" ng-repeat="parameter_set in controller.parameter_set_list">
             <div ng-hide="parameter_set.identifier === 'grouped' && !controller.isRfcx()">
                 <hr class="my-3" ng-if="parameter_set.identifier === 'grouped'" />
                 {{parameter_set.title}}
@@ -36,7 +36,7 @@
         </li>
     </ul>
 
-    <div class="mx-4 mt-4">
+    <div class="mt-3 row-flex justify-between">
         <button class="btn btn-success btn-rounded-full mr-1" style="width: 48%;" ng-click="controller.resetFilters()" ng-disabled="controller.isLoading">
             <i class="fa fa-undo"></i>
             Reset

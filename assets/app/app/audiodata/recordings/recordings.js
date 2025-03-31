@@ -190,13 +190,16 @@ angular.module('a2.audiodata.recordings', [
         return $modal.open({
             templateUrl: '/common/templates/pop-up.html',
             controller: function() {
+                this.title = "Delete a recordings";
                 this.messages = messages;
                 this.list = list;
                 this.note = 'Note: analysis results on these recordings will also be deleted';
                 this.btnOk =  "Delete";
                 this.btnCancel =  "Cancel";
+                this.isForDeletePopup = true;
             },
-            controllerAs: 'popup'
+            controllerAs: 'popup',
+            windowClass: 'modal-element width-490'
         }).result.then(function() {
             return $http.post('/legacy-api/project/'+Project.getUrl()+'/recordings/delete', { recs: recs });
         }).then((function(response){
@@ -256,8 +259,10 @@ angular.module('a2.audiodata.recordings', [
                     this.note = 'Note: analysis results on these recordings will also be deleted';
                     this.btnOk =  "Delete";
                     this.btnCancel =  "Cancel";
+                    this.isForDeletePopup = true;
                 },
-                controllerAs: 'popup'
+                controllerAs: 'popup',
+                windowClass: 'modal-element width-490'
             }).result;
         }).then(function() {
             return $http.post('/legacy-api/project/'+Project.getUrl()+'/recordings/delete-matching', filters)
@@ -337,7 +342,7 @@ angular.module('a2.audiodata.recordings', [
         const modalInstance = $modal.open({
             controller: 'ExportRecordingstModalInstanceCtrl',
             templateUrl: '/app/audiodata/export-report.html',
-            windowClass: 'export-pop-up-window',
+            windowClass: 'modal-element',
             resolve: {
                 data: function() {
                     return { params: $scope.params,  listParams: listParams }
