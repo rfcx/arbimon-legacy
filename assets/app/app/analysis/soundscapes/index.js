@@ -371,7 +371,6 @@ angular.module('a2.analysis.soundscapes', [
 
 })
 .controller('CreateNewSoundscapeInstanceCtrl', function($scope, $modalInstance, a2Soundscapes, Project, projectData, playlists, userId) {
-
     $scope.projectData = projectData;
     $scope.playlists = playlists;
     $scope.buttonEnableFlag = true;
@@ -393,6 +392,11 @@ angular.module('a2.analysis.soundscapes', [
     $scope.nameMsg = '';
 
     $scope.userId = userId;
+
+    $scope.showPlaylistLimitWarning = function() {
+        if (!$scope.datasubmit && !$scope.datasubmit.playlist) return
+        return $scope.datasubmit.playlist.count > 10000;
+    }
 
     Project.getSites(function(sites) {
         $scope.sites = sites.map(s => s.name)
@@ -419,6 +423,7 @@ angular.module('a2.analysis.soundscapes', [
             u: $scope.userId
         }
         if ($scope.datasubmit.jobtype === 'single') {
+            if ($scope.showPlaylistLimitWarning) return;
             opts.n = $scope.datasubmit.name
             opts.p = $scope.datasubmit.playlist
             a2Soundscapes.createSingleSoundscape(opts)
