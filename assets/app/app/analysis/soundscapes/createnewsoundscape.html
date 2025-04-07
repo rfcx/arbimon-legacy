@@ -64,7 +64,7 @@
               </ui-select-choices>
             </ui-select>
         </div>
-        <error-message ng-if="showPlaylistLimitWarning()" message="'Please select a playlist with less than 10,000 recordings.'"></error-message>
+        <error-message ng-if="showPlaylistLimitWarning()" message="'Please limit the playlist to 10,000 recordings or fewer.'"></error-message>
       </div>
       <div ng-if="datasubmit.jobtype === 'multiple'" class="form-group text-util-gray-01">
         <div class="row row-flex flex-space-center" ng-show="!uploader.queue.length">
