@@ -31,7 +31,17 @@
                                 "name": "JOB_ID",
                                 "value": "{{ENV_JOB_ID}}"
                             }
-                        ]
+                        ],
+                        "resources": {
+                            "requests": {
+                                "cpu": "0.5",
+                                "memory": "512Mi"
+                            },
+                            "limits": {
+                                "cpu": "1",
+                                "memory": "1Gi"
+                            }
+                        }
                     }
                 ],
                 "restartPolicy": "Never"

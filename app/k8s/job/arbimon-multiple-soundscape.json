@@ -59,7 +59,17 @@
                                 "name": "CREATED_BY_USER_ID",
                                 "value": "{{ENV_CREATED_BY_USER_ID}}"
                             }
-                        ]
+                        ],
+                        "resources": {
+                            "requests": {
+                                "cpu": "0.5",
+                                "memory": "512Mi"
+                            },
+                            "limits": {
+                                "cpu": "1",
+                                "memory": "1Gi"
+                            }
+                        }
                     }
                 ],
                 "restartPolicy": "Never"
