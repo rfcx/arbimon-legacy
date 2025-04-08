@@ -423,7 +423,6 @@ angular.module('a2.analysis.soundscapes', [
             u: $scope.userId
         }
         if ($scope.datasubmit.jobtype === 'single') {
-            if ($scope.showPlaylistLimitWarning()) return;
             opts.n = $scope.datasubmit.name
             opts.p = $scope.datasubmit.playlist
             a2Soundscapes.createSingleSoundscape(opts)
@@ -457,7 +456,8 @@ angular.module('a2.analysis.soundscapes', [
             ((typeof $scope.datasubmit.threshold.length)  == 'string') ||
             ((typeof $scope.datasubmit.bandwidth.length)  == 'string') ||
             $scope.datasubmit.name.length  === 0 ||
-            ((typeof $scope.datasubmit.playlist) == 'string')
+            ((typeof $scope.datasubmit.playlist) == 'string') ||
+            $scope.showPlaylistLimitWarning()
         ) : (
             $scope.datasubmit.aggregation.length  === 0 ||
             $scope.datasubmit.threshold.length === 0 || $scope.datasubmit.year.length === 0
