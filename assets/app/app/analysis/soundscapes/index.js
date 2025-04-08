@@ -423,7 +423,7 @@ angular.module('a2.analysis.soundscapes', [
             u: $scope.userId
         }
         if ($scope.datasubmit.jobtype === 'single') {
-            if ($scope.showPlaylistLimitWarning) return;
+            if ($scope.showPlaylistLimitWarning()) return;
             opts.n = $scope.datasubmit.name
             opts.p = $scope.datasubmit.playlist
             a2Soundscapes.createSingleSoundscape(opts)
