@@ -85,7 +85,8 @@
                     <field title="Name" tdclass="is-v-middle hidelongtext widthtd" key="mname" filter>
                         <span>{{row.mname}}</span>
                         <a class="is-v-middle cursor-pointer linodeco"
-                            ng-if="row.shared === true">
+                            ng-if="row.shared === true"
+                            ng-click="$event.stopPropagation(); goToSourceProject(row)">
                             <i aria-hidden="true" class="glyphicon glyphicon-link text-frequency pl-2"></i>
                             <span class="text-frequency">linked</span>
                         </a>

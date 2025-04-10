@@ -30,7 +30,7 @@ angular.module('a2.directive.a2-table', [
 
         var clone = selectExpand.clone(true);
         selectExpand.detach();
-        selectExpand = angular.element('<tr ng-show="selected"><td colspan="' + options.fieldCount + '"></td></tr>');
+        selectExpand = angular.element('<tr ng-show="expanded"><td colspan="' + options.fieldCount + '"></td></tr>');
         selectExpand.find('td').append(clone);
         return selectExpand;
     }
@@ -40,6 +40,7 @@ angular.module('a2.directive.a2-table', [
         scope: {
             rows: '=',
             selected: '=?',  // able to work with $scope.selected rows
+            expanded: '=?',
             onSelect: '&',
             onCheck: '&',
             onCheckAll: '&',
@@ -229,9 +230,11 @@ angular.module('a2.directive.a2-table', [
             return;
         }
 
-        // if(tableScope.selected === row){
-        //     row = undefined;
-        // } 
+        if(tableScope.expanded === row){
+            tableScope.expanded = undefined;
+        } else {
+            tableScope.expanded = row
+        }
 
         tableScope.selected = row;
         scope.selected = row;
