@@ -69,7 +69,7 @@ var TrainingSets = {
         var sql = "SELECT TS.training_set_id as id, \n" +
                 "       TS.name, \n" +
                 "       TS.date_created, \n" +
-                "       TS.project_id as project, \n" +
+                "       TS.project_id as project, TS.source_project_id, \n" +
                 "       TST.identifier as type, \n" +
                 "       TSRS.species_id as species, \n" +
                 "       TSRS.songtype_id as songtype \n" +
@@ -137,7 +137,7 @@ var TrainingSets = {
             var cb = Array.prototype.pop.call(arguments);
             scope.in_transaction = true;
             scope.connection.query(
-                "INSERT INTO training_sets (project_id, name, date_created, training_set_type_id) \n" +
+                "INSERT INTO training_sets (project_id, name, date_created, training_set_type_id, source_project_id) \n" +
                 "VALUES ("+dbpool.escape(data.project_id)+", "+dbpool.escape(data.name)+", NOW(), "+ dbpool.escape(typedef.id)+")",
             cb);
         });
@@ -171,6 +171,20 @@ var TrainingSets = {
             }
             callback(err, tset);
         });
+    },
+
+    checkExistingTrainingSet: function(opts, callback) {
+        const q = `select * from training_sets where project_id = ${opts.projectId} and name = '${opts.trainingSetName}';`;
+        queryHandler(q, callback);
+    },
+
+    shareTrainingSet: function(opts, callback) {
+        const q = `insert into training_sets(project_id, name, date_created, training_set_type_id, removed, source_project_id)
+            select ${opts.projectId}, ts2.name, ts2.date_created, ts2.training_set_type_id, ts2.removed, ${opts.sourceProjectId}
+            from training_sets ts2
+            where ts2.training_set_id = ${opts.trainingSetId};
+        `;
+        queryHandler(q, callback);
     },
 
     /** Edits a given training set.

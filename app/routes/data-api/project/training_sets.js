@@ -154,6 +154,24 @@ router.post('/add', function(req, res, next) {
     }, next);
 });
 
+router.post('/share-training-set', function(req, res, next) {
+    res.type('json');
+    const opts = {
+        projectId: req.project.project_id,
+        sourceProjectId: req.body.sourceProjectId,
+        trainingSetId: req.body.trainingSetId,
+        trainingSetName: req.body.trainingSetName
+    }
+    model.trainingSets.checkExistingTrainingSet(opts, function(err, result) {
+        if (err) return next(err);
+        if (result.length) return res.json({ ok:'This training has been shared to selected project.' });
+        return model.trainingSets.shareTrainingSet(opts, function(err, result) {
+            if(err) return next(err);
+            res.json({ ok:'The training set was successfully shared with the selected project.' });
+        });
+    });
+});
+
 /** Edit a training set.
 */
 router.post('/edit/:trainingSet', function(req, res, next) {
