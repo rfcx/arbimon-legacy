@@ -166,12 +166,12 @@ router.post('/combine', async function(req, res, next) {
     }
 
     const term1Data = await model.trainingSets.find({ id: opts.term1 })
-    if (term1Data.length == 0) {
+    if (term1Data.length === 0) {
         res.status(404).json({ field: 'term1', error: 'training set not found'});
     }
 
     const term2Data = await model.trainingSets.find({ id: opts.term2 })
-    if (term2Data.length == 0) {
+    if (term2Data.length === 0) {
         res.status(404).json({ field: 'term2', error: 'training set not found'});
     }
 
