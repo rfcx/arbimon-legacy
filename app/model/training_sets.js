@@ -190,6 +190,7 @@ var TrainingSets = {
             FROM training_set_roi_set_data
             WHERE training_set_id = ?`
         return await dbpool.query(sql_new_ts_rois, [newInserted.insertId, opts.trainingSetId]);
+    },
 
     /** Insert a combined training set with metadata (term1, term2).
      * @param {Object} data
