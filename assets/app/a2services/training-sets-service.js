@@ -90,7 +90,10 @@ angular.module('a2.srv.training-sets', ['a2.srv.project'])
                 .success(function(data) {
                     callback(data);
                 });
-        }
+        },
+        shareTrainingSet: function(trainingSetData) {
+            return $http.post('/legacy-api/project/' + Project.getUrl() + '/training-sets/share', trainingSetData)
+        },
     };
 })
 ;

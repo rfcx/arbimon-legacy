@@ -154,25 +154,26 @@ router.post('/add', function(req, res, next) {
     }, next);
 });
 
-router.post('/share-training-set', function(req, res, next) {
+router.post('/share', function(req, res, next) {
     res.type('json');
+
     const sourceProjectId = req.body.sourceProjectId
     if (!sourceProjectId || !(typeof sourceProjectId === 'number')) {
-        throw new Error('Source project id is not found.')
+        res.status(404).json({ error: 'Source project id is not found.' });
     }
     const opts = {
         projectId: req.project.project_id,
         sourceProjectId: sourceProjectId,
-        trainingSetId: req.body.trainingSetId,
-        trainingSetName: req.body.trainingSetName
+        trainingSetId: req.body.trainingSetId
     }
-    model.trainingSets.find({ project: opts.projectId, name: opts.trainingSetName }, function(err, result) {
+    model.trainingSets.find({ project: opts.projectId, sourceProject: sourceProjectId }, async function(err, result) {
         if (err) return next(err);
-        if (result.length) return res.json({ ok:'This training has been shared to selected project.' });
-        return model.trainingSets.shareTrainingSet(opts, function(err, result) {
-            if(err) return next(err);
-            res.json({ ok:'The training set was successfully shared with the selected project.' });
-        });
+        if (result.length) return res.status(400).json({ message: 'This training has been shared to selected project.' });
+        model.trainingSets.shareTrainingSet(opts)
+            .then(() => {
+                res.status(201).json({ message: 'The training set was successfully shared with the selected project.' })
+            })
+            .catch(next)
     });
 });
 
