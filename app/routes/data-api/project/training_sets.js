@@ -154,6 +154,29 @@ router.post('/add', function(req, res, next) {
     }, next);
 });
 
+router.post('/share', function(req, res, next) {
+    res.type('json');
+
+    const sourceProjectId = req.body.sourceProjectId
+    if (!sourceProjectId || !(typeof sourceProjectId === 'number')) {
+        res.status(404).json({ error: 'Source project id is not found.' });
+    }
+    const opts = {
+        projectId: req.project.project_id,
+        sourceProjectId: sourceProjectId,
+        trainingSetId: req.body.trainingSetId
+    }
+    model.trainingSets.find({ project: opts.projectId, sourceProject: sourceProjectId }, async function(err, result) {
+        if (err) return next(err);
+        if (result.length) return res.status(400).json({ message: 'This training has been shared to selected project.' });
+        model.trainingSets.shareTrainingSet(opts)
+            .then(() => {
+                res.status(201).json({ message: 'The training set was successfully shared with the selected project.' })
+            })
+            .catch(next)
+    });
+});
+
 /** Combine 2 training sets into 1.
  */
 router.post('/combine', async function(req, res, next) {

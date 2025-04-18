@@ -167,6 +167,37 @@ angular.module('a2.audiodata.training-sets', [
        this.showSetDetails = false;
     };
 
+    this.isShareTsEnabled = function() {
+        return a2UserPermit.getUserRole() === 'Expert' || a2UserPermit.getUserRole() === 'Admin' || a2UserPermit.getUserRole() === 'Owner';
+    }
+
+    this.shareTrainingSet = function() {
+        if (!this.isShareTsEnabled()) {
+            notify.error('You do not have permission to share training sets');
+            return;
+        }
+        const trainingSetsData = this.trainingSets;
+        const modalInstance = $modal.open({
+            templateUrl: '/app/audiodata/training-sets-share-modal.html',
+            controller: 'ShareTrainingSetInstanceCtrl',
+            resolve: {
+                trainingSets: function() {
+                    return trainingSetsData;
+                }
+            },
+            windowClass: 'modal-element'
+        });
+
+        modalInstance.result.then(
+            function(res) {
+                if (res.error) {
+                    notify.error("Error: " + res.error);
+                }
+                else notify.log(res.message);
+            }
+        );
+    };
+
     this.getTrainingSetList = function(){
         this.loading.list = true;
         return a2TrainingSets.getList((function(data){
@@ -351,6 +382,43 @@ angular.module('a2.audiodata.training-sets', [
             this.setROI(data.lr || 0);
         }
     }).bind(this));
+
+})
+
+.controller('ShareTrainingSetInstanceCtrl', function($scope, $modalInstance, a2TrainingSets, trainingSets, Project) {
+    $scope.trainingSets = trainingSets.filter(ts => !ts.source_project_id);
+    $scope.isShareTrainingSet = false;
+    $scope.selectedData = { project: {}, trainingSet: {} };
+    $scope.isTrainingSetEmpty = false;
+    $scope.isProjectEmpty = false;
+    Project.getProjectsToShareModel(function(data) {
+        $scope.projects = data;
+    });
+
+    $scope.ok = function() {
+        $scope.isTrainingSetEmpty = !$scope.selectedData.trainingSet.id;
+        $scope.isProjectEmpty = !$scope.selectedData.project.project_id;
+        if ($scope.isTrainingSetEmpty || $scope.isProjectEmpty) return;
+        $scope.isShareTrainingSet = true;
+        a2TrainingSets.shareTrainingSet({ trainingSetId: $scope.selectedData.trainingSet.id, sourceProjectId: $scope.selectedData.project.project_id })
+            .success(function(data) {
+                $scope.isShareTrainingSet = false;
+                $scope.isTrainingSetEmpty = false;
+                $scope.isProjectEmpty = false;
+                $modalInstance.close(data);
+            })
+            .error(function(err) {
+                $scope.isShareTrainingSet = false;
+                $scope.isTrainingSetEmpty = false;
+                $scope.isProjectEmpty = false;
+                $modalInstance.close(err);
+            });
+    };
+
+    $scope.cancel = function() {
+        $scope.isShareTrainingSet = false;
+        $modalInstance.dismiss('cancel');
+    };
 
 })
 ;

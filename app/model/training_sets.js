@@ -59,6 +59,10 @@ var TrainingSets = {
                 if (query.name) {
                     constraints.push('TS.name = ' + dbpool.escape(query.name));
                 }
+
+                if (query.sourceProject) {
+                    constraints.push('TS.source_project_id = ' + dbpool.escape(query.sourceProject));
+                }
             }
         }
 
@@ -69,7 +73,7 @@ var TrainingSets = {
         var sql = "SELECT TS.training_set_id as id, \n" +
                 "       TS.name, \n" +
                 "       TS.date_created, \n" +
-                "       TS.project_id as project, \n" +
+                "       TS.project_id as project, TS.source_project_id, \n" +
                 "       TS.metadata, \n" +
                 "       TST.identifier as type, \n" +
                 "       TSRS.species_id as species, \n" +
@@ -173,6 +177,19 @@ var TrainingSets = {
             callback(err, tset);
         });
     },
+
+    shareTrainingSet: async function(opts) {
+        const sql_new_ts = `insert into training_sets(project_id, name, date_created, training_set_type_id, removed, source_project_id)
+            select ?, ts2.name, ts2.date_created, ts2.training_set_type_id, ts2.removed, ?
+            from training_sets ts2
+            where ts2.training_set_id = ?;
+        `;
+        const newInserted = await dbpool.query(sql_new_ts, [opts.projectId, opts.sourceProjectId, opts.trainingSetId])
+        const sql_new_ts_rois = `INSERT INTO training_set_roi_set_data (training_set_id, recording_id, species_id, songtype_id, x1, x2, y1, y2, uri)
+            SELECT DISTINCT ?, recording_id, species_id, songtype_id, x1, x2, y1, y2, uri
+            FROM training_set_roi_set_data
+            WHERE training_set_id = ?`
+        return await dbpool.query(sql_new_ts_rois, [newInserted.insertId, opts.trainingSetId]);
 
     /** Insert a combined training set with metadata (term1, term2).
      * @param {Object} data

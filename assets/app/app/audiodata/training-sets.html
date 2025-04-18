@@ -1,12 +1,8 @@
 
 <div class="row">
-    <div class="col-lg-5 col-sm-12 mt-4">
+    <div class="col-sm-12 mt-4">
         <div class="row-flex flex-space-between">
-            <div class="row-flex flex-align-middle">
-                <button ng-click="controller.addNewTrainingSet()" class="btn btn-primary btn-rounded-full"
-                    tooltip="Create Training Set">
-                    New Training Set <img class="ml-1" src="/images/fi-plus.svg">
-                </button>
+            <div class="row-flex flex-align-middle gap-x-2">
                 <button class="btn btn-default ml-2"
                     ng-click="controller.editSelectedTrainingSet()"
                     ng-disabled="!controller.selected.trainingSet"
@@ -19,14 +15,31 @@
                     tooltip="Remove Training Set">
                     <i class="fa fa-trash"></i>
                 </button>
+                <div class="search">
+                    <div class="form-element ml-2">
+                        <i class="fa fa-search mt-3"></i>
+                        <input class="form-control" style="display:inline-block" type="text" placeholder="Search" ng-model="search.name">
+                    </div>
+                </div>
             </div>
-            <div class="search">
-                <div class="form-element ml-2">
-                    <i class="fa fa-search mt-3"></i>
-                    <input class="form-control" style="display:inline-block" type="text" placeholder="Search" ng-model="search.name">
+            <div class="row-flex flex-align-middle gap-x-3">
+                <button ng-click="controller.addNewTrainingSet()" class="btn btn-primary btn-rounded-full"
+                    tooltip="Create Training Set">
+                    New Training Set <img class="ml-1" src="/images/fi-plus.svg">
+                </button>
+                <div tooltip="{{ controller.isShareTsEnabled() ? 'Share' : 'You must be an Expert or Administrator to share Training Sets' }}" tooltip-append-to-body="true">
+                    <button class="btn btn-rounded-full"
+                        ng-class="{ 'btn-default': !controller.isShareTsEnabled(), 'btn-primary': controller.isShareTsEnabled() }"
+                        ng-click="controller.shareTrainingSet()"
+                        ng-disabled="!controller.isShareTsEnabled()"
+                    >
+                        <span class="row-flex flex-space-center px-2"> Share </span>
+                    </button>
                 </div>
             </div>
         </div>
+    </div>
+    <div class="col-lg-5 col-sm-12 mt-4">
         <div class="py-3">
             <span ng-if="!controller.loading.list" class="text-left reclist-total ml-2">
                 {{ controller.trainingSets ? controller.trainingSets.length : 0 }} {{controller.trainingSets.length > 1 ? "training sets" : "training set"}}
