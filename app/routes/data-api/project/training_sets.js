@@ -154,6 +154,40 @@ router.post('/add', function(req, res, next) {
     }, next);
 });
 
+/** Combine 2 training sets into 1.
+ */
+router.post('/combine', async function(req, res, next) {
+    res.type('json')
+
+    const opts = {
+        projectId: req.project.project_id,
+        term1: req.body.term1,
+        term2: req.body.term2
+    }
+
+    const term1Data = await model.trainingSets.find({ id: opts.term1 })
+    if (term1Data.length === 0) {
+        res.status(404).json({ field: 'term1', error: 'training set not found'});
+    }
+
+    const term2Data = await model.trainingSets.find({ id: opts.term2 })
+    if (term2Data.length === 0) {
+        res.status(404).json({ field: 'term2', error: 'training set not found'});
+    }
+
+    opts.name = `${term1Data[0].name} union ${term2Data[0].name}`
+    const combinedTrainingSet = await model.trainingSets.find({ name: opts.name, project: opts.projectId})
+    if (combinedTrainingSet.length > 0) {
+        res.status(400).json({ error: 'term1 and term2 combination is existing'});
+    }
+    
+    model.trainingSets.combine(opts)
+    .then(() => {
+        res.status(201).json({ message: 'training set created' })
+    })
+    .catch(next)
+})
+
 /** Edit a training set.
 */
 router.post('/edit/:trainingSet', function(req, res, next) {
