@@ -400,7 +400,11 @@ angular.module('a2.audiodata.training-sets', [
         $scope.isProjectEmpty = !$scope.selectedData.project.project_id;
         if ($scope.isTrainingSetEmpty || $scope.isProjectEmpty) return;
         $scope.isShareTrainingSet = true;
-        a2TrainingSets.shareTrainingSet({ trainingSetId: $scope.selectedData.trainingSet.id, sourceProjectId: $scope.selectedData.project.project_id })
+        a2TrainingSets.shareTrainingSet({
+                trainingSetId: $scope.selectedData.trainingSet.id,
+                projectIdTo: $scope.selectedData.project.project_id,
+                trainingSetName: $scope.selectedData.trainingSet.name
+            })
             .success(function(data) {
                 $scope.isShareTrainingSet = false;
                 $scope.isTrainingSetEmpty = false;

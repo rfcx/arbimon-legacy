@@ -157,16 +157,17 @@ router.post('/add', function(req, res, next) {
 router.post('/share', function(req, res, next) {
     res.type('json');
 
-    const sourceProjectId = req.body.sourceProjectId
+    const sourceProjectId = req.project.project_id;
     if (!sourceProjectId || !(typeof sourceProjectId === 'number')) {
         res.status(404).json({ error: 'Source project id is not found.' });
     }
     const opts = {
-        projectId: req.project.project_id,
+        projectId: req.body.projectIdTo,
         sourceProjectId: sourceProjectId,
-        trainingSetId: req.body.trainingSetId
+        trainingSetId: req.body.trainingSetId,
+        trainingSetName: req.body.trainingSetName
     }
-    model.trainingSets.find({ project: opts.projectId, sourceProject: sourceProjectId }, async function(err, result) {
+    model.trainingSets.find({ project: opts.projectId, sourceProject: sourceProjectId, name: opts.trainingSetName }, async function(err, result) {
         if (err) return next(err);
         if (result.length) return res.status(400).json({ message: 'This training has been shared to selected project.' });
         model.trainingSets.shareTrainingSet(opts)
