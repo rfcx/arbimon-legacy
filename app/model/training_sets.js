@@ -182,14 +182,14 @@ var TrainingSets = {
      * @param {Object} data.term2  training_set_id in format of term2.
      */
     combine: async function(data) {
-        const q = `INSERT INTO training_sets (project_id, name, date_created, training_set_type_id, metadata)
-                VALUES (?, ?, NOW(), 1, ?)`
+        const q = `INSERT INTO training_sets (project_id, name, date_created, training_set_type_id, removed, metadata)
+                VALUES (?, ?, NOW(), 1, 0, ?)`
         const newInserted = await dbpool.query(q, [data.projectId, data.name, JSON.stringify({
             term1:data.term1,
             term2:data.term2,
         })])
         const combine_q = `INSERT INTO training_set_roi_set_data (training_set_id, recording_id, species_id, songtype_id, x1, x2, y1, y2, uri)
-                        SELECT DISTRICT ?, recording_id, species_id, songtype_id, x1, x2, y1, y2, uri
+                        SELECT DISTINCT ?, recording_id, species_id, songtype_id, x1, x2, y1, y2, uri
                         FROM training_set_roi_set_data
                         WHERE training_set_id IN (?, ?)`
         return await dbpool.query(combine_q, [newInserted.insertId, data.term1, data.term2])

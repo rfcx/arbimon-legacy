@@ -175,7 +175,7 @@ router.post('/combine', async function(req, res, next) {
         res.status(404).json({ field: 'term2', error: 'training set not found'});
     }
 
-    opts.name = `${term1Data.name} union ${term2Data.name}`
+    opts.name = `${term1Data[0].name} union ${term2Data[0].name}`
     const combinedTrainingSet = await model.trainingSets.find({ name: opts.name, project: opts.projectId})
     if (combinedTrainingSet.length > 0) {
         res.status(400).json({ error: 'term1 and term2 combination is existing'});
