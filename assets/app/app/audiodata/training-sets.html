@@ -27,13 +27,22 @@
                     tooltip="Create Training Set">
                     New Training Set <img class="ml-1" src="/images/fi-plus.svg">
                 </button>
+                <div tooltip="{{ controller.isShareTsEnabled() ? 'Combine' : 'You must be an Expert or Administrator to combine Training Sets' }}" tooltip-append-to-body="true">
+                    <button class="btn btn-rounded-full"
+                        ng-class="{ 'btn-default': !controller.isShareTsEnabled(), 'btn-success': controller.isShareTsEnabled() }"
+                        ng-click="controller.combineTrainingSet()"
+                        ng-disabled="!controller.isShareTsEnabled()"
+                    >
+                        <span class="row-flex flex-space-center px-2">Combine</span>
+                    </button>
+                </div>
                 <div tooltip="{{ controller.isShareTsEnabled() ? 'Share' : 'You must be an Expert or Administrator to share Training Sets' }}" tooltip-append-to-body="true">
                     <button class="btn btn-rounded-full"
                         ng-class="{ 'btn-default': !controller.isShareTsEnabled(), 'btn-success': controller.isShareTsEnabled() }"
                         ng-click="controller.shareTrainingSet()"
                         ng-disabled="!controller.isShareTsEnabled()"
                     >
-                        <span class="row-flex flex-space-center px-2"> Share </span>
+                        <span class="row-flex flex-space-center px-2">Share</span>
                     </button>
                 </div>
             </div>
@@ -68,7 +77,7 @@
         </div>
     </div>
 
-    <div class="col-lg-7 col-sm-12">
+    <div class="col-lg-7 col-sm-12 mt-4 py-3">
         <div class="panel panel-default" ng-show="controller.loaderDisplay">
             <div class="panel-body">
                 Loading <loader></loader>

@@ -188,7 +188,9 @@ router.post('/combine', async function(req, res, next) {
     const opts = {
         projectId: req.project.project_id,
         term1: req.body.term1,
-        term2: req.body.term2
+        term2: req.body.term2,
+        species: req.body.species,
+        songtype: req.body.songtype
     }
 
     const term1Data = await model.trainingSets.find({ id: opts.term1 })

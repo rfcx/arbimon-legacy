@@ -94,6 +94,9 @@ angular.module('a2.srv.training-sets', ['a2.srv.project'])
         shareTrainingSet: function(trainingSetData) {
             return $http.post('/legacy-api/project/' + Project.getUrl() + '/training-sets/share', trainingSetData)
         },
+        combineTrainingSet: function(trainingSetData) {
+            return $http.post('/legacy-api/project/' + Project.getUrl() + '/training-sets/combine', trainingSetData)
+        },
     };
 })
 ;

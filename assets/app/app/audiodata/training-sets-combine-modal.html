@@ -1,0 +1,36 @@
+<img class="ic-close cursor-pointer" src="/images/fi-close.svg" ng-click="cancel()">
+<div class="modal-header">
+    Combine Training Sets
+</div>
+<div class="modal-body">
+    <div class="form-group">
+        <label for="trainingSet1Name">Training set 1</label>
+        <span ng-if="isTrainingSet1Empty" class="text-danger small mb-1 ml-3">Please select a training set.</span>
+        <ui-select ng-if="trainingSets1 && trainingSets1.length" ng-model="selectedData.trainingSet1" ng-change="filterTrainingSetData()" theme="bootstrap" ng-disabled="disabled">
+            <ui-select-match placeholder="Select or search a training set...">{{$select.selected.name}}</ui-select-match>
+            <ui-select-choices repeat="trainingSet in trainingSets1 | filter: $select.search" value="trainingSet.id">
+                {{trainingSet.name}}
+            </ui-select-choices>
+        </ui-select>
+    </div>
+    <div class="form-group">
+        <label for="trainingSet2Name">Training set 2</label>
+        <span ng-if="isTrainingSet2Empty" class="text-danger small mb-1 ml-3">Please select a training set.</span>
+        <p ng-if="!trainingSets2.length" class="text-danger small">There is not training set data to combine.</p>
+        <ui-select ng-if="trainingSets2 && trainingSets2.length" ng-model="selectedData.trainingSet2" theme="bootstrap" ng-disabled="disabled">
+            <ui-select-match placeholder="Select or search a training set...">{{$select.selected.name}}</ui-select-match>
+            <ui-select-choices repeat="trainingSet in trainingSets2 | filter: $select.search" value="trainingSet.id">
+                {{trainingSet.name}}
+            </ui-select-choices>
+        </ui-select>
+    </div>
+</div>
+<div class="modal-footer">
+    <div class="row-flex flex-direction-row flex-space-between">
+        <button class="btn btn-success btn-rounded-full bg-moss" style="padding: 8px 24px;" ng-click="cancel()">Cancel</button>
+        <div class="row-flex flex-direction-row flex-space-center">
+            <i class="fa fa-spinner fa-spin" ng-if="isCombineTrainingSet" style="font-size: 26px; vertical-align: middle; margin-right: 5px;"></i>
+            <button class="btn btn-primary btn-rounded-full" style="padding: 8px 24px;" ng-disabled="isShareTrainingSet" ng-click="ok()">Combine</button>
+        </div>
+    </div>
+</div>

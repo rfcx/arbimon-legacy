@@ -198,6 +198,36 @@ angular.module('a2.audiodata.training-sets', [
         );
     };
 
+    this.combineTrainingSet = function() {
+        if (!this.isShareTsEnabled()) {
+            notify.error('You do not have permission to combine training sets');
+            return;
+        }
+        const trainingSetsData = this.trainingSets;
+        const modalInstance = $modal.open({
+            templateUrl: '/app/audiodata/training-sets-combine-modal.html',
+            controller: 'CombineTrainingSetInstanceCtrl',
+            resolve: {
+                trainingSets: function() {
+                    return trainingSetsData;
+                }
+            },
+            windowClass: 'modal-element width-490'
+        });
+
+        modalInstance.result.then(
+            function(res) {
+                if (res.error) {
+                    notify.error("Error: " + res.error);
+                }
+                else {
+                    notify.log(res.message);
+                    this.getTrainingSetList();
+                }
+            }
+        );
+    };
+
     this.getTrainingSetList = function(){
         this.loading.list = true;
         return a2TrainingSets.getList((function(data){
@@ -434,6 +464,53 @@ angular.module('a2.audiodata.training-sets', [
         $scope.isShareTrainingSet = false;
         $modalInstance.dismiss('cancel');
     };
+
+})
+
+.controller('CombineTrainingSetInstanceCtrl', function($scope, $modalInstance, a2TrainingSets, trainingSets) {
+    $scope.originalTrainingSets = trainingSets.filter(ts => !ts.source_project_id && !ts.name.includes('union'));
+    $scope.trainingSets1 = $scope.trainingSets2 = $scope.originalTrainingSets;
+    $scope.isCombineTrainingSet = false;
+    $scope.selectedData = { trainingSet1: {}, trainingSet2: {} };
+    $scope.isTrainingSet1Empty = false;
+    $scope.isTrainingSet2Empty = false;
+
+    $scope.ok = function() {
+        $scope.isTrainingSet1Empty = !$scope.selectedData.trainingSet1.id;
+        $scope.isTrainingSet2Empty = !$scope.selectedData.trainingSet2.id;
+        if ($scope.isTrainingSet1Empty || $scope.isTrainingSet2Empty) return;
+        $scope.isCombineTrainingSet = true;
+        a2TrainingSets.combineTrainingSet({
+            term1: $scope.selectedData.trainingSet1.id,
+            term2: $scope.selectedData.trainingSet2.id,
+            species: $scope.selectedData.trainingSet1.species,
+            songtype: $scope.selectedData.trainingSet1.songtype
+        })
+            .success(function(data) {
+                $scope.resetFormStatus();
+                $modalInstance.close(data);
+            })
+            .error(function(err) {
+                $scope.resetFormStatus();
+                $scope.isProjectEmpty = false;
+                $modalInstance.close(err);
+            });
+    };
+
+    $scope.cancel = function() {
+        $scope.isShareTrainingSet = false;
+        $modalInstance.dismiss('cancel');
+    };
+
+    $scope.resetFormStatus = function() {
+        $scope.isCombineTrainingSet = false;
+        $scope.isTrainingSet1Empty = false;
+        $scope.isTrainingSet2Empty = false;
+    }
+
+    $scope.filterTrainingSetData = function() {
+        $scope.trainingSets2 = $scope.originalTrainingSets.filter(ts => (ts.species === $scope.selectedData.trainingSet1.species && $scope.selectedData.trainingSet1.songtype && ts.id !== $scope.selectedData.trainingSet1.id));
+    }
 
 })
 ;
