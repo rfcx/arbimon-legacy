@@ -185,11 +185,13 @@ var TrainingSets = {
             where ts2.training_set_id = ?;
         `;
         const newInserted = await dbpool.query(sql_new_ts, [opts.projectId, opts.sourceProjectId, opts.trainingSetId])
-        const sql_new_ts_rois = `INSERT INTO training_set_roi_set_data (training_set_id, recording_id, species_id, songtype_id, x1, x2, y1, y2, uri)
+        const sql_new_ts_rois_data = `INSERT INTO training_set_roi_set_data (training_set_id, recording_id, species_id, songtype_id, x1, x2, y1, y2, uri)
             SELECT DISTINCT ?, recording_id, species_id, songtype_id, x1, x2, y1, y2, uri
             FROM training_set_roi_set_data
-            WHERE training_set_id = ?`
-        return await dbpool.query(sql_new_ts_rois, [newInserted.insertId, opts.trainingSetId]);
+            WHERE training_set_id = ?;`;
+        await dbpool.query(sql_new_ts_rois_data, [newInserted.insertId, opts.trainingSetId])
+        const sql_new_ts_roi_set = 'insert into training_sets_roi_set(training_set_id, species_id, songtype_id) values(?, ?, ?);';
+        return await dbpool.query(sql_new_ts_roi_set, [opts.trainingSetId, opts.species, opts.songtype]);
     },
 
     /** Insert a combined training set with metadata (term1, term2).

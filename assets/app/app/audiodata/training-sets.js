@@ -41,7 +41,7 @@ angular.module('a2.audiodata.training-sets', [
         };
     }
 )
-.controller('TrainingSetsCtrl', function($state, a2TrainingSets, Project, $q, $modal, a2TrainingSetHistory, a2UserPermit, notify) {
+.controller('TrainingSetsCtrl', function($state, a2TrainingSets, Project, $q, $modal, a2TrainingSetHistory, a2UserPermit, notify, $window) {
     var p={
         set : $state.params.set,
         show : $state.params.show
@@ -232,6 +232,15 @@ angular.module('a2.audiodata.training-sets', [
         );
     };
 
+    this.goToSourceProject = function(row) {
+        if (!row.source_project_id) return;
+        Project.getProjectById(row.source_project_id, function(data) {
+            if (data) {
+                $window.location.href = "/project/"+data.url+"/analysis/random-forest-models/models?tab=trainingSets";
+            }
+        });
+    }
+
     this.selectTrainingSet = function(selected) {
         $state.transitionTo($state.current.name, {set:selected.id, show:$state.params.show}, {notify:false});
 
@@ -403,6 +412,8 @@ angular.module('a2.audiodata.training-sets', [
         a2TrainingSets.shareTrainingSet({
                 trainingSetId: $scope.selectedData.trainingSet.id,
                 projectIdTo: $scope.selectedData.project.project_id,
+                species: $scope.selectedData.trainingSet.species,
+                songtype: $scope.selectedData.trainingSet.songtype,
                 trainingSetName: $scope.selectedData.trainingSet.name
             })
             .success(function(data) {

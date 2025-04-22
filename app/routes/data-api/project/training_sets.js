@@ -165,7 +165,9 @@ router.post('/share', function(req, res, next) {
         projectId: req.body.projectIdTo,
         sourceProjectId: sourceProjectId,
         trainingSetId: req.body.trainingSetId,
-        trainingSetName: req.body.trainingSetName
+        trainingSetName: req.body.trainingSetName,
+        species: req.body.species,
+        songtype: req.body.songtype
     }
     model.trainingSets.find({ project: opts.projectId, sourceProject: sourceProjectId, name: opts.trainingSetName }, async function(err, result) {
         if (err) return next(err);

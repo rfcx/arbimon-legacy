@@ -3,6 +3,12 @@
     <div class="col-sm-12 mt-4">
         <div class="row-flex flex-space-between">
             <div class="row-flex flex-align-middle gap-x-2">
+                <div class="search" style="width:350px">
+                    <div class="form-element ml-2">
+                        <i class="fa fa-search mt-3"></i>
+                        <input class="form-control" style="display:inline-block" type="text" placeholder="Search" ng-model="search.name">
+                    </div>
+                </div>
                 <button class="btn btn-default ml-2"
                     ng-click="controller.editSelectedTrainingSet()"
                     ng-disabled="!controller.selected.trainingSet"
@@ -15,12 +21,6 @@
                     tooltip="Remove Training Set">
                     <i class="fa fa-trash"></i>
                 </button>
-                <div class="search">
-                    <div class="form-element ml-2">
-                        <i class="fa fa-search mt-3"></i>
-                        <input class="form-control" style="display:inline-block" type="text" placeholder="Search" ng-model="search.name">
-                    </div>
-                </div>
             </div>
             <div class="row-flex flex-align-middle gap-x-3">
                 <button ng-click="controller.addNewTrainingSet()" class="btn btn-primary btn-rounded-full"
@@ -29,7 +29,7 @@
                 </button>
                 <div tooltip="{{ controller.isShareTsEnabled() ? 'Share' : 'You must be an Expert or Administrator to share Training Sets' }}" tooltip-append-to-body="true">
                     <button class="btn btn-rounded-full"
-                        ng-class="{ 'btn-default': !controller.isShareTsEnabled(), 'btn-primary': controller.isShareTsEnabled() }"
+                        ng-class="{ 'btn-default': !controller.isShareTsEnabled(), 'btn-success': controller.isShareTsEnabled() }"
                         ng-click="controller.shareTrainingSet()"
                         ng-disabled="!controller.isShareTsEnabled()"
                     >
@@ -45,11 +45,19 @@
                 {{ controller.trainingSets ? controller.trainingSets.length : 0 }} {{controller.trainingSets.length > 1 ? "training sets" : "training set"}}
             </span>
         </div>
-        <div class="row">
+        <div class="row templates">
             <div class="col-md-12">
                 <a2-table search="search" rows="controller.trainingSets" no-checkbox on-select="controller.selectTrainingSet(row)">
-                    <field title="Name" key="name">
-                        {{ row.name }}
+                    <field title="Name" key="name" tdclass="is-v-middle name">
+                        <div>
+                            <p class="m-0 is-v-middle no-wrap hidelongtext" title="{{ row.name }}">{{ row.name }}</p>
+                            <a class="is-v-middle"
+                                ng-if="row.project !== row.source_project_id && row.source_project_id !== null"
+                                ng-click="$event.stopPropagation(); controller.goToSourceProject(row)">
+                                <i aria-hidden="true" class="glyphicon glyphicon-link text-frequency pl-2"></i>
+                                <span class="text-frequency">linked</span>
+                            </a>
+                        </div>
                     </field>
                     <field title="Date created" key="date_created">
                         {{ row.date_created | moment: 'll' }}
