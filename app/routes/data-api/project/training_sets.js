@@ -171,7 +171,7 @@ router.post('/share', function(req, res, next) {
     }
     model.trainingSets.find({ project: opts.projectId, sourceProject: sourceProjectId, name: opts.trainingSetName }, async function(err, result) {
         if (err) return next(err);
-        if (result.length) return res.status(400).json({ message: 'This training has been shared to selected project.' });
+        if (result.length) return res.status(400).json({ message: 'This training set is already existed in the project.' });
         model.trainingSets.shareTrainingSet(opts)
             .then(() => {
                 res.status(201).json({ message: 'The training set was successfully shared with the selected project.' })

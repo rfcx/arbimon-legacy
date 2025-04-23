@@ -28,21 +28,23 @@
                     New Training Set <img class="ml-1" src="/images/fi-plus.svg">
                 </button>
                 <div tooltip="{{ controller.isShareTsEnabled() ? 'Combine' : 'You must be an Expert or Administrator to combine Training Sets' }}" tooltip-append-to-body="true">
-                    <button class="btn btn-rounded-full"
+                    <button class="btn btn-rounded-full row-flex flex-space-center flex-align-middle gap-x-2 px-5"
                         ng-class="{ 'btn-default': !controller.isShareTsEnabled(), 'btn-success': controller.isShareTsEnabled() }"
                         ng-click="controller.combineTrainingSet()"
                         ng-disabled="!controller.isShareTsEnabled()"
                     >
-                        <span class="row-flex flex-space-center px-2">Combine</span>
+                        Combine
+                        <i class="fa a2-combine"></i>
                     </button>
                 </div>
                 <div tooltip="{{ controller.isShareTsEnabled() ? 'Share' : 'You must be an Expert or Administrator to share Training Sets' }}" tooltip-append-to-body="true">
-                    <button class="btn btn-rounded-full"
+                    <button class="btn btn-rounded-full row-flex flex-space-center flex-align-middle gap-x-2 px-5"
                         ng-class="{ 'btn-default': !controller.isShareTsEnabled(), 'btn-success': controller.isShareTsEnabled() }"
                         ng-click="controller.shareTrainingSet()"
                         ng-disabled="!controller.isShareTsEnabled()"
                     >
-                        <span class="row-flex flex-space-center px-2">Share</span>
+                        Share
+                    </span>
                     </button>
                 </div>
             </div>
