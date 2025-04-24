@@ -23,8 +23,7 @@ angular.module('a2.srv.training-sets', ['a2.srv.project'])
         },
         
         delete: function(trainingSetId) {
-            var projectName = Project.getUrl();
-            return $http.post('/legacy-api/project/'+projectName+'/training-sets/remove/'+trainingSetId);
+            return $http.post('/legacy-api/project/' + Project.getUrl() + '/training-sets/remove/'+trainingSetId);
         },
         
         addData: function(trainingSetId, tset_data, callback) {

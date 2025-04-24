@@ -211,7 +211,7 @@ router.post('/combine', async function(req, res, next) {
     
     model.trainingSets.combine(opts)
     .then(() => {
-        res.status(201).json({ message: 'training set created' })
+        res.status(201).json({ message: 'Training set created.' })
     })
     .catch(next)
 })
@@ -241,15 +241,7 @@ router.post('/edit/:trainingSet', function(req, res, next) {
 router.post('/remove/:trainingSet', function(req, res, next) {
     res.type('json');
     model.trainingSets.remove(req.trainingSet).then(function() {
-        model.projects.insertNews({
-            news_type_id: 13, // training set created
-            user_id: req.session.user.id,
-            project_id: req.project.project_id,
-            data: JSON.stringify({ training_set: req.trainingSet.name })
-        });
-        
-        res.json(req.trainingSet);
-        return null;
+        return res.status(201).json({ message: 'Training set removed.' })
     }, next);
 });
 

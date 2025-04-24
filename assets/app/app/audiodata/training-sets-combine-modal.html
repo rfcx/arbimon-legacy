@@ -16,13 +16,15 @@
     <div class="form-group">
         <label for="trainingSet2Name">Training set 2</label>
         <span ng-if="isTrainingSet2Empty" class="text-danger small mb-1 ml-3">Please select a training set.</span>
-        <p ng-if="!trainingSets2.length" class="text-danger small">There is not training set data to combine.</p>
-        <ui-select ng-if="trainingSets2 && trainingSets2.length" ng-model="selectedData.trainingSet2" theme="bootstrap" ng-disabled="disabled">
-            <ui-select-match placeholder="Select or search a training set...">{{$select.selected.name}}</ui-select-match>
-            <ui-select-choices repeat="trainingSet in trainingSets2 | filter: $select.search" value="trainingSet.id">
-                {{trainingSet.name}}
-            </ui-select-choices>
-        </ui-select>
+        <div ng-class="{'input-red-border': showTSWarning()}">
+            <ui-select ng-if="trainingSets2 && trainingSets2.length" ng-model="selectedData.trainingSet2" theme="bootstrap" ng-disabled="disabled">
+                <ui-select-match placeholder="Select or search a training set...">{{$select.selected.name}}</ui-select-match>
+                <ui-select-choices repeat="trainingSet in trainingSets2 | filter: $select.search" value="trainingSet.id">
+                    {{trainingSet.name}}
+                </ui-select-choices>
+            </ui-select>
+        </div>
+        <error-message ng-if="showTSWarning()" message="'There is a species and songtype mismatch between the selected Training set 1 and Training set 2.'"></error-message>
     </div>
 </div>
 <div class="modal-footer">

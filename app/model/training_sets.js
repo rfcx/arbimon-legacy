@@ -291,12 +291,7 @@ var TrainingSets = {
      * @return {Promise} resolved with the newly edited training set, rejected on any errors.
      */
     remove: function (trainingSet) {
-        var typedef = TrainingSets.types[trainingSet.type];
-        var typedef_action = typedef && typedef.edit;
-        var connection;
-        var in_transaction = false;
-
-        if(!trainingSet){
+        if(!trainingSet.id){
             return q.reject(new APIError("Training set not given.", 422));
         }
 

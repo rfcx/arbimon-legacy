@@ -10,40 +10,41 @@
                     </div>
                 </div>
                 <button class="btn btn-default ml-2"
-                    ng-click="controller.editSelectedTrainingSet()"
-                    ng-disabled="!controller.selected.trainingSet"
+                    ng-click="editSelectedTrainingSet()"
+                    ng-disabled="!selected.trainingSet"
                     tooltip="Edit Training Set">
                     <i class="fa fa-pencil"></i>
                 </button>
                 <button class="btn btn-default ml-2"
-                    ng-click="controller.deleteSelectedTrainingSet()"
-                    ng-disabled="!controller.selected.trainingSet"
+                    ng-click="deleteSelectedTrainingSet()"
+                    ng-disabled="!selected.trainingSet"
                     tooltip="Remove Training Set">
                     <i class="fa fa-trash"></i>
                 </button>
             </div>
             <div class="row-flex flex-align-middle gap-x-3">
-                <button ng-click="controller.addNewTrainingSet()" class="btn btn-primary btn-rounded-full"
+                <button ng-click="addNewTrainingSet()" class="btn btn-primary btn-rounded-full"
                     tooltip="Create Training Set">
                     New Training Set <img class="ml-1" src="/images/fi-plus.svg">
                 </button>
-                <div tooltip="{{ controller.isShareTsEnabled() ? 'Combine' : 'You must be an Expert or Administrator to combine Training Sets' }}" tooltip-append-to-body="true">
-                    <button class="btn btn-rounded-full row-flex flex-space-center flex-align-middle gap-x-2 px-5"
-                        ng-class="{ 'btn-default': !controller.isShareTsEnabled(), 'btn-success': controller.isShareTsEnabled() }"
-                        ng-click="controller.combineTrainingSet()"
-                        ng-disabled="!controller.isShareTsEnabled()"
+                <div tooltip="{{ isShareTsEnabled() ? 'Combine' : 'You must be an Expert or Administrator to combine Training Sets' }}" tooltip-append-to-body="true">
+                    <button class="btn btn-rounded-full row-flex flex-space-center flex-align-middle gap-x-2"
+                        ng-class="{ 'btn-default': !isShareTsEnabled(), 'btn-success': isShareTsEnabled() }"
+                        ng-click="combineTrainingSet()"
+                        ng-disabled="!isShareTsEnabled()"
                     >
                         Combine
                         <i class="fa a2-combine"></i>
                     </button>
                 </div>
-                <div tooltip="{{ controller.isShareTsEnabled() ? 'Share' : 'You must be an Expert or Administrator to share Training Sets' }}" tooltip-append-to-body="true">
-                    <button class="btn btn-rounded-full row-flex flex-space-center flex-align-middle gap-x-2 px-5"
-                        ng-class="{ 'btn-default': !controller.isShareTsEnabled(), 'btn-success': controller.isShareTsEnabled() }"
-                        ng-click="controller.shareTrainingSet()"
-                        ng-disabled="!controller.isShareTsEnabled()"
+                <div tooltip="{{ isShareTsEnabled() ? 'Share' : 'You must be an Expert or Administrator to share Training Sets' }}" tooltip-append-to-body="true">
+                    <button class="btn btn-rounded-full row-flex flex-space-center flex-align-middle gap-x-2"
+                        ng-class="{ 'btn-default': !isShareTsEnabled(), 'btn-success': isShareTsEnabled() }"
+                        ng-click="shareTrainingSet()"
+                        ng-disabled="!isShareTsEnabled()"
                     >
                         Share
+                        <img ng-src="{{ isShareTsEnabled() ? '/images/share-frequency.png' : '/images/share-disabled.png' }}" style="height: 12px; margin-top: 1px;">
                     </span>
                     </button>
                 </div>
@@ -52,19 +53,19 @@
     </div>
     <div class="col-lg-5 col-sm-12 mt-4">
         <div class="py-3">
-            <span ng-if="!controller.loading.list" class="text-left reclist-total ml-2">
-                {{ controller.trainingSets ? controller.trainingSets.length : 0 }} {{controller.trainingSets.length > 1 ? "training sets" : "training set"}}
+            <span ng-if="!loading.list" class="text-left reclist-total ml-2">
+                {{ trainingSets ? trainingSets.length : 0 }} {{trainingSets.length > 1 ? "training sets" : "training set"}}
             </span>
         </div>
         <div class="row templates">
             <div class="col-md-12">
-                <a2-table search="search" rows="controller.trainingSets" no-checkbox on-select="controller.selectTrainingSet(row)">
+                <a2-table search="search" rows="trainingSets" no-checkbox on-select="selectTrainingSet(row)">
                     <field title="Name" key="name" tdclass="is-v-middle name">
                         <div>
                             <p class="m-0 is-v-middle no-wrap hidelongtext" title="{{ row.name }}">{{ row.name }}</p>
                             <a class="is-v-middle"
                                 ng-if="row.project !== row.source_project_id && row.source_project_id !== null"
-                                ng-click="$event.stopPropagation(); controller.goToSourceProject(row)">
+                                ng-click="$event.stopPropagation(); goToSourceProject(row)">
                                 <i aria-hidden="true" class="glyphicon glyphicon-link text-frequency pl-2"></i>
                                 <span class="text-frequency">linked</span>
                             </a>
@@ -74,78 +75,87 @@
                         {{ row.date_created | moment: 'll' }}
                     </field>
                 </a2-table>
-                <loader ng-show="controller.loading.list"></loader>
+                <loader ng-show="loading.list"></loader>
             </div>
         </div>
     </div>
 
     <div class="col-lg-7 col-sm-12 mt-4 py-3">
-        <div class="panel panel-default" ng-show="controller.loaderDisplay">
+        <div class="panel panel-default" ng-show="loaderDisplay">
             <div class="panel-body">
                 Loading <loader></loader>
             </div>
         </div>
 
-        <div class="panel panel-default" ng-show="controller.selected.trainingSet && !controller.loaderDisplay">
+        <div class="panel panel-default" ng-show="selected.trainingSet && !loaderDisplay">
             <div class="panel-heading">
                 <h3 class="panel-title">
                     {{
-                        (controller.selected.trainingSet.edit ? "Editing - " : "") +
-                        controller.selected.trainingSet.name +
-                        (!controller.selected.trainingSet.edit ? " info" : "")
+                        (selected.trainingSet.edit ? "Editing - " : "") +
+                        selected.trainingSet.name +
+                        (!selected.trainingSet.edit ? " info" : "")
                     }}
                 </h3>
             </div>
             <div class="mt-2">
                 <div class="clearfix form-group">
                     <label class="col-sm-3 control-label">Name</label>
-                    <div class="col-sm-9" ng-if="!controller.selected.trainingSet.edit">
-                        {{ controller.selected.trainingSet.name }}
+                    <div class="col-sm-9" ng-if="!selected.trainingSet.edit">
+                        {{ selected.trainingSet.name }}
                     </div>
-                    <div class="col-sm-9" ng-if="controller.selected.trainingSet.edit">
-                        <input class="form-control" ng-model="controller.selected.trainingSet.edit.name" />
+                    <div class="col-sm-9" ng-if="selected.trainingSet.edit">
+                        <input class="form-control" ng-model="selected.trainingSet.edit.name" />
                     </div>
                 </div>
                 <div class="clearfix form-group">
                     <label class="col-sm-3 control-label">Species sound</label>
-                    <div class="col-sm-9" ng-if="!controller.selected.trainingSet.edit">
-                        {{ controller.species }} - {{ controller.songtype }}
+                    <div class="col-sm-9" ng-if="!selected.trainingSet.edit">
+                        {{ species }} - {{ songtype }}
                     </div>
-                    <div class="col-sm-9" ng-if="controller.selected.trainingSet.edit">
-                        <ui-select ng-model="controller.selected.trainingSet.edit.class" theme="bootstrap">
+                    <div class="col-sm-9" ng-if="selected.trainingSet.edit">
+                        <ui-select ng-model="selected.trainingSet.edit.class" theme="bootstrap">
                             <ui-select-match placeholder="Select a species sound">
                                 {{ $select.selected.species_name }} {{ $select.selected.songtype_name }}
                             </ui-select-match>
-                            <ui-select-choices repeat="class in controller.selected.trainingSet.edit.projectClasses | filter:$select.search">
+                            <ui-select-choices repeat="class in selected.trainingSet.edit.projectClasses | filter:$select.search">
                                 {{ class.species_name }}, {{ class.songtype_name }}
                             </ui-select-choices>
                         </ui-select>
                     </div>
                 </div>
-                <div class="clearfix form-group" ng-if="controller.selected.trainingSet.edit">
+                <div class="clearfix form-group" ng-if="selected.trainingSet.edit">
                     <div class="col-md-offset-3 col-sm-2">
-                        <button type="button" ng-click="controller.selected.trainingSet.edit.save()" class="btn btn-primary btn-rounded-full" style="width: 100px;">Save</button>
+                        <button type="button" ng-click="selected.trainingSet.edit.save()" class="btn btn-primary btn-rounded-full" style="width: 100px;">Save</button>
                     </div>
                     <div class="col-sm-7">
-                        <button type="button" ng-click="controller.selected.trainingSet.edit.cancel()" class="btn btn-success btn-rounded-full" style="width: 100px;">Cancel</button>
+                        <button type="button" ng-click="selected.trainingSet.edit.cancel()" class="btn btn-success btn-rounded-full" style="width: 100px;">Cancel</button>
                     </div>
                 </div>
-                <div class="clearfix form-group" ng-if="!controller.selected.trainingSet.edit">
+                <div class="clearfix form-group" ng-if="!selected.trainingSet.edit">
                     <div class="col-sm-3"></div>
                     <div class="col-sm-3">
-                        <i class="fa val-1"></i> present: {{ controller.selected.trainingSet.validations.present }}
+                        <i class="fa val-1"></i> present: {{ selected.trainingSet.validations.present }}
                     </div>
                     <div class="col-sm-6">
-                            <i class="fa val-0"></i> absent: {{ controller.selected.trainingSet.validations.absent }}
+                            <i class="fa val-0"></i> absent: {{ selected.trainingSet.validations.absent }}
                     </div>
                 </div>
                 <div class="clearfix form-group">
                     <label class="col-sm-3 control-label">ROI Count</label>
-                    <div class="col-sm-9">{{ controller.rois.length }}</div>
+                    <div class="col-sm-9">{{ rois.length }}</div>
+                </div>
+                <div ng-if="isSelectedTsCombined()" class="clearfix form-group">
+                    <label class="col-sm-3 control-label">Combine training sets</label>
+                    <div class="col-sm-3">
+                        {{ getCombinedTs1() }}
+                    </div>
+                    <div class="col-sm-3">
+                        {{ getCombinedTs2() }}
+                    </div>
                 </div>
             </div>
 
-            <div class="panel-body" ng-hide="controller.rois.length">
+            <div class="panel-body" ng-hide="rois.length">
                 <div class="well">
                     This training set is empty.
                     <a ui-sref="visualizer" href="#/visualizer">
@@ -154,24 +164,24 @@
                 </div>
             </div>
 
-            <div class="panel-body" ng-show="controller.rois.length">
+            <div class="panel-body" ng-show="rois.length">
 
                 <div class="row">
                     <div class="col-sm-offset-2 col-sm-8">
                         <div class="toolbar pull-right">
-                            <div class="btn-group" ng-show="controller.total.pages > 1 || controller.detailedView">
-                                <a class="btn btn-default" ng-click="controller.prev()">Previous</a>
-                                <a class="btn btn-default" ng-hide="controller.detailedView">{{controller.selected.page + 1}} of {{controller.total.pages}}</a>
-                                <a class="btn btn-default" ng-show="controller.detailedView">{{controller.selected.roi_index + 1}} of {{controller.total.rois}}</a>
-                                <a class="btn btn-default" ng-click="controller.next()">Next</a>
+                            <div class="btn-group" ng-show="total.pages > 1 || detailedView">
+                                <a class="btn btn-default" ng-click="prev()">Previous</a>
+                                <a class="btn btn-default" ng-hide="detailedView">{{selected.page + 1}} of {{total.pages}}</a>
+                                <a class="btn btn-default" ng-show="detailedView">{{selected.roi_index + 1}} of {{total.rois}}</a>
+                                <a class="btn btn-default" ng-click="next()">Next</a>
                             </div>
 
                             <div class="btn-group">
-                                <button type="button" class="btn btn-default btn-sm" ng-click="controller.setDetailedView(true)"
+                                <button type="button" class="btn btn-default btn-sm" ng-click="setDetailedView(true)"
                                     tooltip="Detail view" tooltip-append-to-body="true">
                                     <i class="fa fa-search"></i>
                                 </button>
-                                <button type="button" class="btn btn-default btn-sm" ng-click="controller.setDetailedView(false)"
+                                <button type="button" class="btn btn-default btn-sm" ng-click="setDetailedView(false)"
                                     tooltip="Gallery view" tooltip-append-to-body="true">
                                     <i class="fa fa-th"></i>
                                 </button>
@@ -179,8 +189,8 @@
 
                             <div class="btn-group">
                                 <a class="btn btn-default btn-sm"
-                                    ng-href="{{controller.selected.trainingSet.export_url}}"
-                                    ng-click="controller.exportTSReport($event)"
+                                    ng-href="{{selected.trainingSet.export_url}}"
+                                    ng-click="exportTSReport($event)"
                                     tooltip="Export Training Set Data">
                                     <i class="fa fa-download"></i>
                                 </a>
@@ -189,8 +199,8 @@
                         </div>
                     </div>
                 </div>
-                <div ng-hide="controller.detailedView">
-                    <div ng-repeat="roi in controller.currentrois" class="roi-thumbnail"
+                <div ng-hide="detailedView">
+                    <div ng-repeat="roi in currentrois" class="roi-thumbnail"
                         popover-html="'Duration: {{roi.dur}}s <br>
                                     Bandwidth: {{roi.y2-roi.y1}}Hz <br>
                                     Upper freq: {{roi.y2}}Hz <br>
@@ -198,14 +208,14 @@
                         popover-trigger="mouseenter"
                         popover-append-to-body="true"
                     >
-                        <button ng-click="controller.removeRoi(roi.id)"
+                        <button ng-click="removeRoi(roi.id)"
                             class="roi-btn-tr roi-delete"
                             tooltip-placement="left"
                             tooltip-append-to-body="true"
                             tooltip="Delete ROI">
                             <i class="fa fa-times"></i>
                         </button>
-                        <a class="roi-btn-br" ng-href="{{controller.getROIVisualizerUrl(roi)}}">
+                        <a class="roi-btn-br" ng-href="{{getROIVisualizerUrl(roi)}}">
                             <i tooltip-placement="left"
                                 tooltip-append-to-body="true"
                                 tooltip="View in Visualizer"
@@ -216,37 +226,37 @@
                     </div>
                 </div>
 
-                <div ng-show="controller.detailedView">
+                <div ng-show="detailedView">
                     <div class="row">
                         <div class="col-sm-offset-2 col-sm-8" >
                             <div class="row">
                                 <small>
-                                    <div class="col-sm-5" >Duration: {{controller.selected.roi.dur}}s</div>
-                                    <div class="col-sm-5" >{{controller.selected.roi.y1}}-{{controller.selected.roi.y2}}Hz</div>
+                                    <div class="col-sm-5" >Duration: {{selected.roi.dur}}s</div>
+                                    <div class="col-sm-5" >{{selected.roi.y1}}-{{selected.roi.y2}}Hz</div>
                                     <div class="col-sm-1" >
-                                        <a ng-href="{{controller.getROIVisualizerUrl(controller.selected.roi)}}">
+                                        <a ng-href="{{getROIVisualizerUrl(selected.roi)}}">
                                             <i tooltip="View in Visualizer" class="fa fa-cubes"></i>
                                         </a>
                                     </div>
                                     <div class="col-sm-1" class="roi-div-inline-remove-detail" >
                                         <button class="roi-delete"
-                                            ng-click="controller.removeRoi(controller.selected.roi.id)"
+                                            ng-click="removeRoi(selected.roi.id)"
                                             tooltip="Delete ROI">
                                             <i class="fa fa-times"></i>
                                         </button>
                                     </div>
                                 </small>
                             </div>
-                            <div class="thumbnail-viewer v-axis-wide roi-div-inline-img-detail has-vaxis has-haxis" ng-if="controller.selected.roi">
+                            <div class="thumbnail-viewer v-axis-wide roi-div-inline-img-detail has-vaxis has-haxis" ng-if="selected.roi">
                                 <axis type="v" class="v-axis" data="{
-                                    range:[controller.selected.roi.y1, controller.selected.roi.y2],
+                                    range:[selected.roi.y1, selected.roi.y2],
                                     count:5, unit:'Hz',  font:'7px', color:'#333333'}
                                 "></axis>
                                 <axis type="h" class="h-axis" data="{
-                                    range:[0, controller.selected.roi.dur], prec:0.001,
+                                    range:[0, selected.roi.dur], prec:0.001,
                                     count:5, unit:'s',  font:'7px', color:'#333333'}
                                 "></axis>
-                                <div class="img-holder positioned"><img class="crisp-image" ng-src="{{controller.selected.roi.uri}}"/></div>
+                                <div class="img-holder positioned"><img class="crisp-image" ng-src="{{selected.roi.uri}}"/></div>
                             </div>
 
                             <div class="bordeder-empy-div"></div>
@@ -256,11 +266,11 @@
             </div>
         </div>
     </div>
-    <div ng-show="(!controller.trainingSets || !controller.trainingSets.length > 0) && !controller.loading.list" class="help-wrapper col-sm-12 row-flex flex-direction-column flex-space-center flex-align-middle" style="text-align: center;">
+    <div ng-show="(!trainingSets || !trainingSets.length > 0) && !loading.list" class="help-wrapper col-sm-12 row-flex flex-direction-column flex-space-center flex-align-middle" style="text-align: center;">
             <a class="btn btn-sm btn-success btn-rounded-full"
                 tooltip="Create Training Set"
                 tooltip-placement="top"
-                ng-click="controller.addNewTrainingSet()">
+                ng-click="addNewTrainingSet()">
                 New Training Set <img class="ml-2" src="/images/fi-plus-primary.svg">
             </a>
         <p class="mt-3 mb-0">Learn more:</p>
