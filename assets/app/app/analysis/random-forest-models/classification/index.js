@@ -479,8 +479,8 @@ angular.module('a2.analysis.random-forest-models.classification', [
     };
 
     $scope.isOldModel = function(data) {
-        // If created before November 1, 2024, it will be considered a legacy module.
-        return new Date(data.date_created) < new Date(2024, 10, 1)
+        // If created before November 1, 2024, it will be considered a legacy module OR the model wasn't retrained
+        return new Date(data.date_created) < new Date(2024, 10, 1) && !data.retrained
     }
 
 })
