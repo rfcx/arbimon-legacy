@@ -159,7 +159,7 @@ router.post('/share', function(req, res, next) {
 
     const sourceProjectId = req.project.project_id;
     if (!sourceProjectId || !(typeof sourceProjectId === 'number')) {
-        res.status(404).json({ error: 'Source project id is not found.' });
+        return res.status(404).json({ error: 'Source project id is not found.' });
     }
     const opts = {
         projectId: req.body.projectIdTo,
@@ -195,18 +195,18 @@ router.post('/combine', async function(req, res, next) {
 
     const term1Data = await model.trainingSets.find({ id: opts.term1 })
     if (term1Data.length === 0) {
-        res.status(404).json({ field: 'term1', error: 'Training set not found.'});
+        return res.status(404).json({ field: 'term1', error: 'Training set not found.'});
     }
 
     const term2Data = await model.trainingSets.find({ id: opts.term2 })
     if (term2Data.length === 0) {
-        res.status(404).json({ field: 'term2', error: 'Training set not found.'});
+        return res.status(404).json({ field: 'term2', error: 'Training set not found.'});
     }
 
     opts.name = `${term1Data[0].name} union ${term2Data[0].name}`
     const combinedTrainingSet = await model.trainingSets.find({ name: opts.name, project: opts.projectId})
     if (combinedTrainingSet.length > 0) {
-        res.status(400).json({ error: 'This training set combination already exists. Please select a different combination.'});
+        return res.status(400).json({ error: 'This training set combination already exists. Please select a different combination.'});
     }
     
     model.trainingSets.combine(opts)
