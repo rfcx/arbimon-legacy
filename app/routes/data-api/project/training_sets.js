@@ -154,6 +154,68 @@ router.post('/add', function(req, res, next) {
     }, next);
 });
 
+router.post('/share', function(req, res, next) {
+    res.type('json');
+
+    const sourceProjectId = req.project.project_id;
+    if (!sourceProjectId || !(typeof sourceProjectId === 'number')) {
+        return res.status(404).json({ error: 'Source project id is not found.' });
+    }
+    const opts = {
+        projectId: req.body.projectIdTo,
+        sourceProjectId: sourceProjectId,
+        trainingSetId: req.body.trainingSetId,
+        trainingSetName: req.body.trainingSetName,
+        species: req.body.species,
+        songtype: req.body.songtype
+    }
+    model.trainingSets.find({ project: opts.projectId, sourceProject: sourceProjectId, name: opts.trainingSetName }, async function(err, result) {
+        if (err) return next(err);
+        if (result.length) return res.status(400).json({ message: 'This training set is already existed in the project.' });
+        model.trainingSets.shareTrainingSet(opts)
+            .then(() => {
+                res.status(201).json({ message: 'The training set was successfully shared with the selected project.' })
+            })
+            .catch(next)
+    });
+});
+
+/** Combine 2 training sets into 1.
+ */
+router.post('/combine', async function(req, res, next) {
+    res.type('json')
+
+    const opts = {
+        projectId: req.project.project_id,
+        term1: req.body.term1,
+        term2: req.body.term2,
+        species: req.body.species,
+        songtype: req.body.songtype
+    }
+
+    const term1Data = await model.trainingSets.find({ id: opts.term1 })
+    if (term1Data.length === 0) {
+        return res.status(404).json({ field: 'term1', error: 'Training set not found.'});
+    }
+
+    const term2Data = await model.trainingSets.find({ id: opts.term2 })
+    if (term2Data.length === 0) {
+        return res.status(404).json({ field: 'term2', error: 'Training set not found.'});
+    }
+
+    opts.name = `${term1Data[0].name} union ${term2Data[0].name}`
+    const combinedTrainingSet = await model.trainingSets.find({ name: opts.name, project: opts.projectId})
+    if (combinedTrainingSet.length > 0) {
+        return res.status(400).json({ error: 'This training set combination already exists. Please select a different combination.'});
+    }
+    
+    model.trainingSets.combine(opts)
+    .then(() => {
+        res.status(201).json({ message: 'Training set created.' })
+    })
+    .catch(next)
+})
+
 /** Edit a training set.
 */
 router.post('/edit/:trainingSet', function(req, res, next) {
@@ -179,15 +241,7 @@ router.post('/edit/:trainingSet', function(req, res, next) {
 router.post('/remove/:trainingSet', function(req, res, next) {
     res.type('json');
     model.trainingSets.remove(req.trainingSet).then(function() {
-        model.projects.insertNews({
-            news_type_id: 13, // training set created
-            user_id: req.session.user.id,
-            project_id: req.project.project_id,
-            data: JSON.stringify({ training_set: req.trainingSet.name })
-        });
-        
-        res.json(req.trainingSet);
-        return null;
+        return res.status(201).json({ message: 'Training set removed.' })
     }, next);
 });
 

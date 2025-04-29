@@ -5,6 +5,14 @@ angular.module('a2.audiodata.training-sets', [
     'a2.visualizer.layers.training-sets',
     'humane'
 ])
+.config(function($stateProvider) {
+    $stateProvider
+        .state('audiodata.training-sets', {
+            url: '/training-sets',
+            controller: 'TrainingSetsCtrl',
+            templateUrl: '/app/audiodata/training-sets.html',
+        })
+})
 .factory('a2TrainingSetHistory',
     function() {
         var lastSet,
@@ -41,94 +49,94 @@ angular.module('a2.audiodata.training-sets', [
         };
     }
 )
-.controller('TrainingSetsCtrl', function($state, a2TrainingSets, Project, $q, $modal, a2TrainingSetHistory, a2UserPermit, notify) {
+.controller('TrainingSetsCtrl', function($scope, $state, a2TrainingSets, Project, $q, $modal, a2TrainingSetHistory, a2UserPermit, notify, $window) {
     var p={
         set : $state.params.set,
         show : $state.params.show
     };
 
-    this.selected = {roi_index:0, roi:null, page:0};
-    this.total = {rois:0, pages:0};
-    this.loading = {list:false, details:false};
+    $scope.selected = {roi_index:0, roi:null, page:0};
+    $scope.total = {rois:0, pages:0};
+    $scope.loading = { list:false, details:false };
 
-    this.rois = [];
-    this.species = '';
-    this.songtype = '';
-    this.detailedView = p.show != "gallery";
-    this.currentrois = [];
-    this.roisPerpage = 100;
-    this.detailedView = false;
-    this.loaderDisplay = false;
+    $scope.rois = [];
+    $scope.species = '';
+    $scope.songtype = '';
+    $scope.detailedView = p.show != "gallery";
+    $scope.currentrois = [];
+    $scope.roisPerpage = 100;
+    $scope.detailedView = false;
+    $scope.loaderDisplay = false;
 
-    this.getROIVisualizerUrl = function(roi){
-        return roi ? "/project/"+this.projecturl+"/visualizer/rec/"+roi.recording : '';
+    $scope.getROIVisualizerUrl = function(roi){
+        return roi ? "/project/"+$scope.projecturl+"/visualizer/rec/"+roi.recording : '';
     };
 
-    this.setROI = function(roi_index){
-        if(this.total.rois <= 0){
-            this.selected.roi_index = 0;
-            this.selected.roi = null;
+    $scope.setROI = function(roi_index){
+        if($scope.total.rois <= 0){
+            $scope.selected.roi_index = 0;
+            $scope.selected.roi = null;
         } else {
-            this.selected.roi_index = Math.max(0, Math.min(roi_index | 0, this.total.rois - 1));
-            this.selected.roi = this.rois[this.selected.roi_index];
+            $scope.selected.roi_index = Math.max(0, Math.min(roi_index | 0, $scope.total.rois - 1));
+            $scope.selected.roi = $scope.rois[$scope.selected.roi_index];
         }
-        a2TrainingSetHistory.setLastRoi(this.selected.roi);
-        return this.selected.roi;
+        a2TrainingSetHistory.setLastRoi($scope.selected.roi);
+        return $scope.selected.roi;
     };
 
-    this.setPage = function(page){
-        if(this.total.rois <= 0){
-            this.selected.page = 0;
-            this.selected.currentrois = [];
+    $scope.setPage = function(page){
+        if($scope.total.rois <= 0){
+            $scope.selected.page = 0;
+            $scope.selected.currentrois = [];
         } else {
-            this.selected.page = Math.max(0, Math.min(page, (this.total.rois / this.roisPerpage) | 0));
-            this.currentrois = this.rois.slice(
-                (this.selected.page  ) * this.roisPerpage,
-                (this.selected.page+1) * this.roisPerpage
+            $scope.selected.page = Math.max(0, Math.min(page, ($scope.total.rois / $scope.roisPerpage) | 0));
+            $scope.currentrois = $scope.rois.slice(
+                ($scope.selected.page  ) * $scope.roisPerpage,
+                ($scope.selected.page+1) * $scope.roisPerpage
             );
         }
-        a2TrainingSetHistory.setLastPage(this.selected.page);
-        return this.currentrois;
+        a2TrainingSetHistory.setLastPage($scope.selected.page);
+        return $scope.currentrois;
     };
 
-    this.setROISet = function(rois){
-        this.rois = rois;
-        a2TrainingSetHistory.setLastRoiSet(this.rois);
+    $scope.setROISet = function(rois){
+        $scope.rois = rois;
+        a2TrainingSetHistory.setLastRoiSet($scope.rois);
     };
 
-    this.nextROI = function(step) {
-        return this.setROI(this.selected.roi_index + (step || 1));
+    $scope.nextROI = function(step) {
+        return $scope.setROI($scope.selected.roi_index + (step || 1));
     };
 
-    this.prevROI = function (step) {
-        return this.setROI(this.selected.roi_index - (step || 1));
+    $scope.prevROI = function (step) {
+        return $scope.setROI($scope.selected.roi_index - (step || 1));
     };
 
-    this.nextPage = function(step) {
-        return this.setPage(this.selected.page + (step || 1));
+    $scope.nextPage = function(step) {
+        return $scope.setPage($scope.selected.page + (step || 1));
     };
 
-    this.prevPage = function(step) {
-        return this.setPage(this.selected.page - (step || 1));
+    $scope.prevPage = function(step) {
+        return $scope.setPage($scope.selected.page - (step || 1));
     };
 
-    this.next = function(step) {
+    $scope.next = function(step) {
         if(!step){step = 1;}
-        if(this.detailedView) {
-            this.nextROI(step);
+        if($scope.detailedView) {
+            $scope.nextROI(step);
         } else {
-            this.nextPage(step);
+            $scope.nextPage(step);
         }
     };
 
-    this.prev = function(step) {
+    $scope.prev = function(step) {
         if(!step){step = 1;}
-        return this.next(-step);
+        return $scope.next(-step);
     };
 
-    this.removeRoi = function(roiId) {
-        if(!a2UserPermit.can('manage training sets')) {
-            notify.error('You do not have permission to edit training sets');
+    $scope.removeRoi = function(roiId) {
+        if (!a2UserPermit.can('manage training sets')) {
+            notify.error('You do not have permission to delete training sets');
             return;
         }
 
@@ -163,30 +171,91 @@ angular.module('a2.audiodata.training-sets', [
         }).bind(this));
     };
 
-    this.closeSetDetails = function(){
-       this.showSetDetails = false;
+    $scope.closeSetDetails = function(){
+       $scope.showSetDetails = false;
     };
 
-    this.getTrainingSetList = function(){
-        this.loading.list = true;
+    $scope.isShareTsEnabled = function() {
+        return a2UserPermit.getUserRole() === 'Expert' || a2UserPermit.getUserRole() === 'Admin' || a2UserPermit.getUserRole() === 'Owner';
+    }
+
+    $scope.shareTrainingSet = function() {
+        if (!$scope.isShareTsEnabled()) {
+            notify.error('You do not have permission to share training sets');
+            return;
+        }
+        const trainingSetsData = $scope.trainingSets;
+        const modalInstance = $modal.open({
+            templateUrl: '/app/audiodata/training-sets-share-modal.html',
+            controller: 'ShareTrainingSetInstanceCtrl',
+            resolve: {
+                trainingSets: function() {
+                    return trainingSetsData;
+                }
+            },
+            windowClass: 'modal-element'
+        });
+
+        modalInstance.result.then(
+            function(res) {
+                if (res.error) {
+                    notify.error(res.error);
+                }
+                else notify.log(res.message);
+            }
+        );
+    };
+
+    $scope.combineTrainingSet = function() {
+        if (!$scope.isShareTsEnabled()) {
+            notify.error('You do not have permission to combine training sets');
+            return;
+        }
+        const trainingSetsData = $scope.trainingSets;
+        const modalInstance = $modal.open({
+            templateUrl: '/app/audiodata/training-sets-combine-modal.html',
+            controller: 'CombineTrainingSetInstanceCtrl',
+            resolve: {
+                trainingSets: function() {
+                    return trainingSetsData;
+                }
+            },
+            windowClass: 'modal-element width-490'
+        });
+
+        modalInstance.result.then(
+            function(res) {
+                if (res.error) {
+                    notify.error(res.error);
+                }
+                else {
+                    notify.log(res.message);
+                    $scope.getTrainingSetList();
+                }
+            }
+        );
+    };
+
+    $scope.getTrainingSetList = function() {
+        $scope.loading.list = true;
         return a2TrainingSets.getList((function(data){
-            this.trainingSets = data.map(function(d) {
+            $scope.trainingSets = data.map(function(d) {
                 d.date_created = new Date(d.date_created);
                 return d;
             });
             if(p.set){
-                var selected = this.trainingSets.filter(function(tset){
+                var selected = $scope.trainingSets.filter(function(tset){
                     return tset.id == p.set;
                 }).pop();
                 if(selected){
-                    this.selectTrainingSet(selected);
+                    $scope.selectTrainingSet(selected);
                 }
             }
-            this.loading.list = false;
+            $scope.loading.list = false;
         }.bind(this)));
     };
 
-    this.addNewTrainingSet = function() {
+    $scope.addNewTrainingSet = function() {
         if(!a2UserPermit.can('manage training sets')) {
             notify.error('You do not have permission to create training sets');
             return;
@@ -197,77 +266,99 @@ angular.module('a2.audiodata.training-sets', [
             controller  : 'a2VisualizerAddTrainingSetModalController',
             windowClass: 'modal-element'
         }).result.then(
-            this.getTrainingSetList.bind(this)
+            $scope.getTrainingSetList()
         );
     };
 
-    this.selectTrainingSet = function(selected) {
+    $scope.goToSourceProject = function(row) {
+        if (!row.source_project_id) return;
+        Project.getProjectById(row.source_project_id, function(data) {
+            if (data) {
+                $window.location.href = "/project/"+data.url+"/analysis/random-forest-models/models?tab=trainingSets";
+            }
+        });
+    }
+
+    $scope.selectTrainingSet = function(selected) {
         $state.transitionTo($state.current.name, {set:selected.id, show:$state.params.show}, {notify:false});
 
-        this.detailedView = $state.params.show != "gallery";
-        this.loaderDisplay = true;
+        $scope.detailedView = $state.params.show != "gallery";
+        $scope.loaderDisplay = true;
         a2TrainingSetHistory.setLastSet(selected);
 
-        if(this.selected.trainingSet){
-            if(this.selected.trainingSet.edit){
-                delete this.selected.trainingSet.edit;
+        if($scope.selected.trainingSet){
+            if($scope.selected.trainingSet.edit){
+                delete $scope.selected.trainingSet.edit;
             }
         }
 
-        this.selected.trainingSet = selected;
+        $scope.selected.trainingSet = selected;
 
         Project.validationBySpeciesSong(selected.species, selected.songtype, (function(data) {
-            this.selected.trainingSet.validations = data;
+            $scope.selected.trainingSet.validations = data;
         }).bind(this));
 
         a2TrainingSets.getSpecies(selected.id, (function(speciesData) {
-            this.species = speciesData.species;
-            this.songtype = speciesData.songtype;
+            $scope.species = speciesData.species;
+            $scope.songtype = speciesData.songtype;
 
-            a2TrainingSetHistory.setLastSpecies(this.species,this.songtype);
+            a2TrainingSetHistory.setLastSpecies($scope.species,$scope.songtype);
 
             a2TrainingSets.getRois(selected.id, (function(data) {
-                this.loaderDisplay = false;
-                this.detailedView = false;
-                this.total.rois = data.length;
-                this.total.pages = Math.ceil(this.total.rois/this.roisPerpage);
-                this.setROISet(data);
-                this.setROI(0);
-                this.setPage(0);
-                this.selected.page = 0;
+                $scope.loaderDisplay = false;
+                $scope.detailedView = false;
+                $scope.total.rois = data.length;
+                $scope.total.pages = Math.ceil($scope.total.rois/$scope.roisPerpage);
+                $scope.setROISet(data);
+                $scope.setROI(0);
+                $scope.setPage(0);
+                $scope.selected.page = 0;
             }).bind(this) );
         }).bind(this));
     };
 
-    this.setupExportUrl = function() {
-        this.selected.trainingSet.export_url = a2TrainingSets.getExportUrl(this.selected.trainingSet.id);
+    $scope.isSelectedTsCombined = function() {
+        if ($scope.selected && $scope.selected.trainingSet && $scope.selected.trainingSet.name !== undefined) {
+            return $scope.selected.trainingSet.name.indexOf('union') !== -1;
+        } else false
+    }
+
+    $scope.getCombinedTs1 = function() {
+        return $scope.selected && $scope.selected.trainingSet && $scope.selected.trainingSet.name && $scope.selected.trainingSet.name.substring(0, $scope.selected.trainingSet.name.indexOf('union'));
+    }
+
+    $scope.getCombinedTs2 = function() {
+        return $scope.selected && $scope.selected.trainingSet && $scope.selected.trainingSet.name && $scope.selected.trainingSet.name.split('union').pop();
+    }
+
+    $scope.setupExportUrl = function() {
+        $scope.selected.trainingSet.export_url = a2TrainingSets.getExportUrl($scope.selected.trainingSet.id);
     };
 
-    this.exportTSReport = function ($event) {
+    $scope.exportTSReport = function ($event) {
         $event.stopPropagation();
-        if (a2UserPermit.isSuper()) return this.setupExportUrl();
+        if (a2UserPermit.isSuper()) return $scope.setupExportUrl();
         if ((a2UserPermit.all && !a2UserPermit.all.length) || !a2UserPermit.can('export report')) {
             return notify.error('You do not have permission to export Training Set data');
-        } else return this.setupExportUrl()
+        } else return $scope.setupExportUrl()
     };
 
-    this.setDetailedView = function(detailedView){
+    $scope.setDetailedView = function(detailedView){
         $state.transitionTo($state.current.name, {set:$state.params.set, show:detailedView?"detail":"gallery"}, {notify:false});
-        this.detailedView = detailedView;
-        a2TrainingSetHistory.setViewState(this.detailedView);
+        $scope.detailedView = detailedView;
+        a2TrainingSetHistory.setViewState($scope.detailedView);
     };
 
-    this.editSelectedTrainingSet = function(){
-        if(!a2UserPermit.can('manage training sets')) {
-            notify.error('You do not have permission to edit training sets');
-            return;
+    $scope.editSelectedTrainingSet = function(){
+        if (!a2UserPermit.can('manage training sets')) {
+            return notify.error('You do not have permission to edit training sets');
         }
 
-        if(this.selected.trainingSet){
-            var trainingSet = this.selected.trainingSet;
+        if($scope.selected.trainingSet){
+            var trainingSet = $scope.selected.trainingSet;
             var speciesClass = {species:trainingSet.species, songtype:trainingSet.songtype};
-            speciesClass.species_name = this.species;
-            speciesClass.songtype_name = this.songtype;
+            speciesClass.species_name = $scope.species;
+            speciesClass.songtype_name = $scope.songtype;
             Project.getClasses().then(function(classes){
                 var d = $q.defer();
                 var current = classes.filter(function(cls){
@@ -296,25 +387,24 @@ angular.module('a2.audiodata.training-sets', [
                 for(var i in editedTrainingSet){
                     trainingSet[i] = editedTrainingSet[i];
                 }
-                this.selectTrainingSet(trainingSet);
+                $scope.selectTrainingSet(trainingSet);
             }).bind(this)).finally(function(){
                 delete trainingSet.edit;
             });
         }
     };
 
-    this.deleteSelectedTrainingSet = function() {
-        var trainingSet = this.selected.trainingSet;
-        if(!trainingSet){
+    $scope.deleteSelectedTrainingSet = function() {
+        var trainingSet = $scope.selected.trainingSet;
+        if (!trainingSet) {
             return;
         }
 
-        if(!a2UserPermit.can('manage training sets')) {
-            notify.error('You do not have permission to edit training sets');
-            return;
+        if (!a2UserPermit.can('manage training sets')) {
+            return notify.error('You do not have permission to delete training set.');
         }
 
-        $modal.open({
+        const modalInstance = $modal.open({
             templateUrl: '/common/templates/pop-up.html',
             controller: function() {
                 this.title = "Delete training set";
@@ -325,32 +415,134 @@ angular.module('a2.audiodata.training-sets', [
             },
             controllerAs: 'popup',
             windowClass: 'modal-element width-490'
-        }).result.then((function() {
-            a2TrainingSets.delete(trainingSet.id, (function(data){
-                this.trainingSets.splice(this.trainingSets.indexOf(trainingSet), 1);
-                delete this.selected.trainingSet;
-            }).bind(this));
-        }).bind(this));
+        })
+        modalInstance.result.then(function() {
+            return a2TrainingSets.delete(trainingSet.id).then(function(res) {
+                delete $scope.selected.trainingSet;
+                if (res.error) {
+                    notify.error('Error removing training set.');
+                }
+                else notify.log(res.message);
+                $scope.getTrainingSetList();
+            });
+        });
     };
 
-    this.getTrainingSetList();
-    this.projecturl = Project.getUrl();
+    $scope.getTrainingSetList();
+    $scope.projecturl = Project.getUrl();
 
     a2TrainingSetHistory.getLastSet((function(data) {
         if(data.ls) {
-            this.showSetDetails = true;
-            this.selected.trainingSet = data.ls;
-            this.species = data.sp;
-            this.songtype = data.sg;
-            this.detailedView = data.vs;
-            this.total.rois = data.lrs.length;
-            this.total.pages = Math.ceil(this.total.rois/this.roisPerpage);
-            this.selected.page = data.lp;
-            this.setROISet(data.lrs);
-            this.setPage(data.lp);
-            this.setROI(data.lr || 0);
+            $scope.showSetDetails = true;
+            $scope.selected.trainingSet = data.ls;
+            $scope.species = data.sp;
+            $scope.songtype = data.sg;
+            $scope.detailedView = data.vs;
+            $scope.total.rois = data.lrs.length;
+            $scope.total.pages = Math.ceil($scope.total.rois/$scope.roisPerpage);
+            $scope.selected.page = data.lp;
+            $scope.setROISet(data.lrs);
+            $scope.setPage(data.lp);
+            $scope.setROI(data.lr || 0);
         }
     }).bind(this));
+
+})
+
+.controller('ShareTrainingSetInstanceCtrl', function($scope, $modalInstance, a2TrainingSets, trainingSets, Project) {
+    $scope.trainingSets = trainingSets.filter(ts => !ts.source_project_id);
+    $scope.isShareTrainingSet = false;
+    $scope.selectedData = { project: {}, trainingSet: {} };
+    $scope.isTrainingSetEmpty = false;
+    $scope.isProjectEmpty = false;
+    Project.getProjectsToShareModel(function(data) {
+        $scope.projects = data;
+    });
+
+    $scope.ok = function() {
+        $scope.isTrainingSetEmpty = !$scope.selectedData.trainingSet.id;
+        $scope.isProjectEmpty = !$scope.selectedData.project.project_id;
+        if ($scope.isTrainingSetEmpty || $scope.isProjectEmpty) return;
+        $scope.isShareTrainingSet = true;
+        a2TrainingSets.shareTrainingSet({
+                trainingSetId: $scope.selectedData.trainingSet.id,
+                projectIdTo: $scope.selectedData.project.project_id,
+                species: $scope.selectedData.trainingSet.species,
+                songtype: $scope.selectedData.trainingSet.songtype,
+                trainingSetName: $scope.selectedData.trainingSet.name
+            })
+            .success(function(data) {
+                $scope.isShareTrainingSet = false;
+                $scope.isTrainingSetEmpty = false;
+                $scope.isProjectEmpty = false;
+                $modalInstance.close(data);
+            })
+            .error(function(err) {
+                $scope.isShareTrainingSet = false;
+                $scope.isTrainingSetEmpty = false;
+                $scope.isProjectEmpty = false;
+                $modalInstance.close(err);
+            });
+    };
+
+    $scope.cancel = function() {
+        $scope.isShareTrainingSet = false;
+        $modalInstance.dismiss('cancel');
+    };
+
+})
+
+.controller('CombineTrainingSetInstanceCtrl', function($scope, $modalInstance, a2TrainingSets, trainingSets) {
+    $scope.originalTrainingSets = trainingSets.filter(ts => !ts.source_project_id && !ts.name.includes('union'));
+    $scope.trainingSets1 = $scope.trainingSets2 = $scope.originalTrainingSets;
+    $scope.isCombineTrainingSet = false;
+    $scope.selectedData = { trainingSet1: {}, trainingSet2: {} };
+    $scope.isTrainingSet1Empty = false;
+    $scope.isTrainingSet2Empty = false;
+
+    $scope.ok = function() {
+        $scope.isTrainingSet1Empty = !$scope.selectedData.trainingSet1.id;
+        $scope.isTrainingSet2Empty = !$scope.selectedData.trainingSet2.id;
+        if ($scope.isTrainingSet1Empty || $scope.isTrainingSet2Empty) return;
+        $scope.isCombineTrainingSet = true;
+        a2TrainingSets.combineTrainingSet({
+            term1: $scope.selectedData.trainingSet1.id,
+            term2: $scope.selectedData.trainingSet2.id,
+            species: $scope.selectedData.trainingSet1.species,
+            songtype: $scope.selectedData.trainingSet1.songtype
+        })
+            .success(function(data) {
+                $scope.resetFormStatus();
+                $modalInstance.close(data);
+            })
+            .error(function(err) {
+                $scope.resetFormStatus();
+                $scope.isProjectEmpty = false;
+                $modalInstance.close(err);
+            });
+    };
+
+    $scope.cancel = function() {
+        $scope.isShareTrainingSet = false;
+        $modalInstance.dismiss('cancel');
+    };
+
+    $scope.resetFormStatus = function() {
+        $scope.isCombineTrainingSet = false;
+        $scope.isTrainingSet1Empty = false;
+        $scope.isTrainingSet2Empty = false;
+    }
+
+    $scope.showTSWarning = function () {
+        if ($scope.selectedData.trainingSet2.id) {
+            return ($scope.selectedData.trainingSet1.species !== $scope.selectedData.trainingSet2.species) && ($scope.selectedData.trainingSet1.songtype !== $scope.selectedData.trainingSet2.songtype);
+        }
+        return false
+    }
+
+    $scope.filterTrainingSetData = function() {
+        $scope.trainingSets2 = $scope.originalTrainingSets.filter(ts => (ts.id !== $scope.selectedData.trainingSet1.id));
+    }
 
 })
 ;
