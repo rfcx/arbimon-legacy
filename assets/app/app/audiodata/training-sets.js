@@ -199,7 +199,7 @@ angular.module('a2.audiodata.training-sets', [
         modalInstance.result.then(
             function(res) {
                 if (res.error) {
-                    notify.error("Error: " + res.error);
+                    notify.error(res.error);
                 }
                 else notify.log(res.message);
             }
@@ -226,7 +226,7 @@ angular.module('a2.audiodata.training-sets', [
         modalInstance.result.then(
             function(res) {
                 if (res.error) {
-                    notify.error("Error: " + res.error);
+                    notify.error(res.error);
                 }
                 else {
                     notify.log(res.message);
