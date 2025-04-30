@@ -422,7 +422,7 @@ angular.module('a2.audiodata.training-sets', [
                 if (res.error) {
                     notify.error('Error removing training set.');
                 }
-                else notify.log(res.message);
+                else notify.log(res.data.message);
                 $scope.getTrainingSetList();
             });
         });

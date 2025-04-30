@@ -88,16 +88,15 @@
         </div>
 
         <div class="panel panel-default" ng-show="selected.trainingSet && !loaderDisplay">
-            <div class="panel-heading">
+            <div class="panel-heading row-flex-inline flex-align-middle">
                 <h3 class="panel-title">
                     {{
                         (selected.trainingSet.edit ? "Editing - " : "") +
-                        selected.trainingSet.name +
-                        (!selected.trainingSet.edit ? " info" : "")
+                        selected.trainingSet.name
                     }}
                 </h3>
             </div>
-            <div class="mt-2">
+            <div class="mt-4">
                 <div class="clearfix form-group">
                     <label class="col-sm-3 control-label">Name</label>
                     <div class="col-sm-9" ng-if="!selected.trainingSet.edit">
