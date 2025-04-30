@@ -533,9 +533,10 @@ angular.module('a2.audiodata.training-sets', [
         $scope.isTrainingSet2Empty = false;
     }
 
+    // Show warning if combined training sets have different species and songtype.
     $scope.showTSWarning = function () {
         if ($scope.selectedData.trainingSet2.id) {
-            return ($scope.selectedData.trainingSet1.species !== $scope.selectedData.trainingSet2.species) && ($scope.selectedData.trainingSet1.songtype !== $scope.selectedData.trainingSet2.songtype);
+            return !(($scope.selectedData.trainingSet1.species === $scope.selectedData.trainingSet2.species) && ($scope.selectedData.trainingSet1.songtype === $scope.selectedData.trainingSet2.songtype));
         }
         return false
     }
