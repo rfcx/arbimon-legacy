@@ -280,6 +280,12 @@ angular.module('a2.audiodata.training-sets', [
     }
 
     $scope.selectTrainingSet = function(selected) {
+        if($scope.selected.trainingSet == selected) {
+            $scope.selected.trainingSet = undefined
+            $scope.loaderDisplay = false;
+            return
+        }
+
         $state.transitionTo($state.current.name, {set:selected.id, show:$state.params.show}, {notify:false});
 
         $scope.detailedView = $state.params.show != "gallery";
