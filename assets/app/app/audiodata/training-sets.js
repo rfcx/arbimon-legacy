@@ -502,20 +502,27 @@ angular.module('a2.audiodata.training-sets', [
     $scope.originalTrainingSets = trainingSets.filter(ts => !ts.source_project_id && !ts.name.includes('union'));
     $scope.trainingSets1 = $scope.trainingSets2 = $scope.originalTrainingSets;
     $scope.isCombineTrainingSet = false;
-    $scope.selectedData = { trainingSet1: {}, trainingSet2: {} };
+    $scope.isCombinedTrainingSetNameEmpty = false;
+    $scope.selectedData = { trainingSet1: {}, trainingSet2: {}, trainingSetName: '' };
     $scope.isTrainingSet1Empty = false;
     $scope.isTrainingSet2Empty = false;
 
     $scope.ok = function() {
+        $scope.resetFormStatus();
         $scope.isTrainingSet1Empty = !$scope.selectedData.trainingSet1.id;
         $scope.isTrainingSet2Empty = !$scope.selectedData.trainingSet2.id;
         if ($scope.isTrainingSet1Empty || $scope.isTrainingSet2Empty) return;
+        if (!$scope.selectedData.trainingSetName.length) {
+            $scope.isCombinedTrainingSetNameEmpty = true;
+            return;
+        }
         $scope.isCombineTrainingSet = true;
         a2TrainingSets.combineTrainingSet({
             term1: $scope.selectedData.trainingSet1.id,
             term2: $scope.selectedData.trainingSet2.id,
             species: $scope.selectedData.trainingSet1.species,
-            songtype: $scope.selectedData.trainingSet1.songtype
+            songtype: $scope.selectedData.trainingSet1.songtype,
+            name: $scope.selectedData.trainingSetName
         })
             .success(function(data) {
                 $scope.resetFormStatus();
@@ -537,10 +544,10 @@ angular.module('a2.audiodata.training-sets', [
         $scope.isCombineTrainingSet = false;
         $scope.isTrainingSet1Empty = false;
         $scope.isTrainingSet2Empty = false;
+        $scope.isCombinedTrainingSetNameEmpty = false;
     }
 
-    // Show warning if combined training sets have different species and songtype.
-    $scope.showTSWarning = function () {
+    $scope.isCombinedTrainingSetsMismatch = function () {
         if ($scope.selectedData.trainingSet2.id) {
             return !(($scope.selectedData.trainingSet1.species === $scope.selectedData.trainingSet2.species) && ($scope.selectedData.trainingSet1.songtype === $scope.selectedData.trainingSet2.songtype));
         }
