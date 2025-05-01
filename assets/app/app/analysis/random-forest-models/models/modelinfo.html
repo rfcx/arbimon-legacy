@@ -128,6 +128,19 @@
                 </a2-table>
             </div>
         </div>
+        <div ng-if="sharedModels && sharedModels.length" class="col-xs-12">
+            <h3>Model sharing history</h3>
+            <div class="model-info-column">
+                <a2-table rows="sharedModels" no-checkbox="true">
+                    <field title="Models">
+                        {{ row.model }}
+                    </field>
+                    <field title="Sharing project">
+                        {{ row.project }}
+                    </field>
+                </a2-table>
+            </div>
+        </div>
         <div class="col-xs-12">
             <h3>Model validation details</h3>
             <div class="model-info-column">

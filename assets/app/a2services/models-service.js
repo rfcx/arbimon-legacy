@@ -57,6 +57,12 @@ angular.module('a2.srv.models', [
             };
             return $http.get( '/legacy-api/project/' + Project.getUrl() + '/models/' + modelId + '/retraining', config);
         },
+        getSharedModels: function(modelId, modelName) {
+            const config = {
+                params: { modelName: modelName }
+            };
+            return $http.get( '/legacy-api/project/' + Project.getUrl() + '/models/' + modelId + '/shared', config);
+        },
         setThreshold: function(modelId, thresholdValue) {
             var data = {
                 m: modelId,

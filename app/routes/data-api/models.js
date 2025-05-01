@@ -291,6 +291,22 @@ router.get('/project/:projectUrl/models/:mid/retraining', function(req, res, nex
     });
 });
 
+router.get('/project/:projectUrl/models/:mid/shared', function(req, res, next) {
+    res.type('json');
+    let opts = {
+        modelName: req.query.modelName
+    }
+    return model.projects.find({ url: req.params.projectUrl }, function(err, data) {
+        console.log('data', data)
+        opts.projectId = data[0].project_id;
+        model.models.getSharedModels(opts)
+            .then((rows) => {
+                res.status(200).json(rows);
+            })
+            .catch(next)
+    })
+});
+
 router.get('/project/:projectUrl/models/:modelId/training-vector/:recId', function(req, res, next) {
     res.type('json');
     if(!req.params.modelId || !req.params.recId) {

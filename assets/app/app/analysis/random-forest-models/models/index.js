@@ -678,10 +678,26 @@ angular.module('a2.analysis.random-forest-models.models', [
             });
     }
 
+    var getSharedModels = function(modelName) {
+        a2Models.getSharedModels($stateParams.modelId, modelName)
+            .success(function(data) {
+                $scope.sharedModels = data;
+            })
+            .error(function(data, status) {
+                if(status == 404) {
+                    $scope.notFound = true;
+                }
+                else {
+                    notify.serverError();
+                }
+            });
+    }
+
     a2Models.findById($stateParams.modelId)
         .success(function(model) {
             $scope.model = model;
             getModelRetrainingDates(model.jobId)
+            getSharedModels(model.name)
             $scope.loading = null;
         })
         .error(function(data, status) {

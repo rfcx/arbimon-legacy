@@ -87,6 +87,15 @@ module.exports = {
         return queryHandler(sql, callback);
     },
 
+    getSharedModels: async function (opts) {
+        const prjectIdLength = `${opts.projectId}`.length + 8;
+        const sql = `select m.name as model, p.name as project
+            from models m
+            join projects p on m.project_id = p.project_id
+            where left(m.uri, ?) = 'project_?' and m.project_id != ? and m.deleted = 0 and m.name = ?;`;
+        return await dbpool.query(sql, [prjectIdLength, opts.projectId, opts.projectId, opts.modelName]);
+    },
+
     isModelRetrained: async function (jobId) {
         const sql = `SELECT * from job_params_retraining where trained_job_id = ${jobId}`;
         return dbpool.query(sql).get(0);
