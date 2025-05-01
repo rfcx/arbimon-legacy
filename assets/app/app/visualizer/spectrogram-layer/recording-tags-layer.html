@@ -6,11 +6,10 @@
             width:layout.dsec2width(bbox.bbox.t1, bbox.bbox.t0, 1) + 'px', 
             height:layout.dhz2height(bbox.bbox.f1, bbox.bbox.f0) + 'px'
         }">
-        <div ng-repeat="tag in bbox.tags">
-            <span class="fa fa-tag no-text-wrap spectro-label"
-            ng-style="{
-                margin-left:layout.sec2x(bbox.bbox.t0, 1) + layout.dsec2width(bbox.bbox.t1, bbox.bbox.t0, 1) + 5 + 'px'
-            }">
+        <div ng-repeat="tag in bbox.tags" ng-style="{
+            'margin-left':layout.dsec2width(bbox.bbox.t1, bbox.bbox.t0, 1) + 'px'
+        }">
+            <span class="fa fa-tag no-text-wrap spectro-label">
                 {{tag.tag}}
             </span>
         </div>
