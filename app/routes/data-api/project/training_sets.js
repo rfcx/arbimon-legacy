@@ -190,7 +190,8 @@ router.post('/combine', async function(req, res, next) {
         term1: req.body.term1,
         term2: req.body.term2,
         species: req.body.species,
-        songtype: req.body.songtype
+        songtype: req.body.songtype,
+        name: req.body.name
     }
 
     const term1Data = await model.trainingSets.find({ id: opts.term1 })
@@ -203,7 +204,9 @@ router.post('/combine', async function(req, res, next) {
         return res.status(404).json({ field: 'term2', error: 'Training set not found.'});
     }
 
-    opts.name = `${term1Data[0].name} union ${term2Data[0].name}`
+    if (!opts.name) {
+        opts.name = `${term1Data[0].name} union ${term2Data[0].name}`
+    }
     const combinedTrainingSet = await model.trainingSets.find({ name: opts.name, project: opts.projectId})
     if (combinedTrainingSet.length > 0) {
         return res.status(400).json({ error: 'This training set combination already exists. Please select a different combination.'});
