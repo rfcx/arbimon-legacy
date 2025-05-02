@@ -502,7 +502,6 @@ angular.module('a2.audiodata.training-sets', [
     $scope.originalTrainingSets = trainingSets.filter(ts => !ts.source_project_id && !ts.name.includes('union'));
     $scope.trainingSets1 = $scope.trainingSets2 = $scope.originalTrainingSets;
     $scope.isCombineTrainingSet = false;
-    $scope.isCombinedTrainingSetNameEmpty = false;
     $scope.selectedData = { trainingSet1: {}, trainingSet2: {}, trainingSetName: '' };
     $scope.isTrainingSet1Empty = false;
     $scope.isTrainingSet2Empty = false;
@@ -513,8 +512,7 @@ angular.module('a2.audiodata.training-sets', [
         $scope.isTrainingSet2Empty = !$scope.selectedData.trainingSet2.id;
         if ($scope.isTrainingSet1Empty || $scope.isTrainingSet2Empty) return;
         if (!$scope.selectedData.trainingSetName.length) {
-            $scope.isCombinedTrainingSetNameEmpty = true;
-            return;
+            $scope.updateNamePlaceholder();
         }
         $scope.isCombineTrainingSet = true;
         a2TrainingSets.combineTrainingSet({
@@ -544,7 +542,6 @@ angular.module('a2.audiodata.training-sets', [
         $scope.isCombineTrainingSet = false;
         $scope.isTrainingSet1Empty = false;
         $scope.isTrainingSet2Empty = false;
-        $scope.isCombinedTrainingSetNameEmpty = false;
     }
 
     $scope.isCombinedTrainingSetsMismatch = function () {
@@ -553,6 +550,12 @@ angular.module('a2.audiodata.training-sets', [
         }
         return false
     }
+
+    $scope.updateNamePlaceholder = function() {
+        const term1 = $scope.selectedData.trainingSet1.name || 'Training Set 1';
+        const term2 = $scope.selectedData.trainingSet2.name  || 'Training Set 2';
+        $scope.selectedData.trainingSetName = term1 + ' union ' + term2;
+    };
 
     $scope.filterTrainingSetData = function() {
         $scope.trainingSets2 = $scope.originalTrainingSets.filter(ts => (ts.id !== $scope.selectedData.trainingSet1.id));

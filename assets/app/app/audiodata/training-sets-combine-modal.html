@@ -28,8 +28,7 @@
     </div>
     <div class="form-group">
         <label for="trainingSetName">Resulting Training Set Name</label>
-        <p ng-if="isCombinedTrainingSetNameEmpty" class="text-danger small mb-1 ml-0">Please add a training set name.</p>
-        <input id="trainingSetName" class="form-control"  ng-class="{ 'red-border': isCombinedTrainingSetNameEmpty }" ng-model="selectedData.trainingSetName" type="text" placeholder="Training Set 3" required/>
+        <input id="trainingSetName" class="form-control" ng-model="selectedData.trainingSetName" type="text" placeholder="Training Set 3"/>
     </div>
 </div>
 <div class="modal-footer">
