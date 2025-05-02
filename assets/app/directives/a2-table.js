@@ -236,8 +236,14 @@ angular.module('a2.directive.a2-table', [
             tableScope.expanded = row
         }
 
-        tableScope.selected = row;
-        scope.selected = row;
+        if (tableScope.selected === row) {
+            tableScope.selected = undefined;
+            scope.selected = undefined;
+        } else {
+            tableScope.selected = row;
+            scope.selected = row;
+        }
+
         if(this.selectExpand){
             angular.element($event.currentTarget).after(
                 this.selectExpand
