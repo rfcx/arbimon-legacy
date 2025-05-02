@@ -132,11 +132,14 @@
             <h3>Model sharing history</h3>
             <div class="model-info-column">
                 <a2-table rows="sharedModels" no-checkbox="true">
-                    <field title="Models">
+                    <field tdclass="is-v-middle" title="Models">
                         {{ row.model }}
                     </field>
-                    <field title="Sharing project">
+                    <field tdclass="is-v-middle" title="Sharing project">
                         {{ row.project }}
+                    </field>
+                    <field tdclass="is-v-middle">
+                        <button class="btn btn-success btn-rounded-full" ng-click="unshareModel(row)">Unshare</button>
                     </field>
                 </a2-table>
             </div>

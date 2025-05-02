@@ -693,6 +693,22 @@ angular.module('a2.analysis.random-forest-models.models', [
             });
     }
 
+    $scope.unshareModel = function(model) {
+        a2Models.unshareModel($stateParams.modelId, model)
+            .success(function(data) {
+                notify.log('Model unshared.');
+                getSharedModels($scope.model.name)
+            })
+            .error(function(data, status) {
+                if(status == 404) {
+                    $scope.notFound = true;
+                }
+                else {
+                    notify.serverError();
+                }
+            });
+    }
+
     a2Models.findById($stateParams.modelId)
         .success(function(model) {
             $scope.model = model;

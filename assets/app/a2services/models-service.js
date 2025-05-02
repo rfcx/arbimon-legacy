@@ -63,6 +63,13 @@ angular.module('a2.srv.models', [
             };
             return $http.get( '/legacy-api/project/' + Project.getUrl() + '/models/' + modelId + '/shared', config);
         },
+        unshareModel: function(modelId, modelData) {
+            const data = {
+                model: modelData.modelId,
+                project: modelData.projectId
+            };
+            return $http.post( '/legacy-api/project/' + Project.getUrl() + '/models/' + modelId + '/unshare', data);
+        },
         setThreshold: function(modelId, thresholdValue) {
             var data = {
                 m: modelId,

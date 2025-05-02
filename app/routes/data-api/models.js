@@ -182,6 +182,19 @@ router.post('/project/:projectUrl/models/share-model', function(req, res, next) 
     });
 });
 
+router.post('/project/:projectUrl/models/:mid/unshare', function(req, res, next) {
+    res.type('json');
+    let opts = {
+        modelId: req.body.model,
+        projectId: req.body.project,
+    }
+    model.models.unshareModel(opts)
+        .then((rows) => {
+            res.status(201).json({ message: 'The model was successfully unshared from the project.' });
+        })
+        .catch(next)
+});
+
 router.get('/project/:projectUrl/models/:mid/delete', function(req, res, next) {
     res.type('json');
     model.projects.findByUrl(req.params.projectUrl, function(err, rows) {

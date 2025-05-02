@@ -87,13 +87,27 @@ module.exports = {
         return queryHandler(sql, callback);
     },
 
+    shareModel: function(opts, callback) {
+        const q = `insert into models(name, model_type_id, uri, date_created, project_id, user_id, training_set_id, validation_set_id, deleted, threshold)
+            select  m2.name, m2.model_type_id, m2.uri, m2.date_created, ${opts.projectIdTo}, m2.user_id, m2.training_set_id, m2.validation_set_id, m2.deleted, m2.threshold
+            from models m2
+            where m2.model_id = ${opts.modelId};
+        `;
+        queryHandler(q, callback);
+    },
+
     getSharedModels: async function (opts) {
         const prjectIdLength = `${opts.projectId}`.length + 8;
-        const sql = `select m.name as model, p.name as project
+        const sql = `select m.name as model, m.model_id as modelId, p.name as project, p.project_id as projectId
             from models m
             join projects p on m.project_id = p.project_id
             where left(m.uri, ?) = 'project_?' and m.project_id != ? and m.deleted = 0 and m.name = ?;`;
         return await dbpool.query(sql, [prjectIdLength, opts.projectId, opts.projectId, opts.modelName]);
+    },
+
+    unshareModel: async function (opts) {
+        const sql = `delete from models where project_id = ? and model_id = ?;`;
+        return await dbpool.query(sql, [opts.projectId, opts.modelId]);
     },
 
     isModelRetrained: async function (jobId) {
@@ -225,15 +239,6 @@ module.exports = {
 
     checkExistingModel: function(opts, callback) {
         const q = `select * from models where project_id = ${opts.projectIdTo} and name = '${opts.modelName}';`;
-        queryHandler(q, callback);
-    },
-
-    shareModel: function(opts, callback) {
-        const q = `insert into models(name, model_type_id, uri, date_created, project_id, user_id, training_set_id, validation_set_id, deleted, threshold)
-            select  m2.name, m2.model_type_id, m2.uri, m2.date_created, ${opts.projectIdTo}, m2.user_id, m2.training_set_id, m2.validation_set_id, m2.deleted, m2.threshold
-            from models m2
-            where m2.model_id = ${opts.modelId};
-        `;
         queryHandler(q, callback);
     },
 
