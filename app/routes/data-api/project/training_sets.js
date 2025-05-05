@@ -209,7 +209,7 @@ router.post('/combine', async function(req, res, next) {
     }
     const combinedTrainingSet = await model.trainingSets.find({ name: opts.name, project: opts.projectId})
     if (combinedTrainingSet.length > 0) {
-        return res.status(400).json({ error: 'This training set combination already exists. Please select a different combination.'});
+        return res.status(400).json({ error: 'This training set combination already exists. <b> Please select a different combination.'});
     }
     
     model.trainingSets.combine(opts)

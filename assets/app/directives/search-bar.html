@@ -13,6 +13,6 @@
     <a>
         <span ng-if="isUnsafe==='true'" title="{{match.label}}" bind-html-unsafe="match.label | typeaheadHighlight:query" class="ng-binding"></span>
         <span ng-if="isUnsafe!=='true'" title="{{match.label}}" ng-bind-html="match.label | typeaheadHighlight:query" class="ng-binding"></span>
-        <br><span title="{{match.model.description}}" class="input-search-desc">{{match.model.description}}</span>
+        <br><span title="{{match.model.description}}" class="font-size-small">{{match.model.description}}</span>
     </a>
 </script>

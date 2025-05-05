@@ -696,7 +696,7 @@ angular.module('a2.analysis.random-forest-models.models', [
     $scope.unshareModel = function(model) {
         a2Models.unshareModel($stateParams.modelId, model)
             .success(function(data) {
-                notify.log('Model unshared.');
+                notify.log('The random forest model has been unshared.');
                 getSharedModels($scope.model.name)
             })
             .error(function(data, status) {
