@@ -43,8 +43,11 @@ angular.module('a2.srv.models', [
                 .success(callback)
                 .error(notify.serverError);
         },
-        getValidationResults: function(modelId, callback) {
-            $http.get( '/legacy-api/project/' + Project.getUrl() + '/models/' + modelId + '/validation-list/')
+        getValidationResults: function(modelId, options, callback) {
+            var query = Object.keys(options || {}).map(function(option){
+                return option + '=' + encodeURIComponent(options[option]);
+            }).join('&');
+            $http.get( '/legacy-api/project/' + Project.getUrl() + '/models/' + modelId + '/validation-list?' + query)
                 .success(callback)
                 .error(notify.serverError);
         },

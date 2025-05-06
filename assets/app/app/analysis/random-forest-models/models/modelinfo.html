@@ -347,13 +347,18 @@
                 </div>
             <small>(Click in the row to view recording details)</small>
             </h3>
-            <a2-table rows="validations" no-checkbox on-select="recDetails(row)">
-                <field title="Date"  key="date">{{ row.date | moment: 'lll' }}</field>
-                <field title="Site"  key="site">{{ row.site }}</field>
-                <field title="User presence"  key="presence">{{ row.presence }}</field>
-                <field title="Model presence"  key="model">{{ row.model }}</field>
-                <field title="Threshold presence"  key="threshold">{{ row.threshold }}</field>
-            </a2-table>
+            <div a2-scroll="onScroll($event, $controller)" a2-scroll-on="window">
+                <a2-table rows="validations" no-checkbox on-select="recDetails(row)">
+                    <field title="Date"  key="date">{{ row.date | moment: 'lll' }}</field>
+                    <field title="Site"  key="site">{{ row.site }}</field>
+                    <field title="User presence"  key="presence">{{ row.presence }}</field>
+                    <field title="Model presence"  key="model">{{ row.model }}</field>
+                    <field title="Threshold presence"  key="threshold">{{ row.threshold }}</field>
+                </a2-table>
+            </div>
+            <div class="col-sm-12 col-lg-8" ng-show="isGettingVectors">
+                <h3><loader></loader>Loading validations</h3>
+            </div>
         </div>
         <div class="col-sm-12 col-lg-8" ng-hide="showValidationsTable">
             <div>

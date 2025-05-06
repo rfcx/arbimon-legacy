@@ -229,7 +229,7 @@ router.get('/project/:projectUrl/models/:modelId/validation-list', async functio
         }
         let validationUri = row[0].uri;
         validationUri = validationUri.replace('.csv','_vals.csv');
-        await getModelsData(validationUri)
+        await getModelsData(validationUri, +req.query.limit, +req.query.offset)
             .then(data => {
                 res.json({ validations: data });
             })
@@ -237,7 +237,7 @@ router.get('/project/:projectUrl/models/:modelId/validation-list', async functio
     })
 });
 
-async function getModelsData(validationUri) {
+async function getModelsData(validationUri, limit, offset) {
     const isProd = process.env.NODE_ENV === 'production';
     const awsConfig = isProd ? config('aws') : config('aws_rfcx');
     const awsBucket = isProd ? awsConfig.bucketName : awsConfig.bucketNameStaging;
@@ -254,8 +254,8 @@ async function getModelsData(validationUri) {
             const outData = String(data.Body);
             let lines = outData.split('\n');
             lines = lines.filter(line => { return line !== ''; })
-            let rowSent = []
-            for (let line of lines) {
+            let rowSent = [];
+            for (let line of lines.slice(offset,offset+limit)) {
                 const items = line.split(',');
                 const prec = items[1].trim(' ') == 1 ? 'yes' :'no';
                 const modelprec = items[2].trim(' ') == 'NA' ? '-' : ( items[2].trim(' ') == 1 ? 'yes' :'no');

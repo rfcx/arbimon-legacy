@@ -402,7 +402,6 @@ angular.module('a2.analysis.random-forest-models.models', [
         usePresentValidation: $scope.isRetrain ? oldModel.validations.use_in_validation.present : -1,
         useNotPresentValidation: $scope.isRetrain ? oldModel.validations.use_in_validation.notPresent : -1
     };
-    console.log('NewModelInstanceCtrl', $scope.data)
 
     $http.get('/legacy-api/jobs/types')
         .success(function(jobTypes) {
@@ -599,9 +598,28 @@ angular.module('a2.analysis.random-forest-models.models', [
 })
 .controller('ModelDetailsCtrl', function($scope, a2Models, $stateParams, $location, Project, a2Classi, notify, $window, a2UserPermit) {
     var scopeExited = false;
+    $scope.loading = true;
+    $scope.showValidationsTable = true;
+    $scope.allYesMax = [];
+    $scope.allMax = [];
+    $scope.allMin = [];
+    $scope.validations = [];
+    $scope.vectorNoMax = -1;
+    $scope.loadingValidations = true;
+    $scope.stopScrolling = false;
+    $scope.isGettingVectors = false;
+    $scope.showModelValidations = true;
+    $scope.messageSaved = '';
+
     $scope.$on('$destroy', function(argument) {
         scopeExited = true;
         a2Models.modelState(false);
+    });
+
+    a2Models.modelState(true);
+
+    Project.getInfo(function(data) {
+        $scope.project_id = data.project_id;
     });
 
     /*
@@ -610,7 +628,10 @@ angular.module('a2.analysis.random-forest-models.models', [
     var getVectors = function(index) {
         if(scopeExited) return;
 
-        if(index >= $scope.validations.length) return $scope.waitinFunction();
+        if (index >= $scope.validations.length) {
+            $scope.isGettingVectors = false;
+            return $scope.waitinFunction();
+        }
 
         var currRec = $scope.validations[index];
 
@@ -641,27 +662,42 @@ angular.module('a2.analysis.random-forest-models.models', [
             });
     };
 
+    $scope.validationIndex = 0;
 
-    var loadingMsgs = [
-        '',
-        'Loading validations',
-        'Loading vectors'
-    ];
-    $scope.loading = true;
-    $scope.showValidationsTable = true;
-    $scope.allYesMax = [];
-    $scope.allMax = [];
-    $scope.allMin = [];
-    $scope.vectorNoMax = -1;
-    $scope.loadingValidations = true;
-    $scope.showModelValidations = true;
-    $scope.messageSaved = '';
+    $scope.onScroll = function($event, $controller){
+        if ($scope.loadingValidations || $scope.isGettingVectors || $scope.stopScrolling) return
+        $scope.scrollElement = $controller.scrollElement;
+        const scrollTop = $controller.scrollElement.scrollY;
+        const scrollHeight = $controller.scrollElement.outerHeight;
+        const diff = scrollTop > scrollHeight;
+        if (diff) {
+            if ($scope.validations && $scope.validations.length < 10) return;
+            $scope.validationIndex++;
+            $scope.isGettingVectors = true;
+            $scope.getValidationResults();
+        }
+    }
 
-    a2Models.modelState(true);
+    $scope.getValidationResults = function() {
+        const limit = 10;
+        const offset = limit * $scope.validationIndex;
+        a2Models.getValidationResults($stateParams.modelId, {limit: limit, offset: offset}, function(data) {
+            if(data.err) {
+                $scope.showModelValidations = false;
+                $scope.loadingValidations = false;
+                return;
+            }
+            if (!data.validations.length) {
+                $scope.isGettingVectors = false;
+                $scope.stopScrolling = true;
+                return;
+            }
+            $scope.validations = $scope.validations.concat(data.validations);
+            getVectors($scope.validationIndex);
+        });
+    }
 
-    Project.getInfo(function(data) {
-        $scope.project_id = data.project_id;
-    });
+    $scope.getValidationResults(0);
 
     var getModelRetrainingDates = function(jobId) {
         a2Models.getModelRetrainingDates($stateParams.modelId, jobId)
@@ -724,22 +760,6 @@ angular.module('a2.analysis.random-forest-models.models', [
                 notify.serverError();
             }
         });
-
-    a2Models.getValidationResults($stateParams.modelId, function(data) {
-        if(data.err || !data.validations.length) {
-            $scope.showModelValidations = false;
-            $scope.loadingValidations = false;
-            return;
-        }
-
-        $scope.validations = data.validations;
-
-        getVectors(0);
-    });
-
-
-
-
 
     $scope.waitinFunction = function() {
         $scope.loading = null;
