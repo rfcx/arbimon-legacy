@@ -36,6 +36,9 @@
             </div>
             <span ng-class="{'no-text-wrap': layer.species_presence.checkSpectroWidth(layout.sec2x(roi.x1, 1), layout.dsec2width(roi.x2, roi.x1, 1), layout.spectrogram.width)}"
                 class="spectro-label"
+                ng-style="{
+                    'margin-left':layout.dsec2width(roi.x2, roi.x1, 1) + 'px'
+                }"
             >
                 {{roi.name}}
             </span>
