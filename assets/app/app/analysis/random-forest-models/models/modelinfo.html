@@ -138,8 +138,10 @@
                     <field tdclass="hidelongtext widthtd is-v-middle width-35" title="Sharing project">
                         <span title="{{row.project}}">{{ row.project }}</span>
                     </field>
-                    <field tdclass="is-v-middle width-35">
-                        <button class="btn btn-success btn-rounded-full font-size-small" ng-click="unshareModel(row)">Unshare</button>
+                    <field tdclass="is-v-middle width-15">
+                        <div class="row-flex flex-space-center">
+                            <button class="btn btn-success btn-rounded-full font-size-small" ng-click="unshareModel(row)">Unshare</button>
+                        </div>
                     </field>
                 </a2-table>
             </div>
