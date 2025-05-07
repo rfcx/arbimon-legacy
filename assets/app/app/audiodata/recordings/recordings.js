@@ -190,7 +190,7 @@ angular.module('a2.audiodata.recordings', [
         return $modal.open({
             templateUrl: '/common/templates/pop-up.html',
             controller: function() {
-                this.title = "Delete a recordings";
+                this.title = "Delete recordings";
                 this.messages = messages;
                 this.list = list;
                 this.note = 'Note: analysis results on these recordings will also be deleted';

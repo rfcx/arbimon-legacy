@@ -596,7 +596,7 @@ angular.module('a2.analysis.random-forest-models.models', [
         $modalInstance.dismiss('cancel');
     };
 })
-.controller('ModelDetailsCtrl', function($scope, a2Models, $stateParams, $location, Project, a2Classi, notify, $window, a2UserPermit) {
+.controller('ModelDetailsCtrl', function($scope, a2Models, $stateParams, $location, Project, $modal, notify, $window, a2UserPermit) {
     var scopeExited = false;
     $scope.loading = true;
     $scope.showValidationsTable = true;
@@ -730,19 +730,32 @@ angular.module('a2.analysis.random-forest-models.models', [
     }
 
     $scope.unshareModel = function(model) {
-        a2Models.unshareModel($stateParams.modelId, model)
-            .success(function(data) {
-                notify.log('The random forest model has been unshared.');
-                getSharedModels($scope.model.name)
-            })
-            .error(function(data, status) {
-                if(status == 404) {
-                    $scope.notFound = true;
-                }
-                else {
-                    notify.serverError();
-                }
-            });
+        return $modal.open({
+            templateUrl: '/common/templates/pop-up.html',
+            controller: function() {
+                this.title = 'Unshare model';
+                this.messages = ['Are you sure you want to unshare this model from the following project?'];
+                this.list = [model.project];
+                this.btnOk =  "Unshare";
+                this.btnCancel =  "Cancel";
+            },
+            controllerAs: 'popup',
+            windowClass: 'modal-element width-490'
+        }).result.then(function() {
+            return a2Models.unshareModel($stateParams.modelId, model)
+                .success(function(data) {
+                    notify.log('The random forest model has been unshared.');
+                    getSharedModels($scope.model.name)
+                })
+                .error(function(data, status) {
+                    if(status == 404) {
+                        $scope.notFound = true;
+                    }
+                    else {
+                        notify.serverError();
+                    }
+                });
+        });
     }
 
     a2Models.findById($stateParams.modelId)

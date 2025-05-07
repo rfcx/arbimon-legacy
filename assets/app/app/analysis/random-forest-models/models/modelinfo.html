@@ -132,11 +132,11 @@
             <h3>Model sharing history</h3>
             <div class="model-info-column" style="width: 45%;">
                 <a2-table rows="sharedModels" no-checkbox="true">
-                    <field tdclass="hidelongtext widthtd is-v-middle width-35" title="Models">
-                        <span title="{{row.model}}">{{ row.model }}</span>
+                    <field tdclass="is-v-middle width-35" title="Models">
+                        <div class="hidelongtext" style="width: 300px;" title="{{row.model}}">{{ row.model }}</div>
                     </field>
-                    <field tdclass="hidelongtext widthtd is-v-middle width-35" title="Sharing project">
-                        <span title="{{row.project}}">{{ row.project }}</span>
+                    <field tdclass="is-v-middle width-35" title="Sharing project">
+                        <div class="hidelongtext" style="width: 300px;" title="{{row.project}}">{{row.project}}</div>
                     </field>
                     <field tdclass="is-v-middle width-15">
                         <div class="row-flex flex-space-center">
@@ -358,8 +358,9 @@
                     <field title="Threshold presence"  key="threshold">{{ row.threshold }}</field>
                 </a2-table>
             </div>
-            <div class="col-sm-12 col-lg-8" ng-show="isGettingVectors">
-                <h3><loader></loader>Loading validations</h3>
+            <div ng-show="isGettingVectors" class="row-flex flex-direction-row flex-space-center mt-3">
+                <i class="fa fa-spinner fa-spin" style="font-size: 26px; vertical-align: middle; margin-right: 5px;"></i>
+                Loading validations
             </div>
         </div>
         <div class="col-sm-12 col-lg-8" ng-hide="showValidationsTable">
