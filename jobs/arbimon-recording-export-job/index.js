@@ -455,7 +455,7 @@ async function sendEmail (subject, title, rowData, content, isSignedUrl) {
         <span> - The Arbimon Team </span>
       </p>`;
 
-    const isOrgEmail = rowData.user_email.includes('org');
+    const isOrgEmail = rowData.user_email.includes('gmail.com');
     let message = {
         from_email: 'no-reply@arbimon.org',
         to: [{
@@ -466,7 +466,7 @@ async function sendEmail (subject, title, rowData, content, isSignedUrl) {
     if (isSignedUrl) {
         if (isOrgEmail) {
             message.html = textHeader + textExpires + textSupport
-                + `<a style="text-decoration:none;color:#14130D;white-space:nowrap;text-align:center;vertical-align:middle;align-items:center;display:inline-flex;display: -webkit-inline-flex;" download target="_self" href="${content}">Download Report</a>`
+                + `<img style="width: 14px; height: 14px; margin-left:8px" src="https://static.rfcx.org/arbimon/download-icon.png"> Download Link: <a href="${content}"></a>`
                 + textFooter;
         }
         else message.html = textHeader + textExpires + textSupport +
