@@ -474,7 +474,7 @@ async function sendEmail (subject, title, rowData, content, isSignedUrl) {
             </button>` + textFooter
         }
         else message.html = textHeader + textExpires + textSupport
-            + `<img style="width: 14px; height: 14px; margin-left:8px" src="https://static.rfcx.org/arbimon/download-icon.png"><span style="color:#000"> Download </span><a href="${content}"> here </a>`
+            + `<img style="width: 14px; height: 14px; margin-left:8px" src="https://static.rfcx.org/arbimon/download-icon.png"><a href="${content}"> Download export </a>`
             + textFooter;
     } else {
         message.attachments = [{
