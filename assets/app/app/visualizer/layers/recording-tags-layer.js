@@ -75,6 +75,10 @@ angular.module('a2.visualizer.layers.recording-tags', ['a2.srv.tags'])
     this.bboxTags = [];
     this.bboxTagsIndex = {};
 
+    this.getTagNames = function(tags) {
+        return tags.map(t => t.tag).join(',')
+    };
+
     /**
      * @ngdoc method
      * @name a2.visualizer.layer.recording-tags.controller:a2VisualizerRecordingTagsLayerController#setVisobject

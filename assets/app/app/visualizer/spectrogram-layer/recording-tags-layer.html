@@ -1,17 +1,20 @@
 <div>
-    <div class="roi" ng-repeat="bbox in layer.controller.spectrogramTags"
-        ng-style="{
-            left:layout.sec2x(bbox.bbox.t0, 1) + 'px', 
-            top:layout.hz2y(bbox.bbox.f1, 1) + 'px', 
-            width:layout.dsec2width(bbox.bbox.t1, bbox.bbox.t0, 1) + 'px', 
-            height:layout.dhz2height(bbox.bbox.f1, bbox.bbox.f0) + 'px'
-        }">
-        <div ng-repeat="tag in bbox.tags" ng-style="{
-            'margin-left':layout.dsec2width(bbox.bbox.t1, bbox.bbox.t0, 1) + 'px'
-        }">
-            <span class="fa fa-tag no-text-wrap spectro-label">
-                {{tag.tag}}
-            </span>
+    <div ng-repeat="bbox in layer.controller.spectrogramTags">
+        <div class="roi input-source cursor-pointer"
+            ng-style="{
+                left:layout.sec2x(bbox.bbox.t0, 1) + 'px',
+                top:layout.hz2y(bbox.bbox.f1, 1) + 'px',
+                width:layout.dsec2width(bbox.bbox.t1, bbox.bbox.t0, 1) + 'px',
+                height:layout.dhz2height(bbox.bbox.f1, bbox.bbox.f0) + 'px'
+            }"
+            id="popoverspectrogramTags"
+            popover-html="'Tags<br /><br />{{layer.controller.getTagNames(bbox.tags)}}'"
+            popover-trigger="mouseenter"
+            popover-append-to-body="true"
+            data-placement="top"
+            tabindex="0"
+        >
+
         </div>
     </div>
 </div>

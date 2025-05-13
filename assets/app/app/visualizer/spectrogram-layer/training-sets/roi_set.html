@@ -1,13 +1,24 @@
 <div>
-    <div class="roi set" ng-repeat="roi in layer.training_data.data.rois"
-        ng-class="{'roi-selected':layer.training_data.data.selected == roi}"
-        ng-click="$event.stopPropagation(); layer.training_data.data.selected = roi"
-        ng-style="{
-            left:layout.sec2x(roi.x1, 1) + 'px',
-            top:layout.hz2y(roi.y2, 1) + 'px',
-            width:layout.dsec2width(roi.x2, roi.x1, 1) + 'px',
-            height:layout.dhz2height(roi.y2, roi.y1) + 'px'
-        }">
+    <div ng-repeat="roi in layer.training_data.data.rois">
+        <div
+            ng-class="{'roi-selected':layer.training_data.data.selected == roi}"
+            ng-click="$event.stopPropagation(); layer.training_data.data.selected = roi"
+            ng-style="{
+                left:layout.sec2x(roi.x1, 1) + 'px',
+                top:layout.hz2y(roi.y2, 1) + 'px',
+                width:layout.dsec2width(roi.x2, roi.x1, 1) + 'px',
+                height:layout.dhz2height(roi.y2, roi.y1) + 'px'
+            }"
+            id="popoverTrainingSet-{{roi.id}}"
+            class="roi set input-source cursor-pointer"
+            popover-html="'Training Set<br /><br />{{roi.name}}'"
+            popover-trigger="mouseenter"
+            popover-append-to-body="true"
+            data-placement="top"
+            tabindex="0"
+        >
+
+        </div>
     </div>
 </div>
 

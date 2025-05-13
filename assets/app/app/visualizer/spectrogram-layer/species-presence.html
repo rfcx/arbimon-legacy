@@ -7,7 +7,14 @@
                 width:layout.dsec2width(roi.x2, roi.x1, 1) + 'px',
                 height:layout.dhz2height(roi.y2, roi.y1) + 'px',
                 display: roi.display || ''
-            }">
+            }"
+            id="popoverSpeciesPresence-{{roi.id}}"
+            popover-html="'Validation<br /><br />{{roi.name}}'"
+            popover-trigger="mouseenter"
+            popover-append-to-body="true"
+            data-placement="top"
+            tabindex="0"
+        >
             <button class="close" ng-click="layer.species_presence.togglePopup(roi)" style="position: absolute; right: -4px; top:-6px; font-size: 12px; opacity: 1;">
                 <img src="/images/ic-cross.svg"
                     onmouseover="this.src='/images/ic-cross-hover.svg'"
@@ -34,14 +41,6 @@
                     </button>
                 </div>
             </div>
-            <span ng-class="{'no-text-wrap': layer.species_presence.checkSpectroWidth(layout.sec2x(roi.x1, 1), layout.dsec2width(roi.x2, roi.x1, 1), layout.spectrogram.width)}"
-                class="spectro-label"
-                ng-style="{
-                    'margin-left':layout.dsec2width(roi.x2, roi.x1, 1) + 'px'
-                }"
-            >
-                {{roi.name}}
-            </span>
         </div>
     </div>
 </div>

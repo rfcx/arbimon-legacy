@@ -1,20 +1,22 @@
 <div>
-    <div class="roi" ng-repeat="roi in layer.templates.recordingTemplates"
-        ng-class="{'roi-selected':layer.templates.selectedRoi == roi}"
-        ng-click="$event.stopPropagation(); layer.templates.selectedRoi = roi"
-        ng-style="{
-            left:layout.sec2x(roi.x1, 1) + 'px',
-            top:layout.hz2y(roi.y2, 1) + 'px',
-            width:layout.dsec2width(roi.x2, roi.x1, 1) + 'px',
-            height:layout.dhz2height(roi.y2, roi.y1) + 'px'
-        }"> 
-        <div ng-style="{
-            'margin-left':layout.dsec2width(roi.x2, roi.x1, 1) + 'px'
-        }">
-            <span class="no-text-wrap spectro-label">
-                {{roi.name}}<br />
-                {{roi.species_name}} {{roi.songtype_name}}
-            </span>
+    <div ng-repeat="roi in layer.templates.recordingTemplates">
+        <div class="roi input-source cursor-pointer"
+            ng-class="{'roi-selected':layer.templates.selectedRoi == roi}"
+            ng-click="$event.stopPropagation(); layer.templates.selectedRoi = roi"
+            ng-style="{
+                left:layout.sec2x(roi.x1, 1) + 'px',
+                top:layout.hz2y(roi.y2, 1) + 'px',
+                width:layout.dsec2width(roi.x2, roi.x1, 1) + 'px',
+                height:layout.dhz2height(roi.y2, roi.y1) + 'px'
+            }"
+            id="popoverRecordingTemplates-{{roi.id}}"
+            popover-html="'Template<br /><br />{{roi.name}}<br />{{roi.species_name}} {{roi.songtype_name}}'"
+            popover-trigger="mouseenter"
+            popover-append-to-body="true"
+            data-placement="top"
+            tabindex="0"
+        >
+
         </div>
     </div>
 </div>
