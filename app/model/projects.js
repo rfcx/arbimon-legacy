@@ -1046,7 +1046,7 @@ var Projects = {
             "AND st.`songtype_id` = tsrs.`songtype_id` \n"+
             "AND s.`species_id`  = tsrs.`species_id` \n"+
             "AND ts.`project_id` = p.`project_id` \n"+
-            "AND p.`url` = " + dbpool.escape(project_url)
+            "AND p.`url` = " + dbpool.escape(project_url) + ' AND ts.removed = 0'
         );
 
         queryHandler(q, callback);
