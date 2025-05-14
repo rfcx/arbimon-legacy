@@ -659,11 +659,14 @@ TrainingSets.types.roi_set = {
                 tables.push(
                     'recordings R ON TSD.recording_id = R.recording_id',
                     'sites S ON R.site_id = S.site_id',
-                    'training_sets TS ON TSD.training_set_id = TS.training_set_id'
+                    'training_sets TS ON TSD.training_set_id = TS.training_set_id',
+                    'species SP ON TSD.species_id = SP.species_id',
+                    'songtypes ST ON TSD.songtype_id = ST.songtype_id'
                 );
                 return queryHandler(
                     "SELECT TSD.roi_set_data_id as id, TSD.recording_id as recording,\n"+
-                    "   TSD.species_id as species, TS.name, TSD.songtype_id as songtype,  \n" +
+                    "   TSD.species_id as species, TS.name, TSD.songtype_id as songtype, \n" +
+                    "   SP.scientific_name as species_name, ST.songtype as songtype_name, \n" +
                     "   TSD.x1, TSD.y1, TSD.x2, TSD.y2 , \n"+
                     "   CONCAT('https://"+config('aws').bucketName+".s3."+config('aws').region+".amazonaws.com/',TSD.uri) as uri \n" +
                     "FROM "   + tables.join(" \n" +
