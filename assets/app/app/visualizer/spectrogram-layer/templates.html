@@ -10,7 +10,7 @@
                 height:layout.dhz2height(roi.y2, roi.y1) + 'px'
             }"
             id="popoverRecordingTemplates-{{roi.id}}"
-            popover-html="'Template<br /><br />Name: {{roi.name}}<br />Species: {{roi.species_name}} - {{roi.songtype_name}}'"
+            popover-html="'<span class=\'small\'>Template</span><br /><br /><span class=\'small mr-2\'>Name:</span> {{roi.name}}<br /><span class=\'small mr-2\'>Species:</span> {{roi.species_name}}<br /><span class=\'small mr-2\'>Song type:</span> {{roi.songtype_name}}'"
             popover-trigger="mouseenter"
             popover-append-to-body="true"
             data-placement="top"
