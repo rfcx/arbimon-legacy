@@ -59,6 +59,8 @@ angular.module('a2.visualizer.layers.species-presence', [
                         pattern_matching_id: roi.pattern_matching_id,
                         pattern_matching_roi_id: roi.pattern_matching_roi_id,
                         name: roi.species_name + ' ' + roi.songtype_name,
+                        species: roi.species_name,
+                        songtype: roi.songtype_name,
                         x1: roi.x1,
                         x2: roi.x2,
                         y1: roi.y1,
