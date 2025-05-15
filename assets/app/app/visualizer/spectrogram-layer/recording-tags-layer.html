@@ -1,6 +1,6 @@
 <div>
     <div ng-repeat="bbox in layer.controller.spectrogramTags">
-        <div class="roi input-source cursor-pointer"
+        <div class="roi tag input-source cursor-pointer"
             ng-style="{
                 left:layout.sec2x(bbox.bbox.t0, 1) + 'px',
                 top:layout.hz2y(bbox.bbox.f1, 1) + 'px',
@@ -8,7 +8,7 @@
                 height:layout.dhz2height(bbox.bbox.f1, bbox.bbox.f0) + 'px'
             }"
             id="popoverspectrogramTags"
-            popover-html="'<p class=\'small\'>Tag</p>{{layer.controller.getTagNames(bbox.tags)}}'"
+            popover-html="'<span class=\'small mr-2\'>Tag:</span>{{layer.controller.getTagNames(bbox.tags)}}'"
             popover-trigger="mouseenter"
             popover-append-to-body="true"
             data-placement="top"

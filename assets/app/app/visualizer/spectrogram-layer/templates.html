@@ -1,6 +1,6 @@
 <div>
     <div ng-repeat="roi in layer.templates.recordingTemplates">
-        <div class="roi input-source cursor-pointer"
+        <div class="roi template input-source cursor-pointer"
             ng-class="{'roi-selected':layer.templates.selectedRoi == roi}"
             ng-click="$event.stopPropagation(); layer.templates.selectedRoi = roi"
             ng-style="{
