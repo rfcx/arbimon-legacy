@@ -51,8 +51,9 @@
             </div>
         </div>
     </div>
-    <div class="col-lg-5 col-sm-12 mt-4">
-        <div class="py-3">
+    <div class="col-sm-12 mt-4 flex row-flex-inline ">
+    <div style="width: 63%">
+        <div>
             <span ng-if="!loading.list" class="text-left reclist-total ml-2">
                 {{ trainingSets ? trainingSets.length : 0 }} {{trainingSets.length > 1 ? "training sets" : "training set"}}
             </span>
@@ -71,6 +72,12 @@
                             </a>
                         </div>
                     </field>
+                    <field title="Species" key="species" title="{{ row.species }}" tdclass="no-wrap hidelongtext" >
+                        Thamnophilus atrinucha
+                    </field>
+                    <field title="Songtype" key="songtype" title="{{ row.songtype }}" tdclass="no-wrap hidelongtext">
+                        Alternative Song
+                    </field>
                     <field title="Date created" key="date_created">
                         {{ row.date_created | moment: 'll' }}
                     </field>
@@ -80,7 +87,7 @@
         </div>
     </div>
 
-    <div class="col-lg-7 col-sm-12 mt-4 py-3">
+    <div class="mt-4 py-3 ml-2" style="width: 36%">
         <div class="panel panel-default" ng-show="loaderDisplay">
             <div class="panel-body">
                 Loading <loader></loader>
@@ -96,8 +103,8 @@
                     }}
                 </h3>
             </div>
-            <div class="mt-4">
-                <div class="clearfix form-group">
+            <div>
+                <div class="clearfix form-group mt-3">
                     <label class="col-sm-3 control-label">Name</label>
                     <div class="col-sm-9" ng-if="!selected.trainingSet.edit">
                         {{ selected.trainingSet.name }}
@@ -109,7 +116,10 @@
                 <div class="clearfix form-group">
                     <label class="col-sm-3 control-label">Species sound</label>
                     <div class="col-sm-9" ng-if="!selected.trainingSet.edit">
-                        {{ species }} - {{ songtype }}
+                        {{ species }}
+                    </div>
+                    <div class="col-sm-9" ng-if="!selected.trainingSet.edit">
+                        {{ songtype }}
                     </div>
                     <div class="col-sm-9" ng-if="selected.trainingSet.edit">
                         <ui-select ng-model="selected.trainingSet.edit.class" theme="bootstrap">
@@ -131,42 +141,40 @@
                     </div>
                 </div>
                 <div class="clearfix form-group" ng-if="!selected.trainingSet.edit">
-                    <div class="col-sm-3"></div>
-                    <div class="col-sm-3">
+                    <label class="col-sm-3 control-label">Validations</label>
+                    <div class="col-sm-4">
                         <i class="fa val-1"></i> present: {{ selected.trainingSet.validations.present }}
                     </div>
-                    <div class="col-sm-6">
+                    <div class="col-sm-5">
                             <i class="fa val-0"></i> absent: {{ selected.trainingSet.validations.absent }}
+                    </div>
+                </div>
+                <div ng-if="isSelectedTsCombined()" class="clearfix form-group">
+                    <label class="col-sm-3 control-label">Combined training sets</label>
+                    <div class="col-sm-9">
+                        {{ getCombinedTs1() }}
+                    </div>
+                    <div class="col-sm-9">
+                        {{ getCombinedTs2() }}
                     </div>
                 </div>
                 <div class="clearfix form-group">
                     <label class="col-sm-3 control-label">ROI Count</label>
                     <div class="col-sm-9">{{ rois.length }}</div>
                 </div>
-                <div ng-if="isSelectedTsCombined()" class="clearfix form-group">
-                    <label class="col-sm-3 control-label">Combined training sets</label>
-                    <div class="col-sm-3">
-                        {{ getCombinedTs1() }}
-                    </div>
-                    <div class="col-sm-3">
-                        {{ getCombinedTs2() }}
-                    </div>
-                </div>
             </div>
 
-            <div class="panel-body" ng-hide="rois.length">
-                <div class="well">
-                    This training set is empty.
-                    <a ui-sref="visualizer" href="#/visualizer">
-                        To add data go to <i class="fa fa-cubes"></i> Visualizer.
-                    </a>
-                </div>
+            <div class="panel-body text-center well" ng-hide="rois.length">
+                <div>This training set is empty.</div>
+                <a ui-sref="visualizer" href="#/visualizer">
+                    To add data go to <i class="fa fa-cubes"></i> Visualizer.
+                </a>
             </div>
 
             <div class="panel-body" ng-show="rois.length">
 
                 <div class="row">
-                    <div class="col-sm-offset-2 col-sm-8">
+                    <div class="mr-4">
                         <div class="toolbar pull-right">
                             <div class="btn-group" ng-show="total.pages > 1 || detailedView">
                                 <a class="btn btn-default" ng-click="prev()">Previous</a>
@@ -265,6 +273,8 @@
             </div>
         </div>
     </div>
+    </div>
+
     <div ng-show="(!trainingSets || !trainingSets.length > 0) && !loading.list" class="help-wrapper col-sm-12 row-flex flex-direction-column flex-space-center flex-align-middle" style="text-align: center;">
             <a class="btn btn-sm btn-success btn-rounded-full"
                 tooltip="Create Training Set"
