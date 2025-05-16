@@ -72,11 +72,11 @@
                             </a>
                         </div>
                     </field>
-                    <field title="Species" key="species" title="{{ row.species }}" tdclass="no-wrap hidelongtext" >
-                        Thamnophilus atrinucha
+                    <field title="Species" key="species" title="{{ row.species_name }}" tdclass="no-wrap hidelongtext" >
+                        {{ row.species_name }}
                     </field>
-                    <field title="Songtype" key="songtype" title="{{ row.songtype }}" tdclass="no-wrap hidelongtext">
-                        Alternative Song
+                    <field title="Songtype" key="songtype" title="{{ row.songtype_name }}" tdclass="no-wrap hidelongtext">
+                        {{ row.songtype_name }}
                     </field>
                     <field title="Date created" key="date_created">
                         {{ row.date_created | moment: 'll' }}
