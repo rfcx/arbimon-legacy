@@ -18,6 +18,9 @@
                     <field title="Last update" key="last_update">
                         {{ row.last_update | moment: 'lll' }}
                     </field>
+                    <field title="Parameters" key="parameters" tdclass="widthtd hidelongtext">
+                        <span title="{{row.parameters}}">{{row.parameters}}</span>
+                    </field>
                     <field title="State" key="state">
                         <span ng-hide="isProcessing(row)">{{ row.state }}</span>
                         <div ng-show="isProcessing(row)" class="progress progress-striped active mb-0" ng-style="{ 'max-width': 80 + '%' }">

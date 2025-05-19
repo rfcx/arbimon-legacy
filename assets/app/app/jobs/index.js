@@ -218,7 +218,7 @@ angular.module('a2.jobs', [
                     else {
                         updateJobs();
                     }
-                }, 10000);
+                }, 30000);
             }
 
         },
