@@ -76,11 +76,13 @@ var TrainingSets = {
                 "       TS.project_id as project, TS.source_project_id, \n" +
                 "       TS.metadata, \n" +
                 "       TST.identifier as type, \n" +
-                "       TSRS.species_id as species, \n" +
-                "       TSRS.songtype_id as songtype \n" +
+                "       TSRS.species_id as species, SP.scientific_name as species_name, \n" +
+                "       TSRS.songtype_id as songtype, ST.songtype as songtype_name \n" +
                 "FROM training_sets TS \n" +
                 "JOIN training_set_types TST ON TS.training_set_type_id = TST.training_set_type_id \n" +
                 "LEFT JOIN training_sets_roi_set TSRS ON TS.training_set_id = TSRS.training_set_id \n" +
+                "JOIN species SP ON TSRS.species_id = SP.species_id \n" +
+                "JOIN songtypes ST ON TSRS.songtype_id = ST.songtype_id \n" +
                 "WHERE " + constraints.join(" \nAND ") + " \n" +
                 "ORDER BY TS.date_created DESC";
 
