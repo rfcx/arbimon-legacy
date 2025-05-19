@@ -1034,6 +1034,34 @@ a2-draw-peak-threshold {
   overflow: hidden;
 }
 
+.custom-width-63 {
+  width: 63%;
+}
+
+.custom-width-36 {
+  width: 36%;
+}
+
+.responsive-row {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem; /* ระยะห่างระหว่างรายการ */
+}
+
+@media (max-width: 1230px) {
+  /* breakpoint 'lg' ลงไป = ย่อจอ */
+  .responsive-row {
+    flex-direction: column;
+  }
+
+  .custom-width-63 {
+    width: 100%;
+  }
+
+  .custom-width-36 {
+    width: 100%;
+  }
+}
 // -> classification/list, models/list, modelinfo, soundscapes/list
 .widthtd {
   max-width: 300px;

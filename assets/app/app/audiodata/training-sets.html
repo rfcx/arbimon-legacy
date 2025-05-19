@@ -51,8 +51,8 @@
             </div>
         </div>
     </div>
-    <div class="col-sm-12 mt-4 flex row-flex-inline ">
-    <div style="width: 63%">
+    <div class="col-sm-12 mt-4 responsive-row">
+    <div class="custom-width-63">
         <div>
             <span ng-if="!loading.list" class="text-left reclist-total ml-2">
                 {{ trainingSets ? trainingSets.length : 0 }} {{trainingSets.length > 1 ? "training sets" : "training set"}}
@@ -87,7 +87,7 @@
         </div>
     </div>
 
-    <div class="mt-4 py-3 ml-2" style="width: 36%">
+    <div class="mt-4 py-3 ml-2 custom-width-36">
         <div class="panel panel-default" ng-show="loaderDisplay">
             <div class="panel-body">
                 Loading <loader></loader>
@@ -133,10 +133,10 @@
                     </div>
                 </div>
                 <div class="clearfix form-group" ng-if="selected.trainingSet.edit">
-                    <div class="col-md-offset-3 col-sm-2">
+                    <div class="col-md-offset-3 col-sm-3">
                         <button type="button" ng-click="selected.trainingSet.edit.save()" class="btn btn-primary btn-rounded-full" style="width: 100px;">Save</button>
                     </div>
-                    <div class="col-sm-7">
+                    <div class="col-sm-3">
                         <button type="button" ng-click="selected.trainingSet.edit.cancel()" class="btn btn-success btn-rounded-full" style="width: 100px;">Cancel</button>
                     </div>
                 </div>
