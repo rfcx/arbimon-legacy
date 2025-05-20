@@ -351,7 +351,8 @@ var Jobs = {
                 for (let job of jobs) {
                     const sql = await this.getJobParams(job.job_type_id, job.job_id);
                     const params = await dbpool.query(sql);
-                    job.parameters = params[0];
+                    job.paramKeys = Object.keys(params[0]);
+                    job.paramValues = Object.values(params[0]);
                 }
                 return jobs;
             })
@@ -375,46 +376,46 @@ var Jobs = {
         return new Promise(async function (resolve, reject) {
             switch (jobTypeId) {
                 case 1:
-                    sql = `select ts.name as training_set_name
+                    sql = `select ts.name as "Training Set"
                         from job_params_training jptr
                         join training_sets ts on jptr.training_set_id = ts.training_set_id
                         where jptr.job_id = ${jobId};`
                     break;
                 case 2:
-                    sql = `select m.name as model_name, pl.name as playlist_name
+                    sql = `select m.name as "Model Name", pl.name as "Playlist Name"
                         from job_params_classification jpc
                         join playlists pl on jpc.playlist_id = pl.playlist_id
                         join models m on jpc.model_id = m.model_id
                         where jpc.job_id = ${jobId};`
                     break;
                 case 4:
-                    sql = `select pl.name as playlist_name, jps.bin_size, jps.soundscape_aggregation_type_id, jps.normalize, jps.threshold, jps.threshold_type, jps.frequency, jps.max_hertz
+                    sql = `select pl.name as "Playlist Name", jps.bin_size as "Bin Size", jps.soundscape_aggregation_type_id as "Aggregation Type", jps.normalize as "Normalize", jps.threshold as "Threshold", jps.threshold_type as "Threshold Type", jps.frequency as "Frequency", jps.max_hertz as "Max Hertz"
                         from job_params_soundscape jps
                         join playlists pl on jps.playlist_id = pl.playlist_id
                         where jps.job_id = ${jobId};`
                     break;
                 case 6:
-                    sql = `select pl.name as playlist_name, t.name as template_name, pm.parameters
+                    sql = `select pl.name as "Playlist Name", t.name as "Template", pm.parameters as "Parameters"
                         from pattern_matchings pm
                         join playlists pl on pm.playlist_id = pl.playlist_id
                         join templates t on pm.template_id = t.template_id
                         where pm.job_id = ${jobId};`
                     break;
                 case 8:
-                    sql = `select pl.name as playlist_name, jpaed.parameters
+                    sql = `select pl.name as "Playlist Name", jpaed.parameters as "Parameters"
                         from job_params_audio_event_detection_clustering jpaed
                         join playlists pl on jpaed.playlist_id = pl.playlist_id
                         where jpaed.job_id = ${jobId};`
                     break;
                 case 9:
-                    sql = `select pl.name as playlist_name, jpaed.name as audio_event_detection_name, jpaed.parameters
+                    sql = `select pl.name as "Playlist Name", jpaed.name as "AED", jpaed.parameters as "Parameters"
                         from job_params_audio_event_clustering jpaedc
                         join playlists pl on jpaedc.playlist_id = pl.playlist_id
                         join job_params_audio_event_clustering jpaed on jpaedc.audio_event_detection_job_id = jpaed.audio_event_detection_job_id
                         where jpaedc.job_id = ${jobId};`
                     break;
                 case 10:
-                    sql = `select ts.name as training_set_name
+                    sql = `select ts.name as "Training Set"
                         from job_params_retraining jpr
                         join job_params_training jptr on jpr.trained_job_id = jptr.job_id
                         join training_sets ts on jptr.training_set_id = ts.training_set_id

@@ -18,9 +18,6 @@
                     <field title="Last update" key="last_update">
                         {{ row.last_update | moment: 'lll' }}
                     </field>
-                    <field title="Parameters" key="parameters" tdclass="widthtd hidelongtext">
-                        <span title="{{row.parameters}}">{{row.parameters}}</span>
-                    </field>
                     <field title="State" key="state">
                         <span ng-hide="isProcessing(row)">{{ row.state }}</span>
                         <div ng-show="isProcessing(row)" class="progress progress-striped active mb-0" ng-style="{ 'max-width': 80 + '%' }">
@@ -42,6 +39,24 @@
                             <span>Open</span>
                         </button>
                     </field>
+                    <expand-select>
+                        <div class="row" style="margin-top:10px;">
+                            <div class="col-sm-1">
+                                <ul class="pl-0">
+                                    <li ng-repeat="k in selected.paramKeys">
+                                        <div class="pt-2">{{ k }}</div>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="col-sm-6">
+                                <ul>
+                                    <li ng-repeat="v in selected.paramValues track by $index">
+                                        <div class="pt-2">{{ v }}</div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </expand-select>
                 </a2-table>
             </div>
         </div>
