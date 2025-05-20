@@ -75,7 +75,7 @@
                     <field title="Species" key="species" title="{{ row.species_name }}" tdclass="no-wrap hidelongtext" >
                         {{ row.species_name }}
                     </field>
-                    <field title="Songtype" key="songtype" title="{{ row.songtype_name }}" tdclass="no-wrap hidelongtext">
+                    <field title="Song type" key="songtype" title="{{ row.songtype_name }}" tdclass="no-wrap hidelongtext">
                         {{ row.songtype_name }}
                     </field>
                     <field title="Date created" key="date_created">
@@ -114,12 +114,9 @@
                     </div>
                 </div>
                 <div class="clearfix form-group">
-                    <label class="col-sm-3 control-label">Species sound</label>
+                    <label class="col-sm-3 control-label">Species</label>
                     <div class="col-sm-9" ng-if="!selected.trainingSet.edit">
                         {{ species }}
-                    </div>
-                    <div class="col-sm-9" ng-if="!selected.trainingSet.edit">
-                        {{ songtype }}
                     </div>
                     <div class="col-sm-9" ng-if="selected.trainingSet.edit">
                         <ui-select ng-model="selected.trainingSet.edit.class" theme="bootstrap">
@@ -130,6 +127,12 @@
                                 {{ class.species_name }}, {{ class.songtype_name }}
                             </ui-select-choices>
                         </ui-select>
+                    </div>
+                </div>
+                <div class="clearfix form-group" ng-if="!selected.trainingSet.edit">
+                    <label class="col-sm-3 control-label">Song type</label>
+                    <div class="col-sm-9" ng-if="!selected.trainingSet.edit">
+                        {{ songtype }}
                     </div>
                 </div>
                 <div class="clearfix form-group" ng-if="selected.trainingSet.edit">
