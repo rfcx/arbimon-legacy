@@ -350,9 +350,12 @@ var Jobs = {
             .then(async (jobs) => {
                 for (let job of jobs) {
                     const sql = await this.getJobParams(job.job_type_id, job.job_id);
-                    const params = await dbpool.query(sql);
-                    job.paramKeys = Object.keys(params[0]);
-                    job.paramValues = Object.values(params[0]);
+                    let [params] = await dbpool.query(sql);
+                    if (!params) continue
+                    if (params.Parameters) {
+                        params.Parameters = JSON.parse(params.Parameters)
+                    }
+                    job.parameters = params;
                 }
                 return jobs;
             })
@@ -389,7 +392,9 @@ var Jobs = {
                         where jpc.job_id = ${jobId};`
                     break;
                 case 4:
-                    sql = `select pl.name as "Playlist Name", jps.bin_size as "Bin Size", jps.soundscape_aggregation_type_id as "Aggregation Type", jps.normalize as "Normalize", jps.threshold as "Threshold", jps.threshold_type as "Threshold Type", jps.frequency as "Frequency", jps.max_hertz as "Max Hertz"
+                    sql = `select pl.name as "Playlist Name", jps.bin_size as "Bin Size", jps.soundscape_aggregation_type_id as "Aggregation Type",
+                            jps.normalize as "Normalize", jps.threshold as "Threshold", jps.threshold_type as "Threshold Type",
+                            jps.frequency as "Frequency", jps.max_hertz as "Max Hertz"
                         from job_params_soundscape jps
                         join playlists pl on jps.playlist_id = pl.playlist_id
                         where jps.job_id = ${jobId};`
@@ -408,11 +413,10 @@ var Jobs = {
                         where jpaed.job_id = ${jobId};`
                     break;
                 case 9:
-                    sql = `select pl.name as "Playlist Name", jpaed.name as "AED", jpaed.parameters as "Parameters"
-                        from job_params_audio_event_clustering jpaedc
-                        join playlists pl on jpaedc.playlist_id = pl.playlist_id
-                        join job_params_audio_event_clustering jpaed on jpaedc.audio_event_detection_job_id = jpaed.audio_event_detection_job_id
-                        where jpaedc.job_id = ${jobId};`
+                    sql = `select jpaed.name as "AED", jpaec.parameters as "Parameters"
+                        from job_params_audio_event_clustering jpaec
+                        join job_params_audio_event_detection_clustering jpaed on jpaec.audio_event_detection_job_id = jpaed.job_id
+                        where jpaec.job_id = ${jobId};`
                     break;
                 case 10:
                     sql = `select ts.name as "Training Set"

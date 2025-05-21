@@ -40,18 +40,20 @@
                         </button>
                     </field>
                     <expand-select>
-                        <div class="row" style="margin-top:10px;">
-                            <div class="col-sm-1">
-                                <ul class="pl-0">
-                                    <li ng-repeat="k in selected.paramKeys">
-                                        <div class="pt-2">{{ k }}</div>
-                                    </li>
-                                </ul>
-                            </div>
-                            <div class="col-sm-6">
-                                <ul>
-                                    <li ng-repeat="v in selected.paramValues track by $index">
-                                        <div class="pt-2">{{ v }}</div>
+                        <div class="row">
+                            <div>
+                                <ul class="pl-4">
+                                    <li ng-repeat="(k, v) in selected.parameters">
+                                        <div class="row-flex flex-direction-row">
+                                            <div class="col-sm-1 pl-0">{{ k }}:</div>
+                                            <div class="col-sm-6">
+                                                <div ng-if="v.threshold && v.threshold !== undefined" class="pt-2 ml-2">Threshold: {{ v.threshold }}, N: {{v.N}}</div>
+                                                <div ng-if="v['Amplitude Threshold'] || v['Distance Threshold']" ng-repeat="(key, value) in v track by $index" class="pt-2 ml-2">
+                                                    <span>{{key}}:</span><span class="ml-2">{{value}}</span>
+                                                </div>
+                                                <div ng-if="!v.threshold && !v['Amplitude Threshold'] && !v['Distance Threshold']" class="pt-2 ml-2">{{ v }}</div>
+                                            </div>
+                                        </div>
                                     </li>
                                 </ul>
                             </div>
