@@ -1,6 +1,8 @@
 <div>
     <div ng-repeat="bbox in layer.controller.spectrogramTags">
         <div class="roi tag input-source cursor-pointer"
+            ng-class="{'tag-selected': layer.controller.selected == bbox}"
+            ng-click="$event.stopPropagation(); layer.controller.selected = bbox"
             ng-style="{
                 left:layout.sec2x(bbox.bbox.t0, 1) + 'px',
                 top:layout.hz2y(bbox.bbox.f1, 1) + 'px',

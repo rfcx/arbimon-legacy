@@ -1,6 +1,8 @@
 <div>
     <div ng-repeat="roi in layer.species_presence.speciesPresence" style="position: relative;">
         <div class="roi species input-source"
+            ng-class="{'species-selected':layer.species_presence.selected == roi}"
+            ng-click="$event.stopPropagation(); layer.species_presence.selected = roi"
             ng-style="{
                 left:layout.sec2x(roi.x1, 1) + 'px',
                 top:layout.hz2y(roi.y2, 1) + 'px',
@@ -10,7 +12,7 @@
             }"
             id="popoverSpeciesPresence-{{roi.id}}"
             popover-html="'<p class=\'small\'>Validation</p><span class=\'small mr-2\'>Species:</span> {{roi.species}}<br /><span class=\'small mr-2\'>Sound:</span> {{roi.songtype}}'"
-            popover-trigger="mouseenter"
+            popover-trigger="click"
             popover-append-to-body="true"
             data-placement="top"
             tabindex="0"

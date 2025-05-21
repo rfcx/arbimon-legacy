@@ -1,7 +1,7 @@
 <div>
     <div ng-repeat="roi in layer.templates.recordingTemplates">
         <div class="roi template input-source cursor-pointer"
-            ng-class="{'roi-selected':layer.templates.selectedRoi == roi}"
+            ng-class="{'roi-template-selected':layer.templates.selectedRoi == roi}"
             ng-click="$event.stopPropagation(); layer.templates.selectedRoi = roi"
             ng-style="{
                 left:layout.sec2x(roi.x1, 1) + 'px',
@@ -11,7 +11,7 @@
             }"
             id="popoverRecordingTemplates-{{roi.id}}"
             popover-html="'<p class=\'small\'>Template</p><span class=\'small mr-2\'>Name:</span> {{roi.name}}<br /><span class=\'small mr-2\'>Species:</span> {{roi.species_name}}<br /><span class=\'small mr-2\'>Sound:</span> {{roi.songtype_name}}'"
-            popover-trigger="mouseenter"
+            popover-trigger="click"
             popover-append-to-body="true"
             data-placement="top"
             tabindex="0"

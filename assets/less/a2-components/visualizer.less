@@ -321,6 +321,10 @@
                     border-color: @roi-set-border-color;
                     background-color: @roi-set-bg-color;
                 }
+                &.roi-training-set-selected {
+                    border-color: @roi-set-border-color;
+                    background-color: fade(@roi-set-bg-color, 20%);
+                }
                 &.audio-event {
                     border-color: @roi-audio-event-border-color;
                     background-color: @roi-audio-event-color;
@@ -329,9 +333,17 @@
                     border-color: @roi-annotation-border-color;
                     background-color: @roi-annotation-bg-color;
                 }
+                &.roi-template-selected {
+                    border-color: @roi-annotation-border-color;
+                    background-color: fade(@roi-annotation-bg-color, 20%);
+                }
                 &.tag {
                     border-color: @roi-annotation-red-border-color;
                     background-color: @roi-annotation-red-bg-color;
+                }
+                &.tag-selected {
+                    border-color: @roi-annotation-red-border-color;
+                    background-color: fade(@roi-annotation-red-bg-color, 20%);
                 }
                 &.species {
                     border-color: @roi-species-border-color;
@@ -341,12 +353,15 @@
                         visibility: hidden !important;
                     }
                     &:hover {
-                        border: 1px solid fade(@brand-present, 10%);
                         cursor: pointer;
                         .close {
                             visibility: visible !important;
                         }
                     }
+                }
+                &.species-selected {
+                    border-color: @roi-species-border-color;
+                    background-color: fade(@roi-species-color, 20%);
                 }
                 &.roi-current{
                     border-color: @roi-current-border-color;
