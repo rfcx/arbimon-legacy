@@ -45,8 +45,8 @@
                                 <ul class="pl-4">
                                     <li ng-repeat="(k, v) in selected.parameters">
                                         <div class="row-flex flex-direction-row">
-                                            <div class="col-sm-1 pl-0">{{ k }}:</div>
-                                            <div class="col-sm-6">
+                                            <div class="pl-0" style="width:200px">{{ k }}:</div>
+                                            <div>
                                                 <div ng-if="v.threshold && v.threshold !== undefined" class="pt-2 ml-2">Threshold: {{ v.threshold }}, N: {{v.N}}</div>
                                                 <div ng-if="v['Amplitude Threshold'] || v['Distance Threshold']" ng-repeat="(key, value) in v track by $index" class="pt-2 ml-2">
                                                     <span>{{key}}:</span><span class="ml-2">{{value}}</span>
