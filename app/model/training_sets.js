@@ -180,6 +180,15 @@ var TrainingSets = {
         });
     },
 
+    unshareTrainingSet: async function(opts) {
+        const sql_del_ts = `delete from training_sets where training_set_id = ?;`;
+        await dbpool.query(sql_del_ts, [opts.trainingSetId])
+        const sql_del_ts_rois_data = `delete from training_set_roi_set_data where training_set_id = ?;`;
+        await dbpool.query(sql_del_ts_rois_data, [opts.trainingSetId])
+        const sql_del_ts_roi_set = 'delete from training_sets_roi_set where training_set_id = ?';
+        return await dbpool.query(sql_del_ts_roi_set, [opts.trainingSetId]);
+    },
+
     shareTrainingSet: async function(opts) {
         const sql_new_ts = `insert into training_sets(project_id, name, date_created, training_set_type_id, removed, source_project_id)
             select ?, ts2.name, ts2.date_created, ts2.training_set_type_id, ts2.removed, ?
@@ -375,6 +384,14 @@ var TrainingSets = {
     fetchSpecies: function (training_set, callback) {
         var typedef = TrainingSets.types[training_set.type];
         typedef.get_species(training_set, callback);
+    },
+
+    getSharedTrainingSet: async function (opts) {
+        const sql = `select ts.name trainingSetName, ts.training_set_id trainingSetId, p.name project, p.project_id projectId
+            from training_sets ts
+            join projects p on ts.project_id = p.project_id
+            where ts.name = ? and ts.removed = 0 and ts.source_project_id = ?;`;
+        return await dbpool.query(sql, [opts.name, opts.project]);
     },
 
     /** Fetches the available training set types.

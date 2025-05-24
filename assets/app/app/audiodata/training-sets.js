@@ -453,6 +453,73 @@ angular.module('a2.audiodata.training-sets', [
         }
     }).bind(this));
 
+    $scope.getSharedTrainingSet = function(trainingSetId) {
+        return a2TrainingSets.getSharedTrainingSet(trainingSetId)
+            .success(function(data) {
+                $scope.sharedTrainingSet = data;
+            })
+            .error(function(data, status) {
+                notify.serverError();
+            });
+    }
+
+
+    $scope.openSharingHistory = function() {
+        if (!$scope.isShareTsEnabled()) {
+            notify.error('You do not have permission to share training sets');
+            return;
+        }
+        if (!$scope.selected && !$scope.selected.trainingSet && !$scope.selected.trainingSet.id) {
+            return false
+        }
+
+        $scope.getSharedTrainingSet($scope.selected.trainingSet.id).then(function() {
+            const  sharedTrainingSet = $scope.sharedTrainingSet;
+            const modalInstance = $modal.open({
+                templateUrl: '/app/audiodata/training-sets-unshare-modal.html',
+                controller: 'UnshareTrainingSetInstanceCtrl',
+                resolve: {
+                    trainingSets: function() {
+                        return sharedTrainingSet;
+                    }
+                },
+                windowClass: 'modal-element width-700'
+            });
+
+            modalInstance.result.then(
+                function(res) {
+                    if (res.error) {
+                        notify.error(res.error);
+                    }
+                    else notify.log(res.message);
+                }
+            );
+        });
+    };
+
+})
+
+.controller('UnshareTrainingSetInstanceCtrl', function($scope, $modalInstance, a2TrainingSets, trainingSets) {
+    $scope.sharedTrainingSet = trainingSets;
+    $scope.isUnshareTrainingSet = false;
+    $scope.unshareTrainingSet = function(trainingSet) {
+        $scope.isUnshareTrainingSet = true;
+        a2TrainingSets.unshareTrainingSet(trainingSet.trainingSetId)
+            .success(function(data) {
+                $scope.isUnshareTrainingSet = false;
+                $modalInstance.close(data);
+            })
+            .error(function(err) {
+                $scope.isUnshareTrainingSet = false;
+                $modalInstance.close(err);
+            });
+    };
+
+    $scope.cancel = function() {
+        $scope.isUnshareTrainingSet = false;
+        $modalInstance.dismiss('cancel');
+    };
+
 })
 
 .controller('ShareTrainingSetInstanceCtrl', function($scope, $modalInstance, a2TrainingSets, trainingSets, Project) {

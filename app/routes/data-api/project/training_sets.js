@@ -90,6 +90,27 @@ router.get('/rois/:trainingSet', function(req, res, next) {
     }
 });
 
+router.get('/:trainingSet/unshare', function(req, res, next) {
+    res.type('json');
+    return model.trainingSets.unshareTrainingSet({ trainingSetId: req.params.trainingSet })
+        .then((data) => {
+            res.status(201).json({ message: 'The training set was successfully unshared with the selected project.' })
+        })
+        .catch(next)
+});
+
+router.get('/:trainingSet/shared-list', function(req, res, next) {
+    res.type('json');
+    return model.trainingSets.find({ id: req.params.trainingSet }, function(err, data) {
+        const opts = data[0];
+        model.trainingSets.getSharedTrainingSet(opts)
+            .then((rows) => {
+                res.status(200).json(rows);
+            })
+            .catch(next)
+    })
+});
+
 router.get('/data/:trainingSet/get-image/:dataId', function(req, res, next) {
     res.type('json');
     model.trainingSets.fetchDataImage(req.trainingSet, req.dataId, function(err, data) {

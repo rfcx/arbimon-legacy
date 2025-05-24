@@ -93,8 +93,17 @@ angular.module('a2.srv.training-sets', ['a2.srv.project'])
         shareTrainingSet: function(trainingSetData) {
             return $http.post('/legacy-api/project/' + Project.getUrl() + '/training-sets/share', trainingSetData)
         },
+        unshareTrainingSet: function(trainingSetId) {
+            return $http.get('/legacy-api/project/' + Project.getUrl() + '/training-sets/' + trainingSetId + '/unshare')
+        },
         combineTrainingSet: function(trainingSetData) {
             return $http.post('/legacy-api/project/' + Project.getUrl() + '/training-sets/combine', trainingSetData)
+        },
+        getSharedTrainingSet: function(trainingSetId) {
+            const config = {
+                params: { trainingSetId: trainingSetId }
+            };
+            return $http.get( '/legacy-api/project/' + Project.getUrl() + '/training-sets/' + trainingSetId + '/shared-list', config);
         },
     };
 })

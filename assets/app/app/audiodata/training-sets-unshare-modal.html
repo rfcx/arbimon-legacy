@@ -1,0 +1,27 @@
+<img class="ic-close" src="/images/fi-close.svg" ng-click="$dismiss()">
+<div class="modal-header">Training set sharing history</div>
+<div class="modal-body mt-5">
+    <div ng-if="sharedTrainingSet && sharedTrainingSet.length">
+        <a2-table rows="sharedTrainingSet" no-checkbox="true">
+            <field tdclass="is-v-middle" title="Name">
+                <div class="hidelongtext" title="{{row.trainingSetName}}">{{ row.trainingSetName }}</div>
+            </field>
+            <field tdclass="is-v-middle" title="Sharing project">
+                <div class="hidelongtext" title="{{row.project}}">{{row.project}}</div>
+            </field>
+            <field tdclass="is-v-middle">
+                <div class="row-flex flex-space-end">
+                    <button class="btn btn-success btn-rounded-full py-2 px-3" style="font-size:15px" ng-click="unshareTrainingSet(row)">Unshare</button>
+                </div>
+            </field>
+        </a2-table>
+    </div>
+    <div ng-if="sharedTrainingSet && !sharedTrainingSet.length">
+        No sharing history.
+    </div>
+</div>
+<div class="modal-footer">
+    <div class="row-flex flex-direction-row flex-space-end">
+        <button class="btn btn-success" ng-click="$dismiss()">Cancel</button>
+    </div>
+</div>
