@@ -234,6 +234,25 @@ angular.module('a2.audiodata.species', [
         });
     };
 
+    $scope.bulkImport = function() {
+        if (!a2UserPermit.can("manage project species")) {
+            return notify.error("You do not have permission to add species");
+        }
+
+        var modalInstance = $modal.open({
+            templateUrl: '/app/audiodata/species-bulk-insert-modal.html',
+            controller: 'SpeciesBulkInsertModalCtrl',
+            size: 'lg',
+            windowClass: 'modal-element width-900'
+        });
+
+        modalInstance.result.then(function(selected) {
+
+
+
+        });
+    }
+
     $scope.exportSpecies = function() {
         if (a2UserPermit.isSuper()) return $downloadResource(Project.getSpeciesExportUrl());
         if (a2UserPermit.getUserRole() === 'Data Entry') {
@@ -313,4 +332,8 @@ angular.module('a2.audiodata.species', [
             });
         }, 500)
     };
+})
+
+.controller('SpeciesBulkInsertModalCtrl', function($scope, Species, Songtypes) {
+    $scope.isActiveStepper =  'Select';
 });

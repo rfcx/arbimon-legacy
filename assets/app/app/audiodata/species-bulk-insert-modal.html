@@ -1,0 +1,51 @@
+<img class="ic-close" src="/images/fi-close.svg" ng-click="$dismiss()">
+<h2 class="modal-header">
+    Import Species
+</h2>
+<div class="modal-body mt-4">
+    <div class="row row-flex flex-space-between flex-align-middle">
+        <div class="rounded-md p-3 text-fog" ng-class="{'active-stepper':isActiveStepper == 'Select'}">
+            <img class="mr-2" src="/images/fi-circle-black.svg" style="height: 18px;">
+            1. Select file
+        </div>
+        <div class="border-t-1 border-util-gray-02 border-line" style="width:20%"></div>
+        <div class="rounded-md p-3 text-fog" ng-class="{'active-stepper':isActiveStepper == 'Review'}">
+            <img class="mr-2" src="/images/fi-circle-black.svg" style="height: 18px;">
+            2. Review
+        </div>
+        <div class="border-t-1 border-util-gray-02 border-line" style="width:20%"></div>
+        <div class="rounded-md p-3 text-fog" ng-class="{'active-stepper':isActiveStepper == 'Upload'}">
+            <img class="mr-2" src="/images/fi-circle-black.svg" style="height: 18px;">
+            3. Upload
+        </div>
+    </div>
+    <div class="row px-4">
+        <div>
+            <div class="row-flex flex-space-between">
+                <div style="width: 70%;">
+                    <h3>Upload file</h3>
+                    Upload a CSV containing a list of species names.  See an example of the data we expect on the right.
+                    <div class="row-flex flex-space-start bg-insight rounded-lg mt-3 p-2 border-l-2 border-l-palm">
+                        <img class="icon-info text-palm" src="/images/fi-info-palm.svg"></img>
+                        <span class="text-palm mx-3">Note</span>
+                        <span class="text-pitch">All uploaded species will have a default “Simple Call”</span>
+                    </div>
+                </div>
+                <div class="row-flex flex-direction-column border-2 border-util-gray-02 rounded-lg p-3" style="width: 230px;">
+                    <div class="uppercase no-wrap">Species name</div>
+                    <div class="border-t-1 border-util-gray-02 border-line my-3"></div>
+                    <div>Canis lupus</div>
+                    <div>Emberiza citrinella</div>
+                    <div>Sitta europaea</div>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+</div>
+<div class="modal-footer">
+    <div class="row-flex flex-direction-row flex-space-between">
+        <button class="btn btn-success" ng-click="$dismiss()">Cancel</button>
+        <button class="btn btn-primary" ng-disabled="!selected.species || !selected.song" ng-click="$close(selected)">Next: Review</button>
+    </div>
+</div>
