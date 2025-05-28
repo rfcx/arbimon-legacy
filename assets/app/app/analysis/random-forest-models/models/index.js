@@ -622,18 +622,20 @@ angular.module('a2.analysis.random-forest-models.models', [
         $scope.project_id = data.project_id;
     });
 
+    $scope.validationIndex = 0;
+    const limit = 10;
+
     /*
         method recursively get validations vectors and then call waitinFunction()
      */
     var getVectors = function(index) {
-        if(scopeExited) return;
+        if (scopeExited) return;
 
-        if (index >= $scope.validations.length) {
+        var currRec = $scope.currValidations[index];
+        if (!$scope.currValidations[index]) {
             $scope.isGettingVectors = false;
             return $scope.waitinFunction();
         }
-
-        var currRec = $scope.validations[index];
 
         currRec.date = $window.moment(currRec.date, 'MM-DD-YYYY HH:mm');
 
@@ -657,12 +659,9 @@ angular.module('a2.analysis.random-forest-models.models', [
                         $scope.allYesMax.push(vmax);
                     }
                 }
-
                 getVectors(++index);
             });
     };
-
-    $scope.validationIndex = 0;
 
     $scope.onScroll = function($event, $controller){
         if ($scope.loadingValidations || $scope.isGettingVectors || $scope.stopScrolling) return
@@ -672,7 +671,7 @@ angular.module('a2.analysis.random-forest-models.models', [
         const elementHeight = $controller.scrollElement.screen.height;
         const diff = scrollTop + elementHeight > scrollHeight * 0.9;
         if (diff) {
-            if ($scope.validations && $scope.validations.length < 10) return;
+            if ($scope.validations && $scope.validations.length < limit) return;
             $scope.validationIndex++;
             $scope.isGettingVectors = true;
             $scope.getValidationResults();
@@ -680,7 +679,6 @@ angular.module('a2.analysis.random-forest-models.models', [
     }
 
     $scope.getValidationResults = function() {
-        const limit = 10;
         const offset = limit * $scope.validationIndex;
         a2Models.getValidationResults($stateParams.modelId, {limit: limit, offset: offset}, function(data) {
             if(data.err) {
@@ -694,86 +692,12 @@ angular.module('a2.analysis.random-forest-models.models', [
                 return;
             }
             $scope.validations = $scope.validations.concat(data.validations);
-            getVectors($scope.validationIndex);
+            $scope.currValidations = data.validations;
+            getVectors(0);
         });
     }
 
     $scope.getValidationResults(0);
-
-    var getModelRetrainingDates = function(jobId) {
-        a2Models.getModelRetrainingDates($stateParams.modelId, jobId)
-            .success(function(dates) {
-                $scope.retrainingDates = dates;
-            })
-            .error(function(data, status) {
-                if(status == 404) {
-                    $scope.notFound = true;
-                }
-                else {
-                    notify.serverError();
-                }
-            });
-    }
-
-    var getSharedModels = function(modelName) {
-        a2Models.getSharedModels($stateParams.modelId, modelName)
-            .success(function(data) {
-                $scope.sharedModels = data;
-            })
-            .error(function(data, status) {
-                if(status == 404) {
-                    $scope.notFound = true;
-                }
-                else {
-                    notify.serverError();
-                }
-            });
-    }
-
-    $scope.unshareModel = function(model) {
-        return $modal.open({
-            templateUrl: '/common/templates/pop-up.html',
-            controller: function() {
-                this.title = 'Unshare model';
-                this.messages = ['Are you sure you want to unshare this model from the following project?'];
-                this.list = [model.project];
-                this.btnOk =  "Unshare";
-                this.btnCancel =  "Cancel";
-            },
-            controllerAs: 'popup',
-            windowClass: 'modal-element width-490'
-        }).result.then(function() {
-            return a2Models.unshareModel($stateParams.modelId, model)
-                .success(function(data) {
-                    notify.log('The random forest model has been unshared.');
-                    getSharedModels($scope.model.name)
-                })
-                .error(function(data, status) {
-                    if(status == 404) {
-                        $scope.notFound = true;
-                    }
-                    else {
-                        notify.serverError();
-                    }
-                });
-        });
-    }
-
-    a2Models.findById($stateParams.modelId)
-        .success(function(model) {
-            $scope.model = model;
-            getModelRetrainingDates(model.jobId)
-            getSharedModels(model.name)
-            $scope.loading = null;
-        })
-        .error(function(data, status) {
-            if(status == 404) {
-                $scope.notFound = true;
-            }
-            else {
-                notify.serverError();
-            }
-        });
 
     $scope.waitinFunction = function() {
         $scope.loading = null;
@@ -1002,6 +926,82 @@ angular.module('a2.analysis.random-forest-models.models', [
             $scope.messageSaved = 'Value should be between 0 and 1.';
         }
     };
+
+    var getModelRetrainingDates = function(jobId) {
+        a2Models.getModelRetrainingDates($stateParams.modelId, jobId)
+            .success(function(dates) {
+                $scope.retrainingDates = dates;
+            })
+            .error(function(data, status) {
+                if(status == 404) {
+                    $scope.notFound = true;
+                }
+                else {
+                    notify.serverError();
+                }
+            });
+    }
+
+    var getSharedModels = function(modelName) {
+        a2Models.getSharedModels($stateParams.modelId, modelName)
+            .success(function(data) {
+                $scope.sharedModels = data;
+            })
+            .error(function(data, status) {
+                if(status == 404) {
+                    $scope.notFound = true;
+                }
+                else {
+                    notify.serverError();
+                }
+            });
+    }
+
+    $scope.unshareModel = function(model) {
+        return $modal.open({
+            templateUrl: '/common/templates/pop-up.html',
+            controller: function() {
+                this.title = 'Unshare model';
+                this.messages = ['Are you sure you want to unshare this model from the following project?'];
+                this.list = [model.project];
+                this.btnOk =  "Unshare";
+                this.btnCancel =  "Cancel";
+            },
+            controllerAs: 'popup',
+            windowClass: 'modal-element width-490'
+        }).result.then(function() {
+            return a2Models.unshareModel($stateParams.modelId, model)
+                .success(function(data) {
+                    notify.log('The random forest model has been unshared.');
+                    getSharedModels($scope.model.name)
+                })
+                .error(function(data, status) {
+                    if(status == 404) {
+                        $scope.notFound = true;
+                    }
+                    else {
+                        notify.serverError();
+                    }
+                });
+        });
+    }
+
+    a2Models.findById($stateParams.modelId)
+        .success(function(model) {
+            $scope.model = model;
+            getModelRetrainingDates(model.jobId)
+            getSharedModels(model.name)
+            $scope.loading = null;
+        })
+        .error(function(data, status) {
+            if(status == 404) {
+                $scope.notFound = true;
+            }
+            else {
+                notify.serverError();
+            }
+        });
+
 
     // TODO use ng-style
     $scope.zoomout = function() {
