@@ -669,7 +669,8 @@ angular.module('a2.analysis.random-forest-models.models', [
         $scope.scrollElement = $controller.scrollElement;
         const scrollTop = $controller.scrollElement.scrollY;
         const scrollHeight = $controller.scrollElement.outerHeight;
-        const diff = scrollTop > scrollHeight;
+        const elementHeight = $controller.scrollElement.screen.height;
+        const diff = scrollTop + elementHeight > scrollHeight * 0.9;
         if (diff) {
             if ($scope.validations && $scope.validations.length < 10) return;
             $scope.validationIndex++;
