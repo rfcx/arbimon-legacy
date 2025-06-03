@@ -600,6 +600,14 @@ textarea.fixed-width {
     cursor: pointer;
 }
 
+.width-2 {
+  width: 2%;
+}
+
+.width-10 {
+  width: 10%;
+}
+
 .width-35 {
   width: 35%;
 }
@@ -622,6 +630,7 @@ textarea.fixed-width {
 
 .species-table > table {
   table-layout: fixed;
+  margin-bottom: 0;
 }
 
 .templates .a2-table,
@@ -1578,6 +1587,11 @@ a.ui-select-choices-row-inner {
     @media (max-width: @screen-lg-desktop) {
       max-width: 50%;
     }
+  }
+  .container-species {
+    max-width: 100%;
+    padding: 60px 25%;
+    border: dashed 1px @util-gray-01;
   }
 }
 
@@ -2655,6 +2669,7 @@ search-bar {
       font-weight: 400 !important;
       color: #F9F6F2 !important;
       padding: 0px 24px 0px 24px !important;
+      margin-bottom: 0;
       .icon-info {
         margin-left: 6px;
         width: 16px;
@@ -2795,6 +2810,7 @@ search-bar {
       font-weight: 400 !important;
       color: #F9F6F2 !important;
       padding: 0px 24px 0px 24px !important;
+      margin-bottom: 0;
       .icon-info {
         margin-left: 6px;
         width: 16px;

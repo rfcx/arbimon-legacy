@@ -234,6 +234,12 @@ angular.module('a2.srv.project', [
             addClass: function(projectClass, callback) {
                 return $http.post('/legacy-api/project/'+url+'/class/add', projectClass);
             },
+            recognizeClasses: function(projectClasses) {
+                return $http.post('/legacy-api/project/'+url+'/class/recognize', projectClasses);
+            },
+            bulkAddClasses: function(projectClasses) {
+                return $http.post('/legacy-api/project/'+url+'/class/bulk-add', projectClasses);
+            },
             removeClasses: function(projectClasses, callback) {
                 return $http.post('/legacy-api/project/'+url+'/class/del', projectClasses);
             },

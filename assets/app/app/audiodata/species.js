@@ -2,7 +2,8 @@ angular.module('a2.audiodata.species', [
     'a2.services',
     'a2.directives',
     'ui.bootstrap',
-    'humane'
+    'humane',
+    'angularFileUpload'
 ])
 .controller('SpeciesCtrl', function($scope, Project, $modal, notify, a2UserPermit, a2Templates, a2AudioBarService, $localStorage, $state, $window, $downloadResource) {
     $scope.loading = false;
@@ -246,10 +247,8 @@ angular.module('a2.audiodata.species', [
             windowClass: 'modal-element width-900'
         });
 
-        modalInstance.result.then(function(selected) {
-
-
-
+        modalInstance.result.then(function() {
+            $scope.getProjectClasses();
         });
     }
 
@@ -334,6 +333,78 @@ angular.module('a2.audiodata.species', [
     };
 })
 
-.controller('SpeciesBulkInsertModalCtrl', function($scope, Species, Songtypes) {
-    $scope.isActiveStepper =  'Select';
-});
+.controller('SpeciesBulkInsertModalCtrl', function($scope, $modalInstance, Project, FileUploader) {
+    $scope.isActiveStepper = 'Select';
+    $scope.infoMessage = 'All uploaded species will have a default “Simple Call”';
+    $scope.errorSpecies = false;
+    $scope.files=[];
+    $scope.isSpeciesReading = false;
+    $scope.isSpeciesBulkLoading = false;
+
+    $scope.uploader = new FileUploader();
+
+    $scope.handler = function(e, files) {
+        $scope.isSpeciesReading = true;
+        var reader = new FileReader();
+        if (!e.target.files[0]) return
+        $scope.fileName = e.target.files[0].name;
+        reader.onload = function(event) {
+            const res = reader.result.split(/\r\n|\n/);
+            res.length ? $scope.parseSpeciesBulk(res) : $scope.showErrorMessage('Not any data provided.');
+            Project.recognizeClasses({classes: $scope.files})
+                .success(function(result){
+                    $scope.files = result.classes;
+                    $scope.errorSpecies = $scope.files.filter(f => f.status === 'Failed');
+                    if ($scope.errorSpecies.length) $scope.infoMessage = $scope.errorSpecies.length + ' species names are not recognized. Please add them manually.';
+                    $scope.reviewState();
+                })
+                .error(function(data, status) {
+                    notify.serverError();
+                });
+        }
+        reader.readAsText(files[0]);
+        $scope.isSpeciesReading = false;
+    }
+
+    $scope.parseSpeciesBulk = function (res) {
+       res.forEach((sp, ind) => {
+        if (!sp.length) return
+        $scope.files.push({
+            species: sp,
+            sound: 'Simple Call',
+            status: 'Waiting',
+            position: ind + 1
+        })
+       })
+    }
+
+    $scope.uploadState = function () {
+        $scope.isSpeciesBulkLoading = true;
+        $scope.isActiveStepper = 'Upload';
+        $scope.percentage = 10;
+    }
+
+    $scope.reviewState = function () {
+        $scope.isSpeciesReading = false;
+        $scope.isActiveStepper = 'Review';
+    }
+
+    $scope.uploadSpecies = function () {
+        $scope.uploadState();
+        $scope.successFiles = $scope.files.filter(file => file.status === 'Success');
+        $scope.percentage = 80;
+        Project.bulkAddClasses({classes: $scope.successFiles})
+            .success(function(result) {
+                $scope.percentage = 100;
+                $scope.isSpeciesBulkLoading = false
+                $modalInstance.close();
+            })
+            .error(function(data, status) {
+                $scope.isSpeciesBulkError = true;
+            });
+    }
+
+    $scope.cancel = function(){
+        $modalInstance.dismiss();
+    }
+})

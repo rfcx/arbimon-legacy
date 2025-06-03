@@ -46,6 +46,11 @@ var Species = {
         ]).nodeify(callback);
     },
 
+    findByNameAsync: function(scientific_name) {
+        let findByName = util.promisify(this.findByName)
+        return findByName(scientific_name)
+    },
+
     list: function(limit, callback) {
         var q = 'SELECT s.species_id as id, s.scientific_name, sf.family, st.taxon, GROUP_CONCAT(sa.alias) as aliases \n'+
                 'FROM species as s \n'+

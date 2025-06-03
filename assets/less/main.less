@@ -60,7 +60,7 @@ h2 {
   font-weight: 400;
 }
 
-h3 {
+h3, h4 {
   font-weight: 400;
 }
 
@@ -235,8 +235,16 @@ h5 {
   border-color: @util-gray-03;
 }
 
-.border-l-palm {
-  border-left-color: @palm;
+.note-info-border {
+  border-color: @palm;
+  border: 1px solid @palm;
+  border-left: 2px solid @palm;
+}
+
+.note-error-border {
+  border-color: #A31A33;
+  border: 1px solid #A31A33;
+  border-left: 2px solid #A31A33;
 }
 
 .bg-echo {
@@ -247,10 +255,18 @@ h5 {
   background-color: @insight;
 }
 
+.bg-spoonbill-2 {
+  background-color: #FFDADA;
+}
+
 .bg-moss {
   background-color: @moss;
 }
 
+.bg-surface {
+  background-color: #14130D;
+}
+  
 .bg-util-gray-02 {
   background-color: @util-gray-02;
 }

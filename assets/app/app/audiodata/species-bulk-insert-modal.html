@@ -1,17 +1,17 @@
-<img class="ic-close" src="/images/fi-close.svg" ng-click="$dismiss()">
-<h2 class="modal-header">
+<img class="ic-close cursor-pointer" src="/images/fi-close.svg" ng-click="$dismiss()">
+<h2 class="modal-header bg-surface m-0 pt-4">
     Import Species
 </h2>
-<div class="modal-body mt-4">
-    <div class="row row-flex flex-space-between flex-align-middle">
+<div class="modal-body m-0 bg-surface">
+    <div class="row-flex flex-direction-row flex-space-between flex-align-middle pt-4">
         <div class="rounded-md p-3 text-fog" ng-class="{'active-stepper':isActiveStepper == 'Select'}">
-            <img class="mr-2" src="/images/fi-circle-black.svg" style="height: 18px;">
-            1. Select file
+            <img class="mr-2" ng-src="{{isActiveStepper == 'Review' || isActiveStepper == 'Upload'? '/images/fi-check-circle.svg' : '/images/fi-circle-black.svg'}}" style="height: 18px;">
+            <span ng-class="{'text-frequency':isActiveStepper == 'Review' || isActiveStepper == 'Upload'}">1. Select file</span>
         </div>
         <div class="border-t-1 border-util-gray-02 border-line" style="width:20%"></div>
         <div class="rounded-md p-3 text-fog" ng-class="{'active-stepper':isActiveStepper == 'Review'}">
-            <img class="mr-2" src="/images/fi-circle-black.svg" style="height: 18px;">
-            2. Review
+            <img class="mr-2" ng-src="{{isActiveStepper == 'Upload' ? '/images/fi-check-circle.svg' : '/images/fi-circle-black.svg'}}" style="height: 18px;">
+            <span ng-class="{'text-frequency':isActiveStepper == 'Upload'}">2. Review</span>
         </div>
         <div class="border-t-1 border-util-gray-02 border-line" style="width:20%"></div>
         <div class="rounded-md p-3 text-fog" ng-class="{'active-stepper':isActiveStepper == 'Upload'}">
@@ -21,31 +21,120 @@
     </div>
     <div class="row px-4">
         <div>
-            <div class="row-flex flex-space-between">
-                <div style="width: 70%;">
-                    <h3>Upload file</h3>
-                    Upload a CSV containing a list of species names.  See an example of the data we expect on the right.
-                    <div class="row-flex flex-space-start bg-insight rounded-lg mt-3 p-2 border-l-2 border-l-palm">
-                        <img class="icon-info text-palm" src="/images/fi-info-palm.svg"></img>
-                        <span class="text-palm mx-3">Note</span>
-                        <span class="text-pitch">All uploaded species will have a default “Simple Call”</span>
+            <div class="row-flex flex-space-between mt-5">
+                <div>
+                    <h4 ng-if="isActiveStepper == 'Select'" class="mt-0 pt-0">Upload file</h4>
+                    <h4 ng-if="isActiveStepper == 'Upload'" class="mt-0 pt-0">Import</h4>
+                    <h4 ng-if="isActiveStepper == 'Review'" class="mt-0 pt-0">Review species data</h4>
+                    <span ng-if="isActiveStepper == 'Select'">Upload a CSV containing a list of species names.  See an example of the data we expect on the right.</span>
+                    <span ng-if="isActiveStepper == 'Review'">Our system matches the row value with our species database. Review the following species before uploading. </span>
+                    <div ng-if="isActiveStepper !== 'Upload'" class="row-flex flex-space-start bg-insight rounded-lg mt-5 p-2 pl-4 note-info-border" ng-class="{'bg-spoonbill-2 note-error-border': errorSpecies}">
+                        <div ng-if="errorSpecies">
+                            <img src="/images/fi-alert-triangle.svg">
+                            <span class="text-pitch mx-3">Error</span>
+                        </div>
+                        <div ng-if="!errorSpecies">
+                            <img src="/images/fi-info-palm.svg">
+                            <span class="text-palm mx-3">Note</span>
+                        </div>
+                        <span class="text-pitch">{{infoMessage}}</span>
                     </div>
                 </div>
-                <div class="row-flex flex-direction-column border-2 border-util-gray-02 rounded-lg p-3" style="width: 230px;">
+                <!-- <div class="row-flex flex-direction-column border-2 border-util-gray-02 rounded-lg p-3 bg-moss" style="width: 230px;">
                     <div class="uppercase no-wrap">Species name</div>
                     <div class="border-t-1 border-util-gray-02 border-line my-3"></div>
                     <div>Canis lupus</div>
                     <div>Emberiza citrinella</div>
                     <div>Sitta europaea</div>
-                </div>
+                </div> -->
             </div>
         </div>
         
     </div>
+    <div>
+        <div>
+            <div ng-if="files && files.length && isActiveStepper !== 'Upload'" class="mt-5 overflow-y-auto" style="height: 300px">
+                <a2-table rows="files" class="species-table" no-checkbox>
+                    <field key="position" tdclass="is-v-middle width-2">
+                        <span>{{ row.position }}</span>
+                    </field>
+                    <field title="Species" key="species" tdclass="is-v-middle width-20">
+                        <span title="{{row.species}}" class="hidelongtext">{{ row.species }}</span>
+                    </field>
+                    <field title="Sound" key="sound" tdclass="is-v-middle width-15">
+                        <span class="hidelongtext" title="{{ row.sound }}">{{ row.sound }}</span>
+                    </field>
+                    <field title="Status" key="status" tdclass="is-v-middle width-10">
+                        <div class="row-flex flex-direction-row flex-align-middle">
+                            <span class="hidelongtext" style="width: 67px;" title="{{ row.status }}">{{ row.status }}</span>
+                            <img ng-if="row.status === 'Success' || row.status === 'Failed'" ng-src="{{row.status === 'Success' ? '/images/fi-green-circle.svg' : '/images/fi-red-circle.svg'}}" class="ml-3">
+                        </div>
+                    </field>
+                    <field key="error" tdclass="is-v-middle width-20">
+                        <span class="hidelongtext" title="{{ row.error }}">{{ row.error }}</span>
+                    </field>
+                </a2-table>
+            </div>
+
+            <div ng-if="isActiveStepper === 'Upload'" class="jumbotron text-center py-5">
+                <div class="container-species bg-moss rounded-lg" style="height: 350px;position:relative;border-style: solid;">
+                    <div class="row-flex flex-align-middle flex-direction-column mt-5 gap-y-5">
+                        <img ng-if="percentage === 100" src="/images/fi-check-circle-primary.svg">
+                        <img ng-if="isSpeciesBulkError" src="/images/fi-red-circle.svg" style="width:80px;">
+                        <div ng-if="isSpeciesBulkError">A Server Error Occurred. We encountered some issues while importing the species.</div>
+                        <div>{{percentage === 100 ? 'Successfully imported ' + successFiles.length + ' species.' : percentage >= 80 ? 'Finishing up...' : 'Importing ' + successFiles.length + ' species...'}}</div>
+                        <span ng-if="isSpeciesBulkLoading" class="text-sm">{{percentage}} %</span>
+                        <div ng-if="isSpeciesBulkLoading" class="progress progress-striped active my-2" style="width: 300px; height: 10px;">
+                            <div ng-style="{ 'background-color': '#ADFF2C', width : percentage + '%' }"
+                                aria-valuemax="100"
+                                aria-valuemin="0"
+                                aria-valuenow="{{percentage}}"
+                                role="progressbar"
+                                class="progress-bar">
+                            </div>
+                        </div>
+                        <button ng-if="percentage === 100 || isSpeciesBulkError" class="btn btn-primary rounded-full" ng-click="$dismiss()">Back to Species</button>
+                    </div>
+                </div>
+            </div>
+
+            <div ng-if="!(files && files.length)" class="jumbotron text-center pt-5">
+                <div class="container-species bg-moss rounded-lg" style="height: 350px;position:relative;">
+                    <div ng-if="isSpeciesReading" style="position:absolute;z-index:10;left:45%;top: 45%">
+                        <i class="fa fa-spinner fa-spin" style="font-size: 32px;"></i>
+                    </div>
+                    <div ng-if="!isSpeciesReading">
+                        <img src="/images/cloud-upload.svg" style="height: 100px;">
+                        <div class="row-flex items-start flex-direction-column mt-5">
+                            <h4 class="mt-0 ml-0">Drag and drop or upload file</h4>
+                            <div class="input-group" style="width:100%">
+                                <input type="text" accept=".csv" class="form-control bg-util-gray-04 border-util-gray-03 rounded-lg"
+                                    placeholder="Upload a batch species file (csv.)" aria-label="Upload a batch species file (csv.)"
+                                    aria-describedby="basic-addon2"
+                                    ng-model="fileName"
+                                >
+                                <span class="input-group-btn">
+                                    <button class="btn btn-primary rounded-lg btn-file">
+                                        <span class="text-pitch">Choose file</span>
+                                        <input accept=".csv" file-change="handler($event,files)" type="file" ng-model="files">
+                                    </button>
+                                </span>
+                            </div>
+                            <!-- <span class="text-frequency font-size-small mt-2">Use our sample batch species file</span> -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
-<div class="modal-footer">
+<div ng-if="isActiveStepper !== 'Upload'" class="modal-footer bg-surface">
     <div class="row-flex flex-direction-row flex-space-between">
         <button class="btn btn-success" ng-click="$dismiss()">Cancel</button>
-        <button class="btn btn-primary" ng-disabled="!selected.species || !selected.song" ng-click="$close(selected)">Next: Review</button>
+        <button class="btn btn-primary" ng-disabled="!fileName || isActiveStepper === 'Select'" ng-click="uploadSpecies()">
+            <span ng-if="isActiveStepper === 'Review' || isActiveStepper === 'Upload'">Next: Upload</span>
+            <span ng-if="isActiveStepper === 'Select'">Next: Review</span>
+            <i class="fa fa-arrow-right ml-2 text-sm"></i>
+        </button>
     </div>
 </div>
