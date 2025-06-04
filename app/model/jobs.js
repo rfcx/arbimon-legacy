@@ -353,7 +353,11 @@ var Jobs = {
                     let [params] = await dbpool.query(sql);
                     if (!params) continue
                     if (params.Parameters) {
-                        params.Parameters = JSON.parse(params.Parameters)
+                        try {
+                            params.Parameters = JSON.parse(params.Parameters)
+                        } catch (e) {
+                            params.Parameters = params.Parameters
+                        }
                     }
                     job.parameters = params;
                 }
