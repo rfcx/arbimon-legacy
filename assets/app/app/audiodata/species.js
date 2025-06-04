@@ -384,6 +384,22 @@ angular.module('a2.audiodata.species', [
         $scope.percentage = 10;
     }
 
+    $scope.isPercentageFinished = function () {
+        return $scope.percentage === 100;
+    }
+
+    $scope.isSelectStepper = function () {
+        return isActiveStepper === 'Select';
+    }
+
+    $scope.isUploadStepper = function () {
+        return isActiveStepper === 'Upload';
+    }
+
+    $scope.isReviewStepper = function () {
+        return isActiveStepper === 'Review';
+    }
+
     $scope.reviewState = function () {
         $scope.isSpeciesReading = false;
         $scope.isActiveStepper = 'Review';
