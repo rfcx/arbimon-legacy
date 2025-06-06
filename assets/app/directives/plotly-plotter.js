@@ -3,7 +3,7 @@ angular.module('a2.directive.plotly-plotter', [
     'a2.service.plotly-defaults',
     'a2.service.plotly-plot-maker',
 ])
-.directive('plotlyPlotter', function(
+.directive('c', function(
     $window, a2OnResizeService, 
     PlotlyDefaults,
     plotlyPlotMaker

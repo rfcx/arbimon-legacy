@@ -681,13 +681,18 @@ var Projects = {
                 cl.error = 'Species name not recognized.'
                 continue;
             }
+            if (!songtypeResult.length) {
+                console.log(songtypeResult, 'Sound not recognized.')
+                cl.status = 'Failed';
+                cl.error = 'Sound not recognized.'
+                continue;
+            }
             const projectClass = {
                 projectId: projectId,
                 specieId: speciesResult[0].id,
                 songtypeId: songtypeResult[0].id
             };
             const classResult = await Projects.checkClassAsync(projectClass)
-            console.log('classResult', classResult)
             if (classResult.length) {
                 cl.status = 'Failed';
                 cl.error = 'Species class already exists.'
