@@ -2,7 +2,9 @@ angular.module('a2.audiodata.species', [
     'a2.services',
     'a2.directives',
     'ui.bootstrap',
-    'humane'
+    'humane',
+    'angularFileUpload',
+    'uiSwitch'
 ])
 .controller('SpeciesCtrl', function($scope, Project, $modal, notify, a2UserPermit, a2Templates, a2AudioBarService, $localStorage, $state, $window, $downloadResource) {
     $scope.loading = false;
@@ -234,6 +236,23 @@ angular.module('a2.audiodata.species', [
         });
     };
 
+    $scope.bulkImport = function() {
+        if (!a2UserPermit.can("manage project species")) {
+            return notify.error("You do not have permission to add species");
+        }
+
+        var modalInstance = $modal.open({
+            templateUrl: '/app/audiodata/species-bulk-insert-modal.html',
+            controller: 'SpeciesBulkInsertModalCtrl',
+            size: 'lg',
+            windowClass: 'modal-element width-900'
+        });
+
+        modalInstance.result.then(function() {
+            $scope.getProjectClasses();
+        });
+    }
+
     $scope.exportSpecies = function() {
         if (a2UserPermit.isSuper()) return $downloadResource(Project.getSpeciesExportUrl());
         if (a2UserPermit.getUserRole() === 'Data Entry') {
@@ -313,4 +332,264 @@ angular.module('a2.audiodata.species', [
             });
         }, 500)
     };
-});
+})
+
+.controller('SpeciesBulkInsertModalCtrl', function($scope, $modalInstance, Project, notify, a2UserPermit) {
+    $scope.isActiveStepper = 'Select';
+    $scope.infoMessage = 'All uploaded species will have a default “Simple Call”';
+    $scope.files=[];
+    $scope.originalFiles=[];
+    $scope.isSpeciesReading = false;
+    $scope.isSpeciesBulkLoading = false;
+    $scope.toggleErrorSpecies = 0;
+    $scope.fileContent = [];
+
+    $scope.handler = function(e, files) {
+        $scope.isSpeciesReading = true;
+        var reader = new FileReader();
+        if (!e.target.files[0]) return
+        $scope.fileName = e.target.files[0].name;
+        $scope.csvFile = $scope.fileName.includes('.csv');
+        reader.onload = function(event) {
+            if ($scope.csvFile) {
+                const res = reader.result.split(/\r\n|\n/);
+                $scope.readFileData(res);
+            } else {
+                const data = new Uint8Array(reader.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const sheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[sheetName];
+                const json = XLSX.utils.sheet_to_json(worksheet);
+                $scope.readFileData(json);
+            }
+        }
+        $scope.csvFile ? reader.readAsText(files[0]) : reader.readAsArrayBuffer(e.target.files[0]);
+        $scope.isSpeciesReading = false;
+    }
+
+    $scope.$on('fileContent', function(event, data) {
+        $scope.csvFile = data.csvFile;
+        $scope.fileName = data.fileName;
+        const content = data.fileContent;
+        if (content && content.length) $scope.readFileData(content);
+     });
+
+    $scope.readFileData = function(res) {
+        if (!res.length) return $scope.showErrorMessage('Not any data provided.');
+        $scope.csvFile ? $scope.parseCSVSpeciesBulk(res) : $scope.parseExcelSpeciesBulk(res);
+        Project.recognizeClasses({classes: $scope.files})
+            .success(function(result){
+                $scope.files = result.classes;
+                $scope.originalFiles = result.classes;
+                $scope.errorSpecies = $scope.files.filter(f => f.status === 'Failed' && f.error !== 'Species class already exists.');
+                if ($scope.errorSpecies.length) $scope.infoMessage = $scope.errorSpecies.length + ' species names are not recognized. Please add them manually.';
+                $scope.reviewState();
+            })
+            .error(function(data, status) {
+                notify.serverError();
+            });
+    }
+
+    $scope.disableUpload = function () {
+        const errSpecies = $scope.files.filter(f => f.status === 'Failed');
+        return !$scope.fileName || $scope.isActiveStepper === 'Select' || (errSpecies && errSpecies.length === $scope.files.length)
+    }
+
+    $scope.parseCSVSpeciesBulk = function (res) {
+        res.forEach((sp, ind) => {
+            if (!sp.length) return
+            const cl = sp.split(',');
+            const species = cl[0].trim();
+            const sound = cl[1].trim();
+            if (species.toLowerCase() === 'species' || sound.toLowerCase() === 'sound') return
+            $scope.files.push({
+                species: species,
+                sound: sound,
+                status: 'Waiting',
+                position: ind + 1
+            })
+        })
+    }
+
+    $scope.parseExcelSpeciesBulk = function (res) {
+        res.forEach((sp, ind) => {
+            const species  = sp.species ? sp.species : sp.Species;
+            const sound = sp.sound ? sp.sound : sp.Sound ? sp.Sound : sp.Songtype ? sp.Songtype : sp.songtype;
+            $scope.files.push({
+                species: species,
+                sound: sound,
+                status: 'Waiting',
+                position: ind + 1
+            })
+        })
+    }
+
+    $scope.downloadSpeciesExample = function () {
+        const headers = { species: 'Species', sound: 'Sound' };
+        const species = [
+            { species: 'Acanthis flammea', sound: 'Common Song' },
+            { species: 'Alophoixus bres', sound: 'Simple Call' },
+            { species: 'Amaurornis olivacea moluccana', sound: 'Common Song'},
+            { species: 'Amazona mercenaria', sound: 'Common Song' },
+            { species: 'Amazona xanthops', sound: 'Common Song' },
+            { species: 'Aramides cajanea', sound: 'Common Song' }
+        ]
+        exportCSVFile(headers, species, 'species_example');
+    }
+
+    $scope.downloadUnrecognizedSpecies = function () {
+        const headers = { species: 'Species', sound: "Sound" };
+        var itemsFormatted = [];
+        $scope.errorSpecies.forEach((item) => {
+            itemsFormatted.push({
+                species: item.species,
+                sound: item.sound
+            });
+        });
+        exportCSVFile(headers, itemsFormatted, 'unrecognized_species');
+    }
+
+    var exportCSVFile = function(headers, items, fileTitle) {
+        if (headers) {
+            items.unshift(headers);
+        }
+        const jsonObject = JSON.stringify(items);
+        const csv = convertToCSV(jsonObject);
+        const exportedFilenmae = fileTitle + '.csv' || 'export.csv';
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        if (navigator.msSaveBlob) { // IE 10+
+            navigator.msSaveBlob(blob, exportedFilenmae);
+        } else {
+            var link = document.createElement("a");
+            if (link.download !== undefined) {
+                var url = URL.createObjectURL(blob);
+                link.setAttribute("href", url);
+                link.setAttribute("download", exportedFilenmae);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        }
+    }
+
+    var convertToCSV = function(objArray) {
+        var array = typeof objArray != 'object' ? JSON.parse(objArray) : objArray;
+        var str = '';
+        for (var i = 0; i < array.length; i++) {
+            var line = '';
+            for (var index in array[i]) {
+                if (line != '') line += ','
+                line += array[i][index];
+            }
+            str += line + '\r\n';
+        }
+        return str;
+    }
+
+    $scope.disableToggle = function() {
+        const isDisable = !a2UserPermit.can('manage project species');
+        if (isDisable) { $scope.toggleErrorSpecies = 0 }
+        return isDisable
+    }
+
+    $scope.toggleShowErrorOnly = function() {
+        if ($scope.disableToggle()) return;
+        $scope.toggleErrorSpecies = !$scope.toggleErrorSpecies;
+        if ($scope.toggleErrorSpecies) {
+            $scope.files = $scope.errorSpecies;
+        } else $scope.files = $scope.originalFiles;
+    }
+
+    $scope.uploadState = function () {
+        $scope.isSpeciesBulkLoading = true;
+        $scope.isActiveStepper = 'Upload';
+        $scope.percentage = 10;
+    }
+
+    $scope.isPercentageFinished = function () {
+        return $scope.percentage === 100;
+    }
+
+    $scope.isSelectStepper = function () {
+        return $scope.isActiveStepper === 'Select';
+    }
+
+    $scope.isUploadStepper = function () {
+        return $scope.isActiveStepper === 'Upload';
+    }
+
+    $scope.isReviewStepper = function () {
+        return $scope.isActiveStepper === 'Review';
+    }
+
+    $scope.reviewState = function () {
+        $scope.isSpeciesReading = false;
+        $scope.isActiveStepper = 'Review';
+    }
+
+    $scope.uploadSpecies = function () {
+        $scope.uploadState();
+        $scope.successFiles = $scope.originalFiles.filter(file => file.status === 'Success');
+        $scope.percentage = 80;
+        Project.bulkAddClasses({classes: $scope.successFiles})
+            .success(function(result) {
+                $scope.percentage = 100;
+                $scope.isSpeciesBulkLoading = false
+                $modalInstance.close();
+            })
+            .error(function(data, status) {
+                $scope.isSpeciesBulkError = true;
+            });
+    }
+
+    $scope.cancel = function(){
+        $modalInstance.dismiss();
+    }
+})
+.directive('fileDrop', function() {
+    return {
+        restrict: 'A',
+        scope: {
+            fileContent: '='
+        },
+        link: function(scope, element) {
+            element.bind('dragover', function(event) {
+                if (event != null) {
+                    event.preventDefault();
+                }
+                (event.originalEvent || event).dataTransfer.effectAllowed = 'copy';
+                return false;
+            });
+            element.bind('dragenter', function(event) {
+                event.preventDefault();
+                return false;
+            });
+            element.bind('drop', function(event) {
+                if (event != null) {
+                    event.preventDefault();
+                }
+                const file = (event.originalEvent || event).dataTransfer.files[0];
+                var reader = new FileReader();
+                const fileName = file.name;
+                const csvFile = fileName.includes('.csv');
+                reader.onload = function(event) {
+                    const result = event.target.result;
+                    if (csvFile) {
+                        scope.fileContent = result.split(/\r\n|\n/);
+                    } else {
+                        const data = new Uint8Array(result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const sheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[sheetName];
+                        const json = XLSX.utils.sheet_to_json(worksheet);
+                        scope.fileContent = json;
+                    }
+                    scope.$apply();
+                    scope.$emit('fileContent', { fileContent: scope.fileContent, csvFile: csvFile, fileName: fileName });
+                };
+                csvFile ? reader.readAsText(file) : reader.readAsArrayBuffer(file);
+            });
+        }
+    };
+})

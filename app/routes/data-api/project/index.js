@@ -285,6 +285,40 @@ router.get('/:projectUrl/classes', function(req, res, next) {
     }
 });
 
+router.post('/:projectUrl/class/recognize', function(req, res, next) {
+    res.type('json');
+
+    if(!req.body.classes.length) {
+        return res.status(400).json({ error: "missing parameters"});
+    }
+    if(!req.haveAccess(req.project.project_id, "manage project species")) {
+        return res.status(401).json({ error: "you dont have permission to manage project species'" });
+    }
+    const projectClasses = req.body.classes;
+    return model.projects.recognizeClasses(req.project.project_id, projectClasses)
+        .then((result) => {
+            res.status(200).json({classes: result})
+        })
+        .catch(next)
+});
+
+router.post('/:projectUrl/class/bulk-add', function(req, res, next) {
+    res.type('json');
+
+    if(!req.body.classes.length) {
+        return res.status(400).json({ error: "missing parameters"});
+    }
+    if(!req.haveAccess(req.project.project_id, "manage project species")) {
+        return res.status(401).json({ error: "you dont have permission to manage project species'" });
+    }
+    const projectClasses = req.body.classes;
+    return model.projects.insertBatchClassesAsync(req.project.project_id,projectClasses)
+            .then(() => {
+                res.status(201).json({ message: 'The classes were successfully added to the selected project.' })
+            })
+            .catch(next)
+});
+
 router.post('/:projectUrl/class/add', function(req, res, next) {
     res.type('json');
 
@@ -293,7 +327,7 @@ router.post('/:projectUrl/class/add', function(req, res, next) {
     }
 
     if(!req.haveAccess(req.project.project_id, "manage project species")) {
-        return res.status(401).json({ error: "you dont have permission to 'manage project species'" });
+        return res.status(401).json({ error: "you dont have permission to manage project species'" });
     }
 
     var projectClass = {

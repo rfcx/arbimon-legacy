@@ -664,6 +664,49 @@ var Projects = {
         }).nodeify(callback);
     },
 
+    insertBatchClassesAsync: async function(projectId, classes) {
+        const data = classes.map((cl) => {
+            return [projectId, cl.specieId, cl.songtypeId]
+        })
+        dbpool.query('INSERT INTO project_classes(project_id, species_id, songtype_id) VALUES ?;', [data]);
+    },
+
+    recognizeClasses: async function(projectId, projectClasses) {
+        for (let cl of projectClasses) {
+            const speciesResult = await species.findByNameAsync(cl.species);
+            const songtypeResult = await songtypes.findByNameAsync(cl.sound);
+            if (!speciesResult.length) {
+                console.log(speciesResult, 'Species name not recognized.')
+                cl.status = 'Failed';
+                cl.error = 'Species name not recognized.'
+                continue;
+            }
+            if (!songtypeResult.length) {
+                console.log(songtypeResult, 'Sound not recognized.')
+                cl.status = 'Failed';
+                cl.error = 'Sound not recognized.'
+                continue;
+            }
+            const projectClass = {
+                projectId: projectId,
+                specieId: speciesResult[0].id,
+                songtypeId: songtypeResult[0].id
+            };
+            const classResult = await Projects.checkClassAsync(projectClass)
+            if (classResult.length) {
+                cl.status = 'Failed';
+                cl.error = 'Species class already exists.'
+                continue;
+            }
+            else {
+                cl.status = 'Success';
+                cl.specieId = speciesResult[0].id;
+                cl.songtypeId = songtypeResult[0].id;
+            }
+        }
+        return projectClasses
+    },
+
     insertClassAsync: function(projectClass, connection) {
         const {projectId, specieId, songtypeId} = projectClass
         const sql = `INSERT INTO project_classes(project_id, species_id, songtype_id)

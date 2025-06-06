@@ -1,5 +1,6 @@
 var dbpool = require('../utils/dbpool');
 var queryHandler = dbpool.queryHandler;
+let util = require('util');
 
 var Songtypes = {
     /** Finds songtype matching the songtype id.
@@ -24,6 +25,11 @@ var Songtypes = {
             "WHERE songtype = ?",[
             songtype
         ]).nodeify(callback);
+    },
+
+    findByNameAsync: function(songtype) {
+        let findByName = util.promisify(this.findByName)
+        return findByName(songtype)
     },
 
     listAll: function(callback) {
