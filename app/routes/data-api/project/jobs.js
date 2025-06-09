@@ -37,11 +37,9 @@ router.get('/hide/:jId', function(req, res, next) {
 
     model.jobs.hide(req.params.jId, function(err, rows) {
         if(err) return next(err);
-        
-        model.jobs.activeJobs(req.params.projectUrl, function(err, row) {
+        model.jobs.activeJobs({ id: req.project.project_id, last3Months: true }, function(err, row) {
             if(err) return next(err);
-            
-            res.json(row);
+            return res.json(row);
         });
     });
 });
