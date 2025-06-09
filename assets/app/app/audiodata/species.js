@@ -375,13 +375,21 @@ angular.module('a2.audiodata.species', [
      });
 
     $scope.readFileData = function(res) {
-        if (!res.length) return $scope.showErrorMessage('Not any data provided.');
+        if (!res.length) return $scope.infoMessage = 'The imported file is empty. Please check and try again.';
         $scope.csvFile ? $scope.parseCSVSpeciesBulk(res) : $scope.parseExcelSpeciesBulk(res);
         Project.recognizeClasses({classes: $scope.files})
             .success(function(result){
                 $scope.files = result.classes;
                 $scope.originalFiles = result.classes;
                 $scope.errorSpecies = $scope.files.filter(f => f.status === 'Failed' && f.error !== 'Species class already exists.');
+                $scope.errorSpecies = $scope.errorSpecies.map((sp, ind) => {
+                    return {
+                        species: sp.species,
+                        sound: sp.sound,
+                        status: sp.status,
+                        position: ind + 1
+                    }
+                })
                 if ($scope.errorSpecies.length) $scope.infoMessage = $scope.errorSpecies.length + ' species names are not recognized. Please add them manually.';
                 $scope.reviewState();
             })
@@ -396,7 +404,8 @@ angular.module('a2.audiodata.species', [
     }
 
     $scope.parseCSVSpeciesBulk = function (res) {
-        res.forEach((sp, ind) => {
+        var ind = 0
+        res.forEach(sp => {
             if (!sp.length) return
             const cl = sp.split(',');
             const species = cl[0].trim();
@@ -408,6 +417,7 @@ angular.module('a2.audiodata.species', [
                 status: 'Waiting',
                 position: ind + 1
             })
+            ind++
         })
     }
 
@@ -536,7 +546,6 @@ angular.module('a2.audiodata.species', [
             .success(function(result) {
                 $scope.percentage = 100;
                 $scope.isSpeciesBulkLoading = false
-                $modalInstance.close();
             })
             .error(function(data, status) {
                 $scope.isSpeciesBulkError = true;

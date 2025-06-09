@@ -61,6 +61,7 @@ h2 {
 }
 
 h3, h4 {
+  font-family: @font-family-header;
   font-weight: 400;
 }
 
@@ -223,6 +224,10 @@ h5 {
   color: @insight;
 }
 
+.font-poppins {
+  font-family: Poppins;
+}
+
 .text-util-gray-01 {
   color: @util-gray-01;
 }
@@ -273,6 +278,10 @@ h5 {
 
 .bg-util-gray-03 {
   background-color: @util-gray-03;
+}
+
+.bg-util-gray-04 {
+  background-color: @util-gray-04;
 }
 
 .bg-spoonbill {
@@ -456,6 +465,12 @@ h5 {
 
 .form-control[disabled] {
   color: #A1A19E !important;
+}
+
+.btn-primary[disabled] {
+    background-color: @util-gray-04;
+    border-color: @util-gray-04;
+    color: #A1A19E;
 }
 
 .sites-settings input[type=checkbox] {
