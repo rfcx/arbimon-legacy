@@ -36,7 +36,7 @@ angular.module('a2.audiodata.species', [
         }
 
         Project.getClasses(opts).then(data => {
-            $scope.pagination.totalItems = data.count
+            $scope.pagination.totalItems = data.count;
             const classes = data.list;
             if (classes.length) {
                 a2Templates.getList({projectTemplates: true}).then(function(templates) {
