@@ -28,16 +28,14 @@
                     <h4 ng-if="isReviewStepper()" class="mt-0 pt-0">Review species data</h4>
                     <span ng-if="isSelectStepper()">Upload a CSV or MS Excel containing a list of species names and sounds.  <br> See an example of the data we expect under the input file.</span>
                     <span ng-if="isReviewStepper()">Our system matches the row value with our species database. Review the following species before uploading. </span>
-                    <div ng-if="isActiveStepper !== 'Upload' && errorSpecies" class="row-flex flex-space-start bg-insight rounded-lg mt-5 p-4 note-info-border" ng-class="{'bg-spoonbill-2 note-error-border': errorSpecies}">
-                        <div ng-if="errorSpecies">
-                            <img src="/images/fi-alert-triangle.svg">
-                            <span class="text-pitch mx-3">Error</span>
+                    <div class="row-flex flex-space-start">
+                        <div ng-if="isActiveStepper !== 'Upload' && errorSpecies" class="row-flex flex-space-start bg-insight rounded-lg mt-5 p-4 note-info-border" ng-class="{'bg-spoonbill-2 note-error-border': errorSpecies}">
+                            <div ng-if="errorSpecies">
+                                <img src="/images/fi-alert-triangle.svg">
+                                <span class="text-pitch mx-3">Error</span>
+                            </div>
+                            <span class="text-pitch">{{infoMessage}}</span>
                         </div>
-                        <!-- <div ng-if="!errorSpecies">
-                            <img src="/images/fi-info-palm.svg">
-                            <span class="text-palm mx-3">Note</span>
-                        </div> -->
-                        <span class="text-pitch">{{infoMessage}}</span>
                     </div>
                     <div ng-if="errorSpecies" class="row-flex flex-direction-row flex-space-between flex-align-middle mt-5">
                         <a class="text-link cursor-pointer" style="text-decoration:underline;" ng-click="downloadUnrecognizedSpecies()">Download unrecognized species  (csv.)</a>
@@ -62,22 +60,22 @@
         <div>
             <div ng-if="files && files.length && isActiveStepper !== 'Upload'" class="mt-5 overflow-y-auto" style="height: 300px">
                 <a2-table rows="files" class="species-table" no-checkbox>
-                    <field key="position" tdclass="is-v-middle width-2 text-sm">
-                        <span class="text-sm">{{ row.position }}</span>
+                    <field key="position" tdclass="is-v-middle width-2 text-s">
+                        <span>{{ row.position }}</span>
                     </field>
-                    <field title="Species" key="species" tdclass="is-v-middle width-20 text-sm">
+                    <field title="Species" key="species" tdclass="is-v-middle width-20 text-s">
                         <span title="{{row.species}}" class="hidelongtext">{{ row.species }}</span>
                     </field>
-                    <field title="Sound" key="sound" tdclass="is-v-middle width-15 text-sm">
+                    <field title="Sound" key="sound" tdclass="is-v-middle width-15 text-s">
                         <span class="hidelongtext" title="{{ row.sound }}">{{ row.sound }}</span>
                     </field>
-                    <field title="Status" key="status" tdclass="is-v-middle width-10 text-sm">
+                    <field title="Status" key="status" tdclass="is-v-middle width-10 text-s">
                         <div class="row-flex flex-direction-row flex-align-middle">
                             <span class="hidelongtext" style="width: 67px;" title="{{ row.status }}">{{ row.status }}</span>
                             <img ng-if="row.status === 'Success' || row.status === 'Failed'" ng-src="{{row.status === 'Success' ? '/images/fi-green-circle.svg' : '/images/fi-red-circle.svg'}}" class="ml-2">
                         </div>
                     </field>
-                    <field key="error" tdclass="is-v-middle width-20 text-sm">
+                    <field key="error" tdclass="is-v-middle width-20 text-s">
                         <span class="hidelongtext" title="{{ row.error }}">{{ row.error }}</span>
                     </field>
                 </a2-table>
