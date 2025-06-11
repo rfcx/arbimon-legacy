@@ -108,10 +108,11 @@ angular.module('a2.jobs', [
                 controller: function() {
                     this.title = titlen + ' running job';
                     this.messages = ["This job has not finished yet. Are you sure?"];
-                    this.btnOk = "Yes, "+action+" it";
-                    this.btnCancel = "No";
+                    this.btnOk = 'Cancel';
+                    this.btnCancel = 'Close';
                 },
-                controllerAs: "popup"
+                controllerAs: "popup",
+                windowClass: 'modal-element width-490'
             });
 
             modalInstance.opened.then(function() {

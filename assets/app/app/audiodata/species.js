@@ -382,6 +382,7 @@ angular.module('a2.audiodata.species', [
                 $scope.files = result.classes;
                 $scope.originalFiles = result.classes;
                 $scope.errorSpecies = $scope.files.filter(f => f.status === 'Failed' && f.error !== 'Species class already exists.');
+                $scope.existedSpecies = $scope.files.filter(f => f.status === 'Failed' && f.error === 'Species class already exists.');
                 $scope.errorSpecies = $scope.errorSpecies.map((sp, ind) => {
                     return {
                         species: sp.species,
@@ -391,7 +392,17 @@ angular.module('a2.audiodata.species', [
                         position: ind + 1
                     }
                 })
+                $scope.existedSpecies = $scope.existedSpecies.map((sp, ind) => {
+                    return {
+                        species: sp.species,
+                        sound: sp.sound,
+                        status: sp.status,
+                        error: sp.error,
+                        position: ind + 1
+                    }
+                })
                 if ($scope.errorSpecies.length) $scope.infoMessage = $scope.errorSpecies.length === 1 ?  $scope.errorSpecies.length + ' species name is not recognized. Please add it manually.' : $scope.errorSpecies.length + ' species names are not recognized. Please add them manually.';
+                else if ($scope.existedSpecies.length) $scope.infoMessage = $scope.existedSpecies.length === 1 ?  $scope.existedSpecies.length + ' species is already existed.' : $scope.errorSpecies.length + ' species are already existed.';
                 $scope.reviewState();
             })
             .error(function(data, status) {
@@ -508,7 +519,16 @@ angular.module('a2.audiodata.species', [
         if ($scope.disableToggle()) return;
         $scope.toggleErrorSpecies = !$scope.toggleErrorSpecies;
         if ($scope.toggleErrorSpecies) {
-            $scope.files = $scope.errorSpecies;
+            $scope.files = $scope.existedSpecies ? $scope.errorSpecies.concat($scope.existedSpecies) : $scope.errorSpecies;
+            $scope.files = $scope.files.map((sp, ind) => {
+                return {
+                    species: sp.species,
+                    sound: sp.sound,
+                    status: sp.status,
+                    error: sp.error,
+                    position: ind + 1
+                }
+            })
         } else $scope.files = $scope.originalFiles;
     }
 

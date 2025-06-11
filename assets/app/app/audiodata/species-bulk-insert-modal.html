@@ -16,7 +16,7 @@
         <div class="border-t-1 border-util-gray-02 border-line" style="width:20%"></div>
         <div class="rounded-md p-3 text-fog" ng-class="{'active-stepper':isUploadStepper()}">
             <img class="mr-2" src="/images/fi-circle-black.svg" style="height: 18px;">
-            3. Upload
+            <span ng-class="{'text-frequency':isPercentageFinished()}">3. Upload</span>
         </div>
     </div>
     <div class="row px-4">
@@ -30,14 +30,14 @@
                     <span ng-if="isReviewStepper()">Our system matches the row value with our species database. Review the following species before uploading. </span>
                     <div class="row-flex flex-space-start">
                         <div ng-if="isActiveStepper !== 'Upload' && errorSpecies" class="row-flex flex-space-start bg-insight rounded-lg mt-5 p-4 note-info-border" ng-class="{'bg-spoonbill-2 note-error-border': errorSpecies}">
-                            <div ng-if="errorSpecies">
+                            <div ng-if="errorSpecies || existedSpecies">
                                 <img src="/images/fi-alert-triangle.svg">
                                 <span class="text-pitch mx-3">Error</span>
                             </div>
                             <span class="text-pitch">{{infoMessage}}</span>
                         </div>
                     </div>
-                    <div ng-if="errorSpecies && isReviewStepper()" class="row-flex flex-direction-row flex-space-between flex-align-middle mt-5">
+                    <div ng-if="(errorSpecies || existedSpecies) && isReviewStepper()" class="row-flex flex-direction-row flex-space-between flex-align-middle mt-5">
                         <a class="text-link cursor-pointer" style="text-decoration:underline;" ng-click="downloadUnrecognizedSpecies()">Download unrecognized species  (csv.)</a>
                         <div class="row-flex flex-align-middle">
                             <switch name="toggleErrorSpecies" ng-click="toggleShowErrorOnly()" ng-model="toggleErrorSpecies" ng-disabled="disableToggle()"></switch>
