@@ -14,8 +14,8 @@
             <span ng-class="{'text-frequency':isUploadStepper()}">2. Review</span>
         </div>
         <div class="border-t-1 border-util-gray-02 border-line" style="width:20%"></div>
-        <div class="rounded-md p-3 text-fog" ng-class="{'active-stepper':isUploadStepper()}">
-            <img class="mr-2" src="/images/fi-circle-black.svg" style="height: 18px;">
+        <div class="rounded-md p-3 text-fog" ng-class="{'active-stepper': isUploadStepper() && !isPercentageFinished()}">
+            <img class="mr-2" ng-src="{{isPercentageFinished() ? '/images/fi-check-circle.svg' : '/images/fi-circle-black.svg'}}" style="height: 18px;">
             <span ng-class="{'text-frequency':isPercentageFinished()}">3. Upload</span>
         </div>
     </div>
@@ -28,16 +28,19 @@
                     <h4 ng-if="isReviewStepper()" class="mt-0 pt-0">Review species data</h4>
                     <span ng-if="isSelectStepper()">Upload a CSV or MS Excel containing a list of species names and sounds.  <br> See an example of the data we expect under the input file.</span>
                     <span ng-if="isReviewStepper()">Our system matches the row value with our species database. Review the following species before uploading. </span>
-                    <div class="row-flex flex-space-start">
-                        <div ng-if="isActiveStepper !== 'Upload' && errorSpecies" class="row-flex flex-space-start bg-insight rounded-lg mt-5 p-4 note-info-border" ng-class="{'bg-spoonbill-2 note-error-border': errorSpecies}">
-                            <div ng-if="errorSpecies || existedSpecies">
+                    <div class="row-flex flex-space-start" ng-if="isActiveStepper !== 'Upload' && (errorSpecies.length || existedSpecies.length)" >
+                        <div class="row-flex flex-space-start flex-align-middle rounded-lg mt-5 p-4 bg-spoonbill-2 note-error-border">
+                            <div>
                                 <img src="/images/fi-alert-triangle.svg">
                                 <span class="text-pitch mx-3">Error</span>
                             </div>
-                            <span class="text-pitch">{{infoMessage}}</span>
+                            <div class="row-flex flex-direction-column">
+                                <span class="text-pitch">{{errorMessage}}</span>
+                                <span class="text-pitch">{{existedSpeciesMessage}}</span>
+                            </div>
                         </div>
                     </div>
-                    <div ng-if="(errorSpecies || existedSpecies) && isReviewStepper()" class="row-flex flex-direction-row flex-space-between flex-align-middle mt-5">
+                    <div ng-if="isReviewStepper() && (errorSpecies.length || existedSpecies.length)" class="row-flex flex-direction-row flex-space-between flex-align-middle mt-5">
                         <a class="text-link cursor-pointer" style="text-decoration:underline;" ng-click="downloadUnrecognizedSpecies()">Download unrecognized species  (csv.)</a>
                         <div class="row-flex flex-align-middle">
                             <switch name="toggleErrorSpecies" ng-click="toggleShowErrorOnly()" ng-model="toggleErrorSpecies" ng-disabled="disableToggle()"></switch>

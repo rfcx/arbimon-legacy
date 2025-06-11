@@ -336,7 +336,6 @@ angular.module('a2.audiodata.species', [
 
 .controller('SpeciesBulkInsertModalCtrl', function($scope, $modalInstance, Project, notify, a2UserPermit) {
     $scope.isActiveStepper = 'Select';
-    $scope.infoMessage = '';
     $scope.files=[];
     $scope.originalFiles=[];
     $scope.isSpeciesReading = false;
@@ -375,7 +374,7 @@ angular.module('a2.audiodata.species', [
      });
 
     $scope.readFileData = function(res) {
-        if (!res.length) return $scope.infoMessage = 'The imported file is empty. Please check and try again.';
+        if (!res.length) return $scope.errorMessage = 'The imported file is empty. Please check and try again.';
         $scope.csvFile ? $scope.parseCSVSpeciesBulk(res) : $scope.parseExcelSpeciesBulk(res);
         Project.recognizeClasses({classes: $scope.files})
             .success(function(result){
@@ -401,8 +400,13 @@ angular.module('a2.audiodata.species', [
                         position: ind + 1
                     }
                 })
-                if ($scope.errorSpecies.length) $scope.infoMessage = $scope.errorSpecies.length === 1 ?  $scope.errorSpecies.length + ' species name is not recognized. Please add it manually.' : $scope.errorSpecies.length + ' species names are not recognized. Please add them manually.';
-                else if ($scope.existedSpecies.length) $scope.infoMessage = $scope.existedSpecies.length === 1 ?  $scope.existedSpecies.length + ' species is already existed.' : $scope.errorSpecies.length + ' species are already existed.';
+                console.log($scope.errorSpecies, $scope.existedSpecies)
+                if ($scope.errorSpecies.length) {
+                    $scope.errorMessage = $scope.errorSpecies.length + ($scope.errorSpecies.length === 1 ? ' species name is not recognized. Please add it manually.' : ' species names are not recognized. Please add them manually.');
+                }
+                if ($scope.existedSpecies.length) {
+                    $scope.existedSpeciesMessage = $scope.existedSpecies.length + ($scope.existedSpecies.length === 1 ? ' species is already existed.' : ' species are already existed.');
+                }
                 $scope.reviewState();
             })
             .error(function(data, status) {
