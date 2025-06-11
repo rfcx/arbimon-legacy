@@ -38,8 +38,8 @@
             <div class="ml-3 self-center"><loader ng-if="loading"></loader></div>
         </div>
         <div ng-if="classes.length" class="mt-4 mb-3 reclist-total text-left">{{ pagination.totalItems }} species</div>
-        <div ng-if="classes.length && pagination.totalItems > 0">
-            <a2-table rows="classes" class="species-table" data-checked="checked" selected="selected">
+        <div ng-hide="loading || !classes.length">
+            <a2-table rows="classes" data-checked="checked" no-select class="species-table">
                 <field title="Species" key="species_name" tdclass="is-v-middle width-20">
                     <span title="{{row.species_name}}" class="em hidelongtext">{{ row.species_name }}</span>
                 </field>

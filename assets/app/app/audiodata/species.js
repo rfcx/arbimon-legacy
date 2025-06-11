@@ -400,7 +400,6 @@ angular.module('a2.audiodata.species', [
                         position: ind + 1
                     }
                 })
-                console.log($scope.errorSpecies, $scope.existedSpecies)
                 if ($scope.errorSpecies.length) {
                     $scope.errorMessage = $scope.errorSpecies.length + ($scope.errorSpecies.length === 1 ? ' species name is not recognized. Please add it manually.' : ' species names are not recognized. Please add them manually.');
                 }
