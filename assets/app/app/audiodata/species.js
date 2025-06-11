@@ -336,7 +336,7 @@ angular.module('a2.audiodata.species', [
 
 .controller('SpeciesBulkInsertModalCtrl', function($scope, $modalInstance, Project, notify, a2UserPermit) {
     $scope.isActiveStepper = 'Select';
-    $scope.infoMessage = 'All uploaded species will have a default “Simple Call”';
+    $scope.infoMessage = '';
     $scope.files=[];
     $scope.originalFiles=[];
     $scope.isSpeciesReading = false;
@@ -387,10 +387,11 @@ angular.module('a2.audiodata.species', [
                         species: sp.species,
                         sound: sp.sound,
                         status: sp.status,
+                        error: sp.error,
                         position: ind + 1
                     }
                 })
-                if ($scope.errorSpecies.length) $scope.infoMessage = $scope.errorSpecies.length + ' species names are not recognized. Please add them manually.';
+                if ($scope.errorSpecies.length) $scope.infoMessage = $scope.errorSpecies.length === 1 ?  $scope.errorSpecies.length + ' species name is not recognized. Please add it manually.' : $scope.errorSpecies.length + ' species names are not recognized. Please add them manually.';
                 $scope.reviewState();
             })
             .error(function(data, status) {

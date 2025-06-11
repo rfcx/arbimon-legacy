@@ -37,7 +37,7 @@
                             <span class="text-pitch">{{infoMessage}}</span>
                         </div>
                     </div>
-                    <div ng-if="errorSpecies" class="row-flex flex-direction-row flex-space-between flex-align-middle mt-5">
+                    <div ng-if="errorSpecies && isReviewStepper()" class="row-flex flex-direction-row flex-space-between flex-align-middle mt-5">
                         <a class="text-link cursor-pointer" style="text-decoration:underline;" ng-click="downloadUnrecognizedSpecies()">Download unrecognized species  (csv.)</a>
                         <div class="row-flex flex-align-middle">
                             <switch name="toggleErrorSpecies" ng-click="toggleShowErrorOnly()" ng-model="toggleErrorSpecies" ng-disabled="disableToggle()"></switch>
@@ -45,13 +45,6 @@
                         </div>
                     </div>
                 </div>
-                <!-- <div class="row-flex flex-direction-column border-2 border-util-gray-02 rounded-lg p-3 bg-moss" style="width: 230px;">
-                    <div class="uppercase no-wrap">Species name</div>
-                    <div class="border-t-1 border-util-gray-02 border-line my-3"></div>
-                    <div>Canis lupus</div>
-                    <div>Emberiza citrinella</div>
-                    <div>Sitta europaea</div>
-                </div> -->
             </div>
         </div>
         
@@ -84,10 +77,10 @@
             <div ng-if="isUploadStepper()" class="jumbotron text-center py-5">
                 <div class="container-species bg-moss rounded-lg" style="height: 350px;position:relative;border-style: solid;">
                     <div class="row-flex flex-align-middle flex-direction-column mt-5 gap-y-5">
-                        <img ng-if="percentage === 100" src="/images/fi-check-circle-primary.svg">
+                        <img ng-if="isPercentageFinished()" src="/images/fi-check-circle-primary.svg">
                         <img ng-if="isSpeciesBulkError" src="/images/fi-red-circle.svg" style="width:80px;">
                         <div ng-if="isSpeciesBulkError">A Server Error Occurred. We encountered some issues while importing the species.</div>
-                        <div>{{percentage === 100 ? 'Successfully imported ' + successFiles.length + ' species.' : percentage >= 80 ? 'Finishing up...' : 'Importing ' + successFiles.length + ' species...'}}</div>
+                        <div>{{isPercentageFinished() ? 'Successfully imported ' + successFiles.length + ' species.' : percentage >= 80 ? 'Finishing up...' : 'Importing ' + successFiles.length + ' species...'}}</div>
                         <span ng-if="isSpeciesBulkLoading" class="text-sm">{{percentage}} %</span>
                         <div ng-if="isSpeciesBulkLoading" class="progress progress-striped active my-2" style="width: 300px; height: 10px;">
                             <div ng-style="{ 'background-color': '#ADFF2C', width : percentage + '%' }"
@@ -98,7 +91,7 @@
                                 class="progress-bar">
                             </div>
                         </div>
-                        <button ng-if="percentage === 100 || isSpeciesBulkError" class="btn btn-primary rounded-full" ng-click="$dismiss()">Back to Species</button>
+                        <button ng-if="isPercentageFinished() || isSpeciesBulkError" class="btn btn-primary rounded-full" ng-click="$dismiss()">Back to Species</button>
                     </div>
                 </div>
             </div>
