@@ -665,10 +665,17 @@ var Projects = {
     },
 
     insertBatchClassesAsync: async function(projectId, classes) {
-        const data = classes.map((cl) => {
+        let data = classes.map((cl) => {
             return [projectId, cl.specieId, cl.songtypeId]
-        })
-        dbpool.query('INSERT INTO project_classes(project_id, species_id, songtype_id) VALUES ?;', [data]);
+        });
+        const uniqueStrings = new Set();
+        data = data.filter(arr => {
+            const str = JSON.stringify(arr);
+            if (uniqueStrings.has(str)) return false
+            uniqueStrings.add(str);
+            return true;
+        });
+        return dbpool.query('INSERT INTO project_classes(project_id, species_id, songtype_id) VALUES ?;', [data]);
     },
 
     recognizeClasses: async function(projectId, projectClasses) {

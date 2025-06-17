@@ -249,7 +249,7 @@ angular.module('a2.audiodata.species', [
         });
 
         modalInstance.result.then(function() {
-            $scope.getProjectClasses();
+            $scope.getProjectClasses(true)
         });
     }
 

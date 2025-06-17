@@ -14,9 +14,9 @@
             <span ng-class="{'text-frequency':isUploadStepper()}">2. Review</span>
         </div>
         <div class="border-t-1 border-util-gray-02 border-line" style="width:20%"></div>
-        <div class="rounded-md p-3 text-fog" ng-class="{'active-stepper': isUploadStepper() && !isPercentageFinished()}">
-            <img class="mr-2" ng-src="{{isPercentageFinished() ? '/images/fi-check-circle.svg' : '/images/fi-circle-black.svg'}}" style="height: 18px;">
-            <span ng-class="{'text-frequency':isPercentageFinished()}">3. Upload</span>
+        <div class="rounded-md p-3 text-fog" ng-class="{'active-stepper': isUploadStepper() && !isPercentageFinished() && !isSpeciesBulkError}">
+            <img class="mr-2" ng-src="{{isPercentageFinished() ? '/images/fi-check-circle.svg' : isSpeciesBulkError ? '/images/fi-red-circle.svg' : '/images/fi-circle-black.svg'}}" style="height: 18px;">
+            <span ng-class="{'text-frequency':isPercentageFinished(), 'text-ibis': isSpeciesBulkError}">3. Upload</span>
         </div>
     </div>
     <div class="row px-4">
@@ -77,9 +77,9 @@
                     <img ng-if="isPercentageFinished()" src="/images/fi-check-circle-primary.svg">
                     <img ng-if="isSpeciesBulkError" src="/images/fi-red-circle.svg" style="width:80px;">
                     <div ng-if="isSpeciesBulkError">A Server Error Occurred. We encountered some issues while importing the species.</div>
-                    <div>{{isPercentageFinished() ? 'Successfully imported ' + successFiles.length + ' species.' : percentage >= 80 ? 'Finishing up...' : 'Importing ' + successFiles.length + ' species...'}}</div>
-                    <span ng-if="isSpeciesBulkLoading" class="text-sm">{{percentage}} %</span>
-                    <div ng-if="isSpeciesBulkLoading" class="progress progress-striped active my-2" style="width: 300px; height: 10px;">
+                    <div ng-if="!isSpeciesBulkError">{{isPercentageFinished() ? 'Successfully imported ' + successFiles.length + ' species.' : percentage >= 80 ? 'Finishing up...' : 'Importing ' + successFiles.length + ' species...'}}</div>
+                    <span ng-if="isSpeciesBulkLoading && !isSpeciesBulkError" class="text-sm">{{percentage}} %</span>
+                    <div ng-if="isSpeciesBulkLoading && !isSpeciesBulkError" class="progress progress-striped active my-2" style="width: 300px; height: 10px;">
                         <div ng-style="{ 'background-color': '#ADFF2C', width : percentage + '%' }"
                             aria-valuemax="100"
                             aria-valuemin="0"
@@ -88,7 +88,7 @@
                             class="progress-bar">
                         </div>
                     </div>
-                    <button ng-if="isPercentageFinished() || isSpeciesBulkError" class="btn btn-primary rounded-full" ng-click="$dismiss()">Back to Species</button>
+                    <button ng-if="isPercentageFinished() || isSpeciesBulkError" class="btn btn-primary rounded-full" ng-click="$close()">Back to Species</button>
                 </div>
             </div>
         </div>
