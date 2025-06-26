@@ -15,8 +15,9 @@ router.get('/', function(req, res, next) {
     }).then(async function(rows) {
         let deploymentData, deploymentBySite = {}
         if (req.query.deployment) {
+            const idToken = req.headers.authorization?.split(' ')[1];
             try {
-                deploymentData = await model.sites.getDeployedData(req.project.external_id, req.session.idToken)
+                deploymentData = await model.sites.getDeployedData(req.project.external_id, req.session.idToken === undefined ? idToken : req.session.idToken)
                 deploymentData = JSON.parse(deploymentData)
                 if (deploymentData && deploymentData.length) {
                     deploymentData.forEach(data => { return deploymentBySite[data.streamId] = {
@@ -56,9 +57,10 @@ router.post('/create', function(req, res, next) {
             return res.json({ error: 'Site with same name already exists'});
 
         site.project_id = project.project_id;
+        const idToken = req.headers.authorization?.split(' ')[1];
 
         try {
-            await model.sites.createSiteInArbimonAndCoreAPI(site, project, req.session.idToken);
+            await model.sites.createSiteInArbimonAndCoreAPI(site, project, req.session.idToken === undefined ? idToken : req.session.idToken);
             res.json({ message: "New site created" });
             model.projects.updateProjectLocation(project.project_id, site.lat, site.lon)
         }
@@ -73,6 +75,7 @@ router.post('/update', function(req, res, next) {
     var project = req.project;
     var site = req.body.site;
 
+    const idToken = req.headers.authorization?.split(' ')[1];
     console.log(req.body);
 
     if(!req.haveAccess(project.project_id, "manage project sites")) {
@@ -93,7 +96,7 @@ router.post('/update', function(req, res, next) {
             originalProjectId: project.project_id,
             projectExternalId: project.external_id
         }
-        model.sites.updateSite(site, options, req.session.idToken).then(function() {
+        model.sites.updateSite(site, options, req.session.idToken === undefined ? idToken : req.session.idToken).then(function() {
             res.json({ message: 'Site updated' });
             model.projects.updateProjectLocation(project.project_id, site.lat, site.lon)
         }).catch(next);
@@ -104,12 +107,13 @@ router.post('/delete', function(req, res, next) {
     res.type('json');
     const project = req.project;
     const sites = req.body.sites;
+    const idToken = req.headers.authorization?.split(' ')[1];
 
     if(!req.haveAccess(project.project_id, "delete site")) {
         return res.json({ error: "you do not have permission to remove sites" });
     }
 
-    model.sites.removeSite(sites, project.project_id, req.session.idToken).then(function() {
+    model.sites.removeSite(sites, project.project_id, req.session.idToken === undefined ? idToken : req.session.idToken).then(function() {
         res.json({ message: 'Removed' });
     }).catch(next);
 });
