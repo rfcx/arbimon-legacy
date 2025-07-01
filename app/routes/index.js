@@ -38,6 +38,10 @@ router.get(['/project/:projectUrl/audiodata/uploads'], function(req, res) {
     res.redirect(`/p/${req.params.projectUrl}/import-recordings`);
 });
 
+router.get(['/project/:projectUrl/audiodata/sites'], function(req, res) {
+    res.redirect(`/p/${req.params.projectUrl}/audiodata/sites`);
+});
+
 router.get('/projects/:externalId', async (req, res) => {
     try {
         const project = await model.projects.find({external_id: req.params.externalId}).get(0);
