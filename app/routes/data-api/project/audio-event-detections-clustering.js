@@ -147,7 +147,9 @@ router.post('/:aedJobId/remove', function(req, res, next) {
         if(!req.haveAccess(project_id, 'manage AED and Clustering job')){
             throw new Error("You don't have permission to remove Audio Event Detection job");
         }
-    }).then(function(){
+    }).then(function() {
+       return model.AudioEventDetectionsClustering.deleteAedFromS3(job_id)
+    }).then(function() {
         return model.AudioEventDetectionsClustering.delete(job_id);
     }).then(async function(){
         res.json({ ok: true });

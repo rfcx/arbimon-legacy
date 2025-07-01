@@ -155,6 +155,8 @@ router.post('/:clusteringJobId/remove', function(req, res, next) {
         if(!req.haveAccess(project_id, 'manage AED and Clustering job')){
             throw new Error("You don't have permission to remove Clustering job");
         }
+    }).then(function() {
+           return model.ClusteringJobs.deleteAedFromS3(job_id)
     }).then(function(){
         return model.ClusteringJobs.delete(job_id);
     }).then(async function() {
