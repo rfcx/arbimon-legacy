@@ -49,6 +49,19 @@
         <i class="fa fa-circle-o control-point cp-resize-bl" style="position:absolute; bottom:-7px;  left:-6px" ></i>
         <i class="fa fa-circle-o control-point cp-resize-br" style="position:absolute; bottom:-7px; right:-6px" ></i>
     </div>
+    <div class="popover create-template" ng-style="{
+        display: layer.templates.showTemplateNotification ? 'block' : 'none',
+        left: (layout.sec2x(layout.center.s, 1) - 130) + 'px',
+        top: (layout.hz2y(layout.center.hz, 1) - 290) + 'px'
+    }">
+        <div>
+            <img class="ic-close cursor-pointer" style="right:2px;top:2px" src="/images/fi-close.svg" ng-click="layer.templates.closeTemplateNotification()">
+        </div>
+        <p><strong>Template Too Large to Run Job Successfully</strong></p>
+        <p>• Duration: Less than 5 seconds</p>
+        <p>• Frequency Range: Less than 50% of recording</p>
+        <p class="mt-4">Please adjust your template and try again.</p>
+    </div>
     <a2-visualizer-dialog show="layer.templates.editor.valid"
         x1="layer.templates.editor.roi.x1"
         y1="layer.templates.editor.roi.y1"
