@@ -8,7 +8,6 @@ const lambda = new AWS.Lambda();
 const config = require('../config');
 const dbpool = require('../utils/dbpool');
 const moment = require('moment');
-const s3 = new AWS.S3();
 
 let AudioEventDetectionsClustering = {
     find: function (options) {
@@ -147,23 +146,6 @@ let AudioEventDetectionsClustering = {
     delete: function (jobId) {
         const q = `UPDATE job_params_audio_event_detection_clustering SET deleted=1 WHERE job_id = ${jobId}`
         return dbpool.query(q);
-    },
-
-    deleteAedFromS3: function (jobId) {
-        const uri = `audio_events/${config('aws').env}/detection/${jobId}`;
-        const params = {
-            Bucket: config('aws').bucketName,
-            Delete: {
-                Objects: [{ Key: uri }]
-            }
-        }
-        return s3.deleteObjects(params, function(err, data) {
-            if (err && err.code != 'NoSuchKey') {
-                console.error(err);
-                return new Error(err);
-            }
-            console.info(data);
-        });
     },
 
     getTotalRecInLast24Hours: async function(opts) {

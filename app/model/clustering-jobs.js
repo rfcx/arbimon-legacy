@@ -318,24 +318,6 @@ let ClusteringJobs = {
             JOIN jobs j ON j.job_id = jpaec.job_id
             WHERE jpaec.project_id = ${dbpool.escape(projectId)} AND jpaec.deleted = 0 AND j.state = 'completed'`).get(0).get('count');
     },
-
-    deleteAedFromS3: function (jobId) {
-        const uri = `audio_events/${config('aws').env}/clustering/${jobId}`;
-        const params = {
-            Bucket: config('aws').bucketName,
-            Delete: {
-                Objects: [{ Key: uri }]
-            }
-        }
-        return s3.deleteObjects(params, function(err, data) {
-            if (err && err.code != 'NoSuchKey') {
-                console.error(err);
-                return new Error(err);
-            }
-            console.info(data);
-        });
-    },
-
 };
 
 module.exports = ClusteringJobs;

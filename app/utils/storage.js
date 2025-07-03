@@ -41,7 +41,25 @@ async function getSignedUrl ({ Bucket, Key, Expires = 604800 }, { clientType = '
   })
 }
 
+async function deleteObjects (keysArray, { clientType = 'arbimon' }) {
+    const params = {
+        Bucket: config('aws').bucketName,
+        Delete: {
+            Objects: keysArray
+        }
+    }
+    const s3 = getClient(clientType);
+    return s3.deleteObjects(params, function(err, data) {
+        if (err && err.code != 'NoSuchKey') {
+            console.error(err);
+            return new Error(err);
+        }
+        console.info(data);
+    });
+}
+
 module.exports = {
   uploadAsStream,
-  getSignedUrl
+  getSignedUrl,
+  deleteObjects
 }
