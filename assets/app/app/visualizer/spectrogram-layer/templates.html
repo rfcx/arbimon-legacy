@@ -55,7 +55,7 @@
         top: (layout.hz2y(layout.center.hz, 1) - 290) + 'px'
     }">
         <div>
-            <img class="ic-close cursor-pointer" style="right:2px;top:2px" src="/images/fi-close.svg" ng-click="layer.templates.closeTemplateNotification()">
+            <img class="ic-close cursor-pointer" style="right:2px;top:2px" src="/images/fi-close.svg" ng-click="layer.templates.closeTemplateNotification();layer.templates.editor.reset()">
         </div>
         <p><strong>Template Too Large to Run Job Successfully</strong></p>
         <p>• Duration: Less than 5 seconds</p>
@@ -168,7 +168,7 @@
                 </div>
                 <div class="row-flex flex-direction-row flex-space-between mt-5">
                     <button class="btn btn-sm btn-success btn-rounded-full row-flex flex-direction-row flex-space-center"
-                        ng-click=" $event.stopPropagation(); layer.templates.editor.reset()">
+                        ng-click="$event.stopPropagation(); layer.templates.editor.reset()">
                         Cancel
                     </button>
                     <button id="submit-btn" class="btn btn-sm btn-primary btn-rounded-full row-flex flex-direction-row flex-space-center"
