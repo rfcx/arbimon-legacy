@@ -799,6 +799,7 @@ var Recordings = {
                 Recordings.fetchSpectrogramFile(recording, next);
             },
             function(specFile, next){
+                console.log('fetchSpectrogramTiles specFile', specFile)
                 const isLegacy = Recordings.isLegacy(recording)
                 tyler(specFile.path, isLegacy, next);
 

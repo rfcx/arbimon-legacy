@@ -345,12 +345,11 @@ router.get('/tiles/:recordingId/:i/:j/:randomString', function(req, res, next) {
                 if(err || !file){ next(err); return; }
                 res.sendFile(file.path, function () {
                     if (fs.existsSync(file.path)) {
-                        timeout = setTimeout(() => {
-                            fs.unlink(file.path, function (err) {
-                                if (err) console.error('Error deleting the tile file.', err);
-                                console.info('Tile file deleted.');
-                            })
-                        }, 5000);
+                        console.log('Tile file unlink', file.path)
+                        fs.unlink(file.path, function (err) {
+                            if (err) console.error('Error deleting the tile file.', err);
+                            console.info('Tile file deleted.');
+                        })
                     }
                 })
             });
