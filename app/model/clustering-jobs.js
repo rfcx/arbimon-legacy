@@ -318,7 +318,6 @@ let ClusteringJobs = {
             JOIN jobs j ON j.job_id = jpaec.job_id
             WHERE jpaec.project_id = ${dbpool.escape(projectId)} AND jpaec.deleted = 0 AND j.state = 'completed'`).get(0).get('count');
     },
-
 };
 
 module.exports = ClusteringJobs;

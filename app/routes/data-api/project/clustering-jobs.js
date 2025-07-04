@@ -8,9 +8,9 @@ const model = require('../../../model');
 const AWS = require('aws-sdk');
 const s3 = new AWS.S3();
 const config = require('../../../config');
-const csv_stringify = require("csv-stringify");
 const q = require('q');
 const fs = require('fs');
+const { deleteObjects } = require('../../../utils/storage')
 
 router.get('/', function(req, res, next) {
     res.type('json');
@@ -155,6 +155,10 @@ router.post('/:clusteringJobId/remove', function(req, res, next) {
         if(!req.haveAccess(project_id, 'manage AED and Clustering job')){
             throw new Error("You don't have permission to remove Clustering job");
         }
+    }).then(function() {
+        const uri = `audio_events/${config('aws').env}/clustering/${job_id}`;
+        const keysArray = [{ Key: uri }]
+        return deleteObjects(keysArray, 'arbimon');
     }).then(function(){
         return model.ClusteringJobs.delete(job_id);
     }).then(async function() {

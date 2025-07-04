@@ -6,6 +6,8 @@ const express = require('express');
 const router = express.Router();
 const model = require('../../../model');
 const { httpErrorHandler, Converter } = require('@rfcx/http-utils');
+const { deleteObjects } = require('../../../utils/storage')
+const config = require('../../../config');
 
 router.get('/', function(req, res, next) {
     res.type('json');
@@ -147,7 +149,11 @@ router.post('/:aedJobId/remove', function(req, res, next) {
         if(!req.haveAccess(project_id, 'manage AED and Clustering job')){
             throw new Error("You don't have permission to remove Audio Event Detection job");
         }
-    }).then(function(){
+    }).then(function() {
+        const uri = `audio_events/${config('aws').env}/detection/${job_id}`;
+        const keysArray = [{ Key: uri }]
+        return deleteObjects(keysArray, 'arbimon');
+    }).then(function() {
         return model.AudioEventDetectionsClustering.delete(job_id);
     }).then(async function(){
         res.json({ ok: true });
