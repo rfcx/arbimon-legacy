@@ -54,7 +54,6 @@ async function deleteObjects (keysArray, { clientType = 'arbimon' }) {
             console.error(err);
             return new Error(err);
         }
-        console.info(data);
     });
 }
 
