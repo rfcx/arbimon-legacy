@@ -239,7 +239,7 @@ angular.module('a2.visualizer.layers.templates', [
             const roiX = this.roi.x2 - this.roi.x1;
             const roiY = this.roi.y2 - this.roi.y1;
 
-            if ((roiX > 5) || (roiY > (frequency/2))) {
+            if ((roiX > 5) || (roiY > (frequency * 0.75))) {
                 self.showTemplateNotification = true;
                 return;
             }
