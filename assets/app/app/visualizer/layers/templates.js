@@ -233,13 +233,14 @@ angular.module('a2.visualizer.layers.templates', [
                 notify.error('You do not have permission to add a template');
                 return;
             }
-            console.log('this.recording', this.recording, this.roi, $scope.visobject)
 
             const frequency = $scope.visobject.span;
             const roiX = this.roi.x2 - this.roi.x1;
             const roiY = this.roi.y2 - this.roi.y1;
 
-            if ((roiX > 5) || (roiY > (frequency * 0.75))) {
+            self.frequencyPercentage = frequency > 24000 ? 50 : 80;
+
+            if ((roiX > 5) || (roiY > (self.frequencyPercentage === 50 ? (frequency/2) : (frequency * 0.80)))) {
                 self.showTemplateNotification = true;
                 return;
             }

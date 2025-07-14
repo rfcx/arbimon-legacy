@@ -59,7 +59,7 @@
         </div>
         <p><strong>Template Too Large to Run Job Successfully</strong></p>
         <p>• Duration: Less than 5 seconds</p>
-        <p>• Frequency Range: Less than 75% of recording</p>
+        <p>• Frequency Range: Less than {{ layer.templates.frequencyPercentage }}% of recording</p>
         <p class="mt-4">Please adjust your template and try again.</p>
     </div>
     <a2-visualizer-dialog show="layer.templates.editor.valid"
