@@ -453,9 +453,10 @@ router.post('/delete', function(req, res, next) {
     const recIds = recs.map(function(rec) {
         return rec.id
     });
+    const idToken = req.headers.authorization?.split(' ')[1];
     return model.playlists.findRecordingsPlaylists(recIds).then(function(result) {
         playlists = result
-        model.recordings.delete(recs, req.project.project_id, req.session.idToken, async function(err, result) {
+        model.recordings.delete(recs, req.project.project_id, req.session.idToken === undefined ? idToken : req.session.idToken, async function(err, result) {
             if(err) return next(err);
 
             res.json(result);
@@ -477,8 +478,8 @@ router.post('/delete-matching', function(req, res, next) {
 
 
     params.project_id = req.project.project_id;
-
-    model.recordings.deleteMatching(params, req.project.project_id, req.session.idToken).then(function(result) {
+    const idToken = req.headers.authorization?.split(' ')[1];
+    model.recordings.deleteMatching(params, req.project.project_id, req.session.idToken === undefined ? idToken : req.session.idToken).then(function(result) {
         res.json(result);
     }).catch(next);
 });
