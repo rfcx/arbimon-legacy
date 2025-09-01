@@ -128,10 +128,9 @@ angular.module('a2.audiodata.playlists', [
         });
     };
 
-    $scope.create = function () {
-        var slug = Project.getUrl();
-        window.location.href = '/p/' + slug + '/audiodata/recordings'
-    }
+    $scope.create = function (url) {
+        $location.path(url);
+    };
 
     this.initialize();
 
