@@ -221,31 +221,38 @@ var Classifications = {
         queryHandler(q, callback);
     },
 
-    // classificationDetail: function(project_url, cid, callback) {
-
     detail: function(cid, callback) {
-        var q = (
-            "SELECT c.`species_id`, \n"+
-            "   c.`songtype_id`, \n"+
-            "   SUM(c.`present`) as present, \n"+
-            "   COUNT(c.`present`) as total, \n"+
-            "   CONCAT( \n"+
-            "       UCASE(LEFT(st.`songtype`, 1)),  \n"+
-            "       SUBSTRING(st.`songtype`, 2)  \n"+
-            "   ) as songtype,  \n"+
-            "   CONCAT( \n"+
-            "       UCASE(LEFT(s.`scientific_name`, 1)),  \n"+
-            "       SUBSTRING(s.`scientific_name`, 2)  \n"+
-            "   ) as scientific_name, \n"+
-            "   m.`threshold` as th \n"+
-            "FROM `classification_results` as c \n"+
-            "JOIN `job_params_classification` as jpc ON jpc.`job_id` = c.`job_id` \n"+
-            "JOIN `models` m  ON m.`model_id` = jpc.`model_id` \n"+
-            "JOIN `species` as s ON c.`species_id` = s.`species_id` \n"+
-            "JOIN `songtypes` as st ON c.`songtype_id` = st.`songtype_id` \n"+
-            "WHERE c.`job_id` = ? \n"+
-            "GROUP BY c.`species_id`, c.`songtype_id`"
-        );
+        const q = `SELECT agg.species_id,
+            agg.songtype_id,
+            agg.present,
+            agg.total,
+            CONCAT(
+                UCASE(LEFT(st.songtype, 1)),
+                SUBSTRING(st.songtype, 2)
+            ) AS songtype,
+            CONCAT(
+                UCASE(LEFT(s.scientific_name, 1)),
+                SUBSTRING(s.scientific_name, 2)
+            ) AS scientific_name,
+            m.threshold AS th
+        FROM (
+            SELECT c.species_id,
+                c.songtype_id,
+                SUM(c.present) AS present,
+                COUNT(c.present) AS total,
+                c.job_id
+            FROM classification_results c
+            WHERE c.job_id = ?
+            GROUP BY c.species_id, c.songtype_id
+        ) AS agg
+        JOIN job_params_classification jpc
+            ON jpc.job_id = agg.job_id
+        JOIN models m
+            ON m.model_id = jpc.model_id
+        JOIN species s
+            ON agg.species_id = s.species_id
+        JOIN songtypes st
+            ON agg.songtype_id = st.songtype_id;`
 
         queryHandler(dbpool.format(q,[cid]), callback);
     },
