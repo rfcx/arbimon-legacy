@@ -24,11 +24,6 @@ angular.module('a2.audiodata', [
         deepStateRedirect: true,
         sticky: true,
     })
-    .state('audiodata.sites', {
-        url: '/sites?site&show',
-        controller:'SitesCtrl',
-        templateUrl: '/app/audiodata/sites.html'
-    })
     .state('audiodata.species', {
         url: '/species',
         controller:'SpeciesCtrl',
