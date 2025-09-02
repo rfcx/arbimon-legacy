@@ -42,9 +42,9 @@ router.get(['/project/:projectUrl/audiodata/sites'], function(req, res) {
     res.redirect(`/p/${req.params.projectUrl}/audiodata/sites`);
 });
 
-router.get(['/project/:projectUrl/audiodata/recordings'], function(req, res) {
-    res.redirect(`/p/${req.params.projectUrl}/audiodata/recordings`);
-});
+// router.get(['/project/:projectUrl/audiodata/recordings'], function(req, res) {
+//     res.redirect(`/p/${req.params.projectUrl}/audiodata/recordings`);
+// });
 
 router.get('/projects/:externalId', async (req, res) => {
     try {
