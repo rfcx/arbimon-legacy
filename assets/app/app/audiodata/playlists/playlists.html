@@ -2,7 +2,7 @@
     <h1 class="navbar-rfcx-link-m mt-0">
         Playlists
         <button class="btn btn-primary btn-rounded-full"
-            ng-click="create()"
+            ng-click="create('/audiodata/recordings')"
             tooltip="Create New Playlist"
             tooltip-trigger="mouseenter" ng-disabled="loading">
             New Playlist <img class="ml-1" src="/images/fi-plus.svg">
@@ -88,7 +88,7 @@
             <a class="btn btn-sm btn-default"
                 tooltip="Create New Playlist"
                 tooltip-placement="top"
-                ng-click="create()" >
+                ng-click="create('/audiodata/recordings')" >
                 <i class="fa fa-plus mr-1" ></i> New Playlist
             </a>
             <p class="mt-3 mb-0">Learn more:</p>
