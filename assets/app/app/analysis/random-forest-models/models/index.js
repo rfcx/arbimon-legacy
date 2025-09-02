@@ -549,11 +549,15 @@ angular.module('a2.analysis.random-forest-models.models', [
 
 })
 .controller('ShareModelInstanceCtrl', function($scope, $modalInstance, a2Models, models, Project) {
-    $scope.models = models.filter(m => !m.source_project_id);
     $scope.isShareModel = false;
-    $scope.selectedData = { project: {}, model: {} };
     $scope.isModelEmpty = false;
     $scope.isProjectEmpty = false;
+    $scope.isModelZero = false;
+    $scope.models = models.filter(m => !m.source_project_id);
+    if (!$scope.models.length) {
+        $scope.isModelZero = true;
+    }
+    $scope.selectedData = { project: {}, model: {} };
     Project.getProjectsToShareModel(function(data) {
         $scope.projects = data;
     });
