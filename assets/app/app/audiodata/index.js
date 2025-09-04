@@ -4,7 +4,6 @@ angular.module('a2.audiodata', [
     'a2.directive.sidenav-bar',
     'a2.directive.audio-bar',
     'a2.audiodata.species',
-    'a2.audiodata.recordings',
     'a2.audiodata.training-sets',
     'a2.audiodata.playlists',
     'a2.audiodata.templates',
