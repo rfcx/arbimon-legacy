@@ -4,7 +4,8 @@ angular.module('a2.audiodata.species', [
     'ui.bootstrap',
     'humane',
     'angularFileUpload',
-    'uiSwitch'
+    'uiSwitch',
+    'a2.service.download-resource'
 ])
 .controller('SpeciesCtrl', function($scope, Project, $modal, notify, a2UserPermit, a2Templates, a2AudioBarService, $localStorage, $state, $window, $downloadResource) {
     $scope.loading = false;
