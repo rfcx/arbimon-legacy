@@ -153,7 +153,7 @@ tags.resourceDefs.recording = {
             const sites = await projects.getProjectSites(options.project)
             if (sites && sites.length) {
                 constraints.push('RT.site_id IN (' + dbpool.escape(sites.map(s => s.id)) + ')');
-            }
+            } else return []
         }
         return q.ninvoke(dbpool, 'queryHandler',
             "SELECT T.tag_id, T.tag, COUNT(*) as count\n" +
