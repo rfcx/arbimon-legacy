@@ -1,12 +1,22 @@
 <div class="row">
     <h1 class="navbar-rfcx-link-m mt-0">
         Playlists
-        <button class="btn btn-primary btn-rounded-full"
-            ng-click="create()"
-            tooltip="Create New Playlist"
-            tooltip-trigger="mouseenter" ng-disabled="loading">
-            New Playlist <img class="ml-1" src="/images/fi-plus.svg">
-        </button>
+        <div
+            class="row-flex-inline flex-align-middle ml-3"
+            style="vertical-align: middle;"
+        >
+            <a
+                ng-href="{{getNewPlaylistUrl()}}"
+                class="btn btn-primary btn-rounded-full row-flex flex-direction-row flex-align-middle"
+                tooltip="Create New Playlist"
+                tooltip-trigger="mouseenter"
+            >
+                New Playlist
+                <span class="ml-2" style="width: 16px">
+                    <img src="/images/fi-plus.svg">
+                </span>
+            </a>
+        </div>
     </h1>
     <div class="col-sm-12 toolbar mt-4 flex row-flex-inline">
         <div>

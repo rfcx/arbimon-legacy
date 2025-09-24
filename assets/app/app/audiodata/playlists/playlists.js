@@ -14,6 +14,9 @@ angular.module('a2.audiodata.playlists', [
 })
 .controller('PlaylistCtrl', function($scope, a2Playlists, $modal, notify, a2UserPermit, $location, Project) {
     $scope.totalPlaylists = 0;
+    Project.getInfo(function(info) {
+        $scope.bioAnalyticsBaseUrl = info.bioAnalyticsBaseUrl
+    })
     this.initialize = function(){
         removeOnInvalidateHandler = a2Playlists.$on('invalidate-list', (function(){
             this.reset();
@@ -128,9 +131,9 @@ angular.module('a2.audiodata.playlists', [
         });
     };
 
-    $scope.create = function () {
-        var slug = Project.getUrl();
-        window.location.href = '/p/' + slug + '/audiodata/recordings'
+    $scope.getNewPlaylistUrl = function () {
+        const slug = Project.getUrl();
+        return $scope.bioAnalyticsBaseUrl + '/p/' + slug + '/audiodata/recordings';
     }
 
     this.initialize();
