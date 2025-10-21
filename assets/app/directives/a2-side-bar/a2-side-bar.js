@@ -74,7 +74,10 @@ angular.module('a2.directive.side-bar', [])
                         },
                         {
                             title: 'Species',
-                            route: 'audiodata.species'
+                            visibleCondition: () => {
+                                return true
+                            },
+                            externalRoute: $scope.arbimonUrl + '/p/' + url + '/audiodata/species'
                         },
                         {
                             title: 'Playlists',

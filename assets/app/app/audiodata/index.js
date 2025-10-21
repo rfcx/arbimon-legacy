@@ -3,7 +3,6 @@ angular.module('a2.audiodata', [
     'ct.ui.router.extras',
     'a2.directive.sidenav-bar',
     'a2.directive.audio-bar',
-    'a2.audiodata.species',
     'a2.audiodata.training-sets',
     'a2.audiodata.playlists',
     'a2.audiodata.templates',
@@ -22,11 +21,6 @@ angular.module('a2.audiodata', [
         },
         deepStateRedirect: true,
         sticky: true,
-    })
-    .state('audiodata.species', {
-        url: '/species',
-        controller:'SpeciesCtrl',
-        templateUrl: '/app/audiodata/species.html'
     })
     .state('audiodata.trainingSets', {
         url: '/training-sets?set&show',
