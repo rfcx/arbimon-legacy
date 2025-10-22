@@ -22,7 +22,7 @@
         <div>
             <span class="dropdown" dropdown dropdown-append-to-body="true" a2-auto-close-on-outside-click>
                 <button class="btn btn-success btn-rounded-full" ng-disabled="playlists && !playlists.length" dropdown-toggle>Combine Playlists <img src="/images/fi-chevron-down-primary.svg" class="ml-1"></button>
-                <div class="dropdown-form dropdown-menu a2-filters-box-dropdown datepicker" role="menu" style="background-color: #1e1c13 !important;">
+                <div class="dropdown-form dropdown-menu a2-filters-box-dropdown datepicker" role="menu" style="background-color: #1e1c13 !important;" ng-click="$event.stopPropagation()">
                     <playlist-arithmetic on-expression-selected="controller.operate(expression)"></playlist-arithmetic>
                 </div>
             </span>
