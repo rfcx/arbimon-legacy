@@ -29,13 +29,13 @@
         <loader ng-if="loading"></loader>
         <div ng-show="!loading && audioEventDetectionsData && !audioEventDetectionsData.length" class="help-wrapper col-sm-12 row-flex flex-direction-column flex-space-center flex-align-middle clear-button" style="text-align: center;">
             <div>
-                <a class="btn btn-sm btn-primary btn-rounded-full"
+                <a class="btn btn-sm btn-success btn-rounded-full"
                     tooltip="Create New Audio Event Detection job"
                     tooltip-placement="top"
                     ng-click="createNewClusteringModel()">
                     New AED Job
                     <span class="ml-2" style="width: 16px">
-                        <img src="/images/fi-plus.svg">
+                        <img src="/images/fi-plus-primary.svg">
                     </span>
                 </a>
             </div>
@@ -44,7 +44,7 @@
             <p class="mb-0"><a href="https://help.arbimon.org/article/223-creating-an-audio-event-detection-job" target="_blank">2. How to create the Audio Event Detection?<i class="ml-2 fa fa-external-link"></i></a></p>
         </div>
         <div class="py-3">
-            <span ng-if="!loading" class="text-left reclist-total">
+            <span ng-if="!loading && audioEventDetectionsData.length > 0" class="text-left reclist-total">
                 {{ audioEventDetectionsData ? audioEventDetectionsData.length : 0 }} {{audioEventDetectionsData.length > 1 ? "jobs" : "job"}}
             </span>
         </div>
