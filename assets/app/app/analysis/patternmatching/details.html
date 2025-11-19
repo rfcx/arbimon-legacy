@@ -181,7 +181,9 @@
                     ng-click="roi.selected = !roi.selected"
                     popover-html="'Recording: {{roi.recording}}<br>
                                 Site: {{roi.site}}<br>
-                                Time: {{roi.datetime | date:'medium':'UTC'}} <br>
+                                Recording Time: {{roi.datetime | date:'medium':'UTC'}} <br>
+                                ROI Frequency: {{ (roi.y1/1000).toFixed(2) }} kHz - {{ (roi.y2/1000).toFixed(2) }} kHz <br>
+                                ROI period: {{ roi.x1.toFixed(2) }} s - {{ roi.x2.toFixed(2) }} s <br>
                                 Score: {{(roi.score | number) || '(Missing)'}}'"
                     popover-trigger="mouseenter"
                     popover-append-to-body="true"
