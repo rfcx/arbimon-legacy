@@ -73,7 +73,7 @@ async function main () {
         let allData
         // Get all sites, data, hours for selected project.
         if (projection_parameters.grouped === 'site') {
-            projects.getProjectSites(filters.project_id).then(function(rows) {
+            await projects.getProjectSites(filters.project_id).then(function(rows) {
                 allData = rows.map(s=>s.name)
             })
         }
