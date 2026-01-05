@@ -334,6 +334,9 @@ angular.module('a2.analysis.soundscapes', [
 
     };
 
+    this.getRoiVisualizerUrl = function(roi) {
+        return roi ? '/p/' + Project.getUrl() + '/visualizer/soundscape/' + roi.soundscape_id : '';
+    };
 
     this.exportSoundscape = function(options) {
         if (a2UserPermit.isSuper()) return this.getExportUrl(options)
