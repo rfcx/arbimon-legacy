@@ -43,7 +43,7 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
 
     $scope.onSelectedJob = function(playlist_id, job_id, first_playlist_recording) {
         $localStorage.setItem('analysis.audioEventJob',  job_id);
-        $window.location.href = '/project/' + Project.getUrl() + '/visualizer/playlist/' + playlist_id + '/' + first_playlist_recording;
+        $window.location.href = '/p/' + Project.getUrl() + '/visualizer/playlist/' + playlist_id + '/' + first_playlist_recording;
     }
 
     $scope.createNewClusteringModel = function () {

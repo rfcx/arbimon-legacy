@@ -50,7 +50,7 @@ router.get('/:projecturl?/', function(req, res, next) {
                 return next();
             } else {
                 req.session.loggedIn = true
-                return res.redirect('/visualizer/' + project.url + '/');
+                return res.redirect('/p/' + project.url +'/visualizer');
             }
         }).catch(next);
     }

@@ -189,7 +189,7 @@ angular.module('a2.analysis.patternmatching', [
 
     $scope.getTemplateVisualizerUrl = function(template) {
         const box = ['box', template.x1, template.y1, template.x2, template.y2].join(',');
-        return template ? "/project/"+template.project_url+"/visualizer/rec/"+template.recording+"?a="+box : '';
+        return template ? "/p/"+template.project_url+"/visualizer/rec/"+template.recording+"?a="+box : '';
     }
 
     $scope.deleteTemplate = function(templateId) {
@@ -389,7 +389,7 @@ angular.module('a2.analysis.patternmatching', [
         if (template && template.x1) {
             box = ['box', template.x1, template.y1, template.x2, template.y2].join(',');
         }
-        return template ? "/project/"+template.source_project_uri+"/visualizer/rec/"+template.recording+"?a="+box : '';
+        return template ? "/p/"+template.source_project_uri+"/visualizer/rec/"+template.recording+"?a="+box : '';
     }
 
     $scope.selectItem = function(patternmatchingId){
@@ -964,12 +964,12 @@ angular.module('a2.analysis.patternmatching', [
 
     getRoiVisualizerUrl: function(roi){
         var box = ['box', roi.x1, roi.y1, roi.x2, roi.y2].join(',')
-        return roi ? "/project/"+this.projecturl+"/visualizer/rec/"+roi.recording_id+"?a="+box : '';
+        return roi ? "/p/"+this.projecturl+"/visualizer/rec/"+roi.recording_id+"?a="+box : '';
     },
 
     getTemplateVisualizerUrl: function(template){
         var box = ['box', template.x1, template.y1, template.x2, template.y2].join(',')
-        return template ? "/project/"+template.source_project_uri+"/visualizer/rec/"+template.recording+"?a="+box : '';
+        return template ? "/p/"+template.source_project_uri+"/visualizer/rec/"+template.recording+"?a="+box : '';
     },
 
     setRoi: function(roi_index){

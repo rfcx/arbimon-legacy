@@ -602,7 +602,7 @@ angular.module('a2.analysis.clustering-jobs', [
                     count: recIds.filter((id, i, a) => a.indexOf(id) === i).length
                 };
                 $localStorage.setItem('analysis.clusters',  JSON.stringify(tempPlaylistData));
-                $window.location.href = '/project/'+Project.getUrl()+'/visualizer/playlist/0?clusters';
+                $window.location.href = '/p/'+Project.getUrl()+'/visualizer/playlist/0?clusters';
             }
         }
     };
@@ -621,7 +621,7 @@ angular.module('a2.analysis.clustering-jobs', [
         a2Playlists.create(opts,
         function(data) {
             if (data && data.playlist_id) {
-                $window.location.href = '/project/'+Project.getUrl()+'/visualizer/playlist/' + data.playlist_id + '?clusters';
+                $window.location.href = '/p/'+Project.getUrl()+'/visualizer/playlist/' + data.playlist_id + '?clusters';
             }
         }
     )};
@@ -1134,7 +1134,7 @@ angular.module('a2.analysis.clustering-jobs', [
     $scope.getRoiVisualizerUrl = function(roi){
         var projecturl = Project.getUrl();
         var box = ['box', roi.time_min, roi.frequency_min, roi.time_max, roi.frequency_max].join(',');
-        return roi ? '/project/' + projecturl + '/visualizer/rec/' + roi.recording_id + '?a=' + box : '';
+        return roi ? '/p/' + projecturl + '/visualizer/rec/' + roi.recording_id + '?a=' + box : '';
     };
 
     $scope.togglePopup = function() {
