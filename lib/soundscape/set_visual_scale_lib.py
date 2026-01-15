@@ -143,6 +143,9 @@ def upload_image(img_uri, img_file, bucket):
         print('\n<<<ERROR>>>\n{}\n<<<ERROR>>>'.format(img_file))
         print('\n<<<ERROR>>>\n{}\n<<<ERROR>>>'.format(bucket))
     except:
+        print('\n<<<ERROR>>>\n{}\n<<<ERROR>>>'.format(img_uri))
+        print('\n<<<ERROR>>>\n{}\n<<<ERROR>>>'.format(img_file))
+        print('\n<<<ERROR>>>\n{}\n<<<ERROR>>>'.format(bucket))
         exit_error('cannot upload image file.')
 
 
