@@ -26,7 +26,7 @@ class Config(object):
         return cls.scache[basepath]
 
     def data(self):
-        aws = self.awsConfig if self.is_prod else self.awsRfcxConfig
+        aws = self.awsConfig if self.is_prod else self.aws_rfcxConfig
         return [
             self.dbConfig['host'],
             self.dbConfig['user'],
