@@ -139,6 +139,9 @@ def upload_image(img_uri, img_file, bucket):
         k = bucket.new_key(img_uri)
         k.set_contents_from_filename(img_file)
         k.set_acl('public-read')
+        print('\n<<<ERROR>>>\n{}\n<<<ERROR>>>'.format(img_uri))
+        print('\n<<<ERROR>>>\n{}\n<<<ERROR>>>'.format(img_file))
+        print('\n<<<ERROR>>>\n{}\n<<<ERROR>>>'.format(bucket))
     except:
         exit_error('cannot upload image file.')
 

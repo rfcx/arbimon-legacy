@@ -27,14 +27,15 @@ class Config(object):
 
     def data(self):
         aws = self.awsConfig if self.is_prod else self.aws_rfcxConfig
+        bucket = self.awsConfig['bucketName'] if self.is_prod else self.aws_rfcxConfig['bucketNameStaging']
         print('\n<<<ERROR>>>\n{}\n<<<ERROR>>>'.format(self.is_prod))
-        print('\n<<<ERROR>>>\n{}\n<<<ERROR>>>'.format(aws['bucketNameStaging']))
+        print('\n<<<ERROR>>>\n{}\n<<<ERROR>>>'.format(bucket))
         return [
             self.dbConfig['host'],
             self.dbConfig['user'],
             self.dbConfig['password'],
             self.dbConfig['database'],
-            self.awsConfig['bucketName'] if self.is_prod else self.aws_rfcxConfig['bucketNameStaging'],
+            bucket,
             aws['accessKeyId'],
             aws['secretAccessKey'],
             self.spectrogramsConfig['spectrograms'],
