@@ -13,9 +13,12 @@ class Config(object):
         self.basepath = basepath if basepath else "config"
 
         self.load('aws')
+        self.load('aws_rfcx')
         self.load('db')
         self.load('spectrograms')
-        
+
+        self.is_prod = self.awsConfig.get('env') == 'prod'
+
     @classmethod
     def for_path(cls, basepath):
         if basepath not in cls.scache:
@@ -23,16 +26,17 @@ class Config(object):
         return cls.scache[basepath]
 
     def data(self):
+        aws = self.awsConfig if self.is_prod else self.awsRfcxConfig
         return [
             self.dbConfig['host'],
             self.dbConfig['user'],
             self.dbConfig['password'],
             self.dbConfig['database'],
-            self.awsConfig['bucketName'],
-            self.awsConfig['accessKeyId'],
-            self.awsConfig['secretAccessKey'],
+            aws['bucketName'],
+            aws['accessKeyId'],
+            aws['secretAccessKey'],
             self.spectrogramsConfig['spectrograms'],
-            self.awsConfig['region']
+            aws['region']
         ]
 
     def load(self, cfg):
