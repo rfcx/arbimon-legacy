@@ -28,7 +28,7 @@ class Config(object):
     def data(self):
         aws = self.awsConfig if self.is_prod else self.aws_rfcxConfig
         bucket = self.awsConfig['bucketName'] if self.is_prod else self.aws_rfcxConfig['bucketNameStaging']
-        print('\n<<<ERROR>>>\n{}\n<<<ERROR>>>'.format(self.is_prod))
+        print('\n<<<ERROR>>>\n{}\n<<<ERROR>>>'.format(self.awsConfig.get('env')))
         print('\n<<<ERROR>>>\n{}\n<<<ERROR>>>'.format(bucket))
         return [
             self.dbConfig['host'],
