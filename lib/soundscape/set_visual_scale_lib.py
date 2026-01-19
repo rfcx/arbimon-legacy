@@ -139,7 +139,7 @@ def upload_image(img_uri, img_file, bucket):
     try:
         k = bucket.new_key(img_uri)
         k.set_contents_from_filename(img_file)
-        # k.set_acl('public-read')
+        k.set_acl('public-read')
         print '\n<<<UPLOAD OK>>>'
         print img_uri
         print img_file
