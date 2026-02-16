@@ -44,8 +44,8 @@
                             ng-if="item.children"
                             type="button"
                             class="mainmenu row-flex flex-align-middle bg-light-50 text-base font-normal py-1 px-1 h-9 sidebar-submenu collapsed"
-                            data-target="#{{itemId(item.title)}}"
-                            aria-controls="{{itemId(item.title)}}"
+                            ng-attr-data-target="#{{ ::itemId(item.title) }}"
+                            ng-attr-aria-controls="{{ ::itemId(item.title) }}"
                             data-toggle="collapse"
                         >
                             <span ng-if="item.iconRaw === 'fa-search'" class="row-flex flex-space-center" style="width: 28px">
