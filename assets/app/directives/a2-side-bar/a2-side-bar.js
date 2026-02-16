@@ -180,7 +180,8 @@ angular.module('a2.directive.side-bar', [])
     }
 
     $scope.itemId = function(title) {
-        return 'sidebar-' + title.toLowerCase().replace(' ', '-')
+        const collapseTitle = title.toLowerCase().replace(/\s+/g, '-')
+        return 'sidebar-' + collapseTitle
     }
 
     $scope.collapse = function() {
