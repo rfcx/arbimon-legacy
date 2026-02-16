@@ -43,12 +43,9 @@
                         <button
                             ng-show="item.children"
                             type="button"
-                            class="mainmenu collapsed row-flex flex-align-middle bg-light-50 text-base font-normal py-1 px-1 h-9 sidebar-submenu"
-                            data-toggle="collapse"
-                            ng-attr-data-target="#submenu-{{$index}}"
-                            ng-attr-aria-controls="submenu-{{$index}}"
-                            ng-attr-href=""
-                            aria-expanded="false"
+                            class="mainmenu row-flex flex-align-middle bg-light-50 text-base font-normal py-1 px-1 h-9 sidebar-submenu"
+                            ng-class="{ 'collapsed': menuState[$index] !== true }"
+                            ng-click="toggleMenu($index)"
                         >
                             <span ng-if="item.iconRaw === 'fa-search'" class="row-flex flex-space-center" style="width: 28px">
                                 <i class="fa fa-search" style="font-size: 22px;"></i>
@@ -69,8 +66,9 @@
                         </button>
                         <ul
                             ng-show="item.children !== undefined"
-                            id="submenu-{{$index}}"
+                            ng-class="{ in: menuState[$index] === true }"
                             class="collapse submenu"
+                            style="transition: height 0.35s ease;"
                         >
                             <li
                                 ng-repeat="childItem in item.children"
