@@ -41,12 +41,13 @@
                             <span ng-if="showSidebar" class="ml-3">{{ item.title }}</span>
                         </a>
                         <button
-                            ng-if="item.children"
+                            ng-show="item.children"
                             type="button"
                             class="mainmenu collapsed row-flex flex-align-middle bg-light-50 text-base font-normal py-1 px-1 h-9 sidebar-submenu"
                             data-toggle="collapse"
                             ng-attr-data-target="#submenu-{{$index}}"
                             ng-attr-aria-controls="submenu-{{$index}}"
+                            ng-attr-href=""
                             aria-expanded="false"
                         >
                             <span ng-if="item.iconRaw === 'fa-search'" class="row-flex flex-space-center" style="width: 28px">
@@ -67,7 +68,7 @@
                             </span>
                         </button>
                         <ul
-                            ng-if="item.children !== undefined"
+                            ng-show="item.children !== undefined"
                             id="submenu-{{$index}}"
                             class="collapse submenu"
                         >
