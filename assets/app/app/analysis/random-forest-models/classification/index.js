@@ -301,7 +301,7 @@ angular.module('a2.analysis.random-forest-models.classification', [
     }
 )
 .controller('ClassiDetailsInstanceCtrl',
-    function ($scope, $modalInstance, a2Classi, a2Models, notify, a2UserPermit, ClassiInfo) {
+    function ($scope, $modal, $modalInstance, a2Classi, a2Models, notify, a2UserPermit, ClassiInfo) {
         var loadClassifiedRec = function() {
             a2Classi.getResultDetails($scope.classiData.id, ($scope.currentPage*$scope.maxPerPage), $scope.maxPerPage, function(dataRec) {
                 a2Classi.getRecVector($scope.classiData.id, dataRec[0].recording_id).success(function(data) {
@@ -373,7 +373,31 @@ angular.module('a2.analysis.random-forest-models.classification', [
         $scope.currentPage = 0;
         $scope.maxPerPage = 1;
 
-        $scope.csvUrl = "/legacy-api/project/"+$scope.project.url+"/classifications/csv/"+$scope.classiData.id;
+        $scope.exportData = function() {
+            $scope.openExportPopup()
+        }
+
+        $scope.openExportPopup = function() {
+            var params = {
+                userEmail: a2UserPermit.getUserEmail() || '',
+                exportReport: 'rfm-classify',
+                selectedJobId: $scope.classiData.id
+            }
+            const modalInstance = $modal.open({
+                controller: 'ExportRfmClassifyInstanceCtrl',
+                templateUrl: '/app/audiodata/export-report.html',
+                windowClass: 'export-pop-up-window modal-element',
+                resolve: {
+                    data: function() {
+                        return { params: params }
+                    }
+                },
+                backdrop: false
+            });
+            modalInstance.result.then(function() {
+                notify.log('Your Export Report is processing <br> and will be sent by email.');
+            });
+        };
 
         $scope.showDownload = a2UserPermit.can('manage models and classification');
 
@@ -407,6 +431,29 @@ angular.module('a2.analysis.random-forest-models.classification', [
                     $scope.loading = false;
                 });
         });
+})
+
+.controller('ExportRfmClassifyInstanceCtrl', function($scope, $modalInstance, Project, data) {
+    $scope.userEmail = data.params.userEmail
+    $scope.selectedJobId = data.params.selectedJobId
+    $scope.exportRecordings = function(email) {
+        data.params.userEmail = email
+        data.params.selectedJobId = $scope.selectedJobId
+        $scope.isExportingRecs = true
+        $scope.errMess = ''
+        Project.exportRfmClassifyResult(data.params).then(data => {
+            $scope.isExportingRecs = false
+            if (data.error) {
+                $scope.errMess = data.error;
+            }
+            else {
+                $modalInstance.close();
+            }
+        })
+    }
+    $scope.changeUserEmail = function() {
+        $scope.errMess = null;
+    }
 })
 
 .controller('CreateNewClassificationInstanceCtrl', function($scope, $modalInstance, a2Classi, data, projectData, playlists, notify) {

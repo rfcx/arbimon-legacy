@@ -1617,6 +1617,7 @@ var Recordings = {
             pmAll: joi.string(),
             pmIds: arrayOrSingle(joi.number()),
             projectTemplate: joi.string(),
+            rfmClassify: arrayOrSingle(joi.number()),
             soundscapes: joi.string()
         },
         query: {

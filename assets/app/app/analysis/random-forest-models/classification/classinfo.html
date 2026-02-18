@@ -53,15 +53,14 @@
                 <div class="col-sm-12">
                     <h4>
                         Results
-                        <a class="btn btn-default"
+                        <button
                             ng-if="showDownload"
-                            target="_blank"
-                            ng-href="{{csvUrl}}">
-                            <i class="fa fa-download "
-                                tooltip="Download CSV"
-                                tooltip-placement="bottom">
-                            </i>
-                        </a>
+                            type="download"
+                            class="btn btn-success btn-rounded-full ml-3"
+                            tooltip="Export Classification Result"
+                            ng-click="exportData()"
+                        ><i class="fa fa-download"></i>
+                        </button>
                     </h4>
                 </div>
             </div>
