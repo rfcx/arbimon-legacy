@@ -109,6 +109,10 @@ router.post('/project-soundscape-export', function(req, res, next) {
     writeExportParams(req, res, next)
 });
 
+router.post('/project-rfm-classify-export', function(req, res, next) {
+    writeExportParams(req, res, next)
+});
+
 async function writeExportParams(req, res, next) {
     let filters, projection
     try {

@@ -16,6 +16,7 @@ const recordingsExport = require('./recordings')
 const patternMatching = require('./pattern-matching')
 const soundscape = require('./soundscape')
 const template = require('./template')
+const rfmClassification = require('./rfm-classification')
 const { streamToBuffer, zipDirectory } = require('../services/file-helper')
 
 const S3_EXPORT_BUCKET_ARBIMON = process.env.S3_BUCKET_ARBIMON
@@ -95,6 +96,27 @@ async function main () {
         //----------------Arbimon export Occupancy model----------------
         // Create the Occupancy model csv files, put them to .zip folder a send the folder to the user email
         await getMultipleOccupancyModelsData(projection_parameters, filters, rowData, currentTime, message, jobName)
+    } else if (projection_parameters && projection_parameters.rfmClassify) {
+        //----------------Arbimon export Classification Result--------------
+        return new Promise((resolve, reject) => {
+            const exportReportType = 'RFM Classification';
+            console.log(`Arbimon Export ${exportReportType} job`)
+            rfmClassification.collectData(projection_parameters, async (err, filePath) => {
+                if (err) {
+                    console.error('Arbimon Export job error', err)
+                    fs.unlink(filePath, () => {})
+                    reject(err)
+                }
+                console.log('Arbimon Export job: uploading file to S3')
+                const url = await saveFile(filePath, currentTime, rowData.project_id)
+                console.log('Arbimon Export job: file is accessible by url', url)
+                await sendEmail('Arbimon Export recording report', 'arbimon-export-recording.csv', rowData, url, true)
+                await updateExportRecordings(rowData, { processed_at: currentTime })
+                fs.unlink(filePath, () => {})
+                console.log(`Arbimon Export job finished: export recordings report for ${message}`)
+                resolve()
+            })
+        })
     } else if (projection_parameters && (projection_parameters.pmAll || projection_parameters.pmIds)) {
         //----------------Arbimon export all project PM jobs----------------
         return new Promise((resolve, reject) => {
