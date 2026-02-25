@@ -132,6 +132,13 @@ angular.module('a2.srv.project', [
                     return response.data;
                 }).catch(notify.serverError);
             },
+            exportRfmClassifyResult: function(filters){
+                const params = { filters: filters, show: { rfmClassify: filters.selectedJobId } };
+                console.info('params', params)
+                return $http.post('/legacy-api/project/'+url+'/recordings/project-rfm-classify-export', params).then(function(response) {
+                    return response.data;
+                }).catch(notify.serverError);
+            },
             exportAllProjectSoundscapes: function(filters){
                 const params = { filters: filters, show: { soundscapes: 'all' } };
                 return $http.post('/legacy-api/project/'+url+'/recordings/project-soundscape-export', params).then(function(response) {
