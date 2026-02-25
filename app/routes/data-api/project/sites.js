@@ -118,6 +118,20 @@ router.post('/delete', function(req, res, next) {
     }).catch(next);
 });
 
+router.post('/soft-delete', function(req, res, next) {
+    res.type('json');
+    const project = req.project;
+    const idToken = req.headers.authorization?.split(' ')[1];
+
+    if(!req.haveAccess(project.project_id, 'delete site')) {
+        return res.json({ error: 'You do not have permission to remove sites' });
+    }
+
+    model.sites.softRemoveAllSites(project.project_id, req.session.idToken === undefined ? idToken : req.session.idToken).then(function() {
+        res.json({ message: 'Removed' });
+    }).catch(next);
+});
+
 router.param('siteid', function(req, res, next, siteid){
     model.sites.findById(siteid,
     function(err, sites) {
