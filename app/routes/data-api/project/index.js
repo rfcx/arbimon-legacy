@@ -13,6 +13,7 @@ const csv_stringify = require('csv-stringify');
 const { getMetrics, getCachedMetrics } = require('../../../utils/cached-metrics');
 var model = require('../../../model');
 const moment = require('moment-timezone');
+let APIError = require('../../../utils/apierror');
 
 // routes
 var sites = require('./sites');
@@ -567,6 +568,22 @@ router.post('/:projectUrl/remove', function(req, res, next) {
         idToken: req.session.idToken
     }).then(function() {
         res.json({ result: 'success' });
+    }).catch(next);
+});
+
+router.post('/:projectUrl/soft-remove', function(req, res, next) {
+    res.type('json');
+
+    if(!req.haveAccess(req.project.project_id, 'delete project')) {
+        next(new APIError('You do not have permission to delete this project'));
+        return;
+    }
+    const idToken = req.headers.authorization?.split(' ')[1];
+    model.projects.removeProject({
+        project_id: req.project.project_id,
+        idToken: req.session.idToken === undefined ? idToken : req.session.idToken
+    }).then(function() {
+        res.json({ message: 'Removed' });
     }).catch(next);
 });
 

@@ -1368,7 +1368,7 @@ var Projects = {
             .then(async (connection) => {
                 db = connection;
                 await db.beginTransaction();
-                await this.deleteInArbimobDb(options.project_id, db);
+                await this.deleteLegacy(options.project_id, db);
                 if (rfcxConfig.coreAPIEnabled) {
                     await this.deleteInCoreAPI(options.external_id, options.idToken)
                 };
@@ -1385,7 +1385,27 @@ var Projects = {
             })
     },
 
-    deleteInArbimobDb: async function(project_id, db) {
+    removeLegacyProject: async function(options) {
+        let db;
+        return dbpool.getConnection()
+            .then(async (connection) => {
+                db = connection;
+                await db.beginTransaction();
+                await this.deleteLegacy(options.project_id, db);
+                await db.commit();
+                await db.release();
+            })
+            .catch(async (err) => {
+                console.log('err', err)
+                if (db) {
+                    await db.rollback();
+                    await db.release();
+                }
+                throw new APIError('Failed to delete project');
+            })
+    },
+
+    deleteLegacy: async function(project_id, db) {
         return db.query(
             "UPDATE projects SET deleted_at = NOW() \n"+
             "WHERE project_id = ?",[

@@ -73,6 +73,10 @@ var Sites = {
         return dbpool.query(`SELECT external_id FROM sites WHERE site_id=${site_id}`).get(0).get('external_id').nodeify(callback);
     },
 
+    getAllProjectSites: async function(projectId) {
+        return dbpool.query(`SELECT site_id FROM sites WHERE project_id=${projectId} and deleted_at is null`)
+    },
+
     getSiteTimezone: function(site_id, callback) {
         return dbpool.query(`SELECT timezone FROM sites WHERE site_id=${site_id}`).get(0).get('timezone').nodeify(callback);
     },
@@ -643,6 +647,37 @@ var Sites = {
                     await this.removeFromProjectAsync(site_id, project_id, db);
                     if (rfcxConfig.coreAPIEnabled) {
                         await this.deleteInCoreAPI(site_id, idToken)
+                    };
+                }
+                await db.commit();
+                await db.release();
+            })
+            .catch(async (err) => {
+                console.log('err', err);
+                if (db) {
+                    await db.rollback();
+                    await db.release();
+                }
+                throw new Error('Failed to delete site');
+            })
+    },
+
+    softRemoveAllSites: async function(projectId, idToken) {
+        let db;
+        return dbpool.getConnection()
+            .then(async (connection) => {
+                db = connection;
+                await db.beginTransaction();
+                const siteIds = await this.getAllProjectSites(projectId)
+                if (!siteIds.length) {
+                    await db.commit();
+                    await db.release();
+                    return
+                }
+                for (let site of siteIds) {
+                    await this.removeFromProjectAsync(site.site_id, projectId, db);
+                    if (rfcxConfig.coreAPIEnabled) {
+                        await this.deleteInCoreAPI(site.site_id, idToken)
                     };
                 }
                 await db.commit();
