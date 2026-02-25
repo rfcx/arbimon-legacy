@@ -180,8 +180,15 @@ angular.module('a2.directive.side-bar', [])
     }
 
     $scope.itemId = function(title) {
-        return 'sidebar-' + title.toLowerCase().replace(' ', '-')
+        if (!title) return ''
+        return 'sidebar-' + String(title).toLowerCase().trim().replace(/\s+/g, '-').replace(/[^a-z0-9-_]/g, '')
     }
+
+    $scope.menuState = Object.create(null);
+
+    $scope.toggleMenu = function(index) {
+        $scope.menuState[index] = !$scope.menuState[index]
+    };
 
     $scope.collapse = function() {
         submenuEl = document.querySelectorAll('.submenu')

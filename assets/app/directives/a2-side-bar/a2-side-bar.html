@@ -18,9 +18,9 @@
                         </span>
                     </a>
                 </div>
-                <div class="my-4 border-t-1 border-util-gray-02"> </div>
+                <div class="my-4 border-t border-util-gray-02"> </div>
                 <ul class="px-2 row-flex flex-direction-column gap-y-3 mb-0">
-                    <li ng-repeat="item in allItems">
+                    <li ng-repeat="item in allItems track by $index">
                         <a
                             v-show="item.visibleCondition == null || item.visibleCondition() === true"
                             ng-if="item.route"
@@ -41,12 +41,11 @@
                             <span ng-if="showSidebar" class="ml-3">{{ item.title }}</span>
                         </a>
                         <button
-                            ng-if="item.children"
+                            ng-show="item.children"
                             type="button"
-                            class="mainmenu row-flex flex-align-middle bg-light-50 text-base font-normal py-1 px-1 h-9 sidebar-submenu collapsed"
-                            data-target="#{{itemId(item.title)}}"
-                            aria-controls="{{itemId(item.title)}}"
-                            data-toggle="collapse"
+                            class="mainmenu row-flex flex-align-middle bg-light-50 text-base font-normal py-1 px-1 h-9 sidebar-submenu"
+                            ng-class="{ 'collapsed': menuState[$index] !== true }"
+                            ng-click="toggleMenu($index)"
                         >
                             <span ng-if="item.iconRaw === 'fa-search'" class="row-flex flex-space-center" style="width: 28px">
                                 <i class="fa fa-search" style="font-size: 22px;"></i>
@@ -66,9 +65,10 @@
                             </span>
                         </button>
                         <ul
-                            ng-if="item.children"
-                            id="{{ itemId(item.title) }}"
+                            ng-show="item.children !== undefined"
+                            ng-class="{ in: menuState[$index] === true }"
                             class="collapse submenu"
+                            style="transition: height 0.35s ease;"
                         >
                             <li
                                 ng-repeat="childItem in item.children"
@@ -94,7 +94,7 @@
                         </ul>
                     </li>
                 </ul>
-                <div class="my-4 border-t-1 border-util-gray-02"> </div>
+                <div class="my-4 border-t border-util-gray-02"> </div>
                 <div
                     ng-if="showSidebar"
                     class="px-4.5"
@@ -108,7 +108,7 @@
                 </div>
             </div>
             <div>
-                <div class="my-4 border-t-1 border-util-gray-02"></div>
+                <div class="my-4 border-t border-util-gray-02"></div>
                 <ul class="px-2 row-flex flex-direction-column gap-y-3 mb-0">
                     <li class="sidebar-submenu row-flex flex-align-middle">
                         <a
@@ -123,7 +123,7 @@
                         </a>
                     </li>
                 </ul>
-                <div class="my-4 border-t-1 border-util-gray-02"></div>
+                <div class="my-4 border-t border-util-gray-02"></div>
                 <ul class="px-2 row-flex flex-direction-column gap-y-3 mb-0">
                     <li class="sidebar-submenu">
                         <a ng-href="{{getUrlFor('my-projects')}}" class="row-flex flex-align-middle text-base font-normal py-1 px-1 h-9 sidebar-title sidebar-submenu">
@@ -150,7 +150,7 @@
                         </a>
                     </li>
                 </ul>
-                <div class="my-4 border-t-1 border-util-gray-02"></div>
+                <div class="my-4 border-t border-util-gray-02"></div>
                 <ul class="px-2.5 row-flex flex-direction-column gap-y-3 mb-0">
                     <li class="my-2 row-flex flex-align-middle text-base font-normal h-10">
                         <img
