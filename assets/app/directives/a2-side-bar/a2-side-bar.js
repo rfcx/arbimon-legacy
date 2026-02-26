@@ -196,6 +196,7 @@ angular.module('a2.directive.side-bar', [])
         if ($scope.showSidebar === false) {
             mainmenuEl.forEach((el) => el.classList.add('collapsed'))
             submenuEl.forEach((el) => el.classList.remove('in'))
+            $scope.menuState = Object.create(null);
         }
     }
 
