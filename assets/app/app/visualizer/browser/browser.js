@@ -258,15 +258,19 @@ console.log("this.selectNextVisObject = function(){");
         this.currentRecording = null;
     }
     this.setBrowserLocation = function(evt, location){
-        var m = /([\w-+]+)(\/(.+))?/.exec(location);
+        var m = /^([\w-+]+)\/(.+)$/.exec(location);
+        // var m = /([\w-+]+)(\/(.+))?/.exec(location);
         if(this.cachedLocation == location){
             return $q.resolve();
         }
         this.cachedLocation = location;
         if(m && BrowserLOVOs[m[1]]){
-            var loc = m[3];
+            // var loc = m[3];
+            var loc = m[2];
             var lovos_def = BrowserLOVOs[m[1]];
+            // var locArray = loc.split('/');  // ["6354", "3298277"]
             this.setBrowserType(lovos_def).then(function(){
+                    // return lovos_def.$controller.resolve_location(locArray);
                     return lovos_def.$controller.resolve_location(loc);
             }).then(function(visobject){
                 if(visobject){
