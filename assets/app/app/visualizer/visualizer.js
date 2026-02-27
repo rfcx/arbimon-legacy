@@ -82,6 +82,7 @@ angular.module('a2.visualizer', [
         controller: function($state, $scope){
             var p = $state.params;
             var lc = [p.type];
+            console.info('params lc', lc, 'p', p);
             if(p.idA){
                 lc.push(p.idA);
                 if(p.idB){
