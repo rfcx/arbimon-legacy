@@ -346,7 +346,7 @@ angular.module('a2.visualizer', [
     $scope.removeFromLocalStorage = function () {
         $localStorage.setItem('analysis.clusters', null);
         $localStorage.setItem('analysis.clusters.playlist', null);
-        $state.go($state.current.name, { clusters: '' }, { notify: false });
+        $state.go($state.current.name, { clusters: null }, { notify: false });
     }
 
     // Resize Y scale.
