@@ -145,6 +145,7 @@ angular.module('a2.visobjectsbrowser', [
     };
 
     this.setLOVO = function(lovo, location) {
+        console.info('setLOVO', lovo, location)
         var defer = $q.defer();
         var old_lovo = self.lovo;
         self.lovo = lovo;

@@ -321,6 +321,7 @@ angular.module('a2.browser_recordings_by_playlist', [
         console.info('set_playlist', playlist)
         if(playlist && (self.lovo ? self.lovo.playlist != playlist : true)){
             self.lovo = new a2PlaylistLOVO(playlist);
+            console.info('self.lovo', self.lovo)
         }
         a2Browser.setLOVO(self.lovo, self.lovo ? "playlist/"+self.lovo.playlist.id : '');
     };
