@@ -63,7 +63,10 @@ angular.module('a2.visualizer', [
         params:{
             type:'',
             a: null,
-            clusters: null,
+            clusters: {
+                value: undefined,
+                squash: true
+            },
             gain: null,
             filter: null,
             idA: {
@@ -139,7 +142,7 @@ angular.module('a2.visualizer', [
             var all_params=angular.extend({}, this.state.params);
             for(var pk in params){
                 var pv = params[pk];
-                if(pv === undefined){
+                if (pv === undefined || pv === null) {
                     delete all_params[pk];
                 } else {
                     all_params[pk] = pv;
@@ -236,7 +239,7 @@ angular.module('a2.visualizer', [
         }) : [];
     }
     // check selected clusters in query
-    if ($state.params.clusters) {
+    if (Array.isArray($state.params.clusters) || typeof $state.params.clusters === 'string') {
         $localStorage.setItem('analysis.clusters.playlist', $state.params.idA);
     }
     $scope.parseAnnotations($state.params.a);
@@ -346,7 +349,7 @@ angular.module('a2.visualizer', [
     $scope.removeFromLocalStorage = function () {
         $localStorage.setItem('analysis.clusters', null);
         $localStorage.setItem('analysis.clusters.playlist', null);
-        $state.go($state.current.name, { clusters: null }, { notify: false });
+        $state.go($state.current.name, { clusters: undefined }, { notify: false });
     }
 
     // Resize Y scale.

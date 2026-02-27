@@ -69,7 +69,7 @@ angular.module('a2.browser_recordings_by_playlist', [
                 show:'thumbnail-path'
             };
             // get recordings data for temporary clusters playlist
-            if ($state.params.clusters) {
+            if (Array.isArray($state.params.clusters) || typeof $state.params.clusters === 'string') {
                 var clustersData = JSON.parse($localStorage.getItem('analysis.clusters'));
                 if (clustersData && clustersData.playlist && clustersData.playlist.recordings) {
                     opts.recordings = clustersData.playlist.recordings.filter((id, i, a) => {
@@ -253,7 +253,7 @@ angular.module('a2.browser_recordings_by_playlist', [
         self.loading.playlists = true;
         this.getPlaylists = a2Playlists.getList().then(function(playlists){
             // add temporary clusters playlist to playlists' array
-            if ($state.params.clusters) {
+            if (Array.isArray($state.params.clusters) || typeof $state.params.clusters === 'string') {
                 var clustersData = JSON.parse($localStorage.getItem('analysis.clusters'));
                 if (clustersData && clustersData.playlist) {
                     playlists.push(clustersData.playlist);
@@ -327,6 +327,6 @@ angular.module('a2.browser_recordings_by_playlist', [
     $scope.removeFromLocalStorage = function () {
         $localStorage.setItem('analysis.clusters', null);
         $localStorage.setItem('analysis.clusters.playlist', null);
-        $state.go($state.current.name, { clusters: null }, { notify: false });
+        $state.go($state.current.name, { clusters: undefined }, { notify: false });
     }
 });
