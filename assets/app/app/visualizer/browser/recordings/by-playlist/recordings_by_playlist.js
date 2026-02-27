@@ -164,6 +164,7 @@ angular.module('a2.browser_recordings_by_playlist', [
         constructor: function(options){
             this.block_size = 10;
             this.last_page  = 0;
+            this.block = [];
             this.set_options(options);
         },
         resolve_value : function(value, current, first, last){
