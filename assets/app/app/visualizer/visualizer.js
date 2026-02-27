@@ -82,7 +82,6 @@ angular.module('a2.visualizer', [
         controller: function($state, $scope){
             var p = $state.params;
             var lc = [p.type];
-            console.info('params lc', lc, 'p', p);
             if(p.idA){
                 lc.push(p.idA);
                 if(p.idB){
@@ -154,7 +153,7 @@ angular.module('a2.visualizer', [
                 this.__expected = location;
             }
             if ($location.path() != this.prefix + location){
-                var search = $location.search();
+                var search = angular.copy($location.search());
                 delete search.a;
 
                 $location.path(this.prefix + location);
@@ -347,7 +346,7 @@ angular.module('a2.visualizer', [
     $scope.removeFromLocalStorage = function () {
         $localStorage.setItem('analysis.clusters', null);
         $localStorage.setItem('analysis.clusters.playlist', null);
-        $state.params.clusters = '';
+        $state.go($state.current.name, { clusters: '' }, { notify: false });
     }
 
     // Resize Y scale.

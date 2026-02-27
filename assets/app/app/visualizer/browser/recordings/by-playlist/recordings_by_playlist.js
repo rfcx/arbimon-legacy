@@ -327,6 +327,6 @@ angular.module('a2.browser_recordings_by_playlist', [
     $scope.removeFromLocalStorage = function () {
         $localStorage.setItem('analysis.clusters', null);
         $localStorage.setItem('analysis.clusters.playlist', null);
-        $state.params.clusters = '';
+        $state.go($state.current.name, { clusters: '' }, { notify: false });
     }
 });
