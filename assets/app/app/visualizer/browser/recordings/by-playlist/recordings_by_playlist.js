@@ -284,6 +284,10 @@ angular.module('a2.browser_recordings_by_playlist', [
     };
 
     this.resolve_location = function(location){
+        if (!location) return $q.resolve();
+        if (Array.isArray(location)) {
+            location = location.join('/');
+        }
         var m = /(\d+)(\/(\d+))?/.exec(location);
         return (m) ? $q.resolve().then(function(){
             var plid = m[1]|0, recid=m[3]|0;

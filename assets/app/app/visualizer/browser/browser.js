@@ -269,10 +269,9 @@ console.log("this.selectNextVisObject = function(){");
             // var loc = m[3];
             var loc = m[2];
             var lovos_def = BrowserLOVOs[m[1]];
-            // var locArray = loc.split('/');  // ["6354", "3298277"]
+            var locArray = Array.isArray(loc) ? loc : loc.split('/');
             this.setBrowserType(lovos_def).then(function(){
-                    // return lovos_def.$controller.resolve_location(locArray);
-                    return lovos_def.$controller.resolve_location(loc);
+                return lovos_def.$controller.resolve_location(locArray);
             }).then(function(visobject){
                 if(visobject){
                     return self.selectVisObject(visobject);
