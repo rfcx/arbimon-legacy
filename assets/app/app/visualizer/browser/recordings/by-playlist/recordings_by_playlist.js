@@ -318,6 +318,7 @@ angular.module('a2.browser_recordings_by_playlist', [
         if (self.lovo && self.lovo.playlist.id != playlist.id) {
             $scope.removeFromLocalStorage();
         }
+        console.info('set_playlist', playlist)
         if(playlist && (self.lovo ? self.lovo.playlist != playlist : true)){
             self.lovo = new a2PlaylistLOVO(playlist);
         }
@@ -327,6 +328,6 @@ angular.module('a2.browser_recordings_by_playlist', [
     $scope.removeFromLocalStorage = function () {
         $localStorage.setItem('analysis.clusters', null);
         $localStorage.setItem('analysis.clusters.playlist', null);
-        $state.go($state.current.name, { clusters: undefined }, { notify: false });
+        // $state.go($state.current.name, { clusters: undefined }, { notify: false });
     }
 });
