@@ -94,7 +94,11 @@ angular.module('a2.visualizer', [
             var l = lc.join('/');
 
             $scope.location.whenBrowserIsAvailable(function(){
-                $scope.$parent.$broadcast('set-browser-location', l, p.a);
+                if (p.a === null) {
+                    $scope.$parent.$broadcast('set-browser-location', l || '');
+                } else {
+                    $scope.$parent.$broadcast('set-browser-location', l, p.a || '');
+                }
                 // Catch the navigation URL query
                 if (p.type === 'rec') {
                     $scope.$parent.$broadcast('set-browser-annotations', p.idA? Number(p.idA) : null, p.a? p.a : null);
