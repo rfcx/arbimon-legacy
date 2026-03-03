@@ -70,7 +70,7 @@ angular.module('a2.browser_recordings_by_playlist', [
             };
             // get recordings data for temporary clusters playlist
             if (Array.isArray($state.params.clusters) || typeof $state.params.clusters === 'string') {
-                var clustersData = JSON.parse($localStorage.getItem('analysis.clusters'));
+                var clustersData = $localStorage.getItem('analysis.clusters');
                 if (clustersData && clustersData.playlist && clustersData.playlist.recordings) {
                     opts.recordings = clustersData.playlist.recordings.filter((id, i, a) => {
                         return (i >= opts.offset) && (i < opts.offset + opts.limit)
@@ -177,7 +177,7 @@ angular.module('a2.browser_recordings_by_playlist', [
             return Math.max(first, Math.min(+value, last));
         },
         set_options : function(options){
-            if(options.item_count           ){ this.item_count       = options.item_count      ; }
+            if (options.item_count !== undefined) { this.item_count = options.item_count; }
             if(options.page_size            ){ this.page_size        = options.page_size       ; }
             if(options.block_size           ){ this.block_size       = options.block_size      ; }
             if(options.last_page            ){ this.last_page        = options.last_page       ; }
@@ -216,22 +216,23 @@ angular.module('a2.browser_recordings_by_playlist', [
             this.last_page        = ((this.item_count-1) / this.page_size) | 0;
             this.last_page_block  = (this.last_page / this.block_size) | 0;
             this.is_at_last_page  = this.current_page >= this.last_page;
-            this.show_block(this.block);
+            this.show_block(this.current_page_block);
         },
         show_block : function(block){
-            if(this.block_tracks_page){
-                this.current_page_block = this.resolve_value(block, this.current_page_block, 0, this.last_page_block);
-            } else {
-                this.current_page_block = this.resolve_value(block, this.current_page_block, 0, this.last_page_block) | 0;
-            }
+            // Ensure inputs are valid numbers and prevent NaN
+            var blockIdx = (+block) | 0;
+            var lastBlock = (+this.last_page_block) | 0;
+            this.current_page_block = this.resolve_value(blockIdx, this.current_page_block | 0, 0, lastBlock) | 0;
             this.is_at_first_page_block = this.current_page_block <= 0;
-            this.is_at_last_page_block  = this.current_page_block >= this.last_page_block;
-
-            this.current_page_block_first_page = (this.current_page_block * this.block_size)|0;
-            this.current_page_block_last_page  = Math.min(((this.current_page_block+1) * this.block_size - 1)|0, this.last_page);
+            this.is_at_last_page_block  = this.current_page_block >= lastBlock;
+            this.current_page_block_first_page = (this.current_page_block * this.block_size) | 0;
+            this.current_page_block_last_page  = Math.min(((this.current_page_block + 1) * this.block_size - 1) | 0, this.last_page | 0);
             this.block = [];
-            for(var i=this.current_page_block_first_page, e=this.current_page_block_last_page; i <= e; ++i){
-                this.block.push(i);
+            // Safety check: only populate if pages exist and range is valid
+            if (this.last_page >= 0 && this.current_page_block_first_page <= this.current_page_block_last_page) {
+                for (var i = this.current_page_block_first_page, e = this.current_page_block_last_page; i <= e; ++i) {
+                    this.block.push(i);
+                }
             }
         },
         has_page : function(page){
@@ -254,7 +255,7 @@ angular.module('a2.browser_recordings_by_playlist', [
         this.getPlaylists = a2Playlists.getList().then(function(playlists){
             // add temporary clusters playlist to playlists' array
             if (Array.isArray($state.params.clusters) || typeof $state.params.clusters === 'string') {
-                var clustersData = JSON.parse($localStorage.getItem('analysis.clusters'));
+                var clustersData = $localStorage.getItem('analysis.clusters');
                 if (clustersData && clustersData.playlist) {
                     playlists.push(clustersData.playlist);
                 }
@@ -322,10 +323,8 @@ angular.module('a2.browser_recordings_by_playlist', [
         if (self.lovo && self.lovo.playlist.id != playlist.id) {
             $scope.removeFromLocalStorage();
         }
-        console.info('set_playlist', playlist)
         if(playlist && (self.lovo ? self.lovo.playlist != playlist : true)){
             self.lovo = new a2PlaylistLOVO(playlist);
-            console.info('self.lovo', self.lovo)
         }
         a2Browser.setLOVO(self.lovo, self.lovo ? "playlist/"+self.lovo.playlist.id : '');
     };

@@ -86,7 +86,7 @@ angular.module('a2.visobjectsbrowser', [
     var project = Project;
 
     // Set of available lovo types
-    this.types = BrowserLOVOs.$grouping;
+    this.types = BrowserLOVOs.$grouping || [];
     this.visobjectTypes = BrowserVisObjects;
     // currently selected lovo type
     // container for loading flags
@@ -145,7 +145,6 @@ angular.module('a2.visobjectsbrowser', [
     };
 
     this.setLOVO = function(lovo, location) {
-        console.info('setLOVO', lovo, location)
         var defer = $q.defer();
         var old_lovo = self.lovo;
         self.lovo = lovo;
@@ -259,19 +258,21 @@ console.log("this.selectNextVisObject = function(){");
         this.currentRecording = null;
     }
     this.setBrowserLocation = function(evt, location){
-        var m = /^([\w-+]+)\/(.+)$/.exec(location);
-        // var m = /([\w-+]+)(\/(.+))?/.exec(location);
+        if (typeof location !== 'string') {
+            console.warn('Invalid location:', location);
+            return;
+        }
         if(this.cachedLocation == location){
             return $q.resolve();
         }
         this.cachedLocation = location;
+        var m = /^([\w-+]+)\/(.+)$/.exec(location);
+        if (!m || !BrowserLOVOs[m[1]]) return;
         if(m && BrowserLOVOs[m[1]]){
-            // var loc = m[3];
             var loc = m[2];
             var lovos_def = BrowserLOVOs[m[1]];
-            var locArray = Array.isArray(loc) ? loc : loc.split('/');
             this.setBrowserType(lovos_def).then(function(){
-                return lovos_def.$controller.resolve_location(locArray);
+                return lovos_def.$controller.resolve_location(loc);
             }).then(function(visobject){
                 if(visobject){
                     return self.selectVisObject(visobject);
