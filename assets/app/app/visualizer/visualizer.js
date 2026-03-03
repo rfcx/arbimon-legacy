@@ -97,7 +97,11 @@ angular.module('a2.visualizer', [
             var l = lc.join('/');
 
             $scope.location.whenBrowserIsAvailable(function(){
-                $scope.$parent.$broadcast('set-browser-location', l, p.a);
+                if (p.a === null) {
+                    $scope.$parent.$broadcast('set-browser-location', l || '');
+                } else {
+                    $scope.$parent.$broadcast('set-browser-location', l, p.a || '');
+                }
                 // Catch the navigation URL query
                 if (p.type === 'rec') {
                     $scope.$parent.$broadcast('set-browser-annotations', p.idA? Number(p.idA) : null, p.a? p.a : null);
@@ -133,7 +137,7 @@ angular.module('a2.visualizer', [
                 return;
             }
             this.__expected = this.current;
-            this.scope.$broadcast('set-browser-location', this.current);
+            this.scope.$broadcast('set-browser-location', this.current || '');
         },
         update_path : function(){
             this.set(this.current);
@@ -322,7 +326,7 @@ angular.module('a2.visualizer', [
                     $scope.$parent.$broadcast('clear-recording-data', true);
                     // check clusters playlist in local storage else clear local storage
                     if ($localStorage.getItem('analysis.clusters.playlist') === $state.params.idA) {
-                        var clustersData = JSON.parse($localStorage.getItem('analysis.clusters'));
+                        var clustersData = $localStorage.getItem('analysis.clusters');
                         console.log('clustersData', this.clustersData);
                         if (clustersData && clustersData.boxes && $state.params.idB) {
                             this.parseAnnotations(clustersData.boxes[$state.params.idB]);
@@ -349,14 +353,14 @@ angular.module('a2.visualizer', [
     $scope.removeFromLocalStorage = function () {
         $localStorage.setItem('analysis.clusters', null);
         $localStorage.setItem('analysis.clusters.playlist', null);
-        $state.go($state.current.name, { clusters: undefined }, { notify: false });
+        $state.go($state.current.name, { clusters: null }, { notify: false });
     }
 
     // Resize Y scale.
 
     $scope.getSelectedFrequencyCache = function() {
         try {
-            return JSON.parse($localStorage.getItem('visuilizer.frequencies.cache')) || {originalScale: true};
+            return $localStorage.getItem('visuilizer.frequencies.cache') || {originalScale: true};
         } catch(e){
             return {originalScale: true};
         }

@@ -1,3 +1,5 @@
+angular.element.prototype.push = Array.prototype.push;
+
 var a2 = angular.module('a2.app', [
     'a2.permissions',
     'templates-arbimon2',

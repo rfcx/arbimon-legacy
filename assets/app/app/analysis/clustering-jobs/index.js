@@ -61,7 +61,7 @@ angular.module('a2.analysis.clustering-jobs', [
     }
 
     // Parse grid view data if it exists
-    const gridContext = JSON.parse($localStorage.getItem('analysis.gridContext'));
+    const gridContext = $localStorage.getItem('analysis.gridContext');
     if ($stateParams.gridContext || (gridContext && $state.current.name === 'analysis.grid-view')) {
         $scope.showViewGridPage = true;
         $scope.gridContext = $stateParams.gridContext? $stateParams.gridContext : gridContext;
@@ -870,7 +870,7 @@ angular.module('a2.analysis.clustering-jobs', [
         });
     }
 
-    $localStorage.setItem('analysis.gridContext',  JSON.stringify($scope.gridContext));
+    $localStorage.setItem('analysis.gridContext', JSON.stringify($scope.gridContext));
 
     a2ClusteringJobs.getJobDetails($scope.clusteringJobId).then(function(data) {
         if (data) $scope.job_details = data;

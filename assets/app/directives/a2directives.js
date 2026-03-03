@@ -140,19 +140,21 @@ angular.module('a2.directives', [
         },
         scrollHandler: function (event) {
             try {
-                if(this.a2Scroll){
+                if (this.a2Scroll) {
                     this.a2Scroll({
-                        $event:event,
+                        $event: event,
                         $controller: this,
                     });
                 }
-                if($scope.a2InfiniteScroll && !$scope.a2InfiniteScrollDisabled){
-                    var remaining = ((element[0].scrollHeight - element[0].scrollTop)|0) / element.height();
-                    if(remaining < $scope.a2InfiniteScrollDistance){
+                if ($scope.a2InfiniteScroll && !$scope.a2InfiniteScrollDisabled) {
+                    // Fix: Added 'this.' before element
+                    var remaining = ((this.element[0].scrollHeight - this.element[0].scrollTop) | 0) / this.element.height();
+                    if (remaining < $scope.a2InfiniteScrollDistance) {
                         var time = new Date().getTime();
-                        if(!$scope.refraction || $scope.refraction < time){
+                        if (!$scope.refraction || $scope.refraction < time) {
                             $scope.refraction = time + $scope.a2InfiniteScrollRefraction;
-                            $scope.a2InfiniteScroll({$event:e});
+                            // Fix: Changed 'e' to 'event' to match function argument
+                            $scope.a2InfiniteScroll({ $event: event });
                         }
                     }
                 }

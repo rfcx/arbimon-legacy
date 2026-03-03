@@ -183,7 +183,7 @@ angular.module('a2.visualizer.audio-player', [
                 this.duration = resource.duration;
                 this.resource_url = url;
                 this.has_recording = true;
-                this.clustersData = JSON.parse($localStorage.getItem('analysis.clusters'));
+                this.clustersData = $localStorage.getItem('analysis.clusters');
                 console.log('clustersData2', this.clustersData);
             }).bind(this));
         },
