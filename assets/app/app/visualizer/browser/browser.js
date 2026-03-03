@@ -258,16 +258,21 @@ console.log("this.selectNextVisObject = function(){");
         this.currentRecording = null;
     }
     this.setBrowserLocation = function(evt, location){
-        var m = /([\w-+]+)(\/(.+))?/.exec(location);
+        if (typeof location !== 'string') {
+            console.warn('Invalid location:', location);
+            return;
+        }
         if(this.cachedLocation == location){
             return $q.resolve();
         }
         this.cachedLocation = location;
+        var m = /^([\w-+]+)\/(.+)$/.exec(location);
+        if (!m || !BrowserLOVOs[m[1]]) return;
         if(m && BrowserLOVOs[m[1]]){
-            var loc = m[3];
+            var loc = m[2];
             var lovos_def = BrowserLOVOs[m[1]];
             this.setBrowserType(lovos_def).then(function(){
-                    return lovos_def.$controller.resolve_location(loc);
+                return lovos_def.$controller.resolve_location(loc);
             }).then(function(visobject){
                 if(visobject){
                     return self.selectVisObject(visobject);
