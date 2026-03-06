@@ -16,16 +16,16 @@ async function getCsvData(options) {
     const connection = await mysql.getConnection()
     const sql = `SELECT
             SUBSTRING_INDEX(r.uri ,'/',-1 ) rec,
-            cr.present presense,
-            s.name,
+            cr.present "model presence",
+            m.threshold "current threshold",
+            cr.max_vector_value as "vector max value",
+            s.name as "site",
             extract(year from r.datetime) year,
             extract(month from r.datetime) month,
             extract(day from r.datetime) day,
             extract(hour from r.datetime) hour,
             extract(minute from r.datetime) minute,
-            m.threshold,
             r.meta,
-            cr.max_vector_value as "max vector",
             sp.scientific_name species,
             st.songtype
             FROM models m,

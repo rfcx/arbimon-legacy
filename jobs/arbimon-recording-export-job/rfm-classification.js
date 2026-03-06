@@ -62,6 +62,7 @@ async function writeChunk (results, targetFile, isFirstChunk) {
     results.forEach(result => {
       fields.push(...Object.keys(result).filter(f => !fields.includes(f)))
     });
+    fields.splice(2, 0, 'threshold presence');
 
     let datastream = new stream.Readable({objectMode: true});
     let _buf = []
@@ -78,6 +79,12 @@ async function writeChunk (results, targetFile, isFirstChunk) {
           result[f] = '---'}
         }
       )
+      const maxVal = result['vector max value'];
+      let tprec = 0;
+      if (maxVal >= result['current threshold']) {
+        tprec = 1;
+      }
+      result['threshold presence'] = tprec
       datastream.push(result)
     }
     datastream.push(null);
