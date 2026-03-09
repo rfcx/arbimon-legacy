@@ -15,35 +15,38 @@ function parseMetaData(data) {
 async function getCsvData(options) {
     const connection = await mysql.getConnection()
     const sql = `SELECT
-            SUBSTRING_INDEX(r.uri ,'/',-1 ) rec,
-            cr.present "model presence",
-            m.threshold "current threshold",
-            cr.max_vector_value as "vector max value",
-            s.name as "site",
-            extract(year from r.datetime) year,
-            extract(month from r.datetime) month,
-            extract(day from r.datetime) day,
-            extract(hour from r.datetime) hour,
-            extract(minute from r.datetime) minute,
+            SUBSTRING_INDEX(r.uri,'/',-1) rec,
+            cr.present AS "model presence",
+            m.threshold AS "current threshold",
+            cr.max_vector_value AS "vector max value",
+            s.name AS site,
+            EXTRACT(YEAR FROM r.datetime) year,
+            EXTRACT(MONTH FROM r.datetime) month,
+            EXTRACT(DAY FROM r.datetime) day,
+            EXTRACT(HOUR FROM r.datetime) hour,
+            EXTRACT(MINUTE FROM r.datetime) minute,
             r.meta,
             sp.scientific_name species,
             st.songtype
-            FROM models m,
-              job_params_classification jpc,
-              species sp,
-              classification_results cr,
-              recordings r,
-              sites s,
-              songtypes st
-            WHERE cr.job_id = ${options.jobId}
-            AND jpc.job_id = cr.job_id
-            AND jpc.model_id = m.model_id
-            AND cr.recording_id = r.recording_id
-            AND s.site_id = r.site_id
-            AND sp.species_id = cr.species_id
-            AND cr.songtype_id = st.songtype_id
-            limit ${options.limit} offset ${options.offset};`
-
+          FROM (
+            SELECT
+              recording_id,
+              species_id,
+              songtype_id,
+              present,
+              max_vector_value,
+              job_id
+            FROM classification_results
+            WHERE job_id = ${options.jobId}
+            ORDER BY recording_id DESC
+            LIMIT ${options.limit} OFFSET ${options.offset}
+          ) cr
+          JOIN recordings r ON cr.recording_id = r.recording_id
+          JOIN sites s ON s.site_id = r.site_id
+          JOIN species sp ON sp.species_id = cr.species_id
+          JOIN songtypes st ON st.songtype_id = cr.songtype_id
+          JOIN job_params_classification jpc ON jpc.job_id = cr.job_id
+          JOIN models m ON m.model_id = jpc.model_id;`
     const [rows, fields] = await connection.execute(sql)
     if (!rows.length) return []
     for (let _1 of rows) {
