@@ -52,7 +52,8 @@ async function getCsvData(options) {
     for (let _1 of rows) {
         // Fill the original filename from the meta column.
         _1.meta = _1.meta ? parseMetaData(_1.meta) : null;
-        _1.rec = _1.meta && _1.meta.filename? _1.meta.filename :  _1.rec;
+        _1.rec = _1.meta && _1.meta.filename? _1.meta.filename : _1.rec;
+        delete _1.meta;
     }
     return rows
 }

@@ -20,7 +20,7 @@ async function collectData (projection_parameters, cb) {
     }
     console.log(`${exportReportJob}: finished collecting chunks`)
     targetFile.end()
-    cb(null, path.resolve(filePath))
+    cb(null, path.resolve(filePath), res.name)
   }).catch((e) => {
     console.err('Error export RFM Classification', e)
     cb(e)
@@ -43,9 +43,10 @@ async function exportRFMClassify (jobId, targetFile, cb) {
         offset: limit * index
       });
       toProcess = queryResult.length > 0;
-
-      console.log(`${exportReportJob}: writing chunk`)
-      await writeChunk(queryResult, targetFile, isFirstChunk)
+      if (toProcess) {
+        console.log(`${exportReportJob}: writing chunk`)
+        await writeChunk(queryResult, targetFile, isFirstChunk)
+      }
       isFirstChunk = false
       index++
     }
@@ -62,32 +63,34 @@ async function writeChunk (results, targetFile, isFirstChunk) {
     results.forEach(result => {
       fields.push(...Object.keys(result).filter(f => !fields.includes(f)))
     });
-    fields.splice(2, 0, 'threshold presence');
 
     let datastream = new stream.Readable({objectMode: true});
     let _buf = []
-
-    for (let result of results) {
-      _buf.push(result);
+    const thisrow = results[0]
+    if (thisrow['current threshold'] === null) {
+        fields[fields.indexOf('model presence')] = 'presence'
+        fields.splice(2, 2)
+    } else {
+        fields.splice(2, 0, 'threshold presence');
     }
-    datastream.on('data', (d) => {
-      _buf.push(d);
-    })
-    for (let result of _buf) {
-      fields.forEach(f => {
-        if (result[f] === undefined || result[f] === null) {
-          result[f] = '---'}
-        }
-      )
-      const maxVal = result['vector max value'];
-      let tprec = 0;
-      if (maxVal >= result['current threshold']) {
-        tprec = 1;
+    for (let result of results) {
+      if (!thisrow['current threshold']) {
+        delete result['current threshold']
+        delete result['vector max value']
+      } else {
+          const maxVal = result['vector max value'];
+          let tprec = 0;
+          if (maxVal >= result['current threshold']) {
+            tprec = 1;
+          }
+          result['threshold presence'] = tprec
       }
-      result['threshold presence'] = tprec
       datastream.push(result)
     }
     datastream.push(null);
+    datastream.on('data', (d) => {
+        _buf.push(Object.values(d))
+    })
 
     datastream.on('end', async () => {
       csv_stringify(_buf, { header: isFirstChunk, columns: fields }, async (err, data) => {
