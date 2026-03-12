@@ -59,33 +59,52 @@ async function exportRFMClassify (jobId, targetFile, cb) {
 
 async function writeChunk (results, targetFile, isFirstChunk) {
   return new Promise(async function (resolve, reject) {
-    let fields = [];
-    results.forEach(result => {
-      fields.push(...Object.keys(result).filter(f => !fields.includes(f)))
-    });
+    const fieldsFull = [
+      'rec',
+      'model presence',
+      'threshold presence',
+      'current threshold',
+      'vector max value',
+      'site',
+      'year',
+      'month',
+      'day',
+      'hour',
+      'minute',
+      'species',
+      'songtype'
+    ];
+    const fieldsShort = [
+      'rec',
+      'presence',
+      'site',
+      'year',
+      'month',
+      'day',
+      'hour',
+      'minute',
+      'species',
+      'songtype'
+    ];
+    const thisrow = results[0]
+    const isThresholdEmpty = thisrow['current threshold'] === null
 
     let datastream = new stream.Readable({objectMode: true});
     let _buf = []
-    const thisrow = results[0]
-    if (thisrow['current threshold'] === null) {
-        fields[fields.indexOf('model presence')] = 'presence'
-        fields.splice(2, 2)
-    } else {
-        fields.splice(2, 0, 'threshold presence');
-    }
     for (let result of results) {
-      if (!thisrow['current threshold']) {
+      if (isThresholdEmpty) {
         delete result['current threshold']
         delete result['vector max value']
+        result['presence'] = result['model presence']
       } else {
-          const maxVal = result['vector max value'];
-          let tprec = 0;
-          if (maxVal >= result['current threshold']) {
-            tprec = 1;
-          }
-          result['threshold presence'] = tprec
+        const maxVal = result['vector max value'];
+        let tprec = 0;
+        if (maxVal >= result['current threshold']) {
+          tprec = 1;
+        }
+        result['threshold presence'] = tprec
       }
-      datastream.push(result)
+      datastream.push(isThresholdEmpty ? fieldsShort.map(field => result[field]) : fieldsFull.map(field => result[field]))
     }
     datastream.push(null);
     datastream.on('data', (d) => {
@@ -93,7 +112,7 @@ async function writeChunk (results, targetFile, isFirstChunk) {
     })
 
     datastream.on('end', async () => {
-      csv_stringify(_buf, { header: isFirstChunk, columns: fields }, async (err, data) => {
+      csv_stringify(_buf, { header: isFirstChunk, columns: isThresholdEmpty ? fieldsShort : fieldsFull }, async (err, data) => {
         if (err) {
           reject(err)
         }

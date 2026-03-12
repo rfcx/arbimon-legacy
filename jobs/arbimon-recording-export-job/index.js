@@ -515,7 +515,7 @@ async function sendEmail (subject, title, rowData, content, isSignedUrl) {
           async: true
         },
         (res) => {
-          console.log('email status', res)
+          console.log('email status', res, 'title', title)
           resolve({ success: true })
         },
         (e) => {
