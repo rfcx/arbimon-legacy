@@ -722,9 +722,8 @@ angular.module('a2.analysis.patternmatching', [
     },
 
     setupExportUrl: function() {
-        const speciesName = this.patternMatching.species_name.replace(/\s+/g, '_').toLowerCase();
-        const songtypeName = this.patternMatching.songtype_name.replace(/\s+/g, '_').toLowerCase();
-        const fileName = 'pm-' + speciesName + '-' + songtypeName + '-' + this.patternMatching.species_id ;
+        const pmName = this.patternMatching.name.replace(/\s+/g, '_').toLowerCase();
+        const fileName = 'pm_' + pmName;
         this.patternMatchingExportUrl = a2PatternMatching.getExportUrl({
             patternMatching: this.patternMatching.id,
             fileName: encodeURIComponent(fileName)

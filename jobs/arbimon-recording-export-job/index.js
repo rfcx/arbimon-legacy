@@ -122,9 +122,11 @@ async function main () {
         return new Promise((resolve, reject) => {
             const exportReportType = 'Pattern Matchings';
             console.log(`Arbimon Export ${exportReportType} job`)
-            patternMatching.collectData(filters, projection_parameters, async (err, filePath) => {
-                const reportName = 'pattern-matching-export'
-                const zipPath = `jobs/arbimon-recording-export-job/${reportName}.zip`
+            patternMatching.collectData(filters, projection_parameters, async (err, fileName) => {
+                let reportName
+                if (fileName !== null) reportName = fileName
+                else reportName = 'pattern-matching-export'
+                const zipPath = __dirname + `/${reportName}.zip`
                 const bucketFormatted = S3_EXPORT_BUCKET_ARBIMON.split('/')[0]
                 const s3filePath = await uploadFileToS3(bucketFormatted, zipPath, rowData.project_id, currentTime, reportName, '.zip')
                 console.log('--s3filePath', s3filePath)
@@ -133,6 +135,7 @@ async function main () {
                 await sendEmail('Arbimon export', 'Arbimon export', rowData, url, true)
                 await updateExportRecordings(rowData, { processed_at: currentTime })
                 fs.rmSync(tmpFilePath, { recursive: true, force: true });
+                fs.rmSync(zipPath, { recursive: true, force: true });
                 console.log(`Arbimon Export ${exportReportType} job finished: ${message}`)
                 resolve()
             })
