@@ -10,7 +10,7 @@ const exportReportJob = `Arbimon Export ${exportReportType} job`
 
 async function collectData (projection_parameters, cb) {
   const [res] = await getName(projection_parameters.rfmClassify)
-  const filePath = path.join(__dirname, `${res.name}.csv`)
+  const filePath = path.join(__dirname, `rfm_${res.name}.csv`)
   const targetFile = fs.createWriteStream(filePath, { flags: 'a' })
   await exportRFMClassify(projection_parameters.rfmClassify, targetFile, async (err, data) => {
     if (err) {
@@ -20,7 +20,7 @@ async function collectData (projection_parameters, cb) {
     }
     console.log(`${exportReportJob}: finished collecting chunks`)
     targetFile.end()
-    cb(null, path.resolve(filePath), res.name)
+    cb(null, path.resolve(filePath), `rfm_${res.name}`)
   }).catch((e) => {
     console.err('Error export RFM Classification', e)
     cb(e)

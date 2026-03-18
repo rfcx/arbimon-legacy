@@ -21,7 +21,7 @@ const archive = archiver('zip', { zlib: { level: 9 }});
 let outputStreamFile
 
 async function collectData (filters, projection_parameters, cb) {
-  outputStreamFile = fs.createWriteStream(__dirname + '/pattern-matching-export.zip');
+  outputStreamFile = fs.createWriteStream(__dirname + '/pattern-matching_export.zip');
 
   archive.pipe(outputStreamFile)
   await exportAllPmJobs(filters.project_id, projection_parameters, async (err, data) => {
@@ -34,9 +34,10 @@ async function collectData (filters, projection_parameters, cb) {
     console.log(`${exportReportJob}: after finalizeArchive`)
     if (data !== null) {
       try {
-        await rename(__dirname + '/pattern-matching-export.zip', __dirname + `/${data}.zip`)
-        if (!fs.existsSync(__dirname + `/${data}.zip`)) {
-          console.info('file renamed')
+        const newPath =  __dirname + `/${data}.zip`
+        await rename(__dirname + '/pattern-matching_export.zip', newPath)
+        if (!fs.existsSync(newPath)) {
+          console.info('Error renaming file', newPath)
         }
         cb(null, data)
       } catch (e) {
