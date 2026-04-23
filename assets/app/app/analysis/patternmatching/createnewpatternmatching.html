@@ -100,8 +100,19 @@
     </form>
 </div>
 <div class="modal-footer">
+        <div class="form-group" ng-if="controller.tieringGuard.isViewOnlyBlocked || controller.tieringGuard.isJobLimitReached">
+            <error-message
+                ng-if="controller.tieringGuard.isViewOnlyBlocked"
+                message="'This project is currently view-only and cannot create new analysis jobs. Please review Project Settings for current usage and status.'">
+            </error-message>
+            <error-message
+                ng-if="controller.tieringGuard.isJobLimitReached"
+                message="'This project has reached its analysis job limit for the current tier. Review Project Settings to see usage and limits.'">
+            </error-message>
+            <a class="btn btn-sm btn-default mt-2" ng-href="{{controller.tieringGuard.settingsUrl}}">Open Project Settings</a>
+        </div>
     <div class="row-flex flex-direction-row flex-space-between">
         <button class="btn btn-success" ng-click="controller.cancel()">Cancel</button>
-        <button class="btn btn-primary" ng-click="controller.ok()" ng-disabled="controller.isSaving || !controller.isJobValid()">Create</button>
+        <button class="btn btn-primary" ng-click="controller.ok()" ng-disabled="controller.isSaving || !controller.isJobValid() || controller.isCreateBlocked()">Create</button>
     </div>
 </div>

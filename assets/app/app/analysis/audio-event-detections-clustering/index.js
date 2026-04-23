@@ -155,6 +155,13 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
             this.isRfcxUser = a2UserPermit.isRfcx();
             this.isSuper = a2UserPermit.isSuper();
             this.errorJobLimit = false;
+            this.tieringGuard = { loading: true, isBlocked: false, isJobLimitReached: false, isViewOnlyBlocked: false, settingsUrl: '' };
+
+            Project.getAnalysisTieringGuard().then((function(guard) {
+                this.tieringGuard = Object.assign({ loading: false }, guard);
+            }).bind(this)).catch((function() {
+                this.tieringGuard.loading = false;
+            }).bind(this));
 
             this.loading.playlists = true;
             a2Playlists.getList().then((function(playlists){
@@ -191,6 +198,7 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
 
         create: function () {
             this.errorJobLimit = false
+            if (this.tieringGuard.isBlocked) return
             if (this.isRfcx()) return this.newJob()
             return a2AudioEventDetectionsClustering.count().then(data => {
                 if (this.checkLimit(data.totalRecordings)) {
@@ -231,6 +239,10 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
 
         isNotDefined: function (item) {
             return item === undefined || item === null
+        },
+
+        isCreateBlocked: function () {
+            return this.tieringGuard.loading || this.tieringGuard.isBlocked
         }
     });
     this.initialize();

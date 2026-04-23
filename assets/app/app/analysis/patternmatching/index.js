@@ -1127,7 +1127,7 @@ angular.module('a2.analysis.patternmatching', [
         };
     }
 )
-.controller('CreateNewPatternMatchingInstanceCtrl', function($modalInstance, a2PatternMatching, a2Templates, a2Playlists, notify) {
+.controller('CreateNewPatternMatchingInstanceCtrl', function($modalInstance, a2PatternMatching, a2Templates, a2Playlists, notify, Project) {
     var self = this;
     Object.assign(this, {
         initialize: function(){
@@ -1148,8 +1148,15 @@ angular.module('a2.analysis.patternmatching', [
                 playlists: true
             };
             this.isSaving = false;
+            this.tieringGuard = { loading: true, isBlocked: false, isJobLimitReached: false, isViewOnlyBlocked: false, settingsUrl: '' };
 
             this.warningMessage = 'Warning: Large playlist (500,000+ recordings). Save resources by reducing playlist size.'
+
+            Project.getAnalysisTieringGuard().then((function(guard) {
+                this.tieringGuard = Object.assign({ loading: false }, guard);
+            }).bind(this)).catch((function() {
+                this.tieringGuard.loading = false;
+            }).bind(this));
 
             this.getTemplates();
 
@@ -1178,6 +1185,9 @@ angular.module('a2.analysis.patternmatching', [
             }).bind(this));
         },
         ok: function () {
+            if (self.tieringGuard.isBlocked) {
+                return;
+            }
             if (self.data.playlist.count === 0) {
                 return notify.error('Note: The playlist should not be empty.');
             }
@@ -1205,6 +1215,9 @@ angular.module('a2.analysis.patternmatching', [
         },
         isWarningMessage: function () {
             return this.data.playlist && this.data.playlist.count > 500000
+        },
+        isCreateBlocked: function () {
+            return this.tieringGuard.loading || this.tieringGuard.isBlocked;
         }
     });
     this.initialize();

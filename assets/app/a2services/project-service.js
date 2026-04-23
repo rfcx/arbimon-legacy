@@ -9,15 +9,66 @@ angular.module('a2.srv.project', [
         var nameRe = /\/?(project|citizen-scientist|visualizer)\/([\w\_\-]+)/;
         var nrm = nameRe.exec($location.absUrl());
         var url = nrm ? nrm[2] : '';
+        var projectInfoPromise = null;
+
+        function getProjectInfoData() {
+            if (!projectInfoPromise) {
+                projectInfoPromise = $http.get('/legacy-api/project/' + url + '/info').then(function(response) {
+                    return response.data;
+                });
+            }
+            return projectInfoPromise;
+        }
+
+        function getProjectSettingsUrl() {
+            return getProjectInfoData().then(function(data) {
+                return (data.bioAnalyticsBaseUrl || '') + '/p/' + url + '/settings';
+            });
+        }
 
         return {
             getUrl: function(){
                 return url;
             },
             getInfo: function(callback) {
-                $http.get('/legacy-api/project/'+url+'/info')
-                .success(function(data) {
+                getProjectInfoData().then(function(data) {
                     callback(data);
+                });
+            },
+            getTieringUsage: function() {
+                return $http.get('/legacy-api/project/' + url + '/tiering-usage').then(function(response) {
+                    return response.data;
+                });
+            },
+            getEntitlementSummary: function() {
+                return $q.all([getProjectInfoData(), getProjectSettingsUrl()]).then(function(results) {
+                    var projectInfo = results[0];
+                    var settingsUrl = results[1];
+                    return $http.get(projectInfo.bioAnalyticsBaseUrl + '/projects/' + url + '/entitlement-summary').then(function(response) {
+                        return Object.assign({}, response.data, { settingsUrl: settingsUrl });
+                    });
+                });
+            },
+            getAnalysisTieringGuard: function() {
+                return $q.all([this.getTieringUsage(), this.getEntitlementSummary()]).then(function(results) {
+                    var usage = results[0] || {};
+                    var summary = results[1] || {};
+                    var limits = summary.limits || {};
+                    var jobLimit = limits.jobCount;
+                    var isInactive = summary.entitlementState === 'inactive';
+                    var isViewOnly = summary.viewOnlyEffective === true;
+                    var isJobLimitReached = jobLimit !== null && jobLimit !== undefined && Number(usage.jobCount || 0) >= Number(jobLimit);
+                    return {
+                        usage: usage,
+                        summary: summary,
+                        limits: limits,
+                        settingsUrl: summary.settingsUrl,
+                        isInactive: isInactive,
+                        isViewOnly: isViewOnly,
+                        isViewOnlyBlocked: isInactive || isViewOnly,
+                        isJobLimitReached: isJobLimitReached,
+                        isBlocked: isInactive || isViewOnly || isJobLimitReached
+                    };
                 });
             },
             getProjectById: function(projectId, callback) {

@@ -415,6 +415,14 @@ angular.module('a2.analysis.random-forest-models.models', [
             $scope.jobDisabled = !training[0].enabled;
         });
 
+    $scope.tieringGuard = { loading: true, isBlocked: false, isJobLimitReached: false, isViewOnlyBlocked: false, settingsUrl: '' };
+
+    Project.getAnalysisTieringGuard().then(function(guard) {
+        $scope.tieringGuard = angular.extend({ loading: false }, guard);
+    }).catch(function() {
+        $scope.tieringGuard.loading = false;
+    });
+
     $scope.totalPresentValidation = $scope.isRetrain ? oldModel.validations.use_in_validation.present : 0;
 
     $scope.$watch('data.usePresentTraining', function() {
@@ -495,7 +503,9 @@ angular.module('a2.analysis.random-forest-models.models', [
             $scope.data.useNotPresentValidation > 0 &&
             typeof $scope.data.training !== 'string' &&
             typeof $scope.data.classifier !== 'string' &&
-            !$scope.jobDisabled
+            !$scope.jobDisabled &&
+            !$scope.tieringGuard.loading &&
+            !$scope.tieringGuard.isBlocked
         );
 
     };
@@ -505,6 +515,7 @@ angular.module('a2.analysis.random-forest-models.models', [
     };
 
     $scope.ok = function() {
+        if ($scope.tieringGuard.isBlocked) return;
         $scope.nameMsg = '';
         a2Models.create({
                 n: $scope.data.name,

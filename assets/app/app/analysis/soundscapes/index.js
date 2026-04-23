@@ -378,6 +378,14 @@ angular.module('a2.analysis.soundscapes', [
     $scope.playlists = playlists;
     $scope.buttonEnableFlag = true;
     $scope.years = Array.from({ length: 20 }, (_, i) => new Date().getFullYear() - i);
+    $scope.tieringGuard = { loading: true, isBlocked: false, isJobLimitReached: false, isViewOnlyBlocked: false, settingsUrl: '' };
+
+    Project.getAnalysisTieringGuard().then(function(guard) {
+        $scope.tieringGuard = angular.extend({ loading: false }, guard);
+    }).catch(function() {
+        $scope.tieringGuard.loading = false;
+    });
+
     $scope.datasubmit = {
         jobtype: 'single',
         name : '' ,
@@ -414,6 +422,7 @@ angular.module('a2.analysis.soundscapes', [
     };
 
     $scope.ok = function () {
+        if ($scope.tieringGuard.isBlocked) return;
         $scope.nameMsg = '';
         var opts = {
             a: $scope.datasubmit.aggregation,
@@ -460,10 +469,14 @@ angular.module('a2.analysis.soundscapes', [
             ((typeof $scope.datasubmit.bandwidth.length)  == 'string') ||
             $scope.datasubmit.name.length  === 0 ||
             ((typeof $scope.datasubmit.playlist) == 'string') ||
-            $scope.showPlaylistLimitWarning()
+            $scope.showPlaylistLimitWarning() ||
+            $scope.tieringGuard.loading ||
+            $scope.tieringGuard.isBlocked
         ) : (
             $scope.datasubmit.aggregation.length  === 0 ||
-            $scope.datasubmit.threshold.length === 0 || $scope.datasubmit.year.length === 0
+            $scope.datasubmit.threshold.length === 0 || $scope.datasubmit.year.length === 0 ||
+            $scope.tieringGuard.loading ||
+            $scope.tieringGuard.isBlocked
         )
     };
 

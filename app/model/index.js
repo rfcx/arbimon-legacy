@@ -19,6 +19,7 @@ exports.classifications = require('./classifications');
 exports.patternMatchings = require('./pattern_matchings');
 exports.AudioEventDetectionsClustering = require('./audio-event-detections-clustering');
 exports.ClusteringJobs = require('./clustering-jobs');
+exports.tiering         = require('./tiering');
 exports.oauth           = require('./oauth');
 exports.AdminPlots      = require('./admin-plots');
 exports.AccessTokens    = require('./access-tokens');
