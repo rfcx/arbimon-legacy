@@ -44,7 +44,7 @@ angular.module('a2.srv.project', [
                 return $q.all([getProjectInfoData(), getProjectSettingsUrl()]).then(function(results) {
                     var projectInfo = results[0];
                     var settingsUrl = results[1];
-                    return $http.get(projectInfo.bioAnalyticsBaseUrl + '/projects/' + url + '/entitlement-summary').then(function(response) {
+                    return $http.get(projectInfo.bioAnalyticsBaseUrl + '/api/projects/' + url + '/entitlement-summary').then(function(response) {
                         return Object.assign({}, response.data, { settingsUrl: settingsUrl });
                     });
                 });
