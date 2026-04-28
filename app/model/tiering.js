@@ -30,7 +30,7 @@ async function loadProjectTieringUsage(connection, projectId) {
     const jobRows = await dbpool.queryWithConn(connection,
         'SELECT \n' +
         '    COALESCE((SELECT COUNT(*) FROM pattern_matchings pm JOIN jobs j ON pm.job_id = j.job_id WHERE j.project_id = ? AND pm.deleted = 0), 0) AS pattern_matching_count,\n' +
-        '    COALESCE((SELECT COUNT(*) FROM jobs j WHERE j.project_id = ? AND j.job_type_id IN (2, 4, 5, 6, 8, 9, 10)), 0) AS job_count',
+        '    COALESCE((SELECT COUNT(*) FROM jobs j WHERE j.project_id = ? AND j.job_type_id IN (6)), 0) AS job_count', // check only pm for now
         [projectId, projectId]
     );
 
