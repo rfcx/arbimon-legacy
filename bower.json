@@ -27,7 +27,7 @@
     "ui-router-extras": "~0.0.10",
     "zxcvbn": "~3.2.0",
     "roboto-fontface": "~0.4.3",
-    "moment-timezone": "^0.5.33",
+    "moment-timezone": "^0.6.2",
     "plotly.js": "2.6.4"
   },
   "devDependencies": {
