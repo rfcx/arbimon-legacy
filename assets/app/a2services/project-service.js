@@ -56,7 +56,7 @@ angular.module('a2.srv.project', [
                     var limits = summary.limits || {};
                     var jobLimit = limits.jobCount;
                     var isInactive = summary.entitlementState === 'inactive';
-                    var isViewOnly = summary.viewOnlyEffective === true;
+                    var isViewOnly = summary.isLocked === true;
                     var isJobLimitReached = jobLimit !== null && jobLimit !== undefined && Number(usage.jobCount || 0) >= Number(jobLimit);
                     return {
                         usage: usage,

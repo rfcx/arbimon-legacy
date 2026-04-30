@@ -2,6 +2,7 @@ angular.module('a2.audiodata.playlists', [
     'a2.services',
     'a2.directives',
     'ui.bootstrap',
+    'arbimon2.directive.project-state-badge',
     'a2.audiodata.playlists.playlist-arithmetic',
     'humane'
 ])
@@ -23,6 +24,21 @@ angular.module('a2.audiodata.playlists', [
         }).bind(this));
         this.reset();
     };
+
+    $scope.tieringGuard = { loading: true };
+
+    this.loadTieringData = function() {
+        $scope.tieringGuard.loading = true;
+        Project.getAnalysisTieringGuard()
+            .then(function(guard) {
+                $scope.tieringGuard = angular.extend({ loading: false }, guard);
+            })
+            .catch(function() {
+                $scope.tieringGuard.loading = false;
+            });
+    };
+
+    this.loadTieringData();
 
     this.reset = function(){
         $scope.loading = true;
