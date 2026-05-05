@@ -2,6 +2,7 @@ angular.module('a2.analysis.patternmatching', [
     'ui.bootstrap',
     'a2.directive.audio-bar',
     'a2.srv.patternmatching',
+    'arbimon2.directive.project-state-badge',
     'a2.services',
     'a2.permissions',
     'humane',
@@ -68,6 +69,20 @@ angular.module('a2.analysis.patternmatching', [
     $scope.searchTemplates = { q: '', taxon: '' };
     $scope.taxons = [ { id: 0, taxon: 'All taxons' }]
     $scope.searchTemplates.taxon = $scope.taxons[0]
+
+    $scope.tieringGuard = { loading: true };
+    this.loadTieringData = function() {
+    $scope.tieringGuard.loading = true;
+    Project.getAnalysisTieringGuard()
+        .then(function(guard) {
+            $scope.tieringGuard = angular.extend({ loading: false }, guard);
+        })
+        .catch(function() {
+            $scope.tieringGuard.loading = false;
+        });
+    };
+
+    this.loadTieringData();
 
     $scope.getTaxons = function () {
         SpeciesTaxons.getList(function(data){
@@ -642,6 +657,12 @@ angular.module('a2.analysis.patternmatching', [
             .then(function() {
                 return this.loadData(1);
             }.bind(this));
+
+        Project.getAnalysisTieringGuard().then((function(guard) {
+            this.tieringGuard = Object.assign({ loading: false }, guard);
+        }).bind(this)).catch((function() {
+            this.tieringGuard.loading = false;
+        }).bind(this));
     },
 
     lists: {
@@ -750,7 +771,9 @@ angular.module('a2.analysis.patternmatching', [
         this.headerTop = headerTop | 0;
         this.scrolledPastHeader = this.thumbnailClass == 'is-small' ? false : scrollPos >= 450 && this.scrollElement.innerHeight > 500 && this.scrollElement.innerWidth > 1000;
     },
-
+    isViewBlocked: function () {
+        return this.tieringGuard.loading || this.tieringGuard.isBlocked;
+    },
     onSelect: function($item){
         this.select($item.value);
     },

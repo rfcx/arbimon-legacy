@@ -51,6 +51,7 @@
                         <div class="row-flex flex-align-middle flex-direction-row flex-space-start">
                             <span title="{{controller.patternMatching.name}}" class="section-header-title mr-3 hidelongtext">{{controller.patternMatching.name}}</span>
                             <button class="btn btn-default btn-xs"
+                                ng-disabled="!isViewBlocked"
                                 ng-click="controller.update(controller.patternMatching, $event)"
                                 tooltip="Edit Name"
                                 tooltip-trigger="mouseenter">
@@ -95,6 +96,7 @@
                         </div>
                         <div class="pull-right" style="margin-left: .5rem !important; margin-top: 5px;">
                             <a class="btn btn-success btn-rounded-full"
+                                ng-disabled="!isViewBlocked"
                                 ng-href="{{controller.patternMatchingExportUrl}}"
                                 ng-click="controller.exportPmReport($event)"
                                 tooltip="Export Pattern Matching Data">
