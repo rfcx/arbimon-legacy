@@ -11,7 +11,7 @@
                 tooltip-placement="right"
                 ng-if="!tieringGuard.loading"
                 ng-click="!tieringGuard.isViewOnly && createNewPatternMatching()"
-                ng-class="{'disabled': tieringGuard.isViewOnly}"
+                ng-class="{'disabled': tieringGuard.isViewOnly || tieringGuard.isJobLimitReached }"
                 tooltip="{{tieringGuard.isViewOnly ? 'Project is View Only' : 'New PM Job'}}">
                     New PM Job
                     <span class="ml-3" style="width: 16px">
