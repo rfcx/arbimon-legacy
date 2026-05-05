@@ -10,26 +10,32 @@
                     </div>
                 </div>
                 <button class="btn btn-default ml-2"
-                    ng-click="editSelectedTrainingSet()"
+                    ng-if="!tieringGuard.loading"
+                    tooltip="{{tieringGuard.isViewOnly ? 'Project is View Only' : 'Edit Training Set'}}"
+                    tooltip-placement="top"
                     ng-disabled="!selected.trainingSet"
-                    tooltip="Edit Training Set">
+                    ng-class="{'disabled': tieringGuard.isViewOnly}"
+                    ng-click="!tieringGuard.isViewOnly && editSelectedTrainingSet()">
                     <i class="fa fa-pencil"></i>
                 </button>
                 <button class="btn btn-default ml-2"
-                    ng-click="deleteSelectedTrainingSet()"
+                    ng-if="!tieringGuard.loading"
+                    tooltip="{{tieringGuard.isViewOnly ? 'Project is View Only' : 'Remove Training Set'}}"
+                    tooltip-placement="top"
                     ng-disabled="!selected.trainingSet"
-                    tooltip="Remove Training Set">
+                    ng-class="{'disabled': tieringGuard.isViewOnly}"
+                    ng-click="!tieringGuard.isViewOnly && deleteSelectedTrainingSet()">
                     <i class="fa fa-trash"></i>
                 </button>
             </div>
             <div class="row-flex flex-align-middle gap-x-3">
-                <button ng-click="addNewTrainingSet()" class="btn btn-primary btn-rounded-full"
+                <button ng-class="{'disabled': tieringGuard.isViewOnly}" ng-click="addNewTrainingSet()" class="btn btn-primary btn-rounded-full"
                     tooltip="Create Training Set">
                     New Training Set <img class="ml-1" src="/images/fi-plus.svg">
                 </button>
                 <div tooltip="{{ isShareTsEnabled() ? 'Combine' : 'You must be an Expert or Administrator to combine Training Sets' }}" tooltip-append-to-body="true">
                     <button class="btn btn-rounded-full row-flex flex-space-center flex-align-middle gap-x-2"
-                        ng-class="{ 'btn-default': !isShareTsEnabled(), 'btn-success': isShareTsEnabled() }"
+                        ng-class="{ 'btn-default': !isShareTsEnabled(), 'btn-success': isShareTsEnabled(), 'disabled': tieringGuard.isViewOnly }"
                         ng-click="combineTrainingSet()"
                         ng-disabled="!isShareTsEnabled()"
                     >
@@ -39,7 +45,7 @@
                 </div>
                 <div tooltip="{{ isShareTsEnabled() ? 'Share' : 'You must be an Expert or Administrator to share Training Sets' }}" tooltip-append-to-body="true">
                     <button class="btn btn-rounded-full row-flex flex-space-center flex-align-middle gap-x-2"
-                        ng-class="{ 'btn-default': !isShareTsEnabled(), 'btn-success': isShareTsEnabled() }"
+                        ng-class="{ 'btn-default': !isShareTsEnabled(), 'btn-success': isShareTsEnabled(), 'disabled': tieringGuard.isViewOnly }"
                         ng-click="shareTrainingSet()"
                         ng-disabled="!isShareTsEnabled()"
                     >
@@ -283,9 +289,11 @@
 
     <div ng-show="(!trainingSets || !trainingSets.length > 0) && !loading.list" class="help-wrapper col-sm-12 row-flex flex-direction-column flex-space-center flex-align-middle" style="text-align: center;">
             <a class="btn btn-sm btn-success btn-rounded-full"
-                tooltip="Create Training Set"
+                ng-if="!tieringGuard.loading"
+                tooltip="{{tieringGuard.isViewOnly ? 'Project is View Only' : 'Create Training Set'}}"
                 tooltip-placement="top"
-                ng-click="addNewTrainingSet()">
+                ng-class="{'disabled': tieringGuard.isViewOnly}"
+                ng-click="!tieringGuard.isViewOnly && addNewTrainingSet()">
                 New Training Set <img class="ml-2" src="/images/fi-plus-primary.svg">
             </a>
         <p class="mt-3 mb-0">Learn more:</p>

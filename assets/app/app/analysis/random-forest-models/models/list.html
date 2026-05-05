@@ -2,13 +2,17 @@
     <div class="col-sm-12 padded-view-div">
         <h1 class="mt-0 clear-button" style="margin-bottom: 24px; display: flex;">
             Random Forest Models
+            <project-state-badge class="ml-3" style="display: inline-flex; align-items: center; vertical-align: middle;"></project-state-badge>
             <div
                 class="row-flex-inline flex-align-middle ml-3"
             >
                 <a class="btn btn-primary btn-rounded-full"
-                    tooltip=" New Classification Job"
-                    tooltip-placement="right"
-                    ng-click="createNewClassification()">
+                    tooltip=" "
+                    tooltip-placement="top"
+                    ng-if="!tieringGuard.loading"
+                    ng-click="!tieringGuard.isViewOnly && createNewClassification()"
+                    ng-class="{'disabled': tieringGuard.isViewOnly}"
+                    tooltip="{{tieringGuard.isViewOnly ? 'Project is View Only' : 'New Classification Job'}}">
                     New Classification Job
                     <span class="ml-3">
                         <img src="/images/fi-plus.svg">
@@ -19,12 +23,15 @@
                 class="row-flex-inline flex-align-middle ml-3"
             >
                 <a class="btn btn-success btn-rounded-full"
-                    tooltip="New Training Job"
+                    ng-if="!tieringGuard.loading"
+                    tooltip="{{tieringGuard.isViewOnly ? 'Project is View Only' : 'New Training Job'}}"
                     tooltip-placement="right"
-                    ng-click="newModel()">
+                    ng-class="{'disabled': tieringGuard.isViewOnly}"
+                    ng-click="!tieringGuard.isViewOnly && cnewModel()">
                     New Training Job
                     <span class="ml-3">
-                        <img src="/images/fi-plus-primary.svg"> 
+                        <img ng-if="!tieringGuard.isViewOnly" src="/images/fi-plus-primary.svg"> 
+                        <img ng-if="tieringGuard.isViewOnly" src="/images/fi-plus.svg"> 
                     </span>
                 </a>
             </div>
@@ -61,7 +68,7 @@
                         <button class="btn btn-rounded-full"
                             ng-class="{ 'btn-default': !isShareModelEnabled(), 'btn-primary': isShareModelEnabled() }"
                             ng-click="shareModel()"
-                            ng-disabled="!isShareModelEnabled()"
+                            ng-disabled="!isShareModelEnabled() || tieringGuard.isViewOnly"
                         >
                             <span class="row-flex flex-space-center gap-x-2">
                                 Share Model
@@ -100,11 +107,12 @@
                     <field>
                         <div class="row-flex flex-direction-row">
                             <div
+                                ng-if="!tieringGuard.isViewOnly"
                                 tooltip="{{ isRetrainDisable(row) ? 'Disable retraining for models already retrained or created after Feb 5, 2025' : 'Retrain the model created before Feb 5, 2025' }}"
                                 tooltip-append-to-body="true"
                             >
                                 <button
-                                    ng-disabled="isRetrainDisable(row)"
+                                    ng-disabled="isRetrainDisable(row) || tieringGuard.isViewOnly"
                                     class="btn btn-default btn-rounded-full"
                                     ng-click="$event.stopPropagation(); newModel(row, true)">
                                         Retrain
@@ -113,6 +121,7 @@
                             
                         
                             <div class="pl-3 pt-2 pb-2 pr-3"
+                                ng-if="!tieringGuard.isViewOnly"
                                 ng-click="$event.stopPropagation(); deleteModel(row.model_id,row.mname)"
                                 tooltip="Delete training model"
                                 tooltip-trigger="mouseenter"
@@ -126,12 +135,15 @@
             <div ng-show="!loading && modelsDataOrig && !modelsDataOrig.length" class="help-wrapper col-sm-12 row-flex flex-direction-column flex-space-center flex-align-middle clear-button" style="text-align: center;">
                 <div>
                     <a class="btn btn-sm btn-success btn-rounded-full"
-                        tooltip="Create New Training Job"
-                        tooltip-placement="top"
-                        ng-click="newModel()">
+                    ng-if="!tieringGuard.loading"
+                    tooltip="{{tieringGuard.isViewOnly ? 'Project is View Only' : 'Create New Training Job'}}"
+                    tooltip-placement="top"
+                    ng-class="{'disabled': tieringGuard.isViewOnly}"
+                    ng-click="!tieringGuard.isViewOnly && newModel()">
                         New Training Job
                         <span class="ml-2">
-                            <img src="/images/fi-plus-primary.svg"> 
+                            <img ng-if="!tieringGuard.isViewOnly" src="/images/fi-plus-primary.svg"> 
+                            <img ng-if="tieringGuard.isViewOnly" src="/images/fi-plus.svg"> 
                         </span>
                     </a>
                 </div>

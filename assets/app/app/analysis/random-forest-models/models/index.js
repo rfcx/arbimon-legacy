@@ -40,6 +40,21 @@ angular.module('a2.analysis.random-forest-models.models', [
         $scope.projectData = data;
     });
 
+    $scope.tieringGuard = { loading: true };
+    
+    this.loadTieringData = function() {
+    $scope.tieringGuard.loading = true;
+    Project.getAnalysisTieringGuard()
+        .then(function(guard) {
+            $scope.tieringGuard = angular.extend({ loading: false }, guard);
+        })
+        .catch(function() {
+            $scope.tieringGuard.loading = false;
+        });
+    };
+
+    this.loadTieringData();
+
     var p = $state.params;
     var isNewJob = p && p.newJob !== undefined;
 

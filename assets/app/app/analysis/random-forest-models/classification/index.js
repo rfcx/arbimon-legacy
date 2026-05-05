@@ -133,6 +133,21 @@ angular.module('a2.analysis.random-forest-models.classification', [
         });
     };
 
+    $scope.tieringGuard = { loading: true };
+    
+    this.loadTieringData = function() {
+    $scope.tieringGuard.loading = true;
+    Project.getAnalysisTieringGuard()
+        .then(function(guard) {
+            $scope.tieringGuard = angular.extend({ loading: false }, guard);
+        })
+        .catch(function() {
+            $scope.tieringGuard.loading = false;
+        });
+    };
+
+    this.loadTieringData();
+
     $scope.createNewClassification = function () {
         if(!a2UserPermit.can('manage models and classification')) {
             notify.error('You do not have permission to create classifications');

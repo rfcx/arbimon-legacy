@@ -30,6 +30,7 @@
                 </field>
                 <field>
                     <div class="pl-3 pt-2 pb-2 pr-3"
+                        ng-if="!tieringGuard.isViewOnly"
                         ng-click="$event.stopPropagation(); deleteClassification(row.job_id,row.cname)"
                         tooltip="Delete job"
                         tooltip-trigger="mouseenter"
@@ -42,12 +43,15 @@
         <div ng-show="!loading && classificationsOriginal && !classificationsOriginal.length" class="help-wrapper col-sm-12 row-flex flex-direction-column flex-space-center flex-align-middle clear-button" style="text-align: center;">
             <div>
                 <a class="btn btn-sm btn-success btn-rounded-full"
-                    tooltip="Create New Classification Job"
+                    ng-if="!tieringGuard.loading"
+                    tooltip="{{tieringGuard.isViewOnly ? 'Project is View Only' : 'Create New Classification Job'}}"
                     tooltip-placement="top"
-                    ng-click="createNewClassification()">
+                    ng-class="{'disabled': tieringGuard.isViewOnly}"
+                    ng-click="!tieringGuard.isViewOnly && createNewClassification()">
                     New Classification Job
                     <span class="ml-2">
-                        <img src="/images/fi-plus-primary.svg"> 
+                        <img ng-if="!tieringGuard.isViewOnly" src="/images/fi-plus-primary.svg"> 
+                        <img ng-if="tieringGuard.isViewOnly" src="/images/fi-plus.svg">
                     </span>
                 </a>
             </div>
