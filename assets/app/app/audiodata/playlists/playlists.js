@@ -88,6 +88,12 @@ angular.module('a2.audiodata.playlists', [
             });
         });
     };
+
+    $scope.goToNewPlaylist = function() {
+        var url = $scope.getNewPlaylistUrl();
+        window.location.href = url;
+    };
+
     $scope.del = function() {
         if(!$scope.checked || !$scope.checked.length)
             return;

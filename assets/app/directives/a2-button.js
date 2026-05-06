@@ -13,7 +13,7 @@ angular.module('arbimon2.directive.a2-button', [])
             loading: '=?'
         },
         template: `
-        <div class="group" style="position: relative; display: inline-block;">
+        <div class="group clear-button" style="position: relative; display: inline-block;">
             <button class="btn btn-rounded-full {{btnClass}}"
 
                 ng-class="{'disabled': isViewOnly || loading}"
