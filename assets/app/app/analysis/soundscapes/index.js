@@ -156,6 +156,21 @@ angular.module('a2.analysis.soundscapes', [
         $scope.loading = false;
     }
 
+    $scope.tieringGuard = { loading: true };
+
+    this.loadTieringData = function() {
+        $scope.tieringGuard.loading = true;
+        Project.getAnalysisTieringGuard()
+            .then(function(guard) {
+                $scope.tieringGuard = angular.extend({ loading: false }, guard);
+            })
+            .catch(function() {
+                $scope.tieringGuard.loading = false;
+            });
+    };
+
+    this.loadTieringData();
+
     $scope.isSoundscapesAvailable = function (id, name) {
         return !$scope.loading && $scope.soundscapesData && $scope.soundscapesData.length
     }
