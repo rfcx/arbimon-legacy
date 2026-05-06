@@ -28,10 +28,18 @@
                     <i class="fa fa-trash"></i>
                 </button>
             </div>
-            <div class="row-flex flex-align-middle gap-x-3">
-                <button ng-class="{'disabled': tieringGuard.isViewOnly}" ng-click="addNewTrainingSet()" class="btn btn-primary btn-rounded-full"
-                    tooltip="Create Training Set">
-                    New Training Set <img class="ml-1" src="/images/fi-plus.svg">
+            <div class="row-flex flex-align-middle gap-x-3 clear-button">
+                <button ng-class="{'disabled': tieringGuard.isViewOnly}" 
+                    ng-click="addNewTrainingSet()" 
+                    class="btn btn-primary btn-rounded-full"
+                    ng-disabled="tieringGuard.isViewOnly"
+                    tooltip="Create Training Set"
+                    style="display: inline-flex; align-items: center; justify-content: center;">
+                    New Training Set 
+                    <img
+                    class="ml-1" src="/images/fi-plus.svg"
+                    ng-style="tieringGuard.isViewOnly ? 
+                    {'filter': 'invert(52%) sepia(4%) saturate(452%) hue-rotate(24deg) brightness(97%) contrast(89%)'} : {}">
                 </button>
                 <div tooltip="{{ isShareTsEnabled() ? 'Combine' : 'You must be an Expert or Administrator to combine Training Sets' }}" tooltip-append-to-body="true">
                     <button class="btn btn-rounded-full row-flex flex-space-center flex-align-middle gap-x-2"

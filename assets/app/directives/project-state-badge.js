@@ -60,9 +60,9 @@ angular.module('arbimon2.directive.project-state-badge', [])
                         'View-Only' +
                     '</span>' +
                     
-                    '<div class="absolute z-10 inline-block px-3 py-2 ml-5 text-sm font-medium text-gray-900 bg-white rounded-lg shadow-lg border font-poppins border-gray-100 group-hover-visible w-max whitespace-nowrap pointer-events-none" ' +
+                    '<div class="absolute z-10 w-40 inline-block px-3 py-2 ml-5 text-sm font-medium text-gray-900 bg-white rounded-lg shadow-lg border font-poppins border-gray-100 group-hover-visible whitespace-nowrap pointer-events-none text-center" ' +
                     'style="position: absolute; bottom: 100%; left: 0; margin-bottom: 8px; background: white; color: black; padding: 6px 12px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); border: 1px solid #eee; z-index: 9999; font-size: 14px;">' +
-                            'This project is now View Only due to inactivity. Upgrade your plan to restore access.' +
+                            'This project is now View Only due to inactivity.<br>Upgrade your plan to restore access.' +
                         
                         '<div style="position: absolute; width: 8px; height: 8px; background: white; bottom: -4px; left: 20px; transform: rotate(45deg); border-right: 1px solid #eee; border-bottom: 1px solid #eee;"></div>' +
                     '</div>' +

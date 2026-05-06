@@ -4,6 +4,7 @@ angular.module('a2.analysis.patternmatching', [
     'a2.srv.patternmatching',
     'arbimon2.directive.project-state-badge',
     'a2.services',
+    'arbimon2.directive.a2-button',
     'a2.permissions',
     'humane',
     'c3-charts',
