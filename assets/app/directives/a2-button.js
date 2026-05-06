@@ -6,11 +6,13 @@ angular.module('arbimon2.directive.a2-button', [])
         scope: {
             label: '@',
             iconSrc: '@?',
+            iconFa: '@?',
             btnClass: '@',
             tooltipText: '@',
             action: '&',
             isViewOnly: '=',
-            loading: '=?'
+            loading: '=?',
+            iconSize: '@?'
         },
         template: `
         <div class="group clear-button" style="position: relative; display: inline-block;">
@@ -27,11 +29,18 @@ angular.module('arbimon2.directive.a2-button', [])
                 </div>
                 
                 <img ng-if="iconSrc" 
-                     class="ml-2" 
-                     ng-src="{{iconSrc}}"
-                     ng-style="isViewOnly || loading ? 
-                        {'filter': 'brightness(0) invert(52%) sepia(4%) saturate(452%) hue-rotate(24deg) brightness(97%) contrast(89%)'} : {}"
-                     style="width: 16px; height: 16px; display: block;">
+                    class="ml-2" 
+                    ng-src="{{iconSrc}}"
+                    ng-style="{
+                        'width': iconSize || '16px',
+                        'height': iconSize || '16px',
+                        'display': 'block',
+                        'filter': (isViewOnly || loading) 
+                            ? 'brightness(0) saturate(100%) invert(52%) sepia(4%) saturate(452%) hue-rotate(24deg) brightness(97%) contrast(89%)' 
+                            : 'none'
+                    }">
+
+                <i ng-if="iconFa" class="ml-2 fa" ng-class="iconFa"></i>
             </button>
         </div>
         `

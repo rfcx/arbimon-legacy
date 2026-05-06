@@ -42,18 +42,15 @@
         </div>
         <div ng-show="!loading && classificationsOriginal && !classificationsOriginal.length" class="help-wrapper col-sm-12 row-flex flex-direction-column flex-space-center flex-align-middle clear-button" style="text-align: center;">
             <div>
-                <a class="btn btn-sm btn-success btn-rounded-full"
-                    ng-if="!tieringGuard.loading"
-                    tooltip="{{tieringGuard.isViewOnly ? 'Project is View Only' : 'Create New Classification Job'}}"
-                    tooltip-placement="top"
-                    ng-class="{'disabled': tieringGuard.isViewOnly}"
-                    ng-click="!tieringGuard.isViewOnly && createNewClassification()">
-                    New Classification Job
-                    <span class="ml-2">
-                        <img ng-if="!tieringGuard.isViewOnly" src="/images/fi-plus-primary.svg"> 
-                        <img ng-if="tieringGuard.isViewOnly" src="/images/fi-plus.svg">
-                    </span>
-                </a>
+                <a2-button 
+                    label="New Classification Job"
+                    icon-src="/images/fi-plus.svg"
+                    btn-class="btn-primary btn-sm"
+                    tooltip-text="Create New Classification Job"
+                    is-view-only="tieringGuard.isViewOnly"
+                    loading="tieringGuard.loading"
+                    action="createNewClassification()">
+                </a2-button>
             </div>
             <p class="mt-3 mb-0">Learn more:</p>
             <p class="mb-0"><a href="https://help.arbimon.org/article/236-creating-an-rfm-classification-job" target="_blank">How to create a Classification Job?<i class="ml-2 fa fa-external-link"></i></a></p>

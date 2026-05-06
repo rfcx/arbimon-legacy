@@ -29,39 +29,34 @@
                 </button>
             </div>
             <div class="row-flex flex-align-middle gap-x-3 clear-button">
-                <button ng-class="{'disabled': tieringGuard.isViewOnly}" 
-                    ng-click="addNewTrainingSet()" 
-                    class="btn btn-primary btn-rounded-full"
-                    ng-disabled="tieringGuard.isViewOnly"
-                    tooltip="Create Training Set"
-                    style="display: inline-flex; align-items: center; justify-content: center;">
-                    New Training Set 
-                    <img
-                    class="ml-1" src="/images/fi-plus.svg"
-                    ng-style="tieringGuard.isViewOnly ? 
-                    {'filter': 'invert(52%) sepia(4%) saturate(452%) hue-rotate(24deg) brightness(97%) contrast(89%)'} : {}">
-                </button>
-                <div tooltip="{{ isShareTsEnabled() ? 'Combine' : 'You must be an Expert or Administrator to combine Training Sets' }}" tooltip-append-to-body="true">
-                    <button class="btn btn-rounded-full row-flex flex-space-center flex-align-middle gap-x-2"
-                        ng-class="{ 'btn-default': !isShareTsEnabled(), 'btn-success': isShareTsEnabled(), 'disabled': tieringGuard.isViewOnly }"
-                        ng-click="combineTrainingSet()"
-                        ng-disabled="!isShareTsEnabled()"
-                    >
-                        Combine
-                        <i class="fa a2-combine"></i>
-                    </button>
-                </div>
-                <div tooltip="{{ isShareTsEnabled() ? 'Share' : 'You must be an Expert or Administrator to share Training Sets' }}" tooltip-append-to-body="true">
-                    <button class="btn btn-rounded-full row-flex flex-space-center flex-align-middle gap-x-2"
-                        ng-class="{ 'btn-default': !isShareTsEnabled(), 'btn-success': isShareTsEnabled(), 'disabled': tieringGuard.isViewOnly }"
-                        ng-click="shareTrainingSet()"
-                        ng-disabled="!isShareTsEnabled()"
-                    >
-                        Share
-                        <img ng-src="{{ isShareTsEnabled() ? '/images/share-frequency.png' : '/images/share-disabled.png' }}" style="height: 12px; margin-top: 1px;">
-                    </span>
-                    </button>
-                </div>
+                <a2-button 
+                    label="New Training Set"
+                    icon-src="/images/fi-plus.svg"
+                    btn-class="btn-primary"
+                    tooltip-text="Create Training Set"
+                    is-view-only="tieringGuard.isViewOnly"
+                    loading="tieringGuard.loading"
+                    action="addNewTrainingSet()">
+                </a2-button>
+                <a2-button 
+                    label="Combine"
+                    icon-fa="a2-combine" 
+                    btn-class="btn-success"
+                    tooltip-text="{{ isShareTsEnabled() ? 'Combine' : 'You must be an Expert or Administrator to combine Training Sets' }}"
+                    is-view-only="!isShareTsEnabled() || tieringGuard.isViewOnly"
+                    loading="tieringGuard.loading"
+                    action="combineTrainingSet()">
+                </a2-button>
+                <a2-button 
+                    label="Share"
+                    icon-src="/images/share-frequency.png"
+                    btn-class="btn-success"
+                    tooltip-text="{{ isShareTsEnabled() ? 'Share' : 'You must be an Expert or Administrator to share Training Sets' }}"
+                    is-view-only="!isShareTsEnabled() || tieringGuard.isViewOnly"
+                    loading="tieringGuard.loading"
+                    icon-size="12px"
+                    action="shareTrainingSet()">
+                </a2-button>
             </div>
         </div>
     </div>
@@ -296,14 +291,15 @@
     </div>
 
     <div ng-show="(!trainingSets || !trainingSets.length > 0) && !loading.list" class="help-wrapper col-sm-12 row-flex flex-direction-column flex-space-center flex-align-middle" style="text-align: center;">
-            <a class="btn btn-sm btn-success btn-rounded-full"
-                ng-if="!tieringGuard.loading"
-                tooltip="{{tieringGuard.isViewOnly ? 'Project is View Only' : 'Create Training Set'}}"
-                tooltip-placement="top"
-                ng-class="{'disabled': tieringGuard.isViewOnly}"
-                ng-click="!tieringGuard.isViewOnly && addNewTrainingSet()">
-                New Training Set <img class="ml-2" src="/images/fi-plus-primary.svg">
-            </a>
+            <a2-button 
+                label="New Training Set"
+                icon-src="/images/fi-plus.svg"
+                btn-class="btn-primary btn-sm"
+                tooltip-text="Create Training Set"
+                is-view-only="tieringGuard.isViewOnly"
+                loading="tieringGuard.loading"
+                action="addNewTrainingSet()">
+            </a2-button>
         <p class="mt-3 mb-0">Learn more:</p>
         <p class="mb-0"><a href="https://help.arbimon.org/article/232-creating-a-training-set-pattern" target="_blank">What is a Training Set?<i class="ml-2 fa fa-external-link"></i></a></p>
     </div>
