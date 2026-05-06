@@ -80,6 +80,21 @@ angular.module('a2.analysis.clustering-jobs', [
         }
     }
 
+    $scope.tieringGuard = { loading: true };
+
+    this.loadTieringData = function() {
+        $scope.tieringGuard.loading = true;
+        Project.getAnalysisTieringGuard()
+            .then(function(guard) {
+                $scope.tieringGuard = angular.extend({ loading: false }, guard);
+            })
+            .catch(function() {
+                $scope.tieringGuard.loading = false;
+            });
+    };
+
+    this.loadTieringData();
+
     $scope.createNewClusteringJob = function () {
         if(!a2UserPermit.can('manage AED and Clustering job')) {
             notify.error('You do not have permission to create Clustering job');

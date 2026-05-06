@@ -4,41 +4,43 @@
             <h1 class="mt-0 clear-button" style="margin-bottom: 24px;">
                 Clustering Jobs
                 <span class="beta-badge">BETA</span>
-                <div
-                    class="row-flex-inline flex-align-middle ml-3"
-                    style="vertical-align: middle;"
-                >
-                    <a class="btn btn-primary btn-rounded-full"
-                        tooltip="Create New Clustering job"
-                        tooltip-placement="right"
-                        ng-click="createNewClusteringJob()">
-                        New Clustering Job
-                        <span class="ml-3" style="width: 16px">
-                            <img src="/images/fi-plus.svg">
-                        </span>
-                    </a>
+                <project-state-badge></project-state-badge>
+                <div style="display: inline-flex; align-items: center;">
+                    <a2-button 
+                        label="New Clustering Job"
+                        icon-src="/images/fi-plus.svg"
+                        btn-class="btn-primary"
+                        tooltip-text="Create New Clustering job"
+                        is-view-only="tieringGuard.isViewOnly"
+                        loading="tieringGuard.loading"
+                        action="createNewClusteringJob()">
+                    </a2-button>
                 </div>
             </h1>
-            <button ng-if="showRefreshBtn"
-                class="btn btn-success btn-rounded-full pull-right btn-sm mt-4 mb-5"
-                tooltip="Refresh list"
-                ng-click="loadClusteringJobs()">
-                    Refresh List <i class="fa fa-refresh ml-2"></i>
-            </button>
+            <div class="pull-right mt-4 mb-5" ng-if="showRefreshBtn">
+                <a2-button 
+                    label="Refresh List"
+                    icon-src="fa fa-refresh"
+                    icon-size="14px"
+                    btn-class="btn-success btn-sm"
+                    tooltip-text="Refresh list"
+                    is-view-only="tieringGuard.isViewOnly"
+                    loading="tieringGuard.loading"
+                    action="loadClusteringJobs()">
+                </a2-button>
+            </div>
         </div>
         <loader ng-if="loading"></loader>
         <div ng-show="!loading && clusteringJobsData && !clusteringJobsData.length" class="help-wrapper col-sm-12 row-flex flex-direction-column flex-space-center flex-align-middle" style="text-align: center;">
-            <div>
-                <a class="btn btn-sm btn-success btn-rounded-full"
-                    tooltip="Create New Clustering job"
-                    tooltip-placement="top"
-                    ng-click="createNewClusteringJob()">
-                    New Clustering Job
-                    <span class="ml-2" style="width: 16px">
-                        <img src="/images/fi-plus-primary.svg">
-                    </span>
-                </a>
-            </div>
+            <a2-button 
+                label="New Clustering Job"
+                icon-src="/images/fi-plus.svg"
+                btn-class="btn-primary btn-sm"
+                tooltip-text="Create New Clustering job"
+                is-view-only="tieringGuard.isViewOnly"
+                loading="tieringGuard.loading"
+                action="createNewClusteringJob()">
+            </a2-button>
             <p class="mt-3 mb-0">Learn more:</p>
             <p class="mb-0"><a href="https://help.arbimon.org/article/222-what-is-audio-event-detection-clustering" target="_blank">1. What is a Clustering Analysis?<i class="ml-2 fa fa-external-link"></i></a></p>
             <p class="mb-0"><a href="https://help.arbimon.org/article/224-creating-a-clustering-job" target="_blank">2. How to create the Clustering Analysis?<i class="ml-2 fa fa-external-link"></i></a></p>
@@ -66,7 +68,9 @@
                     {{ row.user }}
                 </field>
                 <field tdclass="is-v-middle">
-                    <div class="pl-3 pt-2 pb-2 pr-3"
+                    <div 
+                        ng-if="!tieringGuard.isViewOnly && !tieringGuard.loading"
+                        class="pl-3 pt-2 pb-2 pr-3"
                         ng-click="deleteClusteringJob(row, $event)"
                         tooltip="Delete job"
                         tooltip-trigger="mouseenter"
