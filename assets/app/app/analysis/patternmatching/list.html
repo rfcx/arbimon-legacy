@@ -43,43 +43,49 @@
                         </div>
                     </div>
                 </div>
-                <div ng-if="!tieringGuard.isViewOnly" class="row-flex flex-direction-row flex-align-middle clear-button">
+                <div class="row-flex flex-direction-row flex-align-middle clear-button">
                     <button
-                        ng-if="selectedJobId.length > 0"
+                        ng-if="selectedJobId.length > 0 && !tieringGuard.isViewOnly"
                         class="btn bg-echo text-insight border-1 border-insight btn-rounded-full"
                         ng-click="clearSelectedJob()"
                     >
                         <span>{{ selectedJobId.length }} selected</span>
                         <img src="/images/fi-close-spoonbill.svg">
                     </button>
-                    <button  ng-if="loading.showRefreshBtn"
-                        type="download"
-                        class="btn btn-success btn-rounded-full ml-3"
-                        tooltip="Export selected"
+                    <a2-button
+                        class="ml-3"
+                        ng-if="loading.showRefreshBtn"
+                        label="Export Selected (.csv)"
+                        icon-fa="fa-download"
+                        icon-size="14px"
+                        btn-class="btn-success"
+                        tooltip-text="Export selected"
+                        is-view-only="tieringGuard.isViewOnly"
+                        loading="tieringGuard.loading"
                         ng-disabled="selectedJobId.length == 0"
-                        ng-click="exportData('ExportMultiple')"
-                    >
-                        Export Selected (.csv)
-                        <i class="fa fa-download ml-2"></i>
-                    </button>
-                    <button  ng-if="loading.showRefreshBtn"
-                        type="download"
-                        class="btn btn-success btn-rounded-full ml-3"
-                        tooltip="Export all results"
+                        action="exportData('ExportMultiple')">
+                    </a2-button>
+                    <a2-button 
+                        ng-if="loading.showRefreshBtn"
+                        label="Export All (.csv)"
+                        icon-fa="fa-download"
+                        icon-size="14px"
+                        btn-class="btn-success ml-3"
+                        tooltip-text="Export all results"
+                        is-view-only="tieringGuard.isViewOnly"
+                        loading="tieringGuard.loading"
                         ng-disabled="isExportDisabled()"
-                        ng-click="exportData('pm')"
-                    >
-                        Export All (.csv)
-                        <i class="fa fa-download ml-2"></i>
-                    </button>
-                    <button ng-if="loading.showRefreshBtn"
-                        class="btn btn-success btn-rounded-full ml-2"
-                        tooltip="Refresh list"
-                        ng-click="loadPatternMatchings()"
-                    >
-                        Refresh List
-                        <i class="fa fa-refresh ml-2"></i>
-                    </button>
+                        action="exportData('pm')">
+                    </a2-button>
+                    <a2-button 
+                        ng-if="loading.showRefreshBtn"
+                        label="Refresh List"
+                        icon-fa="fa-refresh"
+                        icon-size="14px"
+                        btn-class="btn-success ml-2"
+                        tooltip-text="Refresh list"
+                        action="loadPatternMatchings()">
+                    </a2-button>
                 </div>
             </div>
             <div class="ml-2"><loader ng-show="loading.rows"></loader></div>
@@ -196,15 +202,17 @@
                             
                             <switch name="onOff" ng-click="togglePublicTemplatesEnabled()" ng-model="onOff" on="ON" off="OFF" style="margin-left:5px;" disabled="disableToggle()"></switch>
                         </div>
-                        <button type="download" class="btn btn-success btn-rounded-full ml-3"
-                            tooltip="Export all templates"
-                            ng-class="{'disabled': tieringGuard.isViewOnly}"
-                            ng-disabled="isExportDisabled()"
-                            ng-click="exportData('projectTemplate')"
-                        >
-                            Export all templates
-                            <i class="fa fa-download ml-2"></i>
-                        </button>
+                        <a2-button 
+                            class="ml-3"
+                            label="Export all templates"
+                            icon-fa="fa-download"
+                            icon-size="14px"
+                            btn-class="btn-success"
+                            tooltip-text="Export all templates"
+                            is-view-only="tieringGuard.isViewOnly"
+                            loading="tieringGuard.loading"
+                            action="exportData('projectTemplate')">
+                        </a2-button>
                     </div>
                 </div>
                 <loader ng-if="loadingTemplates.value"></loader>

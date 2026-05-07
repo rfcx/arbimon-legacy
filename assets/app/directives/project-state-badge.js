@@ -116,35 +116,34 @@ angular.module('arbimon2.directive.project-state-badge', [])
 
             ctrl.loadTieringData();
         },
-        template: `
-            <div style="display: inline-flex; vertical-align: middle; align-items: center; gap: 4px;">
-                <div ng-if="!ctrl.tieringGuard.loading && (ctrl.tieringGuard.isViewOnlyBlocked || ctrl.tieringGuard.summary.isLocked)" 
-                     class="state-badge-group" style="position: relative; display: inline-block;">
+        template: 
+            '<div style="display: inline-flex; vertical-align: middle; align-items: center; gap: 4px;">' +
+                '<div ng-if="!ctrl.tieringGuard.loading && (ctrl.tieringGuard.isViewOnlyBlocked || ctrl.tieringGuard.summary.isLocked)" ' +
+                     'class="state-badge-group" style="position: relative; display: inline-block;">' +
                     
-                    <span style="background-color: #b3b3b3; border-radius: 50px; padding: 4px 12px; font-size: 14px; color: black; display: flex; align-items: center; justify-content: center; font-family: Poppins; font-weight: 600; text-transform: capitalize; cursor: default; line-height: 1;">
-                        View-Only
-                    </span>
+                    '<span style="background-color: #b3b3b3; border-radius: 50px; padding: 4px 12px; font-size: 14px; color: black; display: flex; align-items: center; justify-content: center; font-family: Poppins; font-weight: 600; text-transform: capitalize; cursor: default; line-height: 1;">' +
+                        'View-Only' +
+                    '</span>' +
                     
-                    <div class="state-badge-tooltip" ng-style="ctrl.getTooltipStyle()">This project is now View Only due to inactivity.<br>Upgrade your plan to restore access.<div ng-style="ctrl.getArrowStyle()"></div></div>
-                </div>
+                    '<div class="state-badge-tooltip" ng-style="ctrl.getTooltipStyle()">This project is now View Only due to inactivity.<br>Upgrade your plan to restore access.<div ng-style="ctrl.getArrowStyle()"></div></div>' +
+                '</div>' +
                 
-                <span ng-if="!ctrl.tieringGuard.loading && !ctrl.tieringGuard.isViewOnlyBlocked && !ctrl.tieringGuard.summary.isLocked" 
-                    ng-style="ctrl.getTierStyle(ctrl.tieringGuard.summary.projectType)">
-                    {{ ctrl.tieringGuard.summary.projectType || "Free" }}
-                </span>
+                '<span ng-if="!ctrl.tieringGuard.loading && !ctrl.tieringGuard.isViewOnlyBlocked && !ctrl.tieringGuard.summary.isLocked" ' +
+                    'ng-style="ctrl.getTierStyle(ctrl.tieringGuard.summary.projectType)">' +
+                    '{{ ctrl.tieringGuard.summary.projectType || "Free" }}' +
+                '</span>' +
 
-                <style>
-                    .state-badge-group .state-badge-tooltip {
-                        visibility: hidden; 
-                        opacity: 0; 
-                        transition: opacity 0.2s ease-in-out; 
-                    }
-                    .state-badge-group:hover .state-badge-tooltip { 
-                        visibility: visible; 
-                        opacity: 1; 
-                    }
-                </style>
-            </div>
-        `
+                '<style>' +
+                    '.state-badge-group .state-badge-tooltip {' +
+                        'visibility: hidden; ' +
+                        'opacity: 0; ' +
+                        'transition: opacity 0.2s ease-in-out; ' +
+                    '}' +
+                    '.state-badge-group:hover .state-badge-tooltip { ' +
+                        'visibility: visible; ' +
+                        'opacity: 1; ' +
+                    '}' +
+                '</style>' +
+            '</div>'
     };
 });
