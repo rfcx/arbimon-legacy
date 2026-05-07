@@ -7,9 +7,10 @@ async function loadProjectTieringUsage(connection, projectId) {
     const usageRows = await dbpool.queryWithConn(connection,
         'SELECT \n' +
         '    COALESCE((\n' +
-        '        SELECT cm.value\n' +
-        '        FROM cached_metrics cm\n' +
-        '        WHERE cm.key = CONCAT(\'project-\', p.project_id, \'-rec\')\n' +
+        '        SELECT COUNT(*)\n' +
+        '        FROM recordings r\n' +
+        '        JOIN sites s ON s.site_id = r.site_id\n' +
+        '        WHERE s.project_id = p.project_id AND s.deleted_at IS NULL\n' +
         '    ), 0) AS recording_minutes_count,\n' +
         '    COALESCE((\n' +
         '        SELECT COUNT(*)\n' +
