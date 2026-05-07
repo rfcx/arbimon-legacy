@@ -20,6 +20,19 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags', 'a2.directive.
             $scope.tempSelected = {}
             $scope.timeout;
 
+            $scope.tieringGuard = { loading: true };
+            $scope.loadTieringData = function() {
+                $scope.tieringGuard.loading = true;
+                Project.getAnalysisTieringGuard()
+                    .then(function(guard) {
+                        $scope.tieringGuard = angular.extend({ loading: false }, guard);
+                    })
+                    .catch(function() {
+                        $scope.tieringGuard.loading = false;
+                    });
+            };
+            $scope.loadTieringData();
+
             $scope.onSpeciesExists = function($select) {
                 console.log('[onSpeciesExists] search', $select.search)
                 if (!$select.search) {
