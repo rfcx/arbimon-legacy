@@ -1,6 +1,7 @@
 require('dotenv').config()
 const path = require('path')
 const fs = require('fs')
+const { rename } = require('fs/promises')
 const stream = require('stream');
 const csv_stringify = require('csv-stringify');
 const archiver = require('archiver');
@@ -20,7 +21,7 @@ const archive = archiver('zip', { zlib: { level: 9 }});
 let outputStreamFile
 
 async function collectData (filters, projection_parameters, cb) {
-  outputStreamFile = fs.createWriteStream(__dirname + '/pattern-matching-export.zip');
+  outputStreamFile = fs.createWriteStream(__dirname + '/pattern-matching_export.zip');
 
   archive.pipe(outputStreamFile)
   await exportAllPmJobs(filters.project_id, projection_parameters, async (err, data) => {
@@ -31,7 +32,18 @@ async function collectData (filters, projection_parameters, cb) {
     console.log(`${exportReportJob}: before finalizeArchive`)
     await finalizeArchive()
     console.log(`${exportReportJob}: after finalizeArchive`)
-    cb(null, null);
+    if (data !== null) {
+      try {
+        const newPath =  __dirname + `/${data}.zip`
+        await rename(__dirname + '/pattern-matching_export.zip', newPath)
+        if (!fs.existsSync(newPath)) {
+          console.info('Error renaming file', newPath)
+        }
+        cb(null, data)
+      } catch (e) {
+        console.err('Error renaming file', e)
+      }
+    } else cb(null, null);
   }).catch((e) => {
     console.err('Error export PM', e)
     cb(e)
@@ -69,8 +81,10 @@ async function exportAllPmJobs (projectId, projection_parameters, cb) {
     const projectSites = await getProjectSites({projectId})
     const projectPMJobs = await getProjectPMJobs({projectId, jobs: projection_parameters.pmIds})
     await exportAllPmJobsCsv(projectPMJobs)
+    let fileNameForOneJob
     for (let job of projectPMJobs) {
-      const fileName = `${nameToUrl(job.job_name)}_${job.job_id}.csv`;
+      const fileName = `pm_${nameToUrl(job.job_name)}_${job.job_id}.csv`;
+      fileNameForOneJob = `pm_${nameToUrl(job.job_name)}_${job.job_id}`
       const filePath = path.join(tmpFilePath, fileName)
       const targetFile = fs.createWriteStream(filePath, { flags: 'a' })
       console.log('next PM job start:', fileName)
@@ -103,7 +117,9 @@ async function exportAllPmJobs (projectId, projection_parameters, cb) {
         })
       })
     }
-    cb(null, null)
+    if (projectPMJobs && projectPMJobs.length && projectPMJobs.length === 1) {
+      cb(null, fileNameForOneJob)
+    } else cb(null, null)
   } catch (e) {
     console.error(e)
     cb(null, null)

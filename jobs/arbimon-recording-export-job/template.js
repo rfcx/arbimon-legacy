@@ -38,7 +38,7 @@ async function collectData (projection_parameters, filters, cb) {
 }
 
 async function buildTemplateFolder() {
-    await zipDirectory(tmpFilePath, 'jobs/arbimon-recording-export-job/template-export.zip')
+    await zipDirectory(tmpFilePath, 'jobs/arbimon-recording-export-job/template_export.zip')
 }
 
 async function exportAllProjectTemplate (projectId, projectUrl, cb) {
@@ -89,7 +89,7 @@ async function writeChunk (results, targetFile, isFirstChunk) {
 
       for (let result of results) {
         fields.forEach(f => {
-          const saved_filename = `${nameToUrl(result.template_name)}-${result.template_id}.wav`;
+          const saved_filename = `${nameToUrl(result.template_name)}_${result.template_id}.wav`;
           result.saved_filename = saved_filename
           if (result[f] === undefined || result[f] === null) {
             result[f] = '---'}

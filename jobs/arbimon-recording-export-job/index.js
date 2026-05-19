@@ -101,16 +101,16 @@ async function main () {
         return new Promise((resolve, reject) => {
             const exportReportType = 'RFM Classification';
             console.log(`Arbimon Export ${exportReportType} job`)
-            rfmClassification.collectData(projection_parameters, async (err, filePath) => {
+            rfmClassification.collectData(projection_parameters, async (err, filePath, fileName) => {
                 if (err) {
                     console.error('Arbimon Export job error', err)
                     fs.unlink(filePath, () => {})
                     reject(err)
                 }
                 console.log('Arbimon Export job: uploading file to S3')
-                const url = await saveFile(filePath, currentTime, rowData.project_id)
+                const url = await saveFile(filePath, currentTime, rowData.project_id, fileName)
                 console.log('Arbimon Export job: file is accessible by url', url)
-                await sendEmail('Arbimon Export recording report', 'arbimon-export-recording.csv', rowData, url, true)
+                await sendEmail('Arbimon Export recording report', `${fileName}.csv`, rowData, url, true)
                 await updateExportRecordings(rowData, { processed_at: currentTime })
                 fs.unlink(filePath, () => {})
                 console.log(`Arbimon Export job finished: export recordings report for ${message}`)
@@ -122,17 +122,20 @@ async function main () {
         return new Promise((resolve, reject) => {
             const exportReportType = 'Pattern Matchings';
             console.log(`Arbimon Export ${exportReportType} job`)
-            patternMatching.collectData(filters, projection_parameters, async (err, filePath) => {
-                const reportName = 'pattern-matching-export'
-                const zipPath = `jobs/arbimon-recording-export-job/${reportName}.zip`
+            patternMatching.collectData(filters, projection_parameters, async (err, fileName) => {
+                let reportName
+                if (fileName !== null) { reportName = fileName }
+                else { reportName = 'pattern-matching_export' }
+                const zipPath = __dirname + `/${reportName}.zip`
                 const bucketFormatted = S3_EXPORT_BUCKET_ARBIMON.split('/')[0]
                 const s3filePath = await uploadFileToS3(bucketFormatted, zipPath, rowData.project_id, currentTime, reportName, '.zip')
-                console.log('--s3filePath', s3filePath)
+                console.log('--s3filePath', s3filePath, 'reportName', reportName, 'fileName', fileName)
                 const url = await getSignedUrl({ Bucket: bucketFormatted, Key: s3filePath })
                 console.log('--signed url', url)
                 await sendEmail('Arbimon export', 'Arbimon export', rowData, url, true)
                 await updateExportRecordings(rowData, { processed_at: currentTime })
                 fs.rmSync(tmpFilePath, { recursive: true, force: true });
+                fs.rmSync(zipPath, { recursive: true, force: true });
                 console.log(`Arbimon Export ${exportReportType} job finished: ${message}`)
                 resolve()
             })
@@ -152,7 +155,7 @@ async function main () {
                 console.log(`folder ${tmpFilePath} exists`, fs.existsSync(tmpFilePath))
                 template.collectData(projection_parameters, filters, async (err, filePath) => {
                     await template.buildTemplateFolder()
-                    await sendZipFolderToTheUser(rowData, currentTime, jobName, message, 'template-export')
+                    await sendZipFolderToTheUser(rowData, currentTime, jobName, message, 'template_export')
                     console.log(`Arbimon Export ${exportReportType} job finished: export templates for ${message}`)
                     resolve()
                 })
@@ -166,7 +169,7 @@ async function main () {
                 console.log('--start buildSoundscapeFolder', filePath);
                 await soundscape.buildSoundscapeFolder()
                 console.log('--end buildSoundscapeFolder');
-                await sendZipFolderToTheUser(rowData, currentTime, jobName, message, 'soundscape-export')
+                await sendZipFolderToTheUser(rowData, currentTime, jobName, message, 'soundscape_export')
                 console.log(`Arbimon Export ${exportReportType} job finished: export soundscapes for ${message}`)
                 resolve()
             })
@@ -181,9 +184,9 @@ async function main () {
                     reject(err)
                 }
                 console.log('Arbimon Export job: uploading file to S3')
-                const url = await saveFile(filePath, currentTime, rowData.project_id)
+                const url = await saveFile(filePath, currentTime, rowData.project_id, 'recordings-export')
                 console.log('Arbimon Export job: file is accessible by url', url)
-                await sendEmail('Arbimon Export recording report', 'arbimon-export-recording.csv', rowData, url, true)
+                await sendEmail('Arbimon Export recording report', 'recordings-export.csv', rowData, url, true)
                 await updateExportRecordings(rowData, { processed_at: currentTime })
                 fs.unlink(filePath, () => {})
                 console.log(`Arbimon Export job finished: export recordings report for ${message}`)
@@ -196,8 +199,8 @@ async function main () {
   }
 }
 
-async function saveFile (filePath, currentTime, projectId) {
-    const s3FileKey = combineFilename(currentTime, projectId, 'arbimon-export-report', '.csv')
+async function saveFile (filePath, currentTime, projectId, reportName) {
+    const s3FileKey = combineFilename(currentTime, projectId, reportName ? reportName : 'arbimon-export', '.csv')
     await uploadAsStream({ filePath, Bucket: S3_EXPORT_BUCKET_ARBIMON, Key: s3FileKey, ContentType: 'text/csv' })
     return await getSignedUrl({ Bucket: S3_EXPORT_BUCKET_ARBIMON, Key: s3FileKey })
 }
@@ -515,7 +518,7 @@ async function sendEmail (subject, title, rowData, content, isSignedUrl) {
           async: true
         },
         (res) => {
-          console.log('email status', res)
+          console.log('email status', res, 'title', title)
           resolve({ success: true })
         },
         (e) => {
