@@ -7,6 +7,7 @@ const AWS = require('aws-sdk');
 const config = require('../../../config');
 const model = require('../../../model');
 const pokeDaMonkey = require('../../../utils/monkey');
+const { arbimon2PublicUrl } = require('../../../utils/asset-url');
 const router = express.Router();
 const moment = require('moment');
 const { httpErrorHandler } = require('@rfcx/http-utils');
@@ -70,7 +71,7 @@ router.get('/:classiId/more/:from/:total', function(req, res, next) {
                 const site = await model.sites.findByIdAsync(recording.site_id)
                 if (recording.uri.startsWith('project_')) {
                     const thumbnail = classiInfo.uri.replace('.flac', '.thumbnail.png');
-                    classiInfo.rec_image_url = 'https://' + config('aws').bucketName + '.s3.' + config('aws').region + '.amazonaws.com/' + thumbnail;
+                    classiInfo.rec_image_url = arbimon2PublicUrl(thumbnail);
                 }
                 else {
                     const momentStart = moment.utc(recording.datetime_utc ? recording.datetime_utc : recording.datetime)
