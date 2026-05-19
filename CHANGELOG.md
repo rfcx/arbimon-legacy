@@ -4,6 +4,12 @@
 
 Infrastructure 🛠
 
+- Honor `AWS_S3_ENDPOINT` + `AWS_S3_FORCE_PATH_STYLE` in `app/utils/storage.js`
+  and `jobs/services/storage.js` (both aws-sdk v2 `AWS.S3` clients and the v3
+  `S3Client` used for multipart uploads). Lets the deployment route SDK writes
+  / signed URL issuance / deletes through an S3-compatible proxy (e.g.
+  rfcx-local `s3.arbimon.org`). No-op when the env vars are unset (default
+  AWS S3 endpoint, as before).
 - Centralize public `arbimon2` bucket URL construction in
   `app/utils/asset-url.js` (and a jobs-tree duplicate at
   `jobs/services/asset-url.js`). All 15 emission sites that previously
