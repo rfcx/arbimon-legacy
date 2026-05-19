@@ -18,6 +18,7 @@ const projectModel = require('./projects')
 const classificationsModel = require('./classifications')
 const tagsModel = require('./tags')
 const soundscapeCompositionModel = require('./soundscape-composition')
+const { arbimon2PublicUrl } = require('../utils/asset-url')
 
 var config       = require('../config');
 var SQLBuilder  = require('../utils/sqlbuilder');
@@ -1266,7 +1267,7 @@ var Recordings = {
         }
         const legacy = this.isLegacy(recording)
         if (legacy) {
-            recording.thumbnail = 'https://' + config('aws').bucketName + '.s3.' + config('aws').region + '.amazonaws.com/' + encodeURIComponent(recording.uri.replace(/\.([^.]*)$/, '.thumbnail.png'));
+            recording.thumbnail = arbimon2PublicUrl(encodeURIComponent(recording.uri.replace(/\.([^.]*)$/, '.thumbnail.png')));
         }
         else {
             const momentStart = moment.utc(recording.datetime_utc ? recording.datetime_utc : recording.datetime)

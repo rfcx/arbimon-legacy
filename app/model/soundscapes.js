@@ -12,6 +12,7 @@ let arrays       = require('../utils/arrays');
 let config       = require('../config');
 let arrays_util  = require('../utils/arrays');
 let tmpfilecache = require('../utils/tmpfilecache');
+const { arbimon2PublicUrl } = require('../utils/asset-url');
 const k8sConfig = config('k8s');
 const jsonTemplates = require('../utils/json-templates');
 const { Client } = require('kubernetes-client');
@@ -629,11 +630,10 @@ let Soundscapes = {
     },
 
     __compute_thumbnail_path : function(soundscape, callback) {
-        const isProd = process.env.NODE_ENV === 'production';
-        const awsConfig = isProd ? config('aws') : config('aws_rfcx');
-        const soundscapeBucket = isProd ? awsConfig.bucketName : awsConfig.bucketNameStaging;
-        const soundscapeRegion = isProd ? awsConfig.region : awsConfig.region;
-        soundscape.thumbnail = 'https://' + soundscapeBucket + '.s3.' + soundscapeRegion + '.amazonaws.com/' + soundscape.uri;
+        // Public thumbnail URL: arbimon2 bucket via s3.arbimon.org
+        // (the SDK still uses NODE_ENV-keyed bucket choice for actual
+        // S3 writes; only the public URL emission is centralized here).
+        soundscape.thumbnail = arbimon2PublicUrl(soundscape.uri);
         callback();
     },
     __compute_region_tags : function(region, callback){

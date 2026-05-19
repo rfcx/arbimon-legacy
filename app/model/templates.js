@@ -11,6 +11,7 @@ const config = require('../config');
 const dbpool = require('../utils/dbpool');
 const Recordings = require('./recordings');
 const { isArray } = require('lodash');
+const { arbimon2PublicUrl, arbimon2PublicUrlBase } = require('../utils/asset-url');
 
 let s3;
 
@@ -34,7 +35,7 @@ var Templates = {
             "T.`species_id` as species",
             "T.`songtype_id` as songtype",
             "T.`name`",
-            "CONCAT('https://"+config('aws').bucketName+".s3."+config('aws').region+".amazonaws.com/', T.`uri`) as `uri`",
+            "CONCAT(" + dbpool.escape(arbimon2PublicUrlBase() + '/') + ", T.`uri`) as `uri`",
             "T.`x1`", "T.`y1`", "T.`x2`", "T.`y2`",
             "T.`date_created`",
             "T.user_id",
@@ -202,7 +203,7 @@ var Templates = {
                 "T.`species_id` as species",
                 "T.`songtype_id` as songtype",
                 "T.`name`",
-                "CONCAT('https://"+config('aws').bucketName+".s3."+config('aws').region+".amazonaws.com/', T.`uri`) as `uri`",
+                "CONCAT(" + dbpool.escape(arbimon2PublicUrlBase() + '/') + ", T.`uri`) as `uri`",
                 "T.`x1`", "T.`y1`", "T.`x2`", "T.`y2`",
                 "T.`date_created`",
                 "T.user_id",
@@ -345,7 +346,7 @@ var Templates = {
      */
     createTemplateImage : function (template){
         const s3key = 'project_'+template.project+'/templates/'+template.id+'.png';
-        template.uri = 'https://' + config('aws').bucketName + '.s3.' + config('aws').region + '.amazonaws.com/' + s3key;
+        template.uri = arbimon2PublicUrl(s3key);
         let rec_data, rec_stats, spec_data, isLegacy;
         return Recordings.findByUrlMatch(template.recording, 0, {limit:1})
         .then(data => rec_data = data[0])

@@ -1,5 +1,20 @@
 # Arbimon Release Notes
 
+## Unreleased
+
+Infrastructure 🛠
+
+- Centralize public `arbimon2` bucket URL construction in
+  `app/utils/asset-url.js` (and a jobs-tree duplicate at
+  `jobs/services/asset-url.js`). All 15 emission sites that previously
+  built `https://${bucketName}.s3.${region}.amazonaws.com/...` (or the
+  two hardcoded `s3.amazonaws.com/arbimon2/...` /
+  `arbimon2.s3.us-east-1.amazonaws.com/...` strings) now go through the
+  helper, which reads `ARBIMON2_PUBLIC_URL_BASE` and defaults to
+  `https://s3.arbimon.org/arbimon2`. Lets the deployment point at any
+  S3-compatible endpoint (e.g. the in-cluster Cloudflare/MinIO/B2
+  fronted `s3.arbimon.org`) by setting one env var.
+
 ## v4.1.0 - xx xx, 2024
 
 Enhancements ✨
