@@ -1,41 +1,50 @@
 <div class="row">
-    <h1 class="navbar-rfcx-link-m mt-0">
+    <h1 class="mt-0 clear-button ml-4">
         Playlists
+        <project-state-badge></project-state-badge>
         <div
-            class="row-flex-inline flex-align-middle ml-3"
+            class="row-flex-inline flex-align-middle"
             style="vertical-align: middle;"
         >
-            <a
-                ng-href="{{getNewPlaylistUrl()}}"
-                class="btn btn-primary btn-rounded-full row-flex flex-direction-row flex-align-middle"
-                tooltip="Create New Playlist"
-                tooltip-trigger="mouseenter"
-            >
-                New Playlist
-                <span class="ml-2" style="width: 16px">
-                    <img src="/images/fi-plus.svg">
-                </span>
-            </a>
+            <a2-button 
+                label="New Playlist"
+                icon-src="/images/fi-plus.svg"
+                btn-class="btn-primary"
+                tooltip-text="Create New Playlist"
+                is-view-only="tieringGuard.isViewOnly"
+                loading="tieringGuard.loading"
+                action="goToNewPlaylist()">
+            </a2-button>
         </div>
     </h1>
-    <div class="col-sm-12 toolbar mt-4 flex row-flex-inline">
-        <div>
+    <div ng-if="!loading && !tieringGuard.loading" class="col-sm-12 toolbar mt-4 flex row-flex-inline">
+        <div class="mr-2 clear-button">
             <span class="dropdown" dropdown dropdown-append-to-body="true" a2-auto-close-on-outside-click>
-                <button class="btn btn-success btn-rounded-full" ng-disabled="playlists && !playlists.length" dropdown-toggle>Combine Playlists <img src="/images/fi-chevron-down-primary.svg" class="ml-1"></button>
+                <button class="btn btn-success btn-rounded-full" 
+                        ng-disabled="(playlists && !playlists.length) || tieringGuard.isViewOnly" 
+                        dropdown-toggle>
+                    Combine Playlists 
+                    <img src="/images/fi-chevron-down-primary.svg" 
+                        class="ml-1"
+                        ng-style="(tieringGuard.isViewOnly || (playlists && !playlists.length)) ? 
+                            {'filter': 'brightness(0) saturate(100%) invert(52%) sepia(4%) saturate(452%) hue-rotate(24deg) brightness(97%) contrast(89%)'} : {}"
+                        style="width: 14px; vertical-align: middle;">
+                </button>
                 <div class="dropdown-form dropdown-menu a2-filters-box-dropdown datepicker" role="menu" style="background-color: #1e1c13 !important;" ng-click="$event.stopPropagation()">
                     <playlist-arithmetic on-expression-selected="controller.operate(expression)"></playlist-arithmetic>
                 </div>
             </span>
         </div>
-        <div class="ml-2" tooltip="Select Playlists">
-            <button class="btn btn-success btn-rounded-full"
-                ng-click="del()"
-                ng-disabled="!checked || !checked.length"
-                tooltip-trigger="mouseenter">
-                Delete Playlist
-            </button>
+        <div class="mr-2">
+            <a2-button 
+                label="Delete Playlist"
+                btn-class="btn-success"
+                tooltip-text="Select Playlists"
+                is-view-only="tieringGuard.isViewOnly || (!checked || !checked.length)"
+                action="del()">
+            </a2-button>
         </div>
-        <div class="ml-2 search">
+        <div class="search">
             <div class="form-element">
                 <i class="fa fa-search mt-3"></i>
                 <input class="form-control" type="text" placeholder="Search by playlist name" ng-model="search" style="width: 320px;">
@@ -64,6 +73,7 @@
                         <h4 class="padding: 0px;">{{selected.name}}
                             <button class="btn btn-default btn-xs ml-3"
                                 ng-click="controller.edit(selected)"
+                                ng-if="!tieringGuard.isViewOnly"
                                 tooltip="Edit Name"
                                 tooltip-trigger="mouseenter">
                                 <i class="fa fa-pencil"></i>
@@ -95,12 +105,15 @@
             </expand-select>
         </a2-table>
         <div ng-if="!loading && playlists && !playlists.length" class="help-wrapper col-sm-12 row-flex flex-direction-column flex-space-center flex-align-middle" style="text-align: center;">
-            <a class="btn btn-sm btn-default"
-                tooltip="Create New Playlist"
-                tooltip-placement="top"
-                ng-click="create()" >
-                <i class="fa fa-plus mr-1" ></i> New Playlist
-            </a>
+            <a2-button 
+                label="New Playlist"
+                icon-src="/images/fi-plus.svg" 
+                btn-class="btn-primary btn-sm"
+                tooltip-text="Create New Playlist"
+                is-view-only="tieringGuard.isViewOnly"
+                loading="tieringGuard.loading"
+                action="create()">
+            </a2-button>
             <p class="mt-3 mb-0">Learn more:</p>
             <p class="mb-0"><a href="https://help.arbimon.org/article/214-creating-a-playlist" target="_blank">1. How to create a new playlist?<i class="ml-2 fa fa-external-link"></i></a></p>
         </div>

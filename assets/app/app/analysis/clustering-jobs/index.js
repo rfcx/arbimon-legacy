@@ -61,7 +61,7 @@ angular.module('a2.analysis.clustering-jobs', [
     }
 
     // Parse grid view data if it exists
-    const gridContext = JSON.parse($localStorage.getItem('analysis.gridContext'));
+    const gridContext = $localStorage.getItem('analysis.gridContext');
     if ($stateParams.gridContext || (gridContext && $state.current.name === 'analysis.grid-view')) {
         $scope.showViewGridPage = true;
         $scope.gridContext = $stateParams.gridContext? $stateParams.gridContext : gridContext;
@@ -79,6 +79,21 @@ angular.module('a2.analysis.clustering-jobs', [
             });
         }
     }
+
+    $scope.tieringGuard = { loading: true };
+
+    this.loadTieringData = function() {
+        $scope.tieringGuard.loading = true;
+        Project.getAnalysisTieringGuard()
+            .then(function(guard) {
+                $scope.tieringGuard = angular.extend({ loading: false }, guard);
+            })
+            .catch(function() {
+                $scope.tieringGuard.loading = false;
+            });
+    };
+
+    this.loadTieringData();
 
     $scope.createNewClusteringJob = function () {
         if(!a2UserPermit.can('manage AED and Clustering job')) {
@@ -602,7 +617,7 @@ angular.module('a2.analysis.clustering-jobs', [
                     count: recIds.filter((id, i, a) => a.indexOf(id) === i).length
                 };
                 $localStorage.setItem('analysis.clusters',  JSON.stringify(tempPlaylistData));
-                $window.location.href = '/project/'+Project.getUrl()+'/visualizer/playlist/0?clusters';
+                $window.location.href = '/p/'+Project.getUrl()+'/visualizer/playlist/0?clusters';
             }
         }
     };
@@ -621,7 +636,7 @@ angular.module('a2.analysis.clustering-jobs', [
         a2Playlists.create(opts,
         function(data) {
             if (data && data.playlist_id) {
-                $window.location.href = '/project/'+Project.getUrl()+'/visualizer/playlist/' + data.playlist_id + '?clusters';
+                $window.location.href = '/p/'+Project.getUrl()+'/visualizer/playlist/' + data.playlist_id + '?clusters';
             }
         }
     )};
@@ -870,7 +885,7 @@ angular.module('a2.analysis.clustering-jobs', [
         });
     }
 
-    $localStorage.setItem('analysis.gridContext',  JSON.stringify($scope.gridContext));
+    $localStorage.setItem('analysis.gridContext', JSON.stringify($scope.gridContext));
 
     a2ClusteringJobs.getJobDetails($scope.clusteringJobId).then(function(data) {
         if (data) $scope.job_details = data;
@@ -1134,7 +1149,7 @@ angular.module('a2.analysis.clustering-jobs', [
     $scope.getRoiVisualizerUrl = function(roi){
         var projecturl = Project.getUrl();
         var box = ['box', roi.time_min, roi.frequency_min, roi.time_max, roi.frequency_max].join(',');
-        return roi ? '/project/' + projecturl + '/visualizer/rec/' + roi.recording_id + '?a=' + box : '';
+        return roi ? '/p/' + projecturl + '/visualizer/rec/' + roi.recording_id + '?a=' + box : '';
     };
 
     $scope.togglePopup = function() {

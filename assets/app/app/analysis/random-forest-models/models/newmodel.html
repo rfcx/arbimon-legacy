@@ -94,6 +94,12 @@
     </div>
 </div>
 <div class="modal-footer">
+    <p ng-show="tieringGuard.isViewOnlyBlocked" class="text-danger">
+        This project is currently view-only and cannot create new analysis jobs. Review <a ng-href="{{tieringGuard.settingsUrl}}">Project Settings</a> for current usage and status.
+    </p>
+    <p ng-show="tieringGuard.isJobLimitReached" class="text-danger">
+        This project has reached its analysis job limit for the current tier. Review <a ng-href="{{tieringGuard.settingsUrl}}">Project Settings</a> to see usage and limits.
+    </p>
     <div class="row-flex flex-direction-row flex-space-between">
         <button class="btn btn-success" ng-click="cancel()">Cancel</button>
         <button class="btn btn-primary" ng-click="ok()" ng-disabled="disableCreateButton()">{{ isRetrain ? 'Retrain' : 'Create' }}</button>

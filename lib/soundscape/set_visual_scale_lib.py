@@ -83,10 +83,11 @@ def get_bucket(config):
     bucketName = config[4]
     awsKeyId = config[5]
     awsKeySecret = config[6]
+    region = config[8]
     conn = None
     bucket = None
     try:
-        conn = boto.s3.connection.S3Connection(awsKeyId, awsKeySecret)
+        conn = boto.s3.connection.S3Connection(awsKeyId, awsKeySecret, host='s3.{}.amazonaws.com'.format(region))
     except:
         exit_error('cannot not connect to aws.')
     if not conn:
@@ -139,8 +140,17 @@ def upload_image(img_uri, img_file, bucket):
         k = bucket.new_key(img_uri)
         k.set_contents_from_filename(img_file)
         k.set_acl('public-read')
-    except:
-        exit_error('cannot upload image file.')
+        print '\n<<<UPLOAD OK>>>'
+        print img_uri
+        print img_file
+        print bucket
+    except Exception as e:
+        print '\n<<<UPLOAD FAILED>>>'
+        print 'URI:', img_uri
+        print 'FILE:', img_file
+        print 'BUCKET:', bucket
+        print 'EXCEPTION:', repr(e)
+        raise
 
 
 def update_db(db, clip_max, palette_id, soundscape_id, normalized,

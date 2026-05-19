@@ -1,6 +1,5 @@
-
 angular.module('visualizer-layers', ['visualizer-services', 'a2.utils'])
-.directive('a2VisualizerLayerItem', function(layer_types, $compile, $templateFetch){
+.directive('a2VisualizerLayerItem', function(layer_types, $compile, $templateFetch, Project){
     return {
         restrict : 'E',
         replace  : true,
@@ -16,6 +15,22 @@ angular.module('visualizer-layers', ['visualizer-services', 'a2.utils'])
                     element.append(layer_el.children().unwrap());
                 });
             }
+
+            scope.tieringGuard = { loading: true };
+
+            scope.loadTieringData = function() {
+                scope.tieringGuard.loading = true;
+                Project.getAnalysisTieringGuard()
+                    .then(function(guard) {
+                        // ใช้ angular.extend เพื่อรวมข้อมูลที่ได้จาก API เข้าไปใน tieringGuard
+                        angular.extend(scope.tieringGuard, guard, { loading: false });
+                    })
+                    .catch(function() {
+                        scope.tieringGuard.loading = false;
+                    });
+            };
+
+            scope.loadTieringData();
         }
     };
 });

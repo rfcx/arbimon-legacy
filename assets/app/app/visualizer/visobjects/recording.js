@@ -15,7 +15,7 @@ angular.module('a2.visobjects.recording', [
 
     var getSelectedFrequencyCache = function() {
         try {
-            return JSON.parse($localStorage.getItem('visuilizer.frequencies.cache')) || {originalScale: true};
+            return $localStorage.getItem('visuilizer.frequencies.cache') || {originalScale: true};
         } catch(e){
             return {originalScale: true};
         }
