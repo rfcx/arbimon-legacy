@@ -4,30 +4,51 @@ const AWS = require('aws-sdk');
 const { createReadStream } = require("fs");
 const fs = require('fs')
 
-const export_s3 = new AWS.S3({
+// Honor AWS_S3_ENDPOINT / AWS_S3_FORCE_PATH_STYLE on every S3 client
+// here so the deployment can route through an S3-compatible proxy
+// (e.g. rfcx-local `s3.arbimon.org`). Unset = upstream behavior
+// (default AWS S3 endpoint for the configured region).
+const envEndpoint = (process.env.AWS_S3_ENDPOINT || '').trim() || undefined
+const envForcePathStyle = String(process.env.AWS_S3_FORCE_PATH_STYLE || '').toLowerCase() === 'true'
+
+function withEndpointV2 (cfg) {
+    const out = { ...cfg }
+    if (envEndpoint) out.endpoint = envEndpoint
+    if (envForcePathStyle) out.s3ForcePathStyle = true
+    return out
+}
+
+const export_s3 = new AWS.S3(withEndpointV2({
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
     secretAccessKey: process.env.AWS_SECRET_KEY,
     region: process.env.AWS_REGION_ID
-})
+}))
 
-const legacy_s3 = new AWS.S3({
+const legacy_s3 = new AWS.S3(withEndpointV2({
     accessKeyId: process.env.AWS_ACCESSKEYID,
     secretAccessKey: process.env.AWS_SECRETACCESSKEY,
     region: process.env.AWS_REGION
-})
+}))
 
-const rfcx_s3 = new AWS.S3({
+const rfcx_s3 = new AWS.S3(withEndpointV2({
     accessKeyId: process.env.AWS_RFCX_ACCESSKEYID,
     secretAccessKey: process.env.AWS_RFCX_SECRETACCESSKEY,
     region: process.env.AWS_RFCX_REGION
-})
+}))
+
+// @aws-sdk/client-s3 (v3) uses different option names: `endpoint` and
+// `forcePathStyle`. Apply the same env-driven override.
+const v3Endpoint = envEndpoint ? { endpoint: envEndpoint } : {}
+const v3ForcePathStyle = envForcePathStyle ? { forcePathStyle: true } : {}
 
 const multipart_upload_s3 = new S3Client({
     region: process.env.AWS_REGION_ID,
     credentials: {
         accessKeyId: process.env.AWS_ACCESS_KEY_ID,
         secretAccessKey: process.env.AWS_SECRET_KEY
-    }
+    },
+    ...v3Endpoint,
+    ...v3ForcePathStyle
 });
 
 // Function to upload a file to S3 in chunks
