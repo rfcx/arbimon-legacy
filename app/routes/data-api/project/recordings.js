@@ -382,14 +382,51 @@ router.get('/:get/:oneRecUrl?', function(req, res, next) {
         file : function(err, file) {
             if (err || !file) return next(err);
 
+            // For audio: set Content-Type + a Content-Disposition filename
+            // whose extension matches the actually-served format BEFORE
+            // calling res.download (which writes headers immediately).
+            //
+            // Background: fetchAudioFile transcodes to MP3 by default and to
+            // WAV when query.format === '.wav' (see app/model/recordings.js
+            // fetchAudioFile + getAssetFileFromMediaAPI). The previous code
+            // called res.download(file.path, recording.file, ...) which:
+            //   1. set Content-Type from recording.file (e.g. "...WAV" -> audio/wav)
+            //      even when we actually transcoded to MP3,
+            //   2. left Content-Disposition advertising the original AudioMoth
+            //      filename (e.g. 20240320_092904.WAV) even though the body
+            //      was an MP3,
+            //   3. then tried to override Content-Type and status to 206 in a
+            //      follow-up block, which set the status to 206 even when no
+            //      Range request was made (invalid HTTP without Content-Range).
+            // The result was four pieces of metadata claiming three different
+            // formats with a fourth thing (MP3 ID3v2.4) in the body. Strict
+            // clients that select a decoder from Content-Type or the URL
+            // extension would refuse to decode.
+            if (get === 'audio') {
+                const isWav = query.format === '.wav' || query.format === 'wav';
+                const ext = isWav ? '.wav' : '.mp3';
+                const contentType = isWav ? 'audio/wav' : 'audio/mpeg';
+                // Normalize the served filename: keep the original basename
+                // (typically the recorder's filename like 20240320_092904)
+                // but use the extension that matches what we actually produced.
+                const originalExt = path.extname(recording.file);
+                const baseName = path.basename(recording.file, originalExt);
+                const servedName = `${baseName}${ext}`;
+                res.setHeader('Content-Type', contentType);
+                res.setHeader(
+                    'Content-Disposition',
+                    `attachment; filename="${servedName}"`
+                );
+                res.sendFile(file.path, function(err) {
+                    fs.unlink(file.path, () => {});
+                    if (err && !res.headersSent) return next(err);
+                });
+                return;
+            }
+
             res.download(file.path, recording.file, function() {
                 fs.unlink(file.path, () => {})
             });
-
-            if (get === 'audio') {
-                res.setHeader('content-type', query.format ? 'audio/wav' : 'audio/mpeg');
-                res.status(206);
-            }
         },
     };
 

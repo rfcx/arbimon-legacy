@@ -12,6 +12,7 @@ var APIError = require('../utils/apierror');
 // TODO remove circular dependencies
 var model = require('../model');
 var config = require('../config');
+var { arbimon2PublicUrl } = require('../utils/asset-url');
 
 // local variables
 var s3;
@@ -114,7 +115,7 @@ var Playlists = {
                     if(sr){
                         playlist.region     = sr.region;
                         playlist.soundscape = sr.soundscape;
-                        playlist.soundscape_thumbnail = 'https://' + config('aws').bucketName + '.s3.' + config('aws').region + '.amazonaws.com/' + sr.uri;
+                        playlist.soundscape_thumbnail = arbimon2PublicUrl(sr.uri);
                     }
                 });
             } else if(/union|intersection|subtraction/.test(playlist.type) && playlist.metadata){

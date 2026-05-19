@@ -40,7 +40,7 @@ async function collectData (projection_parameters, filters, cb) {
 }
 
 async function buildSoundscapeFolder() {
-  await zipDirectory(tmpFilePath, 'jobs/arbimon-recording-export-job/soundscape-export.zip')
+  await zipDirectory(tmpFilePath, 'jobs/arbimon-recording-export-job/soundscape_export.zip')
 }
 
 async function exportAllSoundscapes (projectId, projectUrl, targetFile, cb) {
@@ -117,7 +117,6 @@ async function getProjectSoundscapesMatrixData(soundscapes) {
       name: soundscape.aggr_name,
       scale: JSON.parse(soundscape.aggr_scale)
     };
-    console.log('soundscape matrix', soundscape)
     await getMatrixData(soundscape)
     fs.unlink(tempPathToDelete, () => {})
   }
@@ -125,7 +124,6 @@ async function getProjectSoundscapesMatrixData(soundscapes) {
 
 async function getProjectSoundscapesImages(soundscapes) {
   for (let soundscape of soundscapes) {
-    console.log('soundscape  image', soundscape)
     await getImageData(soundscape)
   }
 }
@@ -135,7 +133,7 @@ function nameToUrl (name) {
 }
 
 async function getMatrixData(soundscape) {
-  const filename = `${nameToUrl(soundscape.name)}-${soundscape.id}.csv`;
+  const filename = `ss_${nameToUrl(soundscape.name)}_${soundscape.id}.csv`;
   const filePath = path.join(tmpFilePath, filename)
   const targetFile = fs.createWriteStream(filePath, { flags: 'a' })
 

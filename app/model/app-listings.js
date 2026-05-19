@@ -2,6 +2,7 @@ var q = require('q');
 var config = require('../config'); 
 var aws = require('aws-sdk');
 var debug = require('debug')('arbimon2:models:app-listings');
+var { arbimon2PublicUrl } = require('../utils/asset-url');
 // var s3 = new aws.S3();
 
 
@@ -32,7 +33,7 @@ var AppListings = {
                     var m = /([^\/]+)-(\d+\.\d+\.\d+)\.(msi|deb|dmg)$/.exec(item.Key);
                     if(m){
                         (_[app] || (_[app] = [])).push({
-                            url : 'https://' + config('aws').bucketName + '.s3.' + config('aws').region + '.amazonaws.com/' + item.Key,
+                            url : arbimon2PublicUrl(item.Key),
                             file : m[0],
                             version : m[2],
                             type : AppListings.types[m[3]]
