@@ -13,6 +13,7 @@ const Templates = require('./templates');
 const models = require("./index");
 const lambda = new AWS.Lambda();
 const { getSignedUrl } = require('../utils/storage')
+const { arbimon2PublicUrl } = require('../utils/asset-url')
 
 // exports
 var PatternMatchings = {
@@ -895,7 +896,8 @@ var PatternMatchings = {
     combineRoiUrl: function(opts) {
         const detectionsFolder = process.env.NODE_ENV === 'production' ? 'detections' : 'detections_dev'
         const {projectId, jobId, uriParam1, uriParam2} = opts
-        return `https://s3.amazonaws.com/arbimon2/project_${projectId}/${detectionsFolder}/${jobId}/${uriParam1}${uriParam2 !== null ? '_' + uriParam2 : ''}.png`;
+        const key = `project_${projectId}/${detectionsFolder}/${jobId}/${uriParam1}${uriParam2 !== null ? '_' + uriParam2 : ''}.png`;
+        return arbimon2PublicUrl(key);
     },
 
     JOB_SCHEMA : joi.object().keys({

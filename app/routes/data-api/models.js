@@ -9,6 +9,7 @@ const q = require('q');
 const model = require('../../model');
 const pokeDaMonkey = require('../../utils/monkey');
 const config = require('../../config');
+const { arbimon2PublicUrl } = require('../../utils/asset-url');
 const APIError = require('../../utils/apierror');
 const router = express.Router();
 const s3 = new AWS.S3();
@@ -268,8 +269,7 @@ async function getModelsData(validationUri, limit, offset) {
                 let recUrl;
                 if (recording.uri.startsWith('project_')) {
                     const thumbnailUri = recording.uri.replace('.flac', '.thumbnail.png');
-                    const recThumbnail = 'https://' + awsBucket + '.s3.' + awsRegion + '.amazonaws.com/' + thumbnailUri;
-                    recUrl = recThumbnail;
+                    recUrl = arbimon2PublicUrl(thumbnailUri);
                 }
                 else {
                     const momentStart = moment.utc(recording.datetime_utc ? recording.datetime_utc : recording.datetime)

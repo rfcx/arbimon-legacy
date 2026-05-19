@@ -1,5 +1,6 @@
 const mysql = require('../db/mysql')
 const config_hosts = require('../../config/hosts');
+const { arbimon2PublicUrlBase } = require('./asset-url');
 
 async function getProjectTemplate (options = {}) {
   const connection = await mysql.getConnection()
@@ -27,7 +28,7 @@ async function getTemplateDataForAudio (options = {}) {
   const connection = await mysql.getConnection()
   const sql = `
     SELECT T.template_id as id, T.project_id as project, T.recording_id as recording, T.species_id as species,
-      T.songtype_id as songtype, T.name template_name, CONCAT('https://arbimon2.s3.us-east-1.amazonaws.com/', T.uri) as uri,
+      T.songtype_id as songtype, T.name template_name, CONCAT('${arbimon2PublicUrlBase()}/', T.uri) as uri,
       T.x1, T.y1, T.x2, T.y2, T.date_created, T.user_id, T.disabled, R.uri as recUri, R.site_id as recSiteId,
       R.sample_rate, R.datetime, R.datetime_utc, S.external_id
     FROM templates T
