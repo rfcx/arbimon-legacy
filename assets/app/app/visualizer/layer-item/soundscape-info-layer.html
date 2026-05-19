@@ -1,6 +1,17 @@
 <div>
-    <h5 class="collapse-title"  ng-click="layer.is_closed = !layer.is_closed">
-        <i class="fa" ng-class="(!layer.is_closed) ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
+    <h5 class="collapse-title" 
+        ng-attr-tooltip="{{ tieringGuard.isViewOnly ? 'This project is currently view-only' : '' }}" 
+        ng-click="!(tieringGuard.isViewOnly || tieringGuard.loading) && (layer.is_closed = !layer.is_closed)"
+        ng-style="(tieringGuard.isViewOnly || tieringGuard.loading) && {'cursor': 'not-allowed', 'opacity': '0.7'}">
+        
+        <i class="fa fa-circle-o-notch fa-spin mr-1" ng-if="tieringGuard.loading"></i>
+
+        <i class="fa" 
+        ng-if="!tieringGuard.isViewOnly && !tieringGuard.loading"
+        ng-class="(!layer.is_closed) ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
+        
+        <i class="fa fa-lock mr-1" ng-if="tieringGuard.isViewOnly && !tieringGuard.loading"></i>
+
         {{visobject.name}}
     </h5>
     <div ng-hide="layer.is_closed">
@@ -17,8 +28,12 @@
                     )
                 }}
             </td><td rowspan="2" style="vertical-align: middle; text-align: center">
-                <button class="btn btn-default btn-sm" ng-click="layer.info.edit_visual_scale(visobject)" tooltip="Edit Visualization Options">
-                    <i class="fa fa-wrench"></i>
+                <button class="btn btn-default btn-sm" 
+                        ng-click="!(tieringGuard.isViewOnly || tieringGuard.loading) && layer.info.edit_visual_scale(visobject)" 
+                        ng-attr-tooltip="{{ tieringGuard.isViewOnly ? 'This project is currently view-only' : 'Edit Visualization Options' }}"
+                        ng-style="(tieringGuard.isViewOnly || tieringGuard.loading) && {'cursor': 'not-allowed', 'opacity': '0.5'}"
+                        ng-disabled="tieringGuard.isViewOnly || tieringGuard.loading">
+                    <i class="fa" ng-class="(tieringGuard.isViewOnly && !tieringGuard.loading) ? 'fa-lock' : 'fa-wrench'"></i>
                 </button>
             </td></tr>
             <tr><td>Amplitude Threshold</td><td>

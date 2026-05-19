@@ -69,7 +69,7 @@ angular.module('a2.audiodata.training-sets', [
     $scope.loaderDisplay = false;
 
     $scope.getROIVisualizerUrl = function(roi){
-        return roi ? "/project/"+$scope.projecturl+"/visualizer/rec/"+roi.recording : '';
+        return roi ? "/p/"+$scope.projecturl+"/visualizer/rec/"+roi.recording : '';
     };
 
     $scope.setROI = function(roi_index){
@@ -205,6 +205,21 @@ angular.module('a2.audiodata.training-sets', [
             }
         );
     };
+
+    $scope.tieringGuard = { loading: true };
+    
+    this.loadTieringData = function() {
+    $scope.tieringGuard.loading = true;
+    Project.getAnalysisTieringGuard()
+        .then(function(guard) {
+            $scope.tieringGuard = angular.extend({ loading: false }, guard);
+        })
+        .catch(function() {
+            $scope.tieringGuard.loading = false;
+        });
+    };
+
+    this.loadTieringData();
 
     $scope.combineTrainingSet = function() {
         if (!$scope.isShareTsEnabled()) {

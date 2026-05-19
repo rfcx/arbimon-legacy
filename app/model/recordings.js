@@ -1399,7 +1399,7 @@ var Recordings = {
                     if (parameters.presence === 'present') {
                         constraints.push('CASE WHEN rv.present_review > 0 OR rv.present_aed > 0 THEN 1 ELSE rv.present END');
                     }
-                    else {
+                    if (parameters.presence === 'absent') {
                         constraints.push('CASE WHEN rv.present = 0 AND rv.present_review = 0 AND rv.present_aed = 0 THEN 1 ELSE 0 END');
                     }
                 }

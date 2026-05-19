@@ -41,9 +41,24 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
 
     $scope.loadAudioEventDetections();
 
+    $scope.tieringGuard = { loading: true };
+
+    this.loadTieringData = function() {
+        $scope.tieringGuard.loading = true;
+        Project.getAnalysisTieringGuard()
+            .then(function(guard) {
+                $scope.tieringGuard = angular.extend({ loading: false }, guard);
+            })
+            .catch(function() {
+                $scope.tieringGuard.loading = false;
+            });
+    };
+
+    this.loadTieringData();
+
     $scope.onSelectedJob = function(playlist_id, job_id, first_playlist_recording) {
         $localStorage.setItem('analysis.audioEventJob',  job_id);
-        $window.location.href = '/project/' + Project.getUrl() + '/visualizer/playlist/' + playlist_id + '/' + first_playlist_recording;
+        $window.location.href = '/p/' + Project.getUrl() + '/visualizer/playlist/' + playlist_id + '/' + first_playlist_recording;
     }
 
     $scope.createNewClusteringModel = function () {
@@ -155,6 +170,13 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
             this.isRfcxUser = a2UserPermit.isRfcx();
             this.isSuper = a2UserPermit.isSuper();
             this.errorJobLimit = false;
+            this.tieringGuard = { loading: true, isBlocked: false, isJobLimitReached: false, isViewOnlyBlocked: false, settingsUrl: '' };
+
+            Project.getAnalysisTieringGuard().then((function(guard) {
+                this.tieringGuard = Object.assign({ loading: false }, guard);
+            }).bind(this)).catch((function() {
+                this.tieringGuard.loading = false;
+            }).bind(this));
 
             this.loading.playlists = true;
             a2Playlists.getList().then((function(playlists){
@@ -191,6 +213,7 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
 
         create: function () {
             this.errorJobLimit = false
+            if (this.tieringGuard.isBlocked) return
             if (this.isRfcx()) return this.newJob()
             return a2AudioEventDetectionsClustering.count().then(data => {
                 if (this.checkLimit(data.totalRecordings)) {
@@ -231,6 +254,10 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
 
         isNotDefined: function (item) {
             return item === undefined || item === null
+        },
+
+        isCreateBlocked: function () {
+            return this.tieringGuard.loading || this.tieringGuard.isBlocked
         }
     });
     this.initialize();

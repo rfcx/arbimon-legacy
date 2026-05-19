@@ -63,7 +63,10 @@ angular.module('a2.visualizer', [
         params:{
             type:'',
             a: null,
-            clusters: null,
+            clusters: {
+                value: undefined,
+                squash: true
+            },
             gain: null,
             filter: null,
             idA: {
@@ -134,7 +137,7 @@ angular.module('a2.visualizer', [
                 return;
             }
             this.__expected = this.current;
-            this.scope.$broadcast('set-browser-location', this.current);
+            this.scope.$broadcast('set-browser-location', this.current || '');
         },
         update_path : function(){
             this.set(this.current);
@@ -143,7 +146,7 @@ angular.module('a2.visualizer', [
             var all_params=angular.extend({}, this.state.params);
             for(var pk in params){
                 var pv = params[pk];
-                if(pv === undefined){
+                if (pv === undefined || pv === null) {
                     delete all_params[pk];
                 } else {
                     all_params[pk] = pv;
@@ -157,7 +160,7 @@ angular.module('a2.visualizer', [
                 this.__expected = location;
             }
             if ($location.path() != this.prefix + location){
-                var search = $location.search();
+                var search = angular.copy($location.search());
                 delete search.a;
 
                 $location.path(this.prefix + location);
@@ -240,7 +243,7 @@ angular.module('a2.visualizer', [
         }) : [];
     }
     // check selected clusters in query
-    if ($state.params.clusters) {
+    if (Array.isArray($state.params.clusters) || typeof $state.params.clusters === 'string') {
         $localStorage.setItem('analysis.clusters.playlist', $state.params.idA);
     }
     $scope.parseAnnotations($state.params.a);
@@ -323,7 +326,7 @@ angular.module('a2.visualizer', [
                     $scope.$parent.$broadcast('clear-recording-data', true);
                     // check clusters playlist in local storage else clear local storage
                     if ($localStorage.getItem('analysis.clusters.playlist') === $state.params.idA) {
-                        var clustersData = JSON.parse($localStorage.getItem('analysis.clusters'));
+                        var clustersData = $localStorage.getItem('analysis.clusters');
                         console.log('clustersData', this.clustersData);
                         if (clustersData && clustersData.boxes && $state.params.idB) {
                             this.parseAnnotations(clustersData.boxes[$state.params.idB]);
@@ -350,14 +353,14 @@ angular.module('a2.visualizer', [
     $scope.removeFromLocalStorage = function () {
         $localStorage.setItem('analysis.clusters', null);
         $localStorage.setItem('analysis.clusters.playlist', null);
-        $state.params.clusters = '';
+        $state.go($state.current.name, { clusters: null }, { notify: false });
     }
 
     // Resize Y scale.
 
     $scope.getSelectedFrequencyCache = function() {
         try {
-            return JSON.parse($localStorage.getItem('visuilizer.frequencies.cache')) || {originalScale: true};
+            return $localStorage.getItem('visuilizer.frequencies.cache') || {originalScale: true};
         } catch(e){
             return {originalScale: true};
         }

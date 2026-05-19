@@ -1,6 +1,6 @@
 <div class="content">
     <div class="row row-pad-bottom">
-        <div class="col-sm-12 btn-toolbar">
+        <div class="col-sm-12 btn-toolbar" style="display: flex; align-items: center; flex-wrap: wrap;">
             <div class="btn-group" ng-repeat="type_group in browser.types">
                 <button ng-repeat="type in type_group" class="btn btn-default"
                     ng-class="browser.type == type ? 'active' : ''"
@@ -11,6 +11,7 @@
                     <i ng-class="type.icon"></i>
                 </button>
             </div>
+            <project-state-badge class="ml-3" style="display: inline-block;" tooltip-placement="bottom"></project-state-badge>
         </div>
     </div>
     <div ng-include

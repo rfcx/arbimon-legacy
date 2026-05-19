@@ -12,6 +12,7 @@ angular.module('a2.audiodata.soundscape-composition-classes', [
     });
 })
 .controller('SoundscapeCompositionClassesScreenCtrl', function(
+    $scope,
     $modal,
     notify,
     Project,
@@ -104,6 +105,21 @@ angular.module('a2.audiodata.soundscape-composition-classes', [
 
         });
     };
+
+    $scope.tieringGuard = { loading: true };
+
+    this.loadTieringData = function() {
+        $scope.tieringGuard.loading = true;
+        Project.getAnalysisTieringGuard()
+            .then(function(guard) {
+                $scope.tieringGuard = angular.extend({ loading: false }, guard);
+            })
+            .catch(function() {
+                $scope.tieringGuard.loading = false;
+            });
+    };
+
+    this.loadTieringData();
 
     this.del = function() {
         if(!this.checked || !this.checked.length)

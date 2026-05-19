@@ -2,7 +2,9 @@ angular.module('a2.analysis.patternmatching', [
     'ui.bootstrap',
     'a2.directive.audio-bar',
     'a2.srv.patternmatching',
+    'arbimon2.directive.project-state-badge',
     'a2.services',
+    'arbimon2.directive.a2-button',
     'a2.permissions',
     'humane',
     'c3-charts',
@@ -68,6 +70,20 @@ angular.module('a2.analysis.patternmatching', [
     $scope.searchTemplates = { q: '', taxon: '' };
     $scope.taxons = [ { id: 0, taxon: 'All taxons' }]
     $scope.searchTemplates.taxon = $scope.taxons[0]
+
+    $scope.tieringGuard = { loading: true };
+    this.loadTieringData = function() {
+    $scope.tieringGuard.loading = true;
+    Project.getAnalysisTieringGuard()
+        .then(function(guard) {
+            $scope.tieringGuard = angular.extend({ loading: false }, guard);
+        })
+        .catch(function() {
+            $scope.tieringGuard.loading = false;
+        });
+    };
+
+    this.loadTieringData();
 
     $scope.getTaxons = function () {
         SpeciesTaxons.getList(function(data){
@@ -148,7 +164,8 @@ angular.module('a2.analysis.patternmatching', [
     $scope.disableToggle = function() {
         const isDisable = !a2UserPermit.can('manage project settings');
         if (isDisable) { $scope.onOff = 0 }
-        return isDisable
+
+        return isDisable || $scope.tieringGuard.isViewOnlyBlocked
     }
 
     $scope.togglePublicTemplatesEnabled = function() {
@@ -189,7 +206,7 @@ angular.module('a2.analysis.patternmatching', [
 
     $scope.getTemplateVisualizerUrl = function(template) {
         const box = ['box', template.x1, template.y1, template.x2, template.y2].join(',');
-        return template ? "/project/"+template.project_url+"/visualizer/rec/"+template.recording+"?a="+box : '';
+        return template ? "/p/"+template.project_url+"/visualizer/rec/"+template.recording+"?a="+box : '';
     }
 
     $scope.deleteTemplate = function(templateId) {
@@ -389,7 +406,7 @@ angular.module('a2.analysis.patternmatching', [
         if (template && template.x1) {
             box = ['box', template.x1, template.y1, template.x2, template.y2].join(',');
         }
-        return template ? "/project/"+template.source_project_uri+"/visualizer/rec/"+template.recording+"?a="+box : '';
+        return template ? "/p/"+template.source_project_uri+"/visualizer/rec/"+template.recording+"?a="+box : '';
     }
 
     $scope.selectItem = function(patternmatchingId){
@@ -642,6 +659,12 @@ angular.module('a2.analysis.patternmatching', [
             .then(function() {
                 return this.loadData(1);
             }.bind(this));
+
+        Project.getAnalysisTieringGuard().then((function(guard) {
+            this.tieringGuard = Object.assign({ loading: false }, guard);
+        }).bind(this)).catch((function() {
+            this.tieringGuard.loading = false;
+        }).bind(this));
     },
 
     lists: {
@@ -749,7 +772,9 @@ angular.module('a2.analysis.patternmatching', [
         this.headerTop = headerTop | 0;
         this.scrolledPastHeader = this.thumbnailClass == 'is-small' ? false : scrollPos >= 450 && this.scrollElement.innerHeight > 500 && this.scrollElement.innerWidth > 1000;
     },
-
+    isViewBlocked: function () {
+        return this.tieringGuard.loading || this.tieringGuard.isBlocked;
+    },
     onSelect: function($item){
         this.select($item.value);
     },
@@ -963,12 +988,12 @@ angular.module('a2.analysis.patternmatching', [
 
     getRoiVisualizerUrl: function(roi){
         var box = ['box', roi.x1, roi.y1, roi.x2, roi.y2].join(',')
-        return roi ? "/project/"+this.projecturl+"/visualizer/rec/"+roi.recording_id+"?a="+box : '';
+        return roi ? "/p/"+this.projecturl+"/visualizer/rec/"+roi.recording_id+"?a="+box : '';
     },
 
     getTemplateVisualizerUrl: function(template){
         var box = ['box', template.x1, template.y1, template.x2, template.y2].join(',')
-        return template ? "/project/"+template.source_project_uri+"/visualizer/rec/"+template.recording+"?a="+box : '';
+        return template ? "/p/"+template.source_project_uri+"/visualizer/rec/"+template.recording+"?a="+box : '';
     },
 
     setRoi: function(roi_index){
@@ -1126,7 +1151,7 @@ angular.module('a2.analysis.patternmatching', [
         };
     }
 )
-.controller('CreateNewPatternMatchingInstanceCtrl', function($modalInstance, a2PatternMatching, a2Templates, a2Playlists, notify) {
+.controller('CreateNewPatternMatchingInstanceCtrl', function($modalInstance, a2PatternMatching, a2Templates, a2Playlists, notify, Project) {
     var self = this;
     Object.assign(this, {
         initialize: function(){
@@ -1147,8 +1172,15 @@ angular.module('a2.analysis.patternmatching', [
                 playlists: true
             };
             this.isSaving = false;
+            this.tieringGuard = { loading: true, isBlocked: false, isJobLimitReached: false, isViewOnlyBlocked: false, settingsUrl: '' };
 
             this.warningMessage = 'Warning: Large playlist (500,000+ recordings). Save resources by reducing playlist size.'
+
+            Project.getAnalysisTieringGuard().then((function(guard) {
+                this.tieringGuard = Object.assign({ loading: false }, guard);
+            }).bind(this)).catch((function() {
+                this.tieringGuard.loading = false;
+            }).bind(this));
 
             this.getTemplates();
 
@@ -1177,6 +1209,9 @@ angular.module('a2.analysis.patternmatching', [
             }).bind(this));
         },
         ok: function () {
+            if (self.tieringGuard.isBlocked) {
+                return;
+            }
             if (self.data.playlist.count === 0) {
                 return notify.error('Note: The playlist should not be empty.');
             }
@@ -1204,6 +1239,9 @@ angular.module('a2.analysis.patternmatching', [
         },
         isWarningMessage: function () {
             return this.data.playlist && this.data.playlist.count > 500000
+        },
+        isCreateBlocked: function () {
+            return this.tieringGuard.loading || this.tieringGuard.isBlocked;
         }
     });
     this.initialize();

@@ -88,6 +88,15 @@ router.get('/:projectUrl/info', function(req, res, next) {
     res.json({ ...req.project, bioAnalyticsBaseUrl: rfcxConfig.bioAnalyticsBaseUrl });
 });
 
+router.get('/:projectUrl/tiering-usage', function(req, res, next) {
+    res.type('json');
+    model.tiering.getProjectTieringUsage(req.project.project_id)
+        .then(function(usage) {
+            res.json(usage);
+        })
+        .catch(next);
+});
+
 router.get('/:projectUrl/info/source-project', function(req, res, next) {
     res.type('json');
     model.projects.findById(req.query.project_id, function(err, result){

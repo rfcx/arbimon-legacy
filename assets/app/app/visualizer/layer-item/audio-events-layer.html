@@ -1,6 +1,18 @@
 <div class="layer">
-    <h5 class="collapse-title" ng-init="layer.is_open = layer.audio_events.isHighlightTitle()" ng-click="layer.is_open = !layer.is_open">
-        <i class="fa" ng-class="layer.is_open ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
+    <h5 class="collapse-title" 
+        ng-init="layer.is_open = layer.audio_events.isHighlightTitle()"
+        ng-attr-tooltip="{{ tieringGuard.isViewOnly ? 'This project is currently view-only' : '' }}" 
+        ng-click="!(tieringGuard.isViewOnly || tieringGuard.loading) && (layer.is_open = !layer.is_open)"
+        ng-style="(tieringGuard.isViewOnly || tieringGuard.loading) && {'cursor': 'not-allowed', 'opacity': '0.7'}">
+        
+        <i class="fa fa-circle-o-notch fa-spin mr-1" ng-if="tieringGuard.loading"></i>
+
+        <i class="fa" 
+        ng-if="!tieringGuard.isViewOnly && !tieringGuard.loading"
+        ng-class="layer.is_open ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
+        
+        <i class="fa fa-lock mr-1" ng-if="tieringGuard.isViewOnly && !tieringGuard.loading"></i>
+
         Audio Events
     </h5>
     <div ng-show="layer.is_open">

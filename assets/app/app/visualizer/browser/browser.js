@@ -86,7 +86,7 @@ angular.module('a2.visobjectsbrowser', [
     var project = Project;
 
     // Set of available lovo types
-    this.types = BrowserLOVOs.$grouping;
+    this.types = BrowserLOVOs.$grouping || [];
     this.visobjectTypes = BrowserVisObjects;
     // currently selected lovo type
     // container for loading flags
