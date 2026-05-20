@@ -800,17 +800,38 @@ var Recordings = {
                 Recordings.fetchSpectrogramFile(recording, next);
             },
             function(specFile, next){
-                console.log('fetchSpectrogramTiles specFile', specFile)
                 const isLegacy = Recordings.isLegacy(recording)
                 tyler(specFile.path, isLegacy, next);
-
-                // TODO to enabled file deletion need to skip file creation if tiles exists
-                // fs.unlink(filePath, function() {
-                //     if(err) console.error('failed to deleted spectrogram file');
-                // });
             },
             function(specTiles, specFile, next){
-                fs.unlink(specFile, () => {})
+                // Intentionally do NOT fs.unlink(specFile) here.
+                //
+                // Previously this waterfall step ran `fs.unlink(specFile, () => {})`
+                // immediately after tyler completed. specFile is the hashed
+                // tmpfilecache path returned by fetchSpectrogramFile (e.g.
+                // /tmp/<sha256>.png) and is shared across every concurrent
+                // request for the same recording. Unlinking it had two
+                // user-visible bugs:
+                //
+                //   1) Defeated the cache. The next visualizer-page render
+                //      missed the cache and triggered a full re-fetch of the
+                //      audio + a media-api spectro request + Jimp tiling on
+                //      every load. Cache hits dropped to ~0%, and
+                //      /legacy-api/.../recordings/info/<id> p95 climbed to
+                //      3-4 s (vs <100 ms with a warm cache).
+                //
+                //   2) Race with concurrent requests. tyler's Jimp.read is
+                //      asynchronous (~200-500 ms). A second request that
+                //      arrived during the read window would see the file get
+                //      deleted under it and fail with
+                //      `Error: Could not open image file /tmp/<sha>.png` ->
+                //      ENOENT -> the route returned 500. This was the
+                //      dominant source of concurrency=5 500s on the
+                //      visualizer page (#2461 investigation).
+                //
+                // The tmpfilecache layer already handles eviction via its own
+                // maxObjectLifetime+cleanupInterval (see tmpfilecache.js).
+                // We let it own that and stop racing it.
                 var maxFreq = recording.sample_rate / 2;
                 var pixels2Secs = recording.duration / specTiles.width ;
                 var pixels2Hz = maxFreq / specTiles.height;
