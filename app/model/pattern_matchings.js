@@ -917,22 +917,71 @@ var PatternMatchings = {
     requestNewPatternMatchingJob: function(data){
         const isPrivileged = data.user && data.user.email && data.user.email.endsWith('@rfcx.org') ? 1 : 0
         data.user = data.user.id
-        return q.ninvoke(joi, 'validate', data, PatternMatchings.JOB_SCHEMA).then(() => lambda.invoke({
-            FunctionName: config('lambdas').pattern_matching,
-            InvocationType: 'Event',
-            Payload: JSON.stringify({
-                project_id: data.project,
-                user_id: data.user,
-                is_privileged: isPrivileged,
-                playlist_id: data.playlist,
-                template_id: data.template,
-                name: data.name,
-                N: data.params.N,
-                persite: data.params.persite,
-                threshold: data.params.threshold,
-                citizen_scientist: data.params.citizen_scientist | 0,
-            }),
-        }).promise());
+        return q.ninvoke(joi, 'validate', data, PatternMatchings.JOB_SCHEMA).then(() => {
+            // rfcx-local: when ANALYSIS_DISPATCH=jobqueue, create the job +
+            // pattern_matchings rows directly (what the AWS tm_driver Lambda
+            // used to do) so the in-cluster jobqueue-dispatcher picks it up,
+            // instead of invoking AWS Lambda. Falls back to the original
+            // lambda.invoke path otherwise (reversible).
+            if (config('lambdas').dispatch === 'jobqueue' || process.env.ANALYSIS_DISPATCH === 'jobqueue') {
+                return PatternMatchings.enqueuePatternMatchingJob(data);
+            }
+            return lambda.invoke({
+                FunctionName: config('lambdas').pattern_matching,
+                InvocationType: 'Event',
+                Payload: JSON.stringify({
+                    project_id: data.project,
+                    user_id: data.user,
+                    is_privileged: isPrivileged,
+                    playlist_id: data.playlist,
+                    template_id: data.template,
+                    name: data.name,
+                    N: data.params.N,
+                    persite: data.params.persite,
+                    threshold: data.params.threshold,
+                    citizen_scientist: data.params.citizen_scientist | 0,
+                }),
+            }).promise();
+        });
+    },
+
+    /** rfcx-local: enqueue a Pattern Matching job by inserting the `jobs`
+     * (job_type_id=6, state='waiting') + `pattern_matchings` rows, mirroring
+     * the AWS tm_driver. The jobqueue-dispatcher then claims it and runs the
+     * in-cluster pattern-matching worker. No AWS Lambda / SQS involved.
+     */
+    enqueuePatternMatchingJob: function(data){
+        const citizen = data.params.citizen_scientist | 0;
+        const params = (data.params.persite !== undefined && data.params.persite !== null)
+            ? { threshold: Number(data.params.threshold), N: data.params.N, persite: data.params.persite }
+            : { threshold: Number(data.params.threshold), N: data.params.N };
+        return dbpool.query(
+            'SELECT project_id FROM playlists WHERE playlist_id = ?', [data.playlist]
+        ).then(function(rows){
+            if (!rows.length) { throw new Error('Playlist not found'); }
+            const projId = rows[0].project_id;
+            return dbpool.query(
+                'SELECT species_id, songtype_id FROM templates WHERE template_id = ?', [data.template]
+            ).then(function(trows){
+                if (!trows.length) { throw new Error('Template not found'); }
+                const speciesId = trows[0].species_id;
+                const songtypeId = trows[0].songtype_id;
+                return dbpool.query(
+                    'INSERT INTO `jobs` (`job_type_id`,`date_created`,`last_update`,`project_id`,`user_id`,`state`,`progress`,`completed`,`progress_steps`,`hidden`,`ncpu`,`uri`,`remarks`) ' +
+                    "VALUES (6, now(), now(), ?, ?, 'waiting', 0, 0, 1, 0, 1, '', '')",
+                    [projId, data.user]
+                ).then(function(jres){
+                    const jobId = jres.insertId;
+                    return dbpool.query(
+                        'INSERT INTO `pattern_matchings` (`name`,`project_id`,`job_id`,`timestamp`,`species_id`,`songtype_id`,`parameters`,`playlist_id`,`template_id`,`citizen_scientist`) ' +
+                        'VALUES (?, ?, ?, now(), ?, ?, ?, ?, ?, ?)',
+                        [data.name, projId, jobId, speciesId, songtypeId, JSON.stringify(params), data.playlist, data.template, citizen]
+                    ).then(function(pres){
+                        return { job_id: jobId, pattern_matching_id: pres.insertId, dispatch: 'jobqueue' };
+                    });
+                });
+            });
+        });
     },
 };
 

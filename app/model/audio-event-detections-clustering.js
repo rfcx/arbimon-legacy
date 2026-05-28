@@ -194,11 +194,56 @@ let AudioEventDetectionsClustering = {
                 'Max Frequency': data.params.maxFrequency
             }
         )
-        return q.ninvoke(joi, 'validate', data, AudioEventDetectionsClustering.JOB_SCHEMA).then(() => lambda.invoke({
-            FunctionName: config('lambdas').audio_event_detections,
-            InvocationType: 'Event',
-            Payload: payload,
-        }).promise());
+        return q.ninvoke(joi, 'validate', data, AudioEventDetectionsClustering.JOB_SCHEMA).then(() => {
+            // rfcx-local: when ANALYSIS_DISPATCH=jobqueue, create the job +
+            // job_params rows directly (what the AWS aed conductor Lambda
+            // did) so the in-cluster jobqueue-dispatcher picks it up,
+            // instead of invoking AWS Lambda. Falls back to lambda.invoke
+            // otherwise (no-op for AWS deployments).
+            if (config('lambdas').dispatch === 'jobqueue' || process.env.ANALYSIS_DISPATCH === 'jobqueue') {
+                return AudioEventDetectionsClustering.enqueueAEDClusteringJob(data);
+            }
+            return lambda.invoke({
+                FunctionName: config('lambdas').audio_event_detections,
+                InvocationType: 'Event',
+                Payload: payload,
+            }).promise();
+        });
+    },
+
+    /** rfcx-local: enqueue an AED-for-clustering job by inserting the `jobs`
+     * (job_type_id=8, state='waiting') + job_params_audio_event_detection_clustering
+     * rows, mirroring the AWS aed conductor. The jobqueue-dispatcher then
+     * claims it and runs the in-cluster aed worker. No AWS Lambda involved.
+     */
+    enqueueAEDClusteringJob: function(data){
+        const params = {
+            'Amplitude Threshold': Number(data.params.amplitudeThreshold),
+            'Duration Threshold': Number(data.params.durationThreshold),
+            'Bandwidth Threshold': Number(data.params.bandwidthThreshold),
+            'Area Threshold': Number(data.params.areaThreshold),
+            'Filter Size': Number(data.params.filterSize),
+        };
+        return dbpool.query(
+            'SELECT project_id FROM playlists WHERE playlist_id = ?', [data.playlist_id]
+        ).then(function(rows){
+            if (!rows.length) { throw new Error('Playlist not found'); }
+            const projId = rows[0].project_id;
+            return dbpool.query(
+                'INSERT INTO `jobs` (`job_type_id`,`date_created`,`last_update`,`project_id`,`user_id`,`state`,`progress`,`completed`,`progress_steps`,`hidden`,`ncpu`,`uri`,`remarks`) ' +
+                "VALUES (8, now(), now(), ?, ?, 'waiting', 0, 0, 1, 0, 1, '', '')",
+                [projId, data.user_id]
+            ).then(function(jres){
+                const jobId = jres.insertId;
+                return dbpool.query(
+                    'INSERT INTO `job_params_audio_event_detection_clustering` (`name`,`project_id`,`job_id`,`date_created`,`parameters`,`playlist_id`,`user_id`) ' +
+                    'VALUES (?, ?, ?, now(), ?, ?, ?)',
+                    [data.name, projId, jobId, JSON.stringify(params), data.playlist_id, data.user_id]
+                ).then(function(){
+                    return { job_id: jobId, dispatch: 'jobqueue' };
+                });
+            });
+        });
     },
 };
 
