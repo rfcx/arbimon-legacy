@@ -3,6 +3,7 @@
 
 const joi = require('joi');
 const AWS = require('aws-sdk');
+const { createS3Client } = require('../utils/storage');
 const q = require('q');
 const dbpool = require('../utils/dbpool');
 const Recordings = require('./recordings');
@@ -11,7 +12,7 @@ const k8sConfig = config('k8s');
 const jsonTemplates = require('../utils/json-templates');
 const { Client } = require('kubernetes-client');
 const k8sClient = new Client({ version: '1.13' });
-const s3 = new AWS.S3();
+const s3 = createS3Client('aws'); // endpoint-aware: routes via s3-proxy chain
 const curEnv = config('aws').env
 
 let ClusteringJobs = {
@@ -147,7 +148,7 @@ let ClusteringJobs = {
 
     getAsset: function (s3Path, res) {
         if(!s3){
-            s3 = new AWS.S3();
+            s3 = createS3Client('aws'); // endpoint-aware: routes via s3-proxy chain
         }
         return s3
             .getObject({ Bucket: config('aws').bucketName, Key: s3Path })

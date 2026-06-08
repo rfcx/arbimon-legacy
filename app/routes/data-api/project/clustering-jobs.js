@@ -5,8 +5,9 @@ const express = require('express');
 const path = require('path')
 const router = express.Router();
 const model = require('../../../model');
-const AWS = require('aws-sdk');
-const s3 = new AWS.S3();
+const { createS3Client } = require('../../../utils/storage');
+// endpoint-aware: route through s3-proxy/s3-reader/s3-writer chain.
+const s3 = createS3Client('aws');
 const config = require('../../../config');
 const q = require('q');
 const fs = require('fs');
@@ -85,7 +86,7 @@ router.get('/:job_id/clustering-details', function (req, res, next) {
     res.type('json');
     const uri = `audio_events/${config('aws').env}/clustering/${req.params.job_id}/${req.params.job_id}_${req.query.aed_info ? 'aed_info' : 'lda'}.json`;
     if (!s3) {
-        s3 = new AWS.S3();
+        s3 = createS3Client('aws'); // endpoint-aware: routes via s3-proxy chain
     }
     s3.getObject({
         Bucket: config('aws').bucketName,

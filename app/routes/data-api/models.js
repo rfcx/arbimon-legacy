@@ -12,18 +12,12 @@ const config = require('../../config');
 const { arbimon2PublicUrl } = require('../../utils/asset-url');
 const APIError = require('../../utils/apierror');
 const router = express.Router();
-const s3 = new AWS.S3();
-const s3RFCx = new AWS.S3(getS3ClientConfig('aws_rfcx'))
+const { createS3Client } = require('../../utils/storage');
+// endpoint-aware: route through s3-proxy/s3-reader/s3-writer chain.
+const s3 = createS3Client('aws');
+const s3RFCx = createS3Client('aws_rfcx');
 const { httpErrorHandler } = require('@rfcx/http-utils');
 const moment = require('moment');
-
-function getS3ClientConfig (type) {
-    return {
-        accessKeyId: config(type).accessKeyId,
-        secretAccessKey: config(type).secretAccessKey,
-        region: config(type).region
-    }
-}
 
 // ------------------------ models routes -------------------------------------
 

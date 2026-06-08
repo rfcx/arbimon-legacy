@@ -39,6 +39,18 @@ function getClient (type) {
   return clients[type]
 }
 
+// Canonical endpoint-aware S3 client factory. ALL S3 access in this app
+// must build clients via this (or use getClient/uploadAsStream/etc above)
+// so that AWS_S3_ENDPOINT / AWS_S3_FORCE_PATH_STYLE route through the
+// in-cluster s3-proxy (s3.arbimon.org -> s3-reader for GET/HEAD,
+// s3-writer for PUT/POST/DELETE). Constructing `new AWS.S3()` directly
+// bypasses the storage chain and talks to AWS S3 directly -- do NOT do
+// that. `type` is a config name: 'aws' (legacy arbimon bucket) or
+// 'aws_rfcx' (rfcx streams bucket).
+function createS3Client (type) {
+  return new S3(getS3ClientConfig(type))
+}
+
 async function uploadAsStream ({ filePath, Bucket, Key, ContentType }, { clientType = 'arbimon' }) {
   const s3 = getClient(clientType)
   const Body = fs.createReadStream(filePath)
@@ -77,5 +89,7 @@ async function deleteObjects (keysArray, { clientType = 'arbimon' }) {
 module.exports = {
   uploadAsStream,
   getSignedUrl,
-  deleteObjects
+  deleteObjects,
+  createS3Client,
+  getS3ClientConfig
 }

@@ -12,6 +12,7 @@ var async = require('async');
 var joi = require('joi');
 var jimp = require('jimp');
 var AWS = require('aws-sdk');
+const { createS3Client } = require('../utils/storage');
 var q = require('q');
 
 // local dependencies
@@ -550,7 +551,7 @@ TrainingSets.types.roi_set = {
             return roi.getBufferAsync(jimp.MIME_PNG);
         }).then((roiBuffer) => {
             if(!s3){
-                s3 = new AWS.S3();
+                s3 = createS3Client('aws'); // endpoint-aware: routes via s3-proxy chain
             }
             return s3.putObject({
                 Bucket: config('aws').bucketName,

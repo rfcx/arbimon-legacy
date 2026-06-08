@@ -1,6 +1,7 @@
 var express = require('express');
 var router = express.Router();
 var AWS = require('aws-sdk');
+const { createS3Client } = require('../../../utils/storage');
 var csv_stringify = require("csv-stringify");
 var path   = require('path');
 var model = require('../../../model');
@@ -13,20 +14,14 @@ const fs = require('fs')
 
 let s3, s3RFCx;
 
+// endpoint-aware: route through s3-proxy/s3-reader/s3-writer chain
+// (AWS_S3_ENDPOINT) instead of AWS S3 directly. See app/utils/storage.js.
 function defineS3Clients() {
     if (!s3) {
-        s3 = new AWS.S3(getS3ClientConfig('aws'))
+        s3 = createS3Client('aws')
     }
     if (!s3RFCx) {
-        s3RFCx = new AWS.S3(getS3ClientConfig('aws_rfcx'))
-    }
-}
-
-function getS3ClientConfig(type) {
-    return {
-        accessKeyId: config(type).accessKeyId,
-        secretAccessKey: config(type).secretAccessKey,
-        region: config(type).region
+        s3RFCx = createS3Client('aws_rfcx')
     }
 }
 

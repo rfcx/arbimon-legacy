@@ -28,6 +28,7 @@ var audioTools   = require('../utils/audiotool');
 var sqlutil      = require('../utils/sqlutil');
 var dbpool       = require('../utils/dbpool');
 var tyler        = require('../utils/tyler.js');
+const { createS3Client } = require('../utils/storage');
 const rfcxConfig = config('rfcx');
 const moment = require('moment');
 const auth0Service = require('./auth0');
@@ -50,19 +51,14 @@ const audioFilePattern = /\.(wav|flac|opus)$/i;
 const freqFilterPrecision = 100;
 
 function defineS3Clients () {
+    // Use the canonical endpoint-aware factory so S3 access routes through
+    // the s3-proxy/s3-reader/s3-writer chain (AWS_S3_ENDPOINT) instead of
+    // talking to AWS S3 directly. See app/utils/storage.js.
     if (!s3) {
-        s3 = new AWS.S3(getS3ClientConfig('aws'))
+        s3 = createS3Client('aws')
     }
     if (!s3RFCx) {
-        s3RFCx = new AWS.S3(getS3ClientConfig('aws_rfcx'))
-    }
-}
-
-function getS3ClientConfig (type) {
-    return {
-        accessKeyId: config(type).accessKeyId,
-        secretAccessKey: config(type).secretAccessKey,
-        region: config(type).region
+        s3RFCx = createS3Client('aws_rfcx')
     }
 }
 

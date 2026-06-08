@@ -1,5 +1,6 @@
 const async = require('async');
 const AWS = require('aws-sdk');
+const { createS3Client } = require('../utils/storage');
 const path = require('path');
 const q = require('q');
 const joi = require('joi');
@@ -249,7 +250,7 @@ module.exports = {
                     callback();
                 }
                 if(!s3){
-                    s3 = new AWS.S3();
+                    s3 = createS3Client('aws'); // endpoint-aware: routes via s3-proxy chain
                 }
                 let uri = rows[0].uri;
                 let imgUri = rows[0].uri.replace('.mod','.png');
