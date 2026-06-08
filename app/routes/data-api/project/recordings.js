@@ -424,6 +424,26 @@ router.get('/:get/:oneRecUrl?', function(req, res, next) {
                 return;
             }
 
+            // Spectrogram images + thumbnails are CONTENT-ADDRESSED (every
+            // render param is encoded in the request URL/filename), so they
+            // are immutable and safe to cache aggressively. Serve them
+            // INLINE (not as an attachment download) with a long-lived
+            // Cache-Control + an ETag (res.sendFile adds Last-Modified/ETag)
+            // so browsers and the CDN reuse them instead of re-fetching /
+            // re-rendering on every page view. (Previously res.download set
+            // Content-Disposition: attachment with no cache headers, which
+            // defeats inline <img> caching.)
+            if (get === 'image' || get === 'thumbnail') {
+                res.setHeader('Content-Type', 'image/png');
+                res.setHeader('Content-Disposition', `inline; filename="${recording.file}"`);
+                res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+                res.sendFile(file.path, function(err) {
+                    fs.unlink(file.path, () => {});
+                    if (err && !res.headersSent) return next(err);
+                });
+                return;
+            }
+
             res.download(file.path, recording.file, function() {
                 fs.unlink(file.path, () => {})
             });
