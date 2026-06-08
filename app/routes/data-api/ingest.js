@@ -108,9 +108,46 @@ router.post('/recordings/delete', verifyToken(), hasRole(['systemUser']), async 
 router.get('/recordings/:attr', async function(req, res) {
   const token = await auth0Service.getToken();
   const apiUrl = `${rfcxConfig.mediaBaseUrl}/internal/assets/streams/${req.params.attr}`;
-  request.get(apiUrl, {
+  // Proxy the media-api asset. media-api pipes its response headers through
+  // verbatim (Content-Disposition: attachment + a short Cache-Control),
+  // which makes browsers treat inline spectrogram <img> resources as file
+  // downloads and re-fetch/re-render them on every page view. These asset
+  // URLs are CONTENT-ADDRESSED (every render param is encoded in
+  // req.params.attr), so for images we rewrite the headers to serve INLINE
+  // + immutable so browsers and the CDN cache them. Audio keeps download
+  // semantics. We must use res.writeHead (not setHeader + request.pipe)
+  // because the 'request' lib copies the upstream headers onto res during
+  // pipe, which would clobber our Content-Disposition.
+  const attr = req.params.attr || '';
+  const isImage = /\.(png|jpe?g|webp)$/i.test(attr);
+  const upstream = request.get(apiUrl, {
     headers: { 'Authorization': `Bearer ${token}` }
-  }).pipe(res);
+  });
+  upstream.on('error', () => {
+    if (!res.headersSent) res.status(502);
+    res.end();
+  });
+  upstream.on('response', (upRes) => {
+    const h = {};
+    const passthrough = ['content-type', 'content-length', 'accept-ranges',
+      'content-range', 'rfcx-stream-next-timestamp', 'rfcx-stream-gaps',
+      'access-control-expose-headers', 'last-modified', 'etag'];
+    passthrough.forEach((k) => {
+      if (upRes.headers[k] !== undefined) h[k] = upRes.headers[k];
+    });
+    if (isImage) {
+      if (!h['content-type']) h['content-type'] = 'image/png';
+      h['content-disposition'] = `inline; filename="${attr}"`;
+      h['cache-control'] = 'public, max-age=31536000, immutable';
+    } else {
+      if (upRes.headers['content-disposition']) h['content-disposition'] = upRes.headers['content-disposition'];
+      if (upRes.headers['cache-control']) h['cache-control'] = upRes.headers['cache-control'];
+    }
+    res.writeHead(upRes.statusCode, h);
+    upRes.on('data', (chunk) => res.write(chunk));
+    upRes.on('end', () => res.end());
+    upRes.on('error', () => { try { res.end(); } catch (e) {} });
+  });
 })
 
 module.exports = router;
