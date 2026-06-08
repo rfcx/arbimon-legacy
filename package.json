@@ -15,6 +15,7 @@
     "@ffmpeg-installer/ffmpeg": "^1.0.20",
     "@ffprobe-installer/ffprobe": "^1.0.12",
     "@rfcx/http-utils": "^1.0.2",
+    "@rfcx/s3-storage-client": "github:rfcx/s3-storage-client#1.0.0",
     "async": "~2.6.3",
     "aws-sdk": "^2.1388.0",
     "body-parser": "^1.19.0",
@@ -32,6 +33,7 @@
     "express-mysql-session": "^2.1.5",
     "express-session": "^1.17.1",
     "express-winston": "^4.2.0",
+    "fluent-ffmpeg": "^2.1.2",
     "gravatar": "~1.8.1",
     "jimp": "^0.16.1",
     "joi": "~9.0.4",
@@ -57,7 +59,6 @@
     "riff-file": "^1.0.3",
     "sha1-file": "^1.0.4",
     "sprintf-js": "~1.1.2",
-    "fluent-ffmpeg": "^2.1.2",
     "tz-lookup": "^6.1.25",
     "validator": "~5.7.0",
     "winston": "^3.8.2"
