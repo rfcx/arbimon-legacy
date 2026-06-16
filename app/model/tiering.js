@@ -10,7 +10,10 @@ async function loadProjectTieringUsage(connection, projectId) {
         '        SELECT COUNT(*)\n' +
         '        FROM recordings r\n' +
         '        JOIN sites s ON s.site_id = r.site_id\n' +
-        '        WHERE s.project_id = p.project_id AND s.deleted_at IS NULL\n' +
+        // Archiving (Phase A): archived recordings do NOT count against tier
+        // usage/quota (consistent with "looks deleted to the user"). This is a
+        // billing-relevant decision -- see the design doc open-items.
+        '        WHERE s.project_id = p.project_id AND s.deleted_at IS NULL AND r.archived_at IS NULL\n' +
         '    ), 0) AS recording_minutes_count,\n' +
         '    COALESCE((\n' +
         '        SELECT COUNT(*)\n' +

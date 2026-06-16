@@ -295,6 +295,9 @@ var PatternMatchings = {
             builder.addTable("JOIN sites", "S", "S.site_id = R.site_id");
 
             builder.addConstraint("S.deleted_at is null");
+            // Archiving (Phase A): hide PM ROIs whose recording has been archived
+            // (hide-by-parent). Mirrors the site soft-delete filter above.
+            builder.addConstraint(sqlutil.recordingArchiveScope('R', 'active'));
 
             builder.addProjection(
                 'R.uri as recording, R.meta ',
