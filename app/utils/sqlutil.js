@@ -220,6 +220,53 @@ var sqlutil = {
         if (field.type !== 'DATETIME' || field.name === 'datetime_utc') return next(); // 1 = true, 0 = false
         return new Date(field.string() + ' GMT');
     },
+
+    /**
+     * Archiving (Phase A): centralized "active vs archived" predicate for the
+     * `recordings` table. This is the SINGLE source of truth for the
+     * archived_at filter so the rule is not hand-sprinkled across the ~30
+     * recording read sites (which is the #1 source of "archived data leaks back
+     * into a primary list" bugs).
+     *
+     * Modes:
+     *   'active'   (default) -> `<alias>.archived_at IS NULL`     (primary list)
+     *   'archived'           -> `<alias>.archived_at IS NOT NULL` (View Archived)
+     *   'all'                -> '' (no predicate; admin/debug, opt-in)
+     *
+     * @param {string} alias  table alias used in the query (e.g. 'r', 'R'). Empty
+     *                        string => unqualified column.
+     * @param {string} [mode] one of 'active' | 'archived' | 'all'. Anything
+     *                        falsy/unknown is treated as 'active' (fail-safe).
+     * @returns {string} a SQL boolean expression, or '' for mode 'all'.
+     */
+    recordingArchiveScope: function (alias, mode) {
+        var col = (alias ? alias + '.' : '') + 'archived_at';
+        switch (mode) {
+            case 'all':
+                return '';
+            case 'archived':
+                return col + ' IS NOT NULL';
+            case 'active':
+            default:
+                return col + ' IS NULL';
+        }
+    },
+
+    /**
+     * Normalize an incoming `archived` request param into a scope mode.
+     * Accepts: undefined/false/'false'/'0' -> 'active';
+     *          true/'true'/'1'/'only'/'archived' -> 'archived';
+     *          'all' -> 'all'. Unknown values fail safe to 'active'.
+     * @param {*} archived
+     * @returns {'active'|'archived'|'all'}
+     */
+    normalizeArchivedParam: function (archived) {
+        if (archived === undefined || archived === null) return 'active';
+        if (archived === 'all') return 'all';
+        if (archived === true || archived === 'true' || archived === '1' ||
+            archived === 'only' || archived === 'archived') return 'archived';
+        return 'active';
+    },
 };
 
 module.exports = sqlutil;

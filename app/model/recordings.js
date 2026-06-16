@@ -270,10 +270,15 @@ var Recordings = {
                 } else {
                     const base = `SELECT ${selection} FROM recordings R JOIN sites S ON S.site_id = ? WHERE R.site_id = ?`
                     const replacements = [recording.site_id, recording.site_id, recording.datetime, recording.recording_id];
+                    // Archiving (Phase A): the prev/next neighbor lists must skip
+                    // archived recordings. The middle query resolves the current
+                    // recording itself by id, so it is left unscoped (a user may
+                    // still be viewing it directly).
+                    const _activeR = sqlutil.recordingArchiveScope('R', 'active');
                     const proms = [
-                        dbpool.query({ sql: `${base} AND datetime <= ? AND recording_id != ? ORDER BY datetime DESC LIMIT 5`, typeCast: sqlutil.parseUtcDatetime }, replacements),
+                        dbpool.query({ sql: `${base} AND ${_activeR} AND datetime <= ? AND recording_id != ? ORDER BY datetime DESC LIMIT 5`, typeCast: sqlutil.parseUtcDatetime }, replacements),
                         dbpool.query({ sql: `${base}  AND datetime = ? AND recording_id = ?`, typeCast: sqlutil.parseUtcDatetime }, replacements),
-                        dbpool.query({ sql:`${base} AND datetime >= ? AND recording_id != ? ORDER BY datetime ASC LIMIT 4`, typeCast: sqlutil.parseUtcDatetime }, replacements),
+                        dbpool.query({ sql:`${base} AND ${_activeR} AND datetime >= ? AND recording_id != ? ORDER BY datetime ASC LIMIT 4`, typeCast: sqlutil.parseUtcDatetime }, replacements),
                     ]
                     return Q.all(proms);
                 }
@@ -360,6 +365,19 @@ var Recordings = {
                 constraints.push('R.`recording_id` = ' + dbpool.escape(Number(options.recording_id)));
             }
 
+            // Archiving (Phase A): default list/grouped URL queries to the ACTIVE
+            // recording tier. Explicit single-recording lookups (urlquery.id or
+            // options.recording_id) are intentionally NOT scoped, so direct
+            // by-id resolution (visualizer playback, playlist/training-set
+            // membership) still works in Phase A; playlist<->archive interaction
+            // is decided in Phase B. 'archived'/'all' modes opt out via param.
+            if (!urlquery.id && !options.recording_id) {
+                const _us = sqlutil.recordingArchiveScope('R', sqlutil.normalizeArchivedParam(options.archived));
+                if (_us) {
+                    constraints.push(_us);
+                }
+            }
+
             if(!urlquery.id && !urlquery.site) {
                 steps.push(
                     dbpool.query("(\n" +
@@ -419,12 +437,15 @@ var Recordings = {
     },
 
     fetchNext: function (recording, callback) {
+        // Archiving (Phase A): skip archived recordings when paging to the next
+        // recording in a site (archived recs must not appear as neighbors).
         var query = "SELECT R2.recording_id as id\n" +
             "FROM recordings R \n" +
             "JOIN recordings R2 ON " +
                 "R.site_id = R2.site_id " +
                 "AND R.datetime < R2.datetime \n" +
             "WHERE R.recording_id = " + dbpool.escape(recording.id) + "\n" +
+            "AND " + sqlutil.recordingArchiveScope('R2', 'active') + "\n" +
             "ORDER BY R2.datetime ASC \n" +
             "LIMIT 1";
 
@@ -435,12 +456,15 @@ var Recordings = {
         });
     },
     fetchPrevious: function (recording, callback) {
+        // Archiving (Phase A): skip archived recordings when paging to the
+        // previous recording in a site.
         var query = "SELECT R2.recording_id as id\n" +
             "FROM recordings R \n" +
             "JOIN recordings R2 ON " +
                 "R.site_id = R2.site_id " +
                 "AND R.datetime > R2.datetime \n" +
             "WHERE R.recording_id = " + dbpool.escape(recording.id) + "\n" +
+            "AND " + sqlutil.recordingArchiveScope('R2', 'active') + "\n" +
             "ORDER BY R2.datetime DESC \n" +
             "LIMIT 1";
 
@@ -1408,6 +1432,16 @@ var Recordings = {
             let constraints = [];
             let data = [];
 
+            // Archiving (Phase A): default the recording listing to the ACTIVE
+            // tier (archived_at IS NULL). Centralized in sqlutil so the rule is
+            // defined once. 'archived'/'only' => archived tier; 'all' => no
+            // filter. This is the primary chokepoint for the recordings list,
+            // count, and date_range outputs.
+            const archiveScope = sqlutil.recordingArchiveScope('r', sqlutil.normalizeArchivedParam(parameters.archived));
+            if (archiveScope) {
+                constraints.push(archiveScope);
+            }
+
             const siteIds = Object.values(siteData).map(function(site){
                 return site.site_id;
             })
@@ -1725,6 +1759,14 @@ var Recordings = {
             sortBy: joi.string(),
             sortByMult: arrayOrSingle(arrayOrSingle(joi.string())),
             sortRev: joi.boolean(),
+            // Archiving (Phase A): controls the active/archived tier of the
+            // recording listing. Omitted => active only (default, current
+            // behavior minus archived rows). 'only'/'archived'/true => archived
+            // only (View Archived). 'all' => both (admin/debug).
+            archived: joi.alternatives().try(
+                joi.boolean(),
+                joi.string().valid('active', 'archived', 'only', 'all', 'true', 'false', '0', '1')
+            ),
             output:  arrayOrSingle(joi.string().valid('count','list','date_range','sql')).default('list')
         },
         exportProjections: {
@@ -1778,6 +1820,15 @@ var Recordings = {
             }
 
             builder.addConstraint("s.deleted_at is null")
+
+            // Archiving (Phase A): default to the ACTIVE recording tier
+            // (archived_at IS NULL). Applies to exports and the deleteMatching/
+            // findMatching count paths that build on this query. 'all' => no
+            // filter; 'archived'/'only' => archived tier only.
+            const _archiveScope = sqlutil.recordingArchiveScope('r', sqlutil.normalizeArchivedParam(parameters.archived));
+            if (_archiveScope) {
+                builder.addConstraint(_archiveScope);
+            }
 
             if(parameters.range) {
                 builder.addConstraint('r.datetime BETWEEN ? AND ?',[
