@@ -52,28 +52,36 @@ var Species = {
     },
 
     list: function(limit, callback) {
-        var q = 'SELECT s.species_id as id, s.scientific_name, sf.family, st.taxon, GROUP_CONCAT(sa.alias) as aliases \n'+
-                'FROM species as s \n'+
-                'JOIN species_taxons as st on s.taxon_id = st.taxon_id \n'+
-                'JOIN species_families as sf on s.family_id = sf.family_id \n'+
-                'LEFT JOIN species_aliases as sa on s.species_id = sa.species_id \n'+
-                'GROUP BY s.species_id \n'+
-                'LIMIT %s';
+        // aliases via correlated subquery (not a JOIN+GROUP_CONCAT) so the full
+        // alias set is always returned, blank rows excluded, with a clean separator.
+        var q = "SELECT s.species_id as id, s.scientific_name, sf.family, st.taxon, \n"+
+                "  (SELECT GROUP_CONCAT(a.alias SEPARATOR ', ') FROM species_aliases a WHERE a.species_id = s.species_id AND a.alias <> '') as aliases \n"+
+                "FROM species as s \n"+
+                "JOIN species_taxons as st on s.taxon_id = st.taxon_id \n"+
+                "JOIN species_families as sf on s.family_id = sf.family_id \n"+
+                "LIMIT %s";
 
         q = util.format(q, dbpool.escape(limit));
         queryHandler(q, callback);
     },
 
     search: function(squery, callback) {
-        var q = "SELECT s.species_id as id, s.scientific_name, sf.family, st.taxon, GROUP_CONCAT(sa.alias) as aliases \n"+
+        // Match against scientific_name / family / taxon / aliases. Aliases are
+        // matched via EXISTS (NOT a filtered JOIN) and returned via a correlated
+        // subquery, so the 'aliases' column always contains the species' FULL
+        // alias set regardless of which alias matched the query. Filtering the
+        // alias JOIN (the previous approach) collapsed GROUP_CONCAT to only the
+        // matched alias (e.g. searching 'American Barn Owl' dropped
+        // 'Tyto alba furcata' / 'Tyto furcata' from the result).
+        var q = "SELECT s.species_id as id, s.scientific_name, sf.family, st.taxon, \n"+
+                "  (SELECT GROUP_CONCAT(a.alias SEPARATOR ', ') FROM species_aliases a WHERE a.species_id = s.species_id AND a.alias <> '') as aliases \n"+
                 "FROM species as s \n"+
                 "JOIN species_taxons as st on s.taxon_id = st.taxon_id \n"+
                 "JOIN species_families as sf on s.family_id = sf.family_id \n"+
-                "LEFT JOIN species_aliases as sa on s.species_id = sa.species_id \n"+
                 "WHERE s.scientific_name LIKE %s \n"+
                 "OR sf.family LIKE %s \n"+
                 "OR st.taxon LIKE %s \n"+
-                "OR sa.alias LIKE %s \n"+
+                "OR EXISTS (SELECT 1 FROM species_aliases a WHERE a.species_id = s.species_id AND a.alias LIKE %s) \n"+
                 "GROUP BY s.species_id \n"+
                 "LIMIT 100";
         var term = dbpool.escape('%'+squery+'%');
