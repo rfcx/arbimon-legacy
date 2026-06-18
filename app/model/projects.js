@@ -516,7 +516,11 @@ var Projects = {
             "pc.songtype_id as songtype",
             "st.taxon",
             "sp.scientific_name as species_name",
-            "so.songtype as songtype_name"
+            "so.songtype as songtype_name",
+            // Other names (common names + superseded scientific names) for this
+            // species. Correlated subquery keeps row cardinality unchanged so it
+            // is safe alongside the conditional countValidations GROUP BY below.
+            "(SELECT GROUP_CONCAT(sa.alias SEPARATOR ', ') FROM species_aliases sa WHERE sa.species_id = pc.species_id AND sa.alias <> '') as aliases"
         ];
         let from_clause = [
             "project_classes AS pc",
