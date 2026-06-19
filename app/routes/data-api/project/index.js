@@ -275,6 +275,8 @@ router.get('/:projectUrl/classes', function(req, res, next) {
         q: req.query.q,
         limit: req.query.limit,
         offset: req.query.offset,
+        sortBy: req.query.sortBy,
+        sortRev: req.query.sortRev === 'true' || req.query.sortRev === true,
     };
 
     if(req.query.validations) {
