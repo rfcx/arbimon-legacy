@@ -1329,17 +1329,18 @@ var Recordings = {
      * `max_statement_time` -> empty list -> "0 Recordings" in the UI.
      *   site_id       -> recordings_site_datetime_idx (leading col)
      *   datetime      -> recordings_site_datetime_idx (site_id, datetime)
-     *   filename(uri) -> recordings_site_uri_idx       (site_id, uri)
+     *   filename      -> recordings_site_filename_idx (site_id, filename)
      *   upload_time   -> recordings_site_upload_time_idx (site_id, upload_time)
-     * `recorder` (no composite) and free-text `comments`/`meta` are NOT
-     * sortable by design.
+     * `filename` is a VIRTUAL generated column = JSON_VALUE(meta,'$.filename'),
+     * i.e. the SAME value the UI shows in the Filename column (NOT the uri
+     * basename, which is an opaque UUID). `recorder` (no composite) and
+     * free-text `comments`/`meta` are NOT sortable by design.
      */
     RECORDING_SORT_COLUMNS: {
         site:        { expr: 'r.site_id',     index: 'recordings_site_datetime_idx' },
         site_id:     { expr: 'r.site_id',     index: 'recordings_site_datetime_idx' },
         datetime:    { expr: 'r.datetime',    index: 'recordings_site_datetime_idx' },
-        filename:    { expr: 'r.uri',         index: 'recordings_site_uri_idx' },
-        uri:         { expr: 'r.uri',         index: 'recordings_site_uri_idx' },
+        filename:    { expr: 'r.filename',    index: 'recordings_site_filename_idx' },
         upload_time: { expr: 'r.upload_time', index: 'recordings_site_upload_time_idx' }
     },
 
