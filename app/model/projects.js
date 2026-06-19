@@ -570,14 +570,43 @@ var Projects = {
             groupby_clause.push("pc.species_id", "pc.songtype_id");
         }
 
+        // Safe, whitelisted ORDER BY for the project-species list. The client
+        // sends a stable sort key (column key from the website table); we map
+        // it to a vetted SQL expression so the raw value never reaches SQL.
+        // Default preserves the historical scientific-name ordering.
+        const order_clause = Projects.resolveSpeciesSort(options && options.sortBy, options && options.sortRev);
+
         return q.nfcall(queryHandler, dbpool.format(
             "SELECT " + select_clause.join(", \n") + "\n" +
             "FROM " + from_clause.join("\n") + "\n" +
             "WHERE (" + where_clause.join(") AND (") + ")" +
-            (groupby_clause.length ? "\nGROUP BY " + groupby_clause.join(",") : ""),
+            (groupby_clause.length ? "\nGROUP BY " + groupby_clause.join(",") : "") +
+            "\nORDER BY " + order_clause,
             params) +
             (options.limit ? ("\nLIMIT " + Number(options.limit) + " OFFSET " + Number(options.offset)) : "")
         ).get(0).nodeify(callback);
+    },
+
+    /**
+     * Whitelist of user-selectable sort columns for the project-species list,
+     * mapping a stable client key to a SAFE SQL expression. Anything not in
+     * the map falls back to the default scientific-name ordering. Keys match
+     * the website's species table column keys.
+     */
+    SPECIES_SORT_COLUMNS: {
+        species_name:  'sp.scientific_name',
+        taxon:         'st.taxon',
+        songtype_name: 'so.songtype'
+    },
+
+    resolveSpeciesSort: function(sortBy, sortRev) {
+        const dir = sortRev ? 'DESC' : 'ASC';
+        const expr = sortBy != null ? Projects.SPECIES_SORT_COLUMNS[String(sortBy).trim()] : undefined;
+        if (!expr) {
+            // Historical default order.
+            return 'sp.scientific_name ASC, so.songtype ASC';
+        }
+        return expr + ' ' + dir + ', sp.scientific_name ' + dir;
     },
 
     getProjectClassesAsync: function(projectId, classId, options) {

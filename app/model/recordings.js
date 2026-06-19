@@ -1319,6 +1319,49 @@ var Recordings = {
         return dbpool.query(q);
     },
 
+    /**
+     * Whitelist of user-selectable sort columns for the recordings list.
+     * Maps a stable client-facing sort key to a SAFE, fully-qualified SQL
+     * expression. The client must never be able to inject arbitrary SQL into
+     * the ORDER BY clause, so anything not in this map falls back to the
+     * historical default order (site_id DESC, datetime DESC).
+     *
+     * Only columns backed by an index on `recordings` (or cheap to filesort
+     * within a single project's scope) are exposed — see the index audit:
+     *   datetime      -> datetime_idx / recordings_site_datetime_idx
+     *   upload_time   -> recs_by_upload_time / recordings_upload_time_*
+     *   uri (filename)-> uri
+     *   site_id       -> site_id
+     * `recorder` has no dedicated index but is acceptable as a per-project
+     * filesort. Free-text `comments`/`meta` are intentionally NOT sortable.
+     */
+    RECORDING_SORT_COLUMNS: {
+        site:        'r.site_id',
+        site_id:     'r.site_id',
+        datetime:    'r.datetime',
+        filename:    'r.uri',
+        uri:         'r.uri',
+        upload_time: 'r.upload_time',
+        recorder:    'r.recorder'
+    },
+
+    /**
+     * Resolve a requested (sortBy, sortRev) pair into a safe ORDER BY body for
+     * the recordings list query. Returns an object with `clause` (the SQL
+     * fragment, without the leading "ORDER BY") and `usingDefault` (true when
+     * the request did not map to a whitelisted column).
+     */
+    resolveRecordingSort: function(sortBy, sortRev) {
+        const dir = sortRev ? 'DESC' : 'ASC';
+        const expr = sortBy != null ? Recordings.RECORDING_SORT_COLUMNS[String(sortBy).trim()] : undefined;
+        if (!expr) {
+            // Historical default: keep recordings grouped by site, newest first.
+            return { clause: 'r.site_id DESC, r.datetime DESC', usingDefault: true };
+        }
+        // Tie-break on recording_id for a stable, deterministic page order.
+        return { clause: expr + ' ' + dir + ', r.recording_id ' + dir, usingDefault: false };
+    },
+
     /** finds a set of recordings given some search criteria.
      * @param {Object} params - search parameters
      * @param {Function} callback - callback function (optional)
@@ -1503,9 +1546,10 @@ var Recordings = {
                         where_clause
                     ];
                     if(output === 'list') {
-                        const sortBy = parameters.sortBy || 'r.datetime';
-                        const sortRev = parameters.sortRev ? 'DESC' : '';
-                        query.push('ORDER BY ' + sortBy + ' ' + sortRev);
+                        // Safe, whitelisted ORDER BY — never interpolate the raw
+                        // client sortBy string into SQL (injection guard).
+                        const sort = Recordings.resolveRecordingSort(parameters.sortBy, parameters.sortRev);
+                        query.push('ORDER BY ' + sort.clause);
                         if(limit_clause){
                             query.push("LIMIT " + limit_clause);
                         }
@@ -1519,6 +1563,13 @@ var Recordings = {
                 // Get recording data for the output='list'
                 const listIndex = outputs.findIndex(item => item === 'list')
                 if (outputs.includes('list') && results[listIndex][0].length && !outputs.includes('sql')) {
+                    // The page of recording_ids was already selected in the
+                    // requested (whitelisted) order by the list query above.
+                    // This re-fetch must PRESERVE that exact order — previously
+                    // it hardcoded `site_id DESC, datetime DESC`, which silently
+                    // overrode any user-selected sort. Use ORDER BY FIELD(...)
+                    // to replay the id order from the first query.
+                    const orderedIds = results[listIndex][0].map(item => item.id);
                     const sql = `SELECT r.recording_id AS id,
                         SUBSTRING_INDEX(r.uri,'/',-1) as file,
                         r.uri,
@@ -1532,8 +1583,8 @@ var Recordings = {
                         r.sample_rate,
                         r.meta,
                         r.site_id
-                        FROM recordings r WHERE r.recording_id IN (${results[listIndex][0].map(item => item.id)})
-                        ORDER BY r.site_id DESC, r.datetime DESC
+                        FROM recordings r WHERE r.recording_id IN (${orderedIds})
+                        ORDER BY FIELD(r.recording_id, ${orderedIds})
                     `
                     let queryResult = await dbpool.query({
                         sql,
