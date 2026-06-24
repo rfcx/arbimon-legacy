@@ -28,7 +28,9 @@ var SoundscapeComposition = {
                         "FROM recording_soundscape_composition_annotations RSCA " +
                         "JOIN recordings R ON R.recording_id = RSCA.recordingId " +
                         "WHERE RSCA.scclassId = SCC.id " +
-                        "AND R.site_id IN (?)" +
+                        "AND R.site_id IN (?) " +
+                        // Archiving (Phase A): exclude archived recordings from the tally.
+                        "AND " + require('../utils/sqlutil').recordingArchiveScope('R', 'active') +
                         ") as tally");
                         selectdata.push(sites.map(function(site){
                             return site.id;

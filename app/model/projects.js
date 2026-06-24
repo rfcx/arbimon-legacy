@@ -203,6 +203,8 @@ var Projects = {
                         "SELECT site_id, COUNT(recording_id) as rec_count "+
                         "FROM recordings "+
                         "WHERE site_id IN (?) " +
+                        // Archiving (Phase A): per-site recording counts exclude archived.
+                        "AND " + sqlutil.recordingArchiveScope('', 'active') + " " +
                         "GROUP BY site_id",
                         [siteIds]
                     ).then(function(results){
@@ -236,7 +238,7 @@ var Projects = {
                 s.timezone as Timezone, COUNT(recording_id) as Recordings_Count, s.updated_at, s.external_id
             FROM sites AS s
                 LEFT JOIN project_imported_sites as pis ON s.site_id = pis.site_id AND pis.project_id=?
-                LEFT JOIN recordings as r ON s.site_id = r.site_id
+                LEFT JOIN recordings as r ON s.site_id = r.site_id AND r.archived_at IS NULL
             WHERE (s.project_id=? OR pis.project_id=?) AND s.deleted_at is null
             GROUP BY s.site_id ORDER by s.name;`;
         return dbpool.streamQuery({ sql }, [project_id, project_id, project_id])
@@ -267,7 +269,7 @@ var Projects = {
             FROM recordings AS r
             JOIN sites as s ON s.site_id = r.site_id AND s.project_id = ? AND s.deleted_at is null
             LEFT JOIN project_imported_sites as pis ON s.site_id = pis.site_id AND pis.project_id = ?
-            WHERE s.project_id = ? OR pis.project_id = ?
+            WHERE (s.project_id = ? OR pis.project_id = ?) AND r.archived_at IS NULL
             GROUP BY YEAR(r.datetime), MONTH(r.datetime), DAY(r.datetime) ORDER BY r.datetime ASC`,  typeCast: sqlutil.parseUtcDatetime },
             [project_id, project_id, project_id, project_id]
         )
@@ -1220,13 +1222,13 @@ var Projects = {
     totalRecordings: function(projectId) {
         const q = "SELECT count(recording_id) as count \n" +
                 "FROM recordings AS r JOIN sites AS s ON s.site_id = r.site_id AND s.deleted_at is null \n"+
-                "WHERE s.project_id = " + dbpool.escape(projectId);
+                "WHERE s.project_id = " + dbpool.escape(projectId) + " AND r.archived_at IS NULL";
         return dbpool.query(q).get(0).get('count');
     },
 
     recordingsMinMaxDates: function (project_id, callback) {
         const q = `SELECT min(r.datetime) as min, max(r.datetime) as max FROM recordings r
-            JOIN sites s ON r.site_id = s.site_id WHERE s.project_id = ` + dbpool.escape(project_id)
+            JOIN sites s ON r.site_id = s.site_id WHERE s.project_id = ` + dbpool.escape(project_id) + ` AND r.archived_at IS NULL`
         queryHandler(q, callback);
     },
 
