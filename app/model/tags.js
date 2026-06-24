@@ -148,6 +148,9 @@ tags.resourceDefs.recording = {
     getForType: async function(options){
         var tables = ['tags T', 'JOIN recording_tags RT ON RT.tag_id = T.tag_id', 'JOIN recordings r ON r.recording_id = RT.recording_id'];
         var constraints = [];
+        // Archiving (Phase A): exclude tags on archived recordings from the
+        // project-wide tag counts (hide-by-parent).
+        constraints.push(require('../utils/sqlutil').recordingArchiveScope('r', 'active'));
 
         if(options && options.project){
             const sites = await projects.getProjectSites(options.project)

@@ -114,6 +114,9 @@ let ClusteringJobs = {
             select.push('S.site_id, S.`name` as `site`');
             tables.push("JOIN recordings R ON A.recording_id = R.recording_id");
             tables.push("JOIN sites S ON R.site_id = S.site_id");
+            // Archiving (Phase A): exclude archived recordings from per-site
+            // clustering aggregates (hide-by-parent).
+            constraints.push(require('../utils/sqlutil').recordingArchiveScope('R', 'active'));
         }
 
         if (options.perDate) {

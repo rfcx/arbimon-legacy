@@ -282,7 +282,7 @@ var Sites = {
                 "FROM sites AS s \n"+
                 "JOIN projects AS p ON s.project_id = p.project_id \n"+
                 "JOIN users AS u ON p.owner_id = u.user_id \n"+
-                "LEFT JOIN recordings AS r ON s.site_id = r.site_id \n"+
+                "LEFT JOIN recordings AS r ON s.site_id = r.site_id AND r.archived_at IS NULL \n"+
                 "WHERE s.published = 1 AND s.deleted_at is null "+
                 "GROUP BY s.site_id";
 
@@ -355,7 +355,7 @@ var Sites = {
 
             sql = "SELECT R.upload_time AS datetime, COUNT(*) AS uploads \n" +
             "FROM recordings R\n" +
-            "WHERE site_id = ?";
+            "WHERE site_id = ? AND R.archived_at IS NULL";
             if (options.dates) {
                 sql += " AND DATE(R.upload_time) IN (?)";
                 params.push(options.dates);
@@ -426,7 +426,7 @@ var Sites = {
 
                 sql = "SELECT R.datetime AS datetime, COUNT(*) AS count \n" +
                 "FROM recordings R\n" +
-                "WHERE site_id = ?";
+                "WHERE site_id = ? AND R.archived_at IS NULL";
                 if (options.dates) {
                     sql += " AND DATE(R.datetime) IN (?)";
                     params.push(options.dates);
