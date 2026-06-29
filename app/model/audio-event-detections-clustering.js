@@ -195,6 +195,10 @@ let AudioEventDetectionsClustering = {
             }
         )
         return q.ninvoke(joi, 'validate', data, AudioEventDetectionsClustering.JOB_SCHEMA).then(() => {
+            // Tier reframe (2026-06-29): per-job recording (playlist size) cap
+            // for free projects (project resolved from the playlist). Fail-open.
+            return require('./tiering').assertJobRecordingLimit(data.project_id, data.playlist_id);
+        }).then(() => {
             // rfcx-local: when ANALYSIS_DISPATCH=jobqueue, create the job +
             // job_params rows directly (what the AWS aed conductor Lambda
             // did) so the in-cluster jobqueue-dispatcher picks it up,

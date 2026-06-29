@@ -192,6 +192,15 @@ var Jobs = {
                     return q.ninvoke(joi, 'validate', params, job_type.schema);
                 }
         }).then(function(){
+            // Tier reframe (2026-06-29): enforce the per-job recording (playlist
+            // size) cap for free projects on playlist-driven analyses
+            // (soundscape, classification, ...). PM has its own guard at its
+            // dedicated entrypoint. No-op when the job has no playlist (e.g.
+            // training) or when uncapped/bio-api-unreachable (fail-open).
+            if (params.playlist !== undefined && params.playlist !== null && params.project) {
+                return require('./tiering').assertJobRecordingLimit(params.project, params.playlist);
+            }
+        }).then(function(){
             return q.ninvoke(dbpool, 'getConnection');
         }).then(function start_transaction(connection){
             var tx = new sqlutil.transaction(db = connection);
