@@ -3,8 +3,28 @@
 
 const dbpool = require('../utils/dbpool');
 const request = require('request');
+const dns = require('dns');
 const config = require('../config');
 const debug = require('debug')('arbimon2:tiering');
+
+// Custom A-only DNS lookup for the bio-api call. Node's default dual-stack
+// resolution issues an AAAA query for the cluster-internal
+// *.svc.cluster.local name that hangs ~5s (no IPv6 answer) before falling back
+// to A. That would race the 5s request timeout and (fail-open) silently skip
+// 12k enforcement. Resolving A records directly skips AAAA entirely (~15ms,
+// deterministic). `family:4` on `request` was NOT sufficient (the option isn't
+// reliably forwarded to the socket lookup).
+function ipv4Lookup(hostname, options, callback) {
+    if (typeof options === 'function') { callback = options; }
+    dns.resolve4(hostname, function (err, addresses) {
+        if (err || !addresses || !addresses.length) {
+            // Fall back to the default resolver (e.g. when an IP/literal is
+            // passed); still better than failing outright.
+            return dns.lookup(hostname, { family: 4 }, callback);
+        }
+        callback(null, addresses[0], 4);
+    });
+}
 
 // Tier reframe (2026-06-29): per-job recording (playlist size) cap. The limit
 // itself is OWNED by bio-api (Bio Postgres `insights`.project_type_limit), which
@@ -23,11 +43,7 @@ function fetchProjectEntitlement(slug) {
             url: `${BIO_API_BASE_URL}/projects/${encodeURIComponent(slug)}/entitlement-summary`,
             json: true,
             timeout: 5000,
-            // Force IPv4: Node's default dual-stack resolution tries AAAA first
-            // for cluster-internal *.svc.cluster.local names and stalls ~5s
-            // before falling back to A, which would race the timeout and
-            // (fail-open) silently skip enforcement. family:4 => ~30ms.
-            family: 4
+            lookup: ipv4Lookup
         }, function (err, resp, body) {
             if (err || !resp || resp.statusCode !== 200 || !body) {
                 debug('entitlement lookup failed (fail-open) for %s: %s', slug, err || (resp && resp.statusCode));
