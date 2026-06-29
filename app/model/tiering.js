@@ -22,7 +22,12 @@ function fetchProjectEntitlement(slug) {
             method: 'GET',
             url: `${BIO_API_BASE_URL}/projects/${encodeURIComponent(slug)}/entitlement-summary`,
             json: true,
-            timeout: 5000
+            timeout: 5000,
+            // Force IPv4: Node's default dual-stack resolution tries AAAA first
+            // for cluster-internal *.svc.cluster.local names and stalls ~5s
+            // before falling back to A, which would race the timeout and
+            // (fail-open) silently skip enforcement. family:4 => ~30ms.
+            family: 4
         }, function (err, resp, body) {
             if (err || !resp || resp.statusCode !== 200 || !body) {
                 debug('entitlement lookup failed (fail-open) for %s: %s', slug, err || (resp && resp.statusCode));
