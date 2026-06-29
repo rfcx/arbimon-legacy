@@ -1215,6 +1215,9 @@ angular.module('a2.analysis.patternmatching', [
             if (self.data.playlist.count === 0) {
                 return notify.error('Note: The playlist should not be empty.');
             }
+            if (self.isRecordingLimitExceeded()) {
+                return notify.error(self.recordingLimitMessage());
+            }
             self.isSaving = true;
             return a2PatternMatching.create({
                 name: self.data.name,
@@ -1232,7 +1235,25 @@ angular.module('a2.analysis.patternmatching', [
         },
         isJobValid: function () {
             return self.data && self.data.name && self.data.name.length > 3 &&
-                self.data.playlist && self.data.template;
+                self.data.playlist && self.data.template &&
+                !self.isRecordingLimitExceeded();
+        },
+        // Tier reframe (2026-06-29): free projects cap each analysis job at
+        // tieringGuard.recordingJobLimit recordings (uncapped for premium). This
+        // is a per-job playlist-size constraint, not a usage meter.
+        isRecordingLimitExceeded: function () {
+            var limit = self.tieringGuard && self.tieringGuard.recordingJobLimit;
+            if (limit === null || limit === undefined) return false;
+            return self.data.playlist && Number(self.data.playlist.count) > Number(limit);
+        },
+        recordingLimitMessage: function () {
+            var limit = self.tieringGuard && self.tieringGuard.recordingJobLimit;
+            if (limit === null || limit === undefined) return '';
+            return 'This playlist has ' + Number(self.data.playlist.count).toLocaleString() +
+                ' recordings, but each analysis on a free project can process up to ' +
+                Number(limit).toLocaleString() + ' recordings. You can run unlimited ' +
+                'analyses on a free project \u2014 just select a smaller playlist (or split ' +
+                'this one). Upgrade to Pro for unlimited recordings per analysis.';
         },
         cancel: function (url) {
              $modalInstance.close({ cancel: true, url: url });
