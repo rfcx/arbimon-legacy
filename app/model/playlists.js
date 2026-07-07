@@ -285,40 +285,81 @@ var Playlists = {
      * @return {Promise} resolving to created playlists' insert_id
      */
     create: async function(data) {
-        const playlistId = (await dbpool.query(`INSERT INTO playlists(project_id, name, playlist_type_id, status) VALUES (?, ?, ?, ?)`,
-            [data.project_id, data.name, 1, status.WAITING])
-        ).insertId
-        if (data.recIdsIncluded || data.aedIdsIncluded) {
-            if (data.aedIdsIncluded) {
-                await this.addRecs(playlistId, data.params);
+        const connection = await dbpool.getConnection();
+        let playlistId;
+
+        try {
+            await dbpool.queryWithConn(connection, 'START TRANSACTION');
+            try {
+                playlistId = (await dbpool.queryWithConn(connection,
+                    `INSERT INTO playlists(project_id, name, playlist_type_id, status) VALUES (?, ?, ?, ?)`,
+                    [data.project_id, data.name, 1, status.WAITING]
+                )).insertId;
+            } catch (err) {
+                if (err.code !== 'ER_DUP_ENTRY') {
+                    throw err;
+                }
+
+                const duplicate = (await dbpool.queryWithConn(connection,
+                    'SELECT playlist_id, status FROM playlists WHERE project_id = ? AND name = ? LIMIT 1',
+                    [data.project_id, data.name]
+                ))[0];
+
+                if (!duplicate || duplicate.status === status.CREATED) {
+                    throw new APIError('Playlist name in use');
+                }
+
+                playlistId = duplicate.playlist_id;
+                await dbpool.queryWithConn(connection, 'DELETE FROM playlist_recordings WHERE playlist_id = ?', [playlistId]);
+                await dbpool.queryWithConn(connection,
+                    'UPDATE playlists SET playlist_type_id = ?, uri = NULL, metadata = NULL, total_recordings = ?, status = ? WHERE playlist_id = ?',
+                    [1, 0, status.WAITING, playlistId]
+                );
             }
-            else {
-                const aedData = await model.ClusteringJobs.findRois({ aed: data.params });
-                const recIds = aedData.map(aed => { return aed.recording_id });
-                await this.addRecs(playlistId, [...new Set(recIds)]);
-            }
-        } else {
-            data.params.project_id = data.project_id;
-            data.params.sortBy = 'r.site_id, r.datetime'
-            data.params.output = ['list', 'sql']
-            if (data.params.recIds) {
-                await this.addRecs(playlistId, data.params.recIds);
+
+            let totalInserted = 0;
+            if (data.recIdsIncluded || data.aedIdsIncluded) {
+                if (data.aedIdsIncluded) {
+                    totalInserted = await this.addRecs(playlistId, data.params, connection);
+                }
+                else {
+                    const aedData = await model.ClusteringJobs.findRois({ aed: data.params });
+                    const recIds = aedData.map(aed => { return aed.recording_id });
+                    totalInserted = await this.addRecs(playlistId, [...new Set(recIds)], connection);
+                }
             } else {
-                const sqlParts = await model.recordings.findProjectRecordings(data.params)
-                const testCreatingTime = moment().format('YYYY-MM-DD HH:mm:ss')
-                console.log('Playlist: start insert', testCreatingTime)
-                await dbpool.query(`INSERT INTO playlist_recordings(recording_id, playlist_id) SELECT /*+ MAX_EXECUTION_TIME(360000) */ DISTINCT r.recording_id, ${playlistId} ${sqlParts[1]} ${sqlParts[2]}`)
-                    .catch(async err => {
-                        console.err('Error inserting in a playlist', err)
-                        const q = 'UPDATE playlists SET status = ? WHERE playlist_id = ?'
-                        await dbpool.query(q, [status.FAILED , playlistId])
-                    })
-                const testInsertingTime = moment().format('YYYY-MM-DD HH:mm:ss')
-                console.log('Playlist: inserted', testInsertingTime, playlistId);
+                data.params.project_id = data.project_id;
+                data.params.sortBy = 'r.site_id, r.datetime';
+                data.params.output = ['list', 'sql'];
+                if (data.params.recIds) {
+                    totalInserted = await this.addRecs(playlistId, data.params.recIds, connection);
+                } else {
+                    const sqlParts = await model.recordings.findProjectRecordings(data.params);
+                    const testCreatingTime = moment().format('YYYY-MM-DD HH:mm:ss');
+                    console.log('Playlist: start insert', testCreatingTime);
+                    const result = await dbpool.queryWithConn(connection,
+                        `INSERT INTO playlist_recordings(recording_id, playlist_id) SELECT /*+ MAX_EXECUTION_TIME(360000) */ DISTINCT r.recording_id, ${playlistId} ${sqlParts[1]} ${sqlParts[2]}`
+                    );
+                    totalInserted = result.affectedRows || 0;
+                    const testInsertingTime = moment().format('YYYY-MM-DD HH:mm:ss');
+                    console.log('Playlist: inserted', testInsertingTime, playlistId, totalInserted);
+                }
             }
+
+            await dbpool.queryWithConn(connection,
+                'UPDATE playlists SET total_recordings = ?, status = ? WHERE playlist_id = ?',
+                [totalInserted, status.CREATED, playlistId]
+            );
+            await dbpool.queryWithConn(connection, 'COMMIT');
+            return playlistId;
+        } catch (err) {
+            await dbpool.queryWithConn(connection, 'ROLLBACK').catch(function(rollbackErr) {
+                console.error('Error rolling back playlist creation', rollbackErr);
+            });
+            throw err;
+        } finally {
+            connection.release();
         }
-        await this.refreshTotalRecs(playlistId)
-        return playlistId
     },
 
     /** Adds recordings to a given playlist.
@@ -327,9 +368,16 @@ var Playlists = {
      * @param {Array} recIds - array of recording ids to add to playlist.
      * @return {Promise} resolved after the recordings are added to the playlist.
      */
-    addRecs: async function(playlistId, recIds) {
+    addRecs: async function(playlistId, recIds, connection) {
         const chunkSize = 10000
         let splittedRecs = []
+        let totalInserted = 0
+        recIds = recIds.map(function(recId) {
+            return Number(recId)
+        })
+        if (recIds.some(function(recId) { return !Number.isInteger(recId) || recId <= 0 })) {
+            throw new APIError('Invalid recording id in playlist request')
+        }
         if (recIds.length < chunkSize) {
             splittedRecs = [recIds]
         } else {
@@ -338,8 +386,15 @@ var Playlists = {
             }
         }
         for (let arr of splittedRecs) {
-            await dbpool.query("INSERT INTO playlist_recordings(playlist_id, recording_id) VALUES" + arr.map(recId => `(${playlistId}, ${recId})`).join(", "))
+            if (!arr.length) {
+                continue
+            }
+            const result = connection
+                ? await dbpool.queryWithConn(connection, "INSERT INTO playlist_recordings(playlist_id, recording_id) VALUES" + arr.map(recId => `(${playlistId}, ${recId})`).join(", "))
+                : await dbpool.query("INSERT INTO playlist_recordings(playlist_id, recording_id) VALUES" + arr.map(recId => `(${playlistId}, ${recId})`).join(", "))
+            totalInserted += result.affectedRows || 0
         }
+        return totalInserted
     },
 
     /** Combines two playlists (from the same project) into one.
