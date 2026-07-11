@@ -1,6 +1,7 @@
 var mysql = require('mysql');
 var config = require('../config');
 var sqlutil = require('./sqlutil');
+var tap = require('./dbpool-tap'); // mysql2pg parity tap - OFF unless DBPOOL_TAP=1
 var q = require('q');
 var showQueriesInConsole = true;
 
@@ -57,11 +58,15 @@ var dbpool = {
                 cb = values;
                 values = undefined;
             }
+            var tapRec = tap.enabled ? tap.begin(sql, values) : null;
             if(cb){
                 query_fn.call(connection, sql, values, function(err, rows, fields) {
+                    if (tapRec) { tap.finish(tapRec, err, rows); }
                     cb(err, rows, fields);
                 });
             } else {
+                // streamed / evented use: capture sql+params only (kept cheap)
+                if (tapRec) { tap.finishStream(tapRec); }
                 return query_fn.call(connection, sql, values);
             }
         };
