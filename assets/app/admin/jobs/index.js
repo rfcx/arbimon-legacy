@@ -14,12 +14,10 @@ angular.module('a2.admin.jobs', [
 })
 .controller('AdminJobsCtrl', function($scope, $http, $interval, Project) {
     
-    var getJobQueueInfo = function(argument) {
-        $http.get('/admin/job-queue')
-            .success(function(data) {
-                $scope.jobsStatus = data;
-            });
-    };
+    // The legacy job-queue status endpoint was retired 2026-07-12 (the AWS
+    // SQS-style queue daemon no longer exists; jobs run via the in-cluster
+    // jobqueue-dispatcher). The Job List below is the live source. Nothing
+    // to poll here anymore — see rfcx-local OPEN-ITEMS #52.
     
     $scope.findJobs = function() {
         var query = {};
@@ -109,8 +107,6 @@ angular.module('a2.admin.jobs', [
     ];
     
     $scope.initParams();
-    getJobQueueInfo();
-    
     
     $http.get('/legacy-api/jobs/types')
         .success(function(jobTypes) {

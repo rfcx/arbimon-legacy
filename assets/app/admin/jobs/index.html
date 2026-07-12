@@ -1,28 +1,23 @@
+<!-- Job queue status panel RETIRED 2026-07-12: the AWS SQS-style queue
+     daemon it described no longer exists. Analysis jobs now run via the
+     in-cluster jobqueue-dispatcher (polls jobs where state='waiting' and
+     launches per-type k8s Jobs); there is no persistent queue object with
+     Queue ID / Iteration / Waiting / Max concurrent to display. Live job
+     data is in the Job List below. See rfcx-local OPEN-ITEMS #52. -->
 <div class="row" style="margin-top:10px;">
     <div class="col-sm-12">
         <div class="panel panel-default">
             <div class="panel-heading">
-                Job queue status
+                Job pipeline
             </div>
             <div class="panel-body">
-                <p ng-show="jobsStatus.error"> {{ jobsStatus.error }}</p>
+                <p class="text-muted" style="margin:0;">
+                    Analysis jobs run via the in-cluster job dispatcher.
+                    The legacy job-queue daemon was retired in the
+                    AWS&rarr;cluster migration, so live queue counters are no
+                    longer shown here. See the Job List below for current jobs.
+                </p>
             </div>
-            <table class="table" ng-show="!jobsStatus.error">
-                <tbody>
-                    <tr>
-                        <td> Queue ID: {{ jobsStatus.queue }}</td>
-                        <td> Iteration: {{ jobsStatus.iteration }}</td>
-                        <td> Last updated: {{ jobsStatus.last_updated }}</td>
-                        <td> State: {{ jobsStatus.state }}</td>
-                    </tr>
-                    <tr>
-                        <td> Options: {{ jobsStatus.options }}</td>
-                        <td> Waiting: {{ jobsStatus.waiting }}</td>
-                        <td> Last enqueued: {{ jobsStatus.last_enqueued }}</td>
-                        <td> Max concurrent: {{ jobsStatus.max_concurrent }}</td>
-                    </tr>
-                </tbody>
-            </table>
         </div>
     </div>
 </div>
