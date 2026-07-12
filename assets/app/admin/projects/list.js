@@ -89,7 +89,11 @@ angular.module('a2.admin.projects.list', [
 .service('AdminProjectsListService', function($http){
     return {
         getList : function() {
-            return $http.get('/admin/projects').then(function(response){
+            // Trailing slash is REQUIRED (2026-07-12): the edge router sends the
+            // exact path /admin/projects (browser navigation) to the modern Vue
+            // admin page; this JSON endpoint is reached via /admin/projects/
+            // (express matches both). See rfcx-local public-router arbimon.org.
+            return $http.get('/admin/projects/').then(function(response){
                 return response.data;
             });
         },
