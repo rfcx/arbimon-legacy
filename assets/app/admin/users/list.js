@@ -25,7 +25,9 @@ angular.module('a2.admin.users.list', [
 .service('AdminUsersListService', function($http){
     return {
         getList : function() {
-            return $http.get('/admin/users').then(function(response){
+            // Trailing slash REQUIRED (2026-07-12): exact /admin/users now routes to
+            // the modern Vue admin page at the edge; JSON API uses /admin/users/.
+            return $http.get('/admin/users/').then(function(response){
                 return response.data;
             });
         },
