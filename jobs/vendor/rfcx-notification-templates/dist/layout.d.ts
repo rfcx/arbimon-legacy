@@ -13,6 +13,8 @@ export interface LayoutOptions {
     brand?: Brand;
     /** Render the shared RFCx footer (501c3 / social / address). Default true. */
     footer?: boolean;
+    /** Render the shared RFCx header banner image. Default true. */
+    header?: boolean;
 }
 export declare function renderLayout(options: LayoutOptions): string;
 export declare const DEFAULT_FROM: Record<Brand, {

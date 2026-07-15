@@ -25,8 +25,22 @@ function socialCell(href, img) {
                   </td>`;
 }
 function renderLayout(options) {
-    const { bodyHtml, footer = true } = options;
+    const { bodyHtml, footer = true, header = true } = options;
     const social = SOCIAL_LINKS.map(({ href, img }) => socialCell(href, img)).join('\n                  ');
+    const headerHtml = header
+        ? `      <table cellpadding="0" cellspacing="0" width="100%" align="center" border="0" style='width: 600px; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; margin: 0;
+          padding: 0; font-family: "Lato", sans-serif; border-collapse: collapse !important;'>
+        <thead>
+          <tr>
+            <td style="padding: 0px;" align="center" valign="top">
+                <a style="display: block;" href="https://rfcx.org/">
+                  <img src="${HEADER_IMG}" width="600" alt="RFCx" border="0" style="-ms-interpolation-mode: bicubic; border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none;"/>
+                </a>
+            </td>
+          </tr>
+        </thead>
+      </table>`
+        : '';
     const footerHtml = footer
         ? `      <table cellpadding="0" cellspacing="0" width="100%" align="center" border="0" bgcolor="#ffffff" style='width: 600px; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; margin: 0;
         padding: 0; font-family: "Lato", sans-serif; border-collapse: collapse !important;'>
@@ -65,18 +79,7 @@ function renderLayout(options) {
   </head>
   <body>
     <center>
-      <table cellpadding="0" cellspacing="0" width="100%" align="center" border="0" style='width: 600px; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; margin: 0;
-          padding: 0; font-family: "Lato", sans-serif; border-collapse: collapse !important;'>
-        <thead>
-          <tr>
-            <td style="padding: 0px;" align="center" valign="top">
-                <a style="display: block;" href="https://rfcx.org/">
-                  <img src="${HEADER_IMG}" width="600" alt="RFCx" border="0" style="-ms-interpolation-mode: bicubic; border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none;"/>
-                </a>
-            </td>
-          </tr>
-        </thead>
-      </table>
+${headerHtml}
       <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" id="bodyTable" bgcolor="#ffffff"
         style='width: 600px; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt;
                 margin: 0; padding: 0; font-family: "Lato", sans-serif; border-collapse: collapse !important;'>

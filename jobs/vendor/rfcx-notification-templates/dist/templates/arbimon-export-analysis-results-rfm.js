@@ -95,6 +95,6 @@ ${plainLink}
 ${statsHtml}
 ${expirySupport}
 ${footer}`;
-        return (0, layout_js_1.renderLayout)({ bodyHtml: body, brand: 'arbimon', footer: false });
+        return (0, layout_js_1.renderLayout)({ bodyHtml: body, brand: 'arbimon', footer: false, header: false });
     }
 };
