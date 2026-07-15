@@ -54,6 +54,11 @@ RUN apt update \
         libflac-dev \
         autoconf \
         automake
+# The PM / soundscape / template export paths write intermediate CSVs to
+# jobs/arbimon-recording-export-job/tmpfilecache/ but (unlike the index.js
+# paths) do not create it, so the job crashed with ENOENT once it actually ran.
+# Pre-create it in the image.
+RUN mkdir -p /app/jobs/arbimon-recording-export-job/tmpfilecache
 CMD ["node", "--max-old-space-size=8192", "jobs/arbimon-recording-export-job/index.js"]
 
 # ---
