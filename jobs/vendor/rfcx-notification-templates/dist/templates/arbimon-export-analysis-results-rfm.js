@@ -61,8 +61,7 @@ exports.arbimonExportAnalysisResultsRfm = {
     text: (data) => {
         const stats = statLines(data);
         const statsBlock = stats.length ? `\n${stats.join('\n')}\n` : '';
-        return (`Hello,\n\n` +
-            `Thanks so much for using Arbimon! Your export report for the project "${data.projectName}" is ready for download.\n\n` +
+        return (`Thanks so much for using Arbimon! Your export report for the project "${data.projectName}" is ready for download.\n\n` +
             `Download your export:\n${data.url}\n` +
             `${statsBlock}\n` +
             `${expiryClause(data)} If you have any questions about Arbimon, check out our support docs: https://help.arbimon.org/\n\n` +
@@ -73,8 +72,7 @@ exports.arbimonExportAnalysisResultsRfm = {
         const projectName = (0, escape_js_1.escapeHtml)(data.projectName);
         const url = (0, escape_js_1.safeUrl)(data.url);
         const mode = (_a = data.mode) !== null && _a !== void 0 ? _a : 'button';
-        const header = `              <p style="color:black;margin-top:0">Hello,</p>
-              <p style="color:black;">Thanks so much for using Arbimon! Your export report for the project "${projectName}" is ready for download.</p>`;
+        const header = `              <p style="color:black;margin-top:0">Thanks so much for using Arbimon! Your export report for the project "${projectName}" is ready for download.</p>`;
         const download = mode === 'button'
             ? `              <button style="background:#ADFF2C;border:1px solid #ADFF2C;padding:6px 14px;;border-radius:9999px;cursor:pointer;margin: 10px 0">
                   <a style="text-decoration:none;color:#14130D;white-space:nowrap;text-align:center;vertical-align:middle;align-items:center;display:inline-flex;display: -webkit-inline-flex;" download target="_self" href="${url}">
@@ -97,6 +95,6 @@ ${plainLink}
 ${statsHtml}
 ${expirySupport}
 ${footer}`;
-        return (0, layout_js_1.renderLayout)({ bodyHtml: body, brand: 'arbimon' });
+        return (0, layout_js_1.renderLayout)({ bodyHtml: body, brand: 'arbimon', footer: false });
     }
 };

@@ -25,8 +25,39 @@ function socialCell(href, img) {
                   </td>`;
 }
 function renderLayout(options) {
-    const { bodyHtml } = options;
+    const { bodyHtml, footer = true } = options;
     const social = SOCIAL_LINKS.map(({ href, img }) => socialCell(href, img)).join('\n                  ');
+    const footerHtml = footer
+        ? `      <table cellpadding="0" cellspacing="0" width="100%" align="center" border="0" bgcolor="#ffffff" style='width: 600px; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; margin: 0;
+        padding: 0; font-family: "Lato", sans-serif; border-collapse: collapse !important;'>
+        <tfoot>
+          <tr>
+            <td valign="top" class="center" style="padding: 10px 0 10px;">
+              <hr style="border: 1px solid #828282; border-bottom: 0; margin: 0px;" />
+            </td>
+          </tr>
+          <tr>
+            <td valign="top" class="center" style='padding: 10px 10px; text-align: center; font-family: "Lato", sans-serif; font-size: 12px; color: #828282'>
+              Rainforest Connection is a 501<sub>(c)(3)</sub>
+            </td>
+          </tr>
+          <tr>
+            <td valign="top" class="center" style='padding: 15px 0;'>
+              <table cellpadding="0" cellspacing="0" width="200px" align="center" border="0" bgcolor="#ffffff">
+                <tr>
+                  ${social}
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td valign="top" class="center" style='padding: 10px 10px 20px; text-align: center; font-family: "Lato", sans-serif; font-size: 12px; color: #828282'>
+              77 Van Ness Ave, Suite 101-1717, San Francisco, CA, 94102, USA, +1 (415) 335-9205
+            </td>
+          </tr>
+        </tfoot>
+      </table>`
+        : '';
     return `<html>
   <head>
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&display=swap" rel="stylesheet">
@@ -57,35 +88,7 @@ ${bodyHtml}
           </td>
         </tr>
       </table>
-      <table cellpadding="0" cellspacing="0" width="100%" align="center" border="0" bgcolor="#ffffff" style='width: 600px; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; margin: 0;
-        padding: 0; font-family: "Lato", sans-serif; border-collapse: collapse !important;'>
-        <tfoot>
-          <tr>
-            <td valign="top" class="center" style="padding: 10px 0 10px;">
-              <hr style="border: 1px solid #828282; border-bottom: 0; margin: 0px;" />
-            </td>
-          </tr>
-          <tr>
-            <td valign="top" class="center" style='padding: 10px 10px; text-align: center; font-family: "Lato", sans-serif; font-size: 12px; color: #828282'>
-              Rainforest Connection is a 501<sub>(c)(3)</sub>
-            </td>
-          </tr>
-          <tr>
-            <td valign="top" class="center" style='padding: 15px 0;'>
-              <table cellpadding="0" cellspacing="0" width="200px" align="center" border="0" bgcolor="#ffffff">
-                <tr>
-                  ${social}
-                </tr>
-              </table>
-            </td>
-          </tr>
-          <tr>
-            <td valign="top" class="center" style='padding: 10px 10px 20px; text-align: center; font-family: "Lato", sans-serif; font-size: 12px; color: #828282'>
-              77 Van Ness Ave, Suite 101-1717, San Francisco, CA, 94102, USA, +1 (415) 335-9205
-            </td>
-          </tr>
-        </tfoot>
-      </table>
+${footerHtml}
     </center>
   </body>
 </html>`;
