@@ -84,8 +84,8 @@ ${headerHtml}
         style='width: 600px; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt;
                 margin: 0; padding: 0; font-family: "Lato", sans-serif; border-collapse: collapse !important;'>
         <tr>
-          <td align="center" valign="top" id="bodyCell">
-            <div class="main">
+          <td align="left" valign="top" id="bodyCell">
+            <div class="main" style="text-align: left;">
 ${bodyHtml}
             </div>
           </td>
