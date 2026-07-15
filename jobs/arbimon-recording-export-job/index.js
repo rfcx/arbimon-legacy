@@ -4,6 +4,7 @@ const fs = require('fs')
 const stream = require('stream');
 const csv_stringify = require('csv-stringify');
 const mandrill = require('mandrill-api/mandrill')
+const axios = require('axios')
 const moment = require('moment')
 const { exportOccupancyModels, getExportRecordingsRow, getCountSitesRecPerDates, updateExportRecordings, getCountConnections } = require('../services/recordings')
 const { errorMessage } = require('../services/stats')
@@ -509,6 +510,23 @@ async function sendEmail (subject, title, rowData, content, isSignedUrl) {
         }]
         message.html = textHeader + textSupport + textFooter
     }
+    return sendMessage(message, title)
+}
+
+// Transport: prefer the RFCx notify gateway (Cloudflare Email Sending) and fall
+// back to Mandrill only if the gateway is unconfigured or errors AND a Mandrill
+// key is present. Mirrors the device-api migration pattern. The `message` is in
+// Mandrill-lite shape (from_email/to[{email}]/subject/html/attachments[{type,
+// name,content}]) which the gateway normalizes, so no payload rewrite is needed.
+async function sendViaNotifyGateway (message) {
+    await axios.post(process.env.EMAIL_SEND_URL, message, {
+        headers: { Authorization: `Bearer ${process.env.EMAIL_SEND_TOKEN}` },
+        timeout: 15000
+    })
+    return { success: true }
+}
+
+function sendViaMandrill (message, title) {
     return new Promise(function (resolve, reject) {
       const mandrillClient = new mandrill.Mandrill(process.env.MANDRILL_KEY)
 
@@ -526,6 +544,23 @@ async function sendEmail (subject, title, rowData, content, isSignedUrl) {
           reject(e)
         })
     })
+}
+
+async function sendMessage (message, title) {
+    const hasGateway = !!(process.env.EMAIL_SEND_URL && process.env.EMAIL_SEND_TOKEN)
+    if (hasGateway) {
+        try {
+            const result = await sendViaNotifyGateway(message)
+            console.log('email status (notify gateway) sent, title', title)
+            return result
+        } catch (e) {
+            const detail = e.response ? `${e.response.status} ${JSON.stringify(e.response.data)}` : e.message
+            console.error('Error send email via notify gateway.', detail)
+            if (!process.env.MANDRILL_KEY) throw e
+            console.warn('Falling back to Mandrill.')
+        }
+    }
+    return sendViaMandrill(message, title)
 }
 
 main()
