@@ -1,6 +1,7 @@
 const { Upload } = require("@aws-sdk/lib-storage");
 const { S3Client } = require("@aws-sdk/client-s3");
 const AWS = require('aws-sdk');
+const axios = require('axios');
 const { createReadStream } = require("fs");
 const fs = require('fs')
 
@@ -255,6 +256,41 @@ async function uploadAsStream ({ filePath, Bucket, Key, ContentType }) {
   return export_s3.upload({ Bucket, Key, ContentType, Body }).promise()
 }
 
+// Mint an arb.mn/dl short link for a stored object (biodiversity-api streams it
+// from private MinIO on access). Preferred over a raw S3 presigned URL for
+// user-facing download links, because our s3-proxy re-signs per layer and does
+// NOT honour a caller's presigned signature (so a presigned URL would not
+// resolve through the public chain). Falls back to a presigned URL if the mint
+// endpoint is not configured (SHORT_LINK_MINT_URL + SHORT_LINK_MINT_TOKEN) or
+// errors — degrade-not-break.
+async function getDownloadUrl ({ Bucket, Key, filename, contentType, expiresSeconds = 604800 }) {
+  const mintUrl = process.env.SHORT_LINK_MINT_URL
+  const mintToken = process.env.SHORT_LINK_MINT_TOKEN
+  if (mintUrl && mintToken) {
+    try {
+      const res = await axios.post(mintUrl, {
+        namespace: 'dl',
+        bucket: Bucket,
+        key: Key,
+        filename,
+        contentType,
+        expiresInSeconds: expiresSeconds
+      }, {
+        headers: { 'X-Mint-Token': mintToken },
+        timeout: 15000
+      })
+      if (res.data && res.data.url) {
+        return res.data.url
+      }
+      console.error('Mint returned no url; falling back to presigned URL', res.data)
+    } catch (e) {
+      const detail = e.response ? `${e.response.status} ${JSON.stringify(e.response.data)}` : e.message
+      console.error('Error minting arb.mn/dl link; falling back to presigned URL.', detail)
+    }
+  }
+  return getSignedUrl({ Bucket, Key, Expires: expiresSeconds })
+}
+
 async function getObject ({ Bucket, Key, isLegacy = true }) {
   return new Promise((resolve, reject) => {
     (isLegacy === true ? legacy_s3 : rfcx_s3)
@@ -293,6 +329,7 @@ module.exports = {
   saveLatestData,
   getObject,
   getSignedUrl,
+  getDownloadUrl,
   uploadFileToS3,
   uploadAsStream
 }

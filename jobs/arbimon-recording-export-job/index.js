@@ -12,7 +12,7 @@ const recordings = require('../../app/model/recordings')
 const clusterings = require('../../app/model/clustering-jobs')
 const projects = require('../../app/model/projects')
 const config_hosts = require('../../config/hosts');
-const { saveLatestData, combineFilename, uploadAsStream, getSignedUrl, uploadFileToS3 } = require('../services/storage')
+const { saveLatestData, combineFilename, uploadAsStream, getSignedUrl, getDownloadUrl, uploadFileToS3 } = require('../services/storage')
 const recordingsExport = require('./recordings')
 const patternMatching = require('./pattern-matching')
 const soundscape = require('./soundscape')
@@ -131,7 +131,7 @@ async function main () {
                 const bucketFormatted = S3_EXPORT_BUCKET_ARBIMON.split('/')[0]
                 const s3filePath = await uploadFileToS3(bucketFormatted, zipPath, rowData.project_id, currentTime, reportName, '.zip')
                 console.log('--s3filePath', s3filePath, 'reportName', reportName, 'fileName', fileName)
-                const url = await getSignedUrl({ Bucket: bucketFormatted, Key: s3filePath })
+                const url = await getDownloadUrl({ Bucket: bucketFormatted, Key: s3filePath, filename: `${reportName}.zip`, contentType: 'application/zip' })
                 console.log('--signed url', url)
                 await sendEmail('Arbimon export', 'Arbimon export', rowData, url, true)
                 await updateExportRecordings(rowData, { processed_at: currentTime })
@@ -203,7 +203,8 @@ async function main () {
 async function saveFile (filePath, currentTime, projectId, reportName) {
     const s3FileKey = combineFilename(currentTime, projectId, reportName ? reportName : 'arbimon-export', '.csv')
     await uploadAsStream({ filePath, Bucket: S3_EXPORT_BUCKET_ARBIMON, Key: s3FileKey, ContentType: 'text/csv' })
-    return await getSignedUrl({ Bucket: S3_EXPORT_BUCKET_ARBIMON, Key: s3FileKey })
+    const downloadName = `${reportName ? reportName : 'arbimon-export'}.csv`
+    return await getDownloadUrl({ Bucket: S3_EXPORT_BUCKET_ARBIMON, Key: s3FileKey, filename: downloadName, contentType: 'text/csv' })
 }
 
 // Process Clustering report and send the email
@@ -237,7 +238,7 @@ async function processClusteringStream (cluster, results, rowData, currentTime, 
                 const isBigContent = contentSize && contentSize > 10240 // 10MB
                 if (isBigContent) {
                     const filePath = await saveLatestData(S3_EXPORT_BUCKET_ARBIMON, data, rowData.project_id, currentTime, 'clustering-rois-export', '.csv', 'text/csv')
-                    const url = await getSignedUrl({ Bucket: S3_EXPORT_BUCKET_ARBIMON, Key: filePath })
+                    const url = await getDownloadUrl({ Bucket: S3_EXPORT_BUCKET_ARBIMON, Key: filePath, filename: 'clustering-rois-export.csv', contentType: 'text/csv' })
                     await sendEmail('Arbimon Export clustering report', null, rowData, url, true)
                 }
                 try {
@@ -287,7 +288,7 @@ async function sendZipFolderToTheUser(rowData, currentTime, jobName, message, re
         try {
             console.log(S3_EXPORT_BUCKET_ARBIMON, buffer, buffer.length, rowData.project_id, currentTime, reportName, '.zip', 'application/zip')
             const filePath = await saveLatestData(S3_EXPORT_BUCKET_ARBIMON, buffer, rowData.project_id, currentTime, reportName, '.zip', 'application/zip')
-            const url = await getSignedUrl({ Bucket: S3_EXPORT_BUCKET_ARBIMON, Key: filePath })
+            const url = await getDownloadUrl({ Bucket: S3_EXPORT_BUCKET_ARBIMON, Key: filePath, filename: `${reportName}.zip`, contentType: 'application/zip' })
             console.log('--signed url', url)
             await sendEmail('Arbimon export', 'Arbimon export', rowData, url, true)
             await updateExportRecordings(rowData, { processed_at: currentTime })
