@@ -3,6 +3,9 @@
 FROM node:18.14.0 as build
 WORKDIR /app
 COPY ["jobs/package.json", "jobs/package-lock.json*", "/app/"]
+# The vendored @rfcx/notification-templates (file: dep) must exist before
+# `npm install` can resolve it.
+COPY jobs/vendor /app/vendor
 RUN npm install
 COPY jobs /app/jobs
 

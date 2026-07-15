@@ -6,6 +6,7 @@ const csv_stringify = require('csv-stringify');
 const mandrill = require('mandrill-api/mandrill')
 const axios = require('axios')
 const moment = require('moment')
+const { renderEmail } = require('@rfcx/notification-templates')
 const { exportOccupancyModels, getExportRecordingsRow, getCountSitesRecPerDates, updateExportRecordings, getCountConnections } = require('../services/recordings')
 const { errorMessage } = require('../services/stats')
 const recordings = require('../../app/model/recordings')
@@ -111,7 +112,7 @@ async function main () {
                 console.log('Arbimon Export job: uploading file to S3')
                 const { url, stats } = await saveFile(filePath, currentTime, rowData.project_id, fileName)
                 console.log('Arbimon Export job: file is accessible by url', url, 'stats', stats)
-                await sendEmail('Arbimon Export recording report', `${fileName}.csv`, rowData, url, true, stats)
+                await sendRfmResultsEmail(rowData, url, stats)
                 await updateExportRecordings(rowData, { processed_at: currentTime })
                 fs.unlink(filePath, () => {})
                 console.log(`Arbimon Export job finished: export recordings report for ${message}`)
@@ -486,6 +487,34 @@ async function processGroupedDetectionsStream (results, rowData, projection_para
             })
         })
     })
+}
+
+// Send the RFM (Random Forest Model) analysis-results export notification using
+// the shared @rfcx/notification-templates template (single source of truth for
+// the copy/branding), then dispatch via the notify gateway (Mandrill fallback).
+async function sendRfmResultsEmail (rowData, url, stats) {
+    stats = stats || {}
+    const EXPIRY_DAYS = 7
+    const expiresAt = moment().add(EXPIRY_DAYS, 'days').format('MMMM D, YYYY [at] HH:mm')
+    const isGmail = (rowData.user_email || '').includes('gmail.com')
+    const rendered = renderEmail('arbimon.exportAnalysisResultsRFM', {
+        projectName: rowData.name,
+        url,
+        mode: isGmail ? 'button' : 'link',
+        filename: stats.filename,
+        rows: stats.rows,
+        bytes: stats.bytes,
+        expiryDays: EXPIRY_DAYS,
+        expiresAt
+    })
+    const message = {
+        from_email: 'no-reply@arbimon.org',
+        to: [{ email: rowData.user_email }],
+        subject: rendered.subject,
+        html: rendered.html,
+        text: rendered.text
+    }
+    return sendMessage(message, rendered.subject)
 }
 
 // Send report to the user
