@@ -3,13 +3,14 @@ const path = require('path')
 const fs = require('fs')
 const stream = require('stream');
 const csv_stringify = require('csv-stringify');
-const { getCsvData, getName } = require('../services/rfm-classify');
+const { getCsvData, getName, getJobMeta } = require('../services/rfm-classify');
 
 const exportReportType = 'RFM Classification';
 const exportReportJob = `Arbimon Export ${exportReportType} job`
 
 async function collectData (projection_parameters, cb) {
   const [res] = await getName(projection_parameters.rfmClassify)
+  const jobMeta = await getJobMeta(projection_parameters.rfmClassify).catch(() => null)
   const filePath = path.join(__dirname, `rfm_${res.name}.csv`)
   const targetFile = fs.createWriteStream(filePath, { flags: 'a' })
   await exportRFMClassify(projection_parameters.rfmClassify, targetFile, async (err, data) => {
@@ -20,7 +21,7 @@ async function collectData (projection_parameters, cb) {
     }
     console.log(`${exportReportJob}: finished collecting chunks`)
     targetFile.end()
-    cb(null, path.resolve(filePath), `rfm_${res.name}`)
+    cb(null, path.resolve(filePath), `rfm_${res.name}`, jobMeta)
   }).catch((e) => {
     console.err('Error export RFM Classification', e)
     cb(e)

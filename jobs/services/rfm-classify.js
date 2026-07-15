@@ -69,7 +69,20 @@ async function getName(cid) {
     return rows
 }
 
+// Job metadata for the notification email: numeric id, human-readable (raw) job
+// name, and the playlist the classification job ran against (if any).
+async function getJobMeta(cid) {
+    const connection = await mysql.getConnection()
+    const sql = `SELECT c.job_id AS jobId, c.name AS jobName, pl.name AS playlistName
+            FROM job_params_classification c
+            LEFT JOIN playlists pl ON pl.playlist_id = c.playlist_id
+            WHERE c.job_id = ${cid}`;
+    const [rows, fields] = await connection.execute(sql)
+    return rows && rows.length ? rows[0] : null
+}
+
 module.exports = {
     getCsvData,
-    getName
+    getName,
+    getJobMeta
 }
