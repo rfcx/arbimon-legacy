@@ -103,7 +103,7 @@ async function main () {
         return new Promise((resolve, reject) => {
             const exportReportType = 'RFM Classification';
             console.log(`Arbimon Export ${exportReportType} job`)
-            rfmClassification.collectData(projection_parameters, async (err, filePath, fileName) => {
+            rfmClassification.collectData(projection_parameters, async (err, filePath, fileName, jobMeta) => {
                 if (err) {
                     console.error('Arbimon Export job error', err)
                     fs.unlink(filePath, () => {})
@@ -111,8 +111,8 @@ async function main () {
                 }
                 console.log('Arbimon Export job: uploading file to S3')
                 const { url, stats } = await saveFile(filePath, currentTime, rowData.project_id, fileName)
-                console.log('Arbimon Export job: file is accessible by url', url, 'stats', stats)
-                await sendRfmResultsEmail(rowData, url, stats)
+                console.log('Arbimon Export job: file is accessible by url', url, 'stats', stats, 'jobMeta', jobMeta)
+                await sendRfmResultsEmail(rowData, url, stats, jobMeta)
                 await updateExportRecordings(rowData, { processed_at: currentTime })
                 fs.unlink(filePath, () => {})
                 console.log(`Arbimon Export job finished: export recordings report for ${message}`)
@@ -492,15 +492,20 @@ async function processGroupedDetectionsStream (results, rowData, projection_para
 // Send the RFM (Random Forest Model) analysis-results export notification using
 // the shared @rfcx/notification-templates template (single source of truth for
 // the copy/branding), then dispatch via the notify gateway (Mandrill fallback).
-async function sendRfmResultsEmail (rowData, url, stats) {
+async function sendRfmResultsEmail (rowData, url, stats, jobMeta) {
     stats = stats || {}
+    jobMeta = jobMeta || {}
     const EXPIRY_DAYS = 7
-    const expiresAt = moment().add(EXPIRY_DAYS, 'days').format('MMMM D, YYYY [at] HH:mm')
+    // Expiry timestamp in UTC.
+    const expiresAt = moment.utc().add(EXPIRY_DAYS, 'days').format('MMMM D, YYYY [at] HH:mm [UTC]')
     const isGmail = (rowData.user_email || '').includes('gmail.com')
     const rendered = renderEmail('arbimon.exportAnalysisResultsRFM', {
         projectName: rowData.name,
         url,
         mode: isGmail ? 'button' : 'link',
+        jobId: jobMeta.jobId != null ? Number(jobMeta.jobId) : undefined,
+        jobName: jobMeta.jobName || undefined,
+        playlistName: jobMeta.playlistName || undefined,
         filename: stats.filename,
         rows: stats.rows,
         bytes: stats.bytes,

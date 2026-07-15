@@ -14,6 +14,12 @@ export interface ArbimonExportAnalysisResultsRfmData {
     url: string;
     /** How to present the download (see ArbimonDownloadMode). Default 'button'. */
     mode?: ArbimonDownloadMode;
+    /** Numeric analysis job id. */
+    jobId?: number;
+    /** Human-readable analysis job name. */
+    jobName?: string;
+    /** Playlist name the job ran against (if available). */
+    playlistName?: string;
     /** Export filename, e.g. "rfm_phlebodes_rfm_mon_08.csv". */
     filename?: string;
     /** Number of data rows in the export (thousands-separated in the output). */
@@ -24,8 +30,8 @@ export interface ArbimonExportAnalysisResultsRfmData {
     expiryDays?: number;
     /**
      * Pre-formatted concrete expiry timestamp for the parenthetical, e.g.
-     * "July 22, 2026 at 12:16". The caller formats it (timezone-aware); the
-     * template stays IO/clock-free.
+     * "July 22, 2026 at 12:16 UTC". The caller formats it (UTC); the template
+     * stays IO/clock-free.
      */
     expiresAt?: string;
 }

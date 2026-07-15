@@ -21,6 +21,14 @@ function formatBytes(bytes) {
 }
 function statLines(data) {
     const lines = [];
+    // Job metadata first: Job ID / Job name / Playlist.
+    if (data.jobId != null && !isNaN(data.jobId))
+        lines.push(`Job ID: ${data.jobId}`);
+    if (data.jobName != null && data.jobName !== '')
+        lines.push(`Job name: ${data.jobName}`);
+    if (data.playlistName != null && data.playlistName !== '')
+        lines.push(`Playlist: ${data.playlistName}`);
+    // Then file metadata.
     if (data.filename != null && data.filename !== '')
         lines.push(`Filename: ${data.filename}`);
     if (data.rows != null && !isNaN(data.rows))
