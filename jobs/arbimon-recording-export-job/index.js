@@ -531,12 +531,17 @@ async function sendEmail (subject, title, rowData, content, isSignedUrl, stats) 
     const statsText = statItems.length ? `\n${statItems.join('\n')}\n` : ''
 
     const isGmail = rowData.user_email.includes('gmail.com');
+    // Subject: no leading "Arbimon"; include the project and (when known) the
+    // filename so a user with multiple exports can tell them apart.
+    const emailSubject = stats.filename
+        ? `Export ready — ${rowData.name} — ${stats.filename}`
+        : `Export ready — ${rowData.name}`
     let message = {
         from_email: 'no-reply@arbimon.org',
         to: [{
             email: rowData.user_email
         }],
-        subject: 'Arbimon export'
+        subject: emailSubject
     }
     if (isSignedUrl) {
         const button = `<button style="background:#ADFF2C;border:1px solid #ADFF2C;padding:6px 14px;;border-radius:9999px;cursor:pointer;margin: 10px 0">
