@@ -481,6 +481,10 @@ async function sendEmail (subject, title, rowData, content, isSignedUrl) {
     const textFooter = `<p style="color:black;">
         <span> - The Arbimon Team </span>
       </p>`;
+    // Plain-text copyable link (shown in addition to the button/link, so the URL
+    // is usable even when a mail client strips buttons or blocks the link).
+    const plainLink = (url) => `<p style="color:black;">Or copy and paste this link into your browser:<br>
+        <a href="${url}" style="color:#1a73e8; word-break:break-all;">${url}</a></p>`
 
     const isGmail = rowData.user_email.includes('gmail.com');
     let message = {
@@ -498,11 +502,15 @@ async function sendEmail (subject, title, rowData, content, isSignedUrl) {
                     Download
                     <img style="width: 14px; height: 14px; margin-left:8px" src="https://static.rfcx.org/arbimon/download-icon.png">
                 </a>
-            </button>` + textFooter
+            </button>` + plainLink(content) + textFooter
         }
         else message.html = textHeader + textExpires + textSupport
             + `<img style="width: 14px; height: 14px; margin-left:8px" src="https://static.rfcx.org/arbimon/download-icon.png"><a style="margin-left: 1px" href="${content}">Download export</a>`
+            + plainLink(content)
             + textFooter;
+        // Plain-text alternative part (copyable link; better deliverability +
+        // works in text-only clients).
+        message.text = `Hello,\n\nThanks so much for using Arbimon! Your export report for the project "${rowData.name}" has been completed. Please note that this link will expire in 7 days.\n\nDownload your export:\n${content}\n\nIf you have any questions about Arbimon, check out our support docs: https://help.arbimon.org/\n\n- The Arbimon Team`
     } else {
         message.attachments = [{
             type: 'text/csv',
