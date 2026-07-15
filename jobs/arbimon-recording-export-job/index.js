@@ -508,7 +508,7 @@ async function sendEmail (subject, title, rowData, content, isSignedUrl, stats) 
     const expiryStr = expiryMoment.format('MMMM D, YYYY [at] HH:mm')
 
     const textHeader = `<p style="color:black;margin-top:0">Hello,</p>
-      <p style="color:black;">Thanks so much for using Arbimon! Your export report for the project "${rowData.name}" has been completed.</p>`
+      <p style="color:black;">Thanks so much for using Arbimon! Your export report for the project "${rowData.name}" is ready for download.</p>`
     // Expiry + support, shown AFTER the link. Parenthetical gives the concrete
     // expiry date + HH:MM.
     const textExpiresSupport = `<p style="color:black;">Please note that this link will expire in ${EXPIRY_DAYS} days (on ${expiryStr}). If you have any questions about Arbimon, check out our <a href="https://help.arbimon.org/">support docs</a>.</p>`
@@ -521,12 +521,12 @@ async function sendEmail (subject, title, rowData, content, isSignedUrl, stats) 
         <a href="${url}" style="color:#1a73e8; word-break:break-all;">${url}</a></p>`
     // Short stats list under the download link.
     const statItems = []
-    if (stats.filename) statItems.push(`File: ${stats.filename}`)
+    if (stats.filename) statItems.push(`Filename: ${stats.filename}`)
     if (stats.rows != null && !isNaN(stats.rows)) statItems.push(`Rows: ${Number(stats.rows).toLocaleString('en-US')}`)
     const sizeStr = formatBytes(stats.bytes)
     if (sizeStr) statItems.push(`Size: ${sizeStr}`)
     const statsHtml = statItems.length
-        ? `<ul style="color:black; margin:8px 0; padding-left:20px;">${statItems.map(s => `<li>${s}</li>`).join('')}</ul>`
+        ? `<p style="color:black; margin:8px 0;">${statItems.join('<br>')}</p>`
         : ''
     const statsText = statItems.length ? `\n${statItems.join('\n')}\n` : ''
 
