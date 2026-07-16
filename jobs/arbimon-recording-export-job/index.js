@@ -121,25 +121,50 @@ async function main () {
         })
     } else if (projection_parameters && (projection_parameters.pmAll || projection_parameters.pmIds)) {
         //----------------Arbimon export all project PM jobs----------------
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             const exportReportType = 'Pattern Matchings';
             console.log(`Arbimon Export ${exportReportType} job`)
             patternMatching.collectData(filters, projection_parameters, async (err, fileName) => {
+                // Mirror the RFM path: on ANY failure, RECORD the error on the
+                // row and resolve so the serial queue advances. The old code
+                // ignored `err` entirely, so a failed PM export (e.g. the
+                // historical _pattern_matching.csv ENOENT) crashed the process
+                // before the row's `error` was set -> the same poison row was
+                // re-picked every 5 min and wedged the WHOLE export queue.
                 let reportName
-                if (fileName !== null) { reportName = fileName }
-                else { reportName = 'pattern-matching_export' }
-                const zipPath = __dirname + `/${reportName}.zip`
-                const bucketFormatted = S3_EXPORT_BUCKET_ARBIMON.split('/')[0]
-                const s3filePath = await uploadFileToS3(bucketFormatted, zipPath, rowData.project_id, currentTime, reportName, '.zip')
-                console.log('--s3filePath', s3filePath, 'reportName', reportName, 'fileName', fileName)
-                const url = await getDownloadUrl({ Bucket: bucketFormatted, Key: s3filePath, filename: `${reportName}.zip`, contentType: 'application/zip' })
-                console.log('--signed url', url)
-                await sendEmail('Arbimon export', 'Arbimon export', rowData, url, true)
-                await updateExportRecordings(rowData, { processed_at: currentTime })
-                fs.rmSync(tmpFilePath, { recursive: true, force: true });
-                fs.rmSync(zipPath, { recursive: true, force: true });
-                console.log(`Arbimon Export ${exportReportType} job finished: ${message}`)
-                resolve()
+                let zipPath
+                try {
+                    if (err) { throw err }
+                    if (fileName !== null) { reportName = fileName }
+                    else { reportName = 'pattern-matching_export' }
+                    zipPath = __dirname + `/${reportName}.zip`
+                    const bucketFormatted = S3_EXPORT_BUCKET_ARBIMON.split('/')[0]
+                    const s3filePath = await uploadFileToS3(bucketFormatted, zipPath, rowData.project_id, currentTime, reportName, '.zip')
+                    console.log('--s3filePath', s3filePath, 'reportName', reportName, 'fileName', fileName)
+                    const url = await getDownloadUrl({ Bucket: bucketFormatted, Key: s3filePath, filename: `${reportName}.zip`, contentType: 'application/zip' })
+                    console.log('--signed url', url)
+                    await sendEmail('Arbimon export', 'Arbimon export', rowData, url, true)
+                    await updateExportRecordings(rowData, { processed_at: currentTime })
+                    console.log(`Arbimon Export ${exportReportType} job finished: ${message}`)
+                } catch (e) {
+                    console.error(`Arbimon Export ${exportReportType} job error`, e)
+                    await errorMessage(message, jobName)
+                    // updateExportRecordings interpolates the value inside a
+                    // single-quoted SQL literal WITHOUT escaping, so a stack
+                    // trace containing a quote/backslash/newline would break the
+                    // UPDATE and throw again. Sanitize to a safe single line.
+                    const raw = e instanceof Error ? (e.message || String(e)) : JSON.stringify(e)
+                    const errStr = String(raw).replace(/[\\']/g, ' ').replace(/\s+/g, ' ').slice(0, 2000)
+                    try {
+                        await updateExportRecordings(rowData, { error: errStr })
+                    } catch (uErr) {
+                        console.error('Failed to record export error on row', uErr)
+                    }
+                } finally {
+                    try { fs.rmSync(tmpFilePath, { recursive: true, force: true }) } catch (_) {}
+                    if (zipPath) { try { fs.rmSync(zipPath, { recursive: true, force: true }) } catch (_) {} }
+                    resolve()
+                }
             })
         })
     }   else if (projection_parameters && projection_parameters.projectTemplate) {
