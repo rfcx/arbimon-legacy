@@ -28,6 +28,9 @@ let outputStreamFile
 // raced ahead of the flush). Resolves on 'close'; rejects on stream 'error'.
 function endAndFlush (writeStream) {
   return new Promise((resolve, reject) => {
+    // Guard: if the stream is already closed, resolve immediately (a 'close'
+    // that already fired would otherwise never re-fire and this would hang).
+    if (writeStream.closed || writeStream.destroyed) return resolve()
     let settled = false
     const done = (err) => {
       if (settled) return
@@ -36,6 +39,12 @@ function endAndFlush (writeStream) {
     }
     writeStream.on('error', done)
     writeStream.on('close', () => done())
+    writeStream.on('finish', () => {
+      // 'finish' fires when all data is flushed to the OS. If the stream
+      // doesn't emit 'close' (emitClose disabled), fall back to it so we
+      // never hang; the fd is flushed by this point.
+      if (!writeStream.emitClose) done()
+    })
     writeStream.end()
   })
 }
