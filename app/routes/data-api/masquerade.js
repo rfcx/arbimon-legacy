@@ -87,6 +87,15 @@ async function requireRealSuper(req, res, next) {
 router.get('/status', function(req, res) {
     const m = req.session && req.session.masquerade;
     const active = !!(m && m.targetUserId && (!m.expiresAt || m.expiresAt > Date.now()));
+    // realIsSuper: does the REAL account behind this session hold super? Free
+    // to answer — create_user_object already rebuilt session.user from the DB
+    // this request: not masquerading -> session.user.isSuper is authoritative;
+    // masquerading -> the swap only happens for a verified real super, so an
+    // active masquerade itself proves it. Client-render hint ONLY — start/stop/
+    // search all re-verify server-side via requireRealSuper.
+    const realIsSuper = !!(req.session && (
+        (req.session.user && req.session.user.isSuper === 1) || active
+    ));
     res.json({
         active: active,
         target: active ? {
@@ -95,10 +104,7 @@ router.get('/status', function(req, res) {
             name: m.targetName || m.targetEmail
         } : null,
         expiresAt: active ? m.expiresAt : null,
-        // isSuper here reflects the REAL identity so the tray can decide to show.
-        // Cheap client hint only; server always re-checks on start/stop.
-        realIsSuper: !!(req.session && req.session.user && req.session.user.masqueradedBy)
-            || undefined
+        realIsSuper: realIsSuper
     });
 });
 

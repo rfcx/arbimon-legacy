@@ -58,11 +58,15 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <script src="/includes/js/arbimon2.js"></script>
 <script src="/includes/js/arbimon2-templates.js"></script>
 
-<!-- Superuser masquerade safety banner (Phase 1). Framework-free so it works
-     on EVERY legacy page, even ones that never boot AngularJS, guaranteeing an
-     always-reachable Exit. It calls the status endpoint (session-scoped; the
-     server gates it on the real JWT super identity) and, only while active,
-     renders a fixed top banner with an Exit control. Inert for everyone else. -->
+<!-- Superuser masquerade widget (Phase 1): top safety banner + floating tray.
+     Framework-free so it works on EVERY legacy page (admin, visualizer,
+     citizen-scientist, home, error pages), even ones that never boot
+     AngularJS — guaranteeing an always-reachable Exit and an always-available
+     start surface for real supers. Renders ONLY when the status endpoint says
+     realIsSuper (or a masquerade is active); the server re-verifies the real
+     JWT super identity on every start/stop/search. Inert for everyone else.
+     Tray styles live in assets/less/a2-components/masquerade.less (compiled
+     into style.css, loaded above). -->
 <style>
   #masq-banner{position:fixed;top:0;left:0;right:0;z-index:100000;
     background:#b8860b;color:#fff;font:600 13px/1.4 Lato,Arial,sans-serif;
@@ -78,52 +82,175 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   #masq-banner button:hover{background:#f2e6c4}
   body.masq-active{padding-top:34px!important}
 </style>
-<div id="masq-banner" role="alert">
-  <span class="masq-dot"></span>
-  <span id="masq-banner-text">Viewing as another user</span>
-  <button type="button" id="masq-exit-btn">Exit &#10005;</button>
-</div>
 <script>
 (function(){ "use strict";
-  var BANNER='masq-banner';
-  function el(id){return document.getElementById(id);}
-  function render(status){
-    var b=el(BANNER); if(!b) return;
-    if(status && status.active && status.target){
-      var t=status.target;
-      el('masq-banner-text').textContent='Viewing as '+(t.name||t.email)+' \u00b7 '+t.email;
-      b.style.display='flex';
-      document.body.classList.add('masq-active');
-    } else {
-      b.style.display='none';
-      document.body.classList.remove('masq-active');
+  // NOTE: header.ejs is included inside the document head; static divs here
+  // would force the parser to close head early (hoisting later meta/title
+  // tags into the body). So the banner + tray roots are CREATED from JS once
+  // the body exists — style and script tags are the only static additions.
+  function ensureRoots(){
+    if(!document.body) return false;
+    if(!document.getElementById('masq-banner')){
+      var b=document.createElement('div');
+      b.id='masq-banner'; b.setAttribute('role','alert');
+      b.innerHTML='<span class="masq-dot"></span>'+
+        '<span id="masq-banner-text">Viewing as another user</span>'+
+        '<button type="button" id="masq-exit-btn">Exit &#10005;</button>';
+      document.body.appendChild(b);
     }
+    if(!document.getElementById('masq-tray-root')){
+      var t=document.createElement('div');
+      t.id='masq-tray-root';
+      document.body.appendChild(t);
+    }
+    return true;
   }
-  function fetchStatus(){
+  var state={ status:null, results:[], query:'', searching:false, busy:false, error:null,
+              collapsed:(function(){try{return sessionStorage.getItem('masq-tray-collapsed')==='1';}catch(e){return false;}})() };
+  function el(id){return document.getElementById(id);}
+  function esc(s){ var d=document.createElement('div'); d.textContent=(s==null?'':String(s)); return d.innerHTML; }
+  function xhr(method,url,body,cb){
     try{
       var x=new XMLHttpRequest();
-      x.open('GET','/legacy-api/masquerade/status',true);
-      x.withCredentials=true;
-      x.onreadystatechange=function(){
-        if(x.readyState===4 && x.status===200){
-          try{render(JSON.parse(x.responseText));}catch(e){}
-        }
-      };
-      x.send();
-    }catch(e){}
+      x.open(method,url,true); x.withCredentials=true;
+      if(body!==null) x.setRequestHeader('Content-Type','application/json');
+      x.onreadystatechange=function(){ if(x.readyState===4) cb(x); };
+      x.send(body===null?undefined:JSON.stringify(body));
+    }catch(e){ cb(null); }
   }
-  function exit(){
-    var x=new XMLHttpRequest();
-    x.open('POST','/legacy-api/masquerade/stop',true);
-    x.withCredentials=true;
-    x.setRequestHeader('Content-Type','application/json');
-    x.onreadystatechange=function(){
-      if(x.readyState===4){ location.reload(); }
-    };
-    x.send('{}');
+
+  // ---- top banner ----------------------------------------------------------
+  function renderBanner(){
+    var b=el('masq-banner'); if(!b) return;
+    var s=state.status;
+    if(s && s.active && s.target){
+      el('masq-banner-text').textContent='Viewing as '+(s.target.name||s.target.email)+' \u00b7 '+s.target.email;
+      b.style.display='flex'; document.body.classList.add('masq-active');
+    } else {
+      b.style.display='none'; document.body.classList.remove('masq-active');
+    }
+  }
+
+  // ---- floating tray (right edge; styles from masquerade.less) -------------
+  function trayHtml(){
+    var s=state.status||{};
+    var active=!!(s.active && s.target);
+    var h='';
+    h+='<div class="masq-tray'+(state.collapsed?' masq-tray-collapsed':'')+(active?' masq-tray-live':'')+'">';
+    h+='<div class="masq-tray-head" id="masq-head">';
+    h+='<span class="masq-tray-dot'+(active?' on':'')+'"></span>';
+    h+='<span class="masq-tray-title">'+(active?('Viewing as '+esc(s.target.name||s.target.email)):'View as user')+'</span>';
+    h+='<i class="fa '+(state.collapsed?'fa-chevron-up':'fa-chevron-down')+'"></i>';
+    h+='</div>';
+    if(!state.collapsed){
+      h+='<div class="masq-tray-body">';
+      if(active){
+        h+='<div class="masq-active-panel">';
+        h+='<div class="masq-active-target"><div class="masq-target-name">'+esc(s.target.name)+'</div>';
+        h+='<div class="masq-target-email">'+esc(s.target.email)+'</div></div>';
+        h+='<button type="button" class="btn btn-block masq-stop-btn" id="masq-stop"'+(state.busy?' disabled':'')+'><i class="fa fa-sign-out"></i> Stop viewing as user</button>';
+        h+='<div class="masq-hint">Auto-exits after 60&nbsp;min. Actions you take are recorded.</div>';
+        h+='</div>';
+      } else {
+        h+='<div class="masq-picker">';
+        h+='<input type="text" class="form-control masq-search-input" id="masq-q" placeholder="Search by email or username\u2026" value="'+esc(state.query)+'" autocomplete="off"/>';
+        h+='<div class="masq-results">';
+        if(state.searching){ h+='<div class="masq-muted"><i class="fa fa-spinner fa-spin"></i> Searching\u2026</div>'; }
+        else if(state.query.length>=2 && !state.results.length){ h+='<div class="masq-muted">No matching users.</div>'; }
+        for(var i=0;i<state.results.length;i++){
+          var u=state.results[i];
+          h+='<div class="masq-result-row'+(u.selectable?'':' disabled')+'" data-idx="'+i+'">';
+          h+='<div class="masq-result-main"><div class="masq-result-name">'+esc(u.name);
+          if(u.isSuper) h+=' <span class="masq-badge">super</span>';
+          h+='</div><div class="masq-result-email">'+esc(u.email)+'</div></div>';
+          if(u.selectable) h+='<i class="fa fa-eye"></i>';
+          h+='</div>';
+        }
+        h+='</div>';
+        h+='<div class="masq-hint">Superuser tool. Cannot view as another superuser.</div>';
+        h+='</div>';
+      }
+      if(state.error) h+='<div class="masq-error">'+esc(state.error)+'</div>';
+      h+='</div>';
+    }
+    h+='</div>';
+    return h;
+  }
+  var searchTimer=null;
+  function renderTray(){
+    var root=el('masq-tray-root'); if(!root) return;
+    var s=state.status;
+    var show=!!(s && (s.realIsSuper || s.active));
+    if(!show){ root.innerHTML=''; return; }
+    // preserve input focus/caret across re-render
+    var focusedQ=document.activeElement && document.activeElement.id==='masq-q';
+    var caret=focusedQ?document.activeElement.selectionStart:null;
+    root.innerHTML=trayHtml();
+    var head=el('masq-head');
+    if(head) head.addEventListener('click',function(){
+      state.collapsed=!state.collapsed;
+      try{sessionStorage.setItem('masq-tray-collapsed',state.collapsed?'1':'0');}catch(e){}
+      renderTray();
+    });
+    var stop=el('masq-stop');
+    if(stop) stop.addEventListener('click',doStop);
+    var q=el('masq-q');
+    if(q){
+      q.addEventListener('input',function(){
+        state.query=q.value; state.error=null;
+        if(searchTimer) clearTimeout(searchTimer);
+        var val=q.value.trim();
+        if(val.length<2){ state.results=[]; state.searching=false; renderTray(); return; }
+        state.searching=true; renderTray();
+        searchTimer=setTimeout(function(){ doSearch(val); },300);
+      });
+      if(focusedQ){ q.focus(); if(caret!==null){ try{q.setSelectionRange(caret,caret);}catch(e){} } }
+    }
+    var rows=root.querySelectorAll('.masq-result-row:not(.disabled)');
+    for(var i=0;i<rows.length;i++){
+      (function(row){
+        row.addEventListener('click',function(){
+          var u=state.results[parseInt(row.getAttribute('data-idx'),10)];
+          if(u) doStart(u);
+        });
+      })(rows[i]);
+    }
+  }
+  function doSearch(q){
+    xhr('GET','/legacy-api/masquerade/search?q='+encodeURIComponent(q),null,function(x){
+      state.searching=false;
+      if(x && x.status===200){ try{state.results=JSON.parse(x.responseText)||[];}catch(e){state.results=[];} }
+      else { state.results=[]; state.error=(x&&x.status===403)?null:'Search failed'; }
+      renderTray();
+    });
+  }
+  function doStart(u){
+    if(state.busy) return; state.busy=true; state.error=null; renderTray();
+    xhr('POST','/legacy-api/masquerade/start',{user_id:u.id},function(x){
+      state.busy=false;
+      if(x && x.status===200){ location.reload(); }
+      else{ try{state.error=(JSON.parse(x.responseText)||{}).error||'Could not start';}catch(e){state.error='Could not start';} renderTray(); }
+    });
+  }
+  function doStop(){
+    if(state.busy) return; state.busy=true; renderTray();
+    xhr('POST','/legacy-api/masquerade/stop',{},function(){ location.reload(); });
+  }
+
+  // ---- status poll ----------------------------------------------------------
+  function fetchStatus(){
+    xhr('GET','/legacy-api/masquerade/status',null,function(x){
+      if(x && x.status===200){
+        try{ state.status=JSON.parse(x.responseText); }catch(e){ return; }
+        renderBanner(); renderTray();
+      }
+    });
   }
   function init(){
-    var btn=el('masq-exit-btn'); if(btn) btn.addEventListener('click',exit);
+    if(!ensureRoots()) return; // body must exist (DOMContentLoaded guarantees it)
+    var btn=el('masq-exit-btn'); if(btn) btn.addEventListener('click',function(){
+      xhr('POST','/legacy-api/masquerade/stop',{},function(){ location.reload(); });
+    });
     fetchStatus();
     setInterval(fetchStatus, 30000); // keep TTL-expiry visible
   }
