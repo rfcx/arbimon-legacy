@@ -1,0 +1,161 @@
+// Superuser masquerade tray (Phase 1). Floating, collapsible, left edge —
+// mirrors the modern website task-tray placement but on the left so it never
+// collides with the right-side nav/audio bar. Amber to match the top banner.
+
+@masq-amber: #b8860b;
+@masq-amber-dark: #8a6400;
+
+.masq-tray {
+  position: fixed;
+  left: 0;
+  bottom: 24px;
+  z-index: 90000;
+  width: 300px;
+  max-width: 84vw;
+  background: #1f2124;
+  color: #f4f4f4;
+  border: 1px solid rgba(255, 255, 255, .08);
+  border-left: 3px solid @masq-amber;
+  border-radius: 0 8px 8px 0;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, .45);
+  font-family: Lato, Arial, sans-serif;
+  overflow: hidden;
+
+  &.masq-tray-live {
+    border-left-color: #ffcf3f;
+    box-shadow: 0 6px 22px rgba(184, 134, 11, .5);
+  }
+
+  .masq-tray-head {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 10px 12px;
+    cursor: pointer;
+    background: rgba(255, 255, 255, .03);
+    user-select: none;
+
+    .masq-tray-title {
+      flex: 1;
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .fa { opacity: .6; font-size: 12px; }
+  }
+
+  .masq-tray-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #6b7075;
+    flex: 0 0 auto;
+    &.on {
+      background: #ffcf3f;
+      box-shadow: 0 0 0 0 rgba(255, 207, 63, .7);
+      animation: masqtraypulse 1.6s infinite;
+    }
+  }
+
+  .masq-tray-body {
+    padding: 10px 12px 12px;
+    border-top: 1px solid rgba(255, 255, 255, .06);
+  }
+
+  .masq-search-input {
+    background: #2b2e31;
+    border: 1px solid rgba(255, 255, 255, .12);
+    color: #fff;
+    font-size: 13px;
+    height: 34px;
+    &::placeholder { color: #9aa0a6; }
+    &:focus { border-color: @masq-amber; box-shadow: none; }
+  }
+
+  .masq-results {
+    margin-top: 8px;
+    max-height: 240px;
+    overflow-y: auto;
+  }
+
+  .masq-result-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 8px;
+    border-radius: 5px;
+    cursor: pointer;
+    &:hover { background: rgba(255, 255, 255, .06); }
+    &.disabled { opacity: .45; cursor: not-allowed; }
+
+    .masq-result-main { flex: 1; min-width: 0; }
+    .masq-result-name {
+      font-size: 13px; font-weight: 700;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .masq-result-email {
+      font-size: 11px; color: #9aa0a6;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .fa-eye { color: @masq-amber; opacity: .8; }
+  }
+
+  .masq-badge {
+    display: inline-block;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    background: @masq-amber-dark;
+    color: #fff;
+    padding: 1px 5px;
+    border-radius: 3px;
+    margin-left: 5px;
+    vertical-align: middle;
+  }
+
+  .masq-active-panel {
+    .masq-active-target {
+      background: rgba(255, 207, 63, .08);
+      border: 1px solid rgba(255, 207, 63, .25);
+      border-radius: 6px;
+      padding: 9px 10px;
+      margin-bottom: 10px;
+    }
+    .masq-target-name { font-size: 14px; font-weight: 900; }
+    .masq-target-email { font-size: 12px; color: #cdd2d6; }
+  }
+
+  .masq-stop-btn {
+    background: @masq-amber;
+    color: #fff;
+    font-weight: 700;
+    border: 0;
+    &:hover { background: #cf9a15; color: #fff; }
+  }
+
+  .masq-hint {
+    margin-top: 8px;
+    font-size: 11px;
+    color: #8a9096;
+    line-height: 1.35;
+  }
+  .masq-muted { font-size: 12px; color: #9aa0a6; padding: 6px 4px; }
+  .masq-error {
+    margin-top: 8px;
+    font-size: 12px;
+    color: #ff8a80;
+  }
+
+  &.masq-tray-collapsed {
+    width: auto;
+    .masq-tray-head { padding-right: 14px; }
+  }
+}
+
+@keyframes masqtraypulse {
+  0%   { box-shadow: 0 0 0 0 rgba(255, 207, 63, .6); }
+  70%  { box-shadow: 0 0 0 7px rgba(255, 207, 63, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 207, 63, 0); }
+}

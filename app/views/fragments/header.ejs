@@ -58,6 +58,81 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <script src="/includes/js/arbimon2.js"></script>
 <script src="/includes/js/arbimon2-templates.js"></script>
 
+<!-- Superuser masquerade safety banner (Phase 1). Framework-free so it works
+     on EVERY legacy page, even ones that never boot AngularJS, guaranteeing an
+     always-reachable Exit. It calls the status endpoint (session-scoped; the
+     server gates it on the real JWT super identity) and, only while active,
+     renders a fixed top banner with an Exit control. Inert for everyone else. -->
+<style>
+  #masq-banner{position:fixed;top:0;left:0;right:0;z-index:100000;
+    background:#b8860b;color:#fff;font:600 13px/1.4 Lato,Arial,sans-serif;
+    padding:8px 14px;display:none;align-items:center;justify-content:center;
+    gap:14px;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+  #masq-banner .masq-dot{width:9px;height:9px;border-radius:50%;
+    background:#fff;box-shadow:0 0 0 0 rgba(255,255,255,.7);
+    animation:masqpulse 1.6s infinite}
+  @keyframes masqpulse{0%{box-shadow:0 0 0 0 rgba(255,255,255,.6)}
+    70%{box-shadow:0 0 0 7px rgba(255,255,255,0)}100%{box-shadow:0 0 0 0 rgba(255,255,255,0)}}
+  #masq-banner button{background:#fff;color:#8a6400;border:0;border-radius:4px;
+    padding:4px 12px;font:700 12px/1 Lato,Arial,sans-serif;cursor:pointer}
+  #masq-banner button:hover{background:#f2e6c4}
+  body.masq-active{padding-top:34px!important}
+</style>
+<div id="masq-banner" role="alert">
+  <span class="masq-dot"></span>
+  <span id="masq-banner-text">Viewing as another user</span>
+  <button type="button" id="masq-exit-btn">Exit &#10005;</button>
+</div>
+<script>
+(function(){ "use strict";
+  var BANNER='masq-banner';
+  function el(id){return document.getElementById(id);}
+  function render(status){
+    var b=el(BANNER); if(!b) return;
+    if(status && status.active && status.target){
+      var t=status.target;
+      el('masq-banner-text').textContent='Viewing as '+(t.name||t.email)+' \u00b7 '+t.email;
+      b.style.display='flex';
+      document.body.classList.add('masq-active');
+    } else {
+      b.style.display='none';
+      document.body.classList.remove('masq-active');
+    }
+  }
+  function fetchStatus(){
+    try{
+      var x=new XMLHttpRequest();
+      x.open('GET','/legacy-api/masquerade/status',true);
+      x.withCredentials=true;
+      x.onreadystatechange=function(){
+        if(x.readyState===4 && x.status===200){
+          try{render(JSON.parse(x.responseText));}catch(e){}
+        }
+      };
+      x.send();
+    }catch(e){}
+  }
+  function exit(){
+    var x=new XMLHttpRequest();
+    x.open('POST','/legacy-api/masquerade/stop',true);
+    x.withCredentials=true;
+    x.setRequestHeader('Content-Type','application/json');
+    x.onreadystatechange=function(){
+      if(x.readyState===4){ location.reload(); }
+    };
+    x.send('{}');
+  }
+  function init(){
+    var btn=el('masq-exit-btn'); if(btn) btn.addEventListener('click',exit);
+    fetchStatus();
+    setInterval(fetchStatus, 30000); // keep TTL-expiry visible
+  }
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded', init);
+  } else { init(); }
+})();
+</script>
+
 <%if(typeof(inject_data) != 'undefined'){%>
 <script>
 (function(angular) { "use strict";

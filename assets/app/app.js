@@ -18,7 +18,8 @@ var a2 = angular.module('a2.app', [
     'a2.googlemaps',
     'a2.injected.data',
     'a2.directive.search-bar',
-    'a2.directive.side-bar'
+    'a2.directive.side-bar',
+    'a2.directive.masquerade'
 ])
 .run(function($rootScope, a2UserPermit, notify, $state) {
     $rootScope.Math = Math; // export math library to angular :-)

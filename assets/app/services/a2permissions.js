@@ -13,6 +13,12 @@ angular.module('a2.permissions', [
         isSuper: function(){
             return permit.super;
         },
+        // Superuser masquerade: the real super's email when the current view is
+        // being presented AS another user (else null/undefined). Server-rendered
+        // hint; the masquerade tray also live-polls /legacy-api/masquerade/status.
+        masqueradedBy: function(){
+            return permit.masqueradedBy;
+        },
         isRfcx: function(){
             return permit.rfcxUser;
         },

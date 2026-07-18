@@ -88,6 +88,22 @@ var Users = {
         queryHandler(q, callback);
     },
 
+    // Superuser masquerade: look up candidate target users by email/username
+    // fragment. Returns is_super so the UI can flag (and the backend can
+    // refuse) impersonating another superuser. Capped to keep the picker snappy.
+    searchForMasquerade: function(query) {
+        const like = dbpool.escape('%' + String(query || '').trim() + '%');
+        const q =
+            "SELECT user_id AS id, firstname, lastname, email, \n" +
+            "       login AS username, is_super \n" +
+            "FROM users \n" +
+            "WHERE (login LIKE " + like + " OR email LIKE " + like + ") \n" +
+            "  AND rfcx_id IS NOT NULL \n" +
+            "ORDER BY (email = " + like + ") DESC, email ASC \n" +
+            "LIMIT 15";
+        return dbpool.query(q);
+    },
+
     update: function(userData, callback) {
         if(typeof userData.user_id === 'undefined') {
             callback(new Error("userData does not contain an user_id"));

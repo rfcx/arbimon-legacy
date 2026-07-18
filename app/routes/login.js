@@ -44,27 +44,84 @@ const anonymousGuest = {
     imageUrl: ''
 }
 
+// Resolve the target user for an active, non-expired masquerade IFF the REAL
+// (JWT-authenticated) account is a superuser. Returns the target's user row +
+// the real super's email, or null if masquerade is not applicable. Never lets
+// a non-super, an expired window, or a super-target take effect. Any error is
+// swallowed to a null result so a failure can only ever DROP masquerade back
+// to the real user, never strand or escalate.
+async function resolveMasquerade(session, realUserRow) {
+    try {
+        const m = session && session.masquerade;
+        if (!m || !m.targetUserId) return null;
+        if (m.expiresAt && m.expiresAt <= Date.now()) {
+            console.log('MASQUERADE ' + JSON.stringify({
+                action: 'expired', realEmail: m.realEmail || null,
+                targetUserId: m.targetUserId, targetEmail: m.targetEmail || null,
+                at: new Date().toISOString()
+            }));
+            session.masquerade = undefined;
+            return null;
+        }
+        // The REAL account must currently be a superuser.
+        if (!realUserRow || realUserRow.is_super !== 1) return null;
+        // Never impersonate yourself.
+        if (realUserRow.user_id === m.targetUserId) return null;
+        const target = await model.users.findById(m.targetUserId);
+        if (!target || !target.user_id || !target.rfcx_id) return null;
+        // Never impersonate another superuser (defense in depth vs the start guard).
+        if (target.is_super === 1) return null;
+        return { target: target, realEmail: realUserRow.email };
+    } catch (e) {
+        return null;
+    }
+}
+
 router.use(function create_user_object(req, res, next) {
     const session = req.session
     const permissions = session.user && session.user.permissions ? session.user.permissions : undefined
     if (!req.user) {
         session.isAnonymousGuest = true;
         session.user = anonymousGuest;
-        next();
+        return next();
     }
     else if (session && req.user && req.user.email) {
         q.ninvoke(model.users, 'findByEmail', req.user.email).get(0).then(async user => {
             if (!user.length) {
                 session.isAnonymousGuest = true;
                 session.user = anonymousGuest;
-                next();
+                return next();
+            }
+            const realRow = user[0];
+            // -- superuser masquerade swap (Phase 1) --------------------------
+            // If the real (super) account has an active masquerade, present the
+            // TARGET user as session.user so every downstream check (ACLs,
+            // isSuper, project membership) sees exactly what the target sees.
+            // The swap keys off the REAL JWT identity every request, so it is
+            // self-healing: revoke super / expire window / stop -> back to real.
+            const masq = await resolveMasquerade(session, realRow);
+            if (masq) {
+                session.isAnonymousGuest = false;
+                masq.target.picture = req.user.picture
+                session.user = model.users.makeUserObject(masq.target, {secure: req.secure, all:true});
+                // Target is non-super by guarantee; hard-pin the flag so no
+                // stale value can leak elevated access into the masquerade.
+                session.user.isSuper = 0;
+                session.user.permissions = permissions
+                // Marker consumed by the banner/tray + write-audit; presence of
+                // this field == "this request is being viewed as someone else".
+                session.user.masqueradedBy = masq.realEmail;
+                return next();
             }
             session.isAnonymousGuest = false;
-            user[0].picture = req.user.picture
-            session.user = model.users.makeUserObject(user[0], {secure: req.secure, all:true});
+            realRow.picture = req.user.picture
+            session.user = model.users.makeUserObject(realRow, {secure: req.secure, all:true});
             session.user.permissions = permissions
-            next();
-        })
+            return next();
+        }).catch(next)
+    }
+    else {
+        return next();
     }
 });
 
