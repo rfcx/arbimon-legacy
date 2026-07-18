@@ -94,6 +94,7 @@ router.get('/:projecturl?/', function(req, res, next) {
                     },
                     super: !!req.session.user.isSuper,
                     permissions: rows.map(function(perm) { return perm.name; }),
+                    masqueradedBy: (req.session.user && req.session.user.masqueradedBy) || null,
                 };
 
                 debug("project perms:", req.session.user.permissions);
