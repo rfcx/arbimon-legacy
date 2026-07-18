@@ -67,7 +67,9 @@ async function resolveMasquerade(session, realUserRow) {
         if (!realUserRow || realUserRow.is_super !== 1) return null;
         // Never impersonate yourself.
         if (realUserRow.user_id === m.targetUserId) return null;
-        const target = await model.users.findById(m.targetUserId);
+        // findById resolves to a ROWS ARRAY ([row]) via q.nfcall+.get(0); unwrap.
+        const targetRows = await model.users.findById(m.targetUserId);
+        const target = Array.isArray(targetRows) ? targetRows[0] : targetRows;
         if (!target || !target.user_id || !target.rfcx_id) return null;
         // Never impersonate another superuser (defense in depth vs the start guard).
         if (target.is_super === 1) return null;

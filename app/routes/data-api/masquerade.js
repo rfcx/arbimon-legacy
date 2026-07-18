@@ -133,7 +133,9 @@ router.post('/start', requireRealSuper, async function(req, res, next) {
         if (targetUserId === req.realSuper.user_id) {
             return res.status(400).json({ error: 'cannot masquerade as yourself' });
         }
-        const target = await model.users.findById(targetUserId);
+        // findById resolves to a ROWS ARRAY ([row]) via q.nfcall+.get(0); unwrap.
+        const targetRows = await model.users.findById(targetUserId);
+        const target = Array.isArray(targetRows) ? targetRows[0] : targetRows;
         if (!target || !target.user_id) {
             return res.status(404).json({ error: 'user not found' });
         }
