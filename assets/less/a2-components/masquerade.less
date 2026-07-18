@@ -1,13 +1,13 @@
-// Superuser masquerade tray (Phase 1). Floating, collapsible, left edge —
-// mirrors the modern website task-tray placement but on the left so it never
-// collides with the right-side nav/audio bar. Amber to match the top banner.
+// Superuser masquerade tray (Phase 1). Floating, collapsible, RIGHT edge —
+// mirrors the modern website task-tray stack placement (bottom-right). Amber
+// to match the top masquerade banner.
 
 @masq-amber: #b8860b;
 @masq-amber-dark: #8a6400;
 
 .masq-tray {
   position: fixed;
-  left: 0;
+  right: 0;
   bottom: 24px;
   z-index: 90000;
   width: 300px;
@@ -15,14 +15,14 @@
   background: #1f2124;
   color: #f4f4f4;
   border: 1px solid rgba(255, 255, 255, .08);
-  border-left: 3px solid @masq-amber;
-  border-radius: 0 8px 8px 0;
+  border-right: 3px solid @masq-amber;
+  border-radius: 8px 0 0 8px;
   box-shadow: 0 6px 22px rgba(0, 0, 0, .45);
   font-family: Lato, Arial, sans-serif;
   overflow: hidden;
 
   &.masq-tray-live {
-    border-left-color: #ffcf3f;
+    border-right-color: #ffcf3f;
     box-shadow: 0 6px 22px rgba(184, 134, 11, .5);
   }
 

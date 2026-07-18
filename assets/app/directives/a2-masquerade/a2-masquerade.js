@@ -1,7 +1,8 @@
 /**
  * Superuser masquerade tray (Phase 1, legacy app).
  *
- * A floating, collapsible tray on the LEFT edge, visible ONLY to real
+ * A floating, collapsible tray on the RIGHT edge (matching the modern task-
+ * tray stack), visible ONLY to real
  * superusers, mirroring the modern website's task-tray pattern. Lets a super
  * search for a user and start/stop "view as user". While masquerading the
  * top safety banner (header.ejs, framework-free) also shows an Exit.
