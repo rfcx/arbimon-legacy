@@ -93,6 +93,16 @@ function requireJson(req, res, next) {
     next();
 }
 
+// Masquerade state is per-session and changes on start/stop/expiry, so its
+// responses must NEVER be cached (no ETag/304 revalidation either) — a stale
+// cached status would let the banner/tray show the wrong identity. Applied to
+// every route in this module.
+router.use(function(req, res, next) {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    res.set('Pragma', 'no-cache');
+    next();
+});
+
 // ---- routes ----------------------------------------------------------------
 
 // Current masquerade status (safe for any authenticated caller; returns
