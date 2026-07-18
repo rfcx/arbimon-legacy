@@ -80,6 +80,19 @@ async function requireRealSuper(req, res, next) {
     }
 }
 
+// CSRF hardening for the mutating endpoints: require a JSON content-type.
+// A cross-site <form> POST can only send urlencoded/multipart/text-plain
+// without triggering a CORS preflight, so demanding application/json means a
+// forged form submission is rejected regardless of cookie SameSite config.
+// (The legacy app runs a permissive cors() middleware, so belt-and-braces.)
+function requireJson(req, res, next) {
+    const ct = (req.headers['content-type'] || '').toLowerCase();
+    if (ct.indexOf('application/json') === -1) {
+        return res.status(415).json({ error: 'application/json required' });
+    }
+    next();
+}
+
 // ---- routes ----------------------------------------------------------------
 
 // Current masquerade status (safe for any authenticated caller; returns
@@ -130,7 +143,7 @@ router.get('/search', requireRealSuper, async function(req, res, next) {
 });
 
 // Start masquerading as a target user (super-only).
-router.post('/start', requireRealSuper, async function(req, res, next) {
+router.post('/start', requireJson, requireRealSuper, async function(req, res, next) {
     try {
         const targetUserId = parseInt(req.body && req.body.user_id, 10);
         if (!targetUserId || Number.isNaN(targetUserId)) {
@@ -155,6 +168,13 @@ router.post('/start', requireRealSuper, async function(req, res, next) {
 
         const name = [target.firstname, target.lastname].filter(Boolean).join(' ').trim()
             || target.login || target.email;
+
+        // Switching directly from one target to another: audit the implicit
+        // stop so the trail shows one contiguous record per target.
+        if (req.session.masquerade && req.session.masquerade.targetUserId &&
+            req.session.masquerade.targetUserId !== target.user_id) {
+            auditLog('stop', req, { reason: 'switch-target' });
+        }
 
         req.session.masquerade = {
             targetUserId: target.user_id,
@@ -184,7 +204,7 @@ router.post('/start', requireRealSuper, async function(req, res, next) {
 
 // Stop masquerading. Reachable EVEN while masquerading because the guard uses
 // the real JWT identity, not session.user.
-router.post('/stop', requireRealSuper, function(req, res) {
+router.post('/stop', requireJson, requireRealSuper, function(req, res) {
     if (req.session && req.session.masquerade) {
         auditLog('stop', req, {});
         req.session.masquerade = undefined;
