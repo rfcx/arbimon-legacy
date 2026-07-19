@@ -269,6 +269,68 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 })();
 </script>
 
+<script>
+// -- PostHog pageview beacon (legacy app) -------------------------------------
+// Purpose: retirement-path telemetry (rfcx-local AUDIT-arbimon-legacy-usage-
+// 2026-07-19 §5) — measure which LEGACY pages users actually visit so the
+// Phase-4 port order is driven by real usage. Same self-hosted PostHog as the
+// modern app (track.arbimon.org; public client token, safe to embed).
+// DELIBERATELY conservative, mirroring the modern app's #2461-gated config:
+// no autocapture, no session recording, MANUAL $pageview only (initial load +
+// SPA URL changes via history hooks). No PII beyond PostHog's default anon id.
+(function () {
+  'use strict';
+  var PH_HOST = 'https://track.arbimon.org';
+  var PH_KEY = 'phc_krms3gkJwAaEiJVFfvnANKnH77LViiNzPUz2uY6YiLjc';
+  function capture() {
+    try {
+      var payload = {
+        api_key: PH_KEY,
+        event: '$pageview',
+        properties: {
+          distinct_id: (function () {
+            try {
+              var k = 'ph_legacy_did';
+              var v = window.localStorage.getItem(k);
+              if (!v) { v = 'legacy-' + Math.random().toString(36).slice(2) + Date.now().toString(36); window.localStorage.setItem(k, v); }
+              return v;
+            } catch (e) { return 'legacy-anon'; }
+          })(),
+          $current_url: window.location.href,
+          $referrer: document.referrer || '',
+          app: 'arbimon-legacy'
+        },
+        timestamp: new Date().toISOString()
+      };
+      var body = JSON.stringify(payload);
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon(PH_HOST + '/i/v0/e/', new Blob([body], { type: 'application/json' }));
+      } else {
+        var x = new XMLHttpRequest();
+        x.open('POST', PH_HOST + '/i/v0/e/', true);
+        x.setRequestHeader('Content-Type', 'application/json');
+        x.send(body);
+      }
+    } catch (e) { /* never break the app for telemetry */ }
+  }
+  // initial load
+  if (document.readyState === 'complete' || document.readyState === 'interactive') { capture(); }
+  else { document.addEventListener('DOMContentLoaded', capture); }
+  // SPA navigations (angular ui-router uses pushState + hashchange)
+  var lastUrl = window.location.href;
+  function onNav() {
+    if (window.location.href !== lastUrl) { lastUrl = window.location.href; capture(); }
+  }
+  ['pushState', 'replaceState'].forEach(function (fn) {
+    var orig = window.history[fn];
+    if (!orig) return;
+    window.history[fn] = function () { var r = orig.apply(this, arguments); setTimeout(onNav, 0); return r; };
+  });
+  window.addEventListener('popstate', onNav);
+  window.addEventListener('hashchange', onNav);
+})();
+</script>
+
 <%if(typeof(inject_data) != 'undefined'){%>
 <script>
 (function(angular) { "use strict";
