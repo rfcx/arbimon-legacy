@@ -35,38 +35,6 @@ router.get('/projectlist', function(req, res, next) {
     }
 });
 
-router.get('/feed/formats', function(req, res, next) {
-    res.type('json');
-    model.news.getNewsTypeFormats().then(function(newsTypeFormats) {
-        res.json(newsTypeFormats.reduce(function(_, format){
-            _[format.id] = format.message_format;
-            return _;
-        }, {}));
-    }).catch(next);
-});
-
-router.get('/feed/:page', function(req, res, next) {
-    res.type('json');
-
-    let page = req.params.page || 0;
-
-    ( (req.session.user.isSuper === 1) ?
-        model.news.getFor({page:page, pageCount:10}) :
-        model.news.userFeed(req.session.user.id, page)
-    ).then(function(news) {
-        res.json(news.map(function(newsItem) {
-            let data = JSON.parse(newsItem.data);
-            data.project = [newsItem.project_id, newsItem.project];
-            return {
-                type: newsItem.type,
-                data: data,
-                username: newsItem.username,
-                timestamp: newsItem.timestamp,
-                imageUrl: gravatar.url(newsItem.email, { d: 'monsterid', s: 30 }, req.secure)
-            };
-        }));
-    }).catch(next);
-});
 
 router.get('/info/:userId', function(req, res, next) {
     res.type('json');
