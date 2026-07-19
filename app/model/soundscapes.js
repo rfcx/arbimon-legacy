@@ -115,7 +115,7 @@ let Soundscapes = {
         const scidx_uri = "project_"+(soundscape.project|0)+"/soundscapes/"+(soundscape.id|0)+"/index.scidx";
         return q.ninvoke(tmpfilecache, 'fetch', scidx_uri, function(cache_miss){
             if(!s3){
-                s3 = new AWS.S3();
+                s3 = createS3Client('aws'); // endpoint-aware: routes via s3-proxy chain
             }
             s3.getObject({
                 Bucket : config('aws').bucketName,
@@ -516,7 +516,7 @@ let Soundscapes = {
                     callback(err);
                 }
                 if(!s3){
-                    s3 = new AWS.S3();
+                    s3 = createS3Client('aws'); // endpoint-aware: routes via s3-proxy chain
                 }
                 let imgUri = rows[0].uri;
                 let indexUri = rows[0].uri.replace('image.png','index.scidx');

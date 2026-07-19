@@ -3,7 +3,6 @@
 
 var debug = require('debug')('arbimon2:route:admin');
 var express = require('express');
-var request = require('request');
 var router = express.Router();
 var async = require('async');
 var csv_stringify = require("csv-stringify");
@@ -133,13 +132,24 @@ router.get('/plot-data/data.txt', function(req, res, next) {
 });
 
 
-router.get('/job-queue', function(req, res, next) {
+// RETIRED 2026-07-12: the live "job queue status" widget (Queue ID /
+// Iteration / Waiting / Max concurrent) described the AWS SQS-style queue
+// daemon that ran the analysis pipeline pre-migration. That service is gone;
+// `config('hosts').jobqueue` still points at the dead AWS-era address
+// (10.0.0.4:3007), so this endpoint hung until TCP timeout then errored.
+// The modern pipeline is the in-cluster jobqueue-dispatcher (ns apps-prod),
+// which polls arbimon2.jobs (state='waiting') and launches per-type k8s
+// Jobs — there is NO persistent queue object with those fields to report.
+// Return an explicit retired marker instantly (no network call) so the UI
+// can show an honest note instead of a spinner/timeout. Real live job data
+// is still available via the Job List below (GET /admin/jobs) and the
+// per-type traffic light on the dashboard. See rfcx-local OPEN-ITEMS #52.
+router.get('/job-queue', function(req, res) {
     res.type('json');
-    request.get(config('hosts').jobqueue + '/stats')
-        .on('error', function(err) {
-            res.json({ error:'Could not read job queue stats.' });
-        })
-        .pipe(res);
+    res.json({
+        retired: true,
+        error: 'The legacy job-queue daemon was retired in the AWS\u2192cluster migration. Analysis jobs now run via the in-cluster jobqueue-dispatcher; see the Job List below for live jobs.'
+    });
 });
 
 router.get('/jobs', function(req, res, next) {

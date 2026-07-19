@@ -28,6 +28,7 @@ var audioTools   = require('../utils/audiotool');
 var sqlutil      = require('../utils/sqlutil');
 var dbpool       = require('../utils/dbpool');
 var tyler        = require('../utils/tyler.js');
+const { createS3Client } = require('../utils/storage');
 const rfcxConfig = config('rfcx');
 const moment = require('moment');
 const auth0Service = require('./auth0');
@@ -50,19 +51,14 @@ const audioFilePattern = /\.(wav|flac|opus)$/i;
 const freqFilterPrecision = 100;
 
 function defineS3Clients () {
+    // Use the canonical endpoint-aware factory so S3 access routes through
+    // the s3-proxy/s3-reader/s3-writer chain (AWS_S3_ENDPOINT) instead of
+    // talking to AWS S3 directly. See app/utils/storage.js.
     if (!s3) {
-        s3 = new AWS.S3(getS3ClientConfig('aws'))
+        s3 = createS3Client('aws')
     }
     if (!s3RFCx) {
-        s3RFCx = new AWS.S3(getS3ClientConfig('aws_rfcx'))
-    }
-}
-
-function getS3ClientConfig (type) {
-    return {
-        accessKeyId: config(type).accessKeyId,
-        secretAccessKey: config(type).secretAccessKey,
-        region: config(type).region
+        s3RFCx = createS3Client('aws_rfcx')
     }
 }
 
@@ -1343,6 +1339,57 @@ var Recordings = {
         return dbpool.query(q);
     },
 
+    /**
+     * Whitelist of user-selectable sort columns for the recordings list.
+     * Maps a stable client-facing sort key to a SAFE, fully-qualified SQL
+     * expression. The client must never be able to inject arbitrary SQL into
+     * the ORDER BY clause, so anything not in this map falls back to the
+     * historical default order (site_id DESC, datetime DESC).
+     *
+     * Every exposed column MUST be backed by a `(site_id, <col>)` composite
+     * index so the project-scoped list query (WHERE site_id IN (...)) stays
+     * fast on the ~273M-row table. A single-column sort that cannot use a
+     * site-leading composite degrades to a full scan/filesort and trips
+     * `max_statement_time` -> empty list -> "0 Recordings" in the UI.
+     *   site_id       -> recordings_site_datetime_idx (leading col)
+     *   datetime      -> recordings_site_datetime_idx (site_id, datetime)
+     *   filename      -> recordings_site_filename_idx (site_id, filename)
+     *   upload_time   -> recordings_site_upload_time_idx (site_id, upload_time)
+     * `filename` is a VIRTUAL generated column = JSON_VALUE(meta,'$.filename'),
+     * i.e. the SAME value the UI shows in the Filename column (NOT the uri
+     * basename, which is an opaque UUID). `recorder` (no composite) and
+     * free-text `comments`/`meta` are NOT sortable by design.
+     */
+    RECORDING_SORT_COLUMNS: {
+        site:        { expr: 'r.site_id',     index: 'recordings_site_datetime_idx' },
+        site_id:     { expr: 'r.site_id',     index: 'recordings_site_datetime_idx' },
+        datetime:    { expr: 'r.datetime',    index: 'recordings_site_datetime_idx' },
+        filename:    { expr: 'r.filename',    index: 'recordings_site_filename_idx' },
+        upload_time: { expr: 'r.upload_time', index: 'recordings_site_upload_time_idx' }
+    },
+
+    /**
+     * Resolve a requested (sortBy, sortRev) pair into a safe ORDER BY body for
+     * the recordings list query. Returns:
+     *   - `clause`:       the SQL fragment (without the leading "ORDER BY")
+     *   - `index`:        the (site_id, <col>) composite to FORCE for the list
+     *                     query (the optimizer otherwise mis-picks the single-
+     *                     column index and full-scans -> max_statement_time)
+     *   - `usingDefault`: true when the request did not map to a whitelisted
+     *                     column (falls back to the historical default order)
+     */
+    resolveRecordingSort: function(sortBy, sortRev) {
+        const dir = sortRev ? 'DESC' : 'ASC';
+        const col = sortBy != null ? Recordings.RECORDING_SORT_COLUMNS[String(sortBy).trim()] : undefined;
+        if (!col) {
+            // Historical default: keep recordings grouped by site, newest first.
+            // Uses the (site_id, datetime) composite directly (no filesort).
+            return { clause: 'r.site_id DESC, r.datetime DESC', index: 'recordings_site_datetime_idx', usingDefault: true };
+        }
+        // Tie-break on recording_id for a stable, deterministic page order.
+        return { clause: col.expr + ' ' + dir + ', r.recording_id ' + dir, index: col.index, usingDefault: false };
+    },
+
     /** finds a set of recordings given some search criteria.
      * @param {Object} params - search parameters
      * @param {Function} callback - callback function (optional)
@@ -1536,23 +1583,81 @@ var Recordings = {
                         from_clause,
                         where_clause
                     ];
-                    if(output === 'list') {
-                        const sortBy = parameters.sortBy || 'r.datetime';
-                        const sortRev = parameters.sortRev ? 'DESC' : '';
-                        query.push('ORDER BY ' + sortBy + ' ' + sortRev);
-                        if(limit_clause){
-                            query.push("LIMIT " + limit_clause);
-                        }
+                    if(output !== 'list') {
+                        return Q.nfcall(queryHandler, {
+                            sql: query.join('\n'),
+                            typeCast: sqlutil.parseUtcDatetime,
+                        });
                     }
-                    return Q.nfcall(queryHandler, {
-                        sql: query.join('\n'),
-                        typeCast: sqlutil.parseUtcDatetime,
+
+                    // Safe, whitelisted ORDER BY — never interpolate the raw
+                    // client sortBy string into SQL (injection guard). Every
+                    // whitelisted column is backed by a (site_id, <col>)
+                    // composite index so this stays fast on the ~273M-row table.
+                    const sort = Recordings.resolveRecordingSort(parameters.sortBy, parameters.sortRev);
+                    // Force the (site_id, <col>) composite for the list query.
+                    // Without it the optimizer mis-picks a single-column index
+                    // and full-scans the 273M-row table -> max_statement_time.
+                    // Only the list (select recording_id) needs/benefits from
+                    // this; count/date_range keep their own plans.
+                    const buildListSql = function(orderClause, forceIndex){
+                        const q = query.slice();
+                        q.push('ORDER BY ' + orderClause);
+                        if(limit_clause){ q.push("LIMIT " + limit_clause); }
+                        let sql = q.join('\n');
+                        if (forceIndex) {
+                            // Inject the hint right after the base table alias,
+                            // before any JOINs (the FROM clause is
+                            // "FROM recordings AS r\n<JOINs>").
+                            sql = sql.replace(
+                                /FROM\s+recordings\s+AS\s+r/i,
+                                'FROM recordings AS r FORCE INDEX (' + forceIndex + ')'
+                            );
+                        }
+                        return sql;
+                    };
+
+                    const runList = function(orderClause, forceIndex){
+                        return Q.nfcall(queryHandler, {
+                            sql: buildListSql(orderClause, forceIndex),
+                            typeCast: sqlutil.parseUtcDatetime,
+                        });
+                    };
+
+                    // DEFENSIVE FALLBACK: a non-default sort should NEVER be able
+                    // to produce an empty list (the "0 Recordings" regression).
+                    // If the requested sort errors for any reason (e.g. a slow
+                    // plan tripping max_statement_time on a huge project), retry
+                    // once with the index-backed default order so the user still
+                    // gets their recordings — just in the default order.
+                    // Default order: keep the exact pre-existing behavior (no FORCE INDEX)
+                    // so all the filter combinations the optimizer already
+                    // handles well are unchanged.
+                    if (sort.usingDefault) {
+                        return runList(sort.clause, null);
+                    }
+                    // User-requested sort: FORCE the (site_id,<col>) composite
+                    // (the optimizer otherwise mis-picks a single-column index
+                    // and full-scans -> max_statement_time). If it still fails
+                    // for any reason, fall back to the untouched default path so
+                    // the user never sees an empty list ("0 Recordings").
+                    return runList(sort.clause, sort.index).catch(function(err){
+                        console.error('recordings list sort failed, falling back to default order:',
+                            { sortBy: parameters.sortBy, sortRev: parameters.sortRev, error: err && err.message });
+                        return runList('r.site_id DESC, r.datetime DESC', null);
                     });
                 }));
             }).then(async function (results) {
                 // Get recording data for the output='list'
                 const listIndex = outputs.findIndex(item => item === 'list')
                 if (outputs.includes('list') && results[listIndex][0].length && !outputs.includes('sql')) {
+                    // The page of recording_ids was already selected in the
+                    // requested (whitelisted) order by the list query above.
+                    // This re-fetch must PRESERVE that exact order — previously
+                    // it hardcoded `site_id DESC, datetime DESC`, which silently
+                    // overrode any user-selected sort. Use ORDER BY FIELD(...)
+                    // to replay the id order from the first query.
+                    const orderedIds = results[listIndex][0].map(item => item.id);
                     const sql = `SELECT r.recording_id AS id,
                         SUBSTRING_INDEX(r.uri,'/',-1) as file,
                         r.uri,
@@ -1566,8 +1671,8 @@ var Recordings = {
                         r.sample_rate,
                         r.meta,
                         r.site_id
-                        FROM recordings r WHERE r.recording_id IN (${results[listIndex][0].map(item => item.id)})
-                        ORDER BY r.site_id DESC, r.datetime DESC
+                        FROM recordings r WHERE r.recording_id IN (${orderedIds})
+                        ORDER BY FIELD(r.recording_id, ${orderedIds})
                     `
                     let queryResult = await dbpool.query({
                         sql,

@@ -1,6 +1,7 @@
 var express = require('express');
 var router = express.Router();
 var AWS = require('aws-sdk');
+const { createS3Client } = require('../../../utils/storage');
 var csv_stringify = require("csv-stringify");
 var path   = require('path');
 var model = require('../../../model');
@@ -13,20 +14,14 @@ const fs = require('fs')
 
 let s3, s3RFCx;
 
+// endpoint-aware: route through s3-proxy/s3-reader/s3-writer chain
+// (AWS_S3_ENDPOINT) instead of AWS S3 directly. See app/utils/storage.js.
 function defineS3Clients() {
     if (!s3) {
-        s3 = new AWS.S3(getS3ClientConfig('aws'))
+        s3 = createS3Client('aws')
     }
     if (!s3RFCx) {
-        s3RFCx = new AWS.S3(getS3ClientConfig('aws_rfcx'))
-    }
-}
-
-function getS3ClientConfig(type) {
-    return {
-        accessKeyId: config(type).accessKeyId,
-        secretAccessKey: config(type).secretAccessKey,
-        region: config(type).region
+        s3RFCx = createS3Client('aws_rfcx')
     }
 }
 
@@ -417,6 +412,26 @@ router.get('/:get/:oneRecUrl?', function(req, res, next) {
                     'Content-Disposition',
                     `attachment; filename="${servedName}"`
                 );
+                res.sendFile(file.path, function(err) {
+                    fs.unlink(file.path, () => {});
+                    if (err && !res.headersSent) return next(err);
+                });
+                return;
+            }
+
+            // Spectrogram images + thumbnails are CONTENT-ADDRESSED (every
+            // render param is encoded in the request URL/filename), so they
+            // are immutable and safe to cache aggressively. Serve them
+            // INLINE (not as an attachment download) with a long-lived
+            // Cache-Control + an ETag (res.sendFile adds Last-Modified/ETag)
+            // so browsers and the CDN reuse them instead of re-fetching /
+            // re-rendering on every page view. (Previously res.download set
+            // Content-Disposition: attachment with no cache headers, which
+            // defeats inline <img> caching.)
+            if (get === 'image' || get === 'thumbnail') {
+                res.setHeader('Content-Type', 'image/png');
+                res.setHeader('Content-Disposition', `inline; filename="${recording.file}"`);
+                res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
                 res.sendFile(file.path, function(err) {
                     fs.unlink(file.path, () => {});
                     if (err && !res.headersSent) return next(err);

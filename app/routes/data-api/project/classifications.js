@@ -4,6 +4,7 @@
 const express = require('express');
 const async = require('async');
 const AWS = require('aws-sdk');
+const { createS3Client } = require('../../../utils/storage');
 const config = require('../../../config');
 const model = require('../../../model');
 const pokeDaMonkey = require('../../../utils/monkey');
@@ -15,20 +16,14 @@ const { httpErrorHandler } = require('@rfcx/http-utils');
 let s3, s3RFCx;
 defineS3Clients();
 
-function getS3ClientConfig (type) {
-    return {
-        accessKeyId: config(type).accessKeyId,
-        secretAccessKey: config(type).secretAccessKey,
-        region: config(type).region
-    }
-}
-
+// endpoint-aware: route through s3-proxy/s3-reader/s3-writer chain
+// (AWS_S3_ENDPOINT) instead of AWS S3 directly. See app/utils/storage.js.
 function defineS3Clients () {
     if (!s3) {
-        s3 = new AWS.S3(getS3ClientConfig('aws'))
+        s3 = createS3Client('aws')
     }
     if (!s3RFCx) {
-        s3RFCx = new AWS.S3(getS3ClientConfig('aws_rfcx'))
+        s3RFCx = createS3Client('aws_rfcx')
     }
 }
 

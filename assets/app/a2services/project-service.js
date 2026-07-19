@@ -55,6 +55,10 @@ angular.module('a2.srv.project', [
                     var summary = results[1] || {};
                     var limits = summary.limits || {};
                     var jobLimit = limits.jobCount;
+                    // Tier reframe (2026-06-29): per-job recording (playlist
+                    // size) cap. null/undefined => uncapped (premium).
+                    var recordingJobLimit = (limits.jobRecordingCount === null || limits.jobRecordingCount === undefined)
+                        ? null : Number(limits.jobRecordingCount);
                     var isInactive = summary.entitlementState === 'inactive';
                     var isViewOnly = summary.isLocked === true;
                     var isJobLimitReached = jobLimit !== null && jobLimit !== undefined && Number(usage.jobCount || 0) >= Number(jobLimit);
@@ -62,6 +66,8 @@ angular.module('a2.srv.project', [
                         usage: usage,
                         summary: summary,
                         limits: limits,
+                        projectType: summary.projectType,
+                        recordingJobLimit: recordingJobLimit,
                         settingsUrl: summary.settingsUrl,
                         isInactive: isInactive,
                         isViewOnly: isViewOnly,

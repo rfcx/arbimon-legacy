@@ -2,13 +2,12 @@ var express = require('express');
 var router = express.Router();
 var routes = [
     '/user',
-    '/sites',
     '/species',
     '/species_taxons',
     '/songtypes',
     '/project',
     '/jobs',
-    '/app-listings',
+    '/masquerade',
 ];
 
 

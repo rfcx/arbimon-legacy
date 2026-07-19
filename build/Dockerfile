@@ -3,6 +3,9 @@
 FROM node:18.14.0 as build
 WORKDIR /app
 COPY ["jobs/package.json", "jobs/package-lock.json*", "/app/"]
+# The vendored @rfcx/notification-templates (file: dep) must exist before
+# `npm install` can resolve it.
+COPY jobs/vendor /app/vendor
 RUN npm install
 COPY jobs /app/jobs
 
@@ -54,6 +57,11 @@ RUN apt update \
         libflac-dev \
         autoconf \
         automake
+# The PM / soundscape / template export paths write intermediate CSVs to
+# jobs/arbimon-recording-export-job/tmpfilecache/ but (unlike the index.js
+# paths) do not create it, so the job crashed with ENOENT once it actually ran.
+# Pre-create it in the image.
+RUN mkdir -p /app/jobs/arbimon-recording-export-job/tmpfilecache
 CMD ["node", "--max-old-space-size=8192", "jobs/arbimon-recording-export-job/index.js"]
 
 # ---

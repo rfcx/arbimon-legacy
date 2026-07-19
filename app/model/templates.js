@@ -4,6 +4,7 @@
 const debug = require('debug')('arbimon2:model:templates');
 const jimp = require('jimp');
 const AWS = require('aws-sdk');
+const { createS3Client } = require('../utils/storage');
 const fs = require('fs')
 const joi = require('joi');
 const q = require('q');
@@ -397,7 +398,7 @@ var Templates = {
             return roi.getBufferAsync(jimp.MIME_PNG);
         }).then((roiBuffer) => {
             if(!s3){
-                s3 = new AWS.S3();
+                s3 = createS3Client('aws'); // endpoint-aware: routes via s3-proxy chain
             }
             return s3.putObject({
                 Bucket: config('aws').bucketName,

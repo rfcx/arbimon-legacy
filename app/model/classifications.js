@@ -7,8 +7,10 @@ const config = require('../config');
 const SQLBuilder = require('../utils/sqlbuilder');
 const dbpool = require('../utils/dbpool');
 const queryHandler = dbpool.queryHandler;
-const AWS = require('aws-sdk');
-const s3 = new AWS.S3();
+const { createS3Client } = require('../utils/storage');
+// Route through the s3-proxy/s3-reader/s3-writer chain (endpoint-aware),
+// not AWS S3 directly.
+const s3 = createS3Client('aws');
 const q = require('q');
 const joi = require('joi');
 const k8sConfig = config('k8s');

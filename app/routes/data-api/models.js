@@ -12,18 +12,12 @@ const config = require('../../config');
 const { arbimon2PublicUrl } = require('../../utils/asset-url');
 const APIError = require('../../utils/apierror');
 const router = express.Router();
-const s3 = new AWS.S3();
-const s3RFCx = new AWS.S3(getS3ClientConfig('aws_rfcx'))
+const { createS3Client } = require('../../utils/storage');
+// endpoint-aware: route through s3-proxy/s3-reader/s3-writer chain.
+const s3 = createS3Client('aws');
+const s3RFCx = createS3Client('aws_rfcx');
 const { httpErrorHandler } = require('@rfcx/http-utils');
 const moment = require('moment');
-
-function getS3ClientConfig (type) {
-    return {
-        accessKeyId: config(type).accessKeyId,
-        secretAccessKey: config(type).secretAccessKey,
-        region: config(type).region
-    }
-}
 
 // ------------------------ models routes -------------------------------------
 
@@ -381,45 +375,6 @@ router.get('/project/:projectUrl/validations', function(req, res, next) {
 });
 
 // --------------------- soundscapes routes
-
-router.post('/project/:projectUrl/soundscape/multiple-batch', function(req, res, next) {
-    res.type('json');
-    let siteNames = req.body.s.split(',')
-    let isSearchResult = false
-    let isSearchAll = false
-    siteNames.forEach(site => {
-        if (site.includes('Select all search result')) return isSearchResult = true
-        if (site.includes('Select all')) return isSearchAll = true
-    })
-    if (isSearchResult) {
-        const names = siteNames.filter(site => !site.includes('Select all search result'))
-        const filteredSite = siteNames.filter(site => site.includes('Select all search result'))
-        const filteredSiteNames = filteredSite.map(site => {
-            const reg = /Select all search result \((.*?)\)/.exec(site)
-            return reg[1]
-        })
-        const finalArray = names.concat(filteredSiteNames)
-        siteNames = finalArray.join(",")
-    }
-    else if (isSearchAll) {
-        siteNames = ''
-    }
-    else siteNames = req.body.s
-    console.log('<- soundscape/multiple-batch siteNames', siteNames)
-    return model.soundscapes.createMultipleSoundscape({
-        projectUrl: req.body.projectUrl,
-        sites: siteNames,
-        year: req.body.y.toString(),
-        aggregation: req.body.a,
-        binSize: req.body.b.toString(),
-        normalize: req.body.nv.toString(),
-        threshold: req.body.t.toString(),
-        userId: req.body.u.toString()
-    }, function(err, data) {
-        if (err) return next(err);
-        res.json({ create: data });
-    })
-})
 
 router.post('/project/:projectUrl/soundscape/single-batch', function(req, res, next) {
     res.type('json');

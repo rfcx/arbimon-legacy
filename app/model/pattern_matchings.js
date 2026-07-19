@@ -921,6 +921,11 @@ var PatternMatchings = {
         const isPrivileged = data.user && data.user.email && data.user.email.endsWith('@rfcx.org') ? 1 : 0
         data.user = data.user.id
         return q.ninvoke(joi, 'validate', data, PatternMatchings.JOB_SCHEMA).then(() => {
+            // Tier reframe (2026-06-29): enforce the per-job recording (playlist
+            // size) cap for free projects (uncapped for premium). Limit owned by
+            // bio-api; fail-open if bio-api is unreachable.
+            return require('./tiering').assertJobRecordingLimit(data.project, data.playlist);
+        }).then(() => {
             // rfcx-local: when ANALYSIS_DISPATCH=jobqueue, create the job +
             // pattern_matchings rows directly (what the AWS tm_driver Lambda
             // used to do) so the in-cluster jobqueue-dispatcher picks it up,

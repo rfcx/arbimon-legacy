@@ -3,6 +3,7 @@
 
 const joi = require('joi');
 const AWS = require('aws-sdk');
+const { createS3Client } = require('../utils/storage');
 const q = require('q');
 const dbpool = require('../utils/dbpool');
 const Recordings = require('./recordings');
@@ -11,7 +12,7 @@ const k8sConfig = config('k8s');
 const jsonTemplates = require('../utils/json-templates');
 const { Client } = require('kubernetes-client');
 const k8sClient = new Client({ version: '1.13' });
-const s3 = new AWS.S3();
+const s3 = createS3Client('aws'); // endpoint-aware: routes via s3-proxy chain
 const curEnv = config('aws').env
 
 let ClusteringJobs = {
@@ -150,7 +151,7 @@ let ClusteringJobs = {
 
     getAsset: function (s3Path, res) {
         if(!s3){
-            s3 = new AWS.S3();
+            s3 = createS3Client('aws'); // endpoint-aware: routes via s3-proxy chain
         }
         return s3
             .getObject({ Bucket: config('aws').bucketName, Key: s3Path })
@@ -279,10 +280,18 @@ let ClusteringJobs = {
             "    `date_created`, `parameters`\n" +
             ") SELECT ?, ?, ?, ?, ?, NOW(), ?";
 
+        // rfcx-local: when ANALYSIS_DISPATCH=jobqueue, insert the job as
+        // 'waiting' so the in-cluster jobqueue-dispatcher claims it (type 9 ->
+        // aed-clustering worker) instead of posting a k8s Job directly to AWS
+        // EKS. Falls back to the legacy 'processing' + direct-post when unset.
+        const useJobqueue = (config('lambdas') && config('lambdas').dispatch === 'jobqueue')
+            || process.env.ANALYSIS_DISPATCH === 'jobqueue';
+        const initialState = useJobqueue ? 'waiting' : 'processing';
+
         return q.ninvoke(joi, 'validate', payload, ClusteringJobs.JOB_SCHEMA)
             .then(() => dbpool.query(
                 jobQuery, [
-                    9, data.project_id, data.user_id, 'processing', 0, 0, 4, 0, 0
+                    9, data.project_id, data.user_id, initialState, 0, 0, 4, 0, 0
                 ]
             ).then(result => {
                 data.id = job_id = result.insertId;
@@ -298,6 +307,12 @@ let ClusteringJobs = {
                     ]
                 )
                 ).then(async () => {
+                // rfcx-local: skip the direct AWS-EKS k8s Job post when the
+                // jobqueue dispatcher owns dispatch (it claims the 'waiting'
+                // row above and runs the aed-clustering worker in-cluster).
+                if (useJobqueue) {
+                    return;
+                }
                 data.kubernetesJobName = `aed-clustering-${new Date().getTime()}`;
                 let jobParam = jsonTemplates.getAEDJobTemplate('aed-clustering', 'job', {
                     kubernetesJobName: data.kubernetesJobName,

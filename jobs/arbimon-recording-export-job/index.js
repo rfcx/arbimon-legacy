@@ -4,14 +4,16 @@ const fs = require('fs')
 const stream = require('stream');
 const csv_stringify = require('csv-stringify');
 const mandrill = require('mandrill-api/mandrill')
+const axios = require('axios')
 const moment = require('moment')
+const { renderEmail } = require('@rfcx/notification-templates')
 const { exportOccupancyModels, getExportRecordingsRow, getCountSitesRecPerDates, updateExportRecordings, getCountConnections } = require('../services/recordings')
 const { errorMessage } = require('../services/stats')
 const recordings = require('../../app/model/recordings')
 const clusterings = require('../../app/model/clustering-jobs')
 const projects = require('../../app/model/projects')
 const config_hosts = require('../../config/hosts');
-const { saveLatestData, combineFilename, uploadAsStream, getSignedUrl, uploadFileToS3 } = require('../services/storage')
+const { saveLatestData, combineFilename, uploadAsStream, getSignedUrl, getDownloadUrl, uploadFileToS3 } = require('../services/storage')
 const recordingsExport = require('./recordings')
 const patternMatching = require('./pattern-matching')
 const soundscape = require('./soundscape')
@@ -101,16 +103,16 @@ async function main () {
         return new Promise((resolve, reject) => {
             const exportReportType = 'RFM Classification';
             console.log(`Arbimon Export ${exportReportType} job`)
-            rfmClassification.collectData(projection_parameters, async (err, filePath, fileName) => {
+            rfmClassification.collectData(projection_parameters, async (err, filePath, fileName, jobMeta) => {
                 if (err) {
                     console.error('Arbimon Export job error', err)
                     fs.unlink(filePath, () => {})
                     reject(err)
                 }
                 console.log('Arbimon Export job: uploading file to S3')
-                const url = await saveFile(filePath, currentTime, rowData.project_id, fileName)
-                console.log('Arbimon Export job: file is accessible by url', url)
-                await sendEmail('Arbimon Export recording report', `${fileName}.csv`, rowData, url, true)
+                const { url, stats } = await saveFile(filePath, currentTime, rowData.project_id, fileName)
+                console.log('Arbimon Export job: file is accessible by url', url, 'stats', stats, 'jobMeta', jobMeta)
+                await sendRfmResultsEmail(rowData, url, stats, jobMeta)
                 await updateExportRecordings(rowData, { processed_at: currentTime })
                 fs.unlink(filePath, () => {})
                 console.log(`Arbimon Export job finished: export recordings report for ${message}`)
@@ -130,7 +132,7 @@ async function main () {
                 const bucketFormatted = S3_EXPORT_BUCKET_ARBIMON.split('/')[0]
                 const s3filePath = await uploadFileToS3(bucketFormatted, zipPath, rowData.project_id, currentTime, reportName, '.zip')
                 console.log('--s3filePath', s3filePath, 'reportName', reportName, 'fileName', fileName)
-                const url = await getSignedUrl({ Bucket: bucketFormatted, Key: s3filePath })
+                const url = await getDownloadUrl({ Bucket: bucketFormatted, Key: s3filePath, filename: `${reportName}.zip`, contentType: 'application/zip' })
                 console.log('--signed url', url)
                 await sendEmail('Arbimon export', 'Arbimon export', rowData, url, true)
                 await updateExportRecordings(rowData, { processed_at: currentTime })
@@ -184,9 +186,9 @@ async function main () {
                     reject(err)
                 }
                 console.log('Arbimon Export job: uploading file to S3')
-                const url = await saveFile(filePath, currentTime, rowData.project_id, 'recordings-export')
-                console.log('Arbimon Export job: file is accessible by url', url)
-                await sendEmail('Arbimon Export recording report', 'recordings-export.csv', rowData, url, true)
+                const { url, stats } = await saveFile(filePath, currentTime, rowData.project_id, 'recordings-export')
+                console.log('Arbimon Export job: file is accessible by url', url, 'stats', stats)
+                await sendEmail('Arbimon Export recording report', 'recordings-export.csv', rowData, url, true, stats)
                 await updateExportRecordings(rowData, { processed_at: currentTime })
                 fs.unlink(filePath, () => {})
                 console.log(`Arbimon Export job finished: export recordings report for ${message}`)
@@ -199,10 +201,29 @@ async function main () {
   }
 }
 
+// Count data rows in a CSV (total lines minus the header line).
+function countCsvRows (filePath) {
+    try {
+        const txt = fs.readFileSync(filePath, 'utf8')
+        if (!txt.length) return 0
+        const lines = txt.split('\n').filter(l => l.length > 0)
+        return Math.max(0, lines.length - 1)
+    } catch (e) {
+        return null
+    }
+}
+
+// Uploads the CSV, returns { url, stats } where stats = { rows, bytes, filename }
+// for the notification email.
 async function saveFile (filePath, currentTime, projectId, reportName) {
     const s3FileKey = combineFilename(currentTime, projectId, reportName ? reportName : 'arbimon-export', '.csv')
     await uploadAsStream({ filePath, Bucket: S3_EXPORT_BUCKET_ARBIMON, Key: s3FileKey, ContentType: 'text/csv' })
-    return await getSignedUrl({ Bucket: S3_EXPORT_BUCKET_ARBIMON, Key: s3FileKey })
+    const downloadName = `${reportName ? reportName : 'arbimon-export'}.csv`
+    let bytes = null
+    try { bytes = fs.statSync(filePath).size } catch (e) {}
+    const stats = { rows: countCsvRows(filePath), bytes, filename: downloadName }
+    const url = await getDownloadUrl({ Bucket: S3_EXPORT_BUCKET_ARBIMON, Key: s3FileKey, filename: downloadName, contentType: 'text/csv' })
+    return { url, stats }
 }
 
 // Process Clustering report and send the email
@@ -236,7 +257,7 @@ async function processClusteringStream (cluster, results, rowData, currentTime, 
                 const isBigContent = contentSize && contentSize > 10240 // 10MB
                 if (isBigContent) {
                     const filePath = await saveLatestData(S3_EXPORT_BUCKET_ARBIMON, data, rowData.project_id, currentTime, 'clustering-rois-export', '.csv', 'text/csv')
-                    const url = await getSignedUrl({ Bucket: S3_EXPORT_BUCKET_ARBIMON, Key: filePath })
+                    const url = await getDownloadUrl({ Bucket: S3_EXPORT_BUCKET_ARBIMON, Key: filePath, filename: 'clustering-rois-export.csv', contentType: 'text/csv' })
                     await sendEmail('Arbimon Export clustering report', null, rowData, url, true)
                 }
                 try {
@@ -286,7 +307,7 @@ async function sendZipFolderToTheUser(rowData, currentTime, jobName, message, re
         try {
             console.log(S3_EXPORT_BUCKET_ARBIMON, buffer, buffer.length, rowData.project_id, currentTime, reportName, '.zip', 'application/zip')
             const filePath = await saveLatestData(S3_EXPORT_BUCKET_ARBIMON, buffer, rowData.project_id, currentTime, reportName, '.zip', 'application/zip')
-            const url = await getSignedUrl({ Bucket: S3_EXPORT_BUCKET_ARBIMON, Key: filePath })
+            const url = await getDownloadUrl({ Bucket: S3_EXPORT_BUCKET_ARBIMON, Key: filePath, filename: `${reportName}.zip`, contentType: 'application/zip' })
             console.log('--signed url', url)
             await sendEmail('Arbimon export', 'Arbimon export', rowData, url, true)
             await updateExportRecordings(rowData, { processed_at: currentTime })
@@ -468,47 +489,138 @@ async function processGroupedDetectionsStream (results, rowData, projection_para
     })
 }
 
+// Send the RFM (Random Forest Model) analysis-results export notification using
+// the shared @rfcx/notification-templates template (single source of truth for
+// the copy/branding), then dispatch via the notify gateway (Mandrill fallback).
+async function sendRfmResultsEmail (rowData, url, stats, jobMeta) {
+    stats = stats || {}
+    jobMeta = jobMeta || {}
+    const EXPIRY_DAYS = 7
+    // Expiry timestamp in UTC.
+    const expiresAt = moment.utc().add(EXPIRY_DAYS, 'days').format('MMMM D, YYYY [at] HH:mm [UTC]')
+    const isGmail = (rowData.user_email || '').includes('gmail.com')
+    const rendered = renderEmail('arbimon.exportAnalysisResultsRFM', {
+        projectName: rowData.name,
+        url,
+        mode: isGmail ? 'button' : 'link',
+        jobId: jobMeta.jobId != null ? Number(jobMeta.jobId) : undefined,
+        jobName: jobMeta.jobName || undefined,
+        playlistName: jobMeta.playlistName || undefined,
+        filename: stats.filename,
+        rows: stats.rows,
+        bytes: stats.bytes,
+        expiryDays: EXPIRY_DAYS,
+        expiresAt
+    })
+    const message = {
+        from_email: 'no-reply@arbimon.org',
+        to: [{ email: rowData.user_email }],
+        subject: rendered.subject,
+        html: rendered.html,
+        text: rendered.text
+    }
+    return sendMessage(message, rendered.subject)
+}
+
 // Send report to the user
 // Thanks so much for using Arbimon! Your export report for the project “xxxx” has been completed. Please note that this link will expire in 7 days. If you have any questions about Arbimon, check out our support docs.
-async function sendEmail (subject, title, rowData, content, isSignedUrl) {
+// Human-readable filesize.
+function formatBytes (bytes) {
+    if (bytes == null || isNaN(bytes)) return null
+    const units = ['B', 'KB', 'MB', 'GB']
+    let n = Number(bytes); let i = 0
+    while (n >= 1024 && i < units.length - 1) { n /= 1024; i++ }
+    return `${n >= 10 || i === 0 ? Math.round(n) : n.toFixed(1)} ${units[i]}`
+}
+
+// stats: optional { rows, bytes, filename } shown as a short list under the link.
+async function sendEmail (subject, title, rowData, content, isSignedUrl, stats) {
+    stats = stats || {}
+    const EXPIRY_DAYS = 7
+    // Concrete expiry timestamp: now + 7 days, shown as date + HH:MM.
+    const expiryMoment = moment().add(EXPIRY_DAYS, 'days')
+    const expiryStr = expiryMoment.format('MMMM D, YYYY [at] HH:mm')
+
     const textHeader = `<p style="color:black;margin-top:0">Hello,</p>
-      <p style="color:black;">Thanks so much for using Arbimon! Your export report for the project "${rowData.name}" has been completed.`
-    const textExpires = ` Please note that this link will expire in 7 days.`
-    const textSupport = ` If you have any questions about Arbimon, check out our <a href="https://help.arbimon.org/">support docs</a>.
-      </p>`
+      <p style="color:black;">Thanks so much for using Arbimon! Your export report for the project "${rowData.name}" is ready for download.</p>`
+    // Expiry + support, shown AFTER the link. Parenthetical gives the concrete
+    // expiry date + HH:MM.
+    const textExpiresSupport = `<p style="color:black;">Please note that this link will expire in ${EXPIRY_DAYS} days (on ${expiryStr}). If you have any questions about Arbimon, check out our <a href="https://help.arbimon.org/">support docs</a>.</p>`
     const textFooter = `<p style="color:black;">
         <span> - The Arbimon Team </span>
       </p>`;
+    // Plain-text copyable link (shown in addition to the button/link, so the URL
+    // is usable even when a mail client strips buttons or blocks the link).
+    const plainLink = (url) => `<p style="color:black;">Or copy and paste this link into your browser:<br>
+        <a href="${url}" style="color:#1a73e8; word-break:break-all;">${url}</a></p>`
+    // Short stats list under the download link.
+    const statItems = []
+    if (stats.filename) statItems.push(`Filename: ${stats.filename}`)
+    if (stats.rows != null && !isNaN(stats.rows)) statItems.push(`Rows: ${Number(stats.rows).toLocaleString('en-US')}`)
+    const sizeStr = formatBytes(stats.bytes)
+    if (sizeStr) statItems.push(`Size: ${sizeStr}`)
+    const statsHtml = statItems.length
+        ? `<p style="color:black; margin:8px 0;">${statItems.join('<br>')}</p>`
+        : ''
+    const statsText = statItems.length ? `\n${statItems.join('\n')}\n` : ''
 
     const isGmail = rowData.user_email.includes('gmail.com');
+    // Subject: no leading "Arbimon"; include the project and (when known) the
+    // filename so a user with multiple exports can tell them apart.
+    const emailSubject = stats.filename
+        ? `Export ready — ${rowData.name} — ${stats.filename}`
+        : `Export ready — ${rowData.name}`
     let message = {
         from_email: 'no-reply@arbimon.org',
         to: [{
             email: rowData.user_email
         }],
-        subject: 'Arbimon export'
+        subject: emailSubject
     }
     if (isSignedUrl) {
-        if (isGmail) {
-            message.html = textHeader + textExpires + textSupport +
-            `<button style="background:#ADFF2C;border:1px solid #ADFF2C;padding:6px 14px;;border-radius:9999px;cursor:pointer;margin: 10px 0">
+        const button = `<button style="background:#ADFF2C;border:1px solid #ADFF2C;padding:6px 14px;;border-radius:9999px;cursor:pointer;margin: 10px 0">
                 <a style="text-decoration:none;color:#14130D;white-space:nowrap;text-align:center;vertical-align:middle;align-items:center;display:inline-flex;display: -webkit-inline-flex;" download target="_self" href="${content}">
                     Download
                     <img style="width: 14px; height: 14px; margin-left:8px" src="https://static.rfcx.org/arbimon/download-icon.png">
                 </a>
-            </button>` + textFooter
-        }
-        else message.html = textHeader + textExpires + textSupport
-            + `<img style="width: 14px; height: 14px; margin-left:8px" src="https://static.rfcx.org/arbimon/download-icon.png"><a style="margin-left: 1px" href="${content}">Download export</a>`
-            + textFooter;
+            </button>`
+        const inlineLink = `<p><img style="width: 14px; height: 14px; margin-left:8px" src="https://static.rfcx.org/arbimon/download-icon.png"><a style="margin-left: 1px" href="${content}">Download export</a></p>`
+        // Order: greeting -> download (button/link) -> copyable url -> stats
+        //        -> expiry+support -> signature.
+        message.html = textHeader
+            + (isGmail ? button : inlineLink)
+            + plainLink(content)
+            + statsHtml
+            + textExpiresSupport
+            + textFooter
+        // Plain-text alternative part (copyable link; better deliverability +
+        // works in text-only clients).
+        message.text = `Hello,\n\nThanks so much for using Arbimon! Your export report for the project "${rowData.name}" has been completed.\n\nDownload your export:\n${content}\n${statsText}\nPlease note that this link will expire in ${EXPIRY_DAYS} days (on ${expiryStr}). If you have any questions about Arbimon, check out our support docs: https://help.arbimon.org/\n\n- The Arbimon Team`
     } else {
         message.attachments = [{
             type: 'text/csv',
             name: title,
             content: content
         }]
-        message.html = textHeader + textSupport + textFooter
+        message.html = textHeader + statsHtml + `<p style="color:black;">If you have any questions about Arbimon, check out our <a href="https://help.arbimon.org/">support docs</a>.</p>` + textFooter
     }
+    return sendMessage(message, title)
+}
+
+// Transport: prefer the RFCx notify gateway (Cloudflare Email Sending) and fall
+// back to Mandrill only if the gateway is unconfigured or errors AND a Mandrill
+// key is present. Mirrors the device-api migration pattern. The `message` is in
+// Mandrill-lite shape (from_email/to[{email}]/subject/html/attachments[{type,
+// name,content}]) which the gateway normalizes, so no payload rewrite is needed.
+async function sendViaNotifyGateway (message) {
+    await axios.post(process.env.EMAIL_SEND_URL, message, {
+        headers: { Authorization: `Bearer ${process.env.EMAIL_SEND_TOKEN}` },
+        timeout: 15000
+    })
+    return { success: true }
+}
+
+function sendViaMandrill (message, title) {
     return new Promise(function (resolve, reject) {
       const mandrillClient = new mandrill.Mandrill(process.env.MANDRILL_KEY)
 
@@ -526,6 +638,23 @@ async function sendEmail (subject, title, rowData, content, isSignedUrl) {
           reject(e)
         })
     })
+}
+
+async function sendMessage (message, title) {
+    const hasGateway = !!(process.env.EMAIL_SEND_URL && process.env.EMAIL_SEND_TOKEN)
+    if (hasGateway) {
+        try {
+            const result = await sendViaNotifyGateway(message)
+            console.log('email status (notify gateway) sent, title', title)
+            return result
+        } catch (e) {
+            const detail = e.response ? `${e.response.status} ${JSON.stringify(e.response.data)}` : e.message
+            console.error('Error send email via notify gateway.', detail)
+            if (!process.env.MANDRILL_KEY) throw e
+            console.warn('Falling back to Mandrill.')
+        }
+    }
+    return sendViaMandrill(message, title)
 }
 
 main()

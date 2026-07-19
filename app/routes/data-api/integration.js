@@ -10,6 +10,8 @@ const verifyToken = authentication.verifyToken;
 const hasRole = authentication.hasRole;
 const { Converter, EmptyResultError, ForbiddenError, httpErrorHandler } = require('@rfcx/http-utils');
 
+const { formatCreatedProjectResponse } = require('./integration-project-response');
+
 router.post('/projects', verifyToken(), hasRole(['appUser', 'rfcxUser']), async function(req, res) {
   try {
     const converter = new Converter(req.body, {});
@@ -22,9 +24,9 @@ router.post('/projects', verifyToken(), hasRole(['appUser', 'rfcxUser']), async 
     const { name, is_private, external_id } = params
     const projectId = await model.projects.createProject({ name, is_private, external_id, url }, user.user_id);
     const project = await model.projects.find({ id: projectId }).get(0);
-    res.status(201).json(project);
+    res.status(201).json(formatCreatedProjectResponse(project, projectId));
   } catch (e) {
-    httpErrorHandler(req, res, 'Failed creating a site')(e);
+    httpErrorHandler(req, res, 'Failed creating a project')(e);
   }
 })
 

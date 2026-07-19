@@ -125,7 +125,10 @@ router.get('/:projecturl?/', function(req, res, next) {
                     userFullName: !!req.session.user && !!req.session.user.firstname ? req.session.user.firstname + ' ' + req.session.user.lastname : '',
                     userId: !!req.session.user && !!req.session.user.id ? req.session.user.id : '',
                     permissions: rows.map(function(perm) { return perm.name; }),
-                    userRole: userRole ? userRole : 'Guest'
+                    userRole: userRole ? userRole : 'Guest',
+                    // Superuser masquerade marker: set to the real super's email
+                    // when this response is being rendered AS another user.
+                    masqueradedBy: (req.session.user && req.session.user.masqueradedBy) || null
                 };
 
                 req.project = {

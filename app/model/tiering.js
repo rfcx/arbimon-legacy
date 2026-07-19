@@ -2,6 +2,110 @@
 "use strict";
 
 const dbpool = require('../utils/dbpool');
+const request = require('request');
+const dns = require('dns');
+const config = require('../config');
+const debug = require('debug')('arbimon2:tiering');
+
+// Custom A-only DNS lookup for the bio-api call. Node's default dual-stack
+// resolution issues an AAAA query for the cluster-internal
+// *.svc.cluster.local name that hangs ~5s (no IPv6 answer) before falling back
+// to A. That would race the 5s request timeout and (fail-open) silently skip
+// 12k enforcement. Resolving A records directly skips AAAA entirely (~15ms,
+// deterministic). `family:4` on `request` was NOT sufficient (the option isn't
+// reliably forwarded to the socket lookup).
+function ipv4Lookup(hostname, options, callback) {
+    if (typeof options === 'function') { callback = options; }
+    dns.resolve4(hostname, function (err, addresses) {
+        if (err || !addresses || !addresses.length) {
+            // Fall back to the default resolver (e.g. when an IP/literal is
+            // passed); still better than failing outright.
+            return dns.lookup(hostname, { family: 4 }, callback);
+        }
+        callback(null, addresses[0], 4);
+    });
+}
+
+// Tier reframe (2026-06-29): per-job recording (playlist size) cap. The limit
+// itself is OWNED by bio-api (Bio Postgres `insights`.project_type_limit), which
+// legacy can't read directly (different DB). bio-api exposes an unauthenticated
+// entitlement endpoint keyed by project slug; we ask it for the project's
+// `limits.jobRecordingCount` (null = uncapped) and enforce it at job-create
+// time. Fail-OPEN on any bio-api error so a transient bio-api issue can't block
+// production analysis.
+const BIO_API_BASE_URL = (config('hosts').bioApi || '').replace(/\/$/, '');
+
+function fetchProjectEntitlement(slug) {
+    return new Promise(function (resolve) {
+        if (!BIO_API_BASE_URL) { resolve(null); return; }
+        request({
+            method: 'GET',
+            url: `${BIO_API_BASE_URL}/projects/${encodeURIComponent(slug)}/entitlement-summary`,
+            json: true,
+            timeout: 5000,
+            lookup: ipv4Lookup
+        }, function (err, resp, body) {
+            if (err || !resp || resp.statusCode !== 200 || !body) {
+                debug('entitlement lookup failed (fail-open) for %s: %s', slug, err || (resp && resp.statusCode));
+                resolve(null);
+                return;
+            }
+            resolve(body);
+        });
+    });
+}
+
+async function getProjectSlugById(projectId) {
+    const rows = await dbpool.query('SELECT url FROM projects WHERE project_id = ? LIMIT 1', [projectId]);
+    return rows.length ? rows[0].url : null;
+}
+
+/**
+ * Count the recordings in a playlist.
+ */
+async function getPlaylistRecordingCount(playlistId) {
+    const rows = await dbpool.query(
+        'SELECT COUNT(*) AS c FROM playlist_recordings WHERE playlist_id = ?', [playlistId]
+    );
+    return rows.length ? Number(rows[0].c || 0) : 0;
+}
+
+/**
+ * Enforce the per-job recording (playlist size) cap for the given project.
+ * Throws an Error (surfaced to the user) when the playlist exceeds the project's
+ * jobRecordingCount limit. No-op when uncapped, when bio-api is unreachable
+ * (fail-open), or when the project/playlist can't be resolved.
+ *
+ * @param {Integer} projectId
+ * @param {Integer} playlistId
+ */
+async function getProjectSlugByPlaylistId(playlistId) {
+    const rows = await dbpool.query(
+        'SELECT p.url FROM playlists pl JOIN projects p ON p.project_id = pl.project_id WHERE pl.playlist_id = ? LIMIT 1',
+        [playlistId]
+    );
+    return rows.length ? rows[0].url : null;
+}
+
+async function assertJobRecordingLimit(projectId, playlistId) {
+    if (playlistId === undefined || playlistId === null) return;
+    const slug = projectId
+        ? await getProjectSlugById(projectId)
+        : await getProjectSlugByPlaylistId(playlistId);
+    if (!slug) return;
+    const entitlement = await fetchProjectEntitlement(slug);
+    const limit = entitlement && entitlement.limits ? entitlement.limits.jobRecordingCount : null;
+    if (limit === null || limit === undefined) return; // uncapped
+    const count = await getPlaylistRecordingCount(playlistId);
+    if (count > Number(limit)) {
+        const err = new Error(
+            `This analysis would run on ${count.toLocaleString()} recordings, but ${entitlement.projectType || 'free'} projects are limited to ${Number(limit).toLocaleString()} recordings per analysis. Upgrade to Pro for unlimited recordings per analysis, or run on a smaller playlist.`
+        );
+        err.status = 403;
+        err.http_code = 403;
+        throw err;
+    }
+}
 
 async function loadProjectTieringUsage(connection, projectId) {
     const usageRows = await dbpool.queryWithConn(connection,
@@ -57,5 +161,7 @@ module.exports = {
         } finally {
             connection.release();
         }
-    }
+    },
+    assertJobRecordingLimit,
+    getPlaylistRecordingCount
 };

@@ -57,6 +57,18 @@
             <span class="pl-1 brand-warning" ng-if="controller.isWarningMessage()">
                 <em>{{ controller.warningMessage }}</em>
             </span>
+            <p
+                class="pl-1 brand-warning mt-1"
+                ng-if="controller.tieringGuard.recordingJobLimit"
+            >
+                <em>Free projects can run unlimited analyses, but each analysis can process up to {{ controller.tieringGuard.recordingJobLimit | number }} recordings. Larger playlists must be split.</em>
+            </p>
+            <p
+                class="pl-1 text-danger mt-1"
+                ng-if="controller.isRecordingLimitExceeded()"
+            >
+                <em>{{ controller.recordingLimitMessage() }}</em>
+            </p>
             <ui-select ng-disabled="disabled" ng-if="controller.list.playlists && controller.list.playlists.length" ng-model="controller.data.playlist">
                 <ui-select-match placeholder="Select or search a playlist...">
                     {{$select.selected.name}}
