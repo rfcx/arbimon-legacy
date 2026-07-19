@@ -6,7 +6,6 @@ var router = express.Router();
 
 var project = require('./project');
 var dataApi = require('./data-api');
-var site = require('./site');
 var login = require('./login');
 var acmeChallenge = require('./acme-challenge');
 var dbpool = require('../utils/dbpool');
@@ -100,10 +99,7 @@ router.use(function(req, res, next) {
 
 router.use('/legacy-api', dataApi);
 router.use('/project', project);
-router.use('/site', site);
 router.use('/citizen-scientist', require('./citizen-scientist'));
-router.use('/visualizer', require('./visualizer'));
-router.use('/', require('./access-token'));
 
 
 module.exports = router;

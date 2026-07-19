@@ -376,45 +376,6 @@ router.get('/project/:projectUrl/validations', function(req, res, next) {
 
 // --------------------- soundscapes routes
 
-router.post('/project/:projectUrl/soundscape/multiple-batch', function(req, res, next) {
-    res.type('json');
-    let siteNames = req.body.s.split(',')
-    let isSearchResult = false
-    let isSearchAll = false
-    siteNames.forEach(site => {
-        if (site.includes('Select all search result')) return isSearchResult = true
-        if (site.includes('Select all')) return isSearchAll = true
-    })
-    if (isSearchResult) {
-        const names = siteNames.filter(site => !site.includes('Select all search result'))
-        const filteredSite = siteNames.filter(site => site.includes('Select all search result'))
-        const filteredSiteNames = filteredSite.map(site => {
-            const reg = /Select all search result \((.*?)\)/.exec(site)
-            return reg[1]
-        })
-        const finalArray = names.concat(filteredSiteNames)
-        siteNames = finalArray.join(",")
-    }
-    else if (isSearchAll) {
-        siteNames = ''
-    }
-    else siteNames = req.body.s
-    console.log('<- soundscape/multiple-batch siteNames', siteNames)
-    return model.soundscapes.createMultipleSoundscape({
-        projectUrl: req.body.projectUrl,
-        sites: siteNames,
-        year: req.body.y.toString(),
-        aggregation: req.body.a,
-        binSize: req.body.b.toString(),
-        normalize: req.body.nv.toString(),
-        threshold: req.body.t.toString(),
-        userId: req.body.u.toString()
-    }, function(err, data) {
-        if (err) return next(err);
-        res.json({ create: data });
-    })
-})
-
 router.post('/project/:projectUrl/soundscape/single-batch', function(req, res, next) {
     res.type('json');
     let response_already_sent;
