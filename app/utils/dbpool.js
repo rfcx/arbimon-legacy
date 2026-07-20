@@ -2,6 +2,7 @@ var mysql = require('mysql');
 var config = require('../config');
 var sqlutil = require('./sqlutil');
 var tap = require('./dbpool-tap'); // mysql2pg parity tap - OFF unless DBPOOL_TAP=1
+var pgshadow = require('./dbpool-pg'); // mysql2pg Phase 6 shadow-read - INERT unless DB_ENGINE=shadow
 var q = require('q');
 var showQueriesInConsole = true;
 
@@ -62,6 +63,25 @@ var dbpool = {
             if(cb){
                 query_fn.call(connection, sql, values, function(err, rows, fields) {
                     if (tapRec) { tap.finish(tapRec, err, rows); }
+                    // Phase 6 shadow: MariaDB result is authoritative and is
+                    // handed to cb() below unchanged. The PG replay+diff is
+                    // fire-and-forget (never awaited, never affects cb). Only
+                    // successful read results are shadowed.
+                    if (pgshadow.isShadow && !err) {
+                        try {
+                            // Format with the SAME timezone the pool uses
+                            // ('Z'): mysql.format defaults to local time for
+                            // Date params, which would shadow a different
+                            // datetime literal than the driver actually sent.
+                            var rawSql = (typeof sql === 'string') ? sql
+                                : (sql && typeof sql.sql === 'string') ? sql.sql : null;
+                            if (rawSql !== null) {
+                                var finalSql = mysql.format(rawSql, values, false,
+                                    config('db').timezone || 'Z');
+                                pgshadow.shadowAfterRead(finalSql, rows, null);
+                            }
+                        } catch (e) { /* shadow must never break the query path */ }
+                    }
                     cb(err, rows, fields);
                 });
             } else {
