@@ -318,15 +318,32 @@ function colSet(rows) {
     return Object.keys(rows[0]).map(function (k) { return k.toLowerCase(); }).sort();
 }
 
-// returns {klass, detail} or null when equal
-function compare(sql, rowsA, rowsB, epsilon) {
+// --- two-phase compare ---
+// snapshot(): canonicalize the authoritative rows SYNCHRONOUSLY at hook time.
+// The app MUTATES returned row objects after the query callback (measured
+// live: login.js attaches `picture` to the users row), so holding references
+// across the async PG replay poisons the diff. Canonical strings are
+// immutable — snapshot once, compare later.
+function snapshot(sql, rows, epsilon) {
     var ordered = hasOrderBy(sql);
-    var ca = colSet(rowsA), cb = colSet(rowsB);
+    return {
+        ordered: ordered,
+        underdetermined: !ordered && /\blimit\b/i.test(neutralize(sql)),
+        cols: colSet(rows),
+        n: rows.length,
+        canon: normalizeRows(rows, epsilon, !ordered)
+    };
+}
+
+// compareSnap(): diff a prior snapshot against freshly-returned PG rows.
+function compareSnap(snap, sql, rowsB, epsilon) {
+    var ordered = snap.ordered;
+    var ca = snap.cols, cb = colSet(rowsB);
     // column sets only comparable when both non-empty; empty-vs-empty is equal
-    if (rowsA.length && rowsB.length && ca.join(',') !== cb.join(',')) {
+    if (snap.n && rowsB.length && ca.join(',') !== cb.join(',')) {
         return { klass: 'result_mismatch', detail: 'column sets differ: [' + ca + '] vs [' + cb + ']' };
     }
-    var na = normalizeRows(rowsA, epsilon, !ordered);
+    var na = snap.canon;
     var nb = normalizeRows(rowsB, epsilon, !ordered);
     if (na.length !== nb.length) {
         return { klass: 'result_mismatch', detail: 'row counts differ: ' + na.length + ' vs ' + nb.length };
@@ -350,7 +367,18 @@ function compare(sql, rowsA, rowsB, epsilon) {
     if (casefoldEqual(na.slice().sort(), nb.slice().sort())) {
         return { klass: 'result_mismatch', detail: 'differs only by string case (ci-collation)' };
     }
+    // LIMIT without ORDER BY: the SQL contract does not determine WHICH rows
+    // are returned — each engine may legitimately pick different rows. Tag
+    // distinctly so triage/waivers can separate this class from real drift.
+    if (snap.underdetermined) {
+        return { klass: 'underdetermined_limit', detail: 'LIMIT without ORDER BY: engines returned different (individually valid) row sets' };
+    }
     return { klass: 'result_mismatch', detail: 'row sets differ' };
+}
+
+// back-compat single-shot compare (selftests + e2e harness use this)
+function compare(sql, rowsA, rowsB, epsilon) {
+    return compareSnap(snapshot(sql, rowsA, epsilon), sql, rowsB, epsilon);
 }
 
 function casefoldEqual(a, b) {
@@ -455,9 +483,13 @@ function shadowAfterRead(finalSql, mariaRows, meta) {
     if (_inflight >= MAX_INFLIGHT) { _counters.dropped_cap++; return; }
     var pool = getPool();
     if (!pool) { return; }
-    // Snapshot the MariaDB rows cheaply — they are plain objects already.
     // Cap the diff work for pathologically large results.
     if (mariaRows.length > MAX_DIFF_ROWS) { return; }
+    // SNAPSHOT NOW, synchronously: the app mutates returned row objects after
+    // the callback (e.g. login.js attaches `picture` to a users row), so the
+    // canonical form must be captured before yielding to the event loop.
+    var snap;
+    try { snap = snapshot(text, mariaRows, 1e-9); } catch (e) { return; }
 
     _inflight++;
     _counters.replayed++;
@@ -515,7 +547,7 @@ function shadowAfterRead(finalSql, mariaRows, meta) {
                 }
                 var pgRows = (pgRes && pgRes.rows) || [];
                 var cmp;
-                try { cmp = compare(text, mariaRows, pgRows, 1e-9); } catch (e) { cmp = null; }
+                try { cmp = compareSnap(snap, text, pgRows, 1e-9); } catch (e) { cmp = null; }
                 if (cmp) {
                     _counters.diff++;
                     var chash = templateHash(text);
@@ -554,6 +586,8 @@ module.exports = {
     classify: classify,
     translate: translate,
     compare: compare,
+    snapshot: snapshot,
+    compareSnap: compareSnap,
     sqlTemplate: sqlTemplate,
     templateHash: templateHash,
     normalizeRows: normalizeRows,
