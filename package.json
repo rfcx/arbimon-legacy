@@ -53,6 +53,7 @@
     "nodemailer": "~2.5.0",
     "nodemailer-smtp-transport": "~2.7.4",
     "paypal-rest-sdk": "^1.8.1",
+    "pg": "^8.22.0",
     "q": "^1.5.1",
     "redis": "^4.6.4",
     "request": "^2.88.0",
