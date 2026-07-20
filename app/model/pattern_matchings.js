@@ -330,6 +330,11 @@ var PatternMatchings = {
                 // denorm `datetime` above is TZ-shifted and must NOT be used).
                 'S.external_id as external_id',
                 'R.datetime_utc as datetime_utc',
+                // Needed by the SPA 'expand' modal to frame a padded full-band
+                // window: sample_rate -> nyquist (freq axis), duration -> clamp
+                // the +/-5s window. Cheap columns on the already-joined R.
+                'R.sample_rate as sample_rate',
+                'R.duration as duration',
             );
 
             if(show.datetime){
@@ -347,9 +352,8 @@ var PatternMatchings = {
                 builder.addTable('JOIN songtypes St ON PMR.songtype_id = St.songtype_id');
                 builder.addProjection('Sp.scientific_name as species, St.songtype as songtype');
             }
-            if (show.showFrequency) {
-                builder.addProjection('R.sample_rate as sample_rate');
-            }
+            // (sample_rate is now projected unconditionally above for the SPA
+            // expand modal, so show.showFrequency no longer needs to add it.)
             if(!show.names){
                 builder.addProjection(
                     'PMR.`recording_id`',
