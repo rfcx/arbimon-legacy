@@ -236,6 +236,10 @@ function translateFunctions(sql) {
     // rewrite needed. RAND()/NOW() are classifier-forbidden so never arrive.
     // IFNULL(a,b) -> COALESCE(a,b)
     s = s.replace(/\bIFNULL\s*\(/gi, 'COALESCE(');
+    // UCASE/LCASE are MySQL aliases (first live-canary dialect_error: tags
+    // autocomplete uses UCASE) -> UPPER/LOWER
+    s = s.replace(/\bUCASE\s*\(/gi, 'UPPER(');
+    s = s.replace(/\bLCASE\s*\(/gi, 'LOWER(');
     // MySQL `= ` on tinyint boolean is fine (smallint per T2). No rewrite.
     return s;
 }
