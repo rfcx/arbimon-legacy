@@ -110,10 +110,12 @@ eq('phantom col on maria ignored',
    m.compare('SELECT * FROM users WHERE email = \'x\'',
      [{user_id:1, email:'x', firstname:'A', picture:'http://p/x.png'}],
      [{user_id:1, email:'x', firstname:'A'}], 1e-9), null);
-eq('phantom col on pg side ignored too',
+// PG-ONLY extra column is NOT an app mutation (app never mutates PG rows) ->
+// it signals a real translation/aliasing artifact and MUST be reported.
+eq('pg-only extra col is reported',
    m.compare('SELECT * FROM users WHERE email = \'x\'',
      [{user_id:1, email:'x'}],
-     [{user_id:1, email:'x', extra:'z'}], 1e-9), null);
+     [{user_id:1, email:'x', extra:'z'}], 1e-9).klass, 'result_mismatch');
 // A REAL value diff on a SHARED column is still caught (intersection compare).
 eq('real shared-col diff still caught',
    m.compare('SELECT * FROM users WHERE email = \'x\'',

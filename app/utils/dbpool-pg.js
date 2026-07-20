@@ -531,19 +531,28 @@ function compareSnap(snap, sql, rowsB, epsilon) {
     var ordered = snap.ordered;
     var ca = snap.cols, cb = colSet(rowsB);
     var pgMaps = rowMaps(rowsB, epsilon);
-    // Column-set difference handling: the SAME SQL runs on both engines, so a
-    // column present in one result but absent in the other is NOT query-
-    // derived — it is the app mutating the authoritative row objects after the
-    // callback (measured live: login.js attaches `picture`, a column in
-    // NEITHER schema, onto users rows). Compare over the INTERSECTION and do
-    // not report the phantom column as a divergence. Only a genuine VALUE
-    // difference on shared columns is a real mismatch.
+    // Column-set difference handling. The SAME SQL runs on both engines, so a
+    // column set difference is NOT query-derived. The mutation is
+    // ONE-DIRECTIONAL: the app mutates ONLY MariaDB's authoritative row
+    // objects after the callback (measured live: login.js attaches `picture`,
+    // a column in NEITHER schema, onto users rows). PG rows are diffed then
+    // discarded — the app never touches them. Therefore:
+    //   - MariaDB-only extra columns (ca − cb)  = app mutations → suppress.
+    //   - PG-only extra columns     (cb − ca)  = CANNOT be a mutation; they
+    //     signal a real translation/aliasing artifact → REPORT (never mask).
     var colList = ca;
     if (snap.n && rowsB.length && ca.join(',') !== cb.join(',')) {
+        var caSet = {}; ca.forEach(function (k) { caSet[k] = true; });
         var cbSet = {}; cb.forEach(function (k) { cbSet[k] = true; });
+        var pgOnly = cb.filter(function (k) { return !caSet[k]; });
+        if (pgOnly.length) {
+            // PG produced a column MariaDB did not — not an app mutation.
+            return { klass: 'result_mismatch',
+                detail: 'pg-only column(s) [' + pgOnly + ']: maria=[' + ca + '] pg=[' + cb + ']' };
+        }
+        // Only MariaDB-side extras remain: compare over the shared set (= cb).
         colList = ca.filter(function (k) { return cbSet[k]; });
         if (!colList.length) {
-            // No shared columns at all — that IS a real structural divergence.
             return { klass: 'result_mismatch', detail: 'no shared columns: [' + ca + '] vs [' + cb + ']' };
         }
     }
