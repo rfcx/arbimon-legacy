@@ -48,6 +48,81 @@ eq('backtick inside string untouched', m.translate("SELECT `name` FROM t WHERE x
 eq('limit inside string untouched', m.translate("SELECT a FROM t WHERE note = 'LIMIT 1, 2'"),
    "SELECT a FROM t WHERE note = 'LIMIT 1, 2'");
 
+console.log('== translator: dialect functions (P6 hardening) ==');
+// SUBSTRING_INDEX -> split_part, guarded to |count|=1
+eq('subidx last seg', m.translate("SELECT SUBSTRING_INDEX(r.uri, '/', -1) AS f FROM recordings r"),
+   "SELECT split_part(r.uri, '/', -1) AS f FROM recordings r");
+eq('subidx before dot', m.translate("SELECT SUBSTRING_INDEX(m.uri, '.', 1) FROM models m"),
+   "SELECT split_part(m.uri, '.', 1) FROM models m");
+eq('subidx backtick+spaces', m.translate("SELECT SUBSTRING_INDEX( r.`uri` , '.', 1 ) FROM recordings r"),
+   "SELECT split_part(r.uri, '.', 1) FROM recordings r");
+// NOTE: backtick `uri` -> bare uri (T14 fold); args are trimmed by splitTopArgs
+eq('subidx count>1 NOT rewritten (would be wrong)', m.translate("SELECT SUBSTRING_INDEX(a, '/', 2) FROM t"),
+   "SELECT SUBSTRING_INDEX(a, '/', 2) FROM t");
+// YEAR/MONTH/DAY/HOUR -> EXTRACT
+eq('year->extract', m.translate('SELECT YEAR(R.datetime) as year FROM recordings R'),
+   'SELECT EXTRACT(YEAR FROM R.datetime)::int as year FROM recordings R');
+eq('month+day both', m.translate('SELECT MONTH(r.datetime) m, DAY(r.datetime) d FROM t r'),
+   'SELECT EXTRACT(MONTH FROM r.datetime)::int m, EXTRACT(DAY FROM r.datetime)::int d FROM t r');
+// DATE_FORMAT -> to_char (double-quoted MySQL format string too)
+eq('date_format mdy hi', m.translate("SELECT date_format(r.datetime,'%m-%d-%Y %H:%i') FROM t r"),
+   "SELECT to_char(r.datetime, 'MM-DD-YYYY HH24:MI') FROM t r");
+eq('date_format ymd dquote', m.translate('SELECT DATE_FORMAT(r.datetime, "%Y/%m/%d") as date FROM t r'),
+   "SELECT to_char(r.datetime, 'YYYY/MM/DD') as date FROM t r");
+eq('date_format %T', m.translate('SELECT DATE_FORMAT(r.datetime, "%T") FROM t r'),
+   "SELECT to_char(r.datetime, 'HH24:MI:SS') FROM t r");
+eq('date_format unknown code bails', m.translate('SELECT DATE_FORMAT(x, "%Q") FROM t'),
+   'SELECT DATE_FORMAT(x, "%Q") FROM t');
+// GROUP_CONCAT -> string_agg
+eq('group_concat w/ separator', m.translate("SELECT GROUP_CONCAT(a.alias SEPARATOR ', ') FROM species_aliases a"),
+   "SELECT string_agg((a.alias)::text, ', ') FROM species_aliases a");
+eq('group_concat default sep', m.translate('SELECT GROUP_CONCAT(x) FROM t'),
+   "SELECT string_agg((x)::text, ',') FROM t");
+// IF -> CASE (incl. nested), ISNULL -> IS NULL
+eq('if->case', m.translate('SELECT IF(a IS NULL, 0, 1) FROM t'),
+   'SELECT CASE WHEN a IS NULL THEN 0 ELSE 1 END FROM t');
+eq('nested if->case', m.translate('SELECT IF(x=1, 1, IF(y=1, 1, 0)) FROM t'),
+   'SELECT CASE WHEN x=1 THEN 1 ELSE CASE WHEN y=1 THEN 1 ELSE 0 END END FROM t');
+eq('isnull->is null', m.translate('SELECT IF(ISNULL(p.present), 1, 0) FROM t p'),
+   'SELECT CASE WHEN (p.present IS NULL) THEN 1 ELSE 0 END FROM t p');
+// ROUND(x,n) -> numeric cast
+eq('round two-arg', m.translate('SELECT ROUND(TSD.y2-TSD.y1,1) FROM t TSD'),
+   'SELECT round((TSD.y2-TSD.y1)::numeric, 1) FROM t TSD');
+eq('round one-arg untouched', m.translate('SELECT ROUND(x) FROM t'), 'SELECT ROUND(x) FROM t');
+// FORCE INDEX stripped
+eq('force index stripped', m.translate('SELECT r.recording_id FROM recordings AS r FORCE INDEX (idx) JOIN sites s ON s.site_id=r.site_id'),
+   'SELECT r.recording_id FROM recordings AS r JOIN sites s ON s.site_id=r.site_id');
+// quoted alias -> double-quoted identifier; string-value literals untouched
+eq('quoted alias', m.translate("SELECT CONCAT('a', A.job_id) as 'uri' FROM aed A"),
+   'SELECT CONCAT(\'a\', A.job_id) as "uri" FROM aed A');
+eq('non-ident quoted alias left as literal', m.translate("SELECT x as 'a b' FROM t"),
+   "SELECT x as 'a b' FROM t");
+// literal protection: none of the above touch matching text inside a string
+eq('func name inside string untouched', m.translate("SELECT a FROM t WHERE note = 'call YEAR(x) and IF(y)'"),
+   "SELECT a FROM t WHERE note = 'call YEAR(x) and IF(y)'");
+eq('column named year (no paren) untouched', m.translate('SELECT year FROM summary'),
+   'SELECT year FROM summary');
+
+console.log('== compare: app-injected phantom column (users.picture) ==');
+// Same SQL both engines; MariaDB row gained a `picture` col the app attached
+// after the callback (in NEITHER schema). Must NOT be a divergence.
+eq('phantom col on maria ignored',
+   m.compare('SELECT * FROM users WHERE email = \'x\'',
+     [{user_id:1, email:'x', firstname:'A', picture:'http://p/x.png'}],
+     [{user_id:1, email:'x', firstname:'A'}], 1e-9), null);
+eq('phantom col on pg side ignored too',
+   m.compare('SELECT * FROM users WHERE email = \'x\'',
+     [{user_id:1, email:'x'}],
+     [{user_id:1, email:'x', extra:'z'}], 1e-9), null);
+// A REAL value diff on a SHARED column is still caught (intersection compare).
+eq('real shared-col diff still caught',
+   m.compare('SELECT * FROM users WHERE email = \'x\'',
+     [{user_id:1, email:'x', firstname:'A', picture:'p'}],
+     [{user_id:1, email:'x', firstname:'B'}], 1e-9).klass, 'result_mismatch');
+// No shared columns at all IS a real structural divergence.
+eq('no shared cols is real',
+   m.compare('SELECT a FROM t', [{a:1}], [{b:2}], 1e-9).klass, 'result_mismatch');
+
 console.log('== template/hash ==');
 eq('template collapses literals+IN arity',
    m.sqlTemplate("SELECT * FROM t WHERE id IN (1,2,3) AND name='x' AND n=5"),
