@@ -227,25 +227,205 @@ function translateLimitOffset(sql) {
     });
 }
 
-// A small set of scalar-function / operator rewrites that appear in the
-// measured hot spots. Deliberately conservative — only unambiguous ones.
-function translateFunctions(sql) {
+// --- paren-aware function-call rewriter --------------------------------
+// Finds NAME( ... ) with balanced parentheses (respecting the \u0001L<n>\u0001
+// literal placeholders, which contain no parens/commas), splits the
+// top-level comma args, and replaces the whole call with fn(args). Returns
+// the original call unchanged when fn returns null (so an unsupported shape
+// surfaces as an honest dialect_error rather than a wrong translation).
+// Loops to a fixed point so NESTED calls (e.g. IF inside IF) all convert.
+function splitTopArgs(argStr) {
+    var out = [], depth = 0, cur = '';
+    for (var i = 0; i < argStr.length; i++) {
+        var ch = argStr[i];
+        if (ch === '(') { depth++; cur += ch; }
+        else if (ch === ')') { depth--; cur += ch; }
+        else if (ch === ',' && depth === 0) { out.push(cur); cur = ''; }
+        else { cur += ch; }
+    }
+    if (cur.length || out.length) { out.push(cur); }
+    return out.map(function (a) { return a.trim(); });
+}
+
+function rewriteCall(sql, name, fn) {
+    var re = new RegExp('(^|[^A-Za-z0-9_.])(' + name + ')\\s*\\(', 'gi');
+    var search = 0;
+    for (var guard = 0; guard < 500; guard++) {
+        re.lastIndex = search;
+        var m = re.exec(sql);
+        if (!m) { break; }
+        var openIdx = m.index + m[0].length - 1;   // index of '('
+        var depth = 0, endIdx = -1;
+        for (var i = openIdx; i < sql.length; i++) {
+            if (sql[i] === '(') { depth++; }
+            else if (sql[i] === ')') { depth--; if (depth === 0) { endIdx = i; break; } }
+        }
+        if (endIdx < 0) { break; }   // unbalanced — give up cleanly
+        var inner = sql.slice(openIdx + 1, endIdx);
+        var repl = fn(splitTopArgs(inner), inner);
+        if (repl === null || repl === undefined) {
+            // Not rewritable: advance PAST this whole call and keep scanning
+            // (a later same-named call may still be rewritable).
+            search = endIdx + 1;
+            continue;
+        }
+        // Resume AT the start of the replacement text: any nested same-named
+        // call surfaced into the args (e.g. IF inside IF) gets found next
+        // iteration. Idempotent rewrites (ROUND) must self-guard against
+        // re-conversion via their fn returning null on already-converted args.
+        sql = sql.slice(0, m.index + m[1].length) + repl + sql.slice(endIdx + 1);
+        search = m.index + m[1].length;
+    }
+    return sql;
+}
+
+// MySQL DATE_FORMAT strftime-style codes -> PG to_char template tokens.
+var DATE_FMT_CODES = { Y: 'YYYY', y: 'YY', m: 'MM', c: 'FMMM', d: 'DD', e: 'FMDD',
+    H: 'HH24', k: 'FMHH24', h: 'HH12', I: 'HH12', i: 'MI', s: 'SS', S: 'SS',
+    T: 'HH24:MI:SS', p: 'AM', j: 'DDD', W: 'Day', M: 'Month', a: 'Dy', b: 'Mon' };
+function mysqlDateFormatToPg(fmt) {
+    var out = '', i = 0;
+    while (i < fmt.length) {
+        var ch = fmt[i];
+        if (ch === '%') {
+            var code = fmt[i + 1];
+            if (code === '%') { out += '%'; i += 2; continue; }
+            if (!DATE_FMT_CODES.hasOwnProperty(code)) { return null; } // unknown -> bail
+            out += DATE_FMT_CODES[code]; i += 2; continue;
+        }
+        // literal separators (/ - : space .) pass through; a bare letter would
+        // be a to_char token, so quote any non-token literal char defensively.
+        if (/[A-Za-z]/.test(ch)) { out += '"' + ch + '"'; }
+        else { out += ch; }
+        i++;
+    }
+    return out;
+}
+
+// A set of scalar-function / operator rewrites for the measured hot spots.
+// `store` lets us read the text of protected string literals when a rewrite
+// needs the literal value (DATE_FORMAT format, GROUP_CONCAT separator).
+function litText(tok, store) {
+    var m = /^\u0001L(\d+)\u0001$/.exec(tok.trim());
+    if (!m) { return null; }
+    var raw = store[parseInt(m[1], 10)];
+    if (raw == null) { return null; }
+    return raw.replace(/^['"]/, '').replace(/['"]$/, ''); // strip surrounding quotes
+}
+
+function translateFunctions(sql, store) {
     var s = sql;
     // MySQL string concat via CONCAT() is identical in PG; the `||` operator
     // is logical-OR in MySQL only under PIPES_AS_CONCAT (not set here) so no
     // rewrite needed. RAND()/NOW() are classifier-forbidden so never arrive.
     // IFNULL(a,b) -> COALESCE(a,b)
     s = s.replace(/\bIFNULL\s*\(/gi, 'COALESCE(');
+    // UCASE/LCASE are MySQL aliases (first live-canary dialect_error: tags
+    // autocomplete uses UCASE) -> UPPER/LOWER
+    s = s.replace(/\bUCASE\s*\(/gi, 'UPPER(');
+    s = s.replace(/\bLCASE\s*\(/gi, 'LOWER(');
+
+    // ISNULL(x) -> (x IS NULL)   (PG has no ISNULL function)
+    s = rewriteCall(s, 'ISNULL', function (args) {
+        if (args.length !== 1) { return null; }
+        return '(' + args[0] + ' IS NULL)';
+    });
+
+    // IF(cond, a, b) -> CASE WHEN cond THEN a ELSE b END  (nested via fixpoint)
+    s = rewriteCall(s, 'IF', function (args) {
+        if (args.length !== 3) { return null; }
+        return 'CASE WHEN ' + args[0] + ' THEN ' + args[1] + ' ELSE ' + args[2] + ' END';
+    });
+
+    // SUBSTRING_INDEX(str, delim, count) -> split_part(str, delim, count)
+    // ONLY equivalent for |count| = 1 (for |count|>1 MySQL joins the first
+    // N segments whereas split_part returns the Nth). Guard strictly; the
+    // whole live corpus uses ±1. Others fall through to an honest divergence.
+    s = rewriteCall(s, 'SUBSTRING_INDEX', function (args) {
+        if (args.length !== 3) { return null; }
+        var cnt = args[2].trim();
+        if (cnt !== '1' && cnt !== '-1') { return null; }
+        return 'split_part(' + args[0] + ', ' + args[1] + ', ' + cnt + ')';
+    });
+
+    // YEAR/MONTH/DAY/HOUR/MINUTE/SECOND(x) -> EXTRACT(field FROM x)::int
+    ['YEAR', 'MONTH', 'DAY', 'HOUR', 'MINUTE', 'SECOND'].forEach(function (fld) {
+        s = rewriteCall(s, fld, function (args) {
+            if (args.length !== 1) { return null; }
+            return 'EXTRACT(' + fld + ' FROM ' + args[0] + ')::int';
+        });
+    });
+
+    // ROUND(expr, n): PG has no round(double precision, int) — only
+    // round(numeric, int). Cast the value to numeric. 1-arg ROUND is fine
+    // in both, leave it.
+    s = rewriteCall(s, 'ROUND', function (args) {
+        if (args.length !== 2) { return null; }
+        // idempotence guard: skip an already-converted ROUND (arg0 cast to
+        // numeric) so the resume-at-replacement scan can't re-wrap it.
+        if (/::numeric\s*$/.test(args[0])) { return null; }
+        return 'round((' + args[0] + ')::numeric, ' + args[1] + ')';
+    });
+
+    // DATE_FORMAT(x, '<fmt>') -> to_char(x, '<pgfmt>')
+    s = rewriteCall(s, 'DATE_FORMAT', function (args) {
+        if (args.length !== 2) { return null; }
+        var fmt = litText(args[1], store);
+        if (fmt === null) { return null; }
+        var pg = mysqlDateFormatToPg(fmt);
+        if (pg === null) { return null; }
+        return "to_char(" + args[0] + ", '" + pg + "')";
+    });
+
+    // GROUP_CONCAT(expr [SEPARATOR sep]) -> string_agg(expr, sep|',')
+    s = rewriteCall(s, 'GROUP_CONCAT', function (args, inner) {
+        // SEPARATOR is a keyword inside the single arg, not a comma-split arg.
+        var sepM = /\bSEPARATOR\b/i.exec(inner);
+        var expr, sep;
+        if (sepM) {
+            expr = inner.slice(0, sepM.index).trim();
+            var septok = inner.slice(sepM.index + sepM[0].length).trim();
+            var sv = litText(septok, store);
+            sep = sv === null ? null : "'" + sv.replace(/'/g, "''") + "'";
+            if (sep === null) { return null; }
+        } else {
+            expr = inner.trim();
+            sep = "','"; // MySQL default GROUP_CONCAT separator
+        }
+        // string_agg needs text; casting keeps numeric ids concatenating.
+        return 'string_agg((' + expr + ')::text, ' + sep + ')';
+    });
+
     // MySQL `= ` on tinyint boolean is fine (smallint per T2). No rewrite.
     return s;
+}
+
+// FORCE INDEX (idx) — MySQL optimizer hint, no PG equivalent; strip it.
+function stripIndexHints(sql) {
+    return sql.replace(/\s+(FORCE|USE|IGNORE)\s+INDEX\s*\([^)]*\)/gi, '');
+}
+
+// `expr AS 'alias'`  ->  `expr AS "alias"`  (MySQL string-quoted column alias;
+// PG requires a double-quoted identifier). Keyed on AS + a protected literal
+// that is a plain identifier; anything else is left untouched.
+function fixQuotedAliases(sql, store) {
+    return sql.replace(/\b(AS)\s+\u0001L(\d+)\u0001/gi, function (whole, kw, n) {
+        var raw = store[parseInt(n, 10)];
+        if (raw == null) { return whole; }
+        var ident = raw.replace(/^['"]/, '').replace(/['"]$/, '');
+        if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(ident)) { return whole; } // not a bare ident
+        return kw + ' "' + ident + '"';
+    });
 }
 
 function translate(mysqlSql) {
     var store = [];
     var s = protectLiterals(mysqlSql, store);
+    s = stripIndexHints(s);
+    s = fixQuotedAliases(s, store);
     s = translateBackticks(s);
     s = translateLimitOffset(s);
-    s = translateFunctions(s);
+    s = translateFunctions(s, store);
     s = restoreLiterals(s, store);
     return s;
 }
@@ -291,26 +471,36 @@ function canonValue(v, epsilon) {
     return 'str:' + String(v);
 }
 
-function normalizeRows(rows, epsilon, sortRows) {
-    // rows: array of plain objects (both mysql + pg drivers return objects).
-    // Canonicalize column names (lowercase) and cell values; sort rows if
-    // the query has no ORDER BY.
-    var out = rows.map(function (r) {
-        var keys = Object.keys(r).map(function (k) { return k.toLowerCase(); });
-        keys.sort();
-        var cells = keys.map(function (k) {
-            // find original key case-insensitively
-            var ok = k;
-            if (!(k in r)) {
-                var found = Object.keys(r).filter(function (x) { return x.toLowerCase() === k; })[0];
-                ok = found !== undefined ? found : k;
-            }
-            return k + '=' + canonValue(r[ok], epsilon);
-        });
-        return cells.join('\u0002');
+// Per-row canonical column map: { colLower: canonString }. Built SYNCHRONOUSLY
+// at snapshot time so it is immune to the app mutating the row objects later.
+function rowMaps(rows, epsilon) {
+    return rows.map(function (r) {
+        var mp = {};
+        Object.keys(r).forEach(function (k) { mp[k.toLowerCase()] = canonValue(r[k], epsilon); });
+        return mp;
+    });
+}
+
+// Join per-row maps into comparable canonical strings over a fixed column
+// list (sorted). Missing column in a row canonicalizes as absent -> 'null'.
+function joinMaps(maps, colList, sortRows) {
+    var cols = colList.slice().sort();
+    var out = maps.map(function (mp) {
+        return cols.map(function (k) {
+            return k + '=' + (mp.hasOwnProperty(k) ? mp[k] : canonValue(null, 0));
+        }).join('\u0002');
     });
     if (sortRows) { out.sort(); }
     return out;
+}
+
+function normalizeRows(rows, epsilon, sortRows) {
+    // Back-compat: canonical strings over each row's own columns (union not
+    // needed here — callers that mix column sets use joinMaps + a fixed list).
+    var maps = rowMaps(rows, epsilon);
+    var colUnion = {};
+    maps.forEach(function (mp) { Object.keys(mp).forEach(function (k) { colUnion[k] = true; }); });
+    return joinMaps(maps, Object.keys(colUnion), sortRows);
 }
 
 function colSet(rows) {
@@ -331,7 +521,8 @@ function snapshot(sql, rows, epsilon) {
         underdetermined: !ordered && /\blimit\b/i.test(neutralize(sql)),
         cols: colSet(rows),
         n: rows.length,
-        canon: normalizeRows(rows, epsilon, !ordered)
+        epsilon: epsilon,
+        maps: rowMaps(rows, epsilon)   // per-column, projectable, mutation-safe
     };
 }
 
@@ -339,12 +530,34 @@ function snapshot(sql, rows, epsilon) {
 function compareSnap(snap, sql, rowsB, epsilon) {
     var ordered = snap.ordered;
     var ca = snap.cols, cb = colSet(rowsB);
-    // column sets only comparable when both non-empty; empty-vs-empty is equal
+    var pgMaps = rowMaps(rowsB, epsilon);
+    // Column-set difference handling. The SAME SQL runs on both engines, so a
+    // column set difference is NOT query-derived. The mutation is
+    // ONE-DIRECTIONAL: the app mutates ONLY MariaDB's authoritative row
+    // objects after the callback (measured live: login.js attaches `picture`,
+    // a column in NEITHER schema, onto users rows). PG rows are diffed then
+    // discarded — the app never touches them. Therefore:
+    //   - MariaDB-only extra columns (ca − cb)  = app mutations → suppress.
+    //   - PG-only extra columns     (cb − ca)  = CANNOT be a mutation; they
+    //     signal a real translation/aliasing artifact → REPORT (never mask).
+    var colList = ca;
     if (snap.n && rowsB.length && ca.join(',') !== cb.join(',')) {
-        return { klass: 'result_mismatch', detail: 'column sets differ: [' + ca + '] vs [' + cb + ']' };
+        var caSet = {}; ca.forEach(function (k) { caSet[k] = true; });
+        var cbSet = {}; cb.forEach(function (k) { cbSet[k] = true; });
+        var pgOnly = cb.filter(function (k) { return !caSet[k]; });
+        if (pgOnly.length) {
+            // PG produced a column MariaDB did not — not an app mutation.
+            return { klass: 'result_mismatch',
+                detail: 'pg-only column(s) [' + pgOnly + ']: maria=[' + ca + '] pg=[' + cb + ']' };
+        }
+        // Only MariaDB-side extras remain: compare over the shared set (= cb).
+        colList = ca.filter(function (k) { return cbSet[k]; });
+        if (!colList.length) {
+            return { klass: 'result_mismatch', detail: 'no shared columns: [' + ca + '] vs [' + cb + ']' };
+        }
     }
-    var na = snap.canon;
-    var nb = normalizeRows(rowsB, epsilon, !ordered);
+    var na = joinMaps(snap.maps, colList, !ordered);
+    var nb = joinMaps(pgMaps, colList, !ordered);
     if (na.length !== nb.length) {
         return { klass: 'result_mismatch', detail: 'row counts differ: ' + na.length + ' vs ' + nb.length };
     }
