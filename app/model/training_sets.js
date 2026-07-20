@@ -23,7 +23,7 @@ var sqlutil      = require('../utils/sqlutil');
 var dbpool       = require('../utils/dbpool');
 var Recordings   = require('./recordings');
 var Projects     = require('./projects');
-var { arbimon2PublicUrl, arbimon2PublicUrlBase } = require('../utils/asset-url');
+var { arbimon2PublicUrl, arbimon2PublicUrlBase, roiSpectrogramUrl } = require('../utils/asset-url');
 
 // local variables
 var s3;
@@ -599,6 +599,13 @@ TrainingSets.types.roi_set = {
         ], callback);
     },
     get_rois : function(training_set, options, callback) {
+        // Normalise the (training_set, callback) 2-arg call used by the JSON
+        // route (fetchRois(ts, cb)); queryHandler normalises this too, but we
+        // read options.stream + wrap the callback here, so we must do it first.
+        if (callback === undefined && options instanceof Function) {
+            callback = options;
+            options = undefined;
+        }
         var uri_prefix = arbimon2PublicUrlBase() + '/';
         var fields=["TSD.roi_set_data_id as id"];
         var tables=["training_set_roi_set_data TSD"];
@@ -625,12 +632,40 @@ TrainingSets.types.roi_set = {
             fields.push("CONCAT(" + dbpool.escape(uri_prefix) + ",TSD.uri) as uri");
         }
 
+        // On-demand spectrogram support: join the recording's stream external_id
+        // + true UTC start so we can build the media-API URL and never depend on
+        // the pre-cached ROI PNGs. Use RSPEC/SSPEC aliases to avoid colliding
+        // with the resolveIds R join above. Only for the streamed JSON path
+        // (not the CSV export, which sets stream:true and streams raw rows).
+        var withSpectro = !(options && options.stream);
+        if (withSpectro) {
+            tables.push("JOIN recordings RSPEC ON RSPEC.recording_id = TSD.recording_id");
+            tables.push("JOIN sites SSPEC ON SSPEC.site_id = RSPEC.site_id");
+            fields.push("SSPEC.external_id as external_id", "RSPEC.datetime_utc as datetime_utc");
+        }
+
+        var enrich = function (err, rows) {
+            if (!err && withSpectro && Array.isArray(rows)) {
+                for (var i = 0; i < rows.length; i++) {
+                    rows[i].spectrogram_url = roiSpectrogramUrl({
+                        externalId: rows[i].external_id,
+                        datetimeUtc: rows[i].datetime_utc,
+                        timeMin: rows[i].x1,
+                        timeMax: rows[i].x2,
+                        freqMin: rows[i].y1,
+                        freqMax: rows[i].y2
+                    });
+                }
+            }
+            return callback(err, rows);
+        };
+
         return queryHandler(
             'SELECT ' + fields.join(',') + '\n' +
             'FROM ' + tables.join('\n') + '\n' +
             'WHERE TSD.training_set_id = ' + dbpool.escape(training_set.id),
             options,
-            callback
+            withSpectro ? enrich : callback
         );
     },
     get_species : function(training_set, callback) {

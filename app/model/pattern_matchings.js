@@ -13,7 +13,7 @@ const Templates = require('./templates');
 const models = require("./index");
 const lambda = new AWS.Lambda();
 const { getSignedUrl } = require('../utils/storage')
-const { arbimon2PublicUrl } = require('../utils/asset-url')
+const { arbimon2PublicUrl, roiSpectrogramUrl } = require('../utils/asset-url')
 
 // exports
 var PatternMatchings = {
@@ -323,6 +323,13 @@ var PatternMatchings = {
                 'R.uri as recording, R.meta ',
                 'S.name as site, S.site_id',
                 'PMR.denorm_recording_datetime as datetime',
+                // Needed to build the on-demand spectrogram URL (media API,
+                // non-session /ingest path) so the SPA does not depend on the
+                // pre-cached detection PNGs. external_id = stream id; datetime_utc
+                // is the true UTC start that frames the ROI time window (the
+                // denorm `datetime` above is TZ-shifted and must NOT be used).
+                'S.external_id as external_id',
+                'R.datetime_utc as datetime_utc',
             );
 
             if(show.datetime){
@@ -912,8 +919,30 @@ var PatternMatchings = {
                 uriParam1: roi.uri_param1,
                 uriParam2: roi.uri_param2
             })
+            // On-demand spectrogram (generated live via the media API through
+            // the non-session /ingest path), so the SPA can render detection
+            // spectrograms WITHOUT depending on the ~1B pre-baked detection PNGs
+            // (roi.uri). Only for non-legacy recordings (which have a stream
+            // external_id); legacy recordings keep the cached uri only.
+            roi.spectrogram_url = this.combineRoiSpectrogramUrl(roi)
         }
         return rois
+    },
+
+    /**
+     * On-demand spectrogram URL for one PM ROI (delegates to the shared
+     * roiSpectrogramUrl helper). CRITICAL: uses datetime_utc, never the
+     * TZ-shifted denorm `datetime`.
+     */
+    combineRoiSpectrogramUrl: function(roi) {
+        return roiSpectrogramUrl({
+            externalId: roi.external_id,
+            datetimeUtc: roi.datetime_utc,
+            timeMin: roi.x1,
+            timeMax: roi.x2,
+            freqMin: roi.y1,
+            freqMax: roi.y2
+        });
     },
 
     combineRoiUrl: function(opts) {

@@ -6,6 +6,7 @@ const AWS = require('aws-sdk');
 const { createS3Client } = require('../utils/storage');
 const q = require('q');
 const dbpool = require('../utils/dbpool');
+const { roiSpectrogramUrl } = require('../utils/asset-url');
 const Recordings = require('./recordings');
 const config = require('../config');
 const k8sConfig = config('k8s');
@@ -93,7 +94,7 @@ let ClusteringJobs = {
         if(!options){
             options = {};
         }
-        select.push(
+select.push(
             `A.aed_id,
             A.time_min,
             A.time_max,
@@ -103,6 +104,19 @@ let ClusteringJobs = {
             CONCAT('audio_events/${curEnv}/detection/', A.job_id, '/png/', A.recording_id, '/', A.uri_param, '.png') as 'uri',
             A.validated`
         );
+
+        // Join the recording + site so we can build the on-demand spectrogram
+        // URL (media API) and never depend on the pre-cached detection PNGs.
+        // `RSPEC`/`SSPEC` aliases avoid colliding with the perSite R/S joins.
+        // Skip on the perDate path (it GROUPs BY aed_id; adding non-aggregated
+        // columns would break under ONLY_FULL_GROUP_BY — that path isn't used to
+        // render the ROI image grid, which goes through the rec_id path).
+        const withSpectroCols = !options.perDate;
+        if (withSpectroCols) {
+            tables.push("JOIN recordings RSPEC ON A.recording_id = RSPEC.recording_id");
+            tables.push("JOIN sites SSPEC ON SSPEC.site_id = RSPEC.site_id");
+            select.push("SSPEC.external_id as external_id, RSPEC.datetime_utc as datetime_utc");
+        }
 
         if (options.aed) {
             tables.push("LEFT JOIN species sp ON sp.species_id = A.species_id");
@@ -157,7 +171,21 @@ let ClusteringJobs = {
         if (options.exportReport) {
             return dbpool.query(sql)
         }
-        return dbpool.query(sql)
+        return dbpool.query(sql).then(function (rois) {
+            if (withSpectroCols && Array.isArray(rois)) {
+                for (const roi of rois) {
+                    roi.spectrogram_url = roiSpectrogramUrl({
+                        externalId: roi.external_id,
+                        datetimeUtc: roi.datetime_utc,
+                        timeMin: roi.time_min,
+                        timeMax: roi.time_max,
+                        freqMin: roi.frequency_min,
+                        freqMax: roi.frequency_max
+                    });
+                }
+            }
+            return rois;
+        })
     },
 
     getClusteringPlaylist: async function(recId) {
