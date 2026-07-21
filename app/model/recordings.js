@@ -2209,6 +2209,12 @@ var Recordings = {
             ]);
             builder.setOrderBy('s.site_id');
             builder.setGroupBy('s.site_id');
+            // PG GROUP BY strictness (42803): s.name is covered by grouping
+            // s.site_id (sites PK, functional dependency) but pis.site_id is a
+            // DIFFERENT table. The LEFT JOIN pins pis.site_id = s.site_id (or
+            // NULL, never mixed within a site), so grouping it too leaves the
+            // groups unchanged; MySQL accepts the extra column.
+            builder.addGroupBy('pis.site_id');
             return dbpool.query(builder.getSQL());
         });
     },
