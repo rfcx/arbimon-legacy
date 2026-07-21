@@ -82,7 +82,11 @@ var Species = {
                 "OR sf.family LIKE %s \n"+
                 "OR st.taxon LIKE %s \n"+
                 "OR EXISTS (SELECT 1 FROM species_aliases a WHERE a.species_id = s.species_id AND a.alias LIKE %s) \n"+
-                "GROUP BY s.species_id \n"+
+                // sf.family/st.taxon are N:1-determined by s.species_id so the
+                // groups are unchanged; listing them satisfies PG GROUP BY
+                // strictness (42803) — PG only infers functional dependency
+                // from the grouped table's own PK, not across joins.
+                "GROUP BY s.species_id, sf.family, st.taxon \n"+
                 "LIMIT 100";
         var term = dbpool.escape('%'+squery+'%');
         q = util.format(q,

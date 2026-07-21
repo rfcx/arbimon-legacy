@@ -69,7 +69,12 @@ let AudioEventDetectionsClustering = {
         if (options.completed) {
             tables.push('JOIN jobs J ON JP.job_id = J.job_id')
             select.push('J.state')
-            constraints.push('J.state = "completed"')
+            // single-quoted: MySQL treats "completed" as a string but PG (via
+            // the dbpool-pg shadow adapter) reads it as an identifier — the
+            // jobs.completed column — producing 42883 job_state = smallint.
+            // The adapter also converts dq-literals now; this keeps the source
+            // engine-neutral at origin.
+            constraints.push("J.state = 'completed'")
         }
 
         if (options.aedCount) {

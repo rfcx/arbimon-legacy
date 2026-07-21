@@ -65,7 +65,7 @@ var PatternMatchings = {
 
         if (options.completed !== undefined) {
             select.push("J.`completed`");
-            constraints.push('J.state = "completed"');
+            constraints.push("J.state = 'completed'");
         }
 
         if (options.citizen_scientist !== undefined) {
@@ -167,6 +167,26 @@ var PatternMatchings = {
                 "SUM(IF(PMR.consensus_validated IS NULL AND PMR.cs_val_present > 0 AND PMR.cs_val_not_present > 0 AND PMR.expert_validated IS NOT NULL, 1, 0)) as cs_conflict_resolved",
                 "SUM(IF(PMR.consensus_validated IS NULL AND PMR.cs_val_present > 0 AND PMR.cs_val_not_present > 0 AND PMR.expert_validated IS NULL, 1, 0)) as cs_conflict_unresolved",
             );
+        }
+
+        // PG GROUP BY strictness (42803): when aggregating per
+        // PM.pattern_matching_id, every joined N:1 table's selected columns
+        // must be grouped too (PG infers functional dependency only from the
+        // grouped table's own PK). Group by each joined table's PK — all are
+        // N:1 from PM (job → user, playlist, species, songtype), so group
+        // cardinality is unchanged; MySQL accepts the extra columns.
+        if (groupby.length) {
+            [
+                ['JOIN jobs J ',       'J.job_id'],
+                ['JOIN users U ',      'U.user_id'],
+                ['JOIN playlists P ',  'P.playlist_id'],
+                ['JOIN species Sp ',   'Sp.species_id'],
+                ['JOIN songtypes St ', 'St.songtype_id'],
+            ].forEach(([frag, pk]) => {
+                if (tables.some(t => (t + ' ').indexOf(frag) !== -1)) {
+                    groupby.push(pk);
+                }
+            });
         }
 
         postprocess.push((rows) => {

@@ -52,7 +52,7 @@ let ClusteringJobs = {
 
         if (options.completed) {
             select.push("J.`state`");
-            constraints.push('J.state = "completed"');
+            constraints.push("J.state = 'completed'");
         }
 
         if (options.deleted !== undefined) {
@@ -214,7 +214,7 @@ let ClusteringJobs = {
 
         if (options.completed) {
             select.push("J.`state`");
-            constraints.push('J.state = "completed"');
+            constraints.push("J.state = 'completed'");
             tables.push("JOIN jobs J ON JP.job_id = J.job_id");
         }
 

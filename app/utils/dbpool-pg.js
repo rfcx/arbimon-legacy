@@ -211,6 +211,28 @@ function restoreLiterals(sql, store) {
     return sql.replace(/\u0001L(\d+)\u0001/g, function (_, n) { return store[parseInt(n, 10)]; });
 }
 
+// MySQL (without ANSI_QUOTES — our pools never set it) treats "..." as a
+// STRING literal; PG treats it as an IDENTIFIER. Live consequence (P6 canary):
+// `J.state = "completed"` resolved "completed" to the jobs.completed COLUMN
+// (smallint) → 42883 `job_state = smallint`, and in the PM shape where two
+// joined tables both have `completed` → 42702 ambiguous-column. Convert every
+// REMAINING double-quoted literal (fixQuotedAliases already consumed the
+// `AS "x"` cases before this runs) to a PG single-quoted literal.
+// Conservative: a literal containing a backslash is left unchanged (MySQL
+// backslash-escape semantics differ from PG standard_conforming_strings) —
+// it surfaces as an honest dialect_error instead of a silent wrong value.
+function restoreLiteralsPg(sql, store) {
+    return sql.replace(/\u0001L(\d+)\u0001/g, function (_, n) {
+        var raw = store[parseInt(n, 10)];
+        if (raw == null) { return _; }
+        if (raw.charAt(0) !== '"') { return raw; }         // sq literal: verbatim
+        var inner = raw.slice(1, -1);
+        if (inner.indexOf('\\') !== -1) { return raw; }    // backslash: punt
+        inner = inner.replace(/""/g, '"');                 // MySQL "" → "
+        return "'" + inner.replace(/'/g, "''") + "'";      // escape for PG
+    });
+}
+
 function translateBackticks(sql) {
     return sql.replace(/`([^`]+)`/g, function (_, ident) {
         var low = ident.toLowerCase();
@@ -396,6 +418,35 @@ function translateFunctions(sql, store) {
         return 'string_agg((' + expr + ')::text, ' + sep + ')';
     });
 
+    // ORDER BY FIELD(col, v1..vn) → COALESCE(array_position(ARRAY[v1..vn], col), 0)
+    // MySQL FIELD returns the 1-based index, 0 when absent (sorts FIRST asc);
+    // COALESCE(array_position(...), 0) reproduces that exactly. The ARRAY
+    // constructor also sidesteps PG's 100-argument function limit (54023 — the
+    // recordings.js visualizer-order query passes hundreds of ids). Guarded to
+    // all-numeric tail args (the only live shape).
+    s = rewriteCall(s, 'FIELD', function (args) {
+        if (args.length < 2) { return null; }
+        var tail = args.slice(1);
+        for (var i = 0; i < tail.length; i++) {
+            if (!/^-?\d+$/.test(tail[i].trim())) { return null; }
+        }
+        return 'COALESCE(array_position(ARRAY[' + tail.join(', ') + '], ' +
+               args[0] + '), 0)';
+    });
+
+    // TIMESTAMPDIFF(unit, a, b) → trunc(EXTRACT(EPOCH FROM (b - a)) / secs)::bigint
+    // (PG parses the bare unit as a column → 42703 `column "second" does not
+    // exist`, models.js joblength). MySQL truncates toward zero; trunc()
+    // matches. Guarded to the time units where epoch math is exact.
+    s = rewriteCall(s, 'TIMESTAMPDIFF', function (args) {
+        if (args.length !== 3) { return null; }
+        var unit = args[0].trim().toUpperCase();
+        var secs = { SECOND: 1, MINUTE: 60, HOUR: 3600, DAY: 86400 }[unit];
+        if (!secs) { return null; }
+        var diff = 'EXTRACT(EPOCH FROM ((' + args[2] + ') - (' + args[1] + ')))';
+        return 'trunc(' + (secs === 1 ? diff : diff + ' / ' + secs) + ')::bigint';
+    });
+
     // MySQL `= ` on tinyint boolean is fine (smallint per T2). No rewrite.
     return s;
 }
@@ -426,7 +477,7 @@ function translate(mysqlSql) {
     s = translateBackticks(s);
     s = translateLimitOffset(s);
     s = translateFunctions(s, store);
-    s = restoreLiterals(s, store);
+    s = restoreLiteralsPg(s, store);
     return s;
 }
 

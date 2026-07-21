@@ -569,7 +569,15 @@ var Projects = {
                     AND rv.project_id = pc.project_id
                 )`
             );
-            groupby_clause.push("pc.species_id", "pc.songtype_id");
+            // PG GROUP BY strictness (42803): also group by the pc PK (covers
+            // all pc.* via functional dependency) + the joined display columns
+            // (N:1 from pc, so groups are unchanged — with project_id pinned,
+            // (species_id, songtype_id) ↔ project_class_id is 1:1 per the
+            // project_classes__project_id unique index). MySQL accepts the
+            // extra columns; result identical on both engines.
+            groupby_clause.push("pc.species_id", "pc.songtype_id",
+                "pc.project_class_id", "st.taxon", "sp.scientific_name",
+                "so.songtype");
         }
 
         // Safe, whitelisted ORDER BY for the project-species list. The client
