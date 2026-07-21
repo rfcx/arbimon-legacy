@@ -642,6 +642,10 @@ TrainingSets.types.roi_set = {
             tables.push("JOIN recordings RSPEC ON RSPEC.recording_id = TSD.recording_id");
             tables.push("JOIN sites SSPEC ON SSPEC.site_id = RSPEC.site_id");
             fields.push("SSPEC.external_id as external_id", "RSPEC.datetime_utc as datetime_utc");
+            // Needed by the SPA 'expand' modal to frame a padded full-band
+            // window: sample_rate -> nyquist (freq axis), duration -> clamp
+            // the padded window. Cheap columns on the already-joined RSPEC.
+            fields.push("RSPEC.sample_rate as sample_rate", "RSPEC.duration as duration");
         }
 
         var enrich = function (err, rows) {
