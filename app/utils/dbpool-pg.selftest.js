@@ -71,8 +71,10 @@ eq('date_format ymd dquote', m.translate('SELECT DATE_FORMAT(r.datetime, "%Y/%m/
    "SELECT to_char(r.datetime, 'YYYY/MM/DD') as date FROM t r");
 eq('date_format %T', m.translate('SELECT DATE_FORMAT(r.datetime, "%T") FROM t r'),
    "SELECT to_char(r.datetime, 'HH24:MI:SS') FROM t r");
+// unknown code: the CALL bails (stays DATE_FORMAT -> honest 42883) but the
+// dq-literal is still converted to a PG string literal (see restoreLiteralsPg).
 eq('date_format unknown code bails', m.translate('SELECT DATE_FORMAT(x, "%Q") FROM t'),
-   'SELECT DATE_FORMAT(x, "%Q") FROM t');
+   "SELECT DATE_FORMAT(x, '%Q') FROM t");
 // GROUP_CONCAT -> string_agg
 eq('group_concat w/ separator', m.translate("SELECT GROUP_CONCAT(a.alias SEPARATOR ', ') FROM species_aliases a"),
    "SELECT string_agg((a.alias)::text, ', ') FROM species_aliases a");
@@ -98,6 +100,32 @@ eq('quoted alias', m.translate("SELECT CONCAT('a', A.job_id) as 'uri' FROM aed A
 eq('non-ident quoted alias left as literal', m.translate("SELECT x as 'a b' FROM t"),
    "SELECT x as 'a b' FROM t");
 // literal protection: none of the above touch matching text inside a string
+// -- double-quoted string literals (MySQL) -> single-quoted (PG). Live P6
+// canary classes: J.state = "completed" resolved as IDENTIFIER on PG ->
+// 42883 job_state=smallint (AED) / 42702 ambiguous "completed" (PM).
+eq('dq literal -> sq literal', m.translate('SELECT J.state FROM jobs J WHERE J.state = "completed"'),
+   "SELECT J.state FROM jobs J WHERE J.state = 'completed'");
+eq('dq literal with embedded sq', m.translate('SELECT a FROM t WHERE b = "it\'s"'),
+   "SELECT a FROM t WHERE b = 'it''s'");
+eq('dq literal doubled dq', m.translate('SELECT a FROM t WHERE b = "a""b"'),
+   "SELECT a FROM t WHERE b = 'a\"b'");
+eq('dq literal with backslash punts', m.translate('SELECT a FROM t WHERE b = "x\\\\y"'),
+   'SELECT a FROM t WHERE b = "x\\\\y"');
+eq('quoted alias still wins over dq-literal', m.translate("SELECT CONCAT(a,b) as 'uri' FROM t"),
+   'SELECT CONCAT(a,b) as "uri" FROM t');
+// -- ORDER BY FIELD -> COALESCE(array_position(...), 0) (54023 >100-arg class)
+eq('field -> array_position', m.translate('SELECT r.id FROM r ORDER BY FIELD(r.id, 5, 3, 9)'),
+   'SELECT r.id FROM r ORDER BY COALESCE(array_position(ARRAY[5, 3, 9], r.id), 0)');
+eq('field non-numeric tail bails', m.translate('SELECT FIELD(x, 1, col) FROM t'),
+   'SELECT FIELD(x, 1, col) FROM t');
+// -- TIMESTAMPDIFF -> epoch math (42703 column "second" class, models.js)
+eq('timestampdiff second', m.translate('SELECT TIMESTAMPDIFF(SECOND, a.c1, b.c2) as joblength FROM t'),
+   'SELECT trunc(EXTRACT(EPOCH FROM ((b.c2) - (a.c1))))::bigint as joblength FROM t');
+eq('timestampdiff minute', m.translate('SELECT TIMESTAMPDIFF(MINUTE, a, b) FROM t'),
+   'SELECT trunc(EXTRACT(EPOCH FROM ((b) - (a))) / 60)::bigint FROM t');
+eq('timestampdiff month bails (inexact)', m.translate('SELECT TIMESTAMPDIFF(MONTH, a, b) FROM t'),
+   'SELECT TIMESTAMPDIFF(MONTH, a, b) FROM t');
+
 eq('func name inside string untouched', m.translate("SELECT a FROM t WHERE note = 'call YEAR(x) and IF(y)'"),
    "SELECT a FROM t WHERE note = 'call YEAR(x) and IF(y)'");
 eq('column named year (no paren) untouched', m.translate('SELECT year FROM summary'),
