@@ -56,7 +56,9 @@ var SoundscapeComposition = {
         }
 
         if (options.isSystemClass) {
-            where.push("SCC.isSystemClass");
+            // engine-neutral: bare smallint truthiness is MySQL-only (PG 42804
+            // 'argument of WHERE must be type boolean'); values are 0/1 only.
+            where.push("SCC.isSystemClass = 1");
         }
 
         if(options.id){
