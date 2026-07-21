@@ -111,7 +111,12 @@ select.push(
         // Skip on the perDate path (it GROUPs BY aed_id; adding non-aggregated
         // columns would break under ONLY_FULL_GROUP_BY — that path isn't used to
         // render the ROI image grid, which goes through the rec_id path).
-        const withSpectroCols = !options.perDate;
+        // ALSO skip on exportReport: the clustering CSV export derives its
+        // column list from Object.keys(results[0]) (processClusteringStream),
+        // so any column projected here LEAKS into the user-facing CSV — and
+        // the export doesn't need the spectro/window columns (nor the extra
+        // RSPEC/SSPEC joins on the full-job export query).
+        const withSpectroCols = !options.perDate && !options.exportReport;
         if (withSpectroCols) {
             tables.push("JOIN recordings RSPEC ON A.recording_id = RSPEC.recording_id");
             tables.push("JOIN sites SSPEC ON SSPEC.site_id = RSPEC.site_id");
