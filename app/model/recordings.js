@@ -1500,10 +1500,10 @@ var Recordings = {
                 // Filter recordings by present/absent validations values from the Recording page.
                 if(parameters.presence){
                     if (parameters.presence === 'present') {
-                        constraints.push('CASE WHEN rv.present_review > 0 OR rv.present_aed > 0 THEN 1 ELSE rv.present END');
+                        constraints.push('(CASE WHEN rv.present_review > 0 OR rv.present_aed > 0 THEN 1 ELSE rv.present END) = 1');
                     }
                     if (parameters.presence === 'absent') {
-                        constraints.push('CASE WHEN rv.present = 0 AND rv.present_review = 0 AND rv.present_aed = 0 THEN 1 ELSE 0 END');
+                        constraints.push('(CASE WHEN rv.present = 0 AND rv.present_review = 0 AND rv.present_aed = 0 THEN 1 ELSE 0 END) = 1');
                     }
                 }
                 // Do not get deleted validations values in the filters result.
