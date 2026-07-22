@@ -463,9 +463,13 @@ function fixQuotedAliases(sql, store) {
     return sql.replace(/\b(AS)\s+\u0001L(\d+)\u0001/gi, function (whole, kw, n) {
         var raw = store[parseInt(n, 10)];
         if (raw == null) { return whole; }
-        var ident = raw.replace(/^['"]/, '').replace(/['"]$/, '');
-        if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(ident)) { return whole; } // not a bare ident
-        return kw + ' "' + ident + '"';
+        var ident = raw.slice(1, -1);
+        // MySQL permits string-literal aliases, including spaces. PG requires
+        // identifier aliases. Convert `AS 'Playlist Name'` / `AS "Playlist Name"`
+        // to a quoted identifier; remaining non-alias double-quoted literals are
+        // converted later by restoreLiteralsPg into PG string literals.
+        ident = ident.replace(/""/g, '"');
+        return kw + ' "' + ident.replace(/"/g, '""') + '"';
     });
 }
 

@@ -97,8 +97,8 @@ eq('force index stripped', m.translate('SELECT r.recording_id FROM recordings AS
 // quoted alias -> double-quoted identifier; string-value literals untouched
 eq('quoted alias', m.translate("SELECT CONCAT('a', A.job_id) as 'uri' FROM aed A"),
    'SELECT CONCAT(\'a\', A.job_id) as "uri" FROM aed A');
-eq('non-ident quoted alias left as literal', m.translate("SELECT x as 'a b' FROM t"),
-   "SELECT x as 'a b' FROM t");
+eq('multi-word quoted alias -> identifier', m.translate("SELECT x as 'a b' FROM t"),
+   'SELECT x as "a b" FROM t');
 // literal protection: none of the above touch matching text inside a string
 // -- double-quoted string literals (MySQL) -> single-quoted (PG). Live P6
 // canary classes: J.state = "completed" resolved as IDENTIFIER on PG ->
