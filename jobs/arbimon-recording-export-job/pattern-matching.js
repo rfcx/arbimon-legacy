@@ -17,7 +17,12 @@ const exportReportType = 'Pattern Matchings';
 const exportReportJob = `Arbimon Export ${exportReportType} job`
 const tmpFilePath = __dirname + '/tmpfilecache'
 
-const archive = archiver('zip', { zlib: { level: 9 }});
+// PER-EXPORT archive (2026-07-23 drain finding): this was a module-level
+// singleton, which worked in the one-process-one-export CRON era but breaks in
+// the long-lived queue consumer — archive.finalize() closes the zip queue, so
+// the SECOND PM export in the same process hit `ArchiverError: queue closed`
+// on append. collectData now creates a fresh archiver per run.
+let archive
 let outputStreamFile
 
 // Wait until a WriteStream has actually flushed + closed its file descriptor
@@ -59,6 +64,7 @@ async function collectData (filters, projection_parameters, cb) {
     return cb(e)
   }
 
+  archive = archiver('zip', { zlib: { level: 9 }});
   outputStreamFile = fs.createWriteStream(__dirname + '/pattern-matching_export.zip');
   // If the zip output stream itself errors, surface it (don't let it become an
   // unhandled 'error' event that hard-crashes the process).
