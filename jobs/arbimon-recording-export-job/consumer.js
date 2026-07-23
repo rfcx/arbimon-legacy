@@ -114,12 +114,13 @@ async function main () {
 
   const conn = await amqp.connect(AMQP_URL)
   const ch = await conn.createChannel()
-  // GLOBAL QoS (2nd arg true): amqplib's default basic.qos is PER-CONSUMER
-  // (global=false); with one consumer per lane (5 lanes) that would allow up
-  // to 5 CONCURRENT exports in this pod — but the export code uses a SHARED
-  // tmpfilecache/ dir + fixed zip paths (occupancy-export.zip, ...), so
-  // concurrent exports corrupt each other. global=true caps the whole channel.
-  await ch.prefetch(PREFETCH, true)
+  // PER-CONSUMER prefetch (global QoS is NOT-IMPLEMENTED on quorum queues —
+  // learned live in E2E: connection 540 on the first consume). With one
+  // consumer per lane this admits up to N-lanes unacked deliveries into the
+  // pod, but the serialize mutex below guarantees only ONE export executes at
+  // a time (the rest wait in the promise chain), which is the actual
+  // correctness requirement (shared tmpfilecache/ + fixed zip paths).
+  await ch.prefetch(PREFETCH)
 
   // Topology is declared by the bootstrap Job; passive check here catches drift
   // without accidentally redeclaring with incompatible args.
