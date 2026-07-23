@@ -121,18 +121,34 @@ async function fileToZipDirectory (sourceFilePath, sourceFileName) {
   console.log('<- start fileToZipDirectory sourceFilePath', sourceFilePath)
   console.log('<- start fileToZipDirectory sourceFileName', sourceFileName)
   return new Promise((resolve, reject) => {
+    // BELT-AND-BRACES (2026-07-23 drain finding #2): archiver reports append-
+    // time failures by EMITTING 'error' on the archive object — NOT through the
+    // stream callbacks below — so without this listener the promise NEVER
+    // SETTLES and the export hangs forever holding its claim (all 3 drain
+    // workers wedged this way on QUEUECLOSED before the per-export-archive
+    // fix; any future archive error — disk full, etc. — would do the same).
+    const onArchiveError = (err) => {
+      console.log('<- 1. Archive error during fileToZipDirectory.', sourceFileName, err)
+      reject(err instanceof Error ? err : new Error(`archive error for ${sourceFileName}: ${err}`))
+    }
+    archive.once('error', onArchiveError)
+    const done = (fn) => (...args) => { archive.removeListener('error', onArchiveError); fn(...args) }
     const src = fs.createReadStream(sourceFilePath)
     src
-      .on('end', function() { console.log('<- 1. End fileToZipDirectory.', sourceFileName); resolve() })
-      .on('error', function(err) {
+      .on('end', done(function() { console.log('<- 1. End fileToZipDirectory.', sourceFileName); resolve() }))
+      .on('error', done(function(err) {
         // Was `reject()` with NO argument -> the process saw an
         // UnhandledPromiseRejection with reason `undefined` and hard-crashed
         // BEFORE the export row's `error` could be set (poison-row wedge).
         // Always reject with a real Error.
         console.log('<- 1. Error fileToZipDirectory.', sourceFileName, err)
         reject(err instanceof Error ? err : new Error(`fileToZipDirectory failed for ${sourceFileName}: ${err}`))
-      })
-    archive.append(src, { name: sourceFileName })
+      }))
+    try {
+      archive.append(src, { name: sourceFileName })
+    } catch (e) {
+      done(reject)(e instanceof Error ? e : new Error(String(e)))
+    }
   });
 }
 
