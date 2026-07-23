@@ -6,6 +6,17 @@ var pgshadow = require('./dbpool-pg'); // mysql2pg Phase 6 shadow-read - INERT u
 var q = require('q');
 var showQueriesInConsole = true;
 
+// Export-worker early PG cutover (OPEN-ITEMS #64): when ONLY the
+// arbimon-recording-export worker sets EXPORTS_DB_ENGINE=pg, app/model/* reads
+// in this process execute against PG via the P6 translator. The web app does
+// not set this env var, so its Phase-6 shadow behavior is untouched.
+var EXPORTS_PG_ENGINE = (process.env.EXPORTS_DB_ENGINE || '').toLowerCase() === 'pg';
+var pgjobs = null;
+function getExportPgJobs () {
+    if (!pgjobs) { pgjobs = require('../../jobs/db/pg'); }
+    return pgjobs;
+}
+
 const QUERY_TIMEOUT = 25000;
 
 var dbpool = {
@@ -161,6 +172,33 @@ var dbpool = {
     },
 
     queryHandler: function (query, options, callback) {
+        if (EXPORTS_PG_ENGINE) {
+            if(callback === undefined && options instanceof Function){
+                callback = options;
+                options = undefined;
+            }
+            try {
+                var rawSql = (typeof query === 'string') ? query
+                    : (query && typeof query.sql === 'string') ? query.sql : null;
+                if (rawSql === null) {
+                    throw new Error('EXPORTS_DB_ENGINE=pg only supports string/sql-object queries')
+                }
+                // Match the mysql driver path: apply replacements/placeholders
+                // before translation, using the configured timezone.
+                var finalSql = mysql.format(rawSql, options, false, config('db').timezone || 'Z');
+                var translated = pgshadow.translate(finalSql);
+                getExportPgJobs().readQuery(translated).then(function (rows) {
+                    callback(null, rows, null);
+                }).catch(function (err) {
+                    console.error('[queryHandler exports-pg]', err && err.message ? err.message : err)
+                    callback(err);
+                });
+            } catch (err) {
+                callback(err);
+            }
+            return;
+        }
+
         dbpool.getConnection(function(err, connection) {
             if (err) {
                 console.log('[err getConnection] - query, options, callback', query, options, callback)

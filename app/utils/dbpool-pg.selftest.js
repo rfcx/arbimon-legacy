@@ -91,6 +91,18 @@ eq('isnull->is null', m.translate('SELECT IF(ISNULL(p.present), 1, 0) FROM t p')
 eq('round two-arg', m.translate('SELECT ROUND(TSD.y2-TSD.y1,1) FROM t TSD'),
    'SELECT round((TSD.y2-TSD.y1)::numeric, 1) FROM t TSD');
 eq('round one-arg untouched', m.translate('SELECT ROUND(x) FROM t'), 'SELECT ROUND(x) FROM t');
+// TRUNCATE(x,n) -> trunc((x)::numeric,n) (MySQL toward-zero == PG trunc, both signs)
+eq('truncate two-arg', m.translate('SELECT TRUNCATE(pmr.x1, 3) FROM t pmr'),
+   'SELECT trunc((pmr.x1)::numeric, 3) FROM t pmr');
+eq('truncate one-arg untouched', m.translate('SELECT TRUNCATE(x) FROM t'), 'SELECT TRUNCATE(x) FROM t');
+// backticked NON-PLAIN identifier (export SQLBuilder escapeId aliases like
+// `val<Genus species/Song>`) -> PG quoted identifier (bare would be a syntax
+// error; MariaDB backtick + PG double-quote yield the SAME result key).
+eq('backtick special-char alias -> quoted ident',
+   m.translate('SELECT x AS `val<Genus species/Song>` FROM t'),
+   'SELECT x AS "val<Genus species/Song>" FROM t');
+eq('backtick plain ident still bare',
+   m.translate('SELECT `plain_col` FROM t'), 'SELECT plain_col FROM t');
 // FORCE INDEX stripped
 eq('force index stripped', m.translate('SELECT r.recording_id FROM recordings AS r FORCE INDEX (idx) JOIN sites s ON s.site_id=r.site_id'),
    'SELECT r.recording_id FROM recordings AS r JOIN sites s ON s.site_id=r.site_id');

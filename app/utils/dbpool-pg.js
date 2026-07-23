@@ -237,6 +237,14 @@ function translateBackticks(sql) {
     return sql.replace(/`([^`]+)`/g, function (_, ident) {
         var low = ident.toLowerCase();
         if (PG_RESERVED_IDENT[low]) { return '"' + low + '"'; }
+        // NON-PLAIN identifier (spaces / < > / punctuation — e.g. the export
+        // SQLBuilder's escapeId aliases like `val<Genus species/Song>`): bare
+        // is INVALID PG syntax, so emit a quoted identifier. Safe for intra-
+        // query references: a special-char identifier can only ever be
+        // referenced via backticks, so every occurrence converts identically.
+        if (!/^[A-Za-z_][A-Za-z0-9_$]*$/.test(ident)) {
+            return '"' + ident.replace(/"/g, '""') + '"';
+        }
         // drop backticks; PG folds unquoted to lowercase (T14)
         return ident;
     });
@@ -387,6 +395,20 @@ function translateFunctions(sql, store) {
         // numeric) so the resume-at-replacement scan can't re-wrap it.
         if (/::numeric\s*$/.test(args[0])) { return null; }
         return 'round((' + args[0] + ')::numeric, ' + args[1] + ')';
+    });
+
+    // TRUNCATE(expr, n): MySQL truncates toward zero to n decimals. PG's
+    // trunc(numeric, int) has the SAME toward-zero semantics for both signs
+    // (verified live: trunc(-1.23456::numeric,3) = -1.234 = MySQL). PG has no
+    // trunc(double precision, int), so cast the value to numeric (mirrors the
+    // ROUND rewrite above). 1-arg TRUNCATE is not used by our SQL; leave it.
+    // The `_pattern_matching`/table name `truncate` is a keyword, not a call,
+    // so rewriteCall (which requires `name(`) won't touch identifiers.
+    s = rewriteCall(s, 'TRUNCATE', function (args) {
+        if (args.length !== 2) { return null; }
+        // idempotence guard: skip an already-converted trunc arg.
+        if (/::numeric\s*$/.test(args[0])) { return null; }
+        return 'trunc((' + args[0] + ')::numeric, ' + args[1] + ')';
     });
 
     // DATE_FORMAT(x, '<fmt>') -> to_char(x, '<pgfmt>')

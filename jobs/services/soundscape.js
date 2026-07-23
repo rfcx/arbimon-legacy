@@ -1,4 +1,6 @@
-const mysql = require('../db/mysql')
+// mysql2pg: engine-selectable backend (EXPORTS_DB_ENGINE=pg -> PG via the P6
+// translator; default mysql = legacy behavior).
+const mysql = require('../db/backend')
 
 async function getSoundscapesForCSV (options = {}) {
   const connection = await mysql.getConnection()

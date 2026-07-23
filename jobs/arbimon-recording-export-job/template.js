@@ -127,8 +127,8 @@ async function downloadTemplateAudio (results) {
           const template = await getTemplateDataForAudio({ templateId: templateId})
           console.log('template', template)
           const opts = {
-            uri: template.recUri,
-            site_id: template.recSiteId,
+            uri: template.rec_uri,
+            site_id: template.rec_site_id,
             external_id: template.external_id,
             datetime: template.datetime,
             datetime_utc: template.datetime_utc
