@@ -189,8 +189,14 @@ async function processExportRow (rowData) {
             recordingsExport.collectData(projection_parameters, filters, async (err, filePath) => {
                 if (err) {
                     console.error('Arbimon Export job error', err)
-                    fs.unlink(filePath, () => {})
-                    reject(err)
+                    // filePath is UNDEFINED on early failures (e.g. joi
+                    // validation) — fs.unlink(undefined) throws SYNCHRONOUSLY
+                    // (ERR_INVALID_ARG_TYPE), an unhandled exception that
+                    // killed the process before the row's error was recorded
+                    // (the #1759 poison-row class, in the default branch;
+                    // caught live in the 2026-07-23 E2E).
+                    if (filePath) { try { fs.unlink(filePath, () => {}) } catch (_) {} }
+                    return reject(err)
                 }
                 console.log('Arbimon Export job: uploading file to S3')
                 const { url, stats } = await saveFile(filePath, currentTime, rowData.project_id, 'recordings-export')
