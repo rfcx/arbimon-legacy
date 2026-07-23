@@ -88,8 +88,11 @@ async function processExportRow (rowData) {
             rfmClassification.collectData(projection_parameters, async (err, filePath, fileName, jobMeta) => {
                 if (err) {
                     console.error('Arbimon Export job error', err)
-                    fs.unlink(filePath, () => {})
-                    reject(err)
+                    // filePath is undefined on early failures — fs.unlink(undefined)
+                    // throws SYNCHRONOUSLY (same class fixed in the default branch,
+                    // caught again here by the 2026-07-23 forced-failure E2E).
+                    if (filePath) { try { fs.unlink(filePath, () => {}) } catch (_) {} }
+                    return reject(err)
                 }
                 console.log('Arbimon Export job: uploading file to S3')
                 const { url, stats } = await saveFile(filePath, currentTime, rowData.project_id, fileName)
@@ -163,6 +166,13 @@ async function processExportRow (rowData) {
                 }
                 console.log(`folder ${tmpFilePath} exists`, fs.existsSync(tmpFilePath))
                 template.collectData(projection_parameters, filters, async (err, filePath) => {
+                    // err was silently IGNORED here (a failed template export
+                    // still zipped/emailed whatever partial state existed).
+                    // Mirror the RFM/recordings discipline: record + reject.
+                    if (err) {
+                        console.error(`Arbimon Export ${exportReportType} job error`, err)
+                        return reject(err)
+                    }
                     await template.buildTemplateFolder()
                     await sendZipFolderToTheUser(rowData, currentTime, jobName, message, 'template_export')
                     console.log(`Arbimon Export ${exportReportType} job finished: export templates for ${message}`)
@@ -175,6 +185,12 @@ async function processExportRow (rowData) {
             const exportReportType = 'Soundscapes';
             console.log(`Arbimon Export ${exportReportType} job`)
             soundscape.collectData(projection_parameters, filters, async (err, filePath) => {
+                // err was silently IGNORED here — same class as the template
+                // branch. Record + reject so the consumer sets terminal error.
+                if (err) {
+                    console.error(`Arbimon Export ${exportReportType} job error`, err)
+                    return reject(err)
+                }
                 console.log('--start buildSoundscapeFolder', filePath);
                 await soundscape.buildSoundscapeFolder()
                 console.log('--end buildSoundscapeFolder');
