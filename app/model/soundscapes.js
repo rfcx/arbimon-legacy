@@ -13,6 +13,7 @@ let config       = require('../config');
 let arrays_util  = require('../utils/arrays');
 let tmpfilecache = require('../utils/tmpfilecache');
 const { arbimon2PublicUrl } = require('../utils/asset-url');
+const { createS3Client } = require('../utils/storage');
 const k8sConfig = config('k8s');
 const jsonTemplates = require('../utils/json-templates');
 const { Client } = require('kubernetes-client');
