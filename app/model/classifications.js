@@ -245,7 +245,7 @@ var Classifications = {
                 c.job_id
             FROM classification_results c
             WHERE c.job_id = ?
-            GROUP BY c.species_id, c.songtype_id
+            GROUP BY c.species_id, c.songtype_id, c.job_id
         ) AS agg
         JOIN job_params_classification jpc
             ON jpc.job_id = agg.job_id
