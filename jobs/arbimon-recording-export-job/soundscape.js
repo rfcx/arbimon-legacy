@@ -22,7 +22,7 @@ async function collectData (projection_parameters, filters, cb) {
    // 1. Export .csv file
   await exportAllSoundscapes(filters.project_id, projection_parameters.projectUrl, targetFile, async (err, data) => {
     if (err) {
-      console.err(`Error export ${exportReportType}`, err)
+      console.error(`Error export ${exportReportType}`, err)
       targetFile.end()
       return cb(err)
     }
@@ -34,7 +34,7 @@ async function collectData (projection_parameters, filters, cb) {
     await getProjectSoundscapesImages(soundscapes)
     cb(null, path.resolve(filePath))
   }).catch((e) => {
-    console.err(`Error export ${exportReportType}`, e)
+    console.error(`Error export ${exportReportType}`, e)
     cb(e)
   })
 }

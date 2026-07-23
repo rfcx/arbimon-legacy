@@ -9,23 +9,37 @@ const exportReportType = 'RFM Classification';
 const exportReportJob = `Arbimon Export ${exportReportType} job`
 
 async function collectData (projection_parameters, cb) {
-  const [res] = await getName(projection_parameters.rfmClassify)
-  const jobMeta = await getJobMeta(projection_parameters.rfmClassify).catch(() => null)
-  const filePath = path.join(__dirname, `rfm_${res.name}.csv`)
-  const targetFile = fs.createWriteStream(filePath, { flags: 'a' })
-  await exportRFMClassify(projection_parameters.rfmClassify, targetFile, async (err, data) => {
-    if (err) {
-      console.err('Error export RFM Classification', err)
-      targetFile.end()
-      return cb(err)
+  // Whole body guarded: an early throw here (e.g. res undefined for a
+  // nonexistent job id) previously escaped as an UNHANDLED REJECTION and
+  // killed the process before the row's error was recorded — the #1759
+  // poison-row class, surviving in this file (caught by the 2026-07-23
+  // forced-failure E2E). Also: console.err is not a function (same class as
+  // the #1759 pattern-matching fixes) — the catch handlers themselves threw.
+  try {
+    const [res] = await getName(projection_parameters.rfmClassify)
+    if (!res || !res.name) {
+      return cb(new Error(`classification job ${projection_parameters.rfmClassify} not found`))
     }
-    console.log(`${exportReportJob}: finished collecting chunks`)
-    targetFile.end()
-    cb(null, path.resolve(filePath), `rfm_${res.name}`, jobMeta)
-  }).catch((e) => {
-    console.err('Error export RFM Classification', e)
+    const jobMeta = await getJobMeta(projection_parameters.rfmClassify).catch(() => null)
+    const filePath = path.join(__dirname, `rfm_${res.name}.csv`)
+    const targetFile = fs.createWriteStream(filePath, { flags: 'a' })
+    await exportRFMClassify(projection_parameters.rfmClassify, targetFile, async (err, data) => {
+      if (err) {
+        console.error('Error export RFM Classification', err)
+        targetFile.end()
+        return cb(err)
+      }
+      console.log(`${exportReportJob}: finished collecting chunks`)
+      targetFile.end()
+      cb(null, path.resolve(filePath), `rfm_${res.name}`, jobMeta)
+    }).catch((e) => {
+      console.error('Error export RFM Classification', e)
+      cb(e)
+    })
+  } catch (e) {
+    console.error('Error export RFM Classification (early)', e)
     cb(e)
-  })
+  }
 }
 
 async function exportRFMClassify (jobId, targetFile, cb) {
