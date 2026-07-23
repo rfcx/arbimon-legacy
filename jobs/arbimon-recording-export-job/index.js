@@ -25,28 +25,10 @@ const S3_EXPORT_BUCKET_ARBIMON = process.env.S3_BUCKET_ARBIMON
 
 const tmpFilePath = 'jobs/arbimon-recording-export-job/tmpfilecache'
 
-async function main () {
+async function processExportRow (rowData) {
   try {
-    console.log('Arbimon export job started.')
-
-    const countConnections = await getCountConnections()
-    if (countConnections > 10) {
-        console.log('Arbimon export job stopped due to high mysql db connections count.')
-        return
-    }
-
     let filters, projection_parameters
     const currentTime = moment.utc().format('YYYY-MM-DD HH:mm:ss')
-    const limit = 1
-    const [rowData] =  await getExportRecordingsRow({
-        currentTime,
-        limit
-    })
-
-    if (!rowData) {
-        console.log('Arbimon export job has not any new export report.')
-        return
-    }
 
     console.log(`\n\n project = ${ rowData.name }`)
 
@@ -226,6 +208,34 @@ async function main () {
   }
 }
 
+
+async function main () {
+  try {
+    console.log('Arbimon export job started.')
+
+    const countConnections = await getCountConnections()
+    if (countConnections > 10) {
+        console.log('Arbimon export job stopped due to high mysql db connections count.')
+        return
+    }
+
+    const currentTime = moment.utc().format('YYYY-MM-DD HH:mm:ss')
+    const limit = 1
+    const [rowData] =  await getExportRecordingsRow({
+        currentTime,
+        limit
+    })
+
+    if (!rowData) {
+        console.log('Arbimon export job has not any new export report.')
+        return
+    }
+
+    await processExportRow(rowData)
+  } catch (e) {
+    console.error(e)
+  }
+}
 // Count data rows in a CSV (total lines minus the header line).
 function countCsvRows (filePath) {
     try {
@@ -374,7 +384,7 @@ async function processOccupancyModelStream (results, rowData, speciesId, filters
                 // Fill each cell in the report.
                 fields.forEach((item) => {
                     tempRow.site = row.site;
-                    tempRow.siteId = row.siteId;
+                    tempRow.siteId = row.site_id;
                     let site = sitesData.find(site => {
                         if (site.site === row.site) {
                             return item === moment(new Date(`${site.year}/${site.month}/${site.day}`)).format('YYYY/MM/DD');
@@ -398,7 +408,7 @@ async function processOccupancyModelStream (results, rowData, speciesId, filters
                     notValidatedRow.site = row;
                     let site = sitesData.find(site => {
                         if (site.site === row) {
-                            notValidatedRow.siteId = site.siteId;
+                            notValidatedRow.siteId = site.site_id;
                             return item === moment(new Date(`${site.year}/${site.month}/${site.day}`)).format('YYYY/MM/DD');
                         }
                     });
@@ -528,9 +538,9 @@ async function sendRfmResultsEmail (rowData, url, stats, jobMeta) {
         projectName: rowData.name,
         url,
         mode: isGmail ? 'button' : 'link',
-        jobId: jobMeta.jobId != null ? Number(jobMeta.jobId) : undefined,
-        jobName: jobMeta.jobName || undefined,
-        playlistName: jobMeta.playlistName || undefined,
+        jobId: jobMeta.job_id != null ? Number(jobMeta.job_id) : undefined,
+        jobName: jobMeta.job_name || undefined,
+        playlistName: jobMeta.playlist_name || undefined,
         filename: stats.filename,
         rows: stats.rows,
         bytes: stats.bytes,
@@ -682,8 +692,15 @@ async function sendMessage (message, title) {
     return sendViaMandrill(message, title)
 }
 
-main()
-    .finally(() => {
-        db.closeAll()
-        process.exit(0)
-    })
+if (require.main === module) {
+    main()
+        .finally(() => {
+            db.closeAll()
+            process.exit(0)
+        })
+}
+
+module.exports = {
+    main,
+    processExportRow
+}

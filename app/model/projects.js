@@ -264,13 +264,23 @@ var Projects = {
     },
 
     getProjectDates: function(project_id, format){
+        // PG GROUP BY strictness (42803): the SELECT expression references
+        // r.datetime, which is not a GROUP BY key (we group by YEAR/MONTH/DAY).
+        // MySQL allows the bare column (picks an arbitrary in-group row); PG
+        // rejects it. Wrap in MIN(): for the '%Y/%m/%d' caller every in-group
+        // row shares the same day so the value is UNCHANGED; for the '%H'
+        // caller (grouped by day) it deterministically labels each day-group by
+        // its earliest recording's hour instead of MySQL's arbitrary pick.
+        // ORDER BY MIN(r.datetime) likewise (a bare r.datetime there is also
+        // non-grouped). Only the export job calls this (verified). Portable on
+        // both engines.
         return dbpool.query({ sql:
-            `SELECT COALESCE(DATE_FORMAT(r.datetime, "${format}")) as date
+            `SELECT COALESCE(DATE_FORMAT(MIN(r.datetime), "${format}")) as date
             FROM recordings AS r
             JOIN sites as s ON s.site_id = r.site_id AND s.project_id = ? AND s.deleted_at is null
             LEFT JOIN project_imported_sites as pis ON s.site_id = pis.site_id AND pis.project_id = ?
             WHERE (s.project_id = ? OR pis.project_id = ?) AND r.archived_at IS NULL
-            GROUP BY YEAR(r.datetime), MONTH(r.datetime), DAY(r.datetime) ORDER BY r.datetime ASC`,  typeCast: sqlutil.parseUtcDatetime },
+            GROUP BY YEAR(r.datetime), MONTH(r.datetime), DAY(r.datetime) ORDER BY MIN(r.datetime) ASC`,  typeCast: sqlutil.parseUtcDatetime },
             [project_id, project_id, project_id, project_id]
         )
     },

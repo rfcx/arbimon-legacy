@@ -1,4 +1,6 @@
-const mysql = require('../db/mysql')
+// mysql2pg: engine-selectable backend (EXPORTS_DB_ENGINE=pg -> PG via the P6
+// translator; default mysql = legacy behavior).
+const mysql = require('../db/backend')
 const config_hosts = require('../../config/hosts');
 const { arbimon2PublicUrlBase } = require('./asset-url');
 
@@ -29,7 +31,7 @@ async function getTemplateDataForAudio (options = {}) {
   const sql = `
     SELECT T.template_id as id, T.project_id as project, T.recording_id as recording, T.species_id as species,
       T.songtype_id as songtype, T.name template_name, CONCAT('${arbimon2PublicUrlBase()}/', T.uri) as uri,
-      T.x1, T.y1, T.x2, T.y2, T.date_created, T.user_id, T.disabled, R.uri as recUri, R.site_id as recSiteId,
+      T.x1, T.y1, T.x2, T.y2, T.date_created, T.user_id, T.disabled, R.uri as rec_uri, R.site_id as rec_site_id,
       R.sample_rate, R.datetime, R.datetime_utc, S.external_id
     FROM templates T
       JOIN recordings R ON T.recording_id = R.recording_id

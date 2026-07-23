@@ -1,4 +1,6 @@
-const mysql = require('../db/mysql')
+// mysql2pg: engine-selectable backend (EXPORTS_DB_ENGINE=pg -> PG via the P6
+// translator; default mysql = legacy behavior).
+const mysql = require('../db/backend')
 
 function parseMetaData(data) {
     try {
@@ -20,11 +22,11 @@ async function getCsvData(options) {
             m.threshold AS "current threshold",
             cr.max_vector_value AS "vector max value",
             s.name AS site,
-            EXTRACT(YEAR FROM r.datetime) year,
-            EXTRACT(MONTH FROM r.datetime) month,
-            EXTRACT(DAY FROM r.datetime) day,
-            EXTRACT(HOUR FROM r.datetime) hour,
-            EXTRACT(MINUTE FROM r.datetime) minute,
+            EXTRACT(YEAR FROM r.datetime) AS "year",
+            EXTRACT(MONTH FROM r.datetime) AS "month",
+            EXTRACT(DAY FROM r.datetime) AS "day",
+            EXTRACT(HOUR FROM r.datetime) AS "hour",
+            EXTRACT(MINUTE FROM r.datetime) AS "minute",
             r.meta,
             sp.scientific_name species,
             st.songtype
@@ -73,7 +75,10 @@ async function getName(cid) {
 // name, and the playlist the classification job ran against (if any).
 async function getJobMeta(cid) {
     const connection = await mysql.getConnection()
-    const sql = `SELECT c.job_id AS jobId, c.name AS jobName, pl.name AS playlistName
+    // Lowercase aliases so the result keys match on BOTH engines (PG folds
+    // unquoted aliases to lowercase; MariaDB preserves). Consumer reads
+    // jobMeta.job_id/job_name/playlist_name (see index.js sendRfmResultsEmail).
+    const sql = `SELECT c.job_id AS job_id, c.name AS job_name, pl.name AS playlist_name
             FROM job_params_classification c
             LEFT JOIN playlists pl ON pl.playlist_id = c.playlist_id
             WHERE c.job_id = ${cid}`;

@@ -28,6 +28,12 @@ var audioTools   = require('../utils/audiotool');
 var sqlutil      = require('../utils/sqlutil');
 var dbpool       = require('../utils/dbpool');
 var tyler        = require('../utils/tyler.js');
+
+function getExportPgWriter () {
+    // app/utils module (NOT jobs/db/*): the arbimon WEB image ships app/ but
+    // not jobs/, and writeExportParams runs in the web app (F25).
+    return require('../utils/exports-pg-writer')
+}
 const { createS3Client } = require('../utils/storage');
 const rfcxConfig = config('rfcx');
 const moment = require('moment');
@@ -1947,7 +1953,20 @@ var Recordings = {
     writeExportParams: function(projection, filters, userId, userEmail) {
         if (filters.sites) delete filters.sites
         return Q.ninvoke(joi, 'validate', projection, Recordings.SCHEMAS.exportProjections)
-            .then((projection_parameters) => {
+            .then(async (projection_parameters) => {
+                // Option-2 export cutover (OPEN-ITEMS #64): when enabled, new
+                // export requests are born in PG and the queue reconciler sees
+                // them immediately. Default remains MariaDB (inert) until the
+                // coordinated cutover also removes this table from forward full-sync.
+                if ((process.env.EXPORTS_WRITE_ENGINE || '').toLowerCase() === 'pg') {
+                    await getExportPgWriter().writerQuery(
+                        `INSERT INTO recordings_export_parameters
+                         (project_id, user_id, user_email, projection_parameters, filters, created_at, processed_at, error)
+                         VALUES ($1, $2, $3, $4, $5, date_trunc('second', now() AT TIME ZONE 'UTC'), null, null)`,
+                        [filters.project_id, userId, userEmail, JSON.stringify(projection_parameters), JSON.stringify(filters)]
+                    )
+                    return { affectedRows: 1 }
+                }
                 const q = `INSERT INTO recordings_export_parameters (project_id, user_id, user_email, projection_parameters, filters, created_at, processed_at, error)
                 VALUES(${filters.project_id}, ${userId}, '${userEmail}', '${JSON.stringify(projection_parameters)}', '${JSON.stringify(filters)}', NOW(), null, null)`
                 return dbpool.query(q)

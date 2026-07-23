@@ -1,7 +1,9 @@
 const mysql = require('./mysql')
+const pg = require('./pg')
 
 async function closeAll () {
   await mysql.closeConnection()
+  await pg.closeConnection()
 }
 
 async function getAllByChunks (func, filters = {}, options = {}, chunkSize = 1000) {

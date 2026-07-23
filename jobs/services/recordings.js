@@ -1,4 +1,6 @@
-const mysql = require('../db/mysql')
+// mysql2pg: engine-selectable backend (EXPORTS_DB_ENGINE=pg -> PG via the P6
+// translator; default mysql = legacy behavior, byte-identical SQL).
+const mysql = require('../db/backend')
 
 async function deleteRecordings (options = {}) {
   const connection = await mysql.getConnection()
@@ -29,6 +31,15 @@ async function getExportRecordingsRow (options = {}) {
 }
 
 async function updateExportRecordings (options, attrs) {
+    // PG queue path: when the row was claimed by a worker (carries a unique
+    // claim token), route the terminal status write to the PG WRITER pool,
+    // targeted by the token (safe under the non-unique logical key), and clear
+    // the sentinel. Parameterized — no interpolation. See export-queue.js.
+    if (options && options._claimToken) {
+        const { setExportTerminal } = require('./export-queue')
+        await setExportTerminal(options._claimToken, attrs)
+        return { affectedRows: 1 }
+    }
     const connection = await mysql.getConnection()
     const updatableFields = ['error', 'processed_at']
     const setStr = updatableFields
@@ -58,7 +69,12 @@ async function getCountConnections (options = {}) {
 async function exportOccupancyModels (specie, filters) {
     const connection = await mysql.getConnection()
     const isRangeAvailable = filters.range !== undefined
-    let sql = `SELECT S.name as site, S.site_id as siteId, DATE_FORMAT(R.datetime, "%Y/%m/%d") as date, SUM(rv.present=1 OR rv.present_review>0 OR rv.present_aed>0) as count
+    // (rv.present=1 OR ...) sums as 0/1 on MySQL; PG SUM() rejects boolean.
+    // CASE WHEN is engine-portable and identical on both.
+    // PG lowercases unquoted aliases; MariaDB preserves them. Use a lowercase
+    // alias (site_id) so the RESULT KEY is identical on both engines, and the
+    // consumer reads row.site_id (see index.js occupancy path).
+    let sql = `SELECT S.name as site, S.site_id as site_id, DATE_FORMAT(R.datetime, "%Y/%m/%d") as date, SUM(CASE WHEN (rv.present=1 OR rv.present_review>0 OR rv.present_aed>0) THEN 1 ELSE 0 END) as count
         FROM recordings R
         JOIN sites S ON S.site_id = R.site_id
         LEFT JOIN project_imported_sites AS pis ON S.site_id = pis.site_id AND pis.project_id = ${filters.project_id}
@@ -67,7 +83,7 @@ async function exportOccupancyModels (specie, filters) {
             AND (S.project_id = ${filters.project_id} OR pis.project_id = ${filters.project_id})
             AND (rv.present_review>0 OR rv.present_aed>0 OR rv.present is not null)
             ${isRangeAvailable ? 'AND (R.datetime >= ' + '"' + filters.range.from + '"' + ' AND R.datetime <=' + '"' + filters.range.to + '"' + ')' : ''}
-        GROUP BY S.name, YEAR(R.datetime), MONTH(R.datetime), DAY(R.datetime) ORDER BY R.datetime ASC
+        GROUP BY S.name, S.site_id, DATE_FORMAT(R.datetime, "%Y/%m/%d") ORDER BY MIN(R.datetime) ASC
     `;
 
     const [rows, fields] = await connection.execute(sql)
@@ -78,13 +94,15 @@ async function exportOccupancyModels (specie, filters) {
 async function getCountSitesRecPerDates (projectId, filters) {
     const connection = await mysql.getConnection()
     const isRangeAvailable = filters.range !== undefined
-    let query = `SELECT S.name as site, S.site_id as siteId, YEAR(R.datetime) as year, MONTH(R.datetime) as month, DAY(R.datetime) as day,COUNT(*) as count
+    // PG GROUP BY strictness: S.site_id is selected, so group it too (S.name
+    // alone is not a key; groups are unchanged on MySQL — site_id determines name).
+    let query = `SELECT S.name as site, S.site_id as site_id, YEAR(R.datetime) as year, MONTH(R.datetime) as month, DAY(R.datetime) as day,COUNT(*) as count
         FROM sites S
         LEFT JOIN recordings R ON S.site_id = R.site_id
         WHERE S.project_id = ${projectId}
             AND S.deleted_at is null
             ${isRangeAvailable ? 'AND (R.datetime >= ' + '"' + filters.range.from + '"' + ' AND R.datetime <= ' + '"' + filters.range.to + '"' + ')' : ''}
-        GROUP BY S.name, YEAR(R.datetime), MONTH(R.datetime), DAY(R.datetime);
+        GROUP BY S.name, S.site_id, YEAR(R.datetime), MONTH(R.datetime), DAY(R.datetime);
     `;
     const [rows, fields] = await connection.execute(query)
     return rows
