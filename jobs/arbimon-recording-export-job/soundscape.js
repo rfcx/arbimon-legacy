@@ -17,6 +17,17 @@ const exportReportJob = `Arbimon Export ${exportReportType} job`
 const tmpFilePath = 'jobs/arbimon-recording-export-job/tmpfilecache'
 
 async function collectData (projection_parameters, filters, cb) {
+  // Ensure the tmp dir exists (drain finding 2026-07-23: an rmSync(recursive)
+  // in another export type's finally-block DELETES the shared tmpfilecache dir
+  // between messages in the long-lived consumer; the cron always started fresh
+  // with the image's pre-created dir. Recreate defensively per run — same
+  // belt-and-braces pattern as pattern-matching.js collectData).
+  try {
+    fs.mkdirSync(tmpFilePath, { recursive: true })
+  } catch (e) {
+    console.error(`${exportReportJob}: could not create tmp dir ${tmpFilePath}`, e)
+    return cb(e)
+  }
   const filePath = path.join(tmpFilePath, `_soundscape.csv`)
   const targetFile = fs.createWriteStream(filePath, { flags: 'a' })
    // 1. Export .csv file
