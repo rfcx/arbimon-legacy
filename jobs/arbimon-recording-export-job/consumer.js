@@ -57,6 +57,8 @@ async function requeue (ch, original, attempts) {
 async function handleMessage (ch, msg) {
   let payload
   let claimed
+  let acked = false
+  const ackOnce = () => { if (!acked) { acked = true; ch.ack(msg) } }
   try {
     payload = parseMessage(msg)
     const attempt = Number(payload.attempt || 0)
@@ -64,9 +66,19 @@ async function handleMessage (ch, msg) {
     claimed = { token, row }
     if (!row) {
       // Already terminal, stale duplicate, or another worker claimed it.
-      ch.ack(msg)
+      ackOnce()
       return
     }
+
+    // ACK-ON-CLAIM (2026-07-23 E2E finding): exports run for HOURS (pmAll
+    // chunked 2,153 CSV chunks before RabbitMQ's default 30-min
+    // consumer_timeout killed the channel: 406 PRECONDITION-FAILED 'delivery
+    // acknowledgement timed out'). The DB claim is the source of truth — once
+    // the row is sentinelled, the message's dispatch job is DONE. Ack now;
+    // a worker crash mid-export leaves the sentinel → stale-claim TTL →
+    // reconciler republish (the same recovery path as SIGTERM, already
+    // proven). Retry/DLQ below REPUBLISH rather than nack.
+    ackOnce()
 
     // Safe-test hook: only enabled in isolated test pods. Production workers do
     // NOT set this. We override the row before processExportRow sees it, so all
@@ -75,35 +87,32 @@ async function handleMessage (ch, msg) {
 
     try {
       await processExportRow(row)
-      // Success path: processExportRow's success branches already wrote
+      // Success: processExportRow's success branches already wrote
       // processed_at (via setExportTerminal, keyed on the claim token). If a
       // branch recorded a deterministic error and resolved (legacy #1759
       // semantics for bad-params/poison rows), the row is terminal-with-error
-      // and won't be re-picked. Either way it is terminal; just ack.
-      ch.ack(msg)
+      // and won't be re-picked. Message was acked at claim.
     } catch (err) {
       // processExportRow threw WITHOUT recording terminal state (the branches
       // that reject/throw). The claim sentinel is still set, so we own the
-      // terminal decision here.
+      // terminal decision here. (Message already acked — we republish.)
       if (attempt + 1 >= MAX_ATTEMPTS) {
         // Terminal failure: record the error (keyed on the token, first-writer
         // -wins) and quarantine to the DLQ. Do NOT clearClaim — we WANT the row
         // to stay terminal (error set), not become pending again.
         await setExportTerminal(token, { error: String(err && err.message ? err.message : err) })
         await publishDlq(ch, payload, err, attempt + 1)
-        ch.ack(msg)
       } else {
         // Retryable: release the claim (error -> NULL) so the next delivery can
-        // re-claim, and requeue with attempt+1.
+        // re-claim, and republish with attempt+1.
         await clearClaim(row, token)
         await requeue(ch, payload, attempt + 1)
-        ch.ack(msg)
       }
     }
   } catch (err) {
-    console.error('[export-consumer] message failed before claim', err)
+    console.error('[export-consumer] message failed before claim/terminal', err)
     try { if (payload) await publishDlq(ch, payload, err, Number(payload.attempt || 0) + 1) } catch (_) {}
-    ch.ack(msg)
+    ackOnce() // guarded: never double-ack (a double basic.ack is a channel error)
   }
 }
 
