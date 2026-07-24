@@ -11,6 +11,15 @@ COPY jobs /app/jobs
 
 # -- arbimon-recording-delete-job --
 FROM build as arbimon-recording-delete-job
+# jobs/db/index.js requires jobs/db/pg.js (exports PG backend, #1770) which
+# requires app/utils/dbpool-pg (the P6 translator). This stage never copied
+# app/utils, so the 2026-07-23 rebuild crashed at require-time
+# (MODULE_NOT_FOUND) and the daily delete cron failed. Copy app/utils like
+# the export-job stage does (dbpool-pg itself needs only crypto + the pg
+# package already present in jobs/package.json; it is INERT without
+# DB_ENGINE=pg/shadow).
+RUN mkdir -p /app/app/utils
+COPY app/utils /app/app/utils
 CMD ["node", "jobs/arbimon-recording-delete-job/index.js"]
 
 # -- arbimon-recording-export-job --
