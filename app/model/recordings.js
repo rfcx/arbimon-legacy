@@ -118,8 +118,24 @@ var Recordings = {
                 deferred.resolve({
                     id    : rec_match[ 1] | 0
                 });
-            // match recording ids
-            } else if((rec_match = /^(\d+)$/.exec(recording_url))){
+            // match recording ids (optionally with a trailing slash)
+            //
+            // rfcx-local 2026-07-25 (mysql2pg Phase 6 shadow finding): the
+            // trailing slash matters. A url like "310984658/" did NOT match the
+            // bare-id pattern, so it fell through to the generic
+            // site-year-month branch below, where group(1) becomes the SITE —
+            // producing a predicate of `site_id = '310984658/'`.
+            //
+            // MySQL silently coerces that trailing-garbage string to a number
+            // (0 rows, no error), so the bug is invisible today. PostgreSQL
+            // correctly rejects it: `invalid input syntax for type bigint:
+            // "310984658/"` (SQLSTATE 22P02). Verified on both live engines.
+            //
+            // Left unfixed, the arbimon2 MariaDB->PostgreSQL read cutover would
+            // turn a benign "no results" into a 500 on these URLs. Treating a
+            // trailing slash as part of the id (rather than as a site name) is
+            // also simply the correct reading of the url.
+            } else if((rec_match = /^(\d+)\/?$/.exec(recording_url))){
                 patternFound = true;
                 deferred.resolve({
                     id    : rec_match[ 1] | 0
