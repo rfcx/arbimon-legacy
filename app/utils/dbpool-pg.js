@@ -820,15 +820,32 @@ function shadowAfterRead(finalSql, mariaRows, meta) {
         //
         // Counted as pg_error (a connection fault), never as a divergence.
         var clientDead = false;
+        // release() is reachable from SEVERAL paths (the client 'error'
+        // handler, the BEGIN callback, the query callback, and the ROLLBACK
+        // callback nested inside those). pg-pool THROWS on a double release
+        // ("Release called on client which has already been released to the
+        // pool") and that throw is itself uncaught -> process exit. So funnel
+        // every path through one idempotent wrapper.
+        // PROVEN NECESSARY: the first version of this fix guarded only the
+        // outer callbacks with `clientDead`, but an in-flight ROLLBACK callback
+        // still fired release() after the error handler had already released,
+        // and the pod died with the double-release throw during a live Patroni
+        // switchover acceptance test (2026-07-26).
+        var released = false;
+        var releaseOnce = function (relErr) {
+            if (released) { return; }
+            released = true;
+            try { release(relErr); } catch (e) { /* pool already reclaimed it */ }
+        };
         client.on('error', function (cerr) {
             if (clientDead) { return; }
             clientDead = true;
             _counters.pg_error++;
             emitStat({ ev: 'client_error',
                 err: String(cerr && cerr.message || cerr).slice(0, 200) });
-            // Release with the error so pg DESTROYS this client instead of
+            // Release WITH the error so pg DESTROYS this client instead of
             // returning a broken connection to the pool.
-            try { release(cerr); } catch (e) { /* already released */ }
+            releaseOnce(cerr);
             finish();
         });
 
@@ -840,13 +857,13 @@ function shadowAfterRead(finalSql, mariaRows, meta) {
         client.query(begin, function (gerr) {
             if (clientDead) { return; }   // client already failed + released
             if (gerr) {
-                try { client.query('ROLLBACK', function () { release(); }); } catch (e) { release(); }
+                try { client.query('ROLLBACK', function () { releaseOnce(); }); } catch (e) { releaseOnce(); }
                 finish(); _counters.pg_error++; return;
             }
             client.query(pgSql, function (qerr, pgRes) {
                 if (clientDead) { return; }   // client already failed + released
                 // Always end the transaction + release the client.
-                try { client.query('ROLLBACK', function () { release(); }); } catch (e) { release(); }
+                try { client.query('ROLLBACK', function () { releaseOnce(); }); } catch (e) { releaseOnce(); }
                 finish();
                 if (qerr) {
                     // 57014 = query_canceled (our statement_timeout): a slow
