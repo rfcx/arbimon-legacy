@@ -801,17 +801,50 @@ function shadowAfterRead(finalSql, mariaRows, meta) {
             emitStat({ ev: 'connect_error', err: String(err && err.message || err).slice(0, 200) });
             return;
         }
+        // CHECKED-OUT CLIENT ERROR GUARD (rfcx-local 2026-07-26).
+        // The pool-level `_pool.on('error')` in getPool() only covers clients
+        // sitting IDLE in the pool. A client that is CHECKED OUT and mid-query
+        // when its server connection dies emits 'error' on ITSELF; with no
+        // listener, Node rethrows it as an uncaught exception and the PROCESS
+        // EXITS. A PG failover (or a pgbouncer restart) kills exactly these
+        // in-flight connections.
+        //
+        // Observed in production 2026-07-25: Patroni failed over TL 61->62 at
+        // 23:36:17Z and the shadow pod died 6s later at 23:36:23Z with
+        // "Error: Connection terminated unexpectedly / Emitted 'error' event on
+        // Client instance" — 4 restarts in ~3.5h across repeated failovers
+        // (5 failovers in 6 days on this cluster). The shadow is meant to be
+        // strictly fire-and-forget: it must NEVER be able to kill the app.
+        // This matters most at the Phase-6 stage-3 rollout, where DB_ENGINE=
+        // shadow moves onto the MAIN user-facing replicas.
+        //
+        // Counted as pg_error (a connection fault), never as a divergence.
+        var clientDead = false;
+        client.on('error', function (cerr) {
+            if (clientDead) { return; }
+            clientDead = true;
+            _counters.pg_error++;
+            emitStat({ ev: 'client_error',
+                err: String(cerr && cerr.message || cerr).slice(0, 200) });
+            // Release with the error so pg DESTROYS this client instead of
+            // returning a broken connection to the pool.
+            try { release(cerr); } catch (e) { /* already released */ }
+            finish();
+        });
+
         // pgbouncer is transaction-pooled: wrap everything in ONE explicit
         // read-only transaction so the timeout guard + SELECT share a server
         // connection, and ROLLBACK always releases it clean. SET LOCAL scopes
         // the timeout to this transaction only.
         var begin = 'BEGIN READ ONLY; SET LOCAL statement_timeout=' + Math.round(TIMEOUT_MS) + ';';
         client.query(begin, function (gerr) {
+            if (clientDead) { return; }   // client already failed + released
             if (gerr) {
                 try { client.query('ROLLBACK', function () { release(); }); } catch (e) { release(); }
                 finish(); _counters.pg_error++; return;
             }
             client.query(pgSql, function (qerr, pgRes) {
+                if (clientDead) { return; }   // client already failed + released
                 // Always end the transaction + release the client.
                 try { client.query('ROLLBACK', function () { release(); }); } catch (e) { release(); }
                 finish();
