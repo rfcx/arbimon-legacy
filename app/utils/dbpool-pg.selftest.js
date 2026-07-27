@@ -384,5 +384,22 @@ eq('collation: literal text is not an operand',
        out.indexOf(g('P2.name')) >= 0, true);
 })();
 
+// -- ADVERSARIAL GUARDS: only *_ci STRING columns may be folded.
+// COLLATION_KNOWN is built from information_schema rows with a non-NULL
+// COLLATION_NAME, so numeric/date/binary columns are structurally absent and
+// hit the UNRESOLVED fail-safe. These pin that property: folding a bigint
+// would be a PG type error, and folding a join key would wreck plans.
+function unfolded(sql) { return m.translate(sql).indexOf('translate(lower(') < 0; }
+eq('collation: numeric columns never fold (recording_id)',
+   unfolded('SELECT 1 FROM recordings R WHERE R.recording_id = 42'), true);
+eq('collation: numeric columns never fold (site_id)',
+   unfolded('SELECT 1 FROM sites S WHERE S.site_id = 5'), true);
+eq('collation: tinyint flags never fold',
+   unfolded('SELECT 1 FROM pattern_matchings PM WHERE PM.deleted = 0'), true);
+eq('collation: datetime never folds',
+   unfolded("SELECT 1 FROM recordings R WHERE R.datetime = '2026-01-01'"), true);
+eq('collation: numeric JOIN keys never fold',
+   unfolded('SELECT 1 FROM recordings R JOIN sites S ON S.site_id = R.site_id'), true);
+
 console.log('\n' + (fails ? ('FAILED ' + fails + '/' + n) : ('ALL ' + n + ' PASS')));
 process.exit(fails ? 1 : 0);
