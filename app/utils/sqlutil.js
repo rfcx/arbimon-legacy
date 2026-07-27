@@ -95,6 +95,39 @@ var sqlutil = {
 
     },
 
+    /** Subjects that are NUMERIC columns in the schema. A non-numeric operand
+     *  compared against these is a malformed-URL artifact, never a real match.
+     *
+     *  rfcx-local 2026-07-27 (mysql2pg Phase 6): PR #1779 fixed ONE malformed
+     *  shape ("310984658/") by anchoring the bare-id regex, but its divergence
+     *  hash 9e9c53dfe45588a0 kept firing afterwards. Root cause: every OTHER
+     *  malformed shape ("//", "/x", "?q=", leading slash, trailing space)
+     *  still falls through to the generic site-year-month branch, where
+     *  capture group 1 becomes the SITE and is string-escaped here.
+     *
+     *  MySQL silently coerces the garbage to a number (0 rows, no error), so
+     *  the defect is invisible today. PostgreSQL rejects it:
+     *      invalid input syntax for type bigint: "310556559/"  (SQLSTATE 22P02)
+     *  Verified on BOTH live engines 2026-07-27. Left unfixed, the arbimon2
+     *  read cutover turns a benign "no results" into a 500 on these URLs.
+     *
+     *  '1 = 0' is the faithful translation of MySQL's coerce-to-no-match and
+     *  is engine-independent (it also spares MariaDB a pointless compare).
+     */
+    NUMERIC_SUBJECTS: {
+        'R.recording_id': 1,
+        'S.site_id': 1,
+        'r.recording_id': 1,
+        's.site_id': 1,
+    },
+
+    /** True when v is safely usable as a numeric SQL operand. */
+    isNumericOperand: function(v){
+        if (typeof v === 'number') { return isFinite(v); }
+        if (typeof v !== 'string') { return false; }
+        return /^-?\d+(\.\d+)?$/.test(v.trim());
+    },
+
     /** Returns a logical expression on a subject, given a query constraint.
      *  @param {String} subject - the lhs of the expression.
      *  @param {Object} query - the query constraint object. Must have only one attribute
@@ -108,6 +141,19 @@ var sqlutil = {
      */
     apply_query_contraint: function(subject, query){
         if(query){
+            // Numeric-subject guard (see NUMERIC_SUBJECTS above): a non-numeric
+            // operand can never match, and string-escaping it produces a PG
+            // 22P02 at the 6.4 read flip. MySQL's own answer is "no rows".
+            var numericSubject = sqlutil.NUMERIC_SUBJECTS[subject];
+            if (numericSubject) {
+                var vals = query['='] !== undefined ? [query['=']]
+                         : query.IN !== undefined ? [].concat(query.IN)
+                         : query.BETWEEN !== undefined ? [].concat(query.BETWEEN)
+                         : null;
+                if (vals && !vals.every(sqlutil.isNumericOperand)) {
+                    return '1 = 0';
+                }
+            }
             if (query['=']) {
                 return subject + ' = ' + mysql.escape(query['=']);
             } else if (query.IN) {

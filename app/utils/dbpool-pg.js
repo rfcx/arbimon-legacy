@@ -539,6 +539,297 @@ function translateFunctions(sql, store) {
     return s;
 }
 
+// ------------------------------------------------- collation / case folding
+// THE PROBLEM (measured live 2026-07-27, stage-3 clock-week day 1):
+// every string column in arbimon2 carries a *_ci collation (99
+// utf8mb3_general_ci + 21 latin1_swedish_ci; ZERO *_bin, zero binary/blob),
+// so MariaDB compares EVERY string case-insensitively. PG compares
+// varchar/text case-SENSITIVELY. schema/096 (T13) gave citext to the 9 UNIQUE
+// identity keys only — deliberately (TYPE-POLICY T13 defers the rest to
+// "Phase-6 app-audit territory"; SCHEMA-WISHLIST W5). This is that audit.
+//
+// Live consequence, measured on the real species.search() SQL (uncapped):
+//   'bird'    MariaDB 34620  vs  PG 967
+//   'ANTBIRD' MariaDB   147  vs  PG   0     <- user search returns NOTHING
+// and it fails OPEN (no error), so DB_PG_FALLBACK cannot catch it.
+//
+// THE TWO COLLATIONS DISAGREE ON ACCENTS — measured on the live master,
+// with true single-byte latin1 values (a first attempt that put UTF-8 bytes
+// into _latin1 literals compared on LENGTH, not collation, and produced a
+// convincing but FALSE result — hence the byte-level test):
+//     pair    latin1_swedish_ci   utf8mb3_general_ci
+//     é vs e         1                    1
+//     ç vs c         1                    1
+//     ñ vs n         1                    1
+//     å ä ö ü        0 (DISTINCT)         1 (folded)
+// Confirmed on real rows: templates.name (swedish) 'Zaunkonig' finds 0 but
+// 'Zaunkönig' finds 2, while pattern_matchings.name 'Tocon' == 'Tocón' == 8;
+// sites.name (general) 'Marco' == 'Março' == 16.
+// So a BLANKET accent-insensitive rule would OVER-match German/Nordic names.
+//
+// WHY NOT native COLLATE: per-column nondeterministic ICU collations would
+// need no translator change at all, but PG rejects them —
+// "nondeterministic collations are not supported for LIKE" (tested).
+// WHY NOT unaccent(): not installed, and STABLE (not IMMUTABLE) so not
+// indexable. translate(lower()) is IMMUTABLE and reproduces both foldings
+// exactly — 8/8 parity vs MariaDB on live rows.
+// GENERATED - do not hand-edit. Source: live arbimon2
+// information_schema.COLUMNS (MariaDB is the truth for collation).
+// Regenerate: data-stores/arbimon-pg/tools/gen-collation-map.sh
+// 120 string columns: 21 latin1_swedish_ci (sv), 99 utf8mb3_general_ci (gen).
+//
+// sv  = latin1_swedish_ci   : folds case + acute/cedilla/tilde,
+//                             KEEPS a-ring/a-uml/o-uml/u-uml distinct.
+// gen = utf8mb3_general_ci  : folds case + ALL accents incl. umlauts.
+// Both MEASURED on the live master 2026-07-27; see
+// runbooks/mysql2pg-p6-collation-case-sensitivity-2026-07-27.md
+//
+// Only the SV set is enumerated: it is small (21) and stable, and every
+// other string column is general_ci. A column absent from BOTH sets is
+// UNRESOLVED and its predicate is left untouched (fail-safe).
+var COLLATION_SV = {
+    'audio_event_detections_clustering.uri_vector': 1,
+    'cached_metrics.key': 1,
+    'classification_stats.json_stats': 1,
+    'job_params_audio_event_clustering.name': 1,
+    'job_params_audio_event_clustering.parameters': 1,
+    'job_params_audio_event_detection_clustering.name': 1,
+    'job_params_audio_event_detection_clustering.parameters': 1,
+    'job_task_types.identifier': 1,
+    'job_task_types.name': 1,
+    'job_task_types.typedef': 1,
+    'job_tasks.args': 1,
+    'job_tasks.remark': 1,
+    'job_tasks.status': 1,
+    'pattern_matchings.name': 1,
+    'pattern_matchings.parameters': 1,
+    'recordings_export_parameters.error': 1,
+    'recordings_export_parameters.filters': 1,
+    'recordings_export_parameters.projection_parameters': 1,
+    'recordings_export_parameters.user_email': 1,
+    'templates.name': 1,
+    'templates.uri': 1,
+};
+
+// The full known-column set (sv + gen). A qualified operand that
+// resolves into this set gets a fold; anything else is left alone.
+var COLLATION_KNOWN = {
+    'audio_event_detections_clustering.uri_vector': 1,
+    'cached_metrics.key': 1,
+    'classification_stats.json_stats': 1,
+    'job_params_audio_event_clustering.name': 1,
+    'job_params_audio_event_clustering.parameters': 1,
+    'job_params_audio_event_detection.name': 1,
+    'job_params_audio_event_detection.statistics': 1,
+    'job_params_audio_event_detection_clustering.name': 1,
+    'job_params_audio_event_detection_clustering.parameters': 1,
+    'job_params_classification.name': 1,
+    'job_params_soundscape.name': 1,
+    'job_params_soundscape.threshold_type': 1,
+    'job_params_training.name': 1,
+    'job_queues.arch': 1,
+    'job_queues.host': 1,
+    'job_queues.platform': 1,
+    'job_queues.run_types': 1,
+    'job_task_types.identifier': 1,
+    'job_task_types.name': 1,
+    'job_task_types.typedef': 1,
+    'job_tasks.args': 1,
+    'job_tasks.remark': 1,
+    'job_tasks.status': 1,
+    'job_types.description': 1,
+    'job_types.identifier': 1,
+    'job_types.name': 1,
+    'job_types.run_type': 1,
+    'job_types.script': 1,
+    'jobs.remarks': 1,
+    'jobs.state': 1,
+    'jobs.uri': 1,
+    'model_stats.json_stats': 1,
+    'model_types.description': 1,
+    'model_types.name': 1,
+    'models.name': 1,
+    'models.uri': 1,
+    'pattern_matchings.name': 1,
+    'pattern_matchings.parameters': 1,
+    'permissions.description': 1,
+    'permissions.name': 1,
+    'playlist_types.name': 1,
+    'playlists.metadata': 1,
+    'playlists.name': 1,
+    'playlists.uri': 1,
+    'project_news.data': 1,
+    'project_news_types.description': 1,
+    'project_news_types.message_format': 1,
+    'project_news_types.name': 1,
+    'projects.country': 1,
+    'projects.external_id': 1,
+    'projects.name': 1,
+    'projects.state': 1,
+    'projects.url': 1,
+    'recordings.bit_rate': 1,
+    'recordings.filename': 1,
+    'recordings.meta': 1,
+    'recordings.mic': 1,
+    'recordings.recorder': 1,
+    'recordings.sample_encoding': 1,
+    'recordings.uri': 1,
+    'recordings.version': 1,
+    'recordings_errors.error': 1,
+    'recordings_export_parameters.error': 1,
+    'recordings_export_parameters.filters': 1,
+    'recordings_export_parameters.projection_parameters': 1,
+    'recordings_export_parameters.user_email': 1,
+    'roles.description': 1,
+    'roles.icon': 1,
+    'roles.name': 1,
+    'site_types.description': 1,
+    'site_types.name': 1,
+    'sites.country_code': 1,
+    'sites.external_id': 1,
+    'sites.name': 1,
+    'sites.timezone': 1,
+    'songtypes.description': 1,
+    'songtypes.songtype': 1,
+    'soundscape_aggregation_types.description': 1,
+    'soundscape_aggregation_types.identifier': 1,
+    'soundscape_aggregation_types.name': 1,
+    'soundscape_aggregation_types.scale': 1,
+    'soundscape_composition_class_types.type': 1,
+    'soundscape_composition_classes.name': 1,
+    'soundscape_regions.name': 1,
+    'soundscape_regions.threshold_type': 1,
+    'soundscape_tags.tag': 1,
+    'soundscape_tags.type': 1,
+    'soundscapes.name': 1,
+    'soundscapes.threshold_type': 1,
+    'soundscapes.uri': 1,
+    'species.code_name': 1,
+    'species.description': 1,
+    'species.image': 1,
+    'species.scientific_name': 1,
+    'species_aliases.alias': 1,
+    'species_families.family': 1,
+    'species_taxons.image': 1,
+    'species_taxons.taxon': 1,
+    'tags.tag': 1,
+    'templates.name': 1,
+    'templates.uri': 1,
+    'training_set_roi_set_data.uri': 1,
+    'training_set_types.description': 1,
+    'training_set_types.identifier': 1,
+    'training_set_types.name': 1,
+    'training_sets.metadata': 1,
+    'training_sets.name': 1,
+    'user_account_support_request.hash': 1,
+    'user_account_support_request.params': 1,
+    'user_account_support_type.description': 1,
+    'user_account_support_type.name': 1,
+    'users.email': 1,
+    'users.firstname': 1,
+    'users.lastname': 1,
+    'users.login': 1,
+    'users.password': 1,
+    'users.rfcx_id': 1,
+    'validation_set.name': 1,
+    'validation_set.params': 1,
+    'validation_set.uri': 1,
+};
+
+// PG-ENUM EXCLUSION (measured 2026-07-27 — this is a HARD error, not a nicety).
+// These columns are native PG enum types in the migrated schema, and
+// lower()/translate() have no enum overload:
+//   SELECT ... WHERE translate(lower(state), ...) = ...
+//   ERROR: No function matches the given name and argument types
+// jobs.state is the HOTTEST predicate in the live PG jobs plane (5.5 flip),
+// so folding it would break production reads at 6.4. Enum vocabularies are
+// machine-written and case-exact anyway ('completed'/'error'/'canceled'),
+// so MySQL's ci comparison is never load-bearing for them.
+// Source: pg_type.typtype='e' on the live arbimon copy.
+var COLLATION_ENUM = {
+    'job_params_soundscape.threshold_type': 1,
+    'job_tasks.status': 1,
+    'job_types.run_type': 1,
+    'jobs.state': 1,
+    'soundscape_regions.threshold_type': 1,
+    'soundscape_tags.type': 1,
+    'soundscapes.threshold_type': 1,
+};
+
+// The two folds. Applied to BOTH sides of a predicate.
+var FOLD_GEN = "translate(lower(%s),'áàâãäåéèêëíìîïóòôõöúùûüçñýÿ','aaaaaaeeeeiiiiooooouuuucny.')";
+var FOLD_SV  = "translate(lower(%s),'áàâãéèêëíìîïóòôõúùûçñýÿ','aaaaeeeeiiiioooouuucny.')";
+
+function foldExpr(expr, cls) {
+    return (cls === 'sv' ? FOLD_SV : FOLD_GEN).replace('%s', expr);
+}
+
+// Resolve FROM/JOIN aliases so `T.name` can be mapped to a real table.
+// REQUIRED, not optional: the same alias means different tables in different
+// queries (T = templates/sv in the template search, T = tags/gen in the tag
+// autocomplete), and 5 bare column names are ambiguous across the two
+// collation classes — `name` alone spans 27 columns (4 sv / 23 gen).
+var _ALIAS_RE = /\b(?:FROM|JOIN)\s+`?([A-Za-z_]\w*)`?(?:\s+(?:AS\s+)?`?([A-Za-z_]\w*)`?)?/gi;
+var _ALIAS_KW = /^(SELECT|WHERE|ON|GROUP|ORDER|BY|LEFT|RIGHT|INNER|OUTER|CROSS|JOIN|LIMIT|OFFSET|UNION|SET|USING|AND|OR|AS|HAVING|WHEN|THEN|ELSE|END)$/i;
+
+function aliasMap(sql) {
+    var map = {};
+    var m;
+    _ALIAS_RE.lastIndex = 0;
+    while ((m = _ALIAS_RE.exec(sql)) !== null) {
+        var table = m[1].toLowerCase();
+        var alias = m[2];
+        map[table] = table;
+        if (alias && !_ALIAS_KW.test(alias)) { map[alias.toLowerCase()] = table; }
+    }
+    return map;
+}
+
+// Resolve a qualified operand to its collation class, or null when unknown.
+// NULL IS THE FAIL-SAFE: an unfolded predicate reproduces today's KNOWN and
+// census-reported behaviour, whereas guessing 'gen' would silently apply the
+// wrong semantics to the 21 latin1_swedish_ci columns. Never guess.
+function collationClass(operand, amap) {
+    var parts = String(operand).split('.');
+    if (parts.length !== 2) { return null; }   // bare column -> ambiguous -> skip
+    var tbl = amap[parts[0].toLowerCase()];
+    if (!tbl) { return null; }
+    var key = tbl + '.' + parts[1].toLowerCase();
+    if (!COLLATION_KNOWN[key]) { return null; }
+    // PG native enum: folding is a hard type error (measured). Skip.
+    if (COLLATION_ENUM[key]) { return null; }
+    return COLLATION_SV[key] ? 'sv' : 'gen';
+}
+
+// Rewrite string predicates so PG reproduces MySQL's ci (and per-collation
+// accent) semantics. Runs on literal-PROTECTED sql, so a placeholder operand
+// is a literal and is folded as a literal.
+//   <col> [NOT] LIKE <rhs>   -> fold(col) [NOT] LIKE fold(rhs)
+//   <col> = | <> | != <rhs>  -> fold(col) = | <> | != fold(rhs)
+// Only fires when the LEFT operand resolves to a known column.
+var _PRED_RE = /([A-Za-z_]\w*\.[A-Za-z_]\w*)\s*(NOT\s+LIKE|LIKE|<=>|<>|!=|=)\s*(\u0001L\d+\u0001|\?|[A-Za-z_]\w*\.[A-Za-z_]\w*)/gi;
+
+function translateCollation(sql) {
+    var amap = aliasMap(sql);
+    return sql.replace(_PRED_RE, function (whole, lhs, op, rhs) {
+        var cls = collationClass(lhs, amap);
+        if (!cls) { return whole; }             // UNRESOLVED -> untouched
+        // Only fold the RHS when it is a literal/placeholder or another known
+        // string column; a mismatched-class column pair is left alone rather
+        // than silently coerced to one side's semantics.
+        var rhsIsCol = /^[A-Za-z_]\w*\.[A-Za-z_]\w*$/.test(rhs);
+        if (rhsIsCol) {
+            var rcls = collationClass(rhs, amap);
+            if (rcls !== cls) { return whole; }
+        }
+        var o = op.toUpperCase().replace(/\s+/g, ' ');
+        // <=> is MySQL null-safe equality; folding it would change NULL
+        // semantics, so leave it entirely.
+        if (o === '<=>') { return whole; }
+        return foldExpr(lhs, cls) + ' ' + o + ' ' + foldExpr(rhs, cls);
+    });
+}
+
 // FORCE INDEX (idx) — MySQL optimizer hint, no PG equivalent; strip it.
 function stripIndexHints(sql) {
     return sql.replace(/\s+(FORCE|USE|IGNORE)\s+INDEX\s*\([^)]*\)/gi, '');
@@ -569,6 +860,7 @@ function translate(mysqlSql) {
     s = translateBackticks(s);
     s = translateLimitOffset(s);
     s = translateFunctions(s, store);
+    s = translateCollation(s);
     s = restoreLiteralsPg(s, store);
     return s;
 }
@@ -1211,6 +1503,9 @@ module.exports = {
     templateHash: templateHash,
     normalizeRows: normalizeRows,
     columnCaseMap: columnCaseMap,
+    translateCollation: translateCollation,
+    aliasMap: aliasMap,
+    collationClass: collationClass,
     restoreRowCase: restoreRowCase,
     _counters: _counters
 };
