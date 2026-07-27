@@ -121,8 +121,42 @@ eq('dq literal with embedded sq', m.translate('SELECT a FROM t WHERE b = "it\'s"
    "SELECT a FROM t WHERE b = 'it''s'");
 eq('dq literal doubled dq', m.translate('SELECT a FROM t WHERE b = "a""b"'),
    "SELECT a FROM t WHERE b = 'a\"b'");
-eq('dq literal with backslash punts', m.translate('SELECT a FROM t WHERE b = "x\\\\y"'),
-   'SELECT a FROM t WHERE b = "x\\\\y"');
+// -- MySQL backslash-escape DECODING (rfcx-local 2026-07-27).
+// Supersedes the former "backslash punts" assertion: punting produced live
+// 42601s (site name `SNR ''Kraljevac''`, 2026-07-27T10:18:26Z) and, worse,
+// SILENT wrong values for \n/\t (PG standard_conforming_strings=on reads
+// 'a\nb' as literal backslash+n — proven live). Expected values below are
+// MEASURED cross-engine, not assumed.
+// MySQL "x\\y" is the 3-char string x\y (live: LENGTH=3); PG writes that as
+// 'x\y' with standard_conforming_strings=on (live: length=3).
+eq('dq literal backslash decodes', m.translate('SELECT a FROM t WHERE b = "x\\\\y"'),
+   "SELECT a FROM t WHERE b = 'x\\y'");
+// THE LIVE 42601 CASE: mysql driver escapes ' as \' — site 88347.
+eq('sq literal escaped quotes (live Kraljevac 42601)',
+   m.translate("SELECT count(*) as count FROM sites WHERE name = 'SNR \\'\\'Kraljevac\\'\\'' AND project_id = 8740"),
+   "SELECT count(*) as count FROM sites WHERE name = 'SNR ''''Kraljevac''''' AND project_id = 8740");
+eq('sq literal single escaped quote (O\'Brien class)',
+   m.translate("SELECT a FROM t WHERE b = 'O\\'Brien'"),
+   "SELECT a FROM t WHERE b = 'O''Brien'");
+// THE SILENT CASE: \n must become a REAL newline, not backslash+n.
+eq('sq literal newline decodes to real newline',
+   m.translate("SELECT a FROM t WHERE b = 'a\\nb'"),
+   "SELECT a FROM t WHERE b = 'a\nb'");
+eq('sq literal tab decodes to real tab',
+   m.translate("SELECT a FROM t WHERE b = 'a\\tb'"),
+   "SELECT a FROM t WHERE b = 'a\tb'");
+// LIKE metacharacter escapes: MySQL KEEPS the backslash (live: LENGTH('a\\%b')
+// = 4), so decoding them would silently change LIKE semantics.
+eq('sq literal keeps \\% for LIKE', m.translate("SELECT a FROM t WHERE b LIKE 'a\\%b'"),
+   "SELECT a FROM t WHERE b LIKE 'a\\%b'");
+eq('sq literal keeps \\_ for LIKE', m.translate("SELECT a FROM t WHERE b LIKE 'a\\_b'"),
+   "SELECT a FROM t WHERE b LIKE 'a\\_b'");
+// Unknown escape -> bare char (live: '[a\\qb]' -> [aqb]).
+eq('sq literal unknown escape drops backslash', m.translate("SELECT a FROM t WHERE b = 'a\\qb'"),
+   "SELECT a FROM t WHERE b = 'aqb'");
+// NUL is unrepresentable in PG text -> punt verbatim (honest dialect_error).
+eq('sq literal NUL punts verbatim', m.translate("SELECT a FROM t WHERE b = 'a\\0b'"),
+   "SELECT a FROM t WHERE b = 'a\\0b'");
 eq('quoted alias still wins over dq-literal', m.translate("SELECT CONCAT(a,b) as 'uri' FROM t"),
    'SELECT CONCAT(a,b) as "uri" FROM t');
 // -- ORDER BY FIELD -> COALESCE(array_position(...), 0) (54023 >100-arg class)
@@ -197,6 +231,65 @@ eq('float within epsilon equal', m.compare('SELECT a FROM t', [{a:1.0000000001}]
 // null vs empty NOT equal (T4 policy)
 var ne = m.compare('SELECT a FROM t', [{a:null}], [{a:''}], 1e-9);
 eq('null != empty (T4)', ne && ne.klass, 'result_mismatch');
+
+// -- Phase 6.4 response routing: COLUMN-CASE RESTORATION -------------------
+// PG folds unquoted identifiers to lowercase and the migrated schema is
+// all-lowercase, so PG returns `typeid` where MariaDB returns `typeId`. The
+// shadow's comparator lowercases keys before diffing, so it is structurally
+// BLIND to this class — these tests are the only guard. Live surface measured
+// 2026-07-27: 8 camelCase columns / 4 tables + ~20 camelCase aliases.
+var ccm = m.columnCaseMap('SELECT SCC.id, SCC.name, SCC.isSystemClass, SCC.typeId FROM soundscape_composition_classes SCC');
+eq('caseMap picks up isSystemClass', ccm && ccm.issystemclass, 'isSystemClass');
+eq('caseMap picks up typeId', ccm && ccm.typeid, 'typeId');
+// The real live shape from app/model/soundscape-composition.js:104.
+var pgRow = [{ id: 7, name: 'Birds', issystemclass: 1, typeid: 2 }];
+var restored = m.restoreRowCase(pgRow, ccm);
+eq('restored row exposes isSystemClass', restored[0].isSystemClass, 1);
+eq('restored row exposes typeId', restored[0].typeId, 2);
+eq('restored row keeps lowercase cols', restored[0].name, 'Birds');
+eq('restored row drops folded key', restored[0].issystemclass, undefined);
+// camelCase ALIASES must round-trip too (`as recUri`, `as maxSiteId`, …).
+var am = m.columnCaseMap('SELECT r.uri as recUri, MAX(s.site_id) as maxSiteId FROM recordings r');
+eq('caseMap picks up alias recUri', am && am.recuri, 'recUri');
+var ar = m.restoreRowCase([{ recuri: 'a/b.flac', maxsiteid: 9 }], am);
+eq('restored alias recUri', ar[0].recUri, 'a/b.flac');
+eq('restored alias maxSiteId', ar[0].maxSiteId, 9);
+// All-lowercase SQL must be a no-op (no map, rows untouched by identity).
+eq('all-lowercase sql -> no case map',
+   m.columnCaseMap('select site_id, name from sites where project_id = 1'), null);
+eq('no-op restore returns rows unchanged',
+   m.restoreRowCase([{ site_id: 1 }], null)[0].site_id, 1);
+// REGRESSION GUARDS for the self-review defect (2026-07-27): string-literal
+// contents and SQL keywords must NEVER become case-map entries. The first
+// version of columnCaseMap mapped completed -> 'Completed' from the literal
+// below and renamed the real jobs.completed result key.
+var litMap = m.columnCaseMap("SELECT j.job_id, j.completed FROM jobs j WHERE j.state = 'Completed'");
+eq('literal contents never enter case map', litMap, null);
+eq('literal case defect: completed key preserved',
+   m.restoreRowCase([{ job_id: 5, completed: 1 }], litMap)[0].completed, 1);
+eq('literal case defect: no Completed key',
+   m.restoreRowCase([{ job_id: 5, completed: 1 }], litMap)[0].Completed, undefined);
+// dq literals too (MySQL string literals).
+eq('dq literal contents never enter case map',
+   m.columnCaseMap('SELECT a FROM t WHERE b = "MixedCase"'), null);
+// Uppercase SQL keywords must not be treated as identifiers.
+eq('keywords never enter case map',
+   m.columnCaseMap('SELECT a FROM t WHERE b IS NOT NULL ORDER BY a DESC'), null);
+// ...while a genuine camelCase column in the same shape still resolves.
+var mixMap = m.columnCaseMap("SELECT SCC.typeId FROM soundscape_composition_classes SCC WHERE SCC.name = 'Birds' ORDER BY SCC.typeId DESC");
+eq('camelCase survives alongside literals+keywords', mixMap && mixMap.typeid, 'typeId');
+eq('camelCase map has no literal entry', mixMap && mixMap.birds, undefined);
+// Qualified names map on their trailing component (the result key).
+eq('qualified name maps trailing component',
+   m.columnCaseMap('SELECT SCC.isSystemClass FROM t SCC').issystemclass, 'isSystemClass');
+
+// Routing eligibility mirrors the shadow allowlist: writes never route to PG.
+eq('pgRouteEligible allows plain select',
+   m.pgRouteEligible('SELECT a FROM t WHERE b = 1'), true);
+eq('pgRouteEligible refuses update',
+   m.pgRouteEligible('UPDATE t SET a = 1 WHERE b = 2'), false);
+eq('pgRouteEligible refuses insert',
+   m.pgRouteEligible('INSERT INTO t (a) VALUES (1)'), false);
 
 console.log('\n' + (fails ? ('FAILED ' + fails + '/' + n) : ('ALL ' + n + ' PASS')));
 process.exit(fails ? 1 : 0);

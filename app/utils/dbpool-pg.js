@@ -218,18 +218,76 @@ function restoreLiterals(sql, store) {
 // joined tables both have `completed` → 42702 ambiguous-column. Convert every
 // REMAINING double-quoted literal (fixQuotedAliases already consumed the
 // `AS "x"` cases before this runs) to a PG single-quoted literal.
-// Conservative: a literal containing a backslash is left unchanged (MySQL
-// backslash-escape semantics differ from PG standard_conforming_strings) —
-// it surfaces as an honest dialect_error instead of a silent wrong value.
+//
+// BACKSLASH ESCAPES (rfcx-local 2026-07-27, stage-3 day-1 finding).
+// Previously ANY literal containing a backslash was punted verbatim, which
+// produced TWO live failure modes because the mysql driver's SqlString
+// escaper emits backslash escapes for `' " \ \0 \b \n \r \t \Z`:
+//   (a) LOUD: a value containing a quote — e.g. the real site name
+//       `SNR ''Kraljevac''` (site_id 88347, created 2026-07-27T10:18:26Z) —
+//       arrives as 'SNR \'\'Kraljevac\'\'' and PG (standard_conforming_strings
+//       = on, verified live) raises 42601 `syntax error at or near "\"`.
+//       Same shape for any O'Brien-class name.
+//   (b) SILENT + WORSE: a value containing a newline/tab arrives as 'a\nb';
+//       under standard_conforming_strings=on PG reads that as a LITERAL
+//       backslash + 'n' (proven live on the replica: 'a\nb' = E'a\nb' is
+//       FALSE, length('a\nb') = 4). No error — just a wrong comparison, and
+//       at the 6.4 read flip, wrong RESULTS.
+// So we now DECODE MySQL escape semantics and RE-ENCODE as a standard PG
+// literal. This is safe to do here and only here: protectLiterals() guarantees
+// no other translator pass has seen the literal's contents.
+//
+// Decoder semantics are MEASURED against the live master (sql_mode='', i.e.
+// NO_BACKSLASH_ESCAPES off — verified 2026-07-27), not assumed:
+//   \0 \b \n \r \t \Z  -> NUL BS LF CR TAB SUB
+//   \' \" \\           -> ' " \
+//   \% \_              -> KEEP THE BACKSLASH (MySQL leaves these intact so
+//                         LIKE metacharacter escaping survives; live:
+//                         LENGTH('a\%b') = 4). Decoding them would silently
+//                         change LIKE semantics.
+//   \<other>           -> the bare character (live: '[a\qb]' -> [aqb])
+// A literal containing NUL is punted honestly: PG text cannot represent \0,
+// so there is no correct translation (an honest dialect_error beats a wrong
+// value — the same principle the original punt was reaching for).
+var MYSQL_ESCAPE_MAP = { '0': '\0', 'b': '\b', 'n': '\n', 'r': '\r',
+                         't': '\t', 'Z': '\x1a' };
+
+function decodeMysqlLiteral(inner, quoteChar) {
+    // Doubled quote chars (MySQL accepts '' inside '...' and "" inside "...").
+    var out = '';
+    for (var i = 0; i < inner.length; i++) {
+        var ch = inner.charAt(i);
+        if (ch === '\\' && i + 1 < inner.length) {
+            var nx = inner.charAt(i + 1);
+            if (nx === '%' || nx === '_') { out += '\\' + nx; i++; continue; }
+            out += Object.prototype.hasOwnProperty.call(MYSQL_ESCAPE_MAP, nx)
+                 ? MYSQL_ESCAPE_MAP[nx] : nx;
+            i++;
+            continue;
+        }
+        if (ch === quoteChar && inner.charAt(i + 1) === quoteChar) {
+            out += quoteChar; i++; continue;
+        }
+        out += ch;
+    }
+    return out;
+}
+
+function encodePgLiteral(value) {
+    if (value.indexOf('\0') !== -1) { return null; }   // unrepresentable in PG text
+    return "'" + value.replace(/'/g, "''") + "'";
+}
+
 function restoreLiteralsPg(sql, store) {
     return sql.replace(/\u0001L(\d+)\u0001/g, function (_, n) {
         var raw = store[parseInt(n, 10)];
         if (raw == null) { return _; }
-        if (raw.charAt(0) !== '"') { return raw; }         // sq literal: verbatim
-        var inner = raw.slice(1, -1);
-        if (inner.indexOf('\\') !== -1) { return raw; }    // backslash: punt
-        inner = inner.replace(/""/g, '"');                 // MySQL "" → "
-        return "'" + inner.replace(/'/g, "''") + "'";      // escape for PG
+        var q = raw.charAt(0);
+        if (q !== '"' && q !== "'") { return raw; }
+        var decoded = decodeMysqlLiteral(raw.slice(1, -1), q);
+        var encoded = encodePgLiteral(decoded);
+        // NUL: punt verbatim -> honest dialect_error rather than a wrong value.
+        return encoded === null ? raw : encoded;
     });
 }
 
@@ -340,7 +398,15 @@ function litText(tok, store) {
     if (!m) { return null; }
     var raw = store[parseInt(m[1], 10)];
     if (raw == null) { return null; }
-    return raw.replace(/^['"]/, '').replace(/['"]$/, ''); // strip surrounding quotes
+    var q = raw.charAt(0);
+    if (q !== '"' && q !== "'") { return null; }
+    // Decode MySQL escape semantics for the same reason restoreLiteralsPg does
+    // (2026-07-27): callers here (DATE_FORMAT fmt, GROUP_CONCAT SEPARATOR)
+    // re-encode the text into a PG literal, so an undecoded `\'` would be
+    // re-emitted wrong. Today's live corpus uses escape-free literals
+    // (SEPARATOR ', ', plain date formats) — this keeps it correct if that
+    // ever changes, rather than depending on the corpus staying tame.
+    return decodeMysqlLiteral(raw.slice(1, -1), q);
 }
 
 function translateFunctions(sql, store) {
@@ -875,6 +941,30 @@ function shadowAfterRead(finalSql, mariaRows, meta) {
                             tmpl: sqlTemplate(text).slice(0, 200) });
                         return;
                     }
+                    // CONNECTION-LIFETIME error, not a SQL error (rfcx-local
+                    // 2026-07-27). A server-side connection death (failover,
+                    // pgbouncer restart, admin terminate) surfaces here as an
+                    // Error with NO SQLSTATE `.code` — e.g. "Connection
+                    // terminated unexpectedly" / "server conn crashed?". The
+                    // client 'error' handler above catches these when it wins
+                    // the race, but the QUERY callback frequently fires first
+                    // (that ordering is exactly what #1781 established), so the
+                    // same fault also lands here.
+                    // Counting it as dialect_error corrupted the O5 gate's
+                    // headline metric: MEASURED on 2026-07-27, the ~07:03Z
+                    // TL68->69 organic failover pushed pod r4h9l's
+                    // dialect_error counter 0->1 with NO divergence record
+                    // (the emission was swallowed by the per-template emit cap),
+                    // making a clean day look dirty and costing a triage cycle
+                    // to reconcile counters against Loki. A dialect_error must
+                    // mean "PG rejected or mis-executed our SQL", nothing else.
+                    if (!qerr.code) {
+                        _counters.pg_error++;
+                        emitStat({ ev: 'query_conn_error',
+                            err: String(qerr && qerr.message || qerr).slice(0, 200),
+                            hash: templateHash(text) });
+                        return;
+                    }
                     _counters.dialect_error++;
                     var dhash = templateHash(text);
                     if (divergenceEmitAllowed(dhash)) {
@@ -916,10 +1006,199 @@ function startStatHeartbeat() {
 }
 if (ENGINE === 'shadow') { startStatHeartbeat(); }
 
+// ==================================================================
+// PHASE 6.4 — `DB_ENGINE=pg` RESPONSE ROUTING (ships INERT)
+// ==================================================================
+// Everything below is unreachable unless DB_ENGINE=pg, which NOTHING sets
+// today (stage-0 pattern: land the code dark, flip the env later under an
+// operator-gated milestone). In `shadow` and `mysql` modes this section is
+// dead weight of one boolean.
+//
+// WHY THIS IS NOT "just run the translated SQL":
+//
+// **THE COLUMN-CASE TRAP (measured 2026-07-27, would have broken flip day).**
+// PG folds unquoted identifiers to lowercase, and the migrated arbimon schema
+// is all-lowercase (`information_schema`: `typeid`, `issystemclass`). MariaDB
+// returns the column's DECLARED case. So `SELECT SCC.typeId, SCC.isSystemClass`
+// yields keys {typeId, isSystemClass} on MariaDB but {typeid, issystemclass}
+// on PG. Any consumer reading `row.isSystemClass` silently gets `undefined`.
+// Live example: app/model/soundscape-composition.js:104 branches on
+// `scClass.isSystemClass` — under naive pg routing that branch inverts and the
+// project-class INSERT fires for system classes.
+//
+// The SHADOW COULD NOT HAVE CAUGHT THIS: rowMaps() lowercases every key before
+// comparing (by design, so casing noise never masks value diffs), so the
+// divergence stream is structurally blind to it. Zero divergences across the
+// whole clock says nothing about column casing — which is exactly why this
+// needed a code read + schema measurement, not more soak time.
+//
+// Affected surface, MEASURED not guessed (live information_schema): 8 camelCase
+// columns across 4 tables (model_types.usesSsim/usesRansac,
+// project_soundscape_composition_classes.projectId/scclassId,
+// recording_soundscape_composition_annotations.recordingId/scclassId,
+// soundscape_composition_classes.typeId/isSystemClass) plus ~20 camelCase SQL
+// aliases across 9 app/model files (`as recUri`, `as maxSiteId`, …).
+//
+// FIX: rebuild MySQL-shaped keys from the ORIGINAL SQL. Any identifier/alias
+// carrying uppercase is mapped lower->original and re-applied to PG rows, so
+// consumers see byte-identical key casing on both engines.
+
+var PG_ROUTE_FALLBACK = (process.env.DB_PG_FALLBACK || '1') !== '0';
+
+// Build lowercase -> original-case map for the MIXED-CASE identifiers in the
+// source SQL. Only ever restores casing MySQL itself would have returned.
+//
+// SELF-REVIEW DEFECT, CAUGHT + FIXED BEFORE MERGE (2026-07-27) — keep this,
+// it is the #1780 lesson repeating: the first version scanned every word in
+// the raw SQL, so STRING-LITERAL CONTENTS and SQL KEYWORDS became map
+// entries. Reproduced concretely:
+//   SELECT j.job_id, j.completed FROM jobs j WHERE j.state = 'Completed'
+// mapped completed -> 'Completed' and RENAMED the real jobs.completed result
+// key to `Completed` — i.e. the exact silent key-shape corruption this
+// function exists to PREVENT, introduced by the fix itself.
+// Three guards now:
+//   1. literals are stripped first, reusing the translator's own
+//      protectLiterals() so literal text can never be scanned;
+//   2. an all-UPPERCASE token is never treated as an identifier (SQL keywords
+//      are written uppercase throughout this codebase; arbimon2 has ZERO
+//      all-uppercase column names — verified live against
+//      information_schema, count = 0). Genuine camelCase (`typeId`,
+//      `isSystemClass`, `recUri`) always contains a lowercase char, so this
+//      excludes keywords without excluding any real column;
+//   3. only the trailing component of a qualified name is used (`SCC.typeId`
+//      -> `typeId`), since that is what appears as the result key.
+var _CASE_TOKEN_RE = /[A-Za-z_][A-Za-z0-9_$]*/g;
+function columnCaseMap(mysqlSql) {
+    var litStore = [];
+    var stripped = protectLiterals(String(mysqlSql), litStore)
+        .replace(/\u0001L\d+\u0001/g, ' ');   // drop literal placeholders entirely
+    var map = null;
+    var m;
+    _CASE_TOKEN_RE.lastIndex = 0;
+    while ((m = _CASE_TOKEN_RE.exec(stripped)) !== null) {
+        var tok = m[0];
+        var low = tok.toLowerCase();
+        if (low === tok) { continue; }              // already lowercase
+        if (tok === tok.toUpperCase()) { continue; } // SQL keyword, not a column
+        if (!map) { map = {}; }
+        if (!Object.prototype.hasOwnProperty.call(map, low)) { map[low] = tok; }
+    }
+    return map;
+}
+
+function restoreRowCase(rows, caseMap) {
+    if (!caseMap || !rows || !rows.length) { return rows; }
+    return rows.map(function (r) {
+        var out = {};
+        Object.keys(r).forEach(function (k) {
+            var want = Object.prototype.hasOwnProperty.call(caseMap, k) ? caseMap[k] : k;
+            out[want] = r[k];
+        });
+        return out;
+    });
+}
+
+// Only statements the SAME allowlist classifier accepts may be served from PG.
+// Everything else (writes, transactions, anything non-plain) stays on MariaDB.
+function pgRouteEligible(sql) {
+    return classify(sqlText(sql)).replayable;
+}
+
+/**
+ * Execute a read on PG and return MySQL-shaped rows (6.4 response routing).
+ * cb(err, rows). On any PG-side failure with DB_PG_FALLBACK enabled (default),
+ * cb is called with a sentinel so dbpool.js can retry on MariaDB — a read flip
+ * must degrade to the old engine, never to an error page.
+ */
+function pgReadQuery(finalSql, cb) {
+    var text = sqlText(finalSql);
+    var pool = getPool();
+    if (!pool) { return cb({ pgRouteFallback: true, message: 'pg pool unavailable' }); }
+    var pgSql;
+    try { pgSql = translate(text); } catch (e) {
+        _counters.dialect_error++;
+        emitDivergence({ v: 1, ts: new Date().toISOString(), klass: 'dialect_error',
+            phase: 'translate-pg', hash: templateHash(text),
+            tmpl: sqlTemplate(text).slice(0, 400),
+            detail: String(e && e.message || e).slice(0, 200) });
+        return cb({ pgRouteFallback: true, message: 'translate failed' });
+    }
+    var caseMap = columnCaseMap(text);
+    pool.connect(function (err, client, release) {
+        if (err) {
+            _counters.pg_error++;
+            emitStat({ ev: 'pg_route_connect_error',
+                err: String(err && err.message || err).slice(0, 200) });
+            return cb({ pgRouteFallback: true, message: 'connect failed' });
+        }
+        var released = false;
+        var releaseOnce = function (e) {
+            if (released) { return; } released = true;
+            try { release(e); } catch (x) { /* pool already reclaimed it */ }
+        };
+        var settled = false;
+        var settle = function (e, rows) {
+            if (settled) { return; } settled = true;
+            cb(e, rows);
+        };
+        // Same #1781 discipline as the shadow path: a checked-out client that
+        // dies mid-query emits 'error' on ITSELF; unlistened, Node rethrows and
+        // the PROCESS EXITS. Under DB_ENGINE=pg that would be a user-facing
+        // outage, so the guard is mandatory here too.
+        client.on('error', function (cerr) {
+            _counters.pg_error++;
+            emitStat({ ev: 'pg_route_client_error',
+                err: String(cerr && cerr.message || cerr).slice(0, 200) });
+            releaseOnce(cerr);
+            settle({ pgRouteFallback: true, message: 'client error' });
+        });
+        client.query('BEGIN READ ONLY; SET LOCAL statement_timeout=' +
+                     Math.round(TIMEOUT_MS) + ';', function (gerr) {
+            if (gerr) {
+                try { client.query('ROLLBACK', function () { releaseOnce(); }); }
+                catch (e) { releaseOnce(); }
+                _counters.pg_error++;
+                return settle({ pgRouteFallback: true, message: 'begin failed' });
+            }
+            client.query(pgSql, function (qerr, pgRes) {
+                try { client.query('ROLLBACK', function () { releaseOnce(); }); }
+                catch (e) { releaseOnce(); }
+                if (qerr) {
+                    // Connection-lifetime faults carry no SQLSTATE (see the
+                    // shadow path's matching guard) — never a dialect error.
+                    if (!qerr.code) {
+                        _counters.pg_error++;
+                        emitStat({ ev: 'pg_route_conn_error',
+                            err: String(qerr && qerr.message || qerr).slice(0, 200) });
+                    } else if (qerr.code === '57014') {
+                        _counters.pg_timeout++;
+                        emitStat({ ev: 'pg_route_timeout', hash: templateHash(text) });
+                    } else {
+                        _counters.dialect_error++;
+                        emitDivergence({ v: 1, ts: new Date().toISOString(),
+                            klass: 'dialect_error', phase: 'execute-pg',
+                            hash: templateHash(text), tmpl: sqlTemplate(text).slice(0, 400),
+                            detail: String(qerr && qerr.message || qerr).slice(0, 240),
+                            pg_code: qerr.code });
+                    }
+                    return settle({ pgRouteFallback: true, message: 'query failed' });
+                }
+                _counters.ok++;
+                settle(null, restoreRowCase((pgRes && pgRes.rows) || [], caseMap));
+            });
+        });
+    });
+}
+
 module.exports = {
     engine: ENGINE,
     enabled: ENABLED,
     isShadow: ENGINE === 'shadow',
+    // Phase 6.4 response routing (INERT unless DB_ENGINE=pg):
+    isPg: ENGINE === 'pg',
+    pgFallbackEnabled: PG_ROUTE_FALLBACK,
+    pgRouteEligible: pgRouteEligible,
+    pgReadQuery: pgReadQuery,
     // dbpool.js hook (shadow):
     shadowAfterRead: shadowAfterRead,
     // exported for the self-test + potential Phase-6.4 pg mode:
@@ -931,5 +1210,7 @@ module.exports = {
     sqlTemplate: sqlTemplate,
     templateHash: templateHash,
     normalizeRows: normalizeRows,
+    columnCaseMap: columnCaseMap,
+    restoreRowCase: restoreRowCase,
     _counters: _counters
 };

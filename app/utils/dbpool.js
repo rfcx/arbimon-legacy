@@ -172,6 +172,45 @@ var dbpool = {
     },
 
     queryHandler: function (query, options, callback) {
+        // -------- Phase 6.4 read flip (INERT unless DB_ENGINE=pg) ----------
+        // Serve eligible plain SELECTs from PostgreSQL. Writes and anything the
+        // allowlist classifier does not positively identify as a plain read fall
+        // through to MariaDB untouched (legacy still OWNS writes until Phase 7).
+        // Any PG-side failure falls back to MariaDB (DB_PG_FALLBACK=0 disables),
+        // so a read flip degrades to the previous engine rather than to an error
+        // page. Placed at the SAME chokepoint the shadow taps, so the code path
+        // validated for a week by shadow is the code path that now serves.
+        if (pgshadow.isPg) {
+            if (callback === undefined && options instanceof Function) {
+                callback = options;
+                options = undefined;
+            }
+            var pgRaw = (typeof query === 'string') ? query
+                : (query && typeof query.sql === 'string') ? query.sql : null;
+            if (pgRaw !== null && pgshadow.pgRouteEligible(pgRaw)) {
+                var pgFinal = null;
+                try {
+                    pgFinal = mysql.format(pgRaw, options, false, config('db').timezone || 'Z');
+                } catch (e) { pgFinal = null; }
+                if (pgFinal !== null) {
+                    var mysqlFallback = function () {
+                        dbpool.getConnection(function (err, connection) {
+                            if (err) { return callback(err); }
+                            dbpool.queryWithConnHandler(connection, query, options, true, callback);
+                        });
+                    };
+                    return pgshadow.pgReadQuery(pgFinal, function (pgErr, rows) {
+                        if (pgErr) {
+                            if (pgErr.pgRouteFallback && pgshadow.pgFallbackEnabled) {
+                                return mysqlFallback();
+                            }
+                            return callback(pgErr);
+                        }
+                        callback(null, rows, null);
+                    });
+                }
+            }
+        }
         if (EXPORTS_PG_ENGINE) {
             if(callback === undefined && options instanceof Function){
                 callback = options;
