@@ -1045,21 +1045,42 @@ if (ENGINE === 'shadow') { startStatHeartbeat(); }
 
 var PG_ROUTE_FALLBACK = (process.env.DB_PG_FALLBACK || '1') !== '0';
 
-// Build lowercase -> original-case map for every identifier-ish token in the
-// source SQL that is not already all-lowercase. Cheap (one regex pass) and
-// only ever ADDs casing that MySQL would have returned.
-var _CASE_TOKEN_RE = /[`"]?\b([A-Za-z_][A-Za-z0-9_$]*)\b[`"]?/g;
+// Build lowercase -> original-case map for the MIXED-CASE identifiers in the
+// source SQL. Only ever restores casing MySQL itself would have returned.
+//
+// SELF-REVIEW DEFECT, CAUGHT + FIXED BEFORE MERGE (2026-07-27) — keep this,
+// it is the #1780 lesson repeating: the first version scanned every word in
+// the raw SQL, so STRING-LITERAL CONTENTS and SQL KEYWORDS became map
+// entries. Reproduced concretely:
+//   SELECT j.job_id, j.completed FROM jobs j WHERE j.state = 'Completed'
+// mapped completed -> 'Completed' and RENAMED the real jobs.completed result
+// key to `Completed` — i.e. the exact silent key-shape corruption this
+// function exists to PREVENT, introduced by the fix itself.
+// Three guards now:
+//   1. literals are stripped first, reusing the translator's own
+//      protectLiterals() so literal text can never be scanned;
+//   2. an all-UPPERCASE token is never treated as an identifier (SQL keywords
+//      are written uppercase throughout this codebase; arbimon2 has ZERO
+//      all-uppercase column names — verified live against
+//      information_schema, count = 0). Genuine camelCase (`typeId`,
+//      `isSystemClass`, `recUri`) always contains a lowercase char, so this
+//      excludes keywords without excluding any real column;
+//   3. only the trailing component of a qualified name is used (`SCC.typeId`
+//      -> `typeId`), since that is what appears as the result key.
+var _CASE_TOKEN_RE = /[A-Za-z_][A-Za-z0-9_$]*/g;
 function columnCaseMap(mysqlSql) {
+    var litStore = [];
+    var stripped = protectLiterals(String(mysqlSql), litStore)
+        .replace(/\u0001L\d+\u0001/g, ' ');   // drop literal placeholders entirely
     var map = null;
     var m;
     _CASE_TOKEN_RE.lastIndex = 0;
-    while ((m = _CASE_TOKEN_RE.exec(mysqlSql)) !== null) {
-        var tok = m[1];
+    while ((m = _CASE_TOKEN_RE.exec(stripped)) !== null) {
+        var tok = m[0];
         var low = tok.toLowerCase();
-        if (low === tok) { continue; }          // already lowercase: nothing to restore
+        if (low === tok) { continue; }              // already lowercase
+        if (tok === tok.toUpperCase()) { continue; } // SQL keyword, not a column
         if (!map) { map = {}; }
-        // First occurrence wins; SQL keywords are uppercase too but they never
-        // collide with a returned column key, so a stray entry is inert.
         if (!Object.prototype.hasOwnProperty.call(map, low)) { map[low] = tok; }
     }
     return map;

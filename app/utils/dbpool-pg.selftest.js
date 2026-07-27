@@ -259,6 +259,30 @@ eq('all-lowercase sql -> no case map',
    m.columnCaseMap('select site_id, name from sites where project_id = 1'), null);
 eq('no-op restore returns rows unchanged',
    m.restoreRowCase([{ site_id: 1 }], null)[0].site_id, 1);
+// REGRESSION GUARDS for the self-review defect (2026-07-27): string-literal
+// contents and SQL keywords must NEVER become case-map entries. The first
+// version of columnCaseMap mapped completed -> 'Completed' from the literal
+// below and renamed the real jobs.completed result key.
+var litMap = m.columnCaseMap("SELECT j.job_id, j.completed FROM jobs j WHERE j.state = 'Completed'");
+eq('literal contents never enter case map', litMap, null);
+eq('literal case defect: completed key preserved',
+   m.restoreRowCase([{ job_id: 5, completed: 1 }], litMap)[0].completed, 1);
+eq('literal case defect: no Completed key',
+   m.restoreRowCase([{ job_id: 5, completed: 1 }], litMap)[0].Completed, undefined);
+// dq literals too (MySQL string literals).
+eq('dq literal contents never enter case map',
+   m.columnCaseMap('SELECT a FROM t WHERE b = "MixedCase"'), null);
+// Uppercase SQL keywords must not be treated as identifiers.
+eq('keywords never enter case map',
+   m.columnCaseMap('SELECT a FROM t WHERE b IS NOT NULL ORDER BY a DESC'), null);
+// ...while a genuine camelCase column in the same shape still resolves.
+var mixMap = m.columnCaseMap("SELECT SCC.typeId FROM soundscape_composition_classes SCC WHERE SCC.name = 'Birds' ORDER BY SCC.typeId DESC");
+eq('camelCase survives alongside literals+keywords', mixMap && mixMap.typeid, 'typeId');
+eq('camelCase map has no literal entry', mixMap && mixMap.birds, undefined);
+// Qualified names map on their trailing component (the result key).
+eq('qualified name maps trailing component',
+   m.columnCaseMap('SELECT SCC.isSystemClass FROM t SCC').issystemclass, 'isSystemClass');
+
 // Routing eligibility mirrors the shadow allowlist: writes never route to PG.
 eq('pgRouteEligible allows plain select',
    m.pgRouteEligible('SELECT a FROM t WHERE b = 1'), true);
