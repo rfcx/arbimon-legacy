@@ -401,5 +401,44 @@ eq('collation: datetime never folds',
 eq('collation: numeric JOIN keys never fold',
    unfolded('SELECT 1 FROM recordings R JOIN sites S ON S.site_id = R.site_id'), true);
 
+// ------------------------------------------------- float4 canonicalization
+// MariaDB renders float32 as C %.6g (half-even); PG renders shortest-
+// roundtrip. canonValue must converge the two renderings of the SAME stored
+// value while keeping genuinely different values apart. All 'live pairs'
+// below were MEASURED on production rows 2026-07-28 (aedc 240283170 batch +
+// pm_rois 1140661357); see the p6 collation runbook §7f-7g.
+function cv(x) { return m.compare('SELECT a FROM t ORDER BY a',
+    [{ a: x }], [{ a: x }], 1e-9); }
+function cvPair(a, b) { return m.compare('SELECT a FROM t ORDER BY a',
+    [{ a: a }], [{ a: b }], 1e-9); }
+
+// -- live pairs: maria-rendering vs pg-rendering of the SAME float32
+[[7.92533, 7.9253335], [9.25867, 9.258667], [22171.9, 22171.875],
+ [18843.8, 18843.75], [21281.2, 21281.25], [30.1547, 30.154667],
+ [1734.38, 1734.375], [11.1573, 11.157333], [52.0475, 52.047527],
+ [0.691209, 0.69120884]].forEach(function (p) {
+    eq('float4: live pair equal ' + p[0] + '~' + p[1], cvPair(p[0], p[1]), null);
+});
+// -- genuinely different values MUST still diverge
+[[7.92533, 7.92534], [22171.9, 22172.0], [0.691209, 0.69121],
+ [1.0, 1.00001]].forEach(function (p) {
+    eq('float4: distinct pair differs ' + p[0] + ' vs ' + p[1],
+       cvPair(p[0], p[1]) !== null, true);
+});
+// -- g6HalfEven unit behaviour
+eq('g6: half-even rounds 21281.25 DOWN (C semantics, not JS half-away)',
+   m.g6HalfEven(21281.25), '21281.2');
+eq('g6: integer-like float32 keeps its zeros (the fuzz-harness bug class)',
+   m.g6HalfEven(28000.0000001), '28000');
+eq('g6: negative values', m.g6HalfEven(-93579.953125), '-93580');
+eq('g6: small values scale-free', m.g6HalfEven(0.69120884), '0.691209');
+eq('g6: zero', m.g6HalfEven(0), '0');
+// -- integers are untouched (fast-path unchanged)
+eq('float4: integer columns unaffected', cvPair(42, 42), null);
+eq('float4: integer mismatch still fires', cvPair(42, 43) !== null, true);
+// -- decimal-as-string tail path uses the SAME canonicalization
+eq('float4: pg-numeric string vs mysql float converge',
+   cvPair('7.9253335', 7.92533), null);
+
 console.log('\n' + (fails ? ('FAILED ' + fails + '/' + n) : ('ALL ' + n + ' PASS')));
 process.exit(fails ? 1 : 0);
