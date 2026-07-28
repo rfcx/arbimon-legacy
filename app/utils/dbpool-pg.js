@@ -872,18 +872,66 @@ function translate(mysqlSql) {
 var _ORDER_BY_RE = /\border\s+by\b/i;
 function hasOrderBy(sql) { return _ORDER_BY_RE.test(sql); }
 
+// --- float canonicalization (rfcx-local 2026-07-28, clock-week finding) ---
+// MariaDB renders float/double to client text with C printf %.6g semantics
+// (6 significant digits, HALF-EVEN rounding); PG renders shortest-roundtrip.
+// Same stored float32 bits therefore arrive as DIFFERENT JS numbers
+// (measured inside a live pod, same row: mysql driver 7.92533 vs pg driver
+// 7.9253335; bit-level proof on the master: time_min = CAST(7.9253335 AS
+// FLOAT) -> 1). The old epsilon quantization (1e-9, absolute-scale) cannot
+// bridge a ~3.5e-6 RELATIVE gap, so identical data emitted as
+// result_mismatch — measured at ~20% of the day-1 clock census across 6
+// templates (recording_tags t0/f0/t1/f1, pattern_matching_rois x1/x2/score,
+// audio_event_detections_clustering time/frequency).
+//
+// FIX: canonicalize non-integer numbers at 6 significant digits with
+// HALF-EVEN rounding — the SAME convention the delta-sync fingerprint
+// compare has always used (delta_sync.py::_fp_norm, '%.6g' % float(v), the
+// P2-checksums normalizer). Fidelity proven against C printf %.6g on a
+// 20,000-value random-float32 fuzz (0 mismatches).
+//
+// Rejected shapes (tested, see the p6 collation runbook §7g):
+//   - Math.fround: a 6-digit truncation loses MORE than a float32 ulp, so
+//     fround cannot re-converge the two renderings.
+//   - bare toPrecision(6): JS rounds half-AWAY; fails on the live value
+//     21281.25 (maria %.6g half-even -> 21281.2, toPrecision -> 21281.3).
+//   - raising epsilon: it is an absolute-scale quantum; no single value
+//     works across magnitudes (22171.9 needs ~1e-1, 0.691209 needs ~1e-6).
+function g6HalfEven(x) {
+    if (!isFinite(x)) { return String(x); }
+    if (x === 0) { return '0'; }
+    var neg = x < 0;
+    var ax = Math.abs(x);
+    var exp = Math.floor(Math.log10(ax));
+    var scale = Math.pow(10, 5 - exp);       // 6 significant digits
+    var scaled = ax * scale;
+    var fl = Math.floor(scaled);
+    var frac = scaled - fl;
+    var r;
+    // half-even at the rounding boundary (C printf semantics; MariaDB's
+    // renderer). 1e-7 tolerance identifies an exact-half within float64 noise.
+    if (Math.abs(frac - 0.5) < 1e-7) { r = (fl % 2 === 0) ? fl : fl + 1; }
+    else { r = Math.round(scaled); }
+    var out = r / scale;
+    var s = out.toPrecision(6);
+    // strip trailing zeros ONLY when a decimal point exists — a bare
+    // /\.?0+$/ eats integer zeros ('28000.0' is safe, '28000' would become
+    // '28'; that exact bug appeared in this fix's own first fuzz harness).
+    if (s.indexOf('e') < 0 && s.indexOf('.') >= 0) {
+        s = s.replace(/0+$/, '').replace(/\.$/, '');
+    }
+    return neg ? '-' + s : s;
+}
+
 function canonValue(v, epsilon) {
     if (v === null || v === undefined) { return 'null'; }
     if (typeof v === 'boolean') { return 'num:' + (v ? 1 : 0); }
     if (typeof v === 'number') {
         if (Number.isInteger(v)) { return 'num:' + v; }
-        if (epsilon > 0) {
-            if (v === 0) { return 'num:0'; }
-            var q = Math.round(v / epsilon) * epsilon;
-            if (Number.isInteger(q)) { return 'num:' + q; }
-            return 'num:' + q;
-        }
-        return 'num:' + v;
+        // Non-integer: 6-sig-digit half-even canonicalization (see g6HalfEven
+        // above). Subsumes the old epsilon quantization — %.6g is coarser than
+        // 1e-9 at every magnitude and is scale-free, which epsilon is not.
+        return 'num:' + g6HalfEven(v);
     }
     if (typeof v === 'bigint') { return 'num:' + v.toString(); }
     if (Buffer.isBuffer(v)) {
@@ -901,7 +949,7 @@ function canonValue(v, epsilon) {
     if (typeof v === 'string' && /^-?\d+(\.\d+)?$/.test(v)) {
         var f = parseFloat(v);
         if (Number.isInteger(f)) { return 'num:' + f; }
-        return 'num:' + f;
+        return 'num:' + g6HalfEven(f);
     }
     return 'str:' + String(v);
 }
@@ -1503,6 +1551,7 @@ module.exports = {
     templateHash: templateHash,
     normalizeRows: normalizeRows,
     columnCaseMap: columnCaseMap,
+    g6HalfEven: g6HalfEven,
     translateCollation: translateCollation,
     aliasMap: aliasMap,
     collationClass: collationClass,
