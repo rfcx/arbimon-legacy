@@ -107,8 +107,11 @@ eq('backtick plain ident still bare',
 eq('force index stripped', m.translate('SELECT r.recording_id FROM recordings AS r FORCE INDEX (idx) JOIN sites s ON s.site_id=r.site_id'),
    'SELECT r.recording_id FROM recordings AS r JOIN sites s ON s.site_id=r.site_id');
 // quoted alias -> double-quoted identifier; string-value literals untouched
+// NOTE (2026-07-28): the expected CONCAT form changed when CONCAT gained
+// NULL-propagating `||` translation. The SUBJECT of this test is the quoted
+// ALIAS, which is unchanged; only the (now-translated) CONCAT body moved.
 eq('quoted alias', m.translate("SELECT CONCAT('a', A.job_id) as 'uri' FROM aed A"),
-   'SELECT CONCAT(\'a\', A.job_id) as "uri" FROM aed A');
+   'SELECT ((\'a\')::text || (A.job_id)) as "uri" FROM aed A');
 eq('multi-word quoted alias -> identifier', m.translate("SELECT x as 'a b' FROM t"),
    'SELECT x as "a b" FROM t');
 // literal protection: none of the above touch matching text inside a string
@@ -157,8 +160,10 @@ eq('sq literal unknown escape drops backslash', m.translate("SELECT a FROM t WHE
 // NUL is unrepresentable in PG text -> punt verbatim (honest dialect_error).
 eq('sq literal NUL punts verbatim', m.translate("SELECT a FROM t WHERE b = 'a\\0b'"),
    "SELECT a FROM t WHERE b = 'a\\0b'");
+// (same note as 'quoted alias' above: the alias is the subject, the CONCAT
+// body is now `||`-translated for MySQL NULL-propagation parity.)
 eq('quoted alias still wins over dq-literal', m.translate("SELECT CONCAT(a,b) as 'uri' FROM t"),
-   'SELECT CONCAT(a,b) as "uri" FROM t');
+   'SELECT ((a)::text || (b)) as "uri" FROM t');
 // -- ORDER BY FIELD -> COALESCE(array_position(...), 0) (54023 >100-arg class)
 eq('field -> array_position', m.translate('SELECT r.id FROM r ORDER BY FIELD(r.id, 5, 3, 9)'),
    'SELECT r.id FROM r ORDER BY COALESCE(array_position(ARRAY[5, 3, 9], r.id), 0)');
@@ -439,6 +444,73 @@ eq('float4: integer mismatch still fires', cvPair(42, 43) !== null, true);
 // -- decimal-as-string tail path uses the SAME canonicalization
 eq('float4: pg-numeric string vs mysql float converge',
    cvPair('7.9253335', 7.92533), null);
+
+console.log('== CONCAT NULL-propagation (P6 2026-07-28) ==');
+// MySQL CONCAT returns NULL if ANY arg is NULL; PG's concat() FUNCTION ignores
+// NULLs, but the `||` OPERATOR propagates. Measured live: MariaDB
+// CONCAT('https://x/', NULL) IS NULL -> 1; PG concat(...) -> 'https://x/'.
+eq('concat: 2-arg -> || with leading text cast',
+   m.translate("SELECT CONCAT('https://x/', T.uri) FROM templates T"),
+   "SELECT (('https://x/')::text || (T.uri)) FROM templates T");
+eq('concat: numeric operands get a text cast (PG has no int||int)',
+   m.translate('SELECT CONCAT(a, b) FROM t'),
+   'SELECT ((a)::text || (b)) FROM t');
+eq('concat: 3-arg',
+   m.translate("SELECT CONCAT(a, ' ', b) FROM t"),
+   "SELECT ((a)::text || (' ') || (b)) FROM t");
+// GROUP_CONCAT must be untouched by the CONCAT rule: rewriteCall's name
+// boundary is (^|[^A-Za-z0-9_.]) and GROUP_CONCAT's CONCAT is preceded by '_'.
+eq('concat: GROUP_CONCAT still becomes string_agg, not ||',
+   m.translate("SELECT GROUP_CONCAT(sa.alias SEPARATOR ', ') FROM species_aliases sa"),
+   "SELECT string_agg((sa.alias)::text, ', ') FROM species_aliases sa");
+eq('concat: nested CONCAT resolves (author expression shape)',
+   /\(\(\(/.test(m.translate("SELECT CONCAT(CONCAT(a,b),' ',CONCAT(c,d)) FROM t")), true);
+eq('concat: no || left un-parenthesised inside GROUP_CONCAT',
+   /string_agg/.test(m.translate("SELECT GROUP_CONCAT(CONCAT(a,b) SEPARATOR ',') FROM t")), true);
+
+console.log('== ORDER BY per-collation fold (P6 2026-07-28) ==');
+var OB = function (sql) { var p = m.translate(sql).split(/order\s+by/i); return p.length > 1 ? p.slice(1).join(' ') : ''; };
+var isFolded = function (sql) { return /translate\(lower\(/.test(OB(sql)); };
+// gen-class column (utf8mb3_general_ci)
+eq('orderby: tags.tag folds (gen)',
+   /translate\(lower\(T\.tag\),'áàâãäåéèêëíìîïóòôõöúùûüçñýÿ'/.test(OB(
+     'SELECT T.tag FROM tags T ORDER BY T.tag LIMIT 20')), true);
+// sv-class column (latin1_swedish_ci) -- MUST use the swedish fold, which
+// KEEPS umlauts distinct (measured: MariaDB sorts apple,zebra,äpple)
+eq('orderby: templates.name folds with the SV fold (umlauts distinct)',
+   /translate\(lower\(T\.name\),'áàâãéèêëíìîïóòôõúùûçñýÿ'/.test(OB(
+     'SELECT T.name FROM templates T ORDER BY T.name DESC')), true);
+eq('orderby: direction preserved', /DESC/.test(OB(
+   'SELECT T.name FROM templates T ORDER BY T.name DESC')), true);
+eq('orderby: mixed keys -- only the string key folds',
+   /translate\(lower\(S\.name\).*ASC, S\.site_id ASC/.test(OB(
+     'SELECT S.site_id FROM sites S ORDER BY S.name ASC, S.site_id ASC LIMIT 10')), true);
+// fail-safe cases: never guess
+eq('orderby: bare column UNRESOLVED -> untouched',
+   isFolded('SELECT a FROM templates T ORDER BY date_created DESC LIMIT 5'), false);
+eq('orderby: numeric column -> untouched',
+   isFolded('SELECT SCC.id FROM soundscape_composition_classes SCC ORDER BY SCC.typeId, SCC.isSystemClass DESC'), false);
+eq('orderby: expression -> untouched',
+   isFolded('SELECT user_id FROM users WHERE email LIKE ? ORDER BY (email = ?) DESC, email ASC LIMIT 10'), false);
+eq('orderby: PG enum (jobs.state) -> untouched (a fold is a hard type error)',
+   isFolded('SELECT J.job_id FROM jobs J ORDER BY J.state'), false);
+// ---- guards pinned from the ADVERSARIAL SELF-REVIEW (both reproduced live
+// as hard PG errors before the guards existed; cf. the #1780 lesson) ----
+eq('orderby GUARD G1: SELECT DISTINCT -> untouched (42P10 otherwise)',
+   isFolded('SELECT DISTINCT t.tag FROM tags t ORDER BY t.tag LIMIT 3'), false);
+eq('orderby GUARD G2: trailing ORDER BY after UNION -> untouched (42P01 otherwise)',
+   isFolded('SELECT t.tag FROM tags t UNION SELECT s.name FROM sites s ORDER BY t.tag LIMIT 3'), false);
+eq('orderby GUARD G2: W5 jobs-progress UNION shape untouched',
+   isFolded("(SELECT J.job_id FROM jobs J WHERE J.state='processing') UNION (SELECT J.job_id FROM jobs J WHERE J.state='waiting') ORDER BY job_id DESC"), false);
+eq('orderby: ORDER BY inside a parenthesised UNION branch still folds',
+   isFolded('(SELECT t.tag FROM tags t ORDER BY t.tag LIMIT 1) UNION (SELECT s.name FROM sites s LIMIT 1)'), true);
+// clause-extent correctness: the fold must not swallow LIMIT/OFFSET
+eq('orderby: LIMIT/OFFSET preserved verbatim after a folded key',
+   /LIMIT \? OFFSET \?/.test(m.translate(
+     'SELECT T.tag FROM tags T ORDER BY T.tag LIMIT ? OFFSET ?')), true);
+eq('orderby: WHERE fold and ORDER BY fold coexist on the same column',
+   (m.translate('SELECT T.tag FROM tags T WHERE T.tag LIKE ? ORDER BY T.tag LIMIT ?')
+      .match(/translate\(lower\(T\.tag\)/g) || []).length, 2);
 
 console.log('\n' + (fails ? ('FAILED ' + fails + '/' + n) : ('ALL ' + n + ' PASS')));
 process.exit(fails ? 1 : 0);
