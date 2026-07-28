@@ -411,9 +411,47 @@ function litText(tok, store) {
 
 function translateFunctions(sql, store) {
     var s = sql;
-    // MySQL string concat via CONCAT() is identical in PG; the `||` operator
-    // is logical-OR in MySQL only under PIPES_AS_CONCAT (not set here) so no
-    // rewrite needed. RAND()/NOW() are classifier-forbidden so never arrive.
+    // CONCAT(a,b,..) -> (a::text || b || ..)
+    // MySQL CONCAT returns NULL if ANY argument is NULL; PG's concat()
+    // FUNCTION ignores NULLs (measured live: MariaDB
+    // CONCAT('https://x/', NULL) IS NULL -> 1; PG -> 'https://x/'). The old
+    // comment here claimed CONCAT was identical in PG -- true for the
+    // non-NULL case only, and the difference is user-visible: a template
+    // with a NULL `uri` rendered `uri:"https://arbimon.org/"` on PG instead
+    // of null (census template 257746653328cfc7, the largest unsigned
+    // bucket on the 429b167 clock; live exposure 1060/77383 templates.uri
+    // NULL across 239 projects, plus 441 training_set_roi_set_data.uri).
+    // PG's `||` operator DOES propagate NULL (verified live:
+    // ('a' || NULL || 'b') IS NULL -> t), so it is the faithful translation.
+    //
+    // WHY NOT a CASE guard: `CASE WHEN a IS NULL OR b IS NULL THEN NULL ELSE
+    // a||b END` duplicates every operand -- which would DOUBLE any `?`
+    // placeholder and shift parameter positions. `||` needs each operand
+    // exactly once.
+    //
+    // The leading ::text cast is REQUIRED: PG has no `int || int` operator
+    // (anynonarray||text / text||anynonarray only), so an all-numeric CONCAT
+    // would raise 42883. Casting only the FIRST operand is sufficient because
+    // `||` is left-associative: (int::text || int) -> text -> text || .. .
+    // A NULL cast to text stays NULL, so propagation is preserved.
+    s = rewriteCall(s, 'CONCAT', function (args) {
+        if (!args.length) { return null; }
+        // idempotence guard: an already-converted call starts with a cast
+        // operand (the resume-at-replacement scan must not re-wrap).
+        if (args.length === 1 && /::text\s*$/.test(args[0])) { return null; }
+        var parts = args.map(function (a, i) {
+            return i === 0 ? '(' + a + ')::text' : '(' + a + ')';
+        });
+        return '(' + parts.join(' || ') + ')';
+    });
+
+    // NOTE: GROUP_CONCAT is NOT affected -- rewriteCall's name boundary is
+    // `(^|[^A-Za-z0-9_.])`, and GROUP_CONCAT's `CONCAT` is preceded by `_`,
+    // so the CONCAT rule cannot match inside it. (GROUP_CONCAT keeps its own
+    // string_agg rewrite below, whose MySQL semantics DO skip NULLs.)
+    //
+    // `||` is logical-OR in MySQL only under PIPES_AS_CONCAT (not set here).
+    // RAND()/NOW() are classifier-forbidden so never arrive.
     // IFNULL(a,b) -> COALESCE(a,b)
     s = s.replace(/\bIFNULL\s*\(/gi, 'COALESCE(');
     // UCASE/LCASE are MySQL aliases (first live-canary dialect_error: tags
@@ -830,6 +868,155 @@ function translateCollation(sql) {
     });
 }
 
+// ---- ORDER BY per-collation fold (P6, 2026-07-28) -------------------------
+// PR #1783 folded string PREDICATES (WHERE) but left ORDER BY alone. MariaDB
+// SORTS case-insensitively too; the `arbimon` PG copy is C.UTF-8, so it sorts
+// by byte value ('#Birds' before '#bird'; MariaDB puts it after).
+//
+// This is NOT cosmetic when the query is paginated: the ordering decides WHICH
+// rows land on the page. MEASURED on the exact post-#1783 translated shape vs
+// the MariaDB master, tags.search at the app's real LIMIT 20:
+//     term '%owl%' -> 6 of 20 rows LOST (and 6 wrong rows shown)
+//     term '%ird%' / '%ana%' -> 1 of 20
+// With this fold: 0 differences on every term tested (12 random terms x 40-row
+// sequences, DESC, mixed string+numeric keys, and both collation classes).
+// It fails OPEN (a full-looking page of wrong rows), so DB_PG_FALLBACK cannot
+// catch it -- same signature as the collation class itself.
+//
+// SCOPE, deliberately narrow (fail-safe mirrors translateCollation):
+//   - only a sort key that is EXACTLY a qualified `alias.column` (with an
+//     optional ASC/DESC) is folded. Bare columns are UNRESOLVED (5 bare names
+//     are ambiguous across the two collation classes) and expressions are left
+//     alone -- both reproduce today's behaviour, which the census reports
+//     honestly.
+//   - the column must resolve via the SAME generated table.column map and be
+//     non-enum (a fold on a PG enum is a hard type error).
+//
+// COST: negligible on real shapes. An unfiltered whole-table sort would lose
+// its index (sites: index-scan cost 5.05 -> sort cost 4794), but every live
+// query filters first (project_id), where the plan is IDENTICAL apart from
+// ~0.4% (6.88 -> 6.93, same Index Scan on sites__project_id). Both folds are
+// translate(lower()) and both functions are IMMUTABLE, so an expression index
+// is available if a hot unfiltered sort ever appears.
+//
+// NOT FIXED HERE (documented, needs an app change): where the sort key has
+// TIES and the query is paginated, page boundaries stay underdetermined on
+// both engines -- measured, 2 of 8 common tag terms straddle a tie at row
+// 20/21. A tiebreak column in the app's ORDER BY is the only remedy and it
+// would change MariaDB's output too.
+//
+// NULL PLACEMENT: MySQL sorts NULLs first ASC / last DESC; PG is the opposite.
+// Live exposure is currently ZERO (0 NULLs in every string sort key measured:
+// sites.name, tags.tag, templates.name, pattern_matchings.name,
+// soundscapes.name), so no NULLS FIRST/LAST is emitted here -- but any future
+// NULLABLE string sort key needs one. Recorded in the P6 ordering runbook.
+var _ORDERBY_CLAUSE_RE = /\border\s+by\b/gi;
+var _SORTKEY_RE = /^([A-Za-z_]\w*\.[A-Za-z_]\w*)(\s+(?:ASC|DESC))?$/i;
+// Clause terminators at the ORDER BY's own paren depth.
+var _ORDERBY_END_RE = /^(LIMIT|OFFSET|UNION|INTERSECT|EXCEPT|FOR|INTO|FETCH|WINDOW|HAVING)$/i;
+
+// Find the extent of an ORDER BY clause starting at `from` (index just past
+// the keyword). Ends at a depth-0 terminator keyword, an unbalanced ')'
+// (i.e. the enclosing subquery closing), a ';', or end of string.
+function orderByExtent(sql, from) {
+    var depth = 0, i = from, word = '', wordStart = -1;
+    for (; i < sql.length; i++) {
+        var ch = sql[i];
+        if (ch === '(') { depth++; word = ''; wordStart = -1; continue; }
+        if (ch === ')') {
+            if (depth === 0) { return i; }   // closes the enclosing subquery
+            depth--; word = ''; wordStart = -1; continue;
+        }
+        if (ch === ';') { return i; }
+        if (/[A-Za-z_]/.test(ch)) {
+            if (wordStart < 0) { wordStart = i; word = ''; }
+            word += ch;
+            continue;
+        }
+        if (word && depth === 0 && _ORDERBY_END_RE.test(word)) { return wordStart; }
+        word = ''; wordStart = -1;
+    }
+    if (word && depth === 0 && _ORDERBY_END_RE.test(word)) { return wordStart; }
+    return sql.length;
+}
+
+// SELF-REVIEW GUARDS (found by running the fix against live PG before merge --
+// the fix contained the exact defect class it exists to prevent, cf. #1780).
+// Two PG rules make a FOLDED sort key a HARD ERROR where the bare column works:
+//
+//  (G1) SELECT DISTINCT: "for SELECT DISTINCT, ORDER BY expressions must
+//       appear in select list" (42P10, reproduced live). `ORDER BY t.tag` is
+//       legal because the column is selected; the translate() wrapper is a new
+//       expression and is not.
+//  (G2) UNION/INTERSECT/EXCEPT: a trailing ORDER BY binds to the SET-OPERATION
+//       output, where only output column names/ordinals are in scope. A
+//       qualified operand raises "missing FROM-clause entry for table t"
+//       (42P01, reproduced live).
+//
+// Both shapes are live in this app (6 SELECT DISTINCT sites; UNION builders in
+// jobs.js/projects.js/recordings.js incl. the W5 jobs-progress template), so
+// both guards are load-bearing, not theoretical. In both cases we leave the
+// ORDER BY untouched -- today's behaviour, which the census reports honestly.
+//
+// G2 is applied per-clause (a set-operation keyword ANYWHERE at depth 0 before
+// the clause disables it) rather than whole-query, so an ORDER BY inside a
+// parenthesised UNION BRANCH -- which is scoped to that branch and is safe --
+// still folds.
+var _SETOP_RE = /\b(UNION|INTERSECT|EXCEPT)\b/i;
+var _DISTINCT_RE = /\bSELECT\s+DISTINCT\b/i;
+
+// Is there a set-operation keyword at paren-depth 0 in sql[0..end)?
+function hasTopLevelSetOp(sql, end) {
+    var depth = 0, word = '', i;
+    for (i = 0; i < end; i++) {
+        var ch = sql[i];
+        if (ch === '(') { depth++; word = ''; continue; }
+        if (ch === ')') { depth--; word = ''; continue; }
+        if (/[A-Za-z]/.test(ch)) { word += ch; continue; }
+        if (word && depth === 0 && _SETOP_RE.test(word)) { return true; }
+        word = '';
+    }
+    return !!(word && depth === 0 && _SETOP_RE.test(word));
+}
+
+function translateOrderByCollation(sql) {
+    // G1: whole-query -- a DISTINCT anywhere makes folding unsafe for the
+    // clause that belongs to it, and correlating which SELECT owns which
+    // ORDER BY is not worth the risk. Skip the query entirely (fail-safe).
+    if (_DISTINCT_RE.test(sql)) { return sql; }
+    var amap = aliasMap(sql);
+    var out = '', cursor = 0;
+    _ORDERBY_CLAUSE_RE.lastIndex = 0;
+    var m;
+    while ((m = _ORDERBY_CLAUSE_RE.exec(sql)) !== null) {
+        var clauseStart = m.index + m[0].length;
+        var clauseEnd = orderByExtent(sql, clauseStart);
+        // G2: a set-operation at depth 0 before this clause means the clause
+        // binds to the set-operation output -> qualified names are out of
+        // scope. Leave it untouched.
+        if (hasTopLevelSetOp(sql, m.index)) {
+            _ORDERBY_CLAUSE_RE.lastIndex = clauseEnd;
+            continue;
+        }
+        var clause = sql.slice(clauseStart, clauseEnd);
+        var keys = splitTopArgs(clause);
+        var rebuilt = keys.map(function (k) {
+            var km = _SORTKEY_RE.exec(k.trim());
+            if (!km) { return k.trim(); }                 // expression -> untouched
+            var cls = collationClass(km[1], amap);
+            if (!cls) { return k.trim(); }                // UNRESOLVED -> untouched
+            return foldExpr(km[1], cls) + (km[2] || '');
+        }).join(', ');
+        // Preserve the original leading/trailing whitespace shape.
+        var lead = /^\s*/.exec(clause)[0];
+        var trail = /\s*$/.exec(clause)[0];
+        out += sql.slice(cursor, clauseStart) + lead + rebuilt + trail;
+        cursor = clauseEnd;
+        _ORDERBY_CLAUSE_RE.lastIndex = clauseEnd;
+    }
+    return out + sql.slice(cursor);
+}
+
 // FORCE INDEX (idx) — MySQL optimizer hint, no PG equivalent; strip it.
 function stripIndexHints(sql) {
     return sql.replace(/\s+(FORCE|USE|IGNORE)\s+INDEX\s*\([^)]*\)/gi, '');
@@ -861,6 +1048,7 @@ function translate(mysqlSql) {
     s = translateLimitOffset(s);
     s = translateFunctions(s, store);
     s = translateCollation(s);
+    s = translateOrderByCollation(s);
     s = restoreLiteralsPg(s, store);
     return s;
 }
@@ -1553,6 +1741,7 @@ module.exports = {
     columnCaseMap: columnCaseMap,
     g6HalfEven: g6HalfEven,
     translateCollation: translateCollation,
+    translateOrderByCollation: translateOrderByCollation,
     aliasMap: aliasMap,
     collationClass: collationClass,
     restoreRowCase: restoreRowCase,
