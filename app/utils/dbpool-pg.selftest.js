@@ -135,9 +135,12 @@ eq('dq literal doubled dq', m.translate('SELECT a FROM t WHERE b = "a""b"'),
 eq('dq literal backslash decodes', m.translate('SELECT a FROM t WHERE b = "x\\\\y"'),
    "SELECT a FROM t WHERE b = 'x\\y'");
 // THE LIVE 42601 CASE: mysql driver escapes ' as \' — site 88347.
+// (2026-07-28: expectation updated for the bare-= fold — `name = <lit>` on a
+// FROM-narrowed sites query now folds. The SUBJECT of this test is the
+// escaped-literal decoding, which must survive INSIDE the fold arguments.)
 eq('sq literal escaped quotes (live Kraljevac 42601)',
    m.translate("SELECT count(*) as count FROM sites WHERE name = 'SNR \\'\\'Kraljevac\\'\\'' AND project_id = 8740"),
-   "SELECT count(*) as count FROM sites WHERE name = 'SNR ''''Kraljevac''''' AND project_id = 8740");
+   "SELECT count(*) as count FROM sites WHERE translate(lower(name),'áàâãäåéèêëíìîïóòôõöúùûüçñýÿ','aaaaaaeeeeiiiiooooouuuucny.') = translate(lower('SNR ''''Kraljevac'''''),'áàâãäåéèêëíìîïóòôõöúùûüçñýÿ','aaaaaaeeeeiiiiooooouuuucny.') AND project_id = 8740");
 eq('sq literal single escaped quote (O\'Brien class)',
    m.translate("SELECT a FROM t WHERE b = 'O\\'Brien'"),
    "SELECT a FROM t WHERE b = 'O''Brien'");
@@ -490,8 +493,15 @@ eq('orderby: bare column UNRESOLVED -> untouched',
    isFolded('SELECT a FROM templates T ORDER BY date_created DESC LIMIT 5'), false);
 eq('orderby: numeric column -> untouched',
    isFolded('SELECT SCC.id FROM soundscape_composition_classes SCC ORDER BY SCC.typeId, SCC.isSystemClass DESC'), false);
-eq('orderby: expression -> untouched',
-   isFolded('SELECT user_id FROM users WHERE email LIKE ? ORDER BY (email = ?) DESC, email ASC LIMIT 10'), false);
+// (2026-07-28: expectation updated — the bare-= pass now folds the
+// `email = ?` PREDICATE inside the ORDER BY expression (users.email
+// FROM-narrows cleanly; verified live: executes + ranks identically).
+// translateOrderByCollation itself still leaves expressions/bare KEYS alone:
+// the second key `email ASC` stays raw (citext sorts ci natively on PG).
+eq('orderby: embedded = predicate folds via the bare pass (live-verified)',
+   isFolded('SELECT user_id FROM users WHERE email LIKE ? ORDER BY (email = ?) DESC, email ASC LIMIT 10'), true);
+eq('orderby: pure expression KEY itself never rewritten by the orderby pass',
+   /ORDER BY \(.*\) DESC, email ASC/.test(m.translate('SELECT user_id FROM users WHERE email LIKE ? ORDER BY (email = ?) DESC, email ASC LIMIT 10')), true);
 eq('orderby: PG enum (jobs.state) -> untouched (a fold is a hard type error)',
    isFolded('SELECT J.job_id FROM jobs J ORDER BY J.state'), false);
 // ---- guards pinned from the ADVERSARIAL SELF-REVIEW (both reproduced live
@@ -511,6 +521,44 @@ eq('orderby: LIMIT/OFFSET preserved verbatim after a folded key',
 eq('orderby: WHERE fold and ORDER BY fold coexist on the same column',
    (m.translate('SELECT T.tag FROM tags T WHERE T.tag LIKE ? ORDER BY T.tag LIMIT ?')
       .match(/translate\(lower\(T\.tag\)/g) || []).length, 2);
+
+console.log('== bare-= + IN-list collation fold (P6 =-surface, 2026-07-28) ==');
+var nfold = function (sql) { return (m.translate(sql).match(/translate\(lower\(/g) || []).length; };
+// FROM-narrowed bare = : the enumeration's real exposed shapes
+eq('bare=: sites dup-check folds (FROM narrows `name` to sites.name/gen)',
+   nfold("SELECT count(*) FROM sites WHERE name = 'x' AND project_id = 1 AND deleted_at is null"), 2);
+eq('bare=: tags create-lookup folds', nfold("SELECT tag_id FROM tags WHERE tag = 'bird'"), 2);
+eq('bare=: templates dup-check folds with the SV fold',
+   /translate\(lower\(name\),'áàâãéèêëíìîïóòôõúùûçñýÿ'/.test(
+     m.translate("SELECT 1 FROM templates WHERE `name`='X' AND `project_id`=1 LIMIT 1")), true);
+eq('bare=: same-class multi-table still folds (sites+projects both gen)',
+   nfold("SELECT 1 FROM sites S JOIN projects P ON S.project_id=P.project_id WHERE name = 'x'"), 2);
+// fail-safes: never guess
+eq('bare=: AMBIGUOUS across classes untouched (templates sv + projects gen)',
+   nfold("SELECT 1 FROM templates T JOIN projects P ON T.project_id=P.project_id WHERE name = 'x'"), 0);
+eq('bare=: enum column untouched (jobs.state)',
+   nfold("SELECT job_id FROM jobs WHERE state = 'completed'"), 0);
+eq('bare=: numeric column untouched', nfold("SELECT site_id FROM sites WHERE project_id = 5"), 0);
+eq('bare=: unknown table untouched', nfold("SELECT x FROM unknown_table WHERE name = 'x'"), 0);
+// THE STATEMENT GATE (load-bearing: the EXPORTS path translates without a
+// SELECT gate; a fold inside UPDATE..SET would corrupt a write)
+eq('bare= GATE: UPDATE SET untouched',
+   nfold("UPDATE playlists SET name = 'x', uri = NULL WHERE playlist_id = 5"), 0);
+eq('bare= GATE: INSERT untouched',
+   nfold("INSERT INTO tags (tag) VALUES ('x')"), 0);
+// IN lists
+eq('IN: qualified string LHS folds LHS + members',
+   nfold("SELECT r.recording_id FROM recordings r JOIN sites s ON s.site_id=r.site_id WHERE s.name IN ('A','B')"), 3);
+eq('IN: bare string LHS folds via FROM-narrowing',
+   nfold("SELECT tag_id FROM tags WHERE tag IN ('a','b')"), 3);
+eq('IN: NOT IN preserved',
+   /NOT IN \(/.test(m.translate("SELECT tag_id FROM tags WHERE tag NOT IN ('a')")), true);
+eq('IN: subquery RHS untouched',
+   nfold("SELECT tag_id FROM tags WHERE tag IN (SELECT tag FROM tags WHERE tag_id < 5)"), 0);
+eq('IN: numeric LHS untouched', nfold("SELECT site_id FROM sites WHERE site_id IN (1,2,3)"), 0);
+eq('IN: template-collapsed placeholder shape unchanged',
+   m.sqlTemplate("SELECT * FROM t WHERE id IN (1,2,3) AND name='x' AND n=5"),
+   'SELECT * FROM t WHERE id IN (?) AND name=? AND n=?');
 
 console.log('\n' + (fails ? ('FAILED ' + fails + '/' + n) : ('ALL ' + n + ' PASS')));
 process.exit(fails ? 1 : 0);
