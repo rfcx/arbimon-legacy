@@ -1017,6 +1017,118 @@ function translateOrderByCollation(sql) {
     return out + sql.slice(cursor);
 }
 
+// ---- bare-`=` + IN-list collation fold (P6 =-surface, 2026-07-28) ----------
+// The =-surface enumeration (runbooks/mysql2pg-p6-eq-surface-enumeration-
+// 2026-07-28.md) found ~9 live read shapes comparing string columns WITHOUT an
+// alias qualifier (create-time dup-checks: sites.js:214, tags.js:192,
+// templates.js:266, training_sets.js:97, models.js:239, soundscapes.js:471)
+// plus 2 alias-qualified IN-list filters (recordings.js:1865, jobs.js:570).
+// The deployed qualified fold cannot see bare operands (5 bare names are
+// ambiguous across collation classes), so at 6.4 these compare case-
+// sensitively: a dup-check misses a case-variant existing row -> duplicate
+// creation / tag fragmentation (1918 live case-variant tag groups measured).
+//
+// RESOLUTION RULE for a bare column: FROM-NARROWING. Collect the query's
+// FROM/JOIN tables (the aliasMap's table set); find which carry this column
+// in the generated map; if EXACTLY ONE COLLATION CLASS results (and no enum
+// membership), fold — else leave untouched. `FROM sites WHERE name = ?` is
+// unambiguous (only sites.name is in scope) even though `name` spans 27
+// columns schema-wide. Never guess.
+//
+// STATEMENT GATE (load-bearing, not paranoia): translate() has one caller
+// that is NOT SELECT-gated — the EXPORTS_DB_ENGINE path (dbpool.js). In an
+// UPDATE, a bare `col = ?` inside SET is an ASSIGNMENT; folding it would
+// corrupt a write. The bare/IN passes therefore run ONLY when the statement
+// is a SELECT/WITH. (The qualified pass keeps its deployed behaviour: an
+// alias-qualified operand cannot appear in a SET clause of our SQL corpus,
+// and changing its gating would alter shipped behaviour.)
+var _SELECT_STMT_RE = /^\s*\(*\s*(SELECT|WITH)\b/i;
+
+// Which collation class does a BARE column resolve to under this query's
+// FROM set? null = ambiguous/unknown/enum -> untouched.
+function resolveBareColumn(col, amap) {
+    var name = String(col).toLowerCase();
+    var tables = {};
+    for (var k in amap) { tables[amap[k]] = true; }
+    var cls = null, hits = 0;
+    for (var t in tables) {
+        var key = t + '.' + name;
+        if (!COLLATION_KNOWN[key]) { continue; }
+        if (COLLATION_ENUM[key]) { return null; }   // enum in scope -> never fold
+        var c = COLLATION_SV[key] ? 'sv' : 'gen';
+        hits++;
+        if (cls === null) { cls = c; }
+        else if (cls !== c) { return null; }        // two classes in scope -> ambiguous
+    }
+    return hits > 0 ? cls : null;
+}
+
+// bare `col <op> <literal|placeholder>` — the RHS is restricted to literals/
+// placeholders (bare col-to-col equality is not in the measured surface and
+// resolving BOTH sides bare doubles the ambiguity risk). The leading guard
+// excludes `.` (qualified operands already handled), `\u0001` (literal
+// tokens), quotes, and word chars.
+var _BARE_PRED_RE = /(^|[^\w.\u0001'"`])([A-Za-z_]\w*)\s*(NOT\s+LIKE|LIKE|<>|!=|=)\s*(\u0001L\d+\u0001|\?)/gi;
+// SQL keywords that can precede `=`-looking text but are never columns.
+var _BARE_STOP = /^(SELECT|WHERE|AND|OR|NOT|ON|BY|AS|IN|IS|NULL|LIKE|BETWEEN|CASE|WHEN|THEN|ELSE|END|LIMIT|OFFSET|SET|VALUES|FROM|JOIN|HAVING|GROUP|ORDER|UNION|ALL|DISTINCT|EXISTS|IF|COALESCE|CONCAT|COUNT|SUM|MIN|MAX|AVG|LEFT|RIGHT|INNER|OUTER|CROSS|USING|INTERVAL|TRUE|FALSE|DIV|MOD)$/i;
+
+function translateBareCollation(sql) {
+    if (!_SELECT_STMT_RE.test(sql)) { return sql; }
+    var amap = aliasMap(sql);
+    return sql.replace(_BARE_PRED_RE, function (whole, lead, col, op, rhs) {
+        if (_BARE_STOP.test(col)) { return whole; }
+        var cls = resolveBareColumn(col, amap);
+        if (!cls) { return whole; }                 // UNRESOLVED -> untouched
+        var o = op.toUpperCase().replace(/\s+/g, ' ');
+        return lead + foldExpr(col, cls) + ' ' + o + ' ' + foldExpr(rhs, cls);
+    });
+}
+
+// `col [NOT] IN (member, member, ...)` — qualified OR bare LHS, every member a
+// literal/placeholder. A subquery RHS (contains SELECT) is left untouched.
+// mysql.format expands array placeholders BEFORE translate, so live IN-lists
+// arrive as literal lists here.
+var _IN_LHS_RE = /([A-Za-z_]\w*(?:\.[A-Za-z_]\w*)?)(\s+NOT)?\s+IN\s*\(/gi;
+
+function translateInCollation(sql) {
+    if (!_SELECT_STMT_RE.test(sql)) { return sql; }
+    var amap = aliasMap(sql);
+    var search = 0;
+    for (var guard = 0; guard < 200; guard++) {
+        _IN_LHS_RE.lastIndex = search;
+        var m = _IN_LHS_RE.exec(sql);
+        if (!m) { break; }
+        var lhs = m[1], neg = m[2] || '';
+        var openIdx = m.index + m[0].length - 1;
+        var depth = 0, endIdx = -1;
+        for (var i = openIdx; i < sql.length; i++) {
+            if (sql[i] === '(') { depth++; }
+            else if (sql[i] === ')') { depth--; if (depth === 0) { endIdx = i; break; } }
+        }
+        if (endIdx < 0) { break; }
+        var inner = sql.slice(openIdx + 1, endIdx);
+        search = endIdx + 1;
+        if (/\bSELECT\b/i.test(inner)) { continue; }         // subquery -> untouched
+        var cls;
+        if (lhs.indexOf('.') >= 0) { cls = collationClass(lhs, amap); }
+        else {
+            if (_BARE_STOP.test(lhs)) { continue; }
+            cls = resolveBareColumn(lhs, amap);
+        }
+        if (!cls) { continue; }                              // UNRESOLVED -> untouched
+        var members = splitTopArgs(inner);
+        var ok = members.length > 0 && members.every(function (a) {
+            return /^(\u0001L\d+\u0001|\?)$/.test(a.trim());
+        });
+        if (!ok) { continue; }                               // non-literal member -> untouched
+        var folded = members.map(function (a) { return foldExpr(a.trim(), cls); }).join(', ');
+        var repl = foldExpr(lhs, cls) + neg + ' IN (' + folded + ')';
+        sql = sql.slice(0, m.index) + repl + sql.slice(endIdx + 1);
+        search = m.index + repl.length;
+    }
+    return sql;
+}
+
 // FORCE INDEX (idx) — MySQL optimizer hint, no PG equivalent; strip it.
 function stripIndexHints(sql) {
     return sql.replace(/\s+(FORCE|USE|IGNORE)\s+INDEX\s*\([^)]*\)/gi, '');
@@ -1048,6 +1160,8 @@ function translate(mysqlSql) {
     s = translateLimitOffset(s);
     s = translateFunctions(s, store);
     s = translateCollation(s);
+    s = translateBareCollation(s);
+    s = translateInCollation(s);
     s = translateOrderByCollation(s);
     s = restoreLiteralsPg(s, store);
     return s;
@@ -1742,6 +1856,9 @@ module.exports = {
     g6HalfEven: g6HalfEven,
     translateCollation: translateCollation,
     translateOrderByCollation: translateOrderByCollation,
+    translateBareCollation: translateBareCollation,
+    translateInCollation: translateInCollation,
+    resolveBareColumn: resolveBareColumn,
     aliasMap: aliasMap,
     collationClass: collationClass,
     restoreRowCase: restoreRowCase,
