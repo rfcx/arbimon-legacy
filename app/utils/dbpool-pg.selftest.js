@@ -291,5 +291,115 @@ eq('pgRouteEligible refuses update',
 eq('pgRouteEligible refuses insert',
    m.pgRouteEligible('INSERT INTO t (a) VALUES (1)'), false);
 
+// ---------------------------------------------------------------- collation
+// MySQL compares every arbimon2 string ci; PG compares varchar/text cs.
+// The fold reproduces MySQL semantics PER COLLATION (the two disagree on
+// umlauts). Measured live 2026-07-27; runbook:
+// runbooks/mysql2pg-p6-collation-case-sensitivity-2026-07-27.md
+var GEN = "translate(lower(%s),'áàâãäåéèêëíìîïóòôõöúùûüçñýÿ','aaaaaaeeeeiiiiooooouuuucny.')";
+var SV  = "translate(lower(%s),'áàâãéèêëíìîïóòôõúùûçñýÿ','aaaaeeeeiiiioooouuucny.')";
+function g(x) { return GEN.replace('%s', x); }
+function v(x) { return SV.replace('%s', x); }
+
+// -- alias resolution (REQUIRED: the same alias means different tables)
+eq('collation: alias T -> tags (gen)',
+   m.collationClass('T.tag', m.aliasMap('SELECT T.tag FROM tags T WHERE T.tag LIKE ?')),
+   'gen');
+eq('collation: alias T -> templates (sv)',
+   m.collationClass('T.name', m.aliasMap('SELECT T.name FROM templates as T WHERE T.name LIKE ?')),
+   'sv');
+eq('collation: pattern_matchings.name is sv',
+   m.collationClass('PM.name', m.aliasMap('SELECT PM.name FROM pattern_matchings as PM WHERE PM.name LIKE ?')),
+   'sv');
+eq('collation: projects.name is gen',
+   m.collationClass('P.name', m.aliasMap('SELECT P.name FROM projects P WHERE P.name LIKE ?')),
+   'gen');
+
+// -- FAIL-SAFE: never guess. Unresolvable -> untouched.
+eq('collation: bare column is UNRESOLVED',
+   m.collationClass('name', m.aliasMap('SELECT name FROM templates WHERE name LIKE ?')),
+   null);
+eq('collation: unknown alias is UNRESOLVED',
+   m.collationClass('X.name', m.aliasMap('SELECT a FROM (SELECT name FROM templates) X')),
+   null);
+eq('collation: unknown column is UNRESOLVED',
+   m.collationClass('T.no_such_col', m.aliasMap('SELECT 1 FROM templates T')),
+   null);
+eq('collation: unresolved predicate left untouched',
+   m.translate('SELECT a FROM nosuchtable T WHERE T.whatever LIKE ?'),
+   'SELECT a FROM nosuchtable T WHERE T.whatever LIKE ?');
+
+// -- the folds actually applied
+eq('collation: LIKE on a gen column folds accents+case',
+   m.translate('SELECT T.tag FROM tags T WHERE T.tag LIKE ?'),
+   'SELECT T.tag FROM tags T WHERE ' + g('T.tag') + ' LIKE ' + g('?'));
+eq('collation: LIKE on an sv column keeps umlauts distinct',
+   m.translate('SELECT T.name FROM templates as T WHERE T.name LIKE ?'),
+   'SELECT T.name FROM templates as T WHERE ' + v('T.name') + ' LIKE ' + v('?'));
+eq('collation: NOT LIKE is folded too (negation must not invert)',
+   m.translate('SELECT T.tag FROM tags T WHERE T.tag NOT LIKE ?'),
+   'SELECT T.tag FROM tags T WHERE ' + g('T.tag') + ' NOT LIKE ' + g('?'));
+eq('collation: = is folded (the surface is LARGER than LIKE)',
+   m.translate('SELECT T.tag FROM tags T WHERE T.tag = ?'),
+   'SELECT T.tag FROM tags T WHERE ' + g('T.tag') + ' = ' + g('?'));
+eq('collation: <> is folded',
+   m.translate('SELECT T.tag FROM tags T WHERE T.tag <> ?'),
+   'SELECT T.tag FROM tags T WHERE ' + g('T.tag') + ' <> ' + g('?'));
+
+// -- REGRESSION GUARDS for the defects found while building this
+// (1) PG native enums: folding is a HARD type error. jobs.state is the
+//     hottest predicate in the LIVE PG jobs plane. Caught by an existing
+//     test failing -- exactly what regression tests are for.
+eq('collation: enum jobs.state NEVER folded (hard PG type error)',
+   m.translate('SELECT J.state FROM jobs J WHERE J.state = "completed"'),
+   "SELECT J.state FROM jobs J WHERE J.state = 'completed'");
+eq('collation: enum resolves to null',
+   m.collationClass('J.state', m.aliasMap('SELECT 1 FROM jobs J')),
+   null);
+eq('collation: enum job_tasks.status never folded',
+   m.collationClass('JT.status', m.aliasMap('SELECT 1 FROM job_tasks JT')),
+   null);
+// (2) <=> is MySQL null-safe equality; folding would change NULL semantics.
+eq('collation: <=> left alone (null-safe equality)',
+   m.translate('SELECT T.tag FROM tags T WHERE T.tag <=> ?'),
+   'SELECT T.tag FROM tags T WHERE T.tag <=> ?');
+// (3) a cross-collation column pair must NOT be coerced to one side.
+eq('collation: sv vs gen column pair left alone',
+   m.translate('SELECT 1 FROM templates T JOIN projects P ON T.name = P.name'),
+   'SELECT 1 FROM templates T JOIN projects P ON T.name = P.name');
+// (4) literal contents must never be scanned as identifiers (the #1782 lesson).
+eq('collation: literal text is not an operand',
+   m.translate("SELECT T.tag FROM tags T WHERE T.tag = 'P.name = x'"),
+   "SELECT T.tag FROM tags T WHERE " + g('T.tag') + " = " + g("'P.name = x'"));
+
+// -- the real divergent template resolves BOTH classes in ONE query
+(function () {
+    var sql = 'SELECT count(*) FROM templates as T JOIN projects P ON T.project_id = P.project_id '
+            + 'LEFT JOIN projects P2 ON T.source_project_id = P2.project_id '
+            + 'WHERE T.name LIKE ? OR P2.name LIKE ?';
+    var out = m.translate(sql);
+    eq('collation: mixed sv+gen in one query (templates sv)',
+       out.indexOf(v('T.name')) >= 0, true);
+    eq('collation: mixed sv+gen in one query (projects gen)',
+       out.indexOf(g('P2.name')) >= 0, true);
+})();
+
+// -- ADVERSARIAL GUARDS: only *_ci STRING columns may be folded.
+// COLLATION_KNOWN is built from information_schema rows with a non-NULL
+// COLLATION_NAME, so numeric/date/binary columns are structurally absent and
+// hit the UNRESOLVED fail-safe. These pin that property: folding a bigint
+// would be a PG type error, and folding a join key would wreck plans.
+function unfolded(sql) { return m.translate(sql).indexOf('translate(lower(') < 0; }
+eq('collation: numeric columns never fold (recording_id)',
+   unfolded('SELECT 1 FROM recordings R WHERE R.recording_id = 42'), true);
+eq('collation: numeric columns never fold (site_id)',
+   unfolded('SELECT 1 FROM sites S WHERE S.site_id = 5'), true);
+eq('collation: tinyint flags never fold',
+   unfolded('SELECT 1 FROM pattern_matchings PM WHERE PM.deleted = 0'), true);
+eq('collation: datetime never folds',
+   unfolded("SELECT 1 FROM recordings R WHERE R.datetime = '2026-01-01'"), true);
+eq('collation: numeric JOIN keys never fold',
+   unfolded('SELECT 1 FROM recordings R JOIN sites S ON S.site_id = R.site_id'), true);
+
 console.log('\n' + (fails ? ('FAILED ' + fails + '/' + n) : ('ALL ' + n + ' PASS')));
 process.exit(fails ? 1 : 0);
