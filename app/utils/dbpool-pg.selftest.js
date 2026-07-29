@@ -560,6 +560,30 @@ eq('IN: template-collapsed placeholder shape unchanged',
    m.sqlTemplate("SELECT * FROM t WHERE id IN (1,2,3) AND name='x' AND n=5"),
    'SELECT * FROM t WHERE id IN (?) AND name=? AND n=?');
 
+// ---- schema-qualifier strip (P6, 2026-07-29) ------------------------------
+// The first genuine dialect_error caught by the post-#1787 unconditional
+// gate: legacy qualifies two queries with the MySQL schema name `arbimon2.`,
+// which is a hard 42P01 on PG (database `arbimon`, schema `public`).
+console.log('== schema-qualifier strip (P6 2026-07-29) ==');
+eq('schema: the live d2f44837 shape (playlists.js:551)',
+   m.translate("SELECT DISTINCT(playlist_id) FROM arbimon2.playlist_recordings WHERE recording_id in (1,2)"),
+   'SELECT DISTINCT(playlist_id) FROM playlist_recordings WHERE recording_id in (1,2)');
+eq('schema: the projects.js:79 shape (aliased, lowercase from)',
+   /from projects p\b/.test(m.translate("select p.project_id from arbimon2.projects p join user_project_role upr on p.project_id = upr.project_id where upr.user_id = 5")),
+   true);
+eq('schema: qualifier inside a STRING LITERAL untouched',
+   m.translate("SELECT * FROM t WHERE uri = 'https://arbimon2.s3.us-east-1.amazonaws.com/x'"),
+   "SELECT * FROM t WHERE uri = 'https://arbimon2.s3.us-east-1.amazonaws.com/x'");
+eq('schema: backticked form also stripped',
+   m.translate('SELECT * FROM `arbimon2`.`playlist_recordings` LIMIT 1'),
+   'SELECT * FROM playlist_recordings LIMIT 1');
+eq('schema: an identifier merely CONTAINING arbimon2 untouched',
+   m.translate('SELECT arbimon2_backup_flag FROM t'),
+   'SELECT arbimon2_backup_flag FROM t');
+eq('schema: case-insensitive (ARBIMON2.)',
+   m.translate('SELECT * FROM ARBIMON2.projects LIMIT 1'),
+   'SELECT * FROM projects LIMIT 1');
+
 // ---- connection-lifetime SQLSTATE classification (P6, 2026-07-29) --------
 // #1781 ruled that a connection DEATH must never book as dialect_error (the
 // O5 gate's hard-zero metric). Its guard tested `!err.code` only, so an

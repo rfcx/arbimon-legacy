@@ -349,6 +349,25 @@ function translateBackticks(sql) {
     });
 }
 
+// --- schema-qualifier strip (P6, 2026-07-29) -----------------------------
+// Two legacy call sites qualify tables with the MySQL SCHEMA name:
+//   playlists.js:551  FROM arbimon2.playlist_recordings   (census d2f44837)
+//   projects.js:79    from arbimon2.projects p
+// On MariaDB that resolves (arbimon2 IS the schema); on PG the database is
+// `arbimon` with everything in `public`, so the qualified name is a hard
+// 42P01 (`relation "arbimon2.playlist_recordings" does not exist`) — the
+// FIRST genuine dialect_error caught by the post-#1787 unconditional gate
+// (2026-07-29 21:34Z, organic traffic). Strip the qualifier; the enumeration
+// found NO other schema ever referenced (information_schema/mysql/etc. never
+// appear in app SQL — verified by repo grep, 2 live sites total).
+// Runs AFTER protectLiterals (a literal like
+// 'arbimon2.s3.us-east-1.amazonaws.com' is already stashed and untouchable)
+// and AFTER translateBackticks (so a hypothetical `arbimon2`.`t` form,
+// already reduced to arbimon2.t, is caught too).
+function stripSchemaQualifier(sql) {
+    return sql.replace(/\barbimon2\s*\.\s*/gi, '');
+}
+
 // LIMIT offset, count  ->  LIMIT count OFFSET offset
 function translateLimitOffset(sql) {
     return sql.replace(/\blimit\s+(\d+)\s*,\s*(\d+)/gi, function (_, off, cnt) {
@@ -1198,6 +1217,7 @@ function translate(mysqlSql) {
     s = stripIndexHints(s);
     s = fixQuotedAliases(s, store);
     s = translateBackticks(s);
+    s = stripSchemaQualifier(s);
     s = translateLimitOffset(s);
     s = translateFunctions(s, store);
     s = translateCollation(s);
