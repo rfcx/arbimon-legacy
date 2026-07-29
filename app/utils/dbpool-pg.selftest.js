@@ -560,5 +560,51 @@ eq('IN: template-collapsed placeholder shape unchanged',
    m.sqlTemplate("SELECT * FROM t WHERE id IN (1,2,3) AND name='x' AND n=5"),
    'SELECT * FROM t WHERE id IN (?) AND name=? AND n=?');
 
+// ---- connection-lifetime SQLSTATE classification (P6, 2026-07-29) --------
+// #1781 ruled that a connection DEATH must never book as dialect_error (the
+// O5 gate's hard-zero metric). Its guard tested `!err.code` only, so an
+// ADMINISTRATIVE termination — which DOES carry a SQLSTATE — slipped through.
+// MEASURED live: the 2026-07-29 04:04:06Z TL72->73 failover booked exactly
+// two 57P01s as dialect_error; the 19:11:47Z TL74->75 failover booked zero
+// (the client 'error' handler won that race). Non-deterministic by nature,
+// so these tests pin the CLASSIFIER rather than any one incident's outcome.
+console.log('== connection-lifetime SQLSTATE classification (P6 2026-07-29) ==');
+var cle = m.isConnLifetimeError;
+// the #1781 shape must keep behaving exactly as before
+eq('conn: no-SQLSTATE error is conn-lifetime (#1781 shape preserved)',
+   cle(new Error('Connection terminated unexpectedly')), true);
+eq('conn: null/undefined is not conn-lifetime', cle(null), false);
+// the measured live gap
+eq('conn: 57P01 admin_shutdown (THE measured 04:04Z failover case)',
+   cle({ code: '57P01', message: 'terminating connection due to administrator command' }), true);
+eq('conn: 57P02 crash_shutdown', cle({ code: '57P02' }), true);
+eq('conn: 57P03 cannot_connect_now', cle({ code: '57P03' }), true);
+eq('conn: 08006 connection_failure', cle({ code: '08006' }), true);
+eq('conn: 08003 connection_does_not_exist', cle({ code: '08003' }), true);
+eq('conn: 08000 connection_exception', cle({ code: '08000' }), true);
+eq('conn: lowercase SQLSTATE still matches', cle({ code: '57p01' }), true);
+// the boundaries that MUST stay visible — these are the whole point of the gate
+eq('conn: 57014 query_canceled is NOT conn-lifetime (our statement_timeout)',
+   cle({ code: '57014' }), false);
+eq('conn: 53300 too_many_connections is NOT absorbed (real capacity fault)',
+   cle({ code: '53300' }), false);
+eq('conn: 42P01 undefined_table is a REAL dialect error',
+   cle({ code: '42P01' }), false);
+eq('conn: 42P10 invalid_column_reference is a REAL dialect error',
+   cle({ code: '42P10' }), false);
+eq('conn: 22P02 invalid_text_representation is a REAL dialect error',
+   cle({ code: '22P02' }), false);
+eq('conn: 42883 undefined_function is a REAL dialect error',
+   cle({ code: '42883' }), false);
+eq('conn: 42601 syntax_error is a REAL dialect error',
+   cle({ code: '42601' }), false);
+eq('conn: 42804 datatype_mismatch is a REAL dialect error',
+   cle({ code: '42804' }), false);
+eq('conn: 23505 unique_violation is a REAL error (not infra)',
+   cle({ code: '23505' }), false);
+eq('conn: the table is exactly the 6 Class-57/08 codes',
+   Object.keys(m.CONN_LIFETIME_SQLSTATES).sort().join(','),
+   '08000,08003,08006,57P01,57P02,57P03');
+
 console.log('\n' + (fails ? ('FAILED ' + fails + '/' + n) : ('ALL ' + n + ' PASS')));
 process.exit(fails ? 1 : 0);

@@ -177,6 +177,47 @@ function templateHash(sql) {
     return crypto.createHash('sha1').update(sqlTemplate(sql).toLowerCase()).digest('hex').slice(0, 16);
 }
 
+// ------------------------------------------- connection-lifetime SQLSTATEs
+// A server-side connection DEATH is not a dialect fault. #1781 established
+// the rule and guarded the shape it had measured: an Error with NO SQLSTATE
+// ("Connection terminated unexpectedly"). But an ADMINISTRATIVE termination
+// DOES carry a SQLSTATE, so it slipped past that guard and was counted as
+// `dialect_error` — the O5 gate's hard-zero headline metric.
+//
+// MEASURED (rfcx-local, 2026-07-29): the 04:04:06Z TL72->73 DCS-blip
+// failover produced exactly two `dialect_error` divergence records, both
+// pg_code **57P01** ("terminating connection due to administrator command"),
+// on two unrelated recordings templates. A third failover the same evening
+// (19:11:47Z TL74->75) produced ZERO — the client 'error' handler won that
+// race instead. **The mis-classification is therefore NON-DETERMINISTIC:
+// whether an infra blip corrupts the gate metric depends on a callback
+// race.** That is worse than a reliable bug, because a clean census cannot
+// be trusted to mean the guard held.
+//
+// The class (PG Appendix A, Class 57 - Operator Intervention):
+//   57P01 admin_shutdown          - terminate_backend / failover / restart
+//   57P02 crash_shutdown          - peer backend crashed, cluster restarting
+//   57P03 cannot_connect_now      - server starting up / shutting down
+//   08006 connection_failure      - connection broken mid-statement
+//   08003 connection_does_not_exist
+//   08000 connection_exception
+// 57014 (query_canceled) is deliberately NOT here: it is OUR statement_timeout
+// firing, already counted separately as pg_timeout (a perf signal).
+// 53300 (too_many_connections) is NOT here either: that is a real capacity
+// fault we WANT visible rather than silently absorbed as infra noise.
+var CONN_LIFETIME_SQLSTATES = {
+    '57P01': 1, '57P02': 1, '57P03': 1,
+    '08000': 1, '08003': 1, '08006': 1
+};
+
+function isConnLifetimeError(err) {
+    if (!err) { return false; }
+    // No SQLSTATE at all = the #1781 shape (connection died before the server
+    // could answer). Kept verbatim so that guard's behaviour is unchanged.
+    if (!err.code) { return true; }
+    return CONN_LIFETIME_SQLSTATES[String(err.code).toUpperCase()] === 1;
+}
+
 // ------------------------------------------------------ MySQL -> PG translator
 // First-pass dialect translation for the measured hot spots. Anything not
 // covered here surfaces as a `dialect_error` divergence = the Phase-6 queue.
@@ -1587,11 +1628,12 @@ function shadowAfterRead(finalSql, mariaRows, meta) {
                     // 2026-07-27). A server-side connection death (failover,
                     // pgbouncer restart, admin terminate) surfaces here as an
                     // Error with NO SQLSTATE `.code` — e.g. "Connection
-                    // terminated unexpectedly" / "server conn crashed?". The
-                    // client 'error' handler above catches these when it wins
-                    // the race, but the QUERY callback frequently fires first
-                    // (that ordering is exactly what #1781 established), so the
-                    // same fault also lands here.
+                    // terminated unexpectedly" / "server conn crashed?" — OR,
+                    // for an ADMINISTRATIVE termination, WITH one (57P01 &c;
+                    // see CONN_LIFETIME_SQLSTATES). The client 'error' handler
+                    // above catches these when it wins the race, but the QUERY
+                    // callback frequently fires first (that ordering is exactly
+                    // what #1781 established), so the same fault also lands here.
                     // Counting it as dialect_error corrupted the O5 gate's
                     // headline metric: MEASURED on 2026-07-27, the ~07:03Z
                     // TL68->69 organic failover pushed pod r4h9l's
@@ -1600,10 +1642,15 @@ function shadowAfterRead(finalSql, mariaRows, meta) {
                     // making a clean day look dirty and costing a triage cycle
                     // to reconcile counters against Loki. A dialect_error must
                     // mean "PG rejected or mis-executed our SQL", nothing else.
-                    if (!qerr.code) {
+                    // 2026-07-29: #1781's `!qerr.code` test was INCOMPLETE for
+                    // exactly that reason — the 04:04Z failover booked two
+                    // 57P01s as dialect_error (the 19:11Z one booked zero: the
+                    // race, not the fault, decides). Now SQLSTATE-aware.
+                    if (isConnLifetimeError(qerr)) {
                         _counters.pg_error++;
                         emitStat({ ev: 'query_conn_error',
                             err: String(qerr && qerr.message || qerr).slice(0, 200),
+                            pg_code: qerr && qerr.code,
                             hash: templateHash(text) });
                         return;
                     }
@@ -1806,12 +1853,19 @@ function pgReadQuery(finalSql, cb) {
                 try { client.query('ROLLBACK', function () { releaseOnce(); }); }
                 catch (e) { releaseOnce(); }
                 if (qerr) {
-                    // Connection-lifetime faults carry no SQLSTATE (see the
-                    // shadow path's matching guard) — never a dialect error.
-                    if (!qerr.code) {
+                    // Connection-lifetime faults are EITHER SQLSTATE-less (the
+                    // #1781 shape) or carry a Class-57/08 admin/connection code
+                    // (see isConnLifetimeError + the shadow path's matching
+                    // guard) — never a dialect error. This matters MORE here
+                    // than on the shadow path: at 6.4 this path serves real
+                    // users, so a mis-booked infra blip would both corrupt the
+                    // gate metric AND look like a translator defect while the
+                    // request silently falls back to MariaDB.
+                    if (isConnLifetimeError(qerr)) {
                         _counters.pg_error++;
                         emitStat({ ev: 'pg_route_conn_error',
-                            err: String(qerr && qerr.message || qerr).slice(0, 200) });
+                            err: String(qerr && qerr.message || qerr).slice(0, 200),
+                            pg_code: qerr && qerr.code });
                     } else if (qerr.code === '57014') {
                         _counters.pg_timeout++;
                         emitStat({ ev: 'pg_route_timeout', hash: templateHash(text) });
@@ -1851,6 +1905,8 @@ module.exports = {
     compareSnap: compareSnap,
     sqlTemplate: sqlTemplate,
     templateHash: templateHash,
+    isConnLifetimeError: isConnLifetimeError,
+    CONN_LIFETIME_SQLSTATES: CONN_LIFETIME_SQLSTATES,
     normalizeRows: normalizeRows,
     columnCaseMap: columnCaseMap,
     g6HalfEven: g6HalfEven,
