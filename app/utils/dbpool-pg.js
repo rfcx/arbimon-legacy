@@ -205,9 +205,21 @@ function templateHash(sql) {
 // firing, already counted separately as pg_timeout (a perf signal).
 // 53300 (too_many_connections) is NOT here either: that is a real capacity
 // fault we WANT visible rather than silently absorbed as infra noise.
+//
+// 08P01 protocol_violation (rfcx-local 2026-08-03, 3rd incompleteness of this
+// classifier after #1781/#1787): when a backend dies UNDER PGBOUNCER, the
+// pooler synthesizes an 08P01 error to the client with the message
+// "server conn crashed?" (both the SQLSTATE and the message are pgbouncer
+// binary strings; verified against the pooler log at the same second). The
+// TL78->79 failover at 06:47:33Z booked exactly 2 such records per pod as
+// dialect_error — a pooler-mediated connection death, not a dialect fault.
+// #1787 covered the DIRECT-connection death states (57P01/2/3, 08000/3/6)
+// but the shadow path rides pgbouncer, so the pooler's synthesized state is
+// the one it actually sees. A REAL client protocol bug would be chronic and
+// still visible as a pg_error step-change (query_conn_error keeps pg_code).
 var CONN_LIFETIME_SQLSTATES = {
     '57P01': 1, '57P02': 1, '57P03': 1,
-    '08000': 1, '08003': 1, '08006': 1
+    '08000': 1, '08003': 1, '08006': 1, '08P01': 1
 };
 
 function isConnLifetimeError(err) {

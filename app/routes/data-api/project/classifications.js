@@ -152,6 +152,22 @@ router.post('/new', function(req, res, next) {
             next();
         },
     ], function(err, data){
+        // rfcx-local 2026-08-03: honor the waterfall's error. The #1631 rewrite
+        // dropped the err check, so an aborted waterfall (e.g. the duplicate-name
+        // path, which has ALREADY responded with {name:"repeated"} and bailed via
+        // next(new Error())) fell through to createClassificationJob with
+        // job_id === undefined — posting a garbage arbimon-rfm-classify-undefined-*
+        // k8s Job and double-sending the response. The second res.json() threw
+        // ERR_HTTP_HEADERS_SENT inside a q async tick (q.js:155 rethrow), which is
+        // OUTSIDE express's error handling → uncaughtException → the whole pod
+        // crashed (2 distinct crash events in 14d: main pod 2026-08-03 00:13Z,
+        // shadow canary 2026-07-20 18:40Z).
+        if (err) {
+            if (!response_already_sent) {
+                res.json({ err: 'Could not create classification job' });
+            }
+            return;
+        }
         return model.classifications.createClassificationJob({
             jobId: job_id
         }, function(err, data) {
