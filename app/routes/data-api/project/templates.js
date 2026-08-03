@@ -84,6 +84,65 @@ router.get('/:template/image', function(req, res, next) {
     }).catch(next);
 });
 
+/** Renders a template's ROI spectrogram DYNAMICALLY via the media-api.
+ *
+ * WHY (2026-08-03): template images used to be rendered once at creation time
+ * and uploaded to S3 (templates.uri). That baked any render-time defect into
+ * storage forever -- and a tmpfilecache key collision (see
+ * Recordings.buildAssetCacheKey) meant ~21-35% of templates created after
+ * 2026-06-09 stored the full-recording COLOUR spectrogram instead of the
+ * monochrome ROI crop.
+ *
+ * Rendering on demand from the recording + the ROI box (x1/x2/y1/y2) makes the
+ * image a pure function of data we still hold, so a defect is fixed by a code
+ * change alone (no S3 backfill), and the ROI box staying in sync with the
+ * picture is guaranteed. media-api asset names are content-addressed, so the
+ * response is immutable and cacheable for a year.
+ *
+ * Legacy recordings (uri starts with 'project_') have no media-api stream and
+ * keep using the stored image.
+ */
+router.get('/:template/spectrogram', function(req, res, next) {
+    model.templates.find({
+        id: req.params.template,
+        showRecordingUri: true,
+        showSiteData: true
+    }).get(0).then(function(template) {
+        if (!template) return res.sendStatus(404);
+
+        // Legacy (pre-media-api) recordings have no media-api stream: fall back
+        // to the stored S3 image. NOTE: use `storedUri` -- `uri` is now THIS
+        // route (see model/templates.js find()), so redirecting to it would loop.
+        if (!template.recUri || String(template.recUri).startsWith('project_')) {
+            if (!template.storedUri) return res.sendStatus(404);
+            return res.redirect(302, template.storedUri);
+        }
+
+        const recording = {
+            uri: template.recUri,
+            external_id: template.external_id,
+            datetime: template.datetime,
+            datetime_utc: template.datetime_utc
+        };
+        const maxFreq = Math.max(template.y1, template.y2);
+        const minFreq = Math.min(template.y1, template.y2);
+        const options = {
+            maxFreq: (template.sample_rate && maxFreq > template.sample_rate / 2)
+                ? template.sample_rate / 2
+                : maxFreq,
+            minFreq: minFreq,
+            trim: {
+                from: Math.min(template.x1, template.x2),
+                to: Math.max(template.x1, template.x2)
+            }
+        };
+        const attr = model.recordings.buildMediaApiAttr(recording, 'template', options);
+        // Serve through the existing content-addressed asset proxy, which
+        // already rewrites images to inline + immutable caching.
+        return res.redirect(302, `/legacy-api/ingest/recordings/${attr}`);
+    }).catch(next);
+});
+
 router.get('/audio/:templateUrl', function(req, res, next) {
     const roiUrl = req.params.templateUrl;
     const ext = path.extname(roiUrl)
