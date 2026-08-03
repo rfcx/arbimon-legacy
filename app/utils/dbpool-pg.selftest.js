@@ -584,6 +584,17 @@ eq('schema: case-insensitive (ARBIMON2.)',
    m.translate('SELECT * FROM ARBIMON2.projects LIMIT 1'),
    'SELECT * FROM projects LIMIT 1');
 
+// ---- clustering perDate GROUP BY shape (P6 2026-08-03, 42803 hash 8ff48586) --
+// findRois(aed+perDate) selects MIN(C.`date_created`) with the aed-branch
+// columns in the GROUP BY. Pin that the translator carries the whole fixed
+// shape: MIN() aggregate untouched, backtick alias -> bare/quoted ident,
+// CONCAT -> || with text cast. (The FIX lives in clustering-jobs.js; this
+// guards the translated form the 6.4 routing path will execute.)
+console.log('== clustering perDate GROUP BY shape (P6 2026-08-03) ==');
+eq('clustering: MIN(backtick col) + alias translates',
+   m.translate('SELECT A.aed_id, MIN(C.`date_created`) as `date_created` FROM a A JOIN c C ON A.j = C.k GROUP BY A.aed_id, A.species_id'),
+   'SELECT A.aed_id, MIN(C.date_created) as date_created FROM a A JOIN c C ON A.j = C.k GROUP BY A.aed_id, A.species_id');
+
 // ---- connection-lifetime SQLSTATE classification (P6, 2026-07-29) --------
 // #1781 ruled that a connection DEATH must never book as dialect_error (the
 // O5 gate's hard-zero metric). Its guard tested `!err.code` only, so an

@@ -121,9 +121,28 @@ let ClusteringJobs = {
         }
 
         if (options.perDate) {
+            // rfcx-local 2026-08-03 (P6 42803): C.audio_event_detection_job_id is
+            // NOT unique — one AED job can have many clustering runs (measured
+            // live: up to 88 C rows per job, avg fan-out 4.62) — so this join
+            // multiplies rows and the GROUP BY A.aed_id de-duplicates them.
+            // MariaDB (ONLY_FULL_GROUP_BY off) silently picked ONE
+            // date_created per aed (first-scanned, = MIN on every job tested);
+            // PostgreSQL rejects the bare column with 42803. MIN() keeps the
+            // query legal on BOTH engines, cardinality-neutral (verified live:
+            // 3 aeds -> 3 rows, vs 264 if the column joined the GROUP BY), and
+            // value-identical to MariaDB's historical pick — now deterministic
+            // instead of scan-order luck. The aed-branch columns join the
+            // GROUP BY for PG's strictness rule; they are 1:1 per aed (species/
+            // songtypes join on their PKs) so they add no rows.
             tables.push("JOIN job_params_audio_event_clustering C ON A.job_id = C.audio_event_detection_job_id");
-            select.push('C.`date_created`');
+            select.push('MIN(C.`date_created`) as `date_created`');
             groupby.push('A.aed_id');
+            if (options.aed) {
+                groupby.push('A.species_id', 'A.songtype_id', 'sgt.songtype', 'sp.scientific_name');
+            }
+            if (options.perSite) {
+                groupby.push('S.site_id', 'S.`name`');
+            }
         }
 
         if (options.rec_id) {
