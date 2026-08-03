@@ -28,7 +28,7 @@ var Templates = {
     find: function (options, callback) {
         options = options || {}
         var constraints = [];
-        var tables = ['templates T'];
+        var tables = ['templates T', 'JOIN projects PU ON T.project_id = PU.project_id'];
         var select = [
             "T.`template_id` as id",
             "T.`project_id` as project",
@@ -36,7 +36,13 @@ var Templates = {
             "T.`species_id` as species",
             "T.`songtype_id` as songtype",
             "T.`name`",
-            "CONCAT(" + dbpool.escape(arbimon2PublicUrlBase() + '/') + ", T.`uri`) as `uri`",
+            "CONCAT(" + dbpool.escape(arbimon2PublicUrlBase() + '/') + ", T.`uri`) as `storedUri`",
+            // Dynamic, always-correct ROI render (route: .../templates/:id/spectrogram).
+            // Replaces the stored S3 PNG as the displayed image: the stored file could be
+            // stale/wrong (2026-06 tmpfilecache key collision baked full-recording COLOUR
+            // spectrograms into ~21-35% of new templates) and could not be repaired without
+            // an S3 backfill. `storedUri` is kept for diagnostics + the legacy fallback.
+            "CONCAT('/legacy-api/project/', PU.`url`, '/templates/', T.`template_id`, '/spectrogram') as `uri`",
             "T.`x1`", "T.`y1`", "T.`x2`", "T.`y2`",
             "T.`date_created`",
             "T.user_id",
@@ -204,7 +210,13 @@ var Templates = {
                 "T.`species_id` as species",
                 "T.`songtype_id` as songtype",
                 "T.`name`",
-                "CONCAT(" + dbpool.escape(arbimon2PublicUrlBase() + '/') + ", T.`uri`) as `uri`",
+                "CONCAT(" + dbpool.escape(arbimon2PublicUrlBase() + '/') + ", T.`uri`) as `storedUri`",
+                // Dynamic, always-correct ROI render (route: .../templates/:id/spectrogram).
+                // Replaces the stored S3 PNG as the displayed image: the stored file could be
+                // stale/wrong (2026-06 tmpfilecache key collision baked full-recording COLOUR
+                // spectrograms into ~21-35% of new templates) and could not be repaired without
+                // an S3 backfill. `storedUri` is kept for diagnostics + the legacy fallback.
+                "CONCAT('/legacy-api/project/', P.`url`, '/templates/', T.`template_id`, '/spectrogram') as `uri`",
                 "T.`x1`", "T.`y1`", "T.`x2`", "T.`y2`",
                 "T.`date_created`",
                 "T.user_id",
