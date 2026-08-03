@@ -626,9 +626,18 @@ eq('conn: 42804 datatype_mismatch is a REAL dialect error',
    cle({ code: '42804' }), false);
 eq('conn: 23505 unique_violation is a REAL error (not infra)',
    cle({ code: '23505' }), false);
-eq('conn: the table is exactly the 6 Class-57/08 codes',
+// 08P01 protocol_violation (P6 2026-08-03, 3rd incompleteness): pgbouncer
+// SYNTHESIZES this state when a backend dies under the pooler ("server conn
+// crashed?" — both strings live in the pgbouncer binary). The shadow path
+// rides pgbouncer, so pooler-mediated deaths surface as 08P01, not 57P01.
+// MEASURED live: the 2026-08-03 06:47:33Z TL78->79 failover booked exactly
+// 2 records per pod as dialect_error via this state.
+eq('conn: 08P01 protocol_violation (pgbouncer-synthesized conn death, 06:47Z case)',
+   cle({ code: '08P01', message: 'server conn crashed?' }), true);
+eq('conn: lowercase 08p01 still matches', cle({ code: '08p01' }), true);
+eq('conn: the table is exactly the 7 Class-57/08 codes',
    Object.keys(m.CONN_LIFETIME_SQLSTATES).sort().join(','),
-   '08000,08003,08006,57P01,57P02,57P03');
+   '08000,08003,08006,08P01,57P01,57P02,57P03');
 
 console.log('\n' + (fails ? ('FAILED ' + fails + '/' + n) : ('ALL ' + n + ' PASS')));
 process.exit(fails ? 1 : 0);
