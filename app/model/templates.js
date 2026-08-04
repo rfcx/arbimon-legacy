@@ -12,7 +12,7 @@ const config = require('../config');
 const dbpool = require('../utils/dbpool');
 const Recordings = require('./recordings');
 const { isArray } = require('lodash');
-const { arbimon2PublicUrl, arbimon2PublicUrlBase } = require('../utils/asset-url');
+const { arbimon2PublicUrl, arbimon2PublicUrlBase, roiSpectrogramUrl } = require('../utils/asset-url');
 
 let s3;
 
@@ -28,7 +28,7 @@ var Templates = {
     find: function (options, callback) {
         options = options || {}
         var constraints = [];
-        var tables = ['templates T', 'JOIN projects PU ON T.project_id = PU.project_id'];
+        var tables = ['templates T', 'JOIN recordings RDYN ON RDYN.recording_id = T.recording_id', 'JOIN sites SDYN ON SDYN.site_id = RDYN.site_id'];
         var select = [
             "T.`template_id` as id",
             "T.`project_id` as project",
@@ -37,12 +37,15 @@ var Templates = {
             "T.`songtype_id` as songtype",
             "T.`name`",
             "CONCAT(" + dbpool.escape(arbimon2PublicUrlBase() + '/') + ", T.`uri`) as `storedUri`",
-            // Dynamic, always-correct ROI render (route: .../templates/:id/spectrogram).
-            // Replaces the stored S3 PNG as the displayed image: the stored file could be
-            // stale/wrong (2026-06 tmpfilecache key collision baked full-recording COLOUR
-            // spectrograms into ~21-35% of new templates) and could not be repaired without
-            // an S3 backfill. `storedUri` is kept for diagnostics + the legacy fallback.
-            "CONCAT('/legacy-api/project/', PU.`url`, '/templates/', T.`template_id`, '/spectrogram') as `uri`",
+            // Columns for the DYNAMIC media-api render (post-mapped onto `uri`
+            // below via roiSpectrogramUrl). The stored S3 PNG can be stale/wrong
+            // (the 2026-06 tmpfilecache key collision baked full-recording COLOUR
+            // spectrograms into ~21-35% of new templates). The dynamic URL must be
+            // the AUTH-FREE /legacy-api/ingest path (NOT the session-gated
+            // .../templates/:id/spectrogram route): SPA users hold an Auth0 session
+            // but not necessarily a legacy session, so a session-gated <img> URL
+            // 302s to /legacy-login (QA-caught on demo 2026-08-04).
+            "RDYN.`uri` as `dynRecUri`, RDYN.`datetime_utc` as `dynDatetimeUtc`, RDYN.`sample_rate` as `dynSampleRate`, SDYN.`external_id` as `dynExternalId`",
             "T.`x1`", "T.`y1`", "T.`x2`", "T.`y2`",
             "T.`date_created`",
             "T.user_id",
@@ -142,7 +145,30 @@ var Templates = {
             WHERE ${constraints.join(' AND ')}
             ORDER BY date_created DESC
             ${options.limit ? ('LIMIT ' + options.limit + ' OFFSET ' + options.offset) : ''}`
-        );
+        ).then(function(rows) {
+            // Post-map: `uri` = the dynamic media-api render when the recording
+            // has a stream external_id (auth-free ingest path, hot-cache-backed);
+            // pre-media-api recordings (project_* uri, no external_id) keep the
+            // stored S3 image. Internal render columns are stripped.
+            for (var i = 0; i < rows.length; i++) {
+                var r = rows[i];
+                var dyn = (r.dynRecUri && String(r.dynRecUri).indexOf('project_') !== 0)
+                    ? roiSpectrogramUrl({
+                        externalId: r.dynExternalId,
+                        datetimeUtc: r.dynDatetimeUtc,
+                        timeMin: Math.min(r.x1, r.x2),
+                        timeMax: Math.max(r.x1, r.x2),
+                        freqMin: Math.min(r.y1, r.y2),
+                        freqMax: Math.max(r.y1, r.y2),
+                        sampleRate: r.dynSampleRate
+                    }, { width: 400, height: 400 })
+                    : null;
+                r.uri = dyn || r.storedUri;
+                delete r.dynRecUri; delete r.dynDatetimeUtc;
+                delete r.dynSampleRate; delete r.dynExternalId;
+            }
+            return rows;
+        });
     },
 
     findOne: function(query){
@@ -211,12 +237,9 @@ var Templates = {
                 "T.`songtype_id` as songtype",
                 "T.`name`",
                 "CONCAT(" + dbpool.escape(arbimon2PublicUrlBase() + '/') + ", T.`uri`) as `storedUri`",
-                // Dynamic, always-correct ROI render (route: .../templates/:id/spectrogram).
-                // Replaces the stored S3 PNG as the displayed image: the stored file could be
-                // stale/wrong (2026-06 tmpfilecache key collision baked full-recording COLOUR
-                // spectrograms into ~21-35% of new templates) and could not be repaired without
-                // an S3 backfill. `storedUri` is kept for diagnostics + the legacy fallback.
-                "CONCAT('/legacy-api/project/', P.`url`, '/templates/', T.`template_id`, '/spectrogram') as `uri`",
+                // Dynamic media-api render columns (post-mapped onto `uri` below;
+                // auth-free ingest path -- see find()).
+                "RDYN.`uri` as `dynRecUri`, RDYN.`datetime_utc` as `dynDatetimeUtc`, RDYN.`sample_rate` as `dynSampleRate`, SDYN.`external_id` as `dynExternalId`",
                 "T.`x1`", "T.`y1`", "T.`x2`", "T.`y2`",
                 "T.`date_created`",
                 "T.user_id",
@@ -227,6 +250,8 @@ var Templates = {
                 "P.`name` as `project_name`, P.`url` as `project_url`",
             );
             tables.push('JOIN projects P ON T.project_id = P.project_id');
+            tables.push('JOIN recordings RDYN ON RDYN.recording_id = T.recording_id');
+            tables.push('JOIN sites SDYN ON SDYN.site_id = RDYN.site_id');
             constraints.push('P.public_templates_enabled = 1')
             constraints.push('T.source_project_id IS NULL');
             tables.push('JOIN project_classes pc ON pc.species_id = T.species_id AND pc.songtype_id = T.songtype_id');
@@ -239,7 +264,26 @@ var Templates = {
                 LIMIT 3)`
             query += index === classIds.length - 1 ? sql : `${sql} UNION `
         })
-        return dbpool.query(query)
+        return dbpool.query(query).then(function(rows) {
+            for (var i = 0; i < rows.length; i++) {
+                var r = rows[i];
+                var dyn = (r.dynRecUri && String(r.dynRecUri).indexOf('project_') !== 0)
+                    ? roiSpectrogramUrl({
+                        externalId: r.dynExternalId,
+                        datetimeUtc: r.dynDatetimeUtc,
+                        timeMin: Math.min(r.x1, r.x2),
+                        timeMax: Math.max(r.x1, r.x2),
+                        freqMin: Math.min(r.y1, r.y2),
+                        freqMax: Math.max(r.y1, r.y2),
+                        sampleRate: r.dynSampleRate
+                    }, { width: 400, height: 400 })
+                    : null;
+                r.uri = dyn || r.storedUri;
+                delete r.dynRecUri; delete r.dynDatetimeUtc;
+                delete r.dynSampleRate; delete r.dynExternalId;
+            }
+            return rows;
+        })
     },
 
     SCHEMA: joi.object().keys({
