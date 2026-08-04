@@ -1315,7 +1315,26 @@ function canonValue(v, epsilon) {
         if (Buffer.compare(Buffer.from(asStr, 'utf8'), v) === 0) { return 'str:' + asStr; }
         return 'bytes:' + v.toString('hex');
     }
-    if (v instanceof Date) { return 'dt:' + v.toISOString(); }
+    if (v instanceof Date) {
+        // WHOLE-SECOND canonicalization (2026-08-04, the b0cc625e class).
+        // Temporal parity is defined at whole-second precision CLUSTER-WIDE:
+        // every datetime column in the arbimon2 reference schema is fsp 0
+        // (information_schema datetime_precision > 0 count = 0, verified
+        // live 2026-08-04), the forward-sync fingerprint already truncates
+        // (delta_sync.py::_fp_norm s[:19]), and the reverse-sync write path
+        // measurably FLOORS PG micros into MariaDB DATETIME (all 556
+        // post-flip rows with micros >= .5s: Maria == PG floor, never
+        // floor+1). Post-flip PG-owned writes carry real sub-second
+        // precision (jobs.last_update 501/564, soundscapes.date_created
+        // 33/80) that is UNREPRESENTABLE on the MariaDB side by schema —
+        // comparing it manufactures permanent divergence on identical
+        // stored facts (same class as the g6HalfEven float4 fold above).
+        // slice(0,19) truncates the ISO string at seconds ('YYYY-MM-DDTHH:
+        // MM:SS'), matching _fp_norm's convention exactly. A real drift of
+        // >= 1s still differs. NOTE: V8 Date already truncated pg micros
+        // to ms at parse time (OID-1114 parser), so this folds ms -> s.
+        return 'dt:' + v.toISOString().slice(0, 19) + 'Z';
+    }
     if (typeof v === 'object') {
         // arrays (pg text[]), json — canonicalize deterministically
         try { return 'json:' + JSON.stringify(v); } catch (e) { return 'str:' + String(v); }
