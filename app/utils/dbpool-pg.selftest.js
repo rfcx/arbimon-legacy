@@ -650,5 +650,31 @@ eq('conn: the table is exactly the 7 Class-57/08 codes',
    Object.keys(m.CONN_LIFETIME_SQLSTATES).sort().join(','),
    '08000,08003,08006,08P01,57P01,57P02,57P03');
 
+console.log('== datetime whole-second canonicalization (P6 2026-08-04) ==');
+// Post-flip PG-owned writes carry micros (jobs.last_update 501/564,
+// soundscapes.date_created 33/80 measured live 2026-08-04); the arbimon2
+// reference schema is fsp 0 EVERYWHERE (datetime_precision > 0 count = 0)
+// and both sync legs truncate (_fp_norm s[:19]; reverse write-path floors —
+// all 556 post-flip rows with micros >= .5s: Maria == PG floor). Temporal
+// parity is therefore defined at whole-second precision; comparing finer
+// manufactures permanent divergence on identical stored facts (the
+// b0cc625e models.details class, model 6352 jobs.last_update .181324).
+function dtPair(a, b) { return m.compare('SELECT a FROM t ORDER BY a',
+    [{ a: a }], [{ a: b }], 1e-9); }
+eq('dt: pg-micros vs maria whole-second equal (the live 6352 pair)',
+   dtPair(new Date('2026-08-03T01:59:01.000Z'), new Date('2026-08-03T01:59:01.181Z')), null);
+eq('dt: identical whole-second dates equal',
+   dtPair(new Date('2026-08-04T15:26:33Z'), new Date('2026-08-04T15:26:33Z')), null);
+eq('dt: >=1s drift still fires (the 168389 skip-no-op class stays visible)',
+   dtPair(new Date('2026-07-31T05:30:08Z'), new Date('2026-07-31T05:38:10.922Z')) !== null, true);
+eq('dt: exactly-1s drift still fires (boundary)',
+   dtPair(new Date('2026-08-04T15:26:33Z'), new Date('2026-08-04T15:26:34Z')) !== null, true);
+eq('dt: sub-second at the SECOND boundary does not round up (floor semantics)',
+   dtPair(new Date('2026-08-04T15:26:33.999Z'), new Date('2026-08-04T15:26:33.000Z')), null);
+eq('dt: date-only columns unaffected (midnight both sides)',
+   dtPair(new Date('2014-10-02T00:00:00Z'), new Date('2014-10-02T00:00:00Z')), null);
+eq('dt: non-Date values untouched by the fold (string passthrough)',
+   dtPair('2026-08-03 01:59:01', '2026-08-03 01:59:01'), null);
+
 console.log('\n' + (fails ? ('FAILED ' + fails + '/' + n) : ('ALL ' + n + ' PASS')));
 process.exit(fails ? 1 : 0);
