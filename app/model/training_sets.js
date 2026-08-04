@@ -659,6 +659,18 @@ TrainingSets.types.roi_set = {
                         freqMin: rows[i].y1,
                         freqMax: rows[i].y2
                     });
+                    // 2026-08-04 consolidation: the legacy training-sets page
+                    // binds roi.uri directly, and the STORED image can be a
+                    // full-recording COLOUR spectrogram (tmpfilecache key
+                    // collision, damaging since 2026-06-09 -- see
+                    // recordings.js buildAssetCacheKey). Serve the dynamic
+                    // render to legacy consumers too; keep the stored URL as
+                    // storedUri (diagnostics + pre-media-api recordings,
+                    // which have no spectrogram_url and keep the stored uri).
+                    if (rows[i].spectrogram_url) {
+                        rows[i].storedUri = rows[i].uri;
+                        rows[i].uri = rows[i].spectrogram_url;
+                    }
                 }
             }
             return callback(err, rows);

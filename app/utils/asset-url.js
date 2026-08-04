@@ -121,7 +121,8 @@ function roiSpectrogramUrl (roi, opts) {
     if (isNaN(fmin) || isNaN(fmax)) return null;
     const w = (opts && opts.width) || 600;
     const h = (opts && opts.height) || 256;
-    // r{fmin}.{fmax} freq band; mtrue = magma color map; d{W}.{H} px; wdolph
+    // r{fmin}.{fmax} freq band; mtrue = MONOCHROME (sox -lm greyscale, verified
+    // against media-api segment-file-utils renderSpectrogram); d{W}.{H} px; wdolph
     // window; z120 z-scale. Same grammar the visualizer + templates use.
     const asset = `r${fmin.toFixed(0)}.${fmax.toFixed(0)}_g1_fspec_mtrue_d${w}.${h}_wdolph_z120.png`;
     return `/legacy-api/ingest/recordings/${roi.externalId}_t${start}Z.${end}Z_${asset}`;
