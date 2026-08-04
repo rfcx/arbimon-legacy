@@ -108,6 +108,56 @@ router.get('/:patternMatching/rois/:paging', async function(req, res, next) {
         .catch(next);
 });
 
+/** Renders a PM detection ROI spectrogram DYNAMICALLY via the media-api.
+ *
+ * Part of the 2026-08 spectrogram overhaul (see templates/:id/spectrogram):
+ * detection ROI images were rendered ONCE by the PM worker at analysis time
+ * and stored to S3 (project_X/detections/<jobId>/<p1>_<p2>.png). Deriving the
+ * render from the ROI box instead makes the image a pure function of data we
+ * hold, survives storage loss, and rides the media-api streams-cache
+ * (hot-tier writeback) for repeat views. Legacy recordings (project_*) fall
+ * back to the stored worker image.
+ */
+router.get('/:patternMatching/rois/:roiId/spectrogram', function(req, res, next) {
+    model.patternMatchings.getRoiRenderData({
+        patternMatchingId: req.params.patternMatching,
+        roiId: req.params.roiId
+    }).then(function(pmr) {
+        if (!pmr) return res.sendStatus(404);
+
+        // Legacy (pre-media-api) recordings: stored worker image or nothing.
+        if (!pmr.recUri || String(pmr.recUri).indexOf('project_') === 0) {
+            var stored = model.patternMatchings.combineRoiUrl({
+                projectId: req.project.project_id,
+                jobId: pmr.pattern_matching_id,
+                uriParam1: pmr.uri_param1,
+                uriParam2: pmr.uri_param2
+            });
+            return res.redirect(302, stored);
+        }
+
+        var freqMax = (pmr.sample_rate && (Math.max(pmr.y1, pmr.y2) > pmr.sample_rate / 2))
+            ? pmr.sample_rate / 2
+            : Math.max(pmr.y1, pmr.y2);
+        var options = {
+            maxFreq: freqMax,
+            minFreq: Math.min(pmr.y1, pmr.y2),
+            trim: {
+                from: Math.min(pmr.x1, pmr.x2),
+                to: Math.max(pmr.x1, pmr.x2)
+            }
+        };
+        var recording = {
+            uri: pmr.recUri,
+            external_id: pmr.external_id,
+            datetime: pmr.datetime,
+            datetime_utc: pmr.datetime_utc
+        };
+        var attr = model.recordings.buildMediaApiAttr(recording, 'template', options);
+        return res.redirect(302, '/legacy-api/ingest/recordings/' + attr);
+    }).catch(next);
+});
+
 router.get('/:patternMatching/site-index', function(req, res, next) {
     res.type('json');
     model.patternMatchings.getSitesForPM(req.params.patternMatching)

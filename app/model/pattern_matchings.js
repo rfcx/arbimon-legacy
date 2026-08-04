@@ -620,7 +620,7 @@ var PatternMatchings = {
             return dbpool.query(builder.getSQL())
         })
         .then((rois) => {
-            return this.getRoiUrl(rois, options.projectId);
+            return this.getRoiUrl(rois, options.projectId, options.projectUrl);
         })
         .then(this.completePMRResults)
         .then(function (results) {
@@ -653,6 +653,7 @@ var PatternMatchings = {
         for (let site of sites) {
             const opts = {
                 projectId: req.project.project_id,
+                projectUrl: req.project.url,
                 patternMatchingId: req.params.patternMatching,
                 site: site,
                 limit: req.paging.limit || 100
@@ -735,7 +736,7 @@ var PatternMatchings = {
             ORDER BY PMR.score DESC LIMIT ?`
         return dbpool.query({ sql: base, typeCast: sqlutil.parseUtcDatetime }, [opts.patternMatchingId, opts.site, opts.limit || 200])
             .then((rois) => {
-                return this.getRoiUrl(rois, opts.projectId);
+                return this.getRoiUrl(rois, opts.projectId, opts.projectUrl);
             })
             .then(this.completePMRResults)
     },
@@ -756,7 +757,7 @@ var PatternMatchings = {
             WHERE PMR.pattern_matching_id = ? AND PMR.denorm_site_id = ?;`
         return dbpool.query({ sql: base, typeCast: sqlutil.parseUtcDatetime }, [pmId, site, pmId, site])
             .then((rois) => {
-                return this.getRoiUrl(rois, opts.projectId);
+                return this.getRoiUrl(rois, opts.projectId, opts.projectUrl);
             })
             .then((data) => {
                 const pmrs = this.completePMRResults(data)
@@ -764,6 +765,26 @@ var PatternMatchings = {
                     return a.datetime.valueOf() - b.datetime.valueOf();
                 })
             })
+    },
+
+    /** Resolves the data needed to render a detection ROI spectrogram
+     * dynamically (2026-08 overhaul): ROI box + recording + site external id.
+     * Same joins as getRoiAudioFile; also returns the uri_param1/2 needed for
+     * the legacy stored-image fallback.
+     */
+    getRoiRenderData(options) {
+        return dbpool.query(
+            "SELECT PMR.x1, PMR.x2, PMR.y1, PMR.y2, PMR.pattern_matching_id,\n" +
+                "PMR.uri_param1, PMR.uri_param2,\n" +
+                "R.sample_rate, R.uri as recUri, R.site_id as recSiteId,\n" +
+                "R.datetime, R.datetime_utc, S.external_id\n" +
+            "FROM pattern_matching_rois PMR\n" +
+            "JOIN recordings R ON PMR.recording_id = R.recording_id\n" +
+            "JOIN sites S ON S.site_id = R.site_id\n" +
+            "WHERE PMR.pattern_matching_id = ? AND PMR.pattern_matching_roi_id = ?", [
+                options.patternMatchingId, options.roiId
+            ]
+        ).get(0);
     },
 
     getRoiAudioFile(patternMatching, roiId, options) {
@@ -903,15 +924,24 @@ var PatternMatchings = {
         }
     },
 
-    getRoiUrl: function(rois, projectId) {
+    getRoiUrl: function(rois, projectId, projectUrl) {
         if (rois && !rois.length) return rois;
         for (let roi of rois) {
-            roi.uri = this.combineRoiUrl({
+            // Stored worker-rendered image (kept for diagnostics + fallback).
+            roi.storedUri = this.combineRoiUrl({
                 projectId,
                 jobId: roi.pattern_matching_id,
                 uriParam1: roi.uri_param1,
                 uriParam2: roi.uri_param2
             })
+            // 2026-08 overhaul: when the caller supplies the project slug,
+            // serve the DYNAMIC media-api render (pure function of the ROI box;
+            // rides the media-api streams-cache/hot tier). Callers that don't
+            // pass projectUrl keep the stored image (citizen-scientist +
+            // legacy paths, unverified surfaces).
+            roi.uri = projectUrl
+                ? '/legacy-api/project/' + projectUrl + '/pattern-matchings/' + roi.pattern_matching_id + '/rois/' + roi.id + '/spectrogram'
+                : roi.storedUri
         }
         return rois
     },
