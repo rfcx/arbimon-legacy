@@ -3,6 +3,7 @@
 
 // dependencies
 var util  = require('util');
+const crypto = require('crypto');
 var path   = require('path');
 var Q = require('q');
 var fs = require('fs');
@@ -604,7 +605,19 @@ var Recordings = {
         }, callback);
     },
 
-    getAssetFileFromMediaAPI: async function(recording, type, options) {
+    /** Builds the CONTENT-ADDRESSED media-api asset name ("attr") for a
+     * recording + asset type + render options.
+     *
+     * The attr encodes EVERY render parameter (time window, frequency clip,
+     * gain, file type, dimensions, monochrome flag), which makes it both the
+     * canonical media-api asset id AND the only correct basis for a local
+     * cache key. See buildAssetCacheKey below.
+     *
+     * Extracted from getAssetFileFromMediaAPI (2026-08-03) so callers can
+     * derive the attr WITHOUT fetching -- used by the dynamic template/ROI
+     * image URLs and by the per-variant cache keys.
+     */
+    buildMediaApiAttr: function(recording, type, options) {
         let asset, fmin, fmax, trimFrom, trimDuration
         const isFrequency = options && (options.minFreq || options.maxFreq)
         const isGain = options && options.gain
@@ -642,9 +655,44 @@ var Recordings = {
         const dateFormat = 'YYYYMMDDTHHmmssSSS'
         const start = momentStart.format(dateFormat)
         const end = momentEnd.format(dateFormat)
-        const attr = `${recording.external_id}_t${start}Z.${end}Z_${asset}`
+        return `${recording.external_id}_t${start}Z.${end}Z_${asset}`
+    },
+
+    /** Per-VARIANT tmpfilecache key.
+     *
+     * HISTORY (the bug this fixes): fetchSpectrogramFile, fetchTemplateFile and
+     * fetchAudioFile all derived their key as `recording.uri.replace(/\.(wav|
+     * flac|opus)$/i, '.png'|'.mp3')` -- i.e. from the RECORDING alone, ignoring
+     * every render parameter. So the full-recording COLOUR spectrogram
+     * (rfull_..._d10286.255, palette -h) and a MONOCHROME template ROI crop
+     * (r<fmin>.<fmax>_..._mtrue_d400.400) shared ONE cache entry, as did every
+     * distinct ROI of the same recording and every gain/frequency/trim variant
+     * of its audio. Whichever asset was cached first won for all of them.
+     *
+     * Latent since 2023-05-17 (fetchTemplateFile's introduction) but harmless
+     * while the serving paths unlinked the shared file after use; once #1721
+     * (2026-05-20) correctly stopped that self-defeating eviction, the colour
+     * full-recording spectrogram began to PERSIST and got uploaded as template
+     * images -- first damaged template 2026-06-09, ~21-35% of templates
+     * thereafter (measured 2026-08-03).
+     *
+     * Keying rule: hash the variant descriptor ourselves and emit exactly ONE
+     * extension. tmpfilecache.hash_key() splits at the FIRST dot and appends
+     * everything after it verbatim, so a raw attr (which contains dots) would
+     * produce 135-char filenames carrying the whole attr; pre-hashing keeps
+     * filenames at sha256+ext and filesystem-safe.
+     */
+    buildAssetCacheKey: function(recording, variant, ext) {
+        const base = String(recording.uri || '')
+            .replace(audioFilePattern, '')
+            .replace(/[^A-Za-z0-9_-]/g, '_');
+        const v = crypto.createHash('sha256').update(String(variant)).digest('hex').slice(0, 16);
+        return `${base}_${v}${ext}`;
+    },
+
+    getAssetFileFromMediaAPI: async function(recording, type, options) {
+        const attr = Recordings.buildMediaApiAttr(recording, type, options)
         const token = await auth0Service.getToken();
-        console.log('attr', attr)
         let params = {
             method: 'GET',
             url: `${rfcxConfig.mediaBaseUrl}/internal/assets/streams/${attr}`,
@@ -681,7 +729,9 @@ var Recordings = {
 
         const isNonLegacy = !Recordings.isLegacy(recording)
         if (isNonLegacy) {
-            const audio_key = recording.uri.replace(audioFilePattern, options.format ? options.format : '.mp3');
+            // Per-variant key: gain / frequency filter / trim all change the
+            // bytes (visualizer gain+band, PM/AED/clustering ROI clips).
+            const audio_key = Recordings.buildAssetCacheKey(recording, Recordings.buildMediaApiAttr(recording, 'audio', options), options.format ? options.format : '.mp3');
             tmpfilecache.fetch(audio_key, function(cache_miss) {
                 Recordings.fetchRecordingFile(recording, async function(err, recording_path){
                     if (err) {
@@ -789,7 +839,11 @@ var Recordings = {
      * @param {Function} callback(err, path) function to call back with the recording spectrogram file's path.
      */
     fetchSpectrogramFile: function (recording, callback) {
-        const spectrogram_key = recording.uri.replace(audioFilePattern, '.png');
+        // Per-variant key: the full-recording spectrogram is ONE variant among
+        // several assets derived from this recording (see buildAssetCacheKey).
+        const spectrogram_key = Recordings.isLegacy(recording)
+            ? recording.uri.replace(audioFilePattern, '.png')
+            : Recordings.buildAssetCacheKey(recording, Recordings.buildMediaApiAttr(recording, 'spectro', {}), '.png');
         tmpfilecache.fetch(spectrogram_key, function(cache_miss){
             Recordings.fetchRecordingFile(recording, async function(err, recording_path){
                 if(err) { callback(err); return; }
@@ -816,7 +870,10 @@ var Recordings = {
     },
 
     fetchTemplateFile: function (recording, options, callback) {
-        const template_key = recording.uri.replace(audioFilePattern, '.png');
+        // Per-variant key: each template ROI (frequency band + time trim) is a
+        // DISTINCT asset. Previously every ROI of a recording -- and the full
+        // colour spectrogram -- shared one key.
+        const template_key = Recordings.buildAssetCacheKey(recording, Recordings.buildMediaApiAttr(recording, 'template', options), '.png');
         tmpfilecache.fetch(template_key, function(cache_miss){
             Recordings.fetchRecordingFile(recording, async function(err, recording_path){
                 if(err) { callback(err); return; }

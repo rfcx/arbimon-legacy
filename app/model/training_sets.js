@@ -23,7 +23,7 @@ var sqlutil      = require('../utils/sqlutil');
 var dbpool       = require('../utils/dbpool');
 var Recordings   = require('./recordings');
 var Projects     = require('./projects');
-var { arbimon2PublicUrl, arbimon2PublicUrlBase } = require('../utils/asset-url');
+var { arbimon2PublicUrl, arbimon2PublicUrlBase, roiSpectrogramUrl } = require('../utils/asset-url');
 
 // local variables
 var s3;
@@ -599,6 +599,13 @@ TrainingSets.types.roi_set = {
         ], callback);
     },
     get_rois : function(training_set, options, callback) {
+        // Normalise the (training_set, callback) 2-arg call used by the JSON
+        // route (fetchRois(ts, cb)); queryHandler normalises this too, but we
+        // read options.stream + wrap the callback here, so we must do it first.
+        if (callback === undefined && options instanceof Function) {
+            callback = options;
+            options = undefined;
+        }
         var uri_prefix = arbimon2PublicUrlBase() + '/';
         var fields=["TSD.roi_set_data_id as id"];
         var tables=["training_set_roi_set_data TSD"];
@@ -625,12 +632,57 @@ TrainingSets.types.roi_set = {
             fields.push("CONCAT(" + dbpool.escape(uri_prefix) + ",TSD.uri) as uri");
         }
 
+        // On-demand spectrogram support: join the recording's stream external_id
+        // + true UTC start so we can build the media-API URL and never depend on
+        // the pre-cached ROI PNGs. Use RSPEC/SSPEC aliases to avoid colliding
+        // with the resolveIds R join above. Only for the streamed JSON path
+        // (not the CSV export, which sets stream:true and streams raw rows).
+        var withSpectro = !(options && options.stream);
+        if (withSpectro) {
+            tables.push("JOIN recordings RSPEC ON RSPEC.recording_id = TSD.recording_id");
+            tables.push("JOIN sites SSPEC ON SSPEC.site_id = RSPEC.site_id");
+            fields.push("SSPEC.external_id as external_id", "RSPEC.datetime_utc as datetime_utc");
+            // Needed by the SPA 'expand' modal to frame a padded full-band
+            // window: sample_rate -> nyquist (freq axis), duration -> clamp
+            // the padded window. Cheap columns on the already-joined RSPEC.
+            fields.push("RSPEC.sample_rate as sample_rate", "RSPEC.duration as duration");
+        }
+
+        var enrich = function (err, rows) {
+            if (!err && withSpectro && Array.isArray(rows)) {
+                for (var i = 0; i < rows.length; i++) {
+                    rows[i].spectrogram_url = roiSpectrogramUrl({
+                        externalId: rows[i].external_id,
+                        datetimeUtc: rows[i].datetime_utc,
+                        timeMin: rows[i].x1,
+                        timeMax: rows[i].x2,
+                        freqMin: rows[i].y1,
+                        freqMax: rows[i].y2,
+                        sampleRate: rows[i].sample_rate
+                    });
+                    // 2026-08-04 consolidation: the legacy training-sets page
+                    // binds roi.uri directly, and the STORED image can be a
+                    // full-recording COLOUR spectrogram (tmpfilecache key
+                    // collision, damaging since 2026-06-09 -- see
+                    // recordings.js buildAssetCacheKey). Serve the dynamic
+                    // render to legacy consumers too; keep the stored URL as
+                    // storedUri (diagnostics + pre-media-api recordings,
+                    // which have no spectrogram_url and keep the stored uri).
+                    if (rows[i].spectrogram_url) {
+                        rows[i].storedUri = rows[i].uri;
+                        rows[i].uri = rows[i].spectrogram_url;
+                    }
+                }
+            }
+            return callback(err, rows);
+        };
+
         return queryHandler(
             'SELECT ' + fields.join(',') + '\n' +
             'FROM ' + tables.join('\n') + '\n' +
             'WHERE TSD.training_set_id = ' + dbpool.escape(training_set.id),
             options,
-            callback
+            withSpectro ? enrich : callback
         );
     },
     get_species : function(training_set, callback) {

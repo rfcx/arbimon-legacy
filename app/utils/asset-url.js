@@ -68,7 +68,75 @@ function arbimon2PublicUrl (key) {
     return `${arbimon2PublicUrlBase()}/${k}`;
 }
 
+/**
+ * Build an on-demand ROI spectrogram URL for the modern SPA.
+ *
+ * Instead of pointing at a pre-generated detection PNG in the arbimon2 bucket
+ * (there are ~1B of these; backfilling them off AWS is prohibitive), this
+ * returns a URL on the NON-SESSION media proxy
+ * (`/legacy-api/ingest/recordings/:attr`, see app/routes/non-session.js +
+ * app/routes/data-api/ingest.js) which renders the spectrogram live via the
+ * core media API. The URL is auth-free (loadable as a bare <img>), content
+ * addressed, and served inline + immutable-cached.
+ *
+ * The window is framed by the recording's TRUE UTC start (`datetimeUtc`) plus
+ * the ROI's time bounds; the image is cropped to the ROI frequency band. NOTE:
+ * callers MUST pass the recording's `datetime_utc` (not the denormalised,
+ * TZ-shifted `datetime`) or the media window will be hours off.
+ *
+ * Returns null when the inputs to generate it aren't available (e.g. a legacy
+ * recording that has no stream external_id) — callers then render a placeholder
+ * and MUST NOT fall back to the cached detection PNG.
+ *
+ * @param {object} roi
+ * @param {string} roi.externalId  stream external id
+ * @param {string|Date} roi.datetimeUtc  recording start (UTC)
+ * @param {number} roi.timeMin  ROI start, seconds into the recording
+ * @param {number} roi.timeMax  ROI end, seconds into the recording
+ * @param {number} roi.freqMin  ROI low frequency, Hz
+ * @param {number} roi.freqMax  ROI high frequency, Hz
+ * @param {number} [roi.sampleRate]  recording sample rate, Hz (clamps freqMax to nyquist)
+ * @param {object} [opts]
+ * @param {number} [opts.width=600]
+ * @param {number} [opts.height=256]
+ */
+function roiSpectrogramUrl (roi, opts) {
+    if (!roi || !roi.externalId) return null;
+    const base = roi.datetimeUtc;
+    if (!base) return null;
+    const baseMs = new Date(base).getTime();
+    if (isNaN(baseMs)) return null;
+    const from = Math.min(Number(roi.timeMin), Number(roi.timeMax));
+    const to = Math.max(Number(roi.timeMin), Number(roi.timeMax));
+    if (isNaN(from) || isNaN(to)) return null;
+    const fmtTs = function (ms) {
+        const d = new Date(ms);
+        const p = function (n, w) { return String(n).padStart(w || 2, '0'); };
+        return `${d.getUTCFullYear()}${p(d.getUTCMonth() + 1)}${p(d.getUTCDate())}T` +
+            `${p(d.getUTCHours())}${p(d.getUTCMinutes())}${p(d.getUTCSeconds())}${p(d.getUTCMilliseconds(), 3)}`;
+    };
+    const start = fmtTs(baseMs + from * 1000);
+    const end = fmtTs(baseMs + to * 1000);
+    const fmin = Math.max(0, Math.min(Number(roi.freqMin), Number(roi.freqMax)));
+    let fmax = Math.max(Number(roi.freqMin), Number(roi.freqMax));
+    if (isNaN(fmin) || isNaN(fmax)) return null;
+    // Clamp to nyquist when the caller knows the sample rate (all three ROI
+    // payloads project it). ROI boxes can carry y2 above the recording's
+    // nyquist; the audio path (getRoiAudioFile) has always clamped for this
+    // reason, and an out-of-band bandpass can fail the media-api render.
+    const nyquist = roi.sampleRate ? Number(roi.sampleRate) / 2 : null;
+    if (nyquist && !isNaN(nyquist) && fmax > nyquist) fmax = nyquist;
+    const w = (opts && opts.width) || 600;
+    const h = (opts && opts.height) || 256;
+    // r{fmin}.{fmax} freq band; mtrue = MONOCHROME (sox -lm greyscale, verified
+    // against media-api segment-file-utils renderSpectrogram); d{W}.{H} px; wdolph
+    // window; z120 z-scale. Same grammar the visualizer + templates use.
+    const asset = `r${fmin.toFixed(0)}.${fmax.toFixed(0)}_g1_fspec_mtrue_d${w}.${h}_wdolph_z120.png`;
+    return `/legacy-api/ingest/recordings/${roi.externalId}_t${start}Z.${end}Z_${asset}`;
+}
+
 module.exports = {
     arbimon2PublicUrl,
-    arbimon2PublicUrlBase
+    arbimon2PublicUrlBase,
+    roiSpectrogramUrl
 };

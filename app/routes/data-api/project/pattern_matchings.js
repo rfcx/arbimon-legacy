@@ -145,9 +145,13 @@ router.get('/:patternMatching/:fileName?', function(req, res, next) {
             const datastream = results[0];
             const fields = results[1].map(function(f) { return f.name });
             ['year', 'month', 'day', 'hour', 'minute', 'url', 'frequency'].forEach(item=> { fields.push(item) });
-            ['datetime', 'meta', 'recording_id', 'sample_rate'].forEach(item=> {
+            // NOTE: external_id / datetime_utc / duration are the SPA on-demand
+            // spectrogram + expand-modal enrichment columns (unconditional in
+            // buildRoisQuery); they are internal plumbing and must NOT leak
+            // into the user-facing CSV export (prod-baseline header parity).
+            ['datetime', 'meta', 'recording_id', 'sample_rate', 'external_id', 'datetime_utc', 'duration'].forEach(item=> {
                 let index = fields.findIndex(i => i === item);
-                fields.splice(index, 1);
+                if (index !== -1) fields.splice(index, 1);
             });
             const colOrder= { id: -17, recording: -16, site: -15, year: -14, month: -13, day: -12, hour: -11, minute: -10,
                 species: -9, songtype: -8, x1: -7, x2: -6, y1: -5, y2: -4, frequency: -3, validated: -2,url: -1
