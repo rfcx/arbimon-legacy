@@ -95,6 +95,7 @@ function arbimon2PublicUrl (key) {
  * @param {number} roi.timeMax  ROI end, seconds into the recording
  * @param {number} roi.freqMin  ROI low frequency, Hz
  * @param {number} roi.freqMax  ROI high frequency, Hz
+ * @param {number} [roi.sampleRate]  recording sample rate, Hz (clamps freqMax to nyquist)
  * @param {object} [opts]
  * @param {number} [opts.width=600]
  * @param {number} [opts.height=256]
@@ -117,8 +118,14 @@ function roiSpectrogramUrl (roi, opts) {
     const start = fmtTs(baseMs + from * 1000);
     const end = fmtTs(baseMs + to * 1000);
     const fmin = Math.max(0, Math.min(Number(roi.freqMin), Number(roi.freqMax)));
-    const fmax = Math.max(Number(roi.freqMin), Number(roi.freqMax));
+    let fmax = Math.max(Number(roi.freqMin), Number(roi.freqMax));
     if (isNaN(fmin) || isNaN(fmax)) return null;
+    // Clamp to nyquist when the caller knows the sample rate (all three ROI
+    // payloads project it). ROI boxes can carry y2 above the recording's
+    // nyquist; the audio path (getRoiAudioFile) has always clamped for this
+    // reason, and an out-of-band bandpass can fail the media-api render.
+    const nyquist = roi.sampleRate ? Number(roi.sampleRate) / 2 : null;
+    if (nyquist && !isNaN(nyquist) && fmax > nyquist) fmax = nyquist;
     const w = (opts && opts.width) || 600;
     const h = (opts && opts.height) || 256;
     // r{fmin}.{fmax} freq band; mtrue = MONOCHROME (sox -lm greyscale, verified

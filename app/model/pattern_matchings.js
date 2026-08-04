@@ -945,7 +945,8 @@ var PatternMatchings = {
             timeMin: roi.x1,
             timeMax: roi.x2,
             freqMin: roi.y1,
-            freqMax: roi.y2
+            freqMax: roi.y2,
+            sampleRate: roi.sample_rate
         });
     },
 

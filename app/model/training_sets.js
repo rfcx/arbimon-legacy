@@ -657,7 +657,8 @@ TrainingSets.types.roi_set = {
                         timeMin: rows[i].x1,
                         timeMax: rows[i].x2,
                         freqMin: rows[i].y1,
-                        freqMax: rows[i].y2
+                        freqMax: rows[i].y2,
+                        sampleRate: rows[i].sample_rate
                     });
                     // 2026-08-04 consolidation: the legacy training-sets page
                     // binds roi.uri directly, and the STORED image can be a

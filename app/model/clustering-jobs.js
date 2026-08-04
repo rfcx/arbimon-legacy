@@ -189,7 +189,8 @@ select.push(
                         timeMin: roi.time_min,
                         timeMax: roi.time_max,
                         freqMin: roi.frequency_min,
-                        freqMax: roi.frequency_max
+                        freqMax: roi.frequency_max,
+                        sampleRate: roi.sample_rate
                     });
                 }
             }
