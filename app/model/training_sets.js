@@ -622,7 +622,15 @@ TrainingSets.types.roi_set = {
             "ROUND(TSD.y2-TSD.y1,1) as bw"
         );
         if(!options || !options.noURI){
-            fields.push("CONCAT(" + dbpool.escape(uri_prefix) + ",TSD.uri) as uri");
+            fields.push("CONCAT(" + dbpool.escape(uri_prefix) + ",TSD.uri) as storedUri");
+            // Dynamic, always-correct ROI render via media-api (see the 2026-06
+            // tmpfilecache key-collision fix in recordings.js): the stored S3 PNG
+            // could be a full-recording COLOUR spectrogram. Existing consumers use
+            // `uri` verbatim, so emit the dynamic route as `uri` and keep the S3
+            // URL as `storedUri` (diagnostics + legacy-recording fallback).
+            fields.push("CONCAT('/legacy-api/project/', P2.url, '/training-sets/data/', TSD.training_set_id, '/spectrogram/', TSD.roi_set_data_id) as uri");
+            tables.push("JOIN training_sets TS2 ON TS2.training_set_id = TSD.training_set_id");
+            tables.push("JOIN projects P2 ON P2.project_id = TS2.project_id");
         }
 
         return queryHandler(

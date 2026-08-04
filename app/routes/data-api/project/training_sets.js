@@ -119,6 +119,51 @@ router.get('/data/:trainingSet/get-image/:dataId', function(req, res, next) {
     });
 });
 
+/** Renders a training-set ROI spectrogram DYNAMICALLY via the media-api.
+ *
+ * Same rationale as .../templates/:template/spectrogram (2026-08 fix): the
+ * stored S3 image could be poisoned by the tmpfilecache key collision
+ * (full-recording COLOUR spectrogram stored as the ROI crop). Deriving the
+ * render from the ROI box (x1/x2/y1/y2) + the recording makes the image a
+ * pure function of data we hold. Legacy recordings (project_*) fall back to
+ * the stored image.
+ */
+router.get('/data/:trainingSet/spectrogram/:dataId', function(req, res, next) {
+    var trainingSet = req.trainingSet;
+    model.trainingSets.fetchData(req.trainingSet, { id: req.params.dataId }, function(err, rows) {
+        if (err) return next(err);
+        if (!rows || !rows.length) return res.sendStatus(404);
+        var rdata = rows[0];
+
+        // findByUrlMatch(recording_id, ...) resolves the recording WITH its
+        // site external_id/datetime fields (same lookup createTemplateImage
+        // and create_data_image use before calling the media-api).
+        model.recordings.findByUrlMatch(rdata.recording, 0, { limit: 1 })
+        .then(function(recData) {
+            var recording = recData && recData[0];
+            if (!recording) return res.sendStatus(404);
+
+            // Legacy (pre-media-api) recordings: stored image or nothing.
+            if (!recording.uri || String(recording.uri).indexOf('project_') === 0) {
+                if (!rdata.storedUri && !rdata.uri) return res.sendStatus(404);
+                return res.redirect(302, rdata.storedUri || rdata.uri);
+            }
+
+            var options = {
+                maxFreq: Math.max(rdata.y1, rdata.y2),
+                minFreq: Math.min(rdata.y1, rdata.y2),
+                trim: {
+                    from: Math.min(rdata.x1, rdata.x2),
+                    to: Math.max(rdata.x1, rdata.x2)
+                }
+            };
+            var attr = model.recordings.buildMediaApiAttr(recording, 'template', options);
+            return res.redirect(302, '/legacy-api/ingest/recordings/' + attr);
+        })
+        .catch(next);
+    });
+});
+
 
 router.get('/species/:trainingSet', function(req, res, next) {
     res.type('json');
