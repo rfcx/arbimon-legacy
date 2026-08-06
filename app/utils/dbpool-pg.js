@@ -977,11 +977,218 @@ function translateCollation(sql) {
 // 20/21. A tiebreak column in the app's ORDER BY is the only remedy and it
 // would change MariaDB's output too.
 //
-// NULL PLACEMENT: MySQL sorts NULLs first ASC / last DESC; PG is the opposite.
-// Live exposure is currently ZERO (0 NULLs in every string sort key measured:
-// sites.name, tags.tag, templates.name, pattern_matchings.name,
-// soundscapes.name), so no NULLS FIRST/LAST is emitted here -- but any future
-// NULLABLE string sort key needs one. Recorded in the P6 ordering runbook.
+// NULL PLACEMENT (armed 2026-08-06 — the §6 latent trap went LIVE): MySQL
+// sorts NULLs first ASC / last DESC; PG is the OPPOSITE. The W9/D4 zero-date
+// conversion minted ~665K recordings.datetime NULLs on PG (MariaDB holds
+// '0000-00-00' zero-dates, which sort as the SMALLEST value — i.e. LAST in
+// DESC — while PG's NULLs sort FIRST in DESC): measured live on site 35416,
+// the zero-date row leads page 1 on PG and trails the list on MariaDB
+// (census hash 3fde2630, ordering_only n=9 and climbing). datetime_utc
+// carries 16.4M NULLs — same mechanism, wider surface. THE RULE: for a
+// qualified sort key that resolves (via aliasMap) to a column in
+// NULLABLE_COLS, emit the MySQL placement explicitly — ASC -> NULLS FIRST,
+// DESC -> NULLS LAST. NOT-NULL keys get NO clause (plan-preserving: the
+// default ASC index remains usable; measured 3ms -> 185ms worst-case when a
+// clause forces a sort on a 154K-recording site — acceptable only because it
+// applies ONLY where NULLs can actually appear). Zero-date == NULL ordering
+// equivalence: both are the extreme "smallest/absent" value, so MySQL's
+// zero-date-last-in-DESC == PG's NULLS LAST placement — verified live on
+// 35416 (byte-identical page after the clause). G1 (DISTINCT: ORDER BY
+// expression must be in the select list — a bare column with NULLS
+// FIRST/LAST is still the selected expression, so the clause is legal;
+// verified live) and G2 (set-op scope) are inherited: this rule runs inside
+// the same clause walk, after the same guards.
+// NULLABLE_COLS is GENERATED — do not hand-edit. Source: live arbimon (PG)
+// information_schema.columns is_nullable='YES' (PG is the truth for 6.4
+// read semantics). Regenerate: data-stores/arbimon-pg/tools/gen-nullable-map.sh
+// (rfcx-local). A schema migration adding a NULLABLE column must regenerate
+// this map in the SAME change (mirror of the collation-map rule).
+var NULLABLE_COLS = {
+    'audio_event_detections_clustering.aed_number': 1,
+    'audio_event_detections_clustering.songtype_id': 1,
+    'audio_event_detections_clustering.species_id': 1,
+    'audio_event_detections_clustering.uri_param': 1,
+    'audio_event_detections_clustering.validated': 1,
+    'batch_insert_state.updated_at': 1,
+    'cached_metrics.expires_at': 1,
+    'classification_results.max_vector_value': 1,
+    'classification_results.min_vector_value': 1,
+    'job_params_audio_event_clustering.date_created': 1,
+    'job_params_audio_event_detection_clustering.aeds_detected': 1,
+    'job_params_audio_event_detection_clustering.date_created': 1,
+    'job_params_classification.playlist_id': 1,
+    'job_params_soundscape.playlist_id': 1,
+    'job_params_training.trained_model_id': 1,
+    'job_params_training.training_set_id': 1,
+    'job_params_training.validation_set_id': 1,
+    'job_tasks.args': 1,
+    'job_tasks.remark': 1,
+    'jobs.date_created': 1,
+    'models.threshold': 1,
+    'mysql2pg_delta_state.watermark': 1,
+    'mysql2pg_load_state.watermark': 1,
+    'mysql2pg_reverse_state.last_rows': 1,
+    'mysql2pg_reverse_state.last_run': 1,
+    'mysql2pg_reverse_state.watermark': 1,
+    'pattern_matching_rois.consensus_validated': 1,
+    'pattern_matching_rois.denorm_recording_date': 1,
+    'pattern_matching_rois.denorm_recording_datetime': 1,
+    'pattern_matching_rois.denorm_site_id': 1,
+    'pattern_matching_rois.expert_validated': 1,
+    'pattern_matching_rois.expert_validation_user_id': 1,
+    'pattern_matching_rois.score': 1,
+    'pattern_matching_rois.uri_param2': 1,
+    'pattern_matching_rois.validated': 1,
+    'pattern_matching_validations.validated': 1,
+    'pattern_matchings.job_id': 1,
+    'pattern_matchings.playlist_id': 1,
+    'pattern_matchings.template_id': 1,
+    'playlists.metadata': 1,
+    'playlists.total_recordings': 1,
+    'playlists.uri': 1,
+    'projects.country': 1,
+    'projects.created_at': 1,
+    'projects.deleted_at': 1,
+    'projects.external_id': 1,
+    'projects.state': 1,
+    'projects.updated_at': 1,
+    'recording_tags.datetime': 1,
+    'recording_tags.f0': 1,
+    'recording_tags.f1': 1,
+    'recording_tags.site_id': 1,
+    'recording_tags.t0': 1,
+    'recording_tags.t1': 1,
+    'recording_validations.created_at': 1,
+    'recording_validations.present': 1,
+    'recording_validations.updated_at': 1,
+    'recordings.archived_at': 1,
+    'recordings.archived_by': 1,
+    'recordings.bit_rate': 1,
+    'recordings.datetime': 1,
+    'recordings.datetime_utc': 1,
+    'recordings.duration': 1,
+    'recordings.file_size': 1,
+    'recordings.filename': 1,
+    'recordings.meta': 1,
+    'recordings.precision': 1,
+    'recordings.sample_encoding': 1,
+    'recordings.sample_rate': 1,
+    'recordings.samples': 1,
+    'recordings.upload_time': 1,
+    'recordings_deleted.duration': 1,
+    'recordings_errors.error': 1,
+    'recordings_export_parameters.created_at': 1,
+    'recordings_export_parameters.error': 1,
+    'recordings_export_parameters.processed_at': 1,
+    'requeue_release_plan.analysis_name': 1,
+    'requeue_release_plan.date_created': 1,
+    'requeue_release_plan.job_id': 1,
+    'requeue_release_plan.job_type_id': 1,
+    'requeue_release_plan.passes_floor': 1,
+    'requeue_release_plan.playlist_exists': 1,
+    'requeue_release_plan.playlist_id': 1,
+    'requeue_release_plan.project_id': 1,
+    'requeue_release_plan.recs': 1,
+    'requeue_release_plan.user_id': 1,
+    'sites.alt': 1,
+    'sites.country_code': 1,
+    'sites.created_at': 1,
+    'sites.deleted_at': 1,
+    'sites.external_id': 1,
+    'sites.lat': 1,
+    'sites.lon': 1,
+    'sites.token_created_on': 1,
+    'sites.updated_at': 1,
+    'soundscape_regions.sample_playlist_id': 1,
+    'soundscape_regions.threshold': 1,
+    'soundscape_regions.threshold_type': 1,
+    'soundscapes.date_created': 1,
+    'soundscapes.frequency': 1,
+    'soundscapes.threshold': 1,
+    'soundscapes.uri': 1,
+    'soundscapes.visual_max_value': 1,
+    'species.biotab_id': 1,
+    'species.code_name': 1,
+    'species.created_at': 1,
+    'species.defined_by': 1,
+    'species.description': 1,
+    'species.family_id': 1,
+    'species.image': 1,
+    'species.updated_at': 1,
+    'support_aedc_dedupe2_backup_20260806.aed_id': 1,
+    'support_aedc_dedupe2_backup_20260806.aed_number': 1,
+    'support_aedc_dedupe2_backup_20260806.frequency_max': 1,
+    'support_aedc_dedupe2_backup_20260806.frequency_min': 1,
+    'support_aedc_dedupe2_backup_20260806.job_id': 1,
+    'support_aedc_dedupe2_backup_20260806.recording_id': 1,
+    'support_aedc_dedupe2_backup_20260806.songtype_id': 1,
+    'support_aedc_dedupe2_backup_20260806.species_id': 1,
+    'support_aedc_dedupe2_backup_20260806.time_max': 1,
+    'support_aedc_dedupe2_backup_20260806.time_min': 1,
+    'support_aedc_dedupe2_backup_20260806.uri_param': 1,
+    'support_aedc_dedupe2_backup_20260806.uri_vector': 1,
+    'support_aedc_dedupe2_backup_20260806.validated': 1,
+    'support_aedc_dedupe_backup_20260806.aed_id': 1,
+    'support_aedc_dedupe_backup_20260806.aed_number': 1,
+    'support_aedc_dedupe_backup_20260806.frequency_max': 1,
+    'support_aedc_dedupe_backup_20260806.frequency_min': 1,
+    'support_aedc_dedupe_backup_20260806.job_id': 1,
+    'support_aedc_dedupe_backup_20260806.recording_id': 1,
+    'support_aedc_dedupe_backup_20260806.songtype_id': 1,
+    'support_aedc_dedupe_backup_20260806.species_id': 1,
+    'support_aedc_dedupe_backup_20260806.time_max': 1,
+    'support_aedc_dedupe_backup_20260806.time_min': 1,
+    'support_aedc_dedupe_backup_20260806.uri_param': 1,
+    'support_aedc_dedupe_backup_20260806.uri_vector': 1,
+    'support_aedc_dedupe_backup_20260806.validated': 1,
+    'support_aedc_rerun_stale_backup_20260806.aed_id': 1,
+    'support_aedc_rerun_stale_backup_20260806.aed_number': 1,
+    'support_aedc_rerun_stale_backup_20260806.frequency_max': 1,
+    'support_aedc_rerun_stale_backup_20260806.frequency_min': 1,
+    'support_aedc_rerun_stale_backup_20260806.job_id': 1,
+    'support_aedc_rerun_stale_backup_20260806.recording_id': 1,
+    'support_aedc_rerun_stale_backup_20260806.songtype_id': 1,
+    'support_aedc_rerun_stale_backup_20260806.species_id': 1,
+    'support_aedc_rerun_stale_backup_20260806.time_max': 1,
+    'support_aedc_rerun_stale_backup_20260806.time_min': 1,
+    'support_aedc_rerun_stale_backup_20260806.uri_param': 1,
+    'support_aedc_rerun_stale_backup_20260806.uri_vector': 1,
+    'support_aedc_rerun_stale_backup_20260806.validated': 1,
+    'support_ts_repair_8799_backup.captured_at': 1,
+    'support_ts_repair_8799_backup.old_datetime': 1,
+    'support_ts_repair_8799_backup.old_datetime_utc': 1,
+    'support_ts_repair_8799_backup.recording_id': 1,
+    'templates.date_created': 1,
+    'templates.deleted': 1,
+    'templates.source_project_id': 1,
+    'templates.uri': 1,
+    'templates.user_id': 1,
+    'tmp_c166120.aed_id': 1,
+    'tmp_cl_out.aed_id': 1,
+    'tmp_cl_out.job_id': 1,
+    'tmp_shard_ctl.aed_id': 1,
+    'tmp_shard_ctl.job_id': 1,
+    'tmp_shard_ids_20260806.aed_id': 1,
+    'tmp_shard_ids_20260806.job_id': 1,
+    'training_set_roi_set_data.uri': 1,
+    'training_sets.date_created': 1,
+    'training_sets.metadata': 1,
+    'training_sets.source_project_id': 1,
+    'user_account_support_request.expires': 1,
+    'user_account_support_request.params': 1,
+    'user_account_support_request.user_id': 1,
+    'user_account_support_type.max_lifetime': 1,
+    'users.created_on': 1,
+    'users.disabled_until': 1,
+    'users.last_login': 1,
+    'users.rfcx_id': 1,
+};
+
+// MySQL null placement for a sort key: ASC (implicit or explicit) -> NULLS
+// FIRST; DESC -> NULLS LAST. `dir` is the raw direction suffix ('' = ASC).
+function mysqlNullPlacement(dir) {
+    return /\bDESC\b/i.test(dir || '') ? ' NULLS LAST' : ' NULLS FIRST';
+}
 var _ORDERBY_CLAUSE_RE = /\border\s+by\b/gi;
 var _SORTKEY_RE = /^([A-Za-z_]\w*\.[A-Za-z_]\w*)(\s+(?:ASC|DESC))?$/i;
 // Clause terminators at the ORDER BY's own paren depth.
@@ -1075,9 +1282,23 @@ function translateOrderByCollation(sql) {
         var rebuilt = keys.map(function (k) {
             var km = _SORTKEY_RE.exec(k.trim());
             if (!km) { return k.trim(); }                 // expression -> untouched
+            // NULL-placement leg (2026-08-06): a qualified key resolving to a
+            // NULLABLE column gets MySQL's explicit placement. Independent of
+            // the collation fold — a nullable key may need placement without
+            // being a string, and vice versa. UNRESOLVED alias -> untouched
+            // (fail-safe, same posture as the fold).
+            var nulls = '';
+            var parts = km[1].split('.');
+            var tbl = amap[parts[0].toLowerCase()];
+            if (tbl && NULLABLE_COLS[tbl + '.' + parts[1].toLowerCase()]) {
+                nulls = mysqlNullPlacement(km[2]);
+            }
             var cls = collationClass(km[1], amap);
-            if (!cls) { return k.trim(); }                // UNRESOLVED -> untouched
-            return foldExpr(km[1], cls) + (km[2] || '');
+            if (!cls) {
+                // no collation fold; still emit placement when needed
+                return nulls ? (km[1] + (km[2] || '') + nulls) : k.trim();
+            }
+            return foldExpr(km[1], cls) + (km[2] || '') + nulls;
         }).join(', ');
         // Preserve the original leading/trailing whitespace shape.
         var lead = /^\s*/.exec(clause)[0];

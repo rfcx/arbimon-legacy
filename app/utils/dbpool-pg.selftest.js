@@ -522,6 +522,40 @@ eq('orderby: WHERE fold and ORDER BY fold coexist on the same column',
    (m.translate('SELECT T.tag FROM tags T WHERE T.tag LIKE ? ORDER BY T.tag LIMIT ?')
       .match(/translate\(lower\(T\.tag\)/g) || []).length, 2);
 
+// ---- NULL placement (2026-08-06 — the §6 trap armed by W9 zero-date NULLs;
+// census hash 3fde2630; verified live on site 35416 pre-merge) ----
+console.log('== ORDER BY NULL placement (nullable keys get MySQL semantics) ==');
+eq('nulls: the 3fde2630 shape — DESC nullable datetime -> NULLS LAST',
+   /ORDER BY r\.site_id DESC, r\.datetime DESC NULLS LAST LIMIT/.test(
+     m.translate('SELECT r.recording_id FROM recordings r WHERE r.archived_at IS NULL AND r.site_id IN (?) ORDER BY r.site_id DESC, r.datetime DESC LIMIT ?, ?')), true);
+eq('nulls: ASC (implicit) nullable key -> NULLS FIRST',
+   /ORDER BY r\.datetime NULLS FIRST/.test(
+     m.translate('SELECT r.recording_id FROM recordings r ORDER BY r.datetime LIMIT 5')), true);
+eq('nulls: explicit ASC nullable key -> NULLS FIRST',
+   /r\.datetime ASC NULLS FIRST/.test(
+     m.translate('SELECT r.recording_id FROM recordings r ORDER BY r.datetime ASC LIMIT 5')), true);
+eq('nulls: NOT-NULL key -> NO clause emitted (plan-preserving)',
+   /NULLS/.test(m.translate('SELECT t.tag FROM tags t ORDER BY t.tag DESC LIMIT 5')), false);
+eq('nulls: NOT-NULL folded key -> fold only, no clause',
+   /NULLS/.test(m.translate('SELECT s.name FROM sites s ORDER BY s.name')), false);
+eq('nulls: nullable + collation-folded key -> BOTH (fold then dir then clause)',
+   /translate\(lower\(t\.uri\).*\) DESC NULLS LAST/.test(
+     m.translate('SELECT t.uri FROM templates t ORDER BY t.uri DESC')), true);
+eq('nulls: G1 DISTINCT -> untouched (no clause)',
+   /NULLS/.test(m.translate('SELECT DISTINCT r.datetime FROM recordings r ORDER BY r.datetime DESC')), false);
+eq('nulls: G2 trailing set-op ORDER BY -> untouched',
+   /NULLS/.test(m.translate('SELECT r.datetime FROM recordings r UNION SELECT r2.datetime FROM recordings r2 ORDER BY datetime DESC')), false);
+eq('nulls: UNRESOLVED alias -> untouched (fail-safe)',
+   /NULLS/.test(m.translate('SELECT x.datetime FROM (SELECT 1) q ORDER BY x.datetime DESC')), false);
+eq('nulls: pmr denorm datetime (3.1M NULLs live) -> NULLS LAST in DESC',
+   /PMR\.denorm_recording_datetime DESC NULLS LAST/.test(
+     m.translate('SELECT PMR.x1 FROM pattern_matching_rois PMR ORDER BY PMR.denorm_recording_datetime DESC')), true);
+eq('nulls: multi-key — each key judged independently',
+   (function () {
+     var s = m.translate('SELECT r.recording_id FROM recordings r JOIN sites s ON s.site_id = r.site_id ORDER BY s.site_id DESC, r.datetime DESC LIMIT 5');
+     return /s\.site_id DESC(?! NULLS)/.test(s) && /r\.datetime DESC NULLS LAST/.test(s);
+   })(), true);
+
 console.log('== bare-= + IN-list collation fold (P6 =-surface, 2026-07-28) ==');
 var nfold = function (sql) { return (m.translate(sql).match(/translate\(lower\(/g) || []).length; };
 // FROM-narrowed bare = : the enumeration's real exposed shapes
