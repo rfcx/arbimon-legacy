@@ -106,9 +106,29 @@ router.post('/sites', verifyToken(), hasRole(['appUser', 'rfcxUser', 'guardianCr
     }
     if (!params.latitude && !params.longitude) siteData.hidden = 1
     const insertData = await model.sites.insertAsync(siteData);
+    if (!insertData || insertData.insertId === undefined || insertData.insertId === null) {
+      throw new Error('createSite: INSERT returned no insertId');
+    }
     await model.sites.setCountryCodeAndTimezone(insertData.insertId, params.country_code, params.timezone);
-    const site = await model.sites.findByIdAsync(insertData.insertId);
-    res.status(201).json(site[0]);
+    // READ-AFTER-WRITE HAZARD (2026-08-08), same class as
+    // training_sets.add_data (#1795) -- and, like users.createFromAuth0,
+    // deliberately NOT fixed by local reconstruction.
+    //
+    // findByIdAsync's SELECT is classified {replayable:true} by the deployed
+    // adapter, so at DB_ENGINE=pg it reads from PostgreSQL while the INSERT
+    // above still goes to MariaDB (legacy owns writes until Phase 7); the row
+    // reaches PG only on the next forward delta-sync tick (every 2 min).
+    // `site[0]` was then undefined and this endpoint answered 201 with a body
+    // of `null` -- a silent success carrying no site.
+    //
+    // Local reconstruction is NOT safe here: sites has SIX defaulted columns
+    // the INSERT does not supply (created_at/updated_at=current_timestamp(),
+    // published=0, timezone_locked=0, hidden=0, plus country_code/timezone
+    // which setCountryCodeAndTimezone writes in a SEPARATE statement above).
+    // Reconstructing would return a site missing its own timezone -- silent
+    // wrong data to an API client, worse than a loud failure.
+    const site = await model.sites.findByIdAfterCreate(insertData.insertId);
+    res.status(201).json(site);
   } catch (e) {
     httpErrorHandler(req, res, 'Failed creating a site')(e);
   }

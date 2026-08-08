@@ -388,8 +388,14 @@ var Jobs = {
     },
 
     getJobParams: async function(jobTypeId, jobId) {
+        // Converted off `new Promise(async ...)` for the same reason as
+        // getJobUrl above: a throw inside an async Promise executor becomes an
+        // unhandled rejection, which is fatal under node 16 (pod restart).
+        // This body contains no awaits today, so the conversion is a pure
+        // hardening of the shape -- it removes the pod-kill primitive before
+        // someone adds an await here later.
         let sql;
-        return new Promise(async function (resolve, reject) {
+        return await (async function () {
             switch (jobTypeId) {
                 case 1:
                     sql = `select ts.name as "Training Set"
@@ -439,8 +445,8 @@ var Jobs = {
                         where jpr.job_id = ${jobId};`
                     break;
             }
-            return resolve(sql)
-        })
+            return sql
+        })()
     },
 
     getChunks: function(arr, perChunk) {
@@ -456,7 +462,30 @@ var Jobs = {
     },
 
     getJobUrl: async function(job) {
-        return new Promise(async function (resolve, reject) {
+        // CRASH CONTAINMENT (2026-08-08). This was `new Promise(async ...)`.
+        // A throw inside an ASYNC Promise executor rejects nothing the caller
+        // can catch: the executor's own promise is already returned, so the
+        // rejection escapes as an UNHANDLED REJECTION. Under node 16 that is
+        // fatal -- the process EXITS and the whole arbimon pod restarts,
+        // taking every in-flight request with it.
+        //
+        // PROVEN, not assumed: a probe of this exact shape was executed inside
+        // the live production container (node v16.20.2). The caller's
+        // try/catch did NOT fire and the process died with exit code 1.
+        //
+        // The trigger is the `case 6` re-read below. getPmId() is a plain
+        // SELECT the deployed adapter classifies {replayable:true}, so at
+        // DB_ENGINE=pg it is served from PostgreSQL while the pattern_matchings
+        // row is still only in MariaDB until the next */2 delta tick --
+        // `pmData` is then undefined and `pmData.deleted` throws. Note the
+        // sibling lines for CNN/models already guard with `&&`; only this one
+        // dereferences unguarded.
+        //
+        // Made a plain async function: rejections now propagate normally to
+        // the caller (Promise.all in activeJobs), which is inside a .then
+        // chain with a .catch. Same behaviour on success, no pod kill on error.
+        const self = this;
+        return await (async function () {
             switch (job.job_type_id) {
                 case 1:
                     const modelData = await models.models.getModelId(job.job_id)
@@ -470,7 +499,10 @@ var Jobs = {
                     break;
                 case 6:
                     const pmData = await models.patternMatchings.getPmId(job.job_id)
-                    job.url = `patternmatching/${pmData.deleted ? '' : (pmData && pmData.pattern_matching_id ? pmData.pattern_matching_id : '')}`
+                    // Guarded to match the CNN/models siblings below. A missing
+                    // row now yields the same empty-url shape they produce,
+                    // instead of throwing (and killing the pod -- see above).
+                    job.url = `patternmatching/${(pmData && !pmData.deleted && pmData.pattern_matching_id) ? pmData.pattern_matching_id : ''}`
                     break;
                 case 7:
                     const cnnData = await models.CNN.getCnnId(job.job_id)
@@ -486,8 +518,8 @@ var Jobs = {
                     job.url = 'random-forest-models/models'
                     break;
             }
-            return resolve(job)
-        })
+            return job
+        })()
     },
 
 

@@ -498,6 +498,30 @@ TrainingSets.types.roi_set = {
      */
     create_data_image : function (training_set, rdata, callback){
         debug('create_data_image');
+        // CRASH CONTAINMENT (2026-08-08). This promise chain had NO `.catch`,
+        // so ANY rejection inside it became an unhandled rejection. Under
+        // node 16 that is fatal: the process EXITS and the whole arbimon pod
+        // restarts, taking every in-flight request with it. Measured live —
+        // two pod restarts on frontend-1 (2026-08-08 03:57:06Z + 03:58:59Z)
+        // from exactly this chain, via `rdata` being undefined at the s3key
+        // line below (the read-after-write defect fixed in add_data).
+        //
+        // This guard is DEFENCE IN DEPTH, deliberately kept even though the
+        // root cause is fixed: an unguarded async chain behind an HTTP route
+        // is a pod-kill primitive regardless of which bug feeds it. Same
+        // family as the classifications.js double-send crash (#1789) and the
+        // #1631-era unguarded final callbacks.
+        //
+        // `settled` prevents a DOUBLE callback: if callback() itself throws,
+        // the .catch would otherwise invoke it a second time and express
+        // would try to send headers twice.
+        var settled = false;
+        if (!rdata || rdata.id === undefined || rdata.id === null) {
+            // Never build an S3 key out of `undefined` — that is how a
+            // malformed key (`.../training_sets/7153/undefined.png`) would
+            // reach the object store.
+            return callback(new Error('create_data_image: missing training set ROI row (no id)'));
+        }
         var s3key = 'project_'+training_set.project+'/training_sets/'+training_set.id+'/'+rdata.id+'.png';
         rdata.uri = arbimon2PublicUrl(s3key);
         let rec_data, rec_stats, spec_data, isLegacy;
@@ -571,7 +595,17 @@ TrainingSets.types.roi_set = {
                     "WHERE roi_set_data_id = ?";
             return dbpool.query(dbpool.format(q, [s3key, rdata.id]));
         }).then(() => {
+            settled = true;
             callback(null, rdata);
+        }).catch((err) => {
+            if (settled) {
+                // The failure happened AFTER we handed off; callback() must
+                // not run twice. Log and stop.
+                console.error('[training_sets.create_data_image] post-callback error', err);
+                return;
+            }
+            settled = true;
+            callback(err);
         });
     },
 
@@ -756,6 +790,9 @@ TrainingSets.types.roi_set = {
      */
     add_data : function(training_set, data, callback){
         var self = this;
+        // Row shape captured AT INSERT TIME — see the read-after-write note
+        // on the reconstruction step below.
+        var inserted = null;
         async.waterfall([
             function(next){
                 joi.validate(data, self.data_schema, {context:training_set},next);
@@ -763,6 +800,15 @@ TrainingSets.types.roi_set = {
             function(vdata, next){
                 var x1 = Math.min(vdata.roi.x1, vdata.roi.x2), y1 = Math.min(vdata.roi.y1, vdata.roi.y2);
                 var x2 = Math.max(vdata.roi.x1, vdata.roi.x2), y2 = Math.max(vdata.roi.y1, vdata.roi.y2);
+
+                // Capture exactly the values we are about to write, so the
+                // next step never has to read them back.
+                inserted = {
+                    recording : vdata.recording,
+                    species   : vdata.species,
+                    songtype  : vdata.songtype,
+                    x1 : x1, y1 : y1, x2 : x2, y2 : y2
+                };
 
                 dbpool.queryHandler(
                     "INSERT INTO training_set_roi_set_data(training_set_id, recording_id, species_id, songtype_id, x1, y1, x2, y2) \n" +
@@ -774,14 +820,64 @@ TrainingSets.types.roi_set = {
                 );
             },
             function(result, fields, next){
-                self.get_data(training_set, {id:result.insertId}, next);
+                // READ-AFTER-WRITE REMOVED (2026-08-08).
+                //
+                // This step used to be:
+                //     self.get_data(training_set, {id:result.insertId}, next);
+                // i.e. INSERT on the writer, then immediately SELECT the row
+                // straight back. The next step did `data = rows[0]` with no
+                // emptiness guard, so a SELECT that saw zero rows produced
+                // `undefined` and create_data_image crashed on `rdata.id` —
+                // an unhandled rejection, which under node 16 KILLS THE POD.
+                //
+                // Why the re-read can miss its own write — it has two
+                // independent failure modes, and the second is the serious one:
+                //
+                //  (1) TODAY (MariaDB/MaxScale): reads go through the
+                //      Read-Write-Split router with `causal_reads=none` and
+                //      adaptive routing (measured live: the replica carries
+                //      the larger routed-packet share), so the follow-up
+                //      SELECT can land on the replica microseconds before the
+                //      INSERT has replicated. Rare, but it fired twice on
+                //      2026-08-08 (rows 138073/138074).
+                //
+                //  (2) AT THE PHASE-6.4 READ FLIP: this becomes DETERMINISTIC.
+                //      The SELECT is a plain read that the adapter's allowlist
+                //      classifier accepts (verified against the deployed
+                //      classifier: `{replayable:true}`), so at DB_ENGINE=pg it
+                //      is served from PostgreSQL — while the INSERT still goes
+                //      to MariaDB (legacy owns writes until Phase 7). The row
+                //      reaches PG only on the next forward delta-sync tick
+                //      (*/2 min), so a re-read microseconds later finds
+                //      NOTHING, every single time. The shadow census already
+                //      shows this template (`6ede4e30fb91983a`) as
+                //      maria=1 / pg=0.
+                //
+                // FIX: reconstruct the row locally instead of reading it back.
+                // This is EXACT, not an approximation — verified against the
+                // live schema: the table has NO triggers, NO column defaults
+                // and NO generated columns, and every column except the
+                // auto-increment pk and the deferred `uri` is supplied by the
+                // INSERT above. `uri` is genuinely NULL at this instant (it is
+                // set minutes later by create_data_image), and get_data's
+                // CONCAT(base, TSD.uri) returned NULL for it anyway, so NULL
+                // is faithful to the shape the re-read produced.
+                //
+                // PRECEDENT: the identical class in playlist creation was
+                // fixed the same way — arbimon-legacy #1740 (2026-07-07),
+                // whose runbook concludes: "future create flows should avoid
+                // immediate read-after-write verification ... unless the read
+                // is pinned to the writer or causally consistent."
+                if (!result || result.insertId === undefined || result.insertId === null) {
+                    next(new Error('add_data: INSERT returned no insertId'));
+                    return;
+                }
+                inserted.id  = result.insertId;
+                inserted.uri = null;
+                next(null, inserted);
             },
-            function(rows, fields, next){
-                data = rows[0];
-                next(null,data);
-            },
-            function (data, next) {
-                self.create_data_image(training_set, data, next);
+            function (row, next) {
+                self.create_data_image(training_set, row, next);
             }
         ], callback);
     },

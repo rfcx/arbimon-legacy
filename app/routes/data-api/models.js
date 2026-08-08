@@ -237,7 +237,18 @@ async function getModelsData(validationUri, limit, offset) {
     const awsConfig = isProd ? config('aws') : config('aws_rfcx');
     const awsBucket = isProd ? awsConfig.bucketName : awsConfig.bucketNameStaging;
     const awsRegion = isProd ? awsConfig.region : awsConfig.region;
-    return new Promise(async function (resolve, reject) {
+    // CRASH CONTAINMENT (2026-08-08). This was `new Promise(async ...)` with
+    // an ASYNC s3 callback inside it. A throw in either position escapes as an
+    // UNHANDLED REJECTION rather than rejecting this promise -- fatal under
+    // node 16 (process exits, pod restarts, all in-flight requests die).
+    // Proven live in-container; see the note on jobs.getJobUrl.
+    //
+    // The reachable throw here is `site[0].external_id` below: findByIdAsync
+    // can legitimately return an empty array (deleted/hidden site), and the
+    // sibling `recording.meta` access is already defensively guarded.
+    // The async callback body is now wrapped so any throw REJECTS this
+    // promise, which the caller already handles.
+    return new Promise(function (resolve, reject) {
         (isProd ? s3 : s3RFCx).getObject({
             Key: validationUri,
             Bucket: awsBucket
@@ -246,6 +257,7 @@ async function getModelsData(validationUri, limit, offset) {
                 if (err.code == 'NoSuchKey') return reject('Validation list not found');
                 else return reject('Failed get validations');
             }
+            try {
             const outData = String(data.Body);
             let lines = outData.split('\n');
             lines = lines.filter(line => { return line !== ''; })
@@ -261,6 +273,9 @@ async function getModelsData(validationUri, limit, offset) {
                 const filename = meta && meta.filename ? meta.filename : meta && meta.file ? meta.file : '---';
                 const site = await model.sites.findByIdAsync(recording.site_id)
                 let recUrl;
+                // Guarded: an empty site lookup used to throw here and kill
+                // the pod. A row we cannot resolve simply gets no thumbnail.
+                const siteExternalId = (site && site[0]) ? site[0].external_id : null;
                 if (recording.uri.startsWith('project_')) {
                     const thumbnailUri = recording.uri.replace('.flac', '.thumbnail.png');
                     recUrl = arbimon2PublicUrl(thumbnailUri);
@@ -271,7 +286,9 @@ async function getModelsData(validationUri, limit, offset) {
                     const dateFormat = 'YYYYMMDDTHHmmssSSS'
                     const start = momentStart.format(dateFormat)
                     const end = momentEnd.format(dateFormat)
-                    recUrl = `/legacy-api/ingest/recordings/${site[0].external_id}_t${start}Z.${end}Z_rfull_g1_fspec_d600.512_wdolph_z120.png`
+                    recUrl = siteExternalId
+                        ? `/legacy-api/ingest/recordings/${siteExternalId}_t${start}Z.${end}Z_rfull_g1_fspec_d600.512_wdolph_z120.png`
+                        : null
                 }
                 rowSent.push({
                     site: recording.site,
@@ -286,6 +303,10 @@ async function getModelsData(validationUri, limit, offset) {
             }
             const vals = rowSent.length ? rowSent.filter((vali) => { return !!vali; }) : [];
             resolve(vals)
+            } catch (e) {
+                // Never let this become an unhandled rejection.
+                reject(e)
+            }
         });
     })
 }

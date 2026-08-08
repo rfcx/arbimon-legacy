@@ -183,6 +183,11 @@ tags.resourceDefs.recording = {
             return q.reject(new APIError('No user specified'));
         }
 
+        // Captured so the created-row echo below never has to be read back.
+        var tagId = null;
+        var tagText = tag.text;
+        var insertedAt = null;
+
         var tagIdPromise = tag.id ? q(tag.id) : q.ninvoke(dbpool, 'queryHandler',
             "INSERT IGNORE INTO tags(tag) VALUES (?)", [tag.text]
         ).then(function(result){
@@ -193,7 +198,18 @@ tags.resourceDefs.recording = {
             ).get(0).get(0);
         });
 
-        return tagIdPromise.then(async function(tagId){
+        return tagIdPromise.then(async function(_tagId){
+            tagId = _tagId;
+            // When the caller passed tag.id we never learned the tag TEXT.
+            // Resolve it BEFORE the INSERT: the tags row is pre-existing, so
+            // this is not a read-after-write and is safe on either engine.
+            if (tagText === undefined || tagText === null) {
+                var trows = await q.ninvoke(dbpool, 'queryHandler',
+                    "SELECT tag FROM tags WHERE tag_id = ?", [tagId]
+                ).get(0);
+                tagText = (trows && trows[0]) ? trows[0].tag : null;
+            }
+            insertedAt = new Date();
             return q.ninvoke(dbpool, 'queryHandler',
                 "INSERT INTO recording_tags(recording_id, site_id, tag_id, user_id, datetime, t0, f0, t1, f1)\n"+
                 "VALUES (?, ?, ?, ?, NOW(), ?, ?, ?, ?)", [
@@ -203,12 +219,35 @@ tags.resourceDefs.recording = {
                 ]
             ).get(0);
         }).then(function(results){
-            return q.ninvoke(dbpool, 'queryHandler',
-                "SELECT RT.recording_tag_id as id, T.tag_id, T.tag, user_id, datetime, t0, f0, t1, f1\n" +
-                "FROM recording_tags RT\n" +
-                "JOIN tags T ON RT.tag_id = T.tag_id\n" +
-                "WHERE RT.recording_tag_id = ?", [results.insertId]
-            ).get(0);
+            // READ-AFTER-WRITE REMOVED (2026-08-08) -- same class as
+            // training_sets.add_data (#1795). This SELECT is classified
+            // {replayable:true} by the deployed adapter, so at DB_ENGINE=pg it
+            // is served from PostgreSQL while the INSERT above still goes to
+            // MariaDB (legacy owns writes until Phase 7). The row reaches PG
+            // only on the next forward delta-sync tick (*/2 min), so a re-read
+            // microseconds later finds NOTHING every time, and the route would
+            // hand the UI `undefined` as the newly created tag.
+            //
+            // Reconstructed locally instead. Verified against the live schema:
+            // recording_tags has NO triggers and its ONLY defaulted column is
+            // the auto-increment pk; every other projected column is supplied
+            // by the INSERT above.
+            if (!results || results.insertId === undefined || results.insertId === null) {
+                return q.reject(new APIError('Failed to create recording tag'));
+            }
+            return {
+                id       : results.insertId,
+                tag_id   : tagId,
+                tag      : tagText,
+                user_id  : userId,
+                // NOW() was evaluated server-side by MariaDB. `insertedAt` is
+                // captured immediately before the INSERT (sub-second accurate)
+                // and is used only for this immediate UI echo; the durable
+                // value stored in the row remains MariaDB's NOW().
+                datetime : insertedAt,
+                t0 : tag.t0 || null, f0 : tag.f0 || null,
+                t1 : tag.t1 || null, f1 : tag.f1 || null
+            };
         });
     },
     /** Removes a tag from a given recording.
