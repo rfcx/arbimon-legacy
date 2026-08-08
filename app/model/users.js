@@ -577,7 +577,7 @@ var Users = {
             rfcx_id: email,
         }
         const insertData = await this.insertAsync(attrs)
-        return this.findById(insertData.insertId).get(0)
+        return await Users.findByIdAfterCreate(insertData, 'createFromAuth0')
     },
 
 
@@ -594,7 +594,53 @@ var Users = {
             rfcx_id: data.email,
         }
         const insertData = await this.insertAsync(attrs)
-        return this.findById(insertData.insertId).get(0)
+        return await Users.findByIdAfterCreate(insertData, 'createByInvitation')
+    },
+
+    /** Read back a just-INSERTed user row, safely across the Phase-6.4 read flip.
+     *
+     * READ-AFTER-WRITE HAZARD (2026-08-08), same class as
+     * training_sets.add_data (#1795) -- but deliberately NOT fixed the same way.
+     *
+     * findById's SELECT is classified {replayable:true} by the deployed
+     * adapter, so at DB_ENGINE=pg it is served from PostgreSQL while the INSERT
+     * above still goes to MariaDB (legacy owns writes until Phase 7). The row
+     * reaches PG only on the next forward delta-sync tick (every 2 min), so a
+     * re-read microseconds later finds NOTHING, every time.
+     *
+     * WHY NOT RECONSTRUCT LOCALLY (the #1795 pattern): the users table has
+     * FIVE columns with schema defaults that the INSERT does not supply --
+     * is_super=0, project_limit=100, login_tries=0, oauth_google=0,
+     * oauth_facebook=0 (verified against the live schema). makeUserObject reads
+     * `user.is_super` and puts it in the SESSION. A local reconstruction would
+     * hand back `isSuper: undefined` instead of 0 -- trading a loud crash for
+     * SILENT WRONG DATA on an auth object, which is strictly worse. This is the
+     * registration/invitation path; it must be exactly right.
+     *
+     * FIX: keep the read, but make it correct and fail LOUDLY.
+     *  - Retry briefly: on PG the row genuinely appears once the delta tick
+     *    lands; on MariaDB/MaxScale replica lag resolves in milliseconds.
+     *  - If it still is not there, THROW. The previous code returned undefined,
+     *    which flowed into makeUserObject and threw a confusing TypeError deep
+     *    in session setup (or, on the auth0 path, inside an async Promise
+     *    executor where it killed the pod).
+     */
+    findByIdAfterCreate: async function (insertData, label) {
+        if (!insertData || insertData.insertId === undefined || insertData.insertId === null) {
+            throw new APIError(label + ': INSERT returned no insertId');
+        }
+        const userId = insertData.insertId;
+        // ~2s of retries: comfortably covers MaxScale replica lag, and covers a
+        // PG delta tick that has just landed. Deliberately does NOT wait out a
+        // full 2-min delta cycle -- an HTTP request must not hang that long,
+        // and failing loudly is the correct outcome.
+        const delaysMs = [0, 50, 150, 300, 500, 1000];
+        for (const wait of delaysMs) {
+            if (wait) { await new Promise(r => setTimeout(r, wait)); }
+            const rows = await Users.findById(userId);
+            if (rows && rows[0]) { return rows[0]; }
+        }
+        throw new APIError(label + ': created user ' + userId + ' was not readable after insert');
     },
 
     makeUserObject: function(user, options){

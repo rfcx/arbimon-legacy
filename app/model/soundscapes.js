@@ -269,12 +269,36 @@ let Soundscapes = {
                 );
             },
             function(results, fields, next){
-                self.getRegions(soundscape, {region:results.insertId}, next);
-            },
-            function(rows, fields){
-                let next = arguments[arguments.length-1];
-                data = rows[0];
-                next(null, data);
+                // READ-AFTER-WRITE REMOVED (2026-08-08) -- same class as
+                // training_sets.add_data (#1795). getRegions' SELECT is
+                // classified {replayable:true}, so at DB_ENGINE=pg it is served
+                // from PostgreSQL while this INSERT still goes to MariaDB
+                // (legacy owns writes until Phase 7). The row reaches PG only
+                // on the next forward delta-sync tick (*/2 min), so the re-read
+                // finds NOTHING every time and `data = rows[0]` (below, which
+                // had NO emptiness guard) became undefined.
+                //
+                // Reconstructed locally. EXACT, verified against the live
+                // schema: soundscape_regions has NO triggers, and its only
+                // defaulted columns are the auto-increment pk plus
+                // sample_playlist_id/threshold/threshold_type -- all of which
+                // are either supplied by the INSERT above or genuinely NULL at
+                // this instant. Field names mirror getRegions' projection
+                // exactly (id/soundscape/name/x1/y1/x2/y2/count/threshold/
+                // threshold_type/playlist).
+                if (!results || results.insertId === undefined || results.insertId === null) {
+                    return next(new Error('addRegion: INSERT returned no insertId'));
+                }
+                next(null, {
+                    id             : results.insertId,
+                    soundscape     : soundscape.id,
+                    name           : data.name,
+                    x1 : x1, y1 : y1, x2 : x2, y2 : y2,
+                    count          : count,
+                    threshold      : region.threshold ? soundscape.threshold : null,
+                    threshold_type : region.threshold ? soundscape.threshold_type : null,
+                    playlist       : null
+                });
             }
         ], callback);
     },
@@ -495,11 +519,31 @@ let Soundscapes = {
             },
             function get_tag(result){
                 let next = arguments[arguments.length-1];
-                Soundscapes.getRegionTags(region, {id:result.insertId}, next);
-            },
-            function (tags){
-                let next = arguments[arguments.length-1];
-                next(null, tags.shift());
+                // READ-AFTER-WRITE REMOVED (2026-08-08) -- same class as the
+                // addRegion fix above. getRegionTags' SELECT is PG-routed at
+                // 6.4 while the INSERT stays on MariaDB, so the re-read finds
+                // nothing and `tags.shift()` yielded undefined to the route.
+                //
+                // Reconstructed locally. soundscape_region_tags has NO triggers
+                // and only the auto-increment pk is defaulted. Field names
+                // mirror getRegionTags' projection (id/region/recording/tag/
+                // type/count, plus user+timestamp which that query includes
+                // when selecting by id). `count` is 1: this row is the single
+                // newly-created tag, which is what the COUNT(*) over this
+                // grouped-by-id projection returns for it.
+                if (!result || result.insertId === undefined || result.insertId === null) {
+                    return next(new Error('addRegionTag: INSERT returned no insertId'));
+                }
+                next(null, {
+                    id        : result.insertId,
+                    region    : region.id,
+                    recording : recording,
+                    tag       : data.tag,
+                    type      : data.type,
+                    user      : user,
+                    timestamp : new Date(),
+                    count     : 1
+                });
             }
         ], callback);
     },

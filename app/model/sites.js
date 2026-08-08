@@ -69,6 +69,32 @@ var Sites = {
         return find(site_id)
     },
 
+    /** Read back a just-INSERTed site row, safely across the Phase-6.4 read flip.
+     *
+     * See the long note at the call site (routes/data-api/integration.js POST
+     * /sites) for why this is a retry-and-throw rather than the local
+     * reconstruction used in training_sets.add_data (#1795): the sites table
+     * has six defaulted columns the INSERT does not supply, and country_code /
+     * timezone are written by a SEPARATE statement, so a reconstructed row
+     * would be silently incomplete.
+     *
+     * Returns the row object (not the array). Throws if the row is not
+     * readable -- the previous code let `site[0]` be undefined and answered
+     * HTTP 201 with a null body.
+     */
+    findByIdAfterCreate: async function (site_id) {
+        // ~2s of retries: covers MaxScale replica lag, and a PG delta tick that
+        // has just landed. Deliberately does NOT wait out a full 2-min delta
+        // cycle -- an HTTP request must not hang that long.
+        const delaysMs = [0, 50, 150, 300, 500, 1000];
+        for (const wait of delaysMs) {
+            if (wait) { await new Promise(r => setTimeout(r, wait)); }
+            const rows = await Sites.findByIdAsync(site_id);
+            if (rows && rows[0]) { return rows[0]; }
+        }
+        throw new APIError('created site ' + site_id + ' was not readable after insert');
+    },
+
     getSiteExternalId: function(site_id, callback) {
         return dbpool.query(`SELECT external_id FROM sites WHERE site_id=${site_id}`).get(0).get('external_id').nodeify(callback);
     },
