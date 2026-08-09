@@ -169,19 +169,31 @@ let AudioEventDetectionsClustering = {
             WHERE jpaec.project_id = ${dbpool.escape(projectId)} AND jpaec.deleted = 0 AND j.state = 'completed'`).get(0).get('count');
     },
 
+    // Every threshold is REQUIRED and must be a positive number.
+    //
+    // 2026-08-09: these were previously optional `joi.number()`. A missing
+    // field passed validation, then `Number(undefined)` -> NaN ->
+    // JSON.stringify -> `null` in job_params.parameters, and the AED worker
+    // died on `float(None)` for every chunk. The job then poison-looped
+    // (chunks nack -> DLQ -> empty lane -> reaper revives -> republish),
+    // burning worker capacity and never telling the user why.
+    // Real occurrences: 168288, 168463, and 168742/168743/168746/168748.
+    // `.required()` + `.positive()` makes the API the backstop, so no client
+    // (this form, a stale cached bundle, or a direct API call) can enqueue an
+    // unrunnable job.
     JOB_SCHEMA : joi.object().keys({
         user_id: joi.number().integer(),
         name: joi.string(),
         playlist_id: joi.number().integer(),
         params     : joi.object().keys({
-            areaThreshold: joi.number(),
-            amplitudeThreshold: joi.number(),
-            durationThreshold: joi.number(),
-            bandwidthThreshold: joi.number(),
-            filterSize: joi.number(),
+            areaThreshold: joi.number().positive().required(),
+            amplitudeThreshold: joi.number().positive().required(),
+            durationThreshold: joi.number().positive().required(),
+            bandwidthThreshold: joi.number().positive().required(),
+            filterSize: joi.number().positive().required(),
             minFrequency: joi.number(),
             maxFrequency: joi.number()
-        }),
+        }).required(),
     }),
 
     requestNewAudioEventDetectionClusteringJob: function(data){
@@ -233,6 +245,20 @@ let AudioEventDetectionsClustering = {
             'Area Threshold': Number(data.params.areaThreshold),
             'Filter Size': Number(data.params.filterSize),
         };
+        // Fail LOUDLY here rather than writing a NaN (which JSON.stringify
+        // turns into `null`) into job_params.parameters. A null threshold is
+        // unrunnable: the worker raises TypeError on float(None) for EVERY
+        // chunk, the chunks dead-letter, and the stalled-job reaper revives
+        // the job on a ~45-min cycle forever. Rejecting at enqueue time keeps
+        // the failure in front of the user, who can simply re-enter a value.
+        const invalid = Object.keys(params).filter(function(k){
+            return !isFinite(params[k]) || params[k] <= 0;
+        });
+        if (invalid.length) {
+            throw new Error(
+                'Invalid AED clustering parameter(s): ' + invalid.join(', ') +
+                ' must each be a number greater than 0.');
+        }
         return dbpool.query(
             'SELECT project_id FROM playlists WHERE playlist_id = ?', [data.playlist_id]
         ).then(function(rows){

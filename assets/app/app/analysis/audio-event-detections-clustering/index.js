@@ -227,9 +227,32 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
             $modalInstance.close({ cancel: true, url: url });
         },
 
+        // The five "Advanced Parameters". These are sent to the worker as
+        // `Number(value)`, so an undefined/blank field becomes NaN -> JSON null
+        // -> the AED worker dies on float(None) and the job poison-loops.
+        // They must therefore be validated here, exactly like the frequencies.
+        ADVANCED_PARAM_KEYS: ['durationThreshold', 'bandwidthThreshold',
+            'areaThreshold', 'filterSize'],
+
+        // True when any advanced param is missing or not a finite positive
+        // number. Drives both the submit guard and the inline error message.
+        showAdvancedParamWarning: function () {
+            if (!this.data || !this.data.params) return false;
+            var params = this.data.params;
+            return this.ADVANCED_PARAM_KEYS.some(function (key) {
+                var value = params[key];
+                return value === undefined || value === null || value === '' ||
+                    !isFinite(Number(value)) || Number(value) <= 0;
+            });
+        },
+
         isJobValid: function () {
             return this.data && this.data.name && this.data.name.length > 3 && this.data.playlist &&
-                !this.isNotDefined(this.data.params.maxFrequency) && !this.isNotDefined(this.data.params.minFrequency);
+                !this.isNotDefined(this.data.params.maxFrequency) && !this.isNotDefined(this.data.params.minFrequency) &&
+                // Advanced params are optional to EDIT (they carry defaults) but
+                // must never reach the worker as null -- see 2026-08-09 incident
+                // (jobs 168742/168743/168746/168748).
+                !this.showAdvancedParamWarning();
         },
 
         showNameWarning: function () {
