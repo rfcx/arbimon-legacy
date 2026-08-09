@@ -86,29 +86,31 @@
                 <img class="icon-info" src="/images/fi-info.svg"
                     tooltip="Minimum duration size (seconds)">
                 </img>
-                <input id="size" class="form-control" style="text-align:left;" min="0.1" step="0.1" ng-model="controller.data.params.durationThreshold" type="number"/>
+                <input id="size" class="form-control" style="text-align:left;" min="0.01" step="any" ng-model="controller.data.params.durationThreshold" type="number"/>
             </div>
             <div class="form-group">
                 <label for="bandwidth">Bandwidth Threshold</label>
                 <img class="icon-info" src="/images/fi-info.svg"
                     tooltip="Minimum frequency bandwidth (kHz)">
                 </img>
-                <input id="size" class="form-control" style="text-align:left;" min="0.1" step="0.1" ng-model="controller.data.params.bandwidthThreshold" type="number"/>
+                <input id="size" class="form-control" style="text-align:left;" min="0.01" step="any" ng-model="controller.data.params.bandwidthThreshold" type="number"/>
             </div>
             <div class="form-group">
               <label for="amplitude">Area Threshold</label>
               <img class="icon-info" src="/images/fi-info.svg"
                   tooltip="The minimum area of an audio event in (kHz * seconds)">
               </img>
-              <input id="area" class="form-control" style="text-align:left;" min="0.1" step="0.1" ng-model="controller.data.params.areaThreshold" type="number"/>
+              <input id="area" class="form-control" style="text-align:left;" min="0.01" step="any" ng-model="controller.data.params.areaThreshold" type="number"/>
             </div>
             <div class="form-group">
                 <label for="filterSize">Filter Size</label>
                 <img class="icon-info" src="/images/fi-info.svg"
                     tooltip="The size of the filter used to denoise the spectrogram (pixels)">
                 </img>
-                <input id="filterSize" class="form-control" style="text-align:left;" min="0.1" step="0.1" ng-model="controller.data.params.filterSize" type="number"/>
+                <input id="filterSize" class="form-control" style="text-align:left;" min="0.01" step="any" ng-model="controller.data.params.filterSize" type="number"/>
             </div>
+            <error-message ng-if="controller.showAdvancedParamWarning()"
+                message="'Every advanced parameter must be a number greater than 0. Values below the field minimum (or left blank) cannot be submitted.'"></error-message>
         </div>
     </form>
 </div>
