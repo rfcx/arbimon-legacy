@@ -935,7 +935,18 @@ var Projects = {
         joi.validate(userProjectRole, schema, async function(err, upr){
             if(err) return callback(err);
 
-            const [user] = await Projects.findByEmailAsync(userProjectRole.user_email)
+            // Guarded 2026-08-09: this async callback is invoked by joi's
+            // node-style API -- nothing awaits it, so a throw (unknown email ->
+            // [user] = [] -> user.user_id) or a rejecting DB read escapes as an
+            // unhandled rejection = pod kill under node 16. Contain the tail
+            // and route every failure through callback(err).
+            let user;
+            try {
+                [user] = await Projects.findByEmailAsync(userProjectRole.user_email)
+            } catch (e) {
+                return callback(e);
+            }
+            if (!user) return callback(new Error('changeUserRole: no user found for email'));
             var user_id = user.user_id;
             var project_id = dbpool.escape(upr.project_id);
             var role_id = dbpool.escape(upr.role_id);
