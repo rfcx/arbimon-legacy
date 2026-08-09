@@ -575,9 +575,15 @@ var PatternMatchings = {
     },
 
     unvalidateRois: async function (patternMatchingId, userId, projectId) {
+        // 2026-08-09: the validateRois chain below was FLOATING (started with
+        // .then, never returned, no .catch) -- a rejection inside it (e.g. a
+        // recordings.validate DB error) was unhandled. Returning the chain
+        // makes the caller's own error handling own it (the one live caller,
+        // pattern_matchings.js /remove, awaits this inside a .catch(next)
+        // chain). Behaviour on success is unchanged.
         const rois = await PatternMatchings.getPresentRois(patternMatchingId)
         const ids = rois.map(roi => { return roi.id })
-        PatternMatchings.validateRois(patternMatchingId, ids, null)
+        return PatternMatchings.validateRois(patternMatchingId, ids, null)
             .then(async function(validatedRois) {
                 for (let roi of rois) {
                     const previousValidation = roi.validated;

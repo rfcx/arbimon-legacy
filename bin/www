@@ -1,4 +1,48 @@
 #!/usr/bin/env node
+
+// ---------------------------------------------------------------------------
+// PROCESS-LEVEL CRASH NET (2026-08-09, mysql2pg P6).
+//
+// Installed FIRST, before any app code loads. Under node >= 15 an unhandled
+// promise rejection is FATAL: the process exits and the whole pod restarts,
+// dropping every in-flight request. This app is full of legacy async
+// callbacks handed to node-style APIs that nothing awaits (the pod-kill
+// primitive) -- four distinct crash classes have killed prod pods this way
+// (#1631-era finals, #1789 classifications double-send [uncaughtException],
+// #1795 training_sets re-read, and the 2026-08-08 models-delete tail).
+//
+// THIS IS A NET, NOT A MUFFLER. Every catch below logs LOUDLY with a stable,
+// greppable marker + the stack, so masked defects remain visible (Loki alert
+// on UNHANDLED_ERROR_NET) and MUST still be fixed at their site. The known
+// sites are fixed in this same change; the net exists for the site nobody
+// has enumerated yet.
+//
+// Deliberate behaviour choices:
+//  - unhandledRejection: log + survive. These arise from post-response tails;
+//    the HTTP response is almost always already sent, so there is nothing to
+//    fail toward. Surviving preserves the other ~100 in-flight requests.
+//  - uncaughtException: log + survive ONLY for ERR_HTTP_HEADERS_SENT (the
+//    known q-tick double-send class, harmless duplicate response); anything
+//    else re-raises after logging -- a truly unknown synchronous corruption
+//    should still fail-stop rather than run in an undefined state.
+// ---------------------------------------------------------------------------
+process.on('unhandledRejection', function (reason) {
+    try {
+        var msg = (reason && reason.stack) || String(reason);
+        console.error('UNHANDLED_ERROR_NET {"kind":"unhandledRejection"}', msg);
+    } catch (e) { /* the net must never throw */ }
+});
+process.on('uncaughtException', function (err) {
+    try {
+        var isHeadersSent = err && (err.code === 'ERR_HTTP_HEADERS_SENT' ||
+            /Cannot set headers after they are sent/.test(err.message || ''));
+        console.error('UNHANDLED_ERROR_NET {"kind":"uncaughtException","survivable":' + !!isHeadersSent + '}',
+            (err && err.stack) || String(err));
+        if (isHeadersSent) { return; }
+    } catch (e) { /* fall through to exit */ }
+    process.exit(1);
+});
+
 var debug = require('debug')('arbimon2');
 var app = require('../app');
 var redirectHttp = require('../app/utils/redirect-http');

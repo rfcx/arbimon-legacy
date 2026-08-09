@@ -123,7 +123,13 @@ router.post('/project/:projectUrl/models/new', function(req, res, next) {
 router.get('/project/:projectUrl/models/:mid', function(req, res, next) {
     res.type('json');
     model.models.getModelById(req.params.mid, async function(err, modelData) {
-        const [data] = modelData;
+        // Guarded 2026-08-09: err was ignored and `[data]` destructured
+        // unchecked -- an empty result (bad id today; at DB_ENGINE=pg any
+        // just-created model not yet on the */2 delta tick) threw on
+        // `data.uri` inside an un-awaited async callback = pod kill.
+        if (err) return next(err);
+        const [data] = modelData || [];
+        if (!data) return res.status(404).json({ error: 'model not found' });
         const isSharedModel = !data.uri.startsWith(`project_${data.project_id}`)
         let opts = {
             isSharedModel
@@ -209,8 +215,32 @@ router.get('/project/:projectUrl/models/:mid/delete', function(req, res, next) {
         model.models.delete(model_id, async function(err, row) {
             if(err) return next(err);
             res.json('Model deleted');
-            const jobData = await model.models.getModelJobId(model_id)
-            await model.jobs.hideAsync(jobData.job_id)
+            // CRASH CONTAINMENT (2026-08-09). This tail runs AFTER res.json in an
+            // async callback that nothing awaits, so any throw here is an
+            // unhandled rejection -> fatal under node 16 -> POD RESTART. That
+            // happened 3x on 2026-08-08 22:04-22:06Z: each training job writes
+            // TWO model rows and job_params_training links only ONE, so deleting
+            // the unlinked twin makes getModelJobId() return undefined and the
+            // bare `jobData.job_id` deref killed the pod (51 such live models).
+            // TWO layers, both required (proven in-container 2026-08-09):
+            //  1. the guard: skip hide() when no jpt row links this model. This
+            //     is semantically CORRECT, not a fallback -- the row that IS
+            //     linked may belong to a still-alive twin model (6394/6395
+            //     from job 168730), so resolving the job any other way (e.g.
+            //     from the uri) would hide a LIVE model's job.
+            //  2. the try/catch: a guard alone still dies when the READ itself
+            //     rejects (DB error; at 6.4, any PG-side failure). Nothing
+            //     awaits this callback, so the tail must contain its own errors.
+            try {
+                const jobData = await model.models.getModelJobId(model_id)
+                if (jobData && jobData.job_id) {
+                    await model.jobs.hideAsync(jobData.job_id)
+                } else {
+                    console.log(`models/${model_id}/delete: no training-job row; nothing to hide`)
+                }
+            } catch(e) {
+                console.error(`models/${model_id}/delete: post-delete job-hide failed (model already deleted, response already sent):`, e && e.message)
+            }
         });
     });
 });
@@ -219,7 +249,10 @@ router.get('/project/:projectUrl/models/:modelId/validation-list', async functio
     res.type('json');
     if (!req.params.modelId) return res.json({ error: 'missing values' });
     return model.projects.modelValidationUri(req.params.modelId, async function (err, row) {
-        if (!row.length) {
+        // Guarded 2026-08-09: `row.length` itself threw when row was
+        // undefined (err path / empty result) -- check err and shape first.
+        if (err) return next(err);
+        if (!row || !row.length) {
             return res.sendStatus(404);
         }
         let validationUri = row[0].uri;
@@ -340,7 +373,10 @@ router.get('/project/:projectUrl/models/:modelId/training-vector/:recId', functi
         return res.status(400).json({ error: 'missing parameters'});
     }
     model.models.getModelById(req.params.modelId, async function(err, modelData) {
-        const [data] = modelData;
+        // Guarded 2026-08-09: same shape as the /models/:mid route above.
+        if (err) return next(err);
+        const [data] = modelData || [];
+        if (!data) return res.status(404).json({ error: 'model not found' });
         const isSharedModel = !data.uri.startsWith(`project_${data.project_id}`);
         let sourceModelId;
         if (isSharedModel) {
