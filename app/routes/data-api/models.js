@@ -319,8 +319,12 @@ async function getModelsData(validationUri, limit, offset) {
                     const dateFormat = 'YYYYMMDDTHHmmssSSS'
                     const start = momentStart.format(dateFormat)
                     const end = momentEnd.format(dateFormat)
+                    // `mtrue` = MONOCHROME. Without it media-api defaults
+                    // monochrome to false (segment-file-parsing.js) and returns an
+                    // 8-bit RGB spectrogram -- inconsistent with every other ROI
+                    // surface and ~2.8x the bytes at 600x512 (measured 2026-08-10).
                     recUrl = siteExternalId
-                        ? `/legacy-api/ingest/recordings/${siteExternalId}_t${start}Z.${end}Z_rfull_g1_fspec_d600.512_wdolph_z120.png`
+                        ? `/legacy-api/ingest/recordings/${siteExternalId}_t${start}Z.${end}Z_rfull_g1_fspec_mtrue_d600.512_wdolph_z120.png`
                         : null
                 }
                 rowSent.push({

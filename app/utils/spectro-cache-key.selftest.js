@@ -36,7 +36,7 @@ function buildMediaApiAttr (recording, type, options) {
         trimDuration = options.trim.duration ? (+options.trim.duration) : (to - trimFrom);
     }
     switch (type) {
-        case 'spectro': asset = `rfull_g1_fspec_d10286.255_wdolph_z120.png`; break;
+        case 'spectro': asset = `rfull_g1_fspec_mtrue_d10286.255_wdolph_z120.png`; break;
         case 'audio': asset = `r${isFrequency ? fmin + '.' + fmax : 'full'}_g${isGain ? options.gain : 1}_${isFormat ? 'fwav.wav' : 'fmp3.mp3'}`; break;
         case 'template': asset = `r${fmin}.${fmax}_g1_fspec_mtrue_d400.400_wdolph_z120.png`; break;
     }
@@ -111,10 +111,25 @@ ok('template attr carries the monochrome flag + 400x400 dims', () => {
     assert.ok(attr.endsWith('.png'));
 });
 
-ok('spectro attr is the FULL-recording colour variant (no mtrue)', () => {
+ok('spectro attr is the FULL-recording MONOCHROME variant', () => {
+    // 2026-08-10: this assertion previously REQUIRED the absence of `mtrue`,
+    // pinning a defect as if it were intent. media-api reads
+    // `monochrome = findStartsWith('m') || 'false'`, so omitting the token
+    // yields an 8-bit RGB render -- the full-recording spectrogram was the
+    // only ROI-family surface serving colour, at ~2.4-2.8x the bytes.
+    // Colour remains a deliberate, user-selectable feature in the VISUALIZER
+    // (localStorage visualizer.spectro_color); it is not this asset's job.
     const attr = buildMediaApiAttr(rec, 'spectro', {});
-    assert.ok(!attr.includes('mtrue'), 'spectro must not be monochrome: ' + attr);
+    assert.ok(attr.includes('_mtrue_'), 'spectro must be monochrome: ' + attr);
     assert.ok(attr.includes('d10286.255'));
+});
+
+ok('spectro and template are BOTH monochrome but still distinct keys', () => {
+    // Guards the 2026-06 collision fix while both are mtrue: they must stay
+    // distinct on GEOMETRY + clip, not on the colour flag.
+    const kSpec = buildAssetCacheKey(rec, buildMediaApiAttr(rec, 'spectro', {}), '.png');
+    const kTpl = buildAssetCacheKey(rec, buildMediaApiAttr(rec, 'template', roiA), '.png');
+    assert.notStrictEqual(kSpec, kTpl, 'spectro/template must not share a key');
 });
 
 ok('keys are filesystem-safe: one dot, no slashes, bounded length', () => {

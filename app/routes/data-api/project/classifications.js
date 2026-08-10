@@ -74,7 +74,13 @@ router.get('/:classiId/more/:from/:total', function(req, res, next) {
                     const dateFormat = 'YYYYMMDDTHHmmssSSS'
                     const start = momentStart.format(dateFormat)
                     const end = momentEnd.format(dateFormat)
-                    classiInfo.rec_image_url = `/legacy-api/ingest/recordings/${site[0].external_id}_t${start}Z.${end}Z_rfull_g1_fspec_d600.512_wdolph_z120.png`
+                    // `mtrue` = MONOCHROME. media-api defaults monochrome to FALSE when
+                    // the token is absent (segment-file-parsing.js), so this URL was
+                    // silently requesting an 8-bit RGB spectrogram -- inconsistent with
+                    // every other ROI/detection surface, and ~2.8x the bytes at this
+                    // geometry (600x512: 355,576 B colour vs 128,061 B greyscale,
+                    // measured 2026-08-10).
+                    classiInfo.rec_image_url = `/legacy-api/ingest/recordings/${site[0].external_id}_t${start}Z.${end}Z_rfull_g1_fspec_mtrue_d600.512_wdolph_z120.png`
                 }
                 delete classiInfo.uri;
             }
