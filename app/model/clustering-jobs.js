@@ -183,6 +183,24 @@ select.push(
         return dbpool.query(sql).then(function (rois) {
             if (withSpectroCols && Array.isArray(rois)) {
                 for (const roi of rois) {
+                    // NOTE (2026-08-10): this value is COMPUTED BUT NOT YET
+                    // CONSUMED. The clustering grid
+                    // (assets/app/app/analysis/clustering-jobs/grid-view.html:164)
+                    // still binds `roi.uri` and fetches it through
+                    // /legacy-api/project/:url/clustering-jobs/asset?path=,
+                    // i.e. the pre-baked arbimon2 PNG -- it never reads
+                    // spectrogram_url.
+                    //
+                    // Deliberately left at the helper's 600x256 default rather
+                    // than "fixed" to 400x400 alongside training_sets.js: with
+                    // no consumer, changing the geometry would alter nothing a
+                    // user sees while implying a migration that has not
+                    // happened. Migrating the grid onto spectrogram_url is a
+                    // separate change -- it switches that view off the stored
+                    // PNG entirely -- and the geometry should be chosen THEN,
+                    // against the box it actually renders into (.roi-img, the
+                    // same 125x125 square as training sets, so 400x400 is the
+                    // likely answer).
                     roi.spectrogram_url = roiSpectrogramUrl({
                         externalId: roi.external_id,
                         datetimeUtc: roi.datetime_utc,

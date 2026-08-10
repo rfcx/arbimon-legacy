@@ -693,7 +693,34 @@ TrainingSets.types.roi_set = {
                         freqMin: rows[i].y1,
                         freqMax: rows[i].y2,
                         sampleRate: rows[i].sample_rate
-                    });
+                    // 2026-08-10: request 400x400 explicitly instead of
+                    // inheriting roiSpectrogramUrl's 600x256 default.
+                    //
+                    // The ROI thumbs on this page render into `.roi-img`, a
+                    // FIXED 125x125 box (100 / 64 for the smaller variants)
+                    // with no object-fit in legacy CSS -- so a 2.34:1 render
+                    // was being squashed ~2.34x vertically in the view users
+                    // spend most of their time in. This inherited default was
+                    // never a decision; PM (pattern_matchings.js) and
+                    // templates.js already pass 400x400 for exactly this
+                    // reason and this call site was simply missed.
+                    //
+                    // Trade-off, deliberately accepted: the DETAIL viewer
+                    // below (.thumbnail-viewer, 351x128) is 2.74:1, so it now
+                    // bends more than it did at 600x256. It also gains
+                    // vertical source detail (3.12 vs 2.00 source px per
+                    // displayed px), and its axes are unaffected -- the <axis>
+                    // directive draws over element.width()/height() (the BOX),
+                    // not over the source image, so tick alignment does not
+                    // depend on the render's aspect. This is the same trade PM
+                    // already ships: ONE 400x400 url serves its square thumbs
+                    // AND its 250x125 card view.
+                    //
+                    // Bonus: 400x400 is the identical cache key PM and
+                    // templates already request for the same ROI, so these
+                    // thumbs now SHARE cached objects instead of populating a
+                    // second 600x256 copy.
+                    }, { width: 400, height: 400 });
                     // 2026-08-04 consolidation: the legacy training-sets page
                     // binds roi.uri directly, and the STORED image can be a
                     // full-recording COLOUR spectrogram (tmpfilecache key
