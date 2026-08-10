@@ -183,24 +183,22 @@ select.push(
         return dbpool.query(sql).then(function (rois) {
             if (withSpectroCols && Array.isArray(rois)) {
                 for (const roi of rois) {
-                    // NOTE (2026-08-10): this value is COMPUTED BUT NOT YET
-                    // CONSUMED. The clustering grid
-                    // (assets/app/app/analysis/clustering-jobs/grid-view.html:164)
-                    // still binds `roi.uri` and fetches it through
-                    // /legacy-api/project/:url/clustering-jobs/asset?path=,
-                    // i.e. the pre-baked arbimon2 PNG -- it never reads
-                    // spectrogram_url.
+                    // 2026-08-10: the clustering grid now serves the DYNAMIC render,
+                    // the same consolidation already applied to PM
+                    // (pattern_matchings.js getRoiUrl), templates.js and
+                    // training_sets.js. Previously this value was computed and
+                    // never consumed: grid-view.html bound `roi.uri` and fetched
+                    // the pre-baked arbimon2 PNG through
+                    // /legacy-api/project/:url/clustering-jobs/asset?path=.
                     //
-                    // Deliberately left at the helper's 600x256 default rather
-                    // than "fixed" to 400x400 alongside training_sets.js: with
-                    // no consumer, changing the geometry would alter nothing a
-                    // user sees while implying a migration that has not
-                    // happened. Migrating the grid onto spectrogram_url is a
-                    // separate change -- it switches that view off the stored
-                    // PNG entirely -- and the geometry should be chosen THEN,
-                    // against the box it actually renders into (.roi-img, the
-                    // same 125x125 square as training sets, so 400x400 is the
-                    // likely answer).
+                    // 400x400 (not the helper's 600x256 default) because these
+                    // render into `.roi-img` -- the SAME fixed 125x125 square
+                    // box (100/64 for the smaller variants) that training sets
+                    // use, with no object-fit in legacy CSS. A 2.34:1 render was
+                    // being squashed ~2.34x vertically. It is also the identical
+                    // cache key PM and templates already request for the same
+                    // ROI, so these thumbs SHARE cached objects rather than
+                    // populating a second 600x256 copy.
                     roi.spectrogram_url = roiSpectrogramUrl({
                         externalId: roi.external_id,
                         datetimeUtc: roi.datetime_utc,
@@ -209,7 +207,24 @@ select.push(
                         freqMin: roi.frequency_min,
                         freqMax: roi.frequency_max,
                         sampleRate: roi.sample_rate
-                    });
+                    }, { width: 400, height: 400 });
+
+                    // Serve the dynamic render as `uri` and keep the stored
+                    // bucket path as `storedUri`. Same shape as PM/templates/
+                    // training-sets, and the SAME retention contract: rows where
+                    // spectrogram_url is null (no stream external_id, or no
+                    // datetime_utc) keep the stored PNG, so nobody loses an
+                    // image -- those rows are exactly the must-retain set in
+                    // runbooks/arbimon2-bucket-retention-contract-2026-08-10.md.
+                    //
+                    // NB the grid fetches through the /clustering-jobs/asset
+                    // proxy, which prefixes the bucket path. A dynamic URL is
+                    // already absolute (/legacy-api/ingest/recordings/...), so
+                    // the template must bind it DIRECTLY -- see grid-view.html.
+                    if (roi.spectrogram_url) {
+                        roi.storedUri = roi.uri;
+                        roi.uri = roi.spectrogram_url;
+                    }
                 }
             }
             return rois;
