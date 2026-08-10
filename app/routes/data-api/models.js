@@ -322,9 +322,19 @@ async function getModelsData(validationUri, limit, offset) {
                     // `mtrue` = MONOCHROME. Without it media-api defaults
                     // monochrome to false (segment-file-parsing.js) and returns an
                     // 8-bit RGB spectrogram -- inconsistent with every other ROI
-                    // surface and ~2.8x the bytes at 600x512 (measured 2026-08-10).
+                    // surface and ~2.8x the bytes (measured 2026-08-10).
+                    //
+                    // 1200x160 for the SAME reason as classifications.js: this url
+                    // is bound to `selected.url` on modelinfo.html:413, which is the
+                    // SAME `.sm-result-thumb` strip (height:100px; width:100%)
+                    // that surface -- measured 700x100 / 920x100 / 1120x100 across
+                    // the Bootstrap-3 container widths, i.e. 7:1 to 11.2:1. The old
+                    // 600x512 (1.17:1) was stretched 6-9.6x horizontally at only
+                    // 0.54-0.86 source px per displayed px while wasting 5.12x
+                    // vertical resolution. Keeping the two endpoints on the SAME
+                    // geometry also keeps them sharing one cache object per window.
                     recUrl = siteExternalId
-                        ? `/legacy-api/ingest/recordings/${siteExternalId}_t${start}Z.${end}Z_rfull_g1_fspec_mtrue_d600.512_wdolph_z120.png`
+                        ? `/legacy-api/ingest/recordings/${siteExternalId}_t${start}Z.${end}Z_rfull_g1_fspec_mtrue_d1200.160_wdolph_z120.png`
                         : null
                 }
                 rowSent.push({
