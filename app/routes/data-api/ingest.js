@@ -4,16 +4,11 @@
 let express = require('express');
 let router = express.Router();
 let model = require('../../model');
-const request = require('request');
 const moment = require('moment');
 const authentication = require('../../middleware/jwt');
 const verifyToken = authentication.verifyToken;
 const hasRole = authentication.hasRole;
 const { EmptyResultError, httpErrorHandler, ArrayConverter } = require('@rfcx/http-utils');
-
-const config = require('../../config');
-const rfcxConfig = config('rfcx');
-const auth0Service = require('../../model/auth0');
 
 router.post('/recordings/create', verifyToken(), hasRole(['systemUser']), async function(req, res) {
   try {
@@ -105,49 +100,15 @@ router.post('/recordings/delete', verifyToken(), hasRole(['systemUser']), async 
   }
 })
 
-router.get('/recordings/:attr', async function(req, res) {
-  const token = await auth0Service.getToken();
-  const apiUrl = `${rfcxConfig.mediaBaseUrl}/internal/assets/streams/${req.params.attr}`;
-  // Proxy the media-api asset. media-api pipes its response headers through
-  // verbatim (Content-Disposition: attachment + a short Cache-Control),
-  // which makes browsers treat inline spectrogram <img> resources as file
-  // downloads and re-fetch/re-render them on every page view. These asset
-  // URLs are CONTENT-ADDRESSED (every render param is encoded in
-  // req.params.attr), so for images we rewrite the headers to serve INLINE
-  // + immutable so browsers and the CDN cache them. Audio keeps download
-  // semantics. We must use res.writeHead (not setHeader + request.pipe)
-  // because the 'request' lib copies the upstream headers onto res during
-  // pipe, which would clobber our Content-Disposition.
-  const attr = req.params.attr || '';
-  const isImage = /\.(png|jpe?g|webp)$/i.test(attr);
-  const upstream = request.get(apiUrl, {
-    headers: { 'Authorization': `Bearer ${token}` }
-  });
-  upstream.on('error', () => {
-    if (!res.headersSent) res.status(502);
-    res.end();
-  });
-  upstream.on('response', (upRes) => {
-    const h = {};
-    const passthrough = ['content-type', 'content-length', 'accept-ranges',
-      'content-range', 'rfcx-stream-next-timestamp', 'rfcx-stream-gaps',
-      'access-control-expose-headers', 'last-modified', 'etag'];
-    passthrough.forEach((k) => {
-      if (upRes.headers[k] !== undefined) h[k] = upRes.headers[k];
-    });
-    if (isImage) {
-      if (!h['content-type']) h['content-type'] = 'image/png';
-      h['content-disposition'] = `inline; filename="${attr}"`;
-      h['cache-control'] = 'public, max-age=31536000, immutable';
-    } else {
-      if (upRes.headers['content-disposition']) h['content-disposition'] = upRes.headers['content-disposition'];
-      if (upRes.headers['cache-control']) h['cache-control'] = upRes.headers['cache-control'];
-    }
-    res.writeHead(upRes.statusCode, h);
-    upRes.on('data', (chunk) => res.write(chunk));
-    upRes.on('end', () => res.end());
-    upRes.on('error', () => { try { res.end(); } catch (e) {} });
-  });
-})
+// NOTE: `GET /recordings/:attr` (the media-api asset proxy) used to live here.
+// It has NO guard of its own, so mounting it in `non-session.js` alongside
+// these JWT-guarded POSTs left it fully public -- anonymous callers could pull
+// spectrograms AND raw audio for private projects. It now lives in
+// `ingest-assets.js` and is mounted behind the "Force login" gate in
+// `routes/index.js`. See that file's header for the full rationale.
+//
+// The two POSTs above stay here: they are called SERVER-SIDE by rfcx-api
+// (core/_services/arbimon) with a systemUser JWT and must remain reachable
+// without a browser session.
 
 module.exports = router;
