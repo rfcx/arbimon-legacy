@@ -697,9 +697,21 @@ var PatternMatchings = {
         return rois
     },
 
+    // NOTE: the three trailing columns (external_id / datetime_utc / sample_rate)
+    // are the INPUTS to roiSpectrogramUrl() — see getRoiUrl() below. They are
+    // projected here, not just in buildRoisQuery(), because getRoiUrl() runs on
+    // EVERY ROI path: without them it silently yields spectrogram_url = null.
+    // That is harmless while consumers read `uri`, but it is a landmine for any
+    // change that serves the dynamic render (the `best_per_site`,
+    // `best_per_site_day` and `top_200_per_site` filters route through here,
+    // so those users would get blank images while the default `by_score`
+    // filter — which uses buildRoisQuery — looked fine).
+    // `R` (recordings) and `S` (sites) are already JOINed by both callers, so
+    // this is projection-only: no new joins, no changed row count.
     pmrSqlSelect: `SELECT S.site_id, S.name as site, PMR.score, R.uri as recording, PMR.pattern_matching_roi_id as id, PMR.pattern_matching_id,
         PMR.denorm_recording_datetime as datetime, PMR.recording_id, PMR.species_id, PMR.songtype_id, PMR.x1, PMR.y1, PMR.x2, PMR.y2, 
-        PMR.uri_param1, PMR.uri_param2, PMR.score, PMR.validated FROM pattern_matching_rois AS PMR`,
+        PMR.uri_param1, PMR.uri_param2, PMR.score, PMR.validated,
+        S.external_id, R.datetime_utc, R.sample_rate FROM pattern_matching_rois AS PMR`,
 
     combineDatetime (pmr) {
         const d = pmr.datetime.toISOString()
@@ -872,10 +884,17 @@ var PatternMatchings = {
     },
 
     getRoi(patternMatchingId, roisId, projectId){
+        // PMR.* preserved verbatim for callers that read arbitrary columns; the
+        // 3 extra columns feed roiSpectrogramUrl() via getRoiUrl(). The joins
+        // are INNER on the same keys getRoiUrl()'s consumers already rely on
+        // (every PM ROI has a recording, which has a site — verified live: 0
+        // orphans in 1M sampled rows), so the row count is unchanged.
         return dbpool.query(
-            "SELECT *\n" +
-            `FROM pattern_matching_rois\n` +
-            "WHERE pattern_matching_id = ? AND pattern_matching_roi_id IN (?)", [
+            "SELECT PMR.*, S.external_id, R.datetime_utc, R.sample_rate\n" +
+            `FROM pattern_matching_rois PMR\n` +
+            "JOIN recordings R ON R.recording_id = PMR.recording_id\n" +
+            "JOIN sites S ON S.site_id = R.site_id\n" +
+            "WHERE PMR.pattern_matching_id = ? AND PMR.pattern_matching_roi_id IN (?)", [
             Number(patternMatchingId), roisId
         ]).then((rois) => {
             return this.getRoiUrl(rois, projectId);
@@ -893,26 +912,36 @@ var PatternMatchings = {
     },
 
     getPatternMatchingRois: function(options) {
-        const base = `SELECT * FROM pattern_matching_rois`;
+        // Same rationale as getRoi(): project the roiSpectrogramUrl() inputs on
+        // every branch, since all three call getRoiUrl(). Joins are INNER on
+        // recording->site (guaranteed present) so row counts are unchanged;
+        // WHERE clauses are qualified to PMR now that the table is aliased.
+        const base = `SELECT PMR.*, S.external_id, R.datetime_utc, R.sample_rate
+                FROM pattern_matching_rois PMR
+                JOIN recordings R ON R.recording_id = PMR.recording_id
+                JOIN sites S ON S.site_id = R.site_id`;
         if (options.rois) {
-            return dbpool.query({ sql: `${base} WHERE pattern_matching_roi_id IN (?)` , typeCast: sqlutil.parseUtcDatetime }, [options.rois])
+            return dbpool.query({ sql: `${base} WHERE PMR.pattern_matching_roi_id IN (?)` , typeCast: sqlutil.parseUtcDatetime }, [options.rois])
                 .then((rois) => {
                     return this.getRoiUrl(rois, options.projectId);
                 });
         }
         if (options.recId && !options.validated) {
-            return dbpool.query({ sql: `${base} WHERE recording_id = ?` , typeCast: sqlutil.parseUtcDatetime }, [options.recId])
+            return dbpool.query({ sql: `${base} WHERE PMR.recording_id = ?` , typeCast: sqlutil.parseUtcDatetime }, [options.recId])
                 .then((rois) => {
                     return this.getRoiUrl(rois, options.projectId);
                 });
         }
         if (options.recId && options.validated) {
             return dbpool.query(
-                { sql: `SELECT PMR.*, SP.scientific_name as species_name, ST.songtype as songtype_name
+                { sql: `SELECT PMR.*, SP.scientific_name as species_name, ST.songtype as songtype_name,
+                S.external_id, R.datetime_utc, R.sample_rate
                 FROM pattern_matching_rois PMR
                 JOIN species SP ON PMR.species_id = SP.species_id
                 JOIN songtypes ST ON PMR.songtype_id = ST.songtype_id
-                WHERE recording_id = ? AND validated = ?`,
+                JOIN recordings R ON R.recording_id = PMR.recording_id
+                JOIN sites S ON S.site_id = R.site_id
+                WHERE PMR.recording_id = ? AND PMR.validated = ?`,
                 typeCast: sqlutil.parseUtcDatetime }, [options.recId, options.validated]
             ).then((rois) => {
                 return this.getRoiUrl(rois, options.projectId);
