@@ -22,6 +22,7 @@ const soundscapeCompositionModel = require('./soundscape-composition')
 const { arbimon2PublicUrl } = require('../utils/asset-url')
 
 var config       = require('../config');
+const { coreApiBaseUrl } = require('../utils/core-api-url');
 var SQLBuilder  = require('../utils/sqlbuilder');
 var arrays_util  = require('../utils/arrays');
 var tmpfilecache = require('../utils/tmpfilecache');
@@ -2342,7 +2343,7 @@ var Recordings = {
         console.log('- deleteRecordingsInCoreAPI', params)
         const options = {
             method: 'DELETE',
-            url: `${rfcxConfig.apiBaseUrl}/internal/arbimon/recordings`,
+            url: `${coreApiBaseUrl()}/internal/arbimon/recordings`,
             headers: {
                 'content-type': 'application/json',
                 Authorization: `Bearer ${idToken}`,

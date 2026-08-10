@@ -15,6 +15,7 @@ const dbpool = require('../utils/dbpool');
 const sqlutil = require('../utils/sqlutil');
 const queryHandler = dbpool.queryHandler;
 const APIError = require('../utils/apierror');
+const { coreApiBaseUrl } = require('../utils/core-api-url');
 const species = require('./species');
 const songtypes = require('./songtypes');
 const roles = require('./roles')
@@ -1019,7 +1020,7 @@ var Projects = {
 
         const options = {
             method: 'PUT',
-            url: `${rfcxConfig.apiBaseUrl}/projects/${project.external_id}/users`,
+            url: `${coreApiBaseUrl()}/projects/${project.external_id}/users`,
             headers: {
                 'content-type': 'application/json',
                 Authorization: token,
@@ -1046,7 +1047,7 @@ var Projects = {
 
         const options = {
             method: 'DELETE',
-            url: `${rfcxConfig.apiBaseUrl}/projects/${project.external_id}/users`,
+            url: `${coreApiBaseUrl()}/projects/${project.external_id}/users`,
             headers: {
                 'content-type': 'application/json',
                 Authorization: token,
@@ -1293,7 +1294,7 @@ var Projects = {
         }
         const options = {
             method: 'POST',
-            url: `${rfcxConfig.apiBaseUrl}/projects`,
+            url: `${coreApiBaseUrl()}/projects`,
             headers: {
                 'content-type': 'application/json',
                 Authorization: `Bearer ${idToken}`,
@@ -1344,7 +1345,7 @@ var Projects = {
         data.is_private !== undefined && (body.is_public = !data.is_private)
         const options = {
             method: 'PATCH',
-            url: `${rfcxConfig.apiBaseUrl}/internal/arbimon/projects/${data.project_id}`,
+            url: `${coreApiBaseUrl()}/internal/arbimon/projects/${data.project_id}`,
             headers: {
                 'content-type': 'application/json',
                 Authorization: `Bearer ${idToken}`,
@@ -1366,7 +1367,7 @@ var Projects = {
         let body = {}
         const options = {
             method: 'DELETE',
-            url: `${rfcxConfig.apiBaseUrl}/projects/${project_id}`,
+            url: `${coreApiBaseUrl()}/projects/${project_id}`,
             headers: {
                 'content-type': 'application/json',
                 Authorization: `Bearer ${idToken}`,

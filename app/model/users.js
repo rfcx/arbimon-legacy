@@ -8,6 +8,7 @@ var config = require('../config');
 var util = require('util');
 var q = require('q');
 var APIError = require('../utils/apierror');
+var { coreApiBaseUrl, noncoreApiBaseUrl } = require('../utils/core-api-url');
 var sprintf = require("sprintf-js").sprintf;
 const rp = util.promisify(request);
 const rfcxConfig = config('rfcx');
@@ -779,7 +780,10 @@ var Users = {
     sendTouchAPI: function(idToken) {
         const options = {
             method: 'GET',
-            url: `${rfcxConfig.apiBaseUrl}/v1/users/touchapi`,
+            // NONCORE-api: the /v1 prefix is served by noncore-api, NOT core-api
+            // (core-api returns 404 for it -- verified live). See
+            // app/utils/core-api-url.js.
+            url: `${noncoreApiBaseUrl()}/v1/users/touchapi`,
             headers: {
               Authorization: `Bearer ${idToken}`
             },
@@ -824,7 +828,7 @@ var Users = {
             .then((token) => {
                 const options = {
                     method: 'POST',
-                    url: `${rfcxConfig.apiBaseUrl}/users`,
+                    url: `${coreApiBaseUrl()}/users`,
                     headers: {
                         'content-type': 'application/json',
                         Authorization: `Bearer ${token}`
