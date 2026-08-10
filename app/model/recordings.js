@@ -19,7 +19,7 @@ const projectModel = require('./projects')
 const classificationsModel = require('./classifications')
 const tagsModel = require('./tags')
 const soundscapeCompositionModel = require('./soundscape-composition')
-const { arbimon2PublicUrl } = require('../utils/asset-url')
+const { arbimon2PublicUrl, mediaAssetUrl } = require('../utils/asset-url')
 
 var config       = require('../config');
 const { coreApiBaseUrl } = require('../utils/core-api-url');
@@ -971,6 +971,31 @@ var Recordings = {
                     function(err, tileSet) {
                         if(err) return next(err);
 
+                        // TRACK B (#99): mint a signed media-api credential per
+                        // tile, SERVER-SIDE, so the visualizer can stop routing
+                        // its tiles through the arbimon-legacy media proxy.
+                        //
+                        // Why here: the visualizer builds tile URLs in the
+                        // BROWSER, and a token cannot be minted there — the salt
+                        // must never reach the client. This function is reached
+                        // only from session-gated /legacy-api/project/* routes,
+                        // so the caller is already an authenticated, entitled
+                        // user. Minting here IS the authorisation decision.
+                        //
+                        // We attach `token`/`exp`/`start`/`end` rather than a
+                        // finished URL because the palette (mtrue / mfalse_p2 /
+                        // ...) is a per-user BROWSER setting the server cannot
+                        // know. That is safe precisely because the token binds
+                        // the SOURCE WINDOW (stream+start+end+exp) and NOT the
+                        // render parameters — so the client may choose colour
+                        // freely without invalidating the signature.
+                        //
+                        // The client MUST use these timestamp strings verbatim.
+                        // media-api re-parses the window out of the filename, so
+                        // any client-side re-derivation risks the fractional-ms
+                        // class that broke ROI images on 2026-08-10.
+                        Recordings.attachTileMediaTokens(recording, tileSet);
+
                         recording.tiles = {
                             x : specTiles.x,
                             y : specTiles.y,
@@ -982,6 +1007,94 @@ var Recordings = {
             }
         ],
         callback);
+    },
+
+    /**
+     * Attach a signed media-api credential to each spectrogram tile.
+     *
+     * Mutates `tileSet` in place, adding to every tile:
+     *   - `mediaStart` / `mediaEnd` : the glued UTC timestamps (no trailing Z)
+     *                                 that the filename MUST use
+     *   - `mediaToken`              : the stream-token authorising that window
+     *   - `mediaExp`                : the bucketed expiry bound into the token
+     *   - `mediaStreamId`           : the stream external id used for signing
+     *
+     * The client composes the final URL as
+     *   /media-api/internal/assets/streams/
+     *     <mediaStreamId>_t<mediaStart>Z.<mediaEnd>Z_<render attrs>.png
+     *     ?stream-token=<mediaToken>&exp=<mediaExp>
+     * choosing the render attrs (palette/dimensions) itself.
+     *
+     * 🔴 THE WINDOW MUST MATCH WHAT THE CLIENT WOULD HAVE COMPUTED. The browser
+     * previously derived each tile's window as
+     *     base + Math.round(tile.s * 1000)  ..  base + Math.round((tile.s + tile.ds) * 1000)
+     * so we reproduce that EXACTLY here, including doing the rounding on the
+     * same expression (round(s*1000) and round((s+ds)*1000), NOT round(s*1000)
+     * + round(ds*1000), which can differ by 1ms). A 1ms disagreement is a 401.
+     *
+     * Fails SOFT: on any missing input (legacy recording with no stream id,
+     * unset salt, unparseable datetime) the tile simply carries no token and
+     * the client falls back to the session-gated legacy proxy.
+     */
+    attachTileMediaTokens: function (recording, tileSet) {
+        try {
+            if (!recording || !Array.isArray(tileSet) || !tileSet.length) return;
+            // Legacy (arbimon-native) recordings are not backed by a core
+            // stream, so there is nothing to sign against.
+            if (!recording.uri || Recordings.isLegacy(recording)) return;
+            // Derive the stream id EXACTLY as the browser does:
+            // `recording.uri.split('/')[3]`.
+            //
+            // DO NOT "prefer" sites.external_id here. It reads as the more
+            // authoritative value (and this route's projection does select it),
+            // but media-api verifies the token against the window it re-parses
+            // FROM THE FILENAME -- and the filename is built client-side from
+            // the uri segment. If the two disagree, the token is minted for a
+            // DIFFERENT stream and the tile 401s with no console error:
+            // visualizer-tile-img.vue's `image.onerror` silently drops it, so
+            // the tile just renders blank.
+            //
+            // They DO disagree in production. Full-table scan 2026-08-10 over
+            // 304,156,781 recordings found 49,249 non-legacy rows across 11
+            // sites where they differ -- 9,363 with a NULL external_id and
+            // 39,886 where it is a genuinely DIFFERENT id. Affected real
+            // projects include tech4nature-mexico (14,352 recordings),
+            // green-and-golden-bell-frogs (7,073) and workshop-arbimon (2,289).
+            // One site carries the literal string 'undefined', which is truthy
+            // and would therefore win a `||`.
+            //
+            // Proven live against prod media-api on site 8062 (nahuelbuta, uri
+            // seg4 `3qxwx34vyovi` vs external_id `rj83wlyqyx3d`): a token minted
+            // from external_id -> 401 (rejected); from the uri segment -> auth
+            // accepted. Keep this derivation identical to the client's.
+            const streamId = recording.uri.split('/')[3];
+            if (!streamId) return;
+            // MUST be datetime_utc: `datetime` is the denormalised, TZ-shifted
+            // local time and would put the window hours off.
+            const recordingDatetime = recording.datetime_utc ? recording.datetime_utc : recording.datetime;
+            if (!recordingDatetime) return;
+            const baseMs = moment.utc(recordingDatetime).valueOf();
+            if (!isFinite(baseMs)) return;
+
+            tileSet.forEach(function (tile) {
+                if (!tile || !isFinite(tile.s) || !isFinite(tile.ds)) return;
+                const startMs = baseMs + Math.round(tile.s * 1000);
+                const endMs = baseMs + Math.round((tile.s + tile.ds) * 1000);
+                // The tile PNG geometry is fixed by the tiler (1023x255); the
+                // palette is chosen client-side and is deliberately NOT signed.
+                const minted = mediaAssetUrl(streamId, startMs, endMs, 'placeholder.png');
+                if (!minted) return;
+                tile.mediaStreamId = streamId;
+                tile.mediaStart = minted.startTs;
+                tile.mediaEnd = minted.endTs;
+                tile.mediaToken = minted.token;
+                tile.mediaExp = minted.exp;
+            });
+        } catch (e) {
+            // Never let token minting break the visualizer payload: without a
+            // token the client transparently uses the legacy proxy.
+            console.error('attachTileMediaTokens failed, tiles will use the legacy proxy:', e && e.message);
+        }
     },
 
     fetchOneSpectrogramTile: function (recording, i, j, callback) {

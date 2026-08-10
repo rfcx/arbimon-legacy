@@ -66,6 +66,30 @@ function mediaAssetExpiry () {
     return Math.ceil(target / MEDIA_TOKEN_BUCKET_SECONDS) * MEDIA_TOKEN_BUCKET_SECONDS;
 }
 
+/**
+ * Format an epoch-millisecond value as the "glued" UTC timestamp media-api's
+ * filename grammar uses: `YYYYMMDDTHHmmssSSS` (the caller appends the `Z`).
+ *
+ * ⚠️ THIS IS A SIGNATURE-CRITICAL FUNCTION. media-api does NOT trust any window
+ * the caller sends: `passport-stream-token` re-derives start/end by PARSING
+ * THEM BACK OUT OF THE FILENAME (`parseStreamAndTime` ->
+ * `gluedDateStrToMoment`). So the integers that reach this formatter are the
+ * only ones that exist as far as verification is concerned. Anything signed
+ * that differs from what this prints — even by a fraction of a millisecond —
+ * produces a different digest and a guaranteed 401.
+ *
+ * `new Date(ms)` TRUNCATES a fractional millisecond, which is exactly how the
+ * 2026-08-10 ROI defect happened. Callers MUST round to an integer BEFORE
+ * calling this and sign over that same integer — see mediaAssetUrl(), which
+ * makes that impossible to get wrong by doing both from one value.
+ */
+function gluedUtcTimestamp (ms) {
+    const d = new Date(ms);
+    const p = function (n, w) { return String(n).padStart(w || 2, '0'); };
+    return `${d.getUTCFullYear()}${p(d.getUTCMonth() + 1)}${p(d.getUTCDate())}T` +
+        `${p(d.getUTCHours())}${p(d.getUTCMinutes())}${p(d.getUTCSeconds())}${p(d.getUTCMilliseconds(), 3)}`;
+}
+
 function trimTrailingSlash (s) {
     return typeof s === 'string' ? s.replace(/\/+$/, '') : s;
 }
@@ -143,6 +167,64 @@ function mediaStreamToken (streamId, startMs, endMs, exp) {
 }
 
 /**
+ * Build a signed, direct media-api asset URL for ONE stream + time window.
+ *
+ * This is THE chokepoint for the direct route: it takes the window as epoch
+ * milliseconds, ROUNDS ONCE, and then derives BOTH the filename timestamps and
+ * the signed token from those same integers. That is the whole point — the
+ * 2026-08-10 ROI defect (9 of 10 images 401'd in prod) happened because the
+ * filename was printed from a TRUNCATED value while the token was signed over
+ * the RAW fractional one. Keeping the two derivations in a single function
+ * makes that class of bug structurally impossible rather than merely absent:
+ * there is no code path here in which they can disagree.
+ *
+ * media-api re-parses the window FROM THE FILENAME, so the returned `startMs`/
+ * `endMs` are the authoritative view of what was signed.
+ *
+ * SCOPE: the token binds streamId + start + end (+ exp) — the SOURCE WINDOW.
+ * It deliberately does NOT bind render parameters (colour, dimensions, gain,
+ * frequency band): those are only HOW the source is rendered, and permissions
+ * attach to the source data. This is what lets a caller mint server-side while
+ * the BROWSER still chooses the palette (the visualizer's per-user
+ * `mtrue`/`mfalse_p2`/... setting) without invalidating the signature.
+ *
+ * Returns null when the salt is unset or inputs are unusable, so callers can
+ * fall back to the session-gated legacy proxy instead of emitting a URL that
+ * would 401.
+ *
+ * @param {string} streamId    stream external id
+ * @param {number} rawStartMs  window start, epoch ms (may be fractional)
+ * @param {number} rawEndMs    window end, epoch ms (may be fractional)
+ * @param {string} asset       the asset suffix after the `_t<start>Z.<end>Z_`
+ *                             segment, e.g. `z95_wdolph_g1_fspec_mtrue_d1023.255.png`
+ * @returns {{url: string, token: string, exp: number, startMs: number, endMs: number, startTs: string, endTs: string, attr: string}|null}
+ */
+function mediaAssetUrl (streamId, rawStartMs, rawEndMs, asset) {
+    if (!streamId || !asset) return null;
+    if (!isFinite(rawStartMs) || !isFinite(rawEndMs)) return null;
+    // ROUND ONCE. Every downstream use — filename AND signature — flows from
+    // these two integers, so they cannot drift apart.
+    const startMs = Math.round(Number(rawStartMs));
+    const endMs = Math.round(Number(rawEndMs));
+    const startTs = gluedUtcTimestamp(startMs);
+    const endTs = gluedUtcTimestamp(endMs);
+    const attr = `${streamId}_t${startTs}Z.${endTs}Z_${asset}`;
+    const exp = mediaAssetExpiry();
+    const token = mediaStreamToken(streamId, startMs, endMs, exp);
+    if (!token) return null;
+    return {
+        url: `${MEDIA_ASSET_PATH}${attr}?stream-token=${token}&exp=${exp}`,
+        token,
+        exp,
+        startMs,
+        endMs,
+        startTs,
+        endTs,
+        attr
+    };
+}
+
+/**
  * Build an on-demand ROI spectrogram URL for the modern SPA.
  *
  * Instead of pointing at a pre-generated detection PNG in the arbimon2 bucket
@@ -183,24 +265,16 @@ function roiSpectrogramUrl (roi, opts) {
     const from = Math.min(Number(roi.timeMin), Number(roi.timeMax));
     const to = Math.max(Number(roi.timeMin), Number(roi.timeMax));
     if (isNaN(from) || isNaN(to)) return null;
-    const fmtTs = function (ms) {
-        const d = new Date(ms);
-        const p = function (n, w) { return String(n).padStart(w || 2, '0'); };
-        return `${d.getUTCFullYear()}${p(d.getUTCMonth() + 1)}${p(d.getUTCDate())}T` +
-            `${p(d.getUTCHours())}${p(d.getUTCMinutes())}${p(d.getUTCSeconds())}${p(d.getUTCMilliseconds(), 3)}`;
-    };
     // ROI x1/x2 are FRACTIONAL seconds, so baseMs + from*1000 is routinely a
-    // NON-INTEGER millisecond value (e.g. …942.5). `fmtTs` prints via Date(),
-    // which truncates to whole ms — so the printed filename and the raw value
-    // disagree. media-api re-parses start/end FROM THE FILENAME, so the token
-    // must be signed over the TRUNCATED values or it can never verify.
-    // Round once, here, and use these for BOTH the filename and the signature.
-    // (This bit live on 2026-08-10: ROIs whose offsets happened to land on a
-    // whole ms worked, everything else 401'd.)
-    const startMs = Math.round(baseMs + from * 1000);
-    const endMs = Math.round(baseMs + to * 1000);
-    const start = fmtTs(startMs);
-    const end = fmtTs(endMs);
+    // NON-INTEGER millisecond value (e.g. …942.5). The filename is printed via
+    // Date(), which truncates to whole ms — so a raw fractional value and the
+    // printed filename disagree. media-api re-parses start/end FROM THE
+    // FILENAME, so the token must be signed over the SAME integers the filename
+    // encodes or it can never verify. (This bit live on 2026-08-10: ROIs whose
+    // offsets happened to land on a whole ms worked, everything else 401'd.)
+    // mediaAssetUrl() now owns that rounding for BOTH derivations.
+    const rawStartMs = baseMs + from * 1000;
+    const rawEndMs = baseMs + to * 1000;
     const fmin = Math.max(0, Math.min(Number(roi.freqMin), Number(roi.freqMax)));
     let fmax = Math.max(Number(roi.freqMin), Number(roi.freqMax));
     if (isNaN(fmin) || isNaN(fmax)) return null;
@@ -217,7 +291,6 @@ function roiSpectrogramUrl (roi, opts) {
     // against media-api segment-file-utils renderSpectrogram); d{W}.{H} px; wdolph
     // window; z120 z-scale. Same grammar the visualizer + templates use.
     const asset = `r${fmin.toFixed(0)}.${fmax.toFixed(0)}_g1_fspec_mtrue_d${w}.${h}_wdolph_z120.png`;
-    const attr = `${roi.externalId}_t${start}Z.${end}Z_${asset}`;
 
     // TRACK B (2026-08-10): prefer the DIRECT media-api route, which skips the
     // arbimon-legacy proxy hop entirely and is a step toward retiring this app.
@@ -236,17 +309,22 @@ function roiSpectrogramUrl (roi, opts) {
     // FALLS BACK to the session-gated proxy when the salt is unset, so a
     // misconfigured environment degrades to the (still authenticated) legacy
     // path rather than emitting URLs that would 401.
-    const exp = mediaAssetExpiry();
-    const token = mediaStreamToken(roi.externalId, startMs, endMs, exp);
-    if (token) {
-        return `${MEDIA_ASSET_PATH}${attr}?stream-token=${token}&exp=${exp}`;
+    const minted = mediaAssetUrl(roi.externalId, rawStartMs, rawEndMs, asset);
+    if (minted) {
+        return minted.url;
     }
+    // Salt unset — fall back to the session-gated proxy. Derive the same attr
+    // from the same rounded integers so the two paths stay byte-identical.
+    const attr = `${roi.externalId}_t${gluedUtcTimestamp(Math.round(rawStartMs))}Z.` +
+        `${gluedUtcTimestamp(Math.round(rawEndMs))}Z_${asset}`;
     return `/legacy-api/ingest/recordings/${attr}`;
 }
 
 module.exports = {
     mediaStreamToken,
     mediaAssetExpiry,
+    mediaAssetUrl,
+    gluedUtcTimestamp,
     MEDIA_ASSET_PATH,
     arbimon2PublicUrl,
     arbimon2PublicUrlBase,
