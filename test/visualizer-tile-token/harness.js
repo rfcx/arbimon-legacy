@@ -359,4 +359,28 @@ console.log('  ok: missing token rejected');
     console.log('  ok: wire shape is ISO-with-zone (' + onTheWire + ') — pins db.json timezone:"Z" / no dateStrings');
 })();
 
+// ---------------------------------------------------------------------------
+// A REFACTOR TRAP worth pinning: the end offset MUST be computed as
+//     Math.round((tile.s + tile.ds) * 1000)
+// and NOT as
+//     Math.round(tile.s * 1000) + Math.round(tile.ds * 1000)
+//
+// The two look algebraically identical and differ in ~25% of real inputs by
+// exactly 1 ms — which is a guaranteed 401, silently. The server must mirror
+// the client's expression character-for-character; "simplifying" it is a
+// production outage that no page-looks-fine check would catch.
+(function endOffsetExpressionMustNotBeSimplified () {
+    let differ = 0;
+    for (let i = 0; i < 50000; i++) {
+        const s = Math.random() * 60;
+        const ds = Math.random() * 12;
+        if (Math.round((s + ds) * 1000) !== Math.round(s * 1000) + Math.round(ds * 1000)) differ++;
+    }
+    assert.ok(differ > 0,
+        'expected the two rounding forms to differ — if they never do, re-derive ' +
+        'this rather than deleting the guard');
+    console.log('  ok: round((s+ds)*1000) != round(s)+round(ds) in ~' +
+        (differ / 500).toFixed(0) + '% of cases — do NOT "simplify" the end offset');
+})();
+
 console.log('\nALL VISUALIZER TILE TOKEN CHECKS PASSED ✅');
