@@ -38,6 +38,8 @@
  *     to be worth a separate PR.
  */
 
+const crypto = require('crypto');
+
 const DEFAULT_BASE = 'https://s3.arbimon.org/arbimon2';
 
 function trimTrailingSlash (s) {
@@ -66,6 +68,46 @@ function arbimon2PublicUrl (key) {
     if (typeof key !== 'string') return key;
     const k = key.replace(/^\/+/, '');
     return `${arbimon2PublicUrlBase()}/${k}`;
+}
+
+/**
+ * Mint a media-api "stream-token" for a stream + time window.
+ *
+ * This is the SAME construction core media-api verifies in
+ * `common/middleware/passport-stream-token` via `getStreamRangeToken`:
+ *     sha256(STREAM_TOKEN_SALT + "<streamId>_<startMs>_<endMs>")
+ * `authenticate()` there accepts ['jwt','stream-token'], so a request carrying
+ * `?stream-token=<this>` is authorised for exactly that stream+window with no
+ * Authorization header -- which is what makes a bare <img> work.
+ *
+ * SCOPE (by design, operator-confirmed 2026-08-10): the token binds streamId +
+ * start + end -- the SOURCE WINDOW. It deliberately does NOT bind file type,
+ * gain, frequency band or dimensions: permissions are determined in relation to
+ * the source data, and those parameters are only how that source data is
+ * RENDERED. So a token minted for a spectrogram also authorises the audio for
+ * the same window, which is correct -- it is the same protected resource.
+ * A mismatched time window IS rejected (401), so a token can never reach data
+ * outside the window it was minted for.
+ *
+ * The authorisation decision therefore happens at MINTING time: only mint for
+ * windows the current user is already entitled to see.
+ *
+ * NOTE: this mechanism has no expiry and no revocation short of rotating
+ * STREAM_TOKEN_SALT (which invalidates every outstanding token at once).
+ *
+ * Returns null when the salt is not configured, so callers can fall back to
+ * the session-gated proxy path rather than emitting a URL that would 401.
+ *
+ * @param {string} streamId  stream external id
+ * @param {number} startMs   window start, epoch ms
+ * @param {number} endMs     window end, epoch ms
+ */
+function mediaStreamToken (streamId, startMs, endMs) {
+    const salt = process.env.STREAM_TOKEN_SALT;
+    if (!salt || !streamId || !isFinite(startMs) || !isFinite(endMs)) return null;
+    return crypto.createHash('sha256')
+        .update(salt + `${streamId}_${startMs}_${endMs}`, 'utf8')
+        .digest('hex');
 }
 
 /**
@@ -136,6 +178,7 @@ function roiSpectrogramUrl (roi, opts) {
 }
 
 module.exports = {
+    mediaStreamToken,
     arbimon2PublicUrl,
     arbimon2PublicUrlBase,
     roiSpectrogramUrl

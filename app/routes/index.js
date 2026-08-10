@@ -97,6 +97,13 @@ router.use(function(req, res, next) {
     return next();
 });
 
+// Media asset proxy -- MUST stay below the "Force login" gate above.
+// `GET /legacy-api/ingest/recordings/:attr` renders spectrograms/audio for an
+// arbitrary stream+window and has no guard of its own; the session IS its
+// authentication. Mounted here (not in non-session.js) since 2026-08-10 to
+// close the f6240fd2 regression -- see app/routes/data-api/ingest-assets.js.
+router.use('/legacy-api/ingest', require('./data-api/ingest-assets'));
+
 router.use('/legacy-api', dataApi);
 router.use('/project', project);
 router.use('/citizen-scientist', require('./citizen-scientist'));
