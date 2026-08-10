@@ -636,7 +636,19 @@ var Recordings = {
 
         switch (type) {
             case 'spectro':
-                asset = `rfull_g1_fspec_d10286.255_wdolph_z120.png`
+                // `mtrue` = MONOCHROME. Omitting it is not neutral: media-api
+                // reads `monochrome = findStartsWith('m') || 'false'`
+                // (segment-file-parsing.js), so NO token means COLOUR. This
+                // case had no `m` and was therefore serving an 8-bit RGB
+                // spectrogram while the `template` case below -- and every
+                // other ROI surface in the app -- serves greyscale.
+                // Measured 2026-08-10: colour costs ~2.4-2.8x the bytes
+                // (2048x255: 647,420 B RGB vs 264,849 B greyscale) for an
+                // image users expect to look like every other spectrogram.
+                // Colour IS offered deliberately elsewhere -- the visualizer's
+                // per-user palette (visualizer.spectro_color) -- which is
+                // untouched by this.
+                asset = `rfull_g1_fspec_mtrue_d10286.255_wdolph_z120.png`
                 break;
             case 'audio':
                 asset = `r${isFrequency ? fmin + '.' + fmax : 'full'}_g${isGain ? options.gain : 1}_${isFormat ? 'fwav.wav' : 'fmp3.mp3'}`

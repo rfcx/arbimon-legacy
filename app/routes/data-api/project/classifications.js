@@ -74,7 +74,30 @@ router.get('/:classiId/more/:from/:total', function(req, res, next) {
                     const dateFormat = 'YYYYMMDDTHHmmssSSS'
                     const start = momentStart.format(dateFormat)
                     const end = momentEnd.format(dateFormat)
-                    classiInfo.rec_image_url = `/legacy-api/ingest/recordings/${site[0].external_id}_t${start}Z.${end}Z_rfull_g1_fspec_d600.512_wdolph_z120.png`
+                    // `mtrue` = MONOCHROME. media-api defaults monochrome to FALSE when
+                    // the token is absent (segment-file-parsing.js), so this URL was
+                    // silently requesting an 8-bit RGB spectrogram -- inconsistent with
+                    // every other ROI/detection surface, and ~2.8x the bytes
+                    // (measured 2026-08-10).
+                    //
+                    // 1200x160 (7.5:1), not the previous 600x512 (1.17:1): this
+                    // renders into `.sm-result-thumb`, which is
+                    // `height:100px; width:100%` (style.less:480) inside
+                    // `.vectorWrapper` -- so the box is CONTAINER-BOUND and very
+                    // wide. Measured in a browser across the Bootstrap-3 container
+                    // widths: 700x100 (7.0:1) / 920x100 (9.2:1) / 1120x100
+                    // (11.2:1). A 1.17:1 render was therefore stretched 6-9.6x
+                    // horizontally with only 0.54-0.86 SOURCE px per displayed px
+                    // (i.e. upscaled past its own resolution, visibly smeared)
+                    // while carrying 5.12x more vertical detail than the 100px-tall
+                    // box can show.
+                    //
+                    // 1200x160 gives x-density 1.30 and y-density 1.60 at the
+                    // common 970px container -- crisp in both axes, aspect bend down
+                    // from 7.85x to 1.23x -- AND it is SMALLER on the wire:
+                    // 94,164 B vs 140,366 B (-33%), because the wasted vertical
+                    // pixels cost more than the added horizontal ones.
+                    classiInfo.rec_image_url = `/legacy-api/ingest/recordings/${site[0].external_id}_t${start}Z.${end}Z_rfull_g1_fspec_mtrue_d1200.160_wdolph_z120.png`
                 }
                 delete classiInfo.uri;
             }
