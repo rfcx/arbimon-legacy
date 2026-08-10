@@ -1042,11 +1042,32 @@ var Recordings = {
             // Legacy (arbimon-native) recordings are not backed by a core
             // stream, so there is nothing to sign against.
             if (!recording.uri || Recordings.isLegacy(recording)) return;
-            // The browser derives the stream id as recording.uri.split('/')[3];
-            // prefer the authoritative external_id when the query projected it,
-            // and fall back to the same derivation otherwise. (Verified equal
-            // against prod data 2026-08-10.)
-            const streamId = recording.external_id || recording.uri.split('/')[3];
+            // Derive the stream id EXACTLY as the browser does:
+            // `recording.uri.split('/')[3]`.
+            //
+            // DO NOT "prefer" sites.external_id here. It reads as the more
+            // authoritative value (and this route's projection does select it),
+            // but media-api verifies the token against the window it re-parses
+            // FROM THE FILENAME -- and the filename is built client-side from
+            // the uri segment. If the two disagree, the token is minted for a
+            // DIFFERENT stream and the tile 401s with no console error:
+            // visualizer-tile-img.vue's `image.onerror` silently drops it, so
+            // the tile just renders blank.
+            //
+            // They DO disagree in production. Full-table scan 2026-08-10 over
+            // 304,156,781 recordings found 49,249 non-legacy rows across 11
+            // sites where they differ -- 9,363 with a NULL external_id and
+            // 39,886 where it is a genuinely DIFFERENT id. Affected real
+            // projects include tech4nature-mexico (14,352 recordings),
+            // green-and-golden-bell-frogs (7,073) and workshop-arbimon (2,289).
+            // One site carries the literal string 'undefined', which is truthy
+            // and would therefore win a `||`.
+            //
+            // Proven live against prod media-api on site 8062 (nahuelbuta, uri
+            // seg4 `3qxwx34vyovi` vs external_id `rj83wlyqyx3d`): a token minted
+            // from external_id -> 401 (rejected); from the uri segment -> auth
+            // accepted. Keep this derivation identical to the client's.
+            const streamId = recording.uri.split('/')[3];
             if (!streamId) return;
             // MUST be datetime_utc: `datetime` is the denormalised, TZ-shifted
             // local time and would put the window hours off.

@@ -29,7 +29,7 @@ const assert = require('assert');
 const crypto = require('crypto');
 const moment = require('moment');
 
-const { mediaAssetUrl } = require('../app/utils/asset-url');
+const { mediaAssetUrl } = require('../../app/utils/asset-url');
 
 // ---------------------------------------------------------------------------
 // media-api's SIDE of the contract, transcribed from rfcx-api @ origin/master:
@@ -225,6 +225,87 @@ console.log('  ok: missing token rejected');
     assert.ok(!mediaApiWouldAuthorise(badUrl).ok,
         'the harness MUST reject the 2026-08-10 fractional-ms construction');
     console.log('  ok: reproduces + REJECTS the 2026-08-10 fractional-ms defect');
+})();
+
+// ---------------------------------------------------------------------------
+// STREAM-ID DERIVATION — the server MUST sign the same stream id the browser
+// puts in the filename.
+//
+// 🔴 This section calls the REAL `attachTileMediaTokens` from model/recordings.js
+// rather than re-implementing it. The fuzz above deliberately mirrors the mint
+// logic (so a bug in our helper can't cancel itself out), but that also means
+// it can NEVER catch a mistake in how the model picks the stream id. This did
+// happen: the first implementation preferred `sites.external_id`, which reads
+// as the authoritative value but is NOT what the client puts in the filename.
+//
+// Evidence (full-table scan 2026-08-10, 304,156,781 recordings): 49,249
+// non-legacy rows across 11 sites disagree -- 9,363 NULL external_id and
+// 39,886 genuinely different. Real projects affected: tech4nature-mexico
+// (14,352), green-and-golden-bell-frogs (7,073), workshop-arbimon (2,289),
+// nahuelbuta (59). Verified live on prod media-api: minting from external_id
+// returned 401, minting from the uri segment authenticated.
+//
+// A 401 tile is SILENT -- visualizer-tile-img.vue's onerror drops it and the
+// tile renders blank -- so only a test like this can catch a regression.
+(function streamIdMustMatchTheClientDerivation () {
+    const recordings = require('../../app/model/recordings');
+
+    // REAL divergent rows observed in production.
+    const cases = [
+        {   name: 'nahuelbuta (external_id differs from uri segment)',
+            uri: '2020/12/10/3qxwx34vyovi/002ac71c-5825-47bf-a778-ff33d587316d.opus',
+            external_id: 'rj83wlyqyx3d', expected: '3qxwx34vyovi' },
+        {   name: 'tech4nature-mexico (differs)',
+            uri: '2024/05/02/p2gi3vshr6k0/aaaaaaaa-0000-0000-0000-000000000000.flac',
+            external_id: 'tz0xjytraxag', expected: 'p2gi3vshr6k0' },
+        {   name: 'green-and-golden-bell-frogs (external_id NULL)',
+            uri: '2025/12/01/79nm6fpzuybk/7d0aee78-0d59-418b-a20b-0551029bdd8d.flac',
+            external_id: null, expected: '79nm6fpzuybk' },
+        {   name: "site carrying the literal string 'undefined' (truthy -> would win a ||)",
+            uri: '2023/01/01/selblm7pnz1n/bbbbbbbb-0000-0000-0000-000000000000.flac',
+            external_id: 'undefined', expected: 'selblm7pnz1n' },
+        {   name: 'aligned row (the common case) still works',
+            uri: '2026/02/23/3hg6xt6309lv/2f09539f-641d-48a1-8b59-72687f57d532.flac',
+            external_id: '3hg6xt6309lv', expected: '3hg6xt6309lv' }
+    ];
+
+    cases.forEach(function (c) {
+        const recording = {
+            uri: c.uri,
+            external_id: c.external_id,
+            datetime_utc: '2020-12-10T00:00:00.000Z'
+        };
+        const tiles = [{ s: 0, ds: 5.9678 }];
+        recordings.attachTileMediaTokens(recording, tiles);
+        const t = tiles[0];
+        assert.ok(t.mediaToken, 'a token must be minted for: ' + c.name);
+        assert.strictEqual(t.mediaStreamId, c.expected,
+            'stream id must come from uri.split("/")[3], not external_id — ' + c.name);
+
+        // End-to-end: the token must verify against the filename the CLIENT
+        // builds, which always uses the uri-derived id.
+        const clientUrl = '/media-api/internal/assets/streams/' +
+            c.expected + '_t' + t.mediaStart + 'Z.' + t.mediaEnd + 'Z_' +
+            'z95_wdolph_g1_fspec_mtrue_d1023.255.png' +
+            '?stream-token=' + t.mediaToken + '&exp=' + t.mediaExp;
+        assert.ok(mediaApiWouldAuthorise(clientUrl).ok,
+            'minted token must authorise the URL the client actually requests — ' + c.name);
+    });
+    console.log('  ok: stream id is derived as the client does (' + cases.length + ' real prod shapes)');
+
+    // Prove this section can FAIL: minting from external_id must NOT authorise
+    // the client's URL for a divergent row.
+    const divergent = cases[0];
+    const startMs = moment.utc('2020-12-10T00:00:00.000Z').valueOf();
+    const endMs = startMs + Math.round(5.9678 * 1000);
+    const wrong = mediaAssetUrl(divergent.external_id, startMs, endMs, 'placeholder.png');
+    const wrongUrl = '/media-api/internal/assets/streams/' +
+        divergent.expected + '_t' + wrong.startTs + 'Z.' + wrong.endTs + 'Z_' +
+        'z95_wdolph_g1_fspec_mtrue_d1023.255.png' +
+        '?stream-token=' + wrong.token + '&exp=' + wrong.exp;
+    assert.ok(!mediaApiWouldAuthorise(wrongUrl).ok,
+        'the harness MUST reject a token minted from external_id on a divergent row');
+    console.log('  ok: reproduces + REJECTS the external_id mis-derivation');
 })();
 
 console.log('\nALL VISUALIZER TILE TOKEN CHECKS PASSED ✅');
