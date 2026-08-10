@@ -80,10 +80,20 @@ function arbimon2PublicUrl (key) {
  * `?stream-token=<this>` is authorised for exactly that stream+window with no
  * Authorization header -- which is what makes a bare <img> work.
  *
- * SCOPE (important): the token binds ONLY streamId + start + end. It does NOT
- * bind file type, so a token minted for a spectrogram also authorises the
- * AUDIO for the same window. Mint them only for windows the current user is
- * already entitled to see.
+ * SCOPE (by design, operator-confirmed 2026-08-10): the token binds streamId +
+ * start + end -- the SOURCE WINDOW. It deliberately does NOT bind file type,
+ * gain, frequency band or dimensions: permissions are determined in relation to
+ * the source data, and those parameters are only how that source data is
+ * RENDERED. So a token minted for a spectrogram also authorises the audio for
+ * the same window, which is correct -- it is the same protected resource.
+ * A mismatched time window IS rejected (401), so a token can never reach data
+ * outside the window it was minted for.
+ *
+ * The authorisation decision therefore happens at MINTING time: only mint for
+ * windows the current user is already entitled to see.
+ *
+ * NOTE: this mechanism has no expiry and no revocation short of rotating
+ * STREAM_TOKEN_SALT (which invalidates every outstanding token at once).
  *
  * Returns null when the salt is not configured, so callers can fall back to
  * the session-gated proxy path rather than emitting a URL that would 401.
