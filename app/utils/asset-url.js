@@ -189,8 +189,18 @@ function roiSpectrogramUrl (roi, opts) {
         return `${d.getUTCFullYear()}${p(d.getUTCMonth() + 1)}${p(d.getUTCDate())}T` +
             `${p(d.getUTCHours())}${p(d.getUTCMinutes())}${p(d.getUTCSeconds())}${p(d.getUTCMilliseconds(), 3)}`;
     };
-    const start = fmtTs(baseMs + from * 1000);
-    const end = fmtTs(baseMs + to * 1000);
+    // ROI x1/x2 are FRACTIONAL seconds, so baseMs + from*1000 is routinely a
+    // NON-INTEGER millisecond value (e.g. …942.5). `fmtTs` prints via Date(),
+    // which truncates to whole ms — so the printed filename and the raw value
+    // disagree. media-api re-parses start/end FROM THE FILENAME, so the token
+    // must be signed over the TRUNCATED values or it can never verify.
+    // Round once, here, and use these for BOTH the filename and the signature.
+    // (This bit live on 2026-08-10: ROIs whose offsets happened to land on a
+    // whole ms worked, everything else 401'd.)
+    const startMs = Math.round(baseMs + from * 1000);
+    const endMs = Math.round(baseMs + to * 1000);
+    const start = fmtTs(startMs);
+    const end = fmtTs(endMs);
     const fmin = Math.max(0, Math.min(Number(roi.freqMin), Number(roi.freqMax)));
     let fmax = Math.max(Number(roi.freqMin), Number(roi.freqMax));
     if (isNaN(fmin) || isNaN(fmax)) return null;
@@ -226,8 +236,6 @@ function roiSpectrogramUrl (roi, opts) {
     // FALLS BACK to the session-gated proxy when the salt is unset, so a
     // misconfigured environment degrades to the (still authenticated) legacy
     // path rather than emitting URLs that would 401.
-    const startMs = baseMs + from * 1000;
-    const endMs = baseMs + to * 1000;
     const exp = mediaAssetExpiry();
     const token = mediaStreamToken(roi.externalId, startMs, endMs, exp);
     if (token) {
