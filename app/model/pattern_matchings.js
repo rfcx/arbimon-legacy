@@ -1018,7 +1018,21 @@ var PatternMatchings = {
             freqMin: roi.y1,
             freqMax: roi.y2,
             sampleRate: roi.sample_rate
-        });
+        // SQUARE render, matching what templates.js already requests for the
+        // template thumbnail shown top-left on this same page. The ROI images
+        // display in `.roi-img`, which is a FIXED-SIZE box with no object-fit
+        // in legacy CSS, so the browser stretches whatever it gets to fill it:
+        // the default/is-middle/is-small boxes are all 1:1 (125/100/64 px), so
+        // the previous 600x256 (2.34:1) render was being squashed 2.34x
+        // vertically in the three views users spend most of their time in.
+        //
+        // 400x400 is >= 2x the largest square box (125 px), so it stays crisp
+        // on retina without a second fetch. ONE url still serves every box:
+        // `thumbnailClass` is a client-side toggle with no refetch, so the
+        // render CANNOT track the box size without shredding the immutable
+        // cache -- hence match the common aspect (1:1) and let object-fit
+        // handle the one 2:1 card view.
+        }, { width: 400, height: 400 });
     },
 
     combineRoiUrl: function(opts) {
