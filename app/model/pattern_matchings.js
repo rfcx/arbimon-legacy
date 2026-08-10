@@ -959,11 +959,47 @@ var PatternMatchings = {
                 uriParam2: roi.uri_param2
             })
             // On-demand spectrogram (generated live via the media API through
-            // the non-session /ingest path), so the SPA can render detection
+            // the non-session /ingest path), so consumers can render detection
             // spectrograms WITHOUT depending on the ~1B pre-baked detection PNGs
             // (roi.uri). Only for non-legacy recordings (which have a stream
             // external_id); legacy recordings keep the cached uri only.
             roi.spectrogram_url = this.combineRoiSpectrogramUrl(roi)
+            // 2026-08-10: serve the DYNAMIC render as `uri` — the legacy PM
+            // details page binds `roi.uri` directly, so this is what makes the
+            // results match the live-rendered template thumbnail shown top-left
+            // on the same page.
+            //
+            // NB the stored bucket PNG is ALSO an ROI crop of the same window —
+            // the win here is resolution + aspect, not the crop. For a typical
+            // ROI (5.86s, 94-4125Hz) the stored asset is 1098x44: ~1.8x the TIME
+            // resolution but only ~1/6th the FREQUENCY resolution (44px for
+            // 4031Hz, a 25:1 strip that the fixed .roi-img box then stretches
+            // ~2.8x vertically). The dynamic render is 600x256. Measured at
+            // DISPLAY size (both are rescaled into the same CSS box, so raw
+            // buffers are not comparable): std 20.3 vs 12.8, p1-p99 range 108.6
+            // vs 71.0 at 125x125. In practice the stored strip cannot show
+            // WHERE in the band the energy sits, which is what a validator is
+            // judging. Same consolidation already applied to templates
+            // (templates.js `r.uri = dyn || r.storedUri`) and training sets
+            // (training_sets.js), so this is the third use of a settled shape —
+            // and the LARGEST: pattern_matching_rois is ~945M rows, ~94% of the
+            // arbimon2 bucket's object count and its last big legacy consumer.
+            //
+            // The stored bucket URL is preserved as `storedUri` (diagnostics +
+            // the explicit template fallback). combineRoiSpectrogramUrl()
+            // returns null when the inputs are missing (no stream external_id,
+            // or no datetime_utc), so those rows keep the stored PNG and
+            // NOBODY loses an image — measured live: <1% of ROIs, and 0 of
+            // 1,000,000 sampled rows were orphaned.
+            //
+            // RETENTION CONTRACT: the rows where spectrogram_url is null are
+            // exactly the bucket objects that must be RETAINED; everything else
+            // is re-derivable. See
+            // rfcx-local runbooks/arbimon2-bucket-retention-contract-2026-08-10.md
+            if (roi.spectrogram_url) {
+                roi.storedUri = roi.uri
+                roi.uri = roi.spectrogram_url
+            }
         }
         return rois
     },

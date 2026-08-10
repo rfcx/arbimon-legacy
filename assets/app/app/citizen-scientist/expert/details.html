@@ -176,7 +176,11 @@
                                     class="fa fa-cubes">
                                 </i>
                             </a>
-                            <img ng-src="{{ roi.uri }}" class="roi-img {{controller.thumbnailClass}}"/>
+                            <!-- Same dynamic-render + stored-PNG fallback as the main PM details
+                                 page (shared getRoisForId -> getRoiUrl path). -->
+                            <img ng-src="{{ roi.uri }}" class="roi-img {{controller.thumbnailClass}}"
+                                onerror="if(this.dataset.fbk!=='1'&&this.dataset.stored){this.dataset.fbk='1';this.src=this.dataset.stored;}"
+                                data-stored="{{ roi.storedUri }}"/>
                         </div>
                         <div>
                             present: {{roi.cs_val_present}}<br />
