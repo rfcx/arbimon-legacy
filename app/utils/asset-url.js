@@ -38,6 +38,8 @@
  *     to be worth a separate PR.
  */
 
+const crypto = require('crypto');
+
 const DEFAULT_BASE = 'https://s3.arbimon.org/arbimon2';
 
 function trimTrailingSlash (s) {
@@ -66,6 +68,36 @@ function arbimon2PublicUrl (key) {
     if (typeof key !== 'string') return key;
     const k = key.replace(/^\/+/, '');
     return `${arbimon2PublicUrlBase()}/${k}`;
+}
+
+/**
+ * Mint a media-api "stream-token" for a stream + time window.
+ *
+ * This is the SAME construction core media-api verifies in
+ * `common/middleware/passport-stream-token` via `getStreamRangeToken`:
+ *     sha256(STREAM_TOKEN_SALT + "<streamId>_<startMs>_<endMs>")
+ * `authenticate()` there accepts ['jwt','stream-token'], so a request carrying
+ * `?stream-token=<this>` is authorised for exactly that stream+window with no
+ * Authorization header -- which is what makes a bare <img> work.
+ *
+ * SCOPE (important): the token binds ONLY streamId + start + end. It does NOT
+ * bind file type, so a token minted for a spectrogram also authorises the
+ * AUDIO for the same window. Mint them only for windows the current user is
+ * already entitled to see.
+ *
+ * Returns null when the salt is not configured, so callers can fall back to
+ * the session-gated proxy path rather than emitting a URL that would 401.
+ *
+ * @param {string} streamId  stream external id
+ * @param {number} startMs   window start, epoch ms
+ * @param {number} endMs     window end, epoch ms
+ */
+function mediaStreamToken (streamId, startMs, endMs) {
+    const salt = process.env.STREAM_TOKEN_SALT;
+    if (!salt || !streamId || !isFinite(startMs) || !isFinite(endMs)) return null;
+    return crypto.createHash('sha256')
+        .update(salt + `${streamId}_${startMs}_${endMs}`, 'utf8')
+        .digest('hex');
 }
 
 /**
@@ -136,6 +168,7 @@ function roiSpectrogramUrl (roi, opts) {
 }
 
 module.exports = {
+    mediaStreamToken,
     arbimon2PublicUrl,
     arbimon2PublicUrlBase,
     roiSpectrogramUrl
