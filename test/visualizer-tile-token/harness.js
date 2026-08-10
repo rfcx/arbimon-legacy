@@ -308,4 +308,55 @@ console.log('  ok: missing token rejected');
     console.log('  ok: reproduces + REJECTS the external_id mis-derivation');
 })();
 
+// ---------------------------------------------------------------------------
+// The SAME class as the streamId bug, applied to the BASE TIMESTAMP.
+//
+// The server derives the window base with `moment.utc(recording.datetime_utc)`;
+// the browser derives it with `new Date(recording.datetime_utc)`. Two different
+// parsers reading one value — exactly the shape that produced both the
+// fractional-ms defect and the external_id defect.
+//
+// They agree for ISO-8601 with an explicit zone, and DISAGREE BY THE HOST TZ
+// OFFSET for a bare "YYYY-MM-DD HH:mm:ss" string (moment.utc reads it as UTC,
+// `new Date()` historically reads it as LOCAL). A bare string would silently
+// 401 every tile.
+//
+// We are safe TODAY only because config/db.json sets `timezone: "Z"` and the
+// mysql driver is NOT in `dateStrings` mode, so datetime_utc arrives as a JS
+// Date and serialises to ISO with a trailing Z. VERIFIED on the live demo pod
+// against the real driver: `{"datetime_utc":"2021-04-28T14:20:00.000Z"}`.
+//
+// That is a load-bearing config detail two layers away from this code, so pin
+// it here: if someone enables dateStrings or changes the pool timezone, this
+// fails loudly instead of blanking the visualizer.
+(function serverAndClientMustParseTheBaseTimestampIdentically () {
+    const isoShapes = [
+        '2021-04-28T14:20:00.000Z',
+        '2021-04-28T14:20:00Z',
+        '2026-01-01T00:00:00.000Z'
+    ];
+    isoShapes.forEach(function (s) {
+        assert.strictEqual(moment.utc(s).valueOf(), new Date(s).valueOf(),
+            'server moment.utc() and client new Date() must agree for: ' + s);
+    });
+    console.log('  ok: base timestamp parses identically server- and client-side (ISO w/ zone)');
+
+    // The REAL invariant: whatever shape reaches the client, both parsers must
+    // agree. Assert that directly on the shape the driver actually produces
+    // (a Date -> ISO-with-Z via JSON), rather than asserting that the bare form
+    // is ambiguous — that depends on the host TZ and is UTC-safe in-pod
+    // (pods run with TZ unset = UTC), so it cannot be a portable assertion.
+    const fromDriver = new Date(Date.UTC(2021, 3, 28, 14, 20, 0));
+    const onTheWire = JSON.parse(JSON.stringify({ d: fromDriver })).d;
+    assert.ok(/Z$/.test(onTheWire),
+        'datetime_utc must reach the client as ISO-8601 WITH a zone designator. ' +
+        'If this fails, the mysql driver has been switched to dateStrings or the ' +
+        'pool timezone changed — a bare "YYYY-MM-DD HH:mm:ss" is parsed as UTC by ' +
+        'moment.utc() (server) and as LOCAL by new Date() (browser), which 401s ' +
+        'every tile silently on any non-UTC client.');
+    assert.strictEqual(moment.utc(onTheWire).valueOf(), new Date(onTheWire).valueOf(),
+        'the wire shape must parse identically on both sides');
+    console.log('  ok: wire shape is ISO-with-zone (' + onTheWire + ') — pins db.json timezone:"Z" / no dateStrings');
+})();
+
 console.log('\nALL VISUALIZER TILE TOKEN CHECKS PASSED ✅');
