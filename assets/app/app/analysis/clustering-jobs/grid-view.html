@@ -161,7 +161,18 @@
                                     class="fa fa-play">
                                 </i>
                             </a>
-                            <img ng-src="/legacy-api/project/{{projectUrl}}/clustering-jobs/asset?path={{roi.uri}}" class="roi-img" ng-class="{ 'full-size': !isSquareSize }"/>
+                            <!-- 2026-08-10: roi.uri is now the DYNAMIC media-api
+                                 render (clustering-jobs.js sets uri = spectrogram_url
+                                 when renderable, keeping the stored path as storedUri).
+                                 A dynamic URL is ABSOLUTE (/legacy-api/ingest/recordings/...),
+                                 so it must be bound directly -- wrapping it in the
+                                 /clustering-jobs/asset?path= proxy would produce a
+                                 broken request. Rows that are NOT renderable keep the
+                                 stored bucket path in roi.uri and still need the proxy,
+                                 so branch on storedUri: it is set ONLY when the swap
+                                 happened. -->
+                            <img ng-if="roi.storedUri" ng-src="{{roi.uri}}" class="roi-img" ng-class="{ 'full-size': !isSquareSize }"/>
+                            <img ng-if="!roi.storedUri" ng-src="/legacy-api/project/{{projectUrl}}/clustering-jobs/asset?path={{roi.uri}}" class="roi-img" ng-class="{ 'full-size': !isSquareSize }"/>
                         </span>
                     </div>
                 </span>
