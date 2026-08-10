@@ -282,26 +282,74 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   'use strict';
   var PH_HOST = 'https://track.arbimon.org';
   var PH_KEY = 'phc_krms3gkJwAaEiJVFfvnANKnH77LViiNzPUz2uY6YiLjc';
-  function capture() {
+
+  // -- Identity (2026-08-09) --------------------------------------------------
+  // Server-injected session identity so legacy events attribute to the SAME
+  // person as the modern SPA. The SPA's canonical distinct_id is the account
+  // EMAIL (operator decision 2026-07-15, apps/website _services/analytics), so
+  // sending the email here makes both apps resolve to one person.
+  //
+  // GUARD: `typeof user` is REQUIRED, not defensive noise — app/index.js:174
+  // renders 'not-found' with NO locals at all, and header.ejs is included by
+  // not-found.ejs, so a bare `user.email` would ReferenceError and break the
+  // 404 page. (Same reason `card` / `inject_data` are typeof-guarded above.)
+  //
+  // MASQUERADE HONESTY: during a superuser masquerade, legacy swaps
+  // session.user to the TARGET (app/routes/login.js) and stamps
+  // `masqueradedBy` with the REAL super's email. We keep the target as the
+  // distinct_id (that is what "viewing as" means) but always emit
+  // `masqueraded_by` so no super's action can be silently booked to a real
+  // user. Attribution must be honest, not merely unified.
+  // SECURITY: JSON.stringify alone is NOT safe to drop into an inline script
+  // block — a value containing a closing script tag ends the block early and
+  // everything after it becomes live HTML (proven by the XSS case in the
+  // render test). NB: this comment deliberately avoids writing that literal
+  // tag, because a COMMENT containing it truncates the block just as surely
+  // as a string does — a trap this patch hit during development.
+  // Escaping `<` (and the JSON-unsafe U+2028/2029 line separators) makes the
+  // literal inert while keeping it valid JSON. Emails are user-controlled at
+  // signup, so this is a real input, not a hypothetical.
+  // NORMALISED (lowercase+trim) server-side: PostHog treats distinct_ids as
+  // opaque and CASE-SENSITIVE, so 'Alice@x.org' and 'alice@x.org' would become
+  // two separate people. Legacy reads MariaDB `users.email` while the SPA reads
+  // the Auth0 claim; they agree today (measured: 271 email ids, 271 distinct
+  // when lowercased) but nothing ENFORCES that, so normalise on both sides.
+  var PH_USER = <%- (typeof user !== 'undefined' && user && !user.isAnonymousGuest && user.email)
+        ? JSON.stringify({ email: String(user.email).trim().toLowerCase(), masqueradedBy: user.masqueradedBy || null })
+            .replace(/</g, '\\u003c')
+            .replace(/\u2028/g, '\\u2028')
+            .replace(/\u2029/g, '\\u2029')
+        : 'null' %>;
+
+  // Anonymous fallback id (pre-existing behaviour, kept for logged-out /
+  // citizen-scientist visitors and used as the $anon_distinct_id we stitch
+  // FROM on first identify).
+  function anonId() {
     try {
-      var payload = {
-        api_key: PH_KEY,
-        event: '$pageview',
-        properties: {
-          distinct_id: (function () {
-            try {
-              var k = 'ph_legacy_did';
-              var v = window.localStorage.getItem(k);
-              if (!v) { v = 'legacy-' + Math.random().toString(36).slice(2) + Date.now().toString(36); window.localStorage.setItem(k, v); }
-              return v;
-            } catch (e) { return 'legacy-anon'; }
-          })(),
-          $current_url: window.location.href,
-          $referrer: document.referrer || '',
-          app: 'arbimon-legacy'
-        },
-        timestamp: new Date().toISOString()
-      };
+      var k = 'ph_legacy_did';
+      var v = window.localStorage.getItem(k);
+      if (!v) { v = 'legacy-' + Math.random().toString(36).slice(2) + Date.now().toString(36); window.localStorage.setItem(k, v); }
+      return v;
+    } catch (e) { return 'legacy-anon'; }
+  }
+
+  // The modern SPA is SAME-ORIGIN (arbimon.org serves the SPA at / and legacy
+  // at /project,/admin,/citizen-scientist), so it shares localStorage. Read
+  // posthog-js's own stored distinct_id when present and stitch from it too,
+  // so a browser that used the SPA first doesn't strand that history.
+  function spaAnonId() {
+    try {
+      var raw = window.localStorage.getItem('ph_' + PH_KEY + '_posthog');
+      if (!raw) return null;
+      var v = JSON.parse(raw).distinct_id;
+      return (typeof v === 'string' && v && v.indexOf('@') === -1) ? v : null;
+    } catch (e) { return null; }
+  }
+
+  function distinctId() { return (PH_USER && PH_USER.email) ? PH_USER.email : anonId(); }
+
+  function send(payload) {
+    try {
       var body = JSON.stringify(payload);
       if (navigator.sendBeacon) {
         navigator.sendBeacon(PH_HOST + '/i/v0/e/', new Blob([body], { type: 'application/json' }));
@@ -313,9 +361,67 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       }
     } catch (e) { /* never break the app for telemetry */ }
   }
+
+  // One $identify per browser per user: folds prior anonymous activity into
+  // the email person. PostHog merges $anon_distinct_id -> distinct_id (this is
+  // the same mechanism the SPA already uses; measured 324/324 merged).
+  function identifyOnce() {
+    if (!PH_USER || !PH_USER.email) return;
+    try {
+      var mark = 'ph_legacy_identified';
+      var prev = null;
+      try { prev = window.localStorage.getItem(mark); } catch (e) {}
+      if (prev === PH_USER.email) return;
+      var anon = spaAnonId() || anonId();
+      // ROTATE the local anon id after using it. On a SHARED computer the next
+      // user must not be stitched onto the previous user's anon id. (PostHog
+      // also refuses to merge FROM an already-identified person — verified in
+      // person-merge-service `isMergeAllowed` — so this is defence in depth,
+      // but it keeps the client honest rather than relying on the server to
+      // reject a request we should never have sent.)
+      try { window.localStorage.removeItem('ph_legacy_did'); } catch (e) {}
+      send({
+        api_key: PH_KEY,
+        event: '$identify',
+        properties: {
+          distinct_id: PH_USER.email,
+          $anon_distinct_id: anon,
+          $set: { email: PH_USER.email },
+          app: 'arbimon-legacy'
+        },
+        timestamp: new Date().toISOString()
+      });
+      try { window.localStorage.setItem(mark, PH_USER.email); } catch (e) {}
+    } catch (e) { /* never break the app for telemetry */ }
+  }
+
+  function capture() {
+    try {
+      var props = {
+        distinct_id: distinctId(),
+        $current_url: window.location.href,
+        $referrer: document.referrer || '',
+        // Provenance is PRESERVED on purpose: attribution unifies, but we must
+        // still be able to ask "how much of this user's work is still on
+        // legacy?" — that is the Phase-4 retirement signal.
+        app: 'arbimon-legacy'
+      };
+      if (PH_USER && PH_USER.email) {
+        props.$user_id = PH_USER.email;
+        if (PH_USER.masqueradedBy) { props.masqueraded_by = PH_USER.masqueradedBy; }
+      }
+      send({
+        api_key: PH_KEY,
+        event: '$pageview',
+        properties: props,
+        timestamp: new Date().toISOString()
+      });
+    } catch (e) { /* never break the app for telemetry */ }
+  }
+  function start() { identifyOnce(); capture(); }
   // initial load
-  if (document.readyState === 'complete' || document.readyState === 'interactive') { capture(); }
-  else { document.addEventListener('DOMContentLoaded', capture); }
+  if (document.readyState === 'complete' || document.readyState === 'interactive') { start(); }
+  else { document.addEventListener('DOMContentLoaded', start); }
   // SPA navigations (angular ui-router uses pushState + hashchange)
   var lastUrl = window.location.href;
   function onNav() {
