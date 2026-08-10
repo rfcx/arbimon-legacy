@@ -42,6 +42,30 @@ const crypto = require('crypto');
 
 const DEFAULT_BASE = 'https://s3.arbimon.org/arbimon2';
 
+// Same-origin path to the DIRECT media-api asset route (public-router strips
+// the `/media-api` prefix and proxies to media-api, rewriting headers to
+// inline + private/immutable so a bare <img> renders and caches).
+// Relative on purpose: the SPA and arbimon-legacy are both served from
+// arbimon.org, and a same-origin URL keeps these out of cross-origin rules.
+const MEDIA_ASSET_PATH = '/media-api/internal/assets/streams/';
+
+// How long a minted asset URL stays valid, and the bucket it is rounded to.
+// BUCKETING IS LOAD-BEARING: the query string is part of the browser/CDN cache
+// key, so a per-request `exp` would defeat caching of content-addressed images
+// for no security gain. Hourly buckets mean a reload reuses the same URL.
+const MEDIA_TOKEN_TTL_SECONDS = 6 * 3600;   // 6h ceiling
+const MEDIA_TOKEN_BUCKET_SECONDS = 3600;    // round UP to the next hour
+
+/**
+ * Expiry (epoch seconds) for a freshly minted asset URL, rounded UP to the next
+ * bucket so repeated renders of the same image produce an IDENTICAL URL.
+ */
+function mediaAssetExpiry () {
+    const now = Math.floor(Date.now() / 1000);
+    const target = now + MEDIA_TOKEN_TTL_SECONDS;
+    return Math.ceil(target / MEDIA_TOKEN_BUCKET_SECONDS) * MEDIA_TOKEN_BUCKET_SECONDS;
+}
+
 function trimTrailingSlash (s) {
     return typeof s === 'string' ? s.replace(/\/+$/, '') : s;
 }
@@ -92,8 +116,12 @@ function arbimon2PublicUrl (key) {
  * The authorisation decision therefore happens at MINTING time: only mint for
  * windows the current user is already entitled to see.
  *
- * NOTE: this mechanism has no expiry and no revocation short of rotating
- * STREAM_TOKEN_SALT (which invalidates every outstanding token at once).
+ * EXPIRY: pass `exp` (epoch seconds) to bind a lifetime into the SIGNED
+ * message; media-api rejects an expired or tampered `exp` (fails closed, 401).
+ * Callers should BUCKET the value -- see mediaAssetExpiry(). Omitting `exp`
+ * yields the historical, non-expiring token, which media-api still accepts.
+ * Beyond expiry there is no revocation short of rotating STREAM_TOKEN_SALT
+ * (which invalidates every outstanding token at once).
  *
  * Returns null when the salt is not configured, so callers can fall back to
  * the session-gated proxy path rather than emitting a URL that would 401.
@@ -102,12 +130,16 @@ function arbimon2PublicUrl (key) {
  * @param {number} startMs   window start, epoch ms
  * @param {number} endMs     window end, epoch ms
  */
-function mediaStreamToken (streamId, startMs, endMs) {
+function mediaStreamToken (streamId, startMs, endMs, exp) {
     const salt = process.env.STREAM_TOKEN_SALT;
     if (!salt || !streamId || !isFinite(startMs) || !isFinite(endMs)) return null;
-    return crypto.createHash('sha256')
-        .update(salt + `${streamId}_${startMs}_${endMs}`, 'utf8')
-        .digest('hex');
+    // `exp` (optional, epoch seconds) is folded into the SIGNED message exactly
+    // as core media-api's getStreamRangeToken does, so editing it in the URL
+    // changes the token that would be required.
+    const message = (exp === undefined || exp === null)
+        ? `${streamId}_${startMs}_${endMs}`
+        : `${streamId}_${startMs}_${endMs}_${exp}`;
+    return crypto.createHash('sha256').update(salt + message, 'utf8').digest('hex');
 }
 
 /**
@@ -170,15 +202,44 @@ function roiSpectrogramUrl (roi, opts) {
     if (nyquist && !isNaN(nyquist) && fmax > nyquist) fmax = nyquist;
     const w = (opts && opts.width) || 600;
     const h = (opts && opts.height) || 256;
+    // (asset string is built below; the direct-vs-proxy choice happens after it)
     // r{fmin}.{fmax} freq band; mtrue = MONOCHROME (sox -lm greyscale, verified
     // against media-api segment-file-utils renderSpectrogram); d{W}.{H} px; wdolph
     // window; z120 z-scale. Same grammar the visualizer + templates use.
     const asset = `r${fmin.toFixed(0)}.${fmax.toFixed(0)}_g1_fspec_mtrue_d${w}.${h}_wdolph_z120.png`;
-    return `/legacy-api/ingest/recordings/${roi.externalId}_t${start}Z.${end}Z_${asset}`;
+    const attr = `${roi.externalId}_t${start}Z.${end}Z_${asset}`;
+
+    // TRACK B (2026-08-10): prefer the DIRECT media-api route, which skips the
+    // arbimon-legacy proxy hop entirely and is a step toward retiring this app.
+    //
+    // The URL is authorised by a signed stream-token over the SOURCE WINDOW
+    // (stream + start + end). We mint it HERE because this function is only
+    // reached from session-gated `/legacy-api/project/*` endpoints -- i.e. the
+    // caller is already an authenticated, entitled user. That is the whole
+    // authorisation decision: see mediaStreamToken()'s note on minting.
+    //
+    // `exp` is bound to the token and BUCKETED to the hour: these URLs are
+    // cached by the browser/CDN with the query string in the cache key, so a
+    // per-request expiry would churn that cache for no security gain. The
+    // bucket also means a page reload reuses the same URL.
+    //
+    // FALLS BACK to the session-gated proxy when the salt is unset, so a
+    // misconfigured environment degrades to the (still authenticated) legacy
+    // path rather than emitting URLs that would 401.
+    const startMs = baseMs + from * 1000;
+    const endMs = baseMs + to * 1000;
+    const exp = mediaAssetExpiry();
+    const token = mediaStreamToken(roi.externalId, startMs, endMs, exp);
+    if (token) {
+        return `${MEDIA_ASSET_PATH}${attr}?stream-token=${token}&exp=${exp}`;
+    }
+    return `/legacy-api/ingest/recordings/${attr}`;
 }
 
 module.exports = {
     mediaStreamToken,
+    mediaAssetExpiry,
+    MEDIA_ASSET_PATH,
     arbimon2PublicUrl,
     arbimon2PublicUrlBase,
     roiSpectrogramUrl
