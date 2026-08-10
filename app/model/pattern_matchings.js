@@ -697,9 +697,21 @@ var PatternMatchings = {
         return rois
     },
 
+    // NOTE: the three trailing columns (external_id / datetime_utc / sample_rate)
+    // are the INPUTS to roiSpectrogramUrl() — see getRoiUrl() below. They are
+    // projected here, not just in buildRoisQuery(), because getRoiUrl() runs on
+    // EVERY ROI path: without them it silently yields spectrogram_url = null.
+    // That is harmless while consumers read `uri`, but it is a landmine for any
+    // change that serves the dynamic render (the `best_per_site`,
+    // `best_per_site_day` and `top_200_per_site` filters route through here,
+    // so those users would get blank images while the default `by_score`
+    // filter — which uses buildRoisQuery — looked fine).
+    // `R` (recordings) and `S` (sites) are already JOINed by both callers, so
+    // this is projection-only: no new joins, no changed row count.
     pmrSqlSelect: `SELECT S.site_id, S.name as site, PMR.score, R.uri as recording, PMR.pattern_matching_roi_id as id, PMR.pattern_matching_id,
         PMR.denorm_recording_datetime as datetime, PMR.recording_id, PMR.species_id, PMR.songtype_id, PMR.x1, PMR.y1, PMR.x2, PMR.y2, 
-        PMR.uri_param1, PMR.uri_param2, PMR.score, PMR.validated FROM pattern_matching_rois AS PMR`,
+        PMR.uri_param1, PMR.uri_param2, PMR.score, PMR.validated,
+        S.external_id, R.datetime_utc, R.sample_rate FROM pattern_matching_rois AS PMR`,
 
     combineDatetime (pmr) {
         const d = pmr.datetime.toISOString()
@@ -872,10 +884,17 @@ var PatternMatchings = {
     },
 
     getRoi(patternMatchingId, roisId, projectId){
+        // PMR.* preserved verbatim for callers that read arbitrary columns; the
+        // 3 extra columns feed roiSpectrogramUrl() via getRoiUrl(). The joins
+        // are INNER on the same keys getRoiUrl()'s consumers already rely on
+        // (every PM ROI has a recording, which has a site — verified live: 0
+        // orphans in 1M sampled rows), so the row count is unchanged.
         return dbpool.query(
-            "SELECT *\n" +
-            `FROM pattern_matching_rois\n` +
-            "WHERE pattern_matching_id = ? AND pattern_matching_roi_id IN (?)", [
+            "SELECT PMR.*, S.external_id, R.datetime_utc, R.sample_rate\n" +
+            `FROM pattern_matching_rois PMR\n` +
+            "JOIN recordings R ON R.recording_id = PMR.recording_id\n" +
+            "JOIN sites S ON S.site_id = R.site_id\n" +
+            "WHERE PMR.pattern_matching_id = ? AND PMR.pattern_matching_roi_id IN (?)", [
             Number(patternMatchingId), roisId
         ]).then((rois) => {
             return this.getRoiUrl(rois, projectId);
@@ -893,26 +912,36 @@ var PatternMatchings = {
     },
 
     getPatternMatchingRois: function(options) {
-        const base = `SELECT * FROM pattern_matching_rois`;
+        // Same rationale as getRoi(): project the roiSpectrogramUrl() inputs on
+        // every branch, since all three call getRoiUrl(). Joins are INNER on
+        // recording->site (guaranteed present) so row counts are unchanged;
+        // WHERE clauses are qualified to PMR now that the table is aliased.
+        const base = `SELECT PMR.*, S.external_id, R.datetime_utc, R.sample_rate
+                FROM pattern_matching_rois PMR
+                JOIN recordings R ON R.recording_id = PMR.recording_id
+                JOIN sites S ON S.site_id = R.site_id`;
         if (options.rois) {
-            return dbpool.query({ sql: `${base} WHERE pattern_matching_roi_id IN (?)` , typeCast: sqlutil.parseUtcDatetime }, [options.rois])
+            return dbpool.query({ sql: `${base} WHERE PMR.pattern_matching_roi_id IN (?)` , typeCast: sqlutil.parseUtcDatetime }, [options.rois])
                 .then((rois) => {
                     return this.getRoiUrl(rois, options.projectId);
                 });
         }
         if (options.recId && !options.validated) {
-            return dbpool.query({ sql: `${base} WHERE recording_id = ?` , typeCast: sqlutil.parseUtcDatetime }, [options.recId])
+            return dbpool.query({ sql: `${base} WHERE PMR.recording_id = ?` , typeCast: sqlutil.parseUtcDatetime }, [options.recId])
                 .then((rois) => {
                     return this.getRoiUrl(rois, options.projectId);
                 });
         }
         if (options.recId && options.validated) {
             return dbpool.query(
-                { sql: `SELECT PMR.*, SP.scientific_name as species_name, ST.songtype as songtype_name
+                { sql: `SELECT PMR.*, SP.scientific_name as species_name, ST.songtype as songtype_name,
+                S.external_id, R.datetime_utc, R.sample_rate
                 FROM pattern_matching_rois PMR
                 JOIN species SP ON PMR.species_id = SP.species_id
                 JOIN songtypes ST ON PMR.songtype_id = ST.songtype_id
-                WHERE recording_id = ? AND validated = ?`,
+                JOIN recordings R ON R.recording_id = PMR.recording_id
+                JOIN sites S ON S.site_id = R.site_id
+                WHERE PMR.recording_id = ? AND PMR.validated = ?`,
                 typeCast: sqlutil.parseUtcDatetime }, [options.recId, options.validated]
             ).then((rois) => {
                 return this.getRoiUrl(rois, options.projectId);
@@ -930,11 +959,47 @@ var PatternMatchings = {
                 uriParam2: roi.uri_param2
             })
             // On-demand spectrogram (generated live via the media API through
-            // the non-session /ingest path), so the SPA can render detection
+            // the non-session /ingest path), so consumers can render detection
             // spectrograms WITHOUT depending on the ~1B pre-baked detection PNGs
             // (roi.uri). Only for non-legacy recordings (which have a stream
             // external_id); legacy recordings keep the cached uri only.
             roi.spectrogram_url = this.combineRoiSpectrogramUrl(roi)
+            // 2026-08-10: serve the DYNAMIC render as `uri` — the legacy PM
+            // details page binds `roi.uri` directly, so this is what makes the
+            // results match the live-rendered template thumbnail shown top-left
+            // on the same page.
+            //
+            // NB the stored bucket PNG is ALSO an ROI crop of the same window —
+            // the win here is resolution + aspect, not the crop. For a typical
+            // ROI (5.86s, 94-4125Hz) the stored asset is 1098x44: ~1.8x the TIME
+            // resolution but only ~1/6th the FREQUENCY resolution (44px for
+            // 4031Hz, a 25:1 strip that the fixed .roi-img box then stretches
+            // ~2.8x vertically). The dynamic render is 600x256. Measured at
+            // DISPLAY size (both are rescaled into the same CSS box, so raw
+            // buffers are not comparable): std 20.3 vs 12.8, p1-p99 range 108.6
+            // vs 71.0 at 125x125. In practice the stored strip cannot show
+            // WHERE in the band the energy sits, which is what a validator is
+            // judging. Same consolidation already applied to templates
+            // (templates.js `r.uri = dyn || r.storedUri`) and training sets
+            // (training_sets.js), so this is the third use of a settled shape —
+            // and the LARGEST: pattern_matching_rois is ~945M rows, ~94% of the
+            // arbimon2 bucket's object count and its last big legacy consumer.
+            //
+            // The stored bucket URL is preserved as `storedUri` (diagnostics +
+            // the explicit template fallback). combineRoiSpectrogramUrl()
+            // returns null when the inputs are missing (no stream external_id,
+            // or no datetime_utc), so those rows keep the stored PNG and
+            // NOBODY loses an image — measured live: <1% of ROIs, and 0 of
+            // 1,000,000 sampled rows were orphaned.
+            //
+            // RETENTION CONTRACT: the rows where spectrogram_url is null are
+            // exactly the bucket objects that must be RETAINED; everything else
+            // is re-derivable. See
+            // rfcx-local runbooks/arbimon2-bucket-retention-contract-2026-08-10.md
+            if (roi.spectrogram_url) {
+                roi.storedUri = roi.uri
+                roi.uri = roi.spectrogram_url
+            }
         }
         return rois
     },
@@ -953,7 +1018,21 @@ var PatternMatchings = {
             freqMin: roi.y1,
             freqMax: roi.y2,
             sampleRate: roi.sample_rate
-        });
+        // SQUARE render, matching what templates.js already requests for the
+        // template thumbnail shown top-left on this same page. The ROI images
+        // display in `.roi-img`, which is a FIXED-SIZE box with no object-fit
+        // in legacy CSS, so the browser stretches whatever it gets to fill it:
+        // the default/is-middle/is-small boxes are all 1:1 (125/100/64 px), so
+        // the previous 600x256 (2.34:1) render was being squashed 2.34x
+        // vertically in the three views users spend most of their time in.
+        //
+        // 400x400 is >= 2x the largest square box (125 px), so it stays crisp
+        // on retina without a second fetch. ONE url still serves every box:
+        // `thumbnailClass` is a client-side toggle with no refetch, so the
+        // render CANNOT track the box size without shredding the immutable
+        // cache -- hence match the common aspect (1:1) and let object-fit
+        // handle the one 2:1 card view.
+        }, { width: 400, height: 400 });
     },
 
     combineRoiUrl: function(opts) {

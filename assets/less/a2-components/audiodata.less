@@ -198,6 +198,29 @@
         width:125px;
         height:125px;
         margin:2px;
+        // These boxes are FIXED size, so without object-fit the browser
+        // stretches the image to fill them and distorts the spectrogram's
+        // time/frequency axes. `contain` preserves the aspect ratio and shows
+        // the WHOLE ROI (letterboxing if needed) -- `cover` was rejected
+        // because it would crop ~57% of the ROI's width in the square boxes,
+        // hiding part of the detection a user is trying to validate.
+        // Applies to the dynamic renders (now square, matching the template
+        // thumbnail) AND to the legacy stored PNGs, which are ~25:1 strips and
+        // were previously stretched ~2.8x vertically.
+        //
+        // SCOPED DELIBERATELY: `.roi-img` is shared by ~16 views, so this rule
+        // is applied to the FIXED-SIZE variants only. `.full-size` (the
+        // clustering grid view) sizes with percentages/vw and is NOT given
+        // object-fit here -- that surface is out of scope for this change and
+        // adding `contain` to a fluid box could visibly shrink its images.
+        // Every other affected view either improves (training-sets 600x256 in
+        // a 1:1 box was stretched 2.34x) or is unchanged (the 400x400 template
+        // renders already match their square boxes exactly).
+        object-fit: contain;
+        &.full-size {
+            // fluid box, out of scope -- keep the pre-existing behaviour
+            object-fit: fill;
+        }
         &.is-middle {
             width:100px;
             height:100px;

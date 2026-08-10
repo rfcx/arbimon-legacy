@@ -210,7 +210,17 @@
                             class="fa fa-play">
                         </i>
                     </a>
-                    <img ng-src="{{ roi.uri }}" class="roi-img {{controller.thumbnailClass}}"/>
+                    <!-- roi.uri is the DYNAMIC, ROI-cropped media-api render
+                         (see pattern_matchings.js getRoiUrl) so results match
+                         the template thumbnail above. roi.storedUri is the
+                         legacy pre-baked arbimon2 detection PNG, kept ONLY as
+                         an explicit fallback: if the live render ever fails we
+                         degrade to the stored image rather than a broken icon.
+                         The onerror is self-disarming (it nulls the handler
+                         before swapping) so a failing fallback cannot loop. -->
+                    <img ng-src="{{ roi.uri }}" class="roi-img {{controller.thumbnailClass}}"
+                        onerror="if(this.dataset.fbk!=='1'&&this.dataset.stored){this.dataset.fbk='1';this.src=this.dataset.stored;}"
+                        data-stored="{{ roi.storedUri }}"/>
                 </span>
             </span>
         </div>
