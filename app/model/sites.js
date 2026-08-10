@@ -13,6 +13,7 @@ var dbpool = require('../utils/dbpool');
 var queryHandler = dbpool.queryHandler;
 const moment = require('moment');
 let APIError = require('../utils/apierror');
+const { coreApiBaseUrl } = require('../utils/core-api-url');
 const projects = require('./projects')
 
 var Sites = {
@@ -536,7 +537,7 @@ var Sites = {
         }
         const options = {
             method: 'POST',
-            url: `${rfcxConfig.apiBaseUrl}/streams`,
+            url: `${coreApiBaseUrl()}/streams`,
             headers: {
                 'content-type': 'application/json',
                 Authorization: `Bearer ${idToken}`,
@@ -560,7 +561,7 @@ var Sites = {
     getCountryCodeAndTimezoneCoreAPI: async function(coreSite, idToken) {
         const options = {
             method: 'GET',
-            url: `${rfcxConfig.apiBaseUrl}/streams?projects[]=${coreSite.project_id}&name[]=${encodeURIComponent(coreSite.name)}`,
+            url: `${coreApiBaseUrl()}/streams?projects[]=${coreSite.project_id}&name[]=${encodeURIComponent(coreSite.name)}`,
             headers: {
                 'content-type': 'application/json',
                 Authorization: `Bearer ${idToken}`
@@ -633,7 +634,7 @@ var Sites = {
         data.project_id !== undefined && (body.project_external_id = data.project_id)
         const options = {
             method: 'PATCH',
-            url: `${rfcxConfig.apiBaseUrl}/internal/arbimon/streams/${data.site_id}`,
+            url: `${coreApiBaseUrl()}/internal/arbimon/streams/${data.site_id}`,
             headers: {
                 'content-type': 'application/json',
                 Authorization: `Bearer ${idToken}`,
@@ -760,7 +761,7 @@ var Sites = {
     deleteInCoreAPI: async function(site_id, idToken) {
         const options = {
             method: 'DELETE',
-            url: `${rfcxConfig.apiBaseUrl}/internal/arbimon/streams/${site_id}`,
+            url: `${coreApiBaseUrl()}/internal/arbimon/streams/${site_id}`,
             headers: {
                 'content-type': 'application/json',
                 Authorization: `Bearer ${idToken}`,
