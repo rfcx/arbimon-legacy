@@ -86,8 +86,38 @@ function mediaAssetExpiry () {
 function gluedUtcTimestamp (ms) {
     const d = new Date(ms);
     const p = function (n, w) { return String(n).padStart(w || 2, '0'); };
-    return `${d.getUTCFullYear()}${p(d.getUTCMonth() + 1)}${p(d.getUTCDate())}T` +
+    // PAD THE YEAR TO 4 DIGITS. media-api parses this with the fixed-width
+    // format `YYYYMMDDTHHmmssSSSZ`, so a year below 1000 rendered unpadded
+    // produced a 7-character date part and a 400 ValidationError
+    // ("`stream`, `start` and `end` must be specified") -- see the year-0172
+    // zero-date class below. Padding alone does not make such a URL CORRECT,
+    // but it keeps a malformed date from becoming an unparseable filename.
+    return `${p(d.getUTCFullYear(), 4)}${p(d.getUTCMonth() + 1)}${p(d.getUTCDate())}T` +
         `${p(d.getUTCHours())}${p(d.getUTCMinutes())}${p(d.getUTCSeconds())}${p(d.getUTCMilliseconds(), 3)}`;
+}
+
+/**
+ * Is this epoch-ms value a PLAUSIBLE recording instant?
+ *
+ * `isFinite`/`isNaN` is not enough. MariaDB zero-dates ('0000-00-00 00:00:00')
+ * reach the app in two different shapes depending on the query/driver path:
+ * as the STRING (which parses to NaN and was already rejected) or as a JS Date
+ * for YEAR 0172 (which has a perfectly finite getTime() of -56709072000000 and
+ * therefore sailed through every existing guard).
+ *
+ * That second shape is what broke template thumbnails on pattern-matching
+ * pages: the window was signed over a year-0172 instant and the filename came
+ * out as `1721217T000055086`, which media-api cannot parse.
+ *
+ * Recordings are audio uploads, so anything before ~1990 or more than a day in
+ * the future is corrupt data rather than a real window. Reject it and let the
+ * caller fall back to its placeholder, instead of emitting a URL that cannot
+ * work.
+ */
+const MIN_PLAUSIBLE_MS = Date.UTC(1990, 0, 1);
+function isPlausibleRecordingMs (ms) {
+    if (!isFinite(ms)) return false;
+    return ms >= MIN_PLAUSIBLE_MS && ms <= (Date.now() + 86400000);
 }
 
 function trimTrailingSlash (s) {
@@ -248,6 +278,9 @@ function mediaStreamToken (streamId, startMs, endMs, exp) {
 function mediaAssetUrl (streamId, rawStartMs, rawEndMs, asset) {
     if (!streamId || !asset) return null;
     if (!isFinite(rawStartMs) || !isFinite(rawEndMs)) return null;
+    // Reject corrupt windows HERE, at the one chokepoint every caller goes
+    // through, rather than in each caller's own date handling.
+    if (!isPlausibleRecordingMs(rawStartMs) || !isPlausibleRecordingMs(rawEndMs)) return null;
     // ROUND ONCE. Every downstream use — filename AND signature — flows from
     // these two integers, so they cannot drift apart.
     const startMs = Math.round(Number(rawStartMs));
@@ -314,7 +347,10 @@ function roiSpectrogramUrl (roi, opts) {
     const base = roi.datetimeUtc;
     if (!base) return null;
     const baseMs = new Date(base).getTime();
-    if (isNaN(baseMs)) return null;
+    // NOT just isNaN: a MariaDB zero-date arrives here as a JS Date for year
+    // 0172 when the driver has already parsed it, which is finite and passes
+    // isNaN. See isPlausibleRecordingMs.
+    if (!isPlausibleRecordingMs(baseMs)) return null;
     const from = Math.min(Number(roi.timeMin), Number(roi.timeMax));
     const to = Math.max(Number(roi.timeMin), Number(roi.timeMax));
     if (isNaN(from) || isNaN(to)) return null;
