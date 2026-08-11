@@ -9,7 +9,7 @@ const q = require('q');
 const model = require('../../model');
 const pokeDaMonkey = require('../../utils/monkey');
 const config = require('../../config');
-const { arbimon2PublicUrl, mediaStreamId } = require('../../utils/asset-url');
+const { arbimon2PublicUrl, mediaAssetUrl, mediaStreamId } = require('../../utils/asset-url');
 const APIError = require('../../utils/apierror');
 const router = express.Router();
 const { createS3Client } = require('../../utils/storage');
@@ -315,10 +315,15 @@ async function getModelsData(validationUri, limit, offset) {
                 }
                 else {
                     const momentStart = moment.utc(recording.datetime_utc ? recording.datetime_utc : recording.datetime)
-                    const momentEnd = momentStart.clone().add(recording.duration, 'seconds')
-                    const dateFormat = 'YYYYMMDDTHHmmssSSS'
-                    const start = momentStart.format(dateFormat)
-                    const end = momentEnd.format(dateFormat)
+                    const baseMs = momentStart.valueOf()
+                    // Math.trunc reproduces moment .add()'s truncation of
+                    // fractional milliseconds; Math.round (mediaAssetUrl's own
+                    // rounding) would shift the window by 1 ms for durations
+                    // like 1.4999 s, and 1 ms of drift silently 401s a signed
+                    // url. Non-finite -> 0, matching moment's treatment of
+                    // null/undefined. Verified equivalent over a 4,000-case fuzz.
+                    const durationSec = Number(recording.duration)
+                    const durationMs = isFinite(durationSec) ? Math.trunc(durationSec * 1000) : 0
                     // `mtrue` = MONOCHROME. Without it media-api defaults
                     // monochrome to false (segment-file-parsing.js) and returns an
                     // 8-bit RGB spectrogram -- inconsistent with every other ROI
@@ -336,9 +341,12 @@ async function getModelsData(validationUri, limit, offset) {
                     // uri-first stream id (site external_id is wrong/NULL for 11
                     // sites — OPEN-ITEMS #107; same derivation as buildMediaApiAttr).
                     const streamId = mediaStreamId(recording.uri, siteExternalId)
-                    recUrl = streamId
-                        ? `/legacy-api/ingest/recordings/${streamId}_t${start}Z.${end}Z_rfull_g1_fspec_mtrue_d1200.160_wdolph_z120.png`
+                    // DIRECT to media-api with a server-minted token (#99),
+                    // replacing the session-gated `/legacy-api/ingest` proxy.
+                    const minted = streamId && isFinite(baseMs)
+                        ? mediaAssetUrl(streamId, baseMs, baseMs + durationMs, 'rfull_g1_fspec_mtrue_d1200.160_wdolph_z120.png')
                         : null
+                    recUrl = minted ? minted.url : null
                 }
                 rowSent.push({
                     site: recording.site,

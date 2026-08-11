@@ -102,6 +102,24 @@ router.use(function(req, res, next) {
 // arbitrary stream+window and has no guard of its own; the session IS its
 // authentication. Mounted here (not in non-session.js) since 2026-08-10 to
 // close the f6240fd2 regression -- see app/routes/data-api/ingest-assets.js.
+//
+// 🔴 STILL REQUIRED AS OF 2026-08-11 -- DO NOT DELETE WITHOUT READING THIS.
+// All four SERVER-side callers were migrated off it today (#99): the recordings
+// thumbnail, the models + classifications strips and the template 302 now emit
+// direct media-api urls carrying a per-window signed stream-token.
+//
+// The remaining consumer is the LEGACY ANGULARJS VISUALIZER, which builds these
+// urls IN THE BROWSER -- assets/app/app/visualizer/visobjects/recording.js
+// composes `/legacy-api/ingest/recordings/<streamId>_t<start>Z.<end>Z_...
+// d1023.255.png` client-side. A browser has no STREAM_TOKEN_SALT and therefore
+// cannot mint a token, so it CANNOT use the direct route: retiring this mount
+// would leave the legacy visualizer with blank spectrograms. Verified live --
+// the built bundle `public/includes/js/arbimon2.min.js` still contains that
+// path, and it is served in production.
+//
+// Retiring this therefore requires one of: porting the legacy visualizer to
+// server-minted tokens (as the SPA was in #1806), or confirming the legacy
+// visualizer route is unreachable and removing it too.
 router.use('/legacy-api/ingest', require('./data-api/ingest-assets'));
 
 router.use('/legacy-api', dataApi);

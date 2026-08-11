@@ -136,10 +136,22 @@ router.get('/:template/spectrogram', function(req, res, next) {
                 to: Math.max(template.x1, template.x2)
             }
         };
-        const attr = model.recordings.buildMediaApiAttr(recording, 'template', options);
-        // Serve through the existing content-addressed asset proxy, which
-        // already rewrites images to inline + immutable caching.
-        return res.redirect(302, `/legacy-api/ingest/recordings/${attr}`);
+        // Redirect DIRECT to media-api with a server-minted stream-token (#99),
+        // replacing the session-gated `/legacy-api/ingest` proxy. The signed url
+        // is derived from the SAME window buildMediaApiAttr() formats, so the
+        // filename and the signature cannot disagree.
+        //
+        // A 302 is safe here: browsers follow it for <img>, the target is
+        // content-addressed and served inline + immutable, and the token is
+        // scoped to this one window with a bucketed ~6 h expiry. The redirect
+        // is NOT cached (no Cache-Control set on the 302 itself), so a stale
+        // token is re-minted on the next request rather than pinned.
+        const minted = model.recordings.buildMediaApiSignedUrl(recording, 'template', options);
+        if (minted) return res.redirect(302, minted.url);
+        // Salt unset or an unusable stream id: fall back to the stored image
+        // rather than emitting a url that would 401.
+        if (template.storedUri) return res.redirect(302, template.storedUri);
+        return res.sendStatus(404);
     }).catch(next);
 });
 

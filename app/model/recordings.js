@@ -683,6 +683,37 @@ var Recordings = {
         return `${streamId}_t${start}Z.${end}Z_${asset}`
     },
 
+    /**
+     * Signed media-api URL for the SAME window buildMediaApiAttr() describes.
+     *
+     * WHY THIS EXISTS RATHER THAN A SECOND DERIVATION AT THE CALL SITE (#99):
+     * buildMediaApiAttr bakes the window into a formatted STRING, so a caller
+     * wanting a signed url would have to recompute the start/end itself and
+     * sign THAT -- and any disagreement (a rounding mode, a fractional ms)
+     * makes the filename and the signature describe different windows, which
+     * fails as a silent 401. Deriving both from one place removes that class.
+     *
+     * Returns null when the recording is legacy, the stream id is unusable, or
+     * the salt is unset -- callers then keep whatever fallback they had.
+     */
+    buildMediaApiSignedUrl: function(recording, type, options) {
+        const attr = Recordings.buildMediaApiAttr(recording, type, options)
+        if (!attr) return null
+        // attr is `<streamId>_t<START>Z.<END>Z_<asset>`; recover the exact
+        // pieces rather than recomputing them.
+        const m = /^(.+?)_t(\d{8}T\d{9})Z\.(\d{8}T\d{9})Z_(.+)$/.exec(attr)
+        if (!m) return null
+        const streamId = m[1]
+        if (!streamId || streamId === 'undefined') return null
+        const glued = 'YYYYMMDDTHHmmssSSS'
+        const startMs = moment.utc(m[2], glued).valueOf()
+        const endMs = moment.utc(m[3], glued).valueOf()
+        if (!isFinite(startMs) || !isFinite(endMs)) return null
+        // Whole-millisecond integers already, so mediaAssetUrl's rounding is a
+        // no-op and the attr it rebuilds is byte-identical to `attr` above.
+        return mediaAssetUrl(streamId, startMs, endMs, m[4])
+    },
+
     /** Per-VARIANT tmpfilecache key.
      *
      * HISTORY (the bug this fixes): fetchSpectrogramFile, fetchTemplateFile and
@@ -1536,17 +1567,47 @@ var Recordings = {
             recording.thumbnail = arbimon2PublicUrl(encodeURIComponent(recording.uri.replace(/\.([^.]*)$/, '.thumbnail.png')));
         }
         else {
-            const momentStart = moment.utc(recording.datetime_utc ? recording.datetime_utc : recording.datetime)
-            const momentEnd = momentStart.clone().add(recording.duration, 'seconds')
-            const dateFormat = 'YYYYMMDDTHHmmssSSS'
-            const start = momentStart.format(dateFormat)
-            const end = momentEnd.format(dateFormat)
             // uri-first stream id (site.external_id is wrong/NULL for 11 sites
             // — OPEN-ITEMS #107; same derivation as buildMediaApiAttr).
             const streamId = mediaStreamId(recording.uri, site && site.external_id)
-            recording.thumbnail = streamId
-                ? `/legacy-api/ingest/recordings/${streamId}_t${start}Z.${end}Z_z95_wdolph_g1_fspec_mtrue_d420.154.png`
+            // DIRECT to media-api with a server-minted stream-token (#99). Was
+            // `/legacy-api/ingest/recordings/:attr`, the session-gated proxy —
+            // this is the last high-traffic caller to move off it (measured 73
+            // requests/24h, 100% this thumbnail).
+            //
+            // mediaAssetUrl ROUNDS ONCE and derives the filename AND the
+            // signature from the same two integers, so they cannot drift apart
+            // — the fractional-ms class of silent 401s.
+            const momentStart = moment.utc(recording.datetime_utc ? recording.datetime_utc : recording.datetime)
+            const baseMs = momentStart.valueOf()
+            // TWO behaviour-preservation details, both found by fuzzing this
+            // migration against the old moment-based derivation rather than
+            // spot-checking one recording:
+            //
+            // 1. `duration` is a NULLABLE float. moment's .add() treats null,
+            //    undefined and NaN alike as 0 (a zero-length window that still
+            //    produced a WORKING url). Number(undefined)*1000 is NaN, which
+            //    would make mediaAssetUrl return null and blank the thumbnail.
+            //
+            // 2. moment TRUNCATES fractional milliseconds; mediaAssetUrl
+            //    Math.rounds them. For a duration like 1.4999 s that is a 1 ms
+            //    difference (1500 vs 1501) -- and 1 ms is exactly the drift
+            //    that silently 401s a signed url. Math.trunc here reproduces
+            //    moment's own semantics, so the window is IDENTICAL to what
+            //    this caller served before, for every input.
+            const durationSec = Number(recording.duration)
+            const durationMs = isFinite(durationSec) ? Math.trunc(durationSec * 1000) : 0
+            const minted = streamId && isFinite(baseMs)
+                ? mediaAssetUrl(
+                    streamId,
+                    baseMs,
+                    baseMs + durationMs,
+                    'z95_wdolph_g1_fspec_mtrue_d420.154.png'
+                )
                 : null
+            // Null when the salt is unset or the inputs are unusable; callers
+            // render a placeholder rather than a URL that would 401.
+            recording.thumbnail = minted ? minted.url : null
         }
     },
     __compute_spectrogram_tiles : function(recording, callback){

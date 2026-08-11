@@ -105,7 +105,8 @@ router.post('/recordings/delete', verifyToken(), hasRole(['systemUser']), async 
 // these JWT-guarded POSTs left it fully public -- anonymous callers could pull
 // spectrograms AND raw audio for private projects. It now lives in
 // `ingest-assets.js` and is mounted behind the "Force login" gate in
-// `routes/index.js`. See that file's header for the full rationale.
+// `routes/index.js`. See that file's header for the full rationale, including
+// why it could not be retired with its server-side callers on 2026-08-11.
 //
 // The two POSTs above stay here: they are called SERVER-SIDE by rfcx-api
 // (core/_services/arbimon) with a systemUser JWT and must remain reachable
