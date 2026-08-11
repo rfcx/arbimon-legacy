@@ -172,6 +172,20 @@ var dbpool = {
     },
 
     queryHandler: function (query, options, callback) {
+        // Normalize the two-arg call form (queryHandler(sql, cb)) ONCE, up
+        // front, for EVERY branch. Previously only the pg-flip and exports-pg
+        // branches normalized; the default MariaDB branch relied on
+        // queryWithConnHandler doing it downstream — which is fine on the
+        // happy path but the getConnection ERROR path called callback(err)
+        // with callback still undefined (it was sitting in `options`),
+        // throwing "TypeError: callback is not a function" as an uncaught
+        // exception and killing the pod. Latent until a DB connection error
+        // occurs (first seen 2026-08-11 under a PROTOCOL_SEQUENCE_TIMEOUT
+        // during host memory pressure).
+        if (callback === undefined && options instanceof Function) {
+            callback = options;
+            options = undefined;
+        }
         // -------- Phase 6.4 read flip (INERT unless DB_ENGINE=pg) ----------
         // Serve eligible plain SELECTs from PostgreSQL. Writes and anything the
         // allowlist classifier does not positively identify as a plain read fall
@@ -181,10 +195,6 @@ var dbpool = {
         // page. Placed at the SAME chokepoint the shadow taps, so the code path
         // validated for a week by shadow is the code path that now serves.
         if (pgshadow.isPg) {
-            if (callback === undefined && options instanceof Function) {
-                callback = options;
-                options = undefined;
-            }
             var pgRaw = (typeof query === 'string') ? query
                 : (query && typeof query.sql === 'string') ? query.sql : null;
             if (pgRaw !== null && pgshadow.pgRouteEligible(pgRaw)) {
@@ -212,10 +222,6 @@ var dbpool = {
             }
         }
         if (EXPORTS_PG_ENGINE) {
-            if(callback === undefined && options instanceof Function){
-                callback = options;
-                options = undefined;
-            }
             try {
                 var rawSql = (typeof query === 'string') ? query
                     : (query && typeof query.sql === 'string') ? query.sql : null;
