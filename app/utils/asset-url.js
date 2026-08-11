@@ -109,14 +109,33 @@ function gluedUtcTimestamp (ms) {
  * pages: the window was signed over a year-0172 instant and the filename came
  * out as `1721217T000055086`, which media-api cannot parse.
  *
- * Recordings are audio uploads, so anything before ~1990 or more than a day in
- * the future is corrupt data rather than a real window. Reject it and let the
- * caller fall back to its placeholder, instead of emitting a URL that cannot
- * work.
+ * WHERE THE FLOOR SITS, AND WHY IT IS NOT 1990 (corrected 2026-08-11).
+ * The first version of this guard used 1990 and was TOO AGGRESSIVE. Plenty of
+ * recordings carry genuinely old timestamps that are FAITHFULLY recorded --
+ * Xeno-Canto reference clips stamped 1988, and devices whose real-time clock
+ * was never set (1970/1972/1979/1981 are classic RTC defaults). For those the
+ * filename, the uri path and BOTH datetime columns all agree, and media-api
+ * serves them happily: verified live, 1972/1979/1981 recordings return HTTP
+ * 200 with real PNGs. Suppressing those URLs broke working images.
+ *
+ * What must be rejected is the UNREPRESENTABLE, not the merely old:
+ *   - the epoch itself and anything before it, which is what a MariaDB zero
+ *     date collapses to once the driver has parsed it (year 0172 -> a large
+ *     NEGATIVE epoch value)
+ *   - anything so far in the future it cannot be a recording
+ * A year below 1000 also cannot be expressed in the fixed-width YYYYMMDD
+ * filename format at all, which is the concrete failure this guard exists to
+ * prevent.
+ *
+ * So: reject negative epochs (pre-1970) and absurd futures; allow everything
+ * else and let the data speak.
  */
-const MIN_PLAUSIBLE_MS = Date.UTC(1990, 0, 1);
+const MIN_PLAUSIBLE_MS = 0; // 1970-01-01T00:00:00Z -- the epoch itself
 function isPlausibleRecordingMs (ms) {
     if (!isFinite(ms)) return false;
+    // `ms >= 0` is the load-bearing test: a driver-parsed zero date (year 0172)
+    // is a large negative number, and any pre-1000 year is unrepresentable in
+    // the YYYYMMDD filename format media-api parses.
     return ms >= MIN_PLAUSIBLE_MS && ms <= (Date.now() + 86400000);
 }
 
