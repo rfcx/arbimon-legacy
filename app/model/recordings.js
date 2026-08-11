@@ -19,7 +19,7 @@ const projectModel = require('./projects')
 const classificationsModel = require('./classifications')
 const tagsModel = require('./tags')
 const soundscapeCompositionModel = require('./soundscape-composition')
-const { arbimon2PublicUrl, mediaAssetUrl } = require('../utils/asset-url')
+const { arbimon2PublicUrl, mediaAssetUrl, mediaStreamId } = require('../utils/asset-url')
 
 var config       = require('../config');
 const { coreApiBaseUrl } = require('../utils/core-api-url');
@@ -443,7 +443,11 @@ var Recordings = {
                         d.legacy = Recordings.isLegacy(d);
                         d.meta = d.meta ? Recordings.__parse_meta_data(d.meta) : null;
                         d.file = d.meta && d.meta.filename? d.meta.filename : d.file;
-                        d.explorerUrl = d.legacy ? null : `${rfcxConfig.explorerBaseUrl}/explorer/${d.external_id}` + (d.datetime_utc ? `?t=${moment(d.datetime_utc).format('YYYYMMDDTHHmmssSSS')}Z` : '');
+                        // uri-first stream id (OPEN-ITEMS #107): external_id is wrong/NULL
+                        // for 11 sites, which pointed this link at a different (or
+                        // deleted) stream in Explorer.
+                        const explorerStreamId = d.legacy ? null : mediaStreamId(d.uri, d.external_id);
+                        d.explorerUrl = explorerStreamId ? `${rfcxConfig.explorerBaseUrl}/explorer/${explorerStreamId}` + (d.datetime_utc ? `?t=${moment(d.datetime_utc).format('YYYYMMDDTHHmmssSSS')}Z` : '') : null;
                     })
                     return data;
                 }
@@ -668,7 +672,15 @@ var Recordings = {
         const dateFormat = 'YYYYMMDDTHHmmssSSS'
         const start = momentStart.format(dateFormat)
         const end = momentEnd.format(dateFormat)
-        return `${recording.external_id}_t${start}Z.${end}Z_${asset}`
+        // Stream id from the recording's own uri, external_id as fallback —
+        // NOT external_id-first. external_id is stale/NULL/'undefined' for 11
+        // sites (49,249 recordings, OPEN-ITEMS #107) and every one of their
+        // core segments is owned by the URI's stream. This was the defect that
+        // broke audio/spectrograms/templates for tech4nature-mexico,
+        // green-and-golden-bell-frogs, workshop-arbimon and nahuelbuta.
+        // Same derivation as attachTileMediaTokens — keep them identical.
+        const streamId = mediaStreamId(recording.uri, recording.external_id)
+        return `${streamId}_t${start}Z.${end}Z_${asset}`
     },
 
     /** Per-VARIANT tmpfilecache key.
@@ -1067,7 +1079,15 @@ var Recordings = {
             // seg4 `3qxwx34vyovi` vs external_id `rj83wlyqyx3d`): a token minted
             // from external_id -> 401 (rejected); from the uri segment -> auth
             // accepted. Keep this derivation identical to the client's.
-            const streamId = recording.uri.split('/')[3];
+            //
+            // NO external_id fallback HERE, on purpose (unlike
+            // buildMediaApiAttr): the BROWSER builds the tile filename from
+            // uri.split('/')[3] on its own, so a server-side fallback would
+            // sign a DIFFERENT id than the filename carries — guaranteed 401
+            // — whereas minting nothing degrades to the session-gated proxy.
+            // mediaStreamId(uri, null) == uri.split('/')[3] plus the
+            // 'undefined'-string guard (site 43570).
+            const streamId = mediaStreamId(recording.uri, null);
             if (!streamId) return;
             // MUST be datetime_utc: `datetime` is the denormalised, TZ-shifted
             // local time and would put the window hours off.
@@ -1521,7 +1541,12 @@ var Recordings = {
             const dateFormat = 'YYYYMMDDTHHmmssSSS'
             const start = momentStart.format(dateFormat)
             const end = momentEnd.format(dateFormat)
-            recording.thumbnail = `/legacy-api/ingest/recordings/${site.external_id}_t${start}Z.${end}Z_z95_wdolph_g1_fspec_mtrue_d420.154.png`
+            // uri-first stream id (site.external_id is wrong/NULL for 11 sites
+            // — OPEN-ITEMS #107; same derivation as buildMediaApiAttr).
+            const streamId = mediaStreamId(recording.uri, site && site.external_id)
+            recording.thumbnail = streamId
+                ? `/legacy-api/ingest/recordings/${streamId}_t${start}Z.${end}Z_z95_wdolph_g1_fspec_mtrue_d420.154.png`
+                : null
         }
     },
     __compute_spectrogram_tiles : function(recording, callback){

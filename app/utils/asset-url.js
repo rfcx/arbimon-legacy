@@ -95,6 +95,52 @@ function trimTrailingSlash (s) {
 }
 
 /**
+ * THE stream-id derivation. One function, used by every URL builder.
+ *
+ * Derives the core media-api stream id for a recording, preferring the 4th
+ * segment of the recording's own `uri` (`YYYY/MM/DD/<streamId>/<segUuid>.flac`)
+ * over `sites.external_id`.
+ *
+ * WHY URI-FIRST (OPEN-ITEMS #107, measured live 2026-08-10): the two disagree
+ * for 49,249 recordings across 11 sites (9,363 NULL external_id + 39,886
+ * genuinely different), and a bulk join of every one of those recordings'
+ * uri-filename UUIDs against core `stream_segments` proved the segment is
+ * owned by the URI's stream — NEVER by external_id's — for 100% of the rows
+ * that have segments at all. `sites.external_id` is a per-SITE column that
+ * goes stale when a site aggregates multiple stream deployments (site 35021
+ * carries TWO streams; one column cannot name both) or was never backfilled
+ * (NULL). The recording's uri names the stream that actually owns its bytes.
+ *
+ * The `externalId` fallback exists for rows whose uri cannot yield a segment
+ * (legacy `project_*` uris handled by callers; malformed/short uris) — for
+ * the 99.983% of the corpus where both agree it changes nothing.
+ *
+ * ⚠ THE LITERAL STRING 'undefined' IS NOT AN ID. Site 43570 stores it (a
+ * failed-ingest artifact); it is truthy, so a naive `a || b` picks it and
+ * signs/fetches it verbatim. Filter it on BOTH inputs.
+ *
+ * DO NOT "simplify" this back to external_id-first: that was the defect
+ * (`buildMediaApiAttr` pre-2026-08) — it broke audio, spectrograms, template
+ * crops and thumbnails for tech4nature-mexico, green-and-golden-bell-frogs,
+ * workshop-arbimon and nahuelbuta.
+ */
+// Standard ingest key shape: YYYY/MM/DD/<streamId>/<file>. Only a uri of
+// this shape is allowed to nominate its 4th segment as the stream id — an
+// unrecognised shape falls back to external_id instead of yielding a date
+// fragment or filename as a "stream id". (Verified live 2026-08-10: 3M-row
+// sample of non-legacy uris = 100% this shape, 0 odd.)
+var STREAM_URI_SHAPE = /^\d{4}\/\d{2}\/\d{2}\/([^/]+)\/[^/]+$/;
+
+function mediaStreamId (uri, externalId) {
+    if (typeof uri === 'string' && uri.indexOf('project_') !== 0) {
+        const m = STREAM_URI_SHAPE.exec(uri);
+        if (m && m[1] !== 'undefined') return m[1];
+    }
+    if (externalId && externalId !== 'undefined') return externalId;
+    return null;
+}
+
+/**
  * Returns the public URL base (no trailing slash) for the arbimon2
  * bucket. Read from `ARBIMON2_PUBLIC_URL_BASE` or, if unset, falls
  * back to the rfcx-local default.
@@ -245,7 +291,8 @@ function mediaAssetUrl (streamId, rawStartMs, rawEndMs, asset) {
  * and MUST NOT fall back to the cached detection PNG.
  *
  * @param {object} roi
- * @param {string} roi.externalId  stream external id
+ * @param {string} [roi.recUri]     recording uri (PREFERRED stream-id source — see mediaStreamId)
+ * @param {string} [roi.externalId] site external id (fallback stream-id source)
  * @param {string|Date} roi.datetimeUtc  recording start (UTC)
  * @param {number} roi.timeMin  ROI start, seconds into the recording
  * @param {number} roi.timeMax  ROI end, seconds into the recording
@@ -257,7 +304,13 @@ function mediaAssetUrl (streamId, rawStartMs, rawEndMs, asset) {
  * @param {number} [opts.height=256]
  */
 function roiSpectrogramUrl (roi, opts) {
-    if (!roi || !roi.externalId) return null;
+    if (!roi) return null;
+    // One derivation everywhere: uri-segment first, external_id fallback
+    // (see mediaStreamId above — external_id is wrong/NULL for 11 sites).
+    // Callers that can project the recording uri pass it as roi.recUri;
+    // callers that cannot still work exactly as before via the fallback.
+    const streamId = mediaStreamId(roi.recUri, roi.externalId);
+    if (!streamId) return null;
     const base = roi.datetimeUtc;
     if (!base) return null;
     const baseMs = new Date(base).getTime();
@@ -309,13 +362,13 @@ function roiSpectrogramUrl (roi, opts) {
     // FALLS BACK to the session-gated proxy when the salt is unset, so a
     // misconfigured environment degrades to the (still authenticated) legacy
     // path rather than emitting URLs that would 401.
-    const minted = mediaAssetUrl(roi.externalId, rawStartMs, rawEndMs, asset);
+    const minted = mediaAssetUrl(streamId, rawStartMs, rawEndMs, asset);
     if (minted) {
         return minted.url;
     }
     // Salt unset — fall back to the session-gated proxy. Derive the same attr
     // from the same rounded integers so the two paths stay byte-identical.
-    const attr = `${roi.externalId}_t${gluedUtcTimestamp(Math.round(rawStartMs))}Z.` +
+    const attr = `${streamId}_t${gluedUtcTimestamp(Math.round(rawStartMs))}Z.` +
         `${gluedUtcTimestamp(Math.round(rawEndMs))}Z_${asset}`;
     return `/legacy-api/ingest/recordings/${attr}`;
 }
@@ -324,6 +377,7 @@ module.exports = {
     mediaStreamToken,
     mediaAssetExpiry,
     mediaAssetUrl,
+    mediaStreamId,
     gluedUtcTimestamp,
     MEDIA_ASSET_PATH,
     arbimon2PublicUrl,

@@ -120,7 +120,7 @@ select.push(
         if (withSpectroCols) {
             tables.push("JOIN recordings RSPEC ON A.recording_id = RSPEC.recording_id");
             tables.push("JOIN sites SSPEC ON SSPEC.site_id = RSPEC.site_id");
-            select.push("SSPEC.external_id as external_id, RSPEC.datetime_utc as datetime_utc");
+            select.push("SSPEC.external_id as external_id, RSPEC.uri as rec_uri, RSPEC.datetime_utc as datetime_utc");
             // Needed by the SPA 'expand' modal to frame a padded full-band
             // window: sample_rate -> nyquist (freq axis), duration -> clamp
             // the padded window. Cheap columns on the already-joined RSPEC.
@@ -200,6 +200,8 @@ select.push(
                     // ROI, so these thumbs SHARE cached objects rather than
                     // populating a second 600x256 copy.
                     roi.spectrogram_url = roiSpectrogramUrl({
+                        // uri-first stream id (OPEN-ITEMS #107)
+                        recUri: roi.rec_uri,
                         externalId: roi.external_id,
                         datetimeUtc: roi.datetime_utc,
                         timeMin: roi.time_min,

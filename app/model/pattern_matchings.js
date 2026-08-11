@@ -890,7 +890,10 @@ var PatternMatchings = {
         // (every PM ROI has a recording, which has a site — verified live: 0
         // orphans in 1M sampled rows), so the row count is unchanged.
         return dbpool.query(
-            "SELECT PMR.*, S.external_id, R.datetime_utc, R.sample_rate\n" +
+            // `R.uri as rec_uri` (NOT plain `uri` — PMR.* already carries the
+            // stored-PNG `uri` column) feeds the uri-first stream derivation
+            // in combineRoiSpectrogramUrl (OPEN-ITEMS #107).
+            "SELECT PMR.*, S.external_id, R.uri as rec_uri, R.datetime_utc, R.sample_rate\n" +
             `FROM pattern_matching_rois PMR\n` +
             "JOIN recordings R ON R.recording_id = PMR.recording_id\n" +
             "JOIN sites S ON S.site_id = R.site_id\n" +
@@ -916,7 +919,9 @@ var PatternMatchings = {
         // every branch, since all three call getRoiUrl(). Joins are INNER on
         // recording->site (guaranteed present) so row counts are unchanged;
         // WHERE clauses are qualified to PMR now that the table is aliased.
-        const base = `SELECT PMR.*, S.external_id, R.datetime_utc, R.sample_rate
+        // `R.uri as rec_uri` on every branch: uri-first stream derivation
+        // (OPEN-ITEMS #107). Aliased because PMR.* carries the stored-PNG `uri`.
+        const base = `SELECT PMR.*, S.external_id, R.uri as rec_uri, R.datetime_utc, R.sample_rate
                 FROM pattern_matching_rois PMR
                 JOIN recordings R ON R.recording_id = PMR.recording_id
                 JOIN sites S ON S.site_id = R.site_id`;
@@ -935,7 +940,7 @@ var PatternMatchings = {
         if (options.recId && options.validated) {
             return dbpool.query(
                 { sql: `SELECT PMR.*, SP.scientific_name as species_name, ST.songtype as songtype_name,
-                S.external_id, R.datetime_utc, R.sample_rate
+                S.external_id, R.uri as rec_uri, R.datetime_utc, R.sample_rate
                 FROM pattern_matching_rois PMR
                 JOIN species SP ON PMR.species_id = SP.species_id
                 JOIN songtypes ST ON PMR.songtype_id = ST.songtype_id
@@ -1011,6 +1016,12 @@ var PatternMatchings = {
      */
     combineRoiSpectrogramUrl: function(roi) {
         return roiSpectrogramUrl({
+            // uri-first stream id (OPEN-ITEMS #107): `rec_uri` from the
+            // PMR.*-shaped queries (getRoi/getPatternMatchingRois), `recording`
+            // from buildRoisQuery/pmrSqlSelect (still the FULL uri here —
+            // completePMRResults truncates it to the basename only AFTER
+            // getRoiUrl has run). external_id stays as the fallback.
+            recUri: roi.rec_uri || roi.recording,
             externalId: roi.external_id,
             datetimeUtc: roi.datetime_utc,
             timeMin: roi.x1,

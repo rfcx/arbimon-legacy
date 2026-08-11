@@ -9,7 +9,7 @@ const q = require('q');
 const model = require('../../model');
 const pokeDaMonkey = require('../../utils/monkey');
 const config = require('../../config');
-const { arbimon2PublicUrl } = require('../../utils/asset-url');
+const { arbimon2PublicUrl, mediaStreamId } = require('../../utils/asset-url');
 const APIError = require('../../utils/apierror');
 const router = express.Router();
 const { createS3Client } = require('../../utils/storage');
@@ -333,8 +333,11 @@ async function getModelsData(validationUri, limit, offset) {
                     // 0.54-0.86 source px per displayed px while wasting 5.12x
                     // vertical resolution. Keeping the two endpoints on the SAME
                     // geometry also keeps them sharing one cache object per window.
-                    recUrl = siteExternalId
-                        ? `/legacy-api/ingest/recordings/${siteExternalId}_t${start}Z.${end}Z_rfull_g1_fspec_mtrue_d1200.160_wdolph_z120.png`
+                    // uri-first stream id (site external_id is wrong/NULL for 11
+                    // sites — OPEN-ITEMS #107; same derivation as buildMediaApiAttr).
+                    const streamId = mediaStreamId(recording.uri, siteExternalId)
+                    recUrl = streamId
+                        ? `/legacy-api/ingest/recordings/${streamId}_t${start}Z.${end}Z_rfull_g1_fspec_mtrue_d1200.160_wdolph_z120.png`
                         : null
                 }
                 rowSent.push({
