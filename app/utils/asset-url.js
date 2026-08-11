@@ -361,7 +361,9 @@ function roiSpectrogramUrl (roi, opts) {
     //
     // FALLS BACK to the session-gated proxy when the salt is unset, so a
     // misconfigured environment degrades to the (still authenticated) legacy
-    // path rather than emitting URLs that would 401.
+    // path rather than emitting URLs that would 401. That proxy is still
+    // mounted (the legacy AngularJS visualizer builds its tile urls
+    // client-side and cannot mint) -- see routes/index.js.
     const minted = mediaAssetUrl(streamId, rawStartMs, rawEndMs, asset);
     if (minted) {
         return minted.url;

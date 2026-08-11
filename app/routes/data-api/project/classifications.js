@@ -8,7 +8,7 @@ const { createS3Client } = require('../../../utils/storage');
 const config = require('../../../config');
 const model = require('../../../model');
 const pokeDaMonkey = require('../../../utils/monkey');
-const { arbimon2PublicUrl, mediaStreamId } = require('../../../utils/asset-url');
+const { arbimon2PublicUrl, mediaAssetUrl, mediaStreamId } = require('../../../utils/asset-url');
 const router = express.Router();
 const moment = require('moment');
 const { httpErrorHandler } = require('@rfcx/http-utils');
@@ -70,10 +70,14 @@ router.get('/:classiId/more/:from/:total', function(req, res, next) {
                 }
                 else {
                     const momentStart = moment.utc(recording.datetime_utc ? recording.datetime_utc : recording.datetime)
-                    const momentEnd = momentStart.clone().add(recording.duration, 'seconds')
-                    const dateFormat = 'YYYYMMDDTHHmmssSSS'
-                    const start = momentStart.format(dateFormat)
-                    const end = momentEnd.format(dateFormat)
+                    const baseMs = momentStart.valueOf()
+                    // Math.trunc reproduces moment .add()'s truncation of
+                    // fractional milliseconds; mediaAssetUrl's own Math.round
+                    // would shift the window by 1 ms for durations like
+                    // 1.4999 s, and 1 ms of drift silently 401s a signed url.
+                    // Non-finite -> 0, matching moment on null/undefined.
+                    const durationSec = Number(recording.duration)
+                    const durationMs = isFinite(durationSec) ? Math.trunc(durationSec * 1000) : 0
                     // `mtrue` = MONOCHROME. media-api defaults monochrome to FALSE when
                     // the token is absent (segment-file-parsing.js), so this URL was
                     // silently requesting an 8-bit RGB spectrogram -- inconsistent with
@@ -100,9 +104,12 @@ router.get('/:classiId/more/:from/:total', function(req, res, next) {
                     // uri-first stream id (site external_id is wrong/NULL for 11 sites
                     // — OPEN-ITEMS #107; same derivation as buildMediaApiAttr).
                     const streamId = mediaStreamId(recording.uri, site && site[0] && site[0].external_id)
-                    classiInfo.rec_image_url = streamId
-                        ? `/legacy-api/ingest/recordings/${streamId}_t${start}Z.${end}Z_rfull_g1_fspec_mtrue_d1200.160_wdolph_z120.png`
+                    // DIRECT to media-api with a server-minted token (#99),
+                    // replacing the session-gated `/legacy-api/ingest` proxy.
+                    const minted = streamId && isFinite(baseMs)
+                        ? mediaAssetUrl(streamId, baseMs, baseMs + durationMs, 'rfull_g1_fspec_mtrue_d1200.160_wdolph_z120.png')
                         : null
+                    classiInfo.rec_image_url = minted ? minted.url : null
                 }
                 delete classiInfo.uri;
             }
