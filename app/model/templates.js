@@ -154,6 +154,8 @@ var Templates = {
                 var r = rows[i];
                 var dyn = (r.dynRecUri && String(r.dynRecUri).indexOf('project_') !== 0)
                     ? roiSpectrogramUrl({
+                        // uri-first stream id (OPEN-ITEMS #107)
+                        recUri: r.dynRecUri,
                         externalId: r.dynExternalId,
                         datetimeUtc: r.dynDatetimeUtc,
                         timeMin: Math.min(r.x1, r.x2),
@@ -269,6 +271,8 @@ var Templates = {
                 var r = rows[i];
                 var dyn = (r.dynRecUri && String(r.dynRecUri).indexOf('project_') !== 0)
                     ? roiSpectrogramUrl({
+                        // uri-first stream id (OPEN-ITEMS #107)
+                        recUri: r.dynRecUri,
                         externalId: r.dynExternalId,
                         datetimeUtc: r.dynDatetimeUtc,
                         timeMin: Math.min(r.x1, r.x2),

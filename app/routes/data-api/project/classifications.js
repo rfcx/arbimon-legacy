@@ -8,7 +8,7 @@ const { createS3Client } = require('../../../utils/storage');
 const config = require('../../../config');
 const model = require('../../../model');
 const pokeDaMonkey = require('../../../utils/monkey');
-const { arbimon2PublicUrl } = require('../../../utils/asset-url');
+const { arbimon2PublicUrl, mediaStreamId } = require('../../../utils/asset-url');
 const router = express.Router();
 const moment = require('moment');
 const { httpErrorHandler } = require('@rfcx/http-utils');
@@ -97,7 +97,12 @@ router.get('/:classiId/more/:from/:total', function(req, res, next) {
                     // from 7.85x to 1.23x -- AND it is SMALLER on the wire:
                     // 94,164 B vs 140,366 B (-33%), because the wasted vertical
                     // pixels cost more than the added horizontal ones.
-                    classiInfo.rec_image_url = `/legacy-api/ingest/recordings/${site[0].external_id}_t${start}Z.${end}Z_rfull_g1_fspec_mtrue_d1200.160_wdolph_z120.png`
+                    // uri-first stream id (site external_id is wrong/NULL for 11 sites
+                    // — OPEN-ITEMS #107; same derivation as buildMediaApiAttr).
+                    const streamId = mediaStreamId(recording.uri, site && site[0] && site[0].external_id)
+                    classiInfo.rec_image_url = streamId
+                        ? `/legacy-api/ingest/recordings/${streamId}_t${start}Z.${end}Z_rfull_g1_fspec_mtrue_d1200.160_wdolph_z120.png`
+                        : null
                 }
                 delete classiInfo.uri;
             }

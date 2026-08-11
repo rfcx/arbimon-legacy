@@ -675,7 +675,7 @@ TrainingSets.types.roi_set = {
         if (withSpectro) {
             tables.push("JOIN recordings RSPEC ON RSPEC.recording_id = TSD.recording_id");
             tables.push("JOIN sites SSPEC ON SSPEC.site_id = RSPEC.site_id");
-            fields.push("SSPEC.external_id as external_id", "RSPEC.datetime_utc as datetime_utc");
+            fields.push("SSPEC.external_id as external_id", "RSPEC.uri as rec_uri", "RSPEC.datetime_utc as datetime_utc");
             // Needed by the SPA 'expand' modal to frame a padded full-band
             // window: sample_rate -> nyquist (freq axis), duration -> clamp
             // the padded window. Cheap columns on the already-joined RSPEC.
@@ -686,6 +686,8 @@ TrainingSets.types.roi_set = {
             if (!err && withSpectro && Array.isArray(rows)) {
                 for (var i = 0; i < rows.length; i++) {
                     rows[i].spectrogram_url = roiSpectrogramUrl({
+                        // uri-first stream id (OPEN-ITEMS #107)
+                        recUri: rows[i].rec_uri,
                         externalId: rows[i].external_id,
                         datetimeUtc: rows[i].datetime_utc,
                         timeMin: rows[i].x1,

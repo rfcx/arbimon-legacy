@@ -48,7 +48,13 @@ function buildMediaApiAttr (recording, type, options) {
         momentEnd = momentStart.clone().add(trimDuration, 'seconds');
     }
     const dateFormat = 'YYYYMMDDTHHmmssSSS';
-    return `${recording.external_id}_t${momentStart.format(dateFormat)}Z.${momentEnd.format(dateFormat)}Z_${asset}`;
+    // Lockstep with asset-url.js mediaStreamId: shape-validated uri segment
+    // first, external_id fallback, 'undefined' never usable — OPEN-ITEMS #107.
+    const m = (typeof recording.uri === 'string' && recording.uri.indexOf('project_') !== 0)
+        ? /^\d{4}\/\d{2}\/\d{2}\/([^/]+)\/[^/]+$/.exec(recording.uri) : null;
+    const streamId = (m && m[1] !== 'undefined') ? m[1]
+        : ((recording.external_id && recording.external_id !== 'undefined') ? recording.external_id : null);
+    return `${streamId}_t${momentStart.format(dateFormat)}Z.${momentEnd.format(dateFormat)}Z_${asset}`;
 }
 
 function buildAssetCacheKey (recording, variant, ext) {
@@ -65,7 +71,9 @@ function hash_key (key) {
 
 // ---------------------------------------------------------------- fixtures
 const rec = {
-    uri: 'streams/aBc123XyZ/2026/07/13/aBc123XyZ_t20260713T000000000Z.wav',
+    // Standard ingest key shape (YYYY/MM/DD/<streamId>/<file>) so the uri-first
+    // stream derivation resolves; uri segment == external_id (the 99.983% case).
+    uri: '2026/07/13/aBc123XyZ/aBc123XyZ_t20260713T000000000Z.wav',
     external_id: 'aBc123XyZ',
     datetime: '2026-07-13 00:00:00',
     datetime_utc: '2026-07-13 00:00:00',
