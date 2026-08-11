@@ -69,12 +69,42 @@ angular.module('a2.visobjects.recording', [
         this.tiles.set.forEach((function(tile){
             if (!!data.legacy) {
                 tile.src="/legacy-api/project/"+Project.getUrl()+"/recordings/tiles/"+this.id+"/"+tile.i+"/"+tile.j+"/"+randomString;
+            } else if (tile.mediaToken && tile.mediaStart && tile.mediaEnd) {
+                // DIRECT to media-api with the token the SERVER minted for this
+                // exact tile window (#99). The payload this view already fetches
+                // (/legacy-api/project/:url/recordings/info/:id -> 
+                // fetchSpectrogramTiles -> attachTileMediaTokens) has carried
+                // mediaToken/mediaStreamId/mediaStart/mediaEnd/mediaExp on every
+                // tile since #1806 -- this view was simply ignoring them and
+                // composing a proxy URL instead.
+                //
+                // 🔴 USE THE SERVER'S start/end VERBATIM. Do NOT recompute them
+                // (as the line this replaces did): the token signs
+                // streamId_startMs_endMs[_exp], so re-deriving the window
+                // client-side risks disagreeing with what was signed by a
+                // millisecond -- and a mismatch is a SILENT 401 that renders as
+                // blank space, because the tile <img> has no error surface.
+                // That is exactly the fractional-ms defect class fixed in the
+                // SPA on 2026-08-10.
+                //
+                // The palette stays client-side: render params are deliberately
+                // NOT part of the signed message, so the per-user spectro colour
+                // still works without a re-mint.
+                var streamId = tile.mediaStreamId || data.uri.split('/')[3];
+                tile.src = '/media-api/internal/assets/streams/' + streamId +
+                    '_t' + tile.mediaStart + 'Z.' + tile.mediaEnd + 'Z' +
+                    '_z95_wdolph_g1_fspec_' + spectroColoredCache + '_d1023.255.png' +
+                    '?stream-token=' + tile.mediaToken +
+                    (tile.mediaExp ? '&exp=' + tile.mediaExp : '');
             } else {
-                var streamId = data.uri.split('/')[3]
+                // FALLBACK: server could not mint (salt unset, or an older
+                // backend). Keep the session-gated proxy so a misconfigured
+                // environment degrades rather than showing blank tiles.
+                var fallbackStreamId = data.uri.split('/')[3]
                 const datetime = data.datetime_utc ? data.datetime_utc : data.datetime
                 var start = new Date(new Date(datetime).valueOf() + Math.round(tile.s * 1000)).toISOString()
                 var end = new Date(new Date(datetime).valueOf() + Math.round((tile.s + tile.ds) * 1000)).toISOString()
-                tile.src = '/legacy-api/ingest/recordings/' + streamId + '_t' + start.replace(/-|:|\./g, '') + '.' + end.replace(/-|:|\./g, '') + '_z95_wdolph_g1_fspec_' + spectroColoredCache + '_d1023.255.png';
+                tile.src = '/legacy-api/ingest/recordings/' + fallbackStreamId + '_t' + start.replace(/-|:|\./g, '') + '.' + end.replace(/-|:|\./g, '') + '_z95_wdolph_g1_fspec_' + spectroColoredCache + '_d1023.255.png';
             }
         }).bind(this));
     };
