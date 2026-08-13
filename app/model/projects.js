@@ -201,7 +201,12 @@ var Projects = {
 
                 return q.all([
                     options.compute.rec_count ? dbpool.query(
-                        "SELECT site_id, COUNT(recording_id) as rec_count "+
+                        // MIN/MAX ride along on the aggregate that already
+                        // computes rec_count over exactly these rows, so the
+                        // per-site date range costs no extra query or scan.
+                        "SELECT site_id, COUNT(recording_id) as rec_count, "+
+                        "       MIN(datetime) as first_recording_at, "+
+                        "       MAX(datetime) as last_recording_at "+
                         "FROM recordings "+
                         "WHERE site_id IN (?) " +
                         // Archiving (Phase A): per-site recording counts exclude archived.
@@ -211,9 +216,13 @@ var Projects = {
                     ).then(function(results){
                         sites.forEach(function(site){
                             site.rec_count=0;
+                            site.first_recording_at=null;
+                            site.last_recording_at=null;
                         });
                         results.forEach(function(row){
                             sitesById[row.site_id].rec_count = row.rec_count;
+                            sitesById[row.site_id].first_recording_at = row.first_recording_at;
+                            sitesById[row.site_id].last_recording_at = row.last_recording_at;
                         });
                     }) : q(),
                 ]).then(function(){
