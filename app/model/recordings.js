@@ -2476,7 +2476,31 @@ var Recordings = {
             }).then(async function() {
                 const chunkSize = 1000
                 let index = 0
-                async function getData () {
+                // Iterate, do NOT recurse. This loop was previously an
+                // `async function getData()` that ended with `await getData()`,
+                // i.e. one nested async frame PER 1,000-row chunk, none of
+                // which unwound until the whole export finished. Each pending
+                // frame kept its own `results` array and awaited promise chain
+                // reachable, so peak memory scaled with EXPORT SIZE rather than
+                // chunk size. (`results = null` before the recursive call was
+                // not a mitigation: it cleared the variable, not the frame.)
+                //
+                // Measured on prod 2026-08-13: a 298,332-recording project
+                // (PELD Gurupi) climbed ~500 MiB per 10 min with no plateau and
+                // was OOMKilled at the 2500Mi limit ~17 times in 35h, never
+                // completing. Because the export could not finish, the row was
+                // re-claimed by the reconciler every ~2h and retried forever,
+                // so the requesting user got neither a file nor an error.
+                // See rfcx-local OPEN-ITEMS #113.
+                //
+                // A `while` loop is semantically identical here (the recursion
+                // was purely a loop) but runs in constant stack, freeing each
+                // chunk once written. This is also the shape the three sibling
+                // exporters in jobs/arbimon-recording-export-job/ already use
+                // (pattern-matching.js, soundscape.js, rfm-classification.js
+                // all drive their chunk loop with `while (toProcess === true)`).
+                let hasMore = true
+                while (hasMore) {
                     let results = [];
                     for (let builder in summaryBuilders) {
                         const baseSql = summaryBuilders[builder].getSQL().replace(';', '').replace('SELECT', 'SELECT /*+ MAX_EXECUTION_TIME(840000) */')
@@ -2488,12 +2512,11 @@ var Recordings = {
                         cb(null, results)
                         index++
                         results = null
-                        await getData()
                     } else {
+                        hasMore = false
                         cb(null, null)
                     }
                 }
-                await getData()
             })
     },
 
