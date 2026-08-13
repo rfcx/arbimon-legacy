@@ -2084,7 +2084,16 @@ var Recordings = {
             start: joi.string(),
             end: joi.string().optional(),
             site_external_id: joi.string(),
-            project_id: joi.number()
+            project_id: joi.number(),
+            // exact=true switches the match from '<=' (nearest recording AT OR
+            // BEFORE start — what the CNN detection viewer and the Visualizer
+            // links need, since a detection's start falls INSIDE a recording)
+            // to '=' (a recording starting exactly at this instant — what a
+            // duplicate check needs). Opt-in so existing callers are unchanged.
+            exact: joi.alternatives().try(
+                joi.boolean(),
+                joi.string().valid('true', 'false', '0', '1')
+            ).optional()
         }
     },
 
@@ -2263,11 +2272,32 @@ var Recordings = {
             .then(async (parameters) => {
                 const [site] = await siteModel.findAsync({ external_id: parameters.site_external_id })
                 const dateFormatted = moment.utc(parameters.start).format('YYYY-MM-DD HH:mm:ss')
-                const q = `select recording_id from recordings
+                // Two DIFFERENT questions share this endpoint:
+                //  - default '<=': "which recording CONTAINS this instant?" — a
+                //    CNN detection's start is offset INSIDE a recording, so the
+                //    nearest-at-or-before row is the right answer.
+                //  - exact '=':   "is there a recording starting exactly here?"
+                //    — the uploader's duplicate advisory. Under '<=' it matched
+                //    the site's newest recording for ANY later timestamp, so
+                //    every genuinely new file was flagged Duplicate.
+                const exact = parameters.exact === true || parameters.exact === 'true' ||
+                    parameters.exact === '1' || parameters.exact === 1
+                const q = exact
+                    ? `select recording_id from recordings
+                    where datetime_utc = '${dateFormatted}' and site_id = ${site.site_id}
+                    limit 1`
+                    : `select recording_id from recordings
                     where datetime_utc <= '${dateFormatted}' and site_id = ${site.site_id}
                     order by datetime_utc desc limit 1`
                 console.log('<- [recording query]', q)
-                return dbpool.query(q).get(0).get('recording_id')
+                // Resolve 0 (not a rejection) when nothing matches. With
+                // exact=true "no match" is the COMMON, expected answer, and the
+                // old .get(0).get(...) chain rejected with a TypeError on an
+                // empty result set — which the route turned into res.json(0)
+                // anyway, but only after logging every clean miss as an error.
+                return dbpool.query(q).then(function (rows) {
+                    return rows && rows.length > 0 ? rows[0].recording_id : 0
+                })
             }).nodeify(callback)
     },
 
