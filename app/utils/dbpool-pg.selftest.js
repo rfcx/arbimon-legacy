@@ -629,6 +629,22 @@ eq('clustering: MIN(backtick col) + alias translates',
    m.translate('SELECT A.aed_id, MIN(C.`date_created`) as `date_created` FROM a A JOIN c C ON A.j = C.k GROUP BY A.aed_id, A.species_id'),
    'SELECT A.aed_id, MIN(C.date_created) as date_created FROM a A JOIN c C ON A.j = C.k GROUP BY A.aed_id, A.species_id');
 
+// ---- soundscape region-tags GROUP BY shape (P6 2026-08-16, 42803 hash e2600c86) --
+// getRegionTags() (soundscapes.js) fired the first genuine dialect_error on
+// the 17th clock: soundscape_region_tag_id + recording_id projected without
+// aggregation while grouped only by (region_id, tag_id) — measured fan-out
+// up to 99 rows/group, so the #1790 MIN() precedent applies (bare GROUP BY
+// addition would 4x the result reaching the UI: 237 groups vs 991 rows).
+// ST.tag/ST.type join the GROUP BY via ST's PK — cardinality-neutral. Pin
+// that the translator carries the fixed shape untouched.
+console.log('== soundscape region-tags GROUP BY shape (P6 2026-08-16) ==');
+eq('srt: MIN() representatives + PK-joined GROUP BY cols translate',
+   m.translate('SELECT MIN(SRT.soundscape_region_tag_id) as id, SRT.soundscape_region_id as region, MIN(SRT.recording_id) as recording, ST.tag, ST.type, COUNT(*) as count FROM soundscape_region_tags SRT JOIN soundscape_tags ST ON ST.soundscape_tag_id = SRT.soundscape_tag_id WHERE SRT.soundscape_region_id = 1 GROUP BY SRT.soundscape_region_id, SRT.soundscape_tag_id, ST.tag, ST.type'),
+   'SELECT MIN(SRT.soundscape_region_tag_id) as id, SRT.soundscape_region_id as region, MIN(SRT.recording_id) as recording, ST.tag, ST.type, COUNT(*) as count FROM soundscape_region_tags SRT JOIN soundscape_tags ST ON ST.soundscape_tag_id = SRT.soundscape_tag_id WHERE SRT.soundscape_region_id = 1 GROUP BY SRT.soundscape_region_id, SRT.soundscape_tag_id, ST.tag, ST.type');
+eq('srt: recording-branch shape (MIN user/timestamp projections) translates',
+   m.translate('SELECT MIN(SRT.soundscape_region_tag_id) as id, MIN(SRT.user_id) as user, MIN(SRT.timestamp) as timestamp, ST.tag, COUNT(*) as count FROM soundscape_region_tags SRT JOIN soundscape_tags ST ON ST.soundscape_tag_id = SRT.soundscape_tag_id WHERE SRT.soundscape_region_id = 1 AND SRT.recording_id = 2 GROUP BY SRT.soundscape_region_id, SRT.recording_id, SRT.soundscape_tag_id, ST.tag, ST.type'),
+   'SELECT MIN(SRT.soundscape_region_tag_id) as id, MIN(SRT.user_id) as user, MIN(SRT.timestamp) as timestamp, ST.tag, COUNT(*) as count FROM soundscape_region_tags SRT JOIN soundscape_tags ST ON ST.soundscape_tag_id = SRT.soundscape_tag_id WHERE SRT.soundscape_region_id = 1 AND SRT.recording_id = 2 GROUP BY SRT.soundscape_region_id, SRT.recording_id, SRT.soundscape_tag_id, ST.tag, ST.type');
+
 // ---- connection-lifetime SQLSTATE classification (P6, 2026-07-29) --------
 // #1781 ruled that a connection DEATH must never book as dialect_error (the
 // O5 gate's hard-zero metric). Its guard tested `!err.code` only, so an
