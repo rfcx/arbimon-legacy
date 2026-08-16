@@ -443,26 +443,39 @@ let Soundscapes = {
 
         if(params.id){
             constraints.push('SRT.soundscape_region_tag_id = ' + dbpool.escape(params.id));
-            project.push('SRT.user_id as user', 'SRT.timestamp');
+            project.push('MIN(SRT.user_id) as user', 'MIN(SRT.timestamp) as timestamp');
             if(params.recording){
                 constraints.push('SRT.recording_id = ' + dbpool.escape(params.recording));
             }
         } else if(params.recording){
             constraints.push('SRT.recording_id = ' + dbpool.escape(params.recording));
-            project.push('SRT.user_id as user', 'SRT.timestamp');
+            project.push('MIN(SRT.user_id) as user', 'MIN(SRT.timestamp) as timestamp');
             groupby.push('SRT.recording_id');
         }
 
         groupby.push('SRT.soundscape_tag_id');
 
+        // PG-strict GROUP BY (mysql2pg #42803, hash e2600c86 — the #1790
+        // MIN() precedent): soundscape_region_tag_id and recording_id are
+        // NOT grouped and NOT unique per (region, tag) group — measured
+        // fan-out up to 99 rows/group — so adding them to GROUP BY would
+        // explode the result reaching the UI (237 groups -> 991 rows).
+        // MIN() keeps cardinality identical and makes the representative
+        // pick deterministic where MariaDB's was scan-order luck. ST.tag/
+        // ST.type join the GROUP BY instead: the join is on ST's PRIMARY
+        // KEY (soundscape_tag_id), already grouped, so they are 1:1 per
+        // group and adding them changes nothing (the #1790 aed-branch
+        // pattern). In the params.recording branch recording_id IS grouped,
+        // and MIN(recording_id) == recording_id there — one projection
+        // stays valid for every branch.
         return dbpool.queryHandler(
-            "SELECT SRT.soundscape_region_tag_id as id, SRT.soundscape_region_id as region, SRT.recording_id as recording,\n" +
+            "SELECT MIN(SRT.soundscape_region_tag_id) as id, SRT.soundscape_region_id as region, MIN(SRT.recording_id) as recording,\n" +
             (project.length ? "    " + project.join(", ")+", \n" : "")+
             "    ST.tag, ST.type, COUNT(*) as count \n" +
             "FROM soundscape_region_tags SRT \n" +
             "JOIN soundscape_tags ST ON ST.soundscape_tag_id = SRT.soundscape_tag_id\n" +
             "WHERE " + constraints.join(' AND ') + "\n" +
-            "GROUP BY " + groupby.join(", "), callback);
+            "GROUP BY " + groupby.join(", ") + ", ST.tag, ST.type", callback);
     },
 
     /** adds a soundscape region tags.
