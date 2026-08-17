@@ -46,9 +46,27 @@ router.get('/:classiId', function(req, res, next) {
         model.classifications.detail(req.params.classiId, function(err, rows) {
             if(err) return next(err);
 
+            // detail() aggregates classification_results for this job and then INNER
+            // JOINs job_params_classification/models/species/songtypes, so it
+            // legitimately returns ZERO rows for a classification that has no results
+            // yet (a job still running) or whose join partners are missing. Without
+            // this guard `rows[0]` is undefined and the assignment below throws a
+            // TypeError inside a DB callback -- an UNCAUGHT exception that kills the
+            // whole process.
+            // PRODUCTION INCIDENT 2026-08-17T17:06:32Z: an arbimon pod exited 1 with
+            // "Cannot set properties of undefined (setting 'errCount')" while users
+            // were POSTing /classifications/new. It also tripped UNHANDLED_ERROR_NET,
+            // a mysql2pg Phase-6 gate metric that must read 0.
+            // Mirrors the existing `if(!rows.length)` guard on the vector route below.
+            if(!rows || !rows.length) {
+                return res.status(404).json({ error: 'data not found'});
+            }
+
             var classifiacationDetails = rows[0];
 
-            classifiacationDetails.errCount = rowsRecs.count;
+            // rowsRecs was reassigned to rowsRecs[0] above and is undefined when the
+            // errors query returns no rows; default to 0 rather than throwing.
+            classifiacationDetails.errCount = (rowsRecs && rowsRecs.count !== undefined) ? rowsRecs.count : 0;
 
             res.json(classifiacationDetails);
         });
