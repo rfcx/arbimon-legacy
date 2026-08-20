@@ -763,6 +763,76 @@ var Recordings = {
         return request(params)
     },
 
+    /**
+     * Stream a media-api asset to `destFile` with FULL error handling.
+     *
+     * WHY THIS EXISTS (2026-08-20, the §1796 crash class).
+     * -----------------------------------------------------
+     * getAssetFileFromMediaAPI() returns the `request` STREAM (request v2 is
+     * not thenable; the async wrapper resolves to the stream object itself).
+     * Every caller used to do `.then(res => res.pipe(ws))` with NO `.catch`
+     * and NO `'error'` listener on either stream. Consequences, both observed
+     * in production:
+     *
+     *   1. A media-api pod dying mid-stream (e.g. during a rollout) emits
+     *      `'error'` on the request stream with no listener →
+     *      uncaughtException `socket hang up` → the PROCESS EXITS. This is
+     *      the 2026-08-18T02:31:19Z kdp2l exit-1 (census §1796 duty), and the
+     *      mechanism was re-proven in the demo pod: awaiting request() then
+     *      piping with no listener crashes the process on ECONNREFUSED.
+     *
+     *   2. Failures that produce a BODY get PIPED INTO THE CACHE FILE: a
+     *      media-api error response is written under the asset's `.png`/mp3
+     *      cache key, so every later fetch returns the poisoned bytes and the
+     *      failure looks like a reproducible code fault ("Could not open
+     *      image file /tmp/<sha>.png" — the documented 53-byte-JSON trap).
+     *
+     * So this helper (a) attaches `'error'` to BOTH streams and `.catch` to
+     * the promise, (b) rejects non-2xx responses WITHOUT writing the body to
+     * the cache path, (c) unlinks the partial destination file on ANY
+     * failure so the cache key stays a miss, and (d) guarantees the callback
+     * fires exactly once.
+     *
+     * The callback receives (err). On success the file at destFile is
+     * complete and closed.
+     */
+    downloadAssetFromMediaAPI: function(recording, type, options, destFile, callback) {
+        let done = false;
+        let ws = null;
+        const finish = function(err) {
+            if (done) return;
+            done = true;
+            if (err) {
+                // Destroy the write stream FIRST — on a response-stream error
+                // pipe() unpipes but never end()s the destination, so without
+                // this the fd stays open forever (one leaked fd per failure;
+                // caught in pass-2 review, not by the happy-path tests).
+                if (ws) ws.destroy();
+                // never leave partial/garbage bytes at the cache path — a
+                // poisoned cache file converts a transient failure into a
+                // permanent-looking one (the 53-byte-JSON trap).
+                fs.unlink(destFile, function(){});
+                callback(err);
+            } else {
+                callback(null);
+            }
+        };
+        Recordings.getAssetFileFromMediaAPI(recording, type, options).then(function(res) {
+            res.on('error', finish);
+            res.on('response', function(response) {
+                if (response.statusCode >= 400) {
+                    // stop the transfer; do NOT cache the error body
+                    res.abort();
+                    finish(new Error('media-api returned ' + response.statusCode + ' for ' + type + ' asset'));
+                }
+            });
+            ws = fs.createWriteStream(destFile);
+            ws.on('error', finish);
+            ws.on('close', function() { finish(null); });
+            res.pipe(ws);
+        }).catch(finish);
+    },
+
     /** Returns the audio file of a given recording.
      * @param {Object} recording object containing the recording's data, like the ones returned in findByUrlMatch.
      * @param {Object} recording.uri url containing the recording's path in the bucket.
@@ -794,12 +864,14 @@ var Recordings = {
                         callback(err);
                         return;
                     }
-                    // Get an audio file from the Media API for the non-legacy recordings
-                    Recordings.getAssetFileFromMediaAPI(recording, 'audio', options).then(res => {
-                        res.pipe(fs.createWriteStream(cache_miss.file).on('close', function () {
-                            fs.unlink(recording_path.path, () => {})
-                            cache_miss.retry_get()
-                        }))
+                    // Get an audio file from the Media API for the non-legacy recordings.
+                    // Via the error-handled helper (§1796): a mid-stream failure
+                    // must fail THIS request, not crash the process or poison
+                    // the cache key with partial bytes.
+                    Recordings.downloadAssetFromMediaAPI(recording, 'audio', options, cache_miss.file, function (err) {
+                        fs.unlink(recording_path.path, () => {})
+                        if (err) { callback(err); return; }
+                        cache_miss.retry_get()
                     })
                 });
             }, callback);
@@ -917,8 +989,10 @@ var Recordings = {
                         cache_miss.retry_get();
                     });
                 } else {
-                    Recordings.getAssetFileFromMediaAPI(recording, 'spectro').then((res) => {
-                        res.pipe(fs.createWriteStream(cache_miss.file).on('close', function () { cache_miss.retry_get() }))
+                    // Error-handled helper (§1796) — see downloadAssetFromMediaAPI.
+                    Recordings.downloadAssetFromMediaAPI(recording, 'spectro', {}, cache_miss.file, function (err) {
+                        if (err) { callback(err); return; }
+                        cache_miss.retry_get()
                     })
                 }
             });
@@ -933,8 +1007,10 @@ var Recordings = {
         tmpfilecache.fetch(template_key, function(cache_miss){
             Recordings.fetchRecordingFile(recording, async function(err, recording_path){
                 if(err) { callback(err); return; }
-                Recordings.getAssetFileFromMediaAPI(recording, 'template', options).then(res => {
-                    res.pipe(fs.createWriteStream(cache_miss.file).on('close', function () { cache_miss.retry_get() }))
+                // Error-handled helper (§1796) — see downloadAssetFromMediaAPI.
+                Recordings.downloadAssetFromMediaAPI(recording, 'template', options, cache_miss.file, function (err) {
+                    if (err) { callback(err); return; }
+                    cache_miss.retry_get()
                 })
             });
         }, callback);
