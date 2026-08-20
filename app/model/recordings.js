@@ -652,7 +652,14 @@ var Recordings = {
                 // Colour IS offered deliberately elsewhere -- the visualizer's
                 // per-user palette (visualizer.spectro_color) -- which is
                 // untouched by this.
-                asset = `rfull_g1_fspec_mtrue_d10286.255_wdolph_z120.png`
+                //
+                // WIDTH IS DURATION-AWARE (2026-08-19). It used to be a flat
+                // `d10286.255` for EVERY recording regardless of length, which
+                // is the root cause of the visualizer's mis-aligned spectrogram
+                // tiles on SHORT recordings (rec 311378538 / 311378544,
+                // 0.963-1.02 s). See specWidthForDuration() for the full
+                // derivation and the measurements.
+                asset = `rfull_g1_fspec_mtrue_d${Recordings.specWidthForDuration(recording.duration)}.255_wdolph_z120.png`
                 break;
             case 'audio':
                 asset = `r${isFrequency ? fmin + '.' + fmax : 'full'}_g${isGain ? options.gain : 1}_${isFormat ? 'fwav.wav' : 'fmp3.mp3'}`
@@ -681,6 +688,91 @@ var Recordings = {
         // Same derivation as attachTileMediaTokens — keep them identical.
         const streamId = mediaStreamId(recording.uri, recording.external_id)
         return `${streamId}_t${start}Z.${end}Z_${asset}`
+    },
+
+    /**
+     * Width (px) of the FULL-RECORDING spectrogram that the tile grid is
+     * derived from.
+     *
+     * WHY THIS IS NOT A CONSTANT ANY MORE (2026-08-19, tile-seam defect).
+     * -------------------------------------------------------------------
+     * This width is never displayed. Its ONLY job is to set the tile GRID:
+     * tyler.js splits the base image into ceil(width / 1024) columns, and
+     * fetchSpectrogramTiles turns each column into a time window that the
+     * browser then fetches from media-api as an INDEPENDENT render.
+     *
+     * So `width` decides HOW MUCH AUDIO each tile covers -- and it was hard
+     * coded to 10286 for every recording. 10286 / 172 px-per-sec
+     * (config/spectrograms.json) == 59.8 s: the constant silently encodes
+     * "this recording is about a minute long". It is right for the common
+     * 60 s recording and badly wrong for a short one:
+     *
+     *     duration   tiles   audio per tile
+     *     60.0 s      11       5454 ms      <- what the constant assumes
+     *      0.963 s    11         87.5 ms    <- rec 311378544
+     *
+     * At 87.5 ms per tile the render is dominated by its own edges. sox
+     * derives its FFT window from the requested height (-y 1024 => 2048
+     * samples ~= 42.6 ms at 48 kHz), so an 87 ms tile is barely TWO analysis
+     * windows wide and its first/last columns are ramp artefacts rather than
+     * signal. Because every tile is rendered separately, those artefacts land
+     * at every tile boundary and the user sees the spectrogram break into
+     * vertical bands that do not line up.
+     *
+     * MEASURED on the real audio of rec 311378544 (0.963 s, 48048 Hz),
+     * comparing the assembled 2244x256 visualizer image against a single
+     * full-width render of the same audio:
+     *
+     *     assembly                              worst seam step  (grey levels)
+     *     single full-width render (truth)             1.92
+     *     ONE render, then sliced into 11              1.63   <- splitting is fine
+     *     11 INDEPENDENT renders (production)         23.87   <- the defect
+     *     1 tile sized to the recording (this fix)     0.93
+     *
+     * and the per-tile edge artefact shrinks as the tile gets longer:
+     *
+     *     tile duration   0.10s  0.25s  0.50s  1.0s   2.0s   4.0s
+     *     edge/interior    6.2x   2.8x   2.1x  1.9x   1.5x   1.4x
+     *
+     * Ruled OUT along the way (each tested, not assumed):
+     *   - tile PLACEMENT: the browser's left/width arithmetic is pixel-exact
+     *     (max 1 px rounding across all 10 boundaries);
+     *   - tile WINDOWS: the minted start/end timestamps are contiguous and
+     *     sum to exactly the recording duration (963 ms);
+     *   - sox auto-normalisation: re-rendering with an explicit `-Z 0`
+     *     ceiling reproduces the seams byte-for-byte, so per-render level
+     *     scaling is not the mechanism.
+     *
+     * THE FIX: give every recording the same time-per-tile that a 60 s
+     * recording already gets, by sizing the base image at the configured
+     * pixel density instead of a fixed 10286.
+     *
+     *   - clamped ABOVE at 10286, so recordings >= ~59.8 s -- the large
+     *     majority -- keep byte-identical attrs, cache keys and tile grids.
+     *     This deliberately changes nothing for the common case.
+     *   - clamped BELOW at one full tile (1024), so a very short recording
+     *     becomes ONE tile spanning the whole clip (no internal seams at all)
+     *     rather than a degenerate few-pixel render.
+     *   - falls back to the historical constant if duration is missing or
+     *     nonsensical, so a bad row degrades to today's behaviour.
+     *
+     * SIDE EFFECT, INTENDED: short recordings stop being rendered at ~62x the
+     * intended pixel density (a 1 s clip was asking media-api for a 10286 px
+     * image) and the visualizer fetches far fewer tiles for them.
+     *
+     * ⚠️ This value is part of the media-api asset name AND of the local
+     * per-variant cache key (buildAssetCacheKey), so changing it re-fills the
+     * base-spectrogram cache for recordings shorter than ~59.8 s. That is a
+     * cache miss, not a correctness risk. Recordings at/above the cap are
+     * untouched.
+     */
+    specWidthForDuration: function (duration) {
+        var MAX_WIDTH = 10286;              // == 59.8 s at 172 px/s: the historical constant
+        var MIN_WIDTH = 1024;               // exactly one tile (config spectrograms.tiles.max_width)
+        var pixPerSec = config("spectrograms").spectrograms.pixPerSec;
+        var dur = parseFloat(duration);
+        if (!isFinite(dur) || dur <= 0) return MAX_WIDTH;
+        return Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, Math.round(dur * pixPerSec)));
     },
 
     /**

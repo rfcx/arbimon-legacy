@@ -19,6 +19,19 @@ const moment = require('moment-timezone');
 // --- app/model/recordings.js buildMediaApiAttr / buildAssetCacheKey) --------
 const audioFilePattern = /\.(wav|flac|opus)$/i;
 const freqFilterPrecision = 1;
+const SPEC_PIX_PER_SEC = 172;   // config/spectrograms.json spectrograms.pixPerSec
+
+// Lockstep with app/model/recordings.js specWidthForDuration (2026-08-19):
+// the base spectrogram is sized from the recording's own duration, clamped to
+// [one tile, the historical 59.8s constant], so short recordings stop being
+// split into 11 sub-100ms tiles whose independently-rendered edges misalign.
+function specWidthForDuration (duration) {
+    const MAX_WIDTH = 10286;
+    const MIN_WIDTH = 1024;
+    const dur = parseFloat(duration);
+    if (!isFinite(dur) || dur <= 0) return MAX_WIDTH;
+    return Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, Math.round(dur * SPEC_PIX_PER_SEC)));
+}
 
 function buildMediaApiAttr (recording, type, options) {
     let asset, fmin, fmax, trimFrom, trimDuration;
@@ -36,7 +49,7 @@ function buildMediaApiAttr (recording, type, options) {
         trimDuration = options.trim.duration ? (+options.trim.duration) : (to - trimFrom);
     }
     switch (type) {
-        case 'spectro': asset = `rfull_g1_fspec_mtrue_d10286.255_wdolph_z120.png`; break;
+        case 'spectro': asset = `rfull_g1_fspec_mtrue_d${specWidthForDuration(recording.duration)}.255_wdolph_z120.png`; break;
         case 'audio': asset = `r${isFrequency ? fmin + '.' + fmax : 'full'}_g${isGain ? options.gain : 1}_${isFormat ? 'fwav.wav' : 'fmp3.mp3'}`; break;
         case 'template': asset = `r${fmin}.${fmax}_g1_fspec_mtrue_d400.400_wdolph_z120.png`; break;
     }
@@ -112,6 +125,45 @@ ok('audio: gain / frequency / format / trim each change the key', () => {
     assert.strictEqual(keys.size, 5);
 });
 
+ok('spectro width is duration-aware, and UNCHANGED at/above the cap', () => {
+    // 2026-08-19 tile-seam defect. The width sets the TILE GRID
+    // (ceil(width/1024) columns), i.e. how much audio each independently
+    // rendered tile covers. Hard-coding 10286 gave a 0.963 s recording ELEVEN
+    // ~87 ms tiles -- each barely two sox FFT windows wide -- so every tile
+    // boundary showed an edge artefact and the spectrogram appeared to break
+    // into misaligned vertical bands.
+    const at = d => buildMediaApiAttr({ ...rec, duration: d }, 'spectro', {});
+
+    // Long recordings must be BYTE-IDENTICAL to the old behaviour: same attr,
+    // same cache key, same tile grid. This is what keeps the fix low-risk.
+    assert.ok(at(60).includes('d10286.255'), at(60));
+    assert.ok(at(120).includes('d10286.255'), at(120));
+    assert.ok(at(59.8).includes('d10286.255'), at(59.8));
+
+    // Short recordings get a width proportional to their own duration...
+    assert.ok(at(30).includes('d5160.255'), at(30));
+    assert.ok(at(10).includes('d1720.255'), at(10));
+
+    // ...clamped below at exactly ONE tile, so the bug recordings render as a
+    // single seamless image instead of 11 mismatched slivers.
+    assert.ok(at(0.963).includes('d1024.255'), at(0.963));
+    assert.ok(at(1.02).includes('d1024.255'), at(1.02));
+
+    // A missing/garbage duration must degrade to the historical constant
+    // rather than produce a degenerate render.
+    assert.ok(at(undefined).includes('d10286.255'), String(at(undefined)));
+    assert.ok(at(0).includes('d10286.255'), at(0));
+    assert.ok(at(-5).includes('d10286.255'), at(-5));
+});
+
+ok('short-recording spectro keys stay distinct per duration', () => {
+    // The width is part of the attr, so it is part of the per-variant cache
+    // key: two different short recordings must not collide on one base image.
+    const a = buildAssetCacheKey({ ...rec, duration: 10 }, buildMediaApiAttr({ ...rec, duration: 10 }, 'spectro', {}), '.png');
+    const b = buildAssetCacheKey({ ...rec, duration: 30 }, buildMediaApiAttr({ ...rec, duration: 30 }, 'spectro', {}), '.png');
+    assert.notStrictEqual(a, b);
+});
+
 ok('template attr carries the monochrome flag + 400x400 dims', () => {
     const attr = buildMediaApiAttr(rec, 'template', roiA);
     assert.ok(attr.includes('_mtrue_'), 'monochrome flag missing: ' + attr);
@@ -129,6 +181,7 @@ ok('spectro attr is the FULL-recording MONOCHROME variant', () => {
     // (localStorage visualizer.spectro_color); it is not this asset's job.
     const attr = buildMediaApiAttr(rec, 'spectro', {});
     assert.ok(attr.includes('_mtrue_'), 'spectro must be monochrome: ' + attr);
+    // The 60 s fixture is at/above the cap, so it keeps the historical width.
     assert.ok(attr.includes('d10286.255'));
 });
 
