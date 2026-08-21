@@ -226,7 +226,86 @@ angular.module('a2.visualizer', [
     };
 
 
+    /**
+     * Clamp a `box` annotation to the bounds of the recording it is drawn on.
+     *
+     * WHY: pattern-matching ROI boxes can carry coordinates that fall outside the
+     * recording. The PM worker zero-pads any recording SHORTER than the template
+     * (match_template cannot correlate against an image narrower than the template),
+     * runs the correlation on that padded timeline, and emits x2 = x1 + template
+     * width. Nothing maps that back, so a short recording yields a box running past
+     * the end of the audio -- e.g. recording 89924173 is 1.016s but carries a box
+     * ending at 1.92s (0.904s of it pure zero-padding).
+     *
+     * The stored coordinates are deliberately left ALONE (they are provenance, and
+     * `x2 > duration` is NOT a safe predicate for "padding artefact" -- some rows are
+     * correct but sit on recordings with stale `duration` metadata). Instead each
+     * surface decides how to present them:
+     *   - the detection PNG on the review page is intentionally NOT clipped: it is
+     *     always exactly template-width, giving every thumbnail for a template one
+     *     consistent time-scale, and the padded region renders as whitespace, which
+     *     is an honest "the recording ended here" cue.
+     *   - here, on the visualizer, the box must coincide with the real recording.
+     *
+     * Bounds: time from the recording's own domain; frequency from NYQUIST rather
+     * than domain.y.to, because resizeYScale() lets the user pick a fixed 24kHz axis
+     * that can exceed the recording's nyquist (see also getRoiAudioFile /
+     * roiSpectrogramUrl, which have always clamped y for the same reason).
+     *
+     * Returns null when the box does not intersect the recording at all, so the
+     * caller can drop it rather than render a zero-width sliver that reads as a
+     * rendering glitch.
+     */
+    var clampBoxToRecording = function(parsed, visobject){
+        // Only recordings have a time/frequency domain to clamp against. Soundscape
+        // annotations use entirely different axis semantics -- leave them untouched.
+        if (!visobject || visobject.type !== 'recording') return parsed;
+        if (!parsed || parsed.type !== 'box' || !parsed.value || parsed.value.length < 4) return parsed;
+
+        var x1 = Number(parsed.value[0]);
+        var y1 = Number(parsed.value[1]);
+        var x2 = Number(parsed.value[2]);
+        var y2 = Number(parsed.value[3]);
+        if ([x1, y1, x2, y2].some(isNaN)) return parsed;
+
+        var duration = Number(visobject.duration);
+        var nyquist = Number(visobject.sampling_rate) / 2;
+
+        // Callers do not guarantee ordering (getRoiAudioFile and the ROI pre-warm
+        // publisher both normalise), so normalise here too rather than assume x1<x2.
+        var xLo = Math.min(x1, x2), xHi = Math.max(x1, x2);
+        var yLo = Math.min(y1, y2), yHi = Math.max(y1, y2);
+
+        if (isFinite(duration) && duration > 0) {
+            xLo = Math.max(0, Math.min(xLo, duration));
+            xHi = Math.max(0, Math.min(xHi, duration));
+            // No overlap with the audio at all (e.g. a peak found entirely inside the
+            // zero-padding): signal "drop me" instead of drawing a 0px box.
+            if (xHi - xLo <= 0) return null;
+        }
+        if (isFinite(nyquist) && nyquist > 0) {
+            yLo = Math.max(0, Math.min(yLo, nyquist));
+            yHi = Math.max(0, Math.min(yHi, nyquist));
+        } else {
+            yLo = Math.max(0, yLo);
+            yHi = Math.max(0, yHi);
+        }
+
+        // Preserve the original ordering convention of the annotation payload:
+        // the template renders width from value[2]-value[0] and height from
+        // value[3]-value[1], i.e. it expects value[3] to be the HIGH frequency.
+        parsed.value[0] = xLo;
+        parsed.value[1] = yLo;
+        parsed.value[2] = xHi;
+        parsed.value[3] = yHi;
+        return parsed;
+    };
+
     $scope.parseAnnotations = function(annotationsString){
+        // Keep the raw payload so the clamp can be re-applied once the recording
+        // (and therefore its duration/sample-rate) has finished loading -- this is
+        // called BEFORE $scope.visobject is assigned during a visobject load.
+        $scope.rawAnnotations = annotationsString;
         $scope.annotations = annotationsString ? (Array.isArray(annotationsString) ? annotationsString : annotationsString.split('|')).map(function(item){
             var comps = item.split(',');
             var parsed = {type: comps.shift(), value:[]};
@@ -239,8 +318,8 @@ angular.module('a2.visualizer', [
                     parsed.value.push(comp);
                 }
             })
-            return parsed;
-        }) : [];
+            return clampBoxToRecording(parsed, $scope.visobject);
+        }).filter(function(a){ return a !== null; }) : [];
     }
     // check selected clusters in query
     if (Array.isArray($state.params.clusters) || typeof $state.params.clusters === 'string') {
@@ -339,6 +418,12 @@ angular.module('a2.visualizer', [
                     $scope.loading_visobject = false;
                     $scope.visobject = visobject;
                     $scope.visobject_type = visobject.type;
+                    // parseAnnotations() above ran BEFORE visobject was assigned, so any
+                    // box it produced could not be clamped to the recording's bounds yet.
+                    // Re-parse now that duration + sampling_rate are known.
+                    if ($scope.rawAnnotations) {
+                        this.parseAnnotations($scope.rawAnnotations);
+                    }
                     $scope.setYScaleOptions();
                 }).bind(this));
             } else {
