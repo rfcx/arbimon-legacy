@@ -97,6 +97,9 @@ var Recordings = {
         precision:       joi.number(),
         duration:        joi.number(),
         samples:         joi.number(),
+        // ⚠️ UNRELIABLE for historical rows — 58.7% of `recordings` carry 0 or
+        // NULL here (2023-07-22 ingest regression; writers fixed 2026-08-21,
+        // backfill deferred). OPEN-ITEMS §189. Do not aggregate; filter > 0.
         file_size:       joi.number(),
         bit_rate:        joi.string(),
         sample_encoding: joi.string(),
@@ -268,6 +271,14 @@ var Recordings = {
     },
 
     getPrevAndNextRecordingsAsync: function (recording_id) {
+        // ⚠️ recordings.file_size IS UNRELIABLE — see OPEN-ITEMS §189.
+        // 58.7% of rows (178.9M zeros + 41.5k NULLs of 304.5M) carry no usable
+        // value: a 2023-07-22 ingest regression wrote 0 for ~3 years. The
+        // WRITERS are fixed (2026-08-21) so new rows are correct, but the
+        // historical backfill is DEFERRED and operator-scheduled.
+        // Do NOT SUM/aggregate/bill on this column, and do not treat 0 as a real
+        // size — filter `file_size > 0` first. The audio objects themselves are
+        // intact; the true size is always obtainable from object storage.
         var selection = "R.recording_id AS id, \n"+
             "SUBSTRING_INDEX(R.uri,'/',-1) as file, R.meta, \n"+
             "S.name as site, \n"+
@@ -347,6 +358,10 @@ var Recordings = {
         if (options.count_only) {
             projection = "COUNT(*) as count";
         } else {
+            // ⚠️ R.file_size below is UNRELIABLE for historical rows (58.7% are
+            // 0/NULL from a 2023-07-22 ingest regression; writers fixed
+            // 2026-08-21, backfill deferred). See OPEN-ITEMS §189.
+            // Never aggregate it; filter `file_size > 0` first.
             projection = "R.recording_id AS id, \n"+
                         "SUBSTRING_INDEX(R.uri,'/',-1) as file, R.meta, \n"+
                         "S.name as site, \n"+

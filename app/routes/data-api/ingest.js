@@ -20,6 +20,11 @@ router.post('/recordings/create', verifyToken(), hasRole(['systemUser']), async 
     converter.convert('precision').toInt();
     converter.convert('duration').toFloat();
     converter.convert('samples').toInt();
+    // ⚠️ This is the WRITE side and is CORRECT as of 2026-08-21 (rfcx-api#670
+    // restored the value, ingest-service#125 made it the stored FLAC rather than
+    // the intermediate WAV). But READERS must not trust the column for
+    // historical rows: 58.7% of `recordings` still carry 0/NULL from the
+    // 2023-07-22 regression. Backfill deferred — OPEN-ITEMS §189.
     converter.convert('file_size').toInt();
     converter.convert('bit_rate').toString();
     converter.convert('sample_encoding').toString();
