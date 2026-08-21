@@ -358,10 +358,11 @@ var Recordings = {
         if (options.count_only) {
             projection = "COUNT(*) as count";
         } else {
-            // ⚠️ R.file_size below is UNRELIABLE for historical rows (58.7% are 0/NULL
-                        // from a 2023-07-22 ingest regression; writers fixed 2026-08-21, backfill
-                        // deferred). See OPEN-ITEMS §189. Never aggregate it; filter `file_size > 0`.
-                        projection = "R.recording_id AS id, \n"+
+            // ⚠️ R.file_size below is UNRELIABLE for historical rows (58.7% are
+            // 0/NULL from a 2023-07-22 ingest regression; writers fixed
+            // 2026-08-21, backfill deferred). See OPEN-ITEMS §189.
+            // Never aggregate it; filter `file_size > 0` first.
+            projection = "R.recording_id AS id, \n"+
                         "SUBSTRING_INDEX(R.uri,'/',-1) as file, R.meta, \n"+
                         "S.name as site, \n"+
                         "S.timezone, \n"+
