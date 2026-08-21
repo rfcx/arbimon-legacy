@@ -1745,11 +1745,35 @@ var Recordings = {
         else {
             var site = await Recordings.getSiteModel(recording)
         }
+        // LEGACY RECORDINGS NOW RENDER DYNAMICALLY TOO (2026-08-21).
+        //
+        // `legacy` (uri LIKE 'project_%', ~1.9% of the platform / 6.1M rows) used
+        // to point at a PRE-RENDERED `<uri>.thumbnail.png` in the arbimon2 bucket.
+        // We are no longer storing those objects: in the arbimon2 localization
+        // backfill they were ~50% of the OBJECTS but only ~1.1% of the BYTES
+        // (49 thumbs/1.8MB vs 50 flac/158.7MB on the in-flight prefix), and that
+        // pipeline is object-bound (~11 obj/s; the s3-writer spends 1.1-3.2s per
+        // object on invalidate + drain enqueue). Carrying them roughly HALVED the
+        // backfill in order to localize ~1% more data that is DERIVABLE from the
+        // .flac we keep. The backfill now excludes `*.thumbnail.png`.
+        //
+        // The else-branch below already handles legacy correctly WITHOUT changes:
+        //   - mediaStreamId() explicitly ignores a `project_` uri and falls back to
+        //     site.external_id, which legacy sites DO carry (verified on the
+        //     read-only replica: 5368=gp9e1rd9391y, 201=6vblysdnugbj,
+        //     506=n8h4ai7fgz79).
+        //   - core PG stream_segments COVER legacy audio, so media-api can actually
+        //     render it (n8h4ai7fgz79 has 2,853 segments in 2008-03 alone; the exact
+        //     window for recording 639373 resolves to one segment).
+        //   - every failure mode already yields `null` (unset salt, missing
+        //     streamId, implausible/NaN window) and callers render a placeholder
+        //     rather than a URL that would 401.
+        //
+        // FALLBACK RETAINED: when the dynamic mint is not possible we fall back to
+        // the stored PNG for legacy rows, so anything predating the backfill keeps
+        // working. That makes this change strictly non-regressive.
         const legacy = this.isLegacy(recording)
-        if (legacy) {
-            recording.thumbnail = arbimon2PublicUrl(encodeURIComponent(recording.uri.replace(/\.([^.]*)$/, '.thumbnail.png')));
-        }
-        else {
+        {
             // uri-first stream id (site.external_id is wrong/NULL for 11 sites
             // — OPEN-ITEMS #107; same derivation as buildMediaApiAttr).
             const streamId = mediaStreamId(recording.uri, site && site.external_id)
@@ -1761,8 +1785,21 @@ var Recordings = {
             // mediaAssetUrl ROUNDS ONCE and derives the filename AND the
             // signature from the same two integers, so they cannot drift apart
             // — the fractional-ms class of silent 401s.
-            const momentStart = moment.utc(recording.datetime_utc ? recording.datetime_utc : recording.datetime)
-            const baseMs = momentStart.valueOf()
+            //
+            // ⚠ LEGACY ROWS REQUIRE datetime_utc — NO `datetime` FALLBACK.
+            // `datetime` is the denormalised, TZ-SHIFTED local time. The
+            // `datetime_utc || datetime` fallback below was SAFE while this branch
+            // served only modern recordings, which always carry datetime_utc. It is
+            // NOT safe for legacy rows, where NULL datetime_utc does occur (e.g.
+            // recording 6656941; 1 of 70,778 on site 201). A TZ-shifted window still
+            // mints a VALID SIGNED URL and renders a plausible-looking spectrogram
+            // OF THE WRONG AUDIO, hours off, with nothing erroring — strictly worse
+            // than falling back to the stored PNG. Modern behaviour is unchanged.
+            const baseDatetime = legacy
+                ? recording.datetime_utc
+                : (recording.datetime_utc ? recording.datetime_utc : recording.datetime)
+            const momentStart = moment.utc(baseDatetime)
+            const baseMs = baseDatetime ? momentStart.valueOf() : NaN
             // TWO behaviour-preservation details, both found by fuzzing this
             // migration against the old moment-based derivation rather than
             // spot-checking one recording:
@@ -1790,7 +1827,16 @@ var Recordings = {
                 : null
             // Null when the salt is unset or the inputs are unusable; callers
             // render a placeholder rather than a URL that would 401.
-            recording.thumbnail = minted ? minted.url : null
+            //
+            // For LEGACY rows only, fall back to the stored PNG instead of null:
+            // those objects exist for everything predating the backfill, so a
+            // failed mint should degrade to the old behaviour, not a placeholder.
+            // Modern rows keep returning null — no stored PNG exists for them.
+            recording.thumbnail = minted
+                ? minted.url
+                : (legacy
+                    ? arbimon2PublicUrl(encodeURIComponent(recording.uri.replace(/\.([^.]*)$/, '.thumbnail.png')))
+                    : null)
         }
     },
     __compute_spectrogram_tiles : function(recording, callback){
