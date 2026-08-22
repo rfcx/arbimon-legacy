@@ -201,17 +201,59 @@ var Projects = {
 
                 return q.all([
                     options.compute.rec_count ? dbpool.query(
-                        // MIN/MAX ride along on the aggregate that already
-                        // computes rec_count over exactly these rows, so the
-                        // per-site date range costs no extra query or scan.
-                        "SELECT site_id, COUNT(recording_id) as rec_count, "+
-                        "       MIN(datetime) as first_recording_at, "+
-                        "       MAX(datetime) as last_recording_at "+
-                        "FROM recordings "+
-                        "WHERE site_id IN (?) " +
-                        // Archiving (Phase A): per-site recording counts exclude archived.
-                        "AND " + sqlutil.recordingArchiveScope('', 'active') + " " +
-                        "GROUP BY site_id",
+                        // PER-SITE INDEX DIVES, not one grouped scan.
+                        //
+                        // History: this used to be a single
+                        //   SELECT site_id, COUNT(..), MIN(datetime), MAX(datetime)
+                        //   FROM recordings WHERE site_id IN (?) AND archived_at IS NULL
+                        //   GROUP BY site_id
+                        // and it measured **221.7 s** on a 4M-recording project
+                        // (318M-row table) -- far past the public-router's 60 s
+                        // proxy_read_timeout, so /audiodata/sites returned 504
+                        // rather than merely being slow.
+                        //
+                        // WHY it was slow: the two predicates are each cheap
+                        // alone but pathological together, because no index
+                        // covers (site_id, archived_at, datetime):
+                        //   recs_active_by_site          (site_id, archived_at) -- covers COUNT, no datetime
+                        //   recordings_site_datetime_idx (site_id, datetime)    -- covers MIN/MAX, no archived_at
+                        // Measured: COUNT-only 0.8 s; MIN/MAX-without-archived 3.4 s;
+                        // both together 221.7 s (~8M PK lookups). MariaDB has no
+                        // partial indexes, so `WHERE archived_at IS NULL` cannot
+                        // be indexed directly -- see the 2026-06-16 archiving
+                        // design doc SS6, which predicted exactly this.
+                        //
+                        // THE FIX: (site_id, datetime) already exists, so per site
+                        // `ORDER BY datetime LIMIT 1` is a single index dive and
+                        // archived_at is then checked on one row instead of 8M.
+                        // Driving off `sites` keeps the SQL compact (no giant
+                        // generated UNION: a 5,938-site project would have needed
+                        // ~2.1 MB of SQL; this form is ~36 KB).
+                        //
+                        // Measured after: 221.7 s -> 0.50 s on the 4M project, and
+                        // 91.2 s -> 0.006 s on the largest project (5,938 sites).
+                        // Verified row-by-row identical to the old query
+                        // (0 mismatches; both sum to 4,003,682 recordings).
+                        //
+                        // NOTE: we select FROM sites BY site_id (the PK list the
+                        // caller already computed, which correctly includes
+                        // project_imported_sites rows owned by OTHER projects).
+                        // Do NOT re-filter by project_id here or imported sites
+                        // silently lose their counts.
+                        "SELECT s.site_id AS site_id, "+
+                        "       (SELECT COUNT(*) FROM recordings r "+
+                        "          WHERE r.site_id = s.site_id "+
+                        "            AND " + sqlutil.recordingArchiveScope('r', 'active') + ") AS rec_count, "+
+                        "       (SELECT r.datetime FROM recordings r "+
+                        "          WHERE r.site_id = s.site_id "+
+                        "            AND " + sqlutil.recordingArchiveScope('r', 'active') + " "+
+                        "          ORDER BY r.datetime ASC LIMIT 1) AS first_recording_at, "+
+                        "       (SELECT r.datetime FROM recordings r "+
+                        "          WHERE r.site_id = s.site_id "+
+                        "            AND " + sqlutil.recordingArchiveScope('r', 'active') + " "+
+                        "          ORDER BY r.datetime DESC LIMIT 1) AS last_recording_at "+
+                        "FROM sites s "+
+                        "WHERE s.site_id IN (?)",
                         [siteIds]
                     ).then(function(results){
                         sites.forEach(function(site){
