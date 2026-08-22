@@ -28,6 +28,7 @@ var arrays_util  = require('../utils/arrays');
 var tmpfilecache = require('../utils/tmpfilecache');
 var audioTools   = require('../utils/audiotool');
 var sqlutil      = require('../utils/sqlutil');
+var dateRangeFastpath = require('../utils/date-range-fastpath');
 var dbpool       = require('../utils/dbpool');
 var tyler        = require('../utils/tyler.js');
 
@@ -1910,6 +1911,10 @@ var Recordings = {
         return { clause: col.expr + ' ' + dir + ', r.recording_id ' + dir, index: col.index, usingDefault: false };
     },
 
+    // Eligibility gate for the date_range fast path. Lives in app/utils so it can
+    // be unit-tested without booting the DB pool; re-exported here for callers.
+    isDateRangeFastPathEligible: dateRangeFastpath.isDateRangeFastPathEligible,
+
     /** finds a set of recordings given some search criteria.
      * @param {Object} params - search parameters
      * @param {Function} callback - callback function (optional)
@@ -2097,12 +2102,70 @@ var Recordings = {
                     return [select_clause.list, from_clause, where_clause]
                 }
 
+                // FAST PATH for the UNFILTERED project-wide date_range.
+                //
+                // `SELECT MIN(r.datetime), MAX(r.datetime) FROM recordings r
+                //  WHERE archived_at IS NULL AND r.site_id IN (...)` measured
+                // **154.5 s** on a 4M-recording project -- the same index gap
+                // documented at length in projects.getProjectSites: nothing
+                // covers (site_id, archived_at, datetime), so the extremes cost
+                // a multi-million-row scan. FORCE INDEX does NOT rescue it
+                // (measured 142.3 s). Per-site index dives on the existing
+                // (site_id, datetime) return the identical pair in **0.004 s**.
+                //
+                // STRICTLY GATED: this rewrite is only equivalent when the ONLY
+                // predicates are the archive scope and the project's site list.
+                // Any additional filter (date range, years/months/days/hours,
+                // validations, tags, playlists, classifications, soundscape,
+                // explicit sites) changes which rows the extremes are taken
+                // over. Rather than enumerate those filters -- a list that will
+                // drift as new ones are added -- we gate STRUCTURALLY on the
+                // built query: single base table, and no constraints beyond the
+                // two known ones. A future filter therefore disables the fast
+                // path automatically instead of silently returning wrong dates.
+                const dateRangeFastPathEligible = Recordings.isDateRangeFastPathEligible({
+                    tables: tables,
+                    constraints: constraints,
+                    archiveScope: archiveScope,
+                    explicitSites: parameters.sites
+                });
+
                 return Q.all(outputs.map(function(output){
                     let query=[
                         select_clause[output],
                         from_clause,
                         where_clause
                     ];
+                    if (output === 'date_range' && dateRangeFastPathEligible && siteIds.length) {
+                        // Roll the per-site extremes up to the project level.
+                        // Selecting FROM sites by site_id (the caller's PK list)
+                        // preserves imported sites owned by other projects.
+                        const scope = sqlutil.recordingArchiveScope('r', sqlutil.normalizeArchivedParam(parameters.archived));
+                        const scopeSql = scope ? (' AND ' + scope) : '';
+                        const fastSql =
+                            "SELECT MIN(z.f) AS min_date, MAX(z.l) AS max_date FROM (\n" +
+                            "  SELECT\n" +
+                            "    (SELECT r.datetime FROM recordings r\n" +
+                            "       WHERE r.site_id = s.site_id" + scopeSql + "\n" +
+                            "       ORDER BY r.datetime ASC LIMIT 1) AS f,\n" +
+                            "    (SELECT r.datetime FROM recordings r\n" +
+                            "       WHERE r.site_id = s.site_id" + scopeSql + "\n" +
+                            "       ORDER BY r.datetime DESC LIMIT 1) AS l\n" +
+                            "  FROM sites s WHERE s.site_id IN (?)\n" +
+                            ") z";
+                        return Q.nfcall(queryHandler, {
+                            sql: dbpool.format(fastSql, [siteIds]),
+                            typeCast: sqlutil.parseUtcDatetime,
+                        }).catch(function(err){
+                            // Never let the optimization cost a user their page:
+                            // fall back to the original (slow but proven) query.
+                            console.error('date_range fast path failed, falling back:', err && err.message);
+                            return Q.nfcall(queryHandler, {
+                                sql: query.join('\n'),
+                                typeCast: sqlutil.parseUtcDatetime,
+                            });
+                        });
+                    }
                     if(output !== 'list') {
                         return Q.nfcall(queryHandler, {
                             sql: query.join('\n'),
