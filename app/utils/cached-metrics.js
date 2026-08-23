@@ -87,9 +87,17 @@ const getCachedMetrics = async function(req, res, key, params, next) {
             results = await model.projects.getCachedMetrics(v)
         }
         const [result] = results
-        const count = result.value
+        // The insert above may have lost a race to a sibling pod (handled as a
+        // no-op in model.projects.insertCachedMetrics), and the re-read can
+        // still come back empty if the freshly-written row expired and was
+        // reaped in between. Compute the value directly rather than
+        // dereferencing undefined -- without this guard the duplicate-key fix
+        // merely moves the 500 from ER_DUP_ENTRY to a TypeError.
+        const count = result ? result.value : await getCountForSelectedMetric(k, params)
 
         res.json(count)
+
+        if (!result) { return null }
 
         const dateNow = moment.utc().valueOf()
         const dateIndb = moment.utc(result.expires_at).valueOf()
