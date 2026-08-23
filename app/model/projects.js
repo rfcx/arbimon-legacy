@@ -27,6 +27,23 @@ const projectSchema = joi.object().keys({
     external_id: joi.string().optional(),
 });
 
+/**
+ * True when a driver error is a unique/primary-key violation, in EITHER engine.
+ *
+ * MariaDB (mysql driver) reports `ER_DUP_ENTRY`; PostgreSQL reports SQLSTATE
+ * `23505` (unique_violation). Checking only the MySQL string is a known
+ * migration hazard -- the branch silently stops matching after the Phase-7
+ * write flip and the dup-handling path becomes dead code. Kept engine-neutral
+ * so this site needs no port.
+ *
+ * @param {Error} err driver error
+ * @return {Boolean}
+ */
+function isDuplicateKeyError (err) {
+    if (!err) { return false; }
+    return err.code === 'ER_DUP_ENTRY' || err.code === '23505';
+}
+
 var Projects = {
 
     countAllProjects: async function() {
@@ -61,11 +78,35 @@ var Projects = {
     insertCachedMetrics: async function(opts) {
         const {key, value, expiresAt} = opts
         const q = 'INSERT INTO cached_metrics(`key`, value, expires_at) VALUES (?,?,?)'
-        return dbpool.query(q, [
-            key,
-            value,
-            expiresAt
-        ])
+        try {
+            return await dbpool.query(q, [
+                key,
+                value,
+                expiresAt
+            ])
+        } catch (err) {
+            // A duplicate key here means a SIBLING POD inserted this exact
+            // cache key microseconds ago -- the row the caller wanted now
+            // exists, so this is a successful outcome, not an error. The
+            // caller (utils/cached-metrics.js getCachedMetrics) re-reads the
+            // row immediately after this returns.
+            //
+            // Measured before this fix: 126-213 occurrences/day, ~1 in 4
+            // /legacy-api/project/:p/*-job-count requests, each surfacing to
+            // the user as a 500 on the project dashboard. The expiry-driven
+            // refresh has an advisory lock for the UPDATE path but nothing
+            // serialises the first INSERT of a cold key.
+            //
+            // Matches BOTH dialects on purpose: MariaDB reports ER_DUP_ENTRY
+            // today, PostgreSQL reports SQLSTATE 23505 after the Phase-7
+            // write flip. A string-only match would silently become dead code
+            // on pg -- the exact hazard the P7 preplan tracks for the two
+            // existing ER_DUP_ENTRY branch sites.
+            if (isDuplicateKeyError(err)) {
+                return null
+            }
+            throw err
+        }
     },
 
     listAll: function(callback) {

@@ -208,10 +208,25 @@ router.post('/:patternMatching/validate', function(req, res, next) {
     res.type('json');
     const validation = req.body.validation
     model.patternMatchings.getRoi(req.params.patternMatching, req.body.rois, req.project.project_id).then(async function(rois) {
-        const updatedRois = rois.filter(function(roi) { return roi.validated != validation });
-        if (!updatedRois || !updatedRois.length) {
-            console.log('--500 status: patternMatchings.getRoi', updatedRois.length)
+        // Two very different cases used to be conflated here, and both returned
+        // a 500:
+        //   (a) getRoi found NOTHING -- a bad pattern-matching id, a roi that
+        //       is not in this project, etc. That IS an error.
+        //   (b) getRoi found rows but NONE need changing, i.e. every requested
+        //       roi already carries the requested validation value. That is an
+        //       idempotent NO-OP -- re-submitting a validation, or a
+        //       double-click -- and must succeed.
+        // Case (b) was surfacing to users as a 500 on the validate action
+        // (measured 13 occurrences/7d). Keep erroring on (a) only.
+        if (!rois || !rois.length) {
+            console.log('--500 status: patternMatchings.getRoi', 0)
             return next(new Error('Error to get PM data'));
+        }
+        const updatedRois = rois.filter(function(roi) { return roi.validated != validation });
+        if (!updatedRois.length) {
+            // Nothing to change: already in the requested state.
+            res.json({ updated: 0 });
+            return null;
         }
         const updatedRoiIds = updatedRois.map(function(roi) { return roi.pattern_matching_roi_id });
         let options = {};

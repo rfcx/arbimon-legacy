@@ -22,7 +22,19 @@ var model = require('../../../model');
 
 router.param('playlist', function(req, res, next, playlist){
     res.type('json');
-    if (!!req.body && (!!req.body.recordings || !Number(playlist))) {
+    // `req.body.recordings` is the deliberate body-driven bypass: those callers
+    // work from an explicit recording list and never need a playlist lookup
+    // (see model.playlists.fetchData's Array.isArray(query.recordings) branch).
+    //
+    // The second leg used to be `!Number(playlist)`, which is ALSO true for the
+    // string "0" because Number("0") === 0 is falsy. A request for playlist id
+    // 0 therefore skipped the loader, left `req.playlist` undefined, and the
+    // handlers dereferenced it -- surfacing as a 500 plus an unhandled
+    // TypeError at playlists.js:107 / :163 instead of the clean 404 this
+    // loader already implements a few lines below. Test for a usable numeric
+    // id instead, so a genuine 0 falls through to find() and 404s properly.
+    const playlistId = Number(playlist);
+    if (!!req.body && (!!req.body.recordings || !Number.isFinite(playlistId))) {
         return next();
     }
     model.playlists.find({
