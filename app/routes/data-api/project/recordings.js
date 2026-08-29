@@ -192,15 +192,81 @@ router.get('/inline/:recordingId', function(req, res, next) {
     downloadRecordingById(req, res, true, next);
 });
 
-function getRecordingFromS3(bucket, legacy, key, res) {
+/**
+ * Stream a recording's audio from S3 to `res` with FULL error handling.
+ *
+ * WHY THIS EXISTS (2026-08-29, the XMLParserError pod-kill class).
+ * ----------------------------------------------------------------
+ * This used to be `getObject(...).createReadStream().pipe(res)` with NO
+ * 'error' listener on the request or the stream. That is a PROCESS-KILL
+ * primitive, and it killed both prod replicas repeatedly on 2026-08-28/29:
+ *
+ *   A recording row whose object is absent from every storage layer (see
+ *   OPEN-ITEMS #86: ~1.85M such rows) makes our s3 chain answer
+ *   `404 text/plain "not found in any layer"`. aws-sdk v2 assumes an S3 error
+ *   body is XML, so `Request.extractError` (s3.js:697) hands that text to
+ *   xml2js/sax, which strict-fails on the leading 'n' and THROWS
+ *   SYNCHRONOUSLY inside an SDK event listener. With no 'error' listener the
+ *   throw becomes an uncaughtException, and bin/www's crash net deliberately
+ *   fail-stops anything that is not ERR_HTTP_HEADERS_SENT => process.exit(1).
+ *   Both replicas serve the same user, so BOTH died within seconds.
+ *
+ * Note the parse error was never the disease: returning valid XML instead
+ * merely renames the fatal error to NoSuchKey (measured). The load-bearing
+ * fix is attaching the 'error' listeners -- ANY S3 failure (missing object,
+ * permissions, upstream outage) must not be able to kill the process.
+ *
+ * Mirrors the existing precedent in app/model/recordings.js
+ * (`downloadAssetFromMediaAPI`, the #1796 media-api fix): listen on BOTH the
+ * request and the stream, and guarantee the completion path runs exactly once.
+ *
+ * Calls back once with (err). Headers are NOT set here -- see
+ * downloadRecordingById, which now waits for first-byte before committing the
+ * response, so a miss can still be answered with a clean 404.
+ */
+function getRecordingFromS3(bucket, legacy, key, res, onHeaders, callback) {
     if(!s3 || !s3RFCx){
         defineS3Clients()
     }
     let s3Client = legacy? s3 : s3RFCx;
-    return s3Client
-        .getObject({ Bucket: bucket, Key: key })
-        .createReadStream()
-        .pipe(res)
+
+    let done = false;
+    const finish = function (err) {
+        if (done) return;
+        done = true;
+        callback(err || null);
+    };
+
+    const req = s3Client.getObject({ Bucket: bucket, Key: key });
+
+    // The SDK throws out of THIS listener chain on a non-XML error body; the
+    // listener is what converts a pod kill into an ordinary error.
+    req.on('error', finish);
+
+    const stream = req.createReadStream();
+    stream.on('error', finish);
+
+    // Only commit the response once bytes are actually flowing. Before the
+    // first byte res.headersSent is false, so an error can still produce a
+    // real 404; after it, the response is committed and the only honest
+    // action is to destroy the socket rather than truncate silently.
+    let started = false;
+    stream.once('data', function () {
+        started = true;
+        try { onHeaders(); } catch (e) { /* headers already sent */ }
+    });
+    stream.on('end', function () { finish(null); });
+
+    stream.on('data', function (chunk) {
+        if (!res.write(chunk)) { stream.pause(); res.once('drain', function () { stream.resume(); }); }
+    });
+
+    // If the client goes away mid-download, stop pulling bytes from storage.
+    res.on('close', function () {
+        if (!done) { try { req.abort(); } catch (e) {} stream.destroy(); finish(null); }
+    });
+
+    return { isStarted: function () { return started; } };
 }
 
 async function downloadRecordingById(req, res, inline, next) {
@@ -213,9 +279,38 @@ async function downloadRecordingById(req, res, inline, next) {
     const legacy = recordingUri.startsWith('project_')
     const mimetype = mime.getType(recordingName)
     const bucketName = config(legacy ? 'aws' : 'aws_rfcx').bucketName
-    res.set({ 'Content-Disposition' : `${ inline ? 'inline' : 'attachment' }; filename=${ recordingName }`})
-    res.setHeader('Content-type', `${ inline ? 'audio/wav' : mimetype }`)
-    await getRecordingFromS3(bucketName, legacy, recordingUri, res)
+
+    // Headers are applied on FIRST BYTE, not up front: setting them early was
+    // harmless while the process died anyway, but now that we survive a miss we
+    // want the option of answering 404 instead of a 200 with an empty body.
+    const applyHeaders = function () {
+        res.set({ 'Content-Disposition' : `${ inline ? 'inline' : 'attachment' }; filename=${ recordingName }`})
+        res.setHeader('Content-type', `${ inline ? 'audio/wav' : mimetype }`)
+    };
+
+    await new Promise(function (resolve) {
+        const handle = getRecordingFromS3(bucketName, legacy, recordingUri, res, applyHeaders, function (err) {
+            if (!err) {
+                if (!res.writableEnded) { res.end(); }
+                return resolve();
+            }
+            if (res.headersSent || handle.isStarted()) {
+                // Committed mid-stream: cannot signal cleanly. Destroy so the
+                // client sees a broken transfer instead of a truncated file
+                // that looks complete.
+                try { res.destroy(); } catch (e) {}
+                return resolve();
+            }
+            const missing = err && (err.statusCode === 404 || err.code === 'NoSuchKey' ||
+                                    err.code === 'NotFound' || err.name === 'XMLParserError');
+            if (missing) {
+                res.status(404).json({ error: 'recording audio not found' });
+                return resolve();
+            }
+            next(err);
+            return resolve();
+        });
+    });
 }
 
 router.get('/time-bounds', function(req, res, next) {

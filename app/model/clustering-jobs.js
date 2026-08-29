@@ -241,14 +241,49 @@ select.push(
         return dbpool.query(q);
     },
 
-    getAsset: function (s3Path, res) {
+    /**
+     * Stream a clustering asset to `res`.
+     *
+     * 2026-08-29: this was the SECOND unguarded S3 stream in the codebase (the
+     * other was getRecordingFromS3). Both are pod-kill primitives: on a missing
+     * object our s3 chain returns `404 text/plain "not found in any layer"`,
+     * aws-sdk v2 tries to parse it as XML, sax throws synchronously inside an
+     * SDK listener, and with no 'error' listener that is an uncaughtException
+     * => bin/www fail-stops => process.exit(1). See
+     * runbooks/FINDING-2026-08-29-arbimon-xmlparser-uncaught-crash-class.md.
+     *
+     * A fix that only patched the recordings route would have left this one
+     * armed, so both are guarded in the same change.
+     */
+    getAsset: function (s3Path, res, callback) {
         if(!s3){
             s3 = createS3Client('aws'); // endpoint-aware: routes via s3-proxy chain
         }
-        return s3
-            .getObject({ Bucket: config('aws').bucketName, Key: s3Path })
-            .createReadStream()
-            .pipe(res)
+        let done = false;
+        const finish = function (err) {
+            if (done) return;
+            done = true;
+            if (typeof callback === 'function') { return callback(err || null); }
+            // No callback supplied (legacy call shape): fail safely rather than
+            // letting the error reach the process.
+            if (err && !res.headersSent) {
+                const missing = err.statusCode === 404 || err.code === 'NoSuchKey' ||
+                                err.code === 'NotFound' || err.name === 'XMLParserError';
+                res.status(missing ? 404 : 500).json({ error: 'asset not available' });
+            } else if (err) {
+                try { res.destroy(); } catch (e) {}
+            }
+        };
+
+        const req = s3.getObject({ Bucket: config('aws').bucketName, Key: s3Path });
+        req.on('error', finish);
+        const rs = req.createReadStream();
+        rs.on('error', finish);
+        rs.on('end', function () { finish(null); });
+        res.on('close', function () {
+            if (!done) { try { req.abort(); } catch (e) {} rs.destroy(); finish(null); }
+        });
+        return rs.pipe(res);
     },
 
     getRoiAudioFile: function (options) {
