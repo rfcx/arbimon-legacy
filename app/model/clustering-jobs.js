@@ -245,10 +245,26 @@ select.push(
         if(!s3){
             s3 = createS3Client('aws'); // endpoint-aware: routes via s3-proxy chain
         }
-        return s3
+        var stream = s3
             .getObject({ Bucket: config('aws').bucketName, Key: s3Path })
             .createReadStream()
-            .pipe(res)
+        // rfcx-local 2026-08-30: same PROCESS-KILL primitive as
+        // getRecordingFromS3 (recordings.js) -- an S3 read stream with no
+        // 'error' listener turns a missing object into an uncaughtException
+        // that fail-stops the pod. This is the SECOND of the two S3-object
+        // stream sites in the request path; fixing only one leaves the crash
+        // class armed. See
+        // runbooks/FINDING-2026-08-29-arbimon-xmlparser-uncaught-crash-class.md
+        stream.on('error', function (err) {
+            console.error('ClusteringJobs.getAsset stream error', {
+                key: s3Path, name: err && err.name, code: err && err.code
+            })
+            if (!res.headersSent) {
+                res.status(err && err.statusCode === 404 ? 404 : 500)
+            }
+            res.destroy(err)
+        })
+        return stream.pipe(res)
     },
 
     getRoiAudioFile: function (options) {
