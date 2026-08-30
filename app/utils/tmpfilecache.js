@@ -111,7 +111,29 @@ var cache = {
                     callback(err);
                 }
                 else {
-                    oncachemiss(new CacheMiss(cache, key, callback));
+                    // rfcx-local 2026-08-30: several oncachemiss callbacks are
+                    // `async` functions (e.g. recordings.fetchRecordingFile), so
+                    // they return a promise this call site used to DISCARD. Any
+                    // throw inside then became an unhandled rejection in a bare
+                    // async context — and for a SYNCHRONOUS throw inside the
+                    // callback's first tick, an uncaughtException that bin/www
+                    // deliberately fail-stops on (process.exit(1)). Measured:
+                    // every crash in the 08-29T15:02Z storm was this path, hit
+                    // during a ~12 req/s bulk recordings/download run when the
+                    // s3 layer returned a non-XML 404 body (now also fixed
+                    // infra-side). Contain BOTH shapes: route a rejected promise
+                    // AND a synchronous throw into the CacheMiss's own deferred,
+                    // which nodeifies to the caller's callback — the error
+                    // reaches the request handler instead of killing the pod.
+                    var miss = new CacheMiss(cache, key, callback);
+                    try {
+                        var ret = oncachemiss(miss);
+                        if (ret && typeof ret.catch === 'function') {
+                            ret.catch(function (e) { miss.resolveWaiting(e); });
+                        }
+                    } catch (e) {
+                        miss.resolveWaiting(e);
+                    }
                 }
             }
             else {

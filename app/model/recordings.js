@@ -394,8 +394,28 @@ var Recordings = {
             constraints = sqlutil.compile_query_constraints(urlquery, fields);
             if (urlquery && urlquery.site) {
                 constraints.shift()
-                data.push(urlquery.site['='])
-                constraints.push('S.site_id = ?');
+                // rfcx-local 2026-08-30 (mysql2pg P6, census hash 918d9fa2ed1027cf):
+                // this hand-rolled substitution binds whatever parseUrl put in
+                // `site` against the BIGINT site_id column. For the intended
+                // `!q:<id>` flow that value is numeric (the !q: expansion resolves
+                // it via a real lookup, commit 3a60cb2d). But a raw site-NAME
+                // selector (a hand-typed URL like "5192996320210910_184200.WAV")
+                // reaches here too, and:
+                //   - MariaDB silently coerces the string (prefix-numeric names
+                //     can even resolve to a DIFFERENT site: name '001' -> site 1),
+                //   - PostgreSQL raises 22P02 at the 6.4 read flip.
+                // Route the operand through the SAME numeric guard
+                // apply_query_contraint uses for NUMERIC_SUBJECTS: a non-numeric
+                // operand can never legitimately match a site_id, so emit the
+                // engine-neutral no-match instead of binding it. Measured before
+                // shipping: /recordings/find/ saw 46 hits in 7 days — 44
+                // bare-numeric, 2 malformed, ZERO legitimate site-name lookups.
+                if (sqlutil.isNumericOperand(urlquery.site['='])) {
+                    data.push(urlquery.site['='])
+                    constraints.push('S.site_id = ?');
+                } else {
+                    constraints.push('1 = 0');
+                }
             }
             group_by = sqlutil.compute_groupby_constraints(urlquery, fields, options.group_by, {
                 count_only : options.count_only
@@ -1905,7 +1925,22 @@ var Recordings = {
         if (!col) {
             // Historical default: keep recordings grouped by site, newest first.
             // Uses the (site_id, datetime) composite directly (no filesort).
-            return { clause: 'r.site_id DESC, r.datetime DESC', index: 'recordings_site_datetime_idx', usingDefault: true };
+            //
+            // rfcx-local 2026-08-30 (mysql2pg P6, PHASE7-PREPLAN item 6): add the
+            // recording_id tie-break the USER-SELECTED branch below already has.
+            // Without it, rows tying on (site_id, datetime) — notably the W9
+            // all-NULL-datetime band, 636,279 rows / 252 sites — have an
+            // underdetermined page order: each engine is internally stable but
+            // orders the tied block differently, so pagination that walks INTO
+            // the block lands on different rows per engine (census class W8,
+            // e.g. hash 3fde2630). This makes EACH engine's own pagination
+            // deterministic; it is deliberately NOT sold as a cross-engine fix
+            // (the engines sort different REPRESENTATIONS in the NULL band —
+            // that unification is Phase-8 data hygiene).
+            // Priced before shipping, on the live 273M-row table with the forced
+            // composite: MariaDB same key/rows, no filesort; PG identical cost
+            // (5035.86..5036.11), same plan, one extra Sort Key.
+            return { clause: 'r.site_id DESC, r.datetime DESC, r.recording_id DESC', index: 'recordings_site_datetime_idx', usingDefault: true };
         }
         // Tie-break on recording_id for a stable, deterministic page order.
         return { clause: col.expr + ' ' + dir + ', r.recording_id ' + dir, index: col.index, usingDefault: false };
