@@ -197,10 +197,35 @@ function getRecordingFromS3(bucket, legacy, key, res) {
         defineS3Clients()
     }
     let s3Client = legacy? s3 : s3RFCx;
-    return s3Client
+    const stream = s3Client
         .getObject({ Bucket: bucket, Key: key })
         .createReadStream()
-        .pipe(res)
+    // rfcx-local 2026-08-30: an S3 read stream with NO 'error' listener is a
+    // PROCESS-KILL primitive. A missing object (or any upstream S3 failure)
+    // emits 'error' asynchronously; with no listener Node raises it as an
+    // uncaughtException and bin/www fail-stops the pod. Both replicas serve the
+    // same burst, so both die together -- this is the 2026-08-29 XMLParserError
+    // crash class (runbooks/FINDING-2026-08-29-arbimon-xmlparser-uncaught-crash-class.md).
+    //
+    // ⚠️ Returning proper XML 404s from the storage chain does NOT fix this: it
+    // only RENAMES the fatal error (XMLParserError -> NoSuchKey) and the pod
+    // still exits 7. Re-verified by execution 2026-08-30 against aws-sdk
+    // 2.1388.0. The listener is the load-bearing fix; nothing substitutes.
+    //
+    // Headers are already set by the caller and the body may be partially
+    // written, so we cannot send a clean error response here. Destroying the
+    // socket is the correct terminal action: the client sees a truncated
+    // transfer instead of the server dying.
+    stream.on('error', function (err) {
+        console.error('getRecordingFromS3 stream error', {
+            bucket: bucket, key: key, name: err && err.name, code: err && err.code
+        })
+        if (!res.headersSent) {
+            res.status(err && err.statusCode === 404 ? 404 : 500)
+        }
+        res.destroy(err)
+    })
+    return stream.pipe(res)
 }
 
 async function downloadRecordingById(req, res, inline, next) {
