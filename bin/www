@@ -54,8 +54,26 @@ app.set('http-redirect-port', process.env.RD_PORT || 3001);
 
 if (app.get('env') === 'production') {
     var http = require('http');
-    http.createServer(app).listen(app.get('app-port'));
-    http.createServer(redirectHttp).listen(app.get('http-redirect-port'));
+    // rfcx-local 2026-08-31 (OPEN-ITEMS §233, rider B2): CAPTURE the server
+    // handles. The previous code chained `.listen()` directly onto
+    // `createServer()`, discarding the handle, so there was nothing to set
+    // timeouts on.
+    //
+    // WHY: node's default keepAliveTimeout (5s) is SHORTER than the upstream
+    // proxy's idle timeout, so the server can close a pooled connection at the
+    // exact moment the proxy reuses it -> sporadic 502s / ECONNRESET on
+    // long-tail requests. Mirrors rfcx-api's own core/main.js: keepAlive must
+    // EXCEED the proxy's idle timeout, and headersTimeout must exceed
+    // keepAliveTimeout or node closes sockets mid-headers.
+    var mainServer = http.createServer(app);
+    mainServer.keepAliveTimeout = 61000;
+    mainServer.headersTimeout = 70000;
+    mainServer.listen(app.get('app-port'));
+
+    var redirectServer = http.createServer(redirectHttp);
+    redirectServer.keepAliveTimeout = 61000;
+    redirectServer.headersTimeout = 70000;
+    redirectServer.listen(app.get('http-redirect-port'));
     require('newrelic');
 } else {
     var server = app.listen(app.get('app-port'), function() {

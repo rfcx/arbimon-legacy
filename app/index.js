@@ -202,7 +202,10 @@ app.use(function(err, req, res, next) {
             res.render('error', {
                 message: err.message || "Something went wrong",
                 error: {},
-                user: req.session.user
+                // rfcx-local 2026-08-31 (rider #4): guard exactly as the branch
+                // four lines above already does -- an error handler that itself
+                // throws on a missing session turns a handled error into a crash.
+                user: req.session ? req.session.user : undefined
             });
         }
     }
