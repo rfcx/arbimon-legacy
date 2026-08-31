@@ -52,9 +52,19 @@ router.param('projectUrl', function(req, res, next, project_url){
                 return res.redirect('/citizen-scientist/' + project.project_id + '/');
         }
 
-        let permissions = req.session.user.permissions && req.session.user.permissions[project.project_id]
+        // rfcx-local 2026-08-31 (OPEN-ITEMS §40 rider #4): req.session.user can be
+        // UNDEFINED on an anonymous / expired-session path. The unguarded property
+        // read threw inside a `q` promise chain -> uncaughtException -> pod exit 1
+        // (incident 2026-08-27T16:19:17Z). Same guard shape the codebase already
+        // uses elsewhere (`req.session ? req.session.user : undefined`).
+        let sessionUser = req.session && req.session.user
+        if (!sessionUser) {
+            // No hydrated session user: cannot resolve per-project permissions.
+            return res.sendStatus(401);
+        }
+        let permissions = sessionUser.permissions && sessionUser.permissions[project.project_id]
         if (!permissions || (permissions && !permissions.length)) {
-            model.users.getPermissions(req.session.user.id, project.project_id, function(err, rows) {
+            model.users.getPermissions(sessionUser.id, project.project_id, function(err, rows) {
                 if(req.session.isAnonymousGuest === true) {
                     // if not authorized to see project send 401
                     return res.sendStatus(401);
