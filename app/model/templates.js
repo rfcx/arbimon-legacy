@@ -150,21 +150,46 @@ var Templates = {
             // has a stream external_id (auth-free ingest path, hot-cache-backed);
             // pre-media-api recordings (project_* uri, no external_id) keep the
             // stored S3 image. Internal render columns are stripped.
+            //
+            // 2026-09-04: the `indexOf('project_') !== 0` PRE-GUARD was REMOVED
+            // here (and at the public-templates call site below). It short-
+            // circuited to null for any legacy `project_*` recording uri, which
+            // meant mediaStreamId()'s external_id FALLBACK was never reached --
+            // even when the site had a perfectly good stream external_id and the
+            // recording had a valid datetime_utc. training_sets.js and
+            // pattern_matchings.js call roiSpectrogramUrl() directly for exactly
+            // this reason; templates was the odd one out.
+            //
+            // Safe by construction: roiSpectrogramUrl() already returns null for
+            // every degenerate input -- no stream id (uri-shape miss AND absent/
+            // 'undefined' external_id), falsy datetimeUtc, and zero-dates via
+            // isPlausibleRecordingMs (a MariaDB zero-date parses to year 0172,
+            // which is FINITE, so isNaN does not catch it). Verified in-pod on
+            // 380f228: all four degenerate cases -> null; a modern
+            // YYYY/MM/DD/<streamid>/<file> uri still derives its id uri-first.
+            // So `dyn || r.storedUri` keeps the stored PNG in exactly the cases
+            // it did before, and gains a dynamic render where one is possible.
+            //
+            // Measured impact is small and honest: of 766 unrenderable live
+            // templates, 66 are unblocked by this change, and only 7 of those
+            // actually render TODAY -- the other 59 sit on 2 streams whose audio
+            // was never migrated (media-api returns "No audio files found for
+            // selected time range."). The value is that templates now render
+            // AUTOMATICALLY as recordings migrate, instead of staying blocked by
+            // a guard the sibling families do not have.
             for (var i = 0; i < rows.length; i++) {
                 var r = rows[i];
-                var dyn = (r.dynRecUri && String(r.dynRecUri).indexOf('project_') !== 0)
-                    ? roiSpectrogramUrl({
-                        // uri-first stream id (OPEN-ITEMS #107)
-                        recUri: r.dynRecUri,
-                        externalId: r.dynExternalId,
-                        datetimeUtc: r.dynDatetimeUtc,
-                        timeMin: Math.min(r.x1, r.x2),
-                        timeMax: Math.max(r.x1, r.x2),
-                        freqMin: Math.min(r.y1, r.y2),
-                        freqMax: Math.max(r.y1, r.y2),
-                        sampleRate: r.dynSampleRate
-                    }, { width: 400, height: 400 })
-                    : null;
+                var dyn = roiSpectrogramUrl({
+                    // uri-first stream id (OPEN-ITEMS #107), external_id fallback
+                    recUri: r.dynRecUri,
+                    externalId: r.dynExternalId,
+                    datetimeUtc: r.dynDatetimeUtc,
+                    timeMin: Math.min(r.x1, r.x2),
+                    timeMax: Math.max(r.x1, r.x2),
+                    freqMin: Math.min(r.y1, r.y2),
+                    freqMax: Math.max(r.y1, r.y2),
+                    sampleRate: r.dynSampleRate
+                }, { width: 400, height: 400 });
                 r.uri = dyn || r.storedUri;
                 delete r.dynRecUri; delete r.dynDatetimeUtc;
                 delete r.dynSampleRate; delete r.dynExternalId;
@@ -267,21 +292,22 @@ var Templates = {
             query += index === classIds.length - 1 ? sql : `${sql} UNION `
         })
         return dbpool.query(query).then(function(rows) {
+            // SECOND call site -- same pre-guard removal as in find() above.
+            // Fixing only the obvious one would leave this path still short-
+            // circuiting on legacy uris (the public-templates / Species page).
             for (var i = 0; i < rows.length; i++) {
                 var r = rows[i];
-                var dyn = (r.dynRecUri && String(r.dynRecUri).indexOf('project_') !== 0)
-                    ? roiSpectrogramUrl({
-                        // uri-first stream id (OPEN-ITEMS #107)
-                        recUri: r.dynRecUri,
-                        externalId: r.dynExternalId,
-                        datetimeUtc: r.dynDatetimeUtc,
-                        timeMin: Math.min(r.x1, r.x2),
-                        timeMax: Math.max(r.x1, r.x2),
-                        freqMin: Math.min(r.y1, r.y2),
-                        freqMax: Math.max(r.y1, r.y2),
-                        sampleRate: r.dynSampleRate
-                    }, { width: 400, height: 400 })
-                    : null;
+                var dyn = roiSpectrogramUrl({
+                    // uri-first stream id (OPEN-ITEMS #107), external_id fallback
+                    recUri: r.dynRecUri,
+                    externalId: r.dynExternalId,
+                    datetimeUtc: r.dynDatetimeUtc,
+                    timeMin: Math.min(r.x1, r.x2),
+                    timeMax: Math.max(r.x1, r.x2),
+                    freqMin: Math.min(r.y1, r.y2),
+                    freqMax: Math.max(r.y1, r.y2),
+                    sampleRate: r.dynSampleRate
+                }, { width: 400, height: 400 });
                 r.uri = dyn || r.storedUri;
                 delete r.dynRecUri; delete r.dynDatetimeUtc;
                 delete r.dynSampleRate; delete r.dynExternalId;
