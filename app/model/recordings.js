@@ -29,6 +29,14 @@ var tmpfilecache = require('../utils/tmpfilecache');
 var audioTools   = require('../utils/audiotool');
 var sqlutil      = require('../utils/sqlutil');
 var dateRangeFastpath = require('../utils/date-range-fastpath');
+const prewarm = require('../utils/prewarm');
+// Late-bound so the producer mints attrs with the SAME functions this model
+// uses (specWidthForDuration is defined on Recordings below).
+const prewarmDeps = {
+    mediaAssetUrl,
+    mediaStreamId,
+    specWidthForDuration: (d) => Recordings.specWidthForDuration(d)
+};
 var dbpool       = require('../utils/dbpool');
 var tyler        = require('../utils/tyler.js');
 
@@ -471,6 +479,26 @@ var Recordings = {
                         d.meta = d.meta ? Recordings.__parse_meta_data(d.meta) : null;
                         d.file = d.meta && d.meta.filename? d.meta.filename : d.file;
                     })
+                    // MEDIA PRE-WARM, ONE MESSAGE PER PAGE (rfcx-local OPEN-ITEMS
+                    // §217 step 2). This `compute` branch IS the recordings-list
+                    // page: `GET /recordings/!q:<site>?limit=10&offset=N&
+                    // show=thumbnail-path` (measured 5,048 hits/7d 2026-09-04 vs
+                    // 1,124 for the /search list). Publish here, once per page,
+                    // BEFORE compute_row_properties fans out per row -- never
+                    // inside __compute_thumbnail_path_async, which also fires
+                    // on the visualizer neighbour path. Fire-and-forget, own
+                    // scoped redis client, inert without config: see
+                    // app/utils/prewarm.js for the rules.
+                    if (prewarm.enabled && /thumbnail-path/.test(String(options.compute))) {
+                        const urls = [];
+                        for (const d of data) {
+                            // this projection carries S.external_id as `external_id`
+                            for (const a of prewarm.attrsForListRow(
+                                { uri: d.uri, site_external_id: d.external_id, datetime_utc: d.datetime_utc, duration: d.duration },
+                                prewarmDeps)) urls.push(a);
+                        }
+                        prewarm.publishUrls(urls);
+                    }
                     return arrays_util.compute_row_properties(data, options.compute, function(property){
                         return Recordings['__compute_' + property.replace(/-/g,'_')];
                     });
@@ -2331,6 +2359,22 @@ var Recordings = {
                             _1.meta = _1.meta ? Recordings.__parse_meta_data(_1.meta) : null;
                             _1.filename = _1.meta? (_1.meta.filename? _1.meta.filename : 'Unknown') : null;
                             Recordings.__compute_thumbnail_path_async(_1);
+                        }
+                        // MEDIA PRE-WARM, ONE MESSAGE PER PAGE (rfcx-local
+                        // OPEN-ITEMS §217 step 2) -- the /recordings/search
+                        // list (the SECOND list surface; the first is the
+                        // `compute` branch of findByUrlMatch above). Here at
+                        // the list assembly, NOT inside
+                        // __compute_thumbnail_path_async (which also fires on
+                        // the visualizer neighbour path and would emit one
+                        // message per row). Fire-and-forget, own scoped redis
+                        // client, inert without config -- app/utils/prewarm.js.
+                        if (prewarm.enabled) {
+                            const urls = [];
+                            for (let _1 of r) {
+                                for (const a of prewarm.attrsForListRow(_1, prewarmDeps)) urls.push(a);
+                            }
+                            prewarm.publishUrls(urls);
                         }
                     } else {
                         r = r[0];
