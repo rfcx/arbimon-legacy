@@ -1718,6 +1718,27 @@ function getPool() {
         pglib.types.setTypeParser(1114, function (str) {
             return str === null ? null : new Date(str.replace(' ', 'T') + 'Z');
         });
+        // CRITICAL type parity #2 (the 2026-09-07 6.4 flip rollback): node-pg
+        // returns int8 (OID 20) as a JS STRING (it refuses to lose precision
+        // silently), while the mysql driver returns BIGINT as a JS NUMBER
+        // (supportBigNumbers is off). 190 arbimon columns are bigint on PG —
+        // every *_id PK/FK (projects, sites, recordings, jobs, users...) — so
+        // under DB_ENGINE=pg `req.project.project_id` arrived as "5358" and
+        // every `typeof x !== 'number'` guard (projects.js:215/939/1318) and
+        // strict `===` on ids failed: 8 user-facing 500s in 110 s, rolled back.
+        // The shadow could NOT catch this: normVal() deliberately bridges
+        // numeric strings to numbers before comparing (same blind spot as the
+        // column-case trap). Parse int8 as Number. Safe: the largest bigint in
+        // arbimon2 is pattern_matching_rois.pattern_matching_roi_id ~1.14e9
+        // (measured 2026-09-07), 6 orders of magnitude below 2^53; the
+        // MariaDB source columns are the same width so the app already
+        // assumed Number-safe ids. Values beyond 2^53 are impossible for this
+        // schema's generated keys and would already be broken on the mysql
+        // side. Registered on the shared type map, so the SHADOW comparator
+        // now sees the same shape the route path serves.
+        pglib.types.setTypeParser(20, function (str) {
+            return str === null ? null : Number(str);
+        });
         var Pool = pglib.Pool;
         _pool = new Pool(pgConf());
         _pool.on('error', function (err) {
