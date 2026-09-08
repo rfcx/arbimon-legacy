@@ -66,7 +66,7 @@ function renderLayout(options) {
           </tr>
           <tr>
             <td valign="top" class="center" style='padding: 10px 10px 20px; text-align: center; font-family: "Lato", sans-serif; font-size: 12px; color: #828282'>
-              77 Van Ness Ave, Suite 101-1717, San Francisco, CA, 94102, USA, +1 (415) 335-9205
+              77 Van Ness Ave, Suite 101-1717, San Francisco, CA, 94102, USA, +1 (305) 570-0096
             </td>
           </tr>
         </tfoot>
