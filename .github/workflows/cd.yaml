@@ -47,7 +47,8 @@ jobs:
       deployments: |
         [
           {"name": "arbimon",                 "image": "arbimon"},
-          {"name": "arbimon-ingest-consumer", "image": "arbimon"}
+          {"name": "arbimon-ingest-consumer", "image": "arbimon"},
+          {"name": "arbimon-export-consumer", "image": "arbimon-recording-export-job"}
         ]
 
 
