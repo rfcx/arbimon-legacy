@@ -40,8 +40,9 @@ const projectSchema = joi.object().keys({
  * @return {Boolean}
  */
 function isDuplicateKeyError (err) {
-    if (!err) { return false; }
-    return err.code === 'ER_DUP_ENTRY' || err.code === '23505';
+    // Promoted to sqlutil (2026-09-08) so every SELECT-then-INSERT site
+    // shares one engine-neutral definition; alias kept for this file.
+    return sqlutil.isDuplicateKeyError(err);
 }
 
 var Projects = {
@@ -806,6 +807,18 @@ var Projects = {
                     species: classSpecies.id,
                     songtype: classSong.id
                 };
+            }, function(err){
+                // 6.4 read-your-own-write race: the existence SELECT above is
+                // PG-served while the INSERT hits MariaDB, so a class added
+                // seconds ago can be invisible to the check yet present for
+                // the insert. The unique key (project_id, species_id,
+                // songtype_id) then reports a duplicate -- which is exactly
+                // the state the caller asked for. Return the same shape the
+                // pre-check returns when it DOES see the row.
+                if (sqlutil.isDuplicateKeyError(err)) {
+                    return { error: "class already in project" };
+                }
+                throw err;
             });
         }).nodeify(callback);
     },
