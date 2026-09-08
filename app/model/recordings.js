@@ -1579,7 +1579,23 @@ var Recordings = {
     addRecordingValidation: async function(opts) {
         const q = `INSERT INTO recording_validations(recording_id, user_id, species_id, songtype_id, project_id)
             VALUES (${opts.recordingId}, ${opts.userId}, ${opts.speciesId}, ${opts.songtypeId}, ${opts.projectId})`;
-        return dbpool.query(q);
+        try {
+            return await dbpool.query(q);
+        } catch (err) {
+            // 6.4 read-your-own-write race (fired 2026-09-08, 9 x 500 within
+            // 30 min of the read flip): the caller's getRecordingValidation()
+            // SELECT is PG-served while this INSERT hits MariaDB. A validation
+            // the same user wrote seconds earlier is invisible to the SELECT
+            // until the <=76 s forward sync lands, so the INSERT collides on
+            // recording_id_2 (recording_id, species_id, songtype_id). The row
+            // exists -- that is the outcome the caller wanted. The aed UPDATE
+            // that precedes this call has already persisted; failing here
+            // only turns a successful validation into a user-facing 500.
+            if (sqlutil.isDuplicateKeyError(err)) {
+                return null;
+            }
+            throw err;
+        }
     },
 
     calculateLocalTime: function(site_id, datetime, callback) {
@@ -2965,6 +2981,12 @@ var Recordings = {
     },
 
     getDeletedRecordingData: async function(recs, project_id, query) {
+        // An empty id list renders `IN ()`, a syntax error on BOTH engines
+        // (MariaDB ER_PARSE_ERROR; PG 42601). Seen live on a legacy delete
+        // with no ids (3 x during the 09-07 O5 exit window). The caller
+        // already handles "no rows" as "nothing deleted", so return that
+        // instead of letting the SQL fail inside an open transaction.
+        if (!Array.isArray(recs) || recs.length === 0) { return []; }
         const q = `SELECT r.recording_id AS id, r.uri, r.site_id, r.datetime, r.duration
             FROM recordings AS r
             JOIN sites AS s ON s.site_id = r.site_id

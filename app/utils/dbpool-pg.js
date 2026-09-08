@@ -62,6 +62,13 @@ var SAMPLE = numEnv('DB_SHADOW_SAMPLE', 1.0);
 if (SAMPLE < 0) { SAMPLE = 0; }
 if (SAMPLE > 1) { SAMPLE = 1; }
 var MAX_INFLIGHT = numEnv('DB_SHADOW_MAX_INFLIGHT', 8);
+// 6.4 (2026-09-08): in `pg` mode the SAME pool serves real user reads, and
+// sizing it off the shadow in-flight cap (min(MAX_INFLIGHT,10)) was found on
+// the 09-07 flip to queue the 7th concurrent routed read behind a 5 s connect
+// timeout. DB_PG_POOL_MAX sizes the route-path pool independently; the shadow
+// keeps its own small cap. Default 20 (pgbouncer transaction-pools behind it;
+// arbimon_ro measured 17 conns fleet-wide during the 09-08 hold).
+var PG_POOL_MAX = numEnv('DB_PG_POOL_MAX', 20);
 var TIMEOUT_MS = numEnv('DB_SHADOW_TIMEOUT_MS', 8000);
 var MAX_DIFF_ROWS = numEnv('DB_SHADOW_MAX_DIFF_ROWS', 2000);
 var DIV_PREFIX = 'DBPOOL_SHADOW_DIVERGENCE ';
@@ -74,9 +81,11 @@ function pgConf() {
         user: process.env.PG_SHADOW_USER || 'arbimon_ro',
         password: process.env.PG_SHADOW_PASSWORD || '',
         database: process.env.PG_SHADOW_DATABASE || 'arbimon',
-        // Keep the shadow pool small: it is a background verifier, not the
-        // request path. max<=MAX_INFLIGHT so we never queue behind the cap.
-        max: Math.max(2, Math.min(MAX_INFLIGHT, 10)),
+        // shadow: keep the pool small (background verifier, max<=MAX_INFLIGHT
+        // so we never queue behind the cap). pg: this IS the request path --
+        // size it from DB_PG_POOL_MAX, decoupled from the shadow knob.
+        max: ENGINE === 'pg' ? Math.max(2, PG_POOL_MAX)
+                             : Math.max(2, Math.min(MAX_INFLIGHT, 10)),
         idleTimeoutMillis: 30000,
         connectionTimeoutMillis: 5000,
         // pgbouncer is transaction-pooled; disable pg's own keepalive probes
@@ -1739,6 +1748,17 @@ function getPool() {
         pglib.types.setTypeParser(20, function (str) {
             return str === null ? null : Number(str);
         });
+        // Sibling class, found by the 09-08 pre-flip driver-type enumeration:
+        // SUM(bigint) yields `numeric` (OID 1700), which node-postgres also
+        // returns as a STRING; the mysql driver returns SUM as a Number.
+        // Schema has ZERO numeric columns (measured), so 1700 only ever
+        // arrives from aggregates over integer columns -- Number() is
+        // lossless there for the same 2^53 argument as int8 above. Known
+        // sites: playlists.total_recordings SUM (jobs.countAnalysesExecuted,
+        // AED getTotalRecInLast24Hours).
+        pglib.types.setTypeParser(1700, function (str) {
+            return str === null ? null : Number(str);
+        });
         var Pool = pglib.Pool;
         _pool = new Pool(pgConf());
         _pool.on('error', function (err) {
@@ -1766,7 +1786,13 @@ function emitStat(obj) { emit(STAT_PREFIX, obj); }
 var _inflight = 0;
 var _counters = { seen: 0, sampled: 0, replayed: 0, skipped_class: 0, dropped_cap: 0,
                   diff: 0, dialect_error: 0, ok: 0, pg_error: 0, pg_timeout: 0,
-                  emit_capped: 0 };
+                  emit_capped: 0,
+                  // 6.4 (DB_ENGINE=pg) route-path counters (2026-09-08):
+                  // routed = reads that entered pgReadQuery;
+                  // routed_ok = served from PG; fallback = pgRouteFallback
+                  // sentinel handed back to dbpool.js (MariaDB retry). In pg
+                  // mode `ok` above also increments on a served read.
+                  routed: 0, routed_ok: 0, fallback: 0 };
 
 // Per-template divergence emit cap: full detail for the first N occurrences
 // of a template per window, then counters only (the heartbeat still carries
@@ -1979,14 +2005,20 @@ function shadowAfterRead(finalSql, mariaRows, meta) {
 
 // periodic stats heartbeat so a silent shadow (0 divergences) is observable
 var _statTimer = null;
+// 2026-09-08: also runs in `pg` mode. On the 6.4 read flip the pg pods went
+// SILENT for the whole hold because this guard was shadow-only, which made
+// the pre-staged "counters must read engine:pg with ok climbing" gate
+// unsatisfiable and left routing provable only by a positive-control query.
+// In pg mode the line carries routed / routed_ok / fallback / pg_error /
+// pg_timeout / dialect_error; the shadow-only fields stay at 0.
 function startStatHeartbeat() {
-    if (_statTimer || ENGINE !== 'shadow') { return; }
+    if (_statTimer || !ENABLED) { return; }
     _statTimer = setInterval(function () {
         emitStat({ ev: 'counters', inflight: _inflight, engine: ENGINE, c: _counters });
     }, 60000);
     if (_statTimer.unref) { _statTimer.unref(); }
 }
-if (ENGINE === 'shadow') { startStatHeartbeat(); }
+if (ENABLED) { startStatHeartbeat(); }
 
 // ==================================================================
 // PHASE 6.4 — `DB_ENGINE=pg` RESPONSE ROUTING (ships INERT)
@@ -2092,8 +2124,16 @@ function pgRouteEligible(sql) {
  * cb is called with a sentinel so dbpool.js can retry on MariaDB — a read flip
  * must degrade to the old engine, never to an error page.
  */
-function pgReadQuery(finalSql, cb) {
+function pgReadQuery(finalSql, cb0) {
     var text = sqlText(finalSql);
+    _counters.routed++;
+    // Wrap the callback once so every exit path books its outcome: a
+    // pgRouteFallback sentinel = `fallback`, a served result = `routed_ok`.
+    var cb = function (err, rows) {
+        if (err && err.pgRouteFallback) { _counters.fallback++; }
+        else if (!err) { _counters.routed_ok++; }
+        return cb0(err, rows);
+    };
     var pool = getPool();
     if (!pool) { return cb({ pgRouteFallback: true, message: 'pg pool unavailable' }); }
     var pgSql;

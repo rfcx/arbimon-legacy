@@ -313,6 +313,27 @@ var sqlutil = {
             archived === 'only' || archived === 'archived') return 'archived';
         return 'active';
     },
+
+    /**
+     * True when a driver error is a unique/primary-key violation, in EITHER
+     * engine. MariaDB (mysql driver) reports `ER_DUP_ENTRY`; PostgreSQL reports
+     * SQLSTATE `23505` (unique_violation). Engine-neutral on purpose: a
+     * string-only match silently becomes dead code after the Phase-7 write
+     * flip. Single home for the check (2026-09-08); `projects.js` keeps a
+     * thin alias for its existing call site.
+     *
+     * WHY THIS MATTERS AT 6.4 (read flip, 2026-09-08): a route that SELECTs
+     * (now PG-served) to decide whether to INSERT (still MariaDB) is a
+     * read-your-own-write race across the <=76 s forward-sync window. The
+     * row the SELECT could not see already exists, so the INSERT's duplicate
+     * key is the DESIRED end state, not an error.
+     * @param {Error} err driver error
+     * @return {Boolean}
+     */
+    isDuplicateKeyError: function (err) {
+        if (!err) { return false; }
+        return err.code === 'ER_DUP_ENTRY' || err.code === '23505';
+    },
 };
 
 module.exports = sqlutil;
