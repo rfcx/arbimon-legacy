@@ -284,7 +284,6 @@ async function writeChunk (results, targetFile, projectSites, isFirstChunk) {
       fields.splice(13, 0, 'site_name');
       fields.push('audio_url')
 
-      let datastream = new stream.Readable({objectMode: true});
       let _buf = []
 
       let recordingIds = results.map(r => r.recording_id)
@@ -311,23 +310,32 @@ async function writeChunk (results, targetFile, projectSites, isFirstChunk) {
         result.audio_url = url;
         _buf.push(result);
       }
-      datastream.on('data', (d) => {
-        _buf.push(d);
-      })
-      for (let result of _buf) {
-        datastream.push(result);
-      }
-      datastream.push(null);
 
-      datastream.on('end', () => {
-        csv_stringify(_buf, { header: isFirstChunk, columns: fields }, async (err, data) => {
-          if (err) {
-            return reject(err instanceof Error ? err : new Error(String(err)))
-          }
-          console.log('targetFile write', _buf.length)
-          targetFile.write(data);
-          return resolve();
-        })
+      // 2026-09-08: EVERY ROW WAS WRITTEN TWICE (user report: a 141-result job
+      // exported 282 data rows; a 38-result job exported 76 — the second set an
+      // exact byte-for-byte repeat of the first, appended after it).
+      //
+      // The enrichment loop above already fills _buf with the complete chunk.
+      // The old code then ALSO ran the rows through a local Readable whose
+      // 'data' handler pushed each one back into that SAME _buf:
+      //
+      //     for (...) { _buf.push(result) }          // _buf = N rows
+      //     datastream.on('data', d => _buf.push(d)) // appends AGAIN
+      //     for (let r of _buf) datastream.push(r)   // feeds the N back in
+      //     ... csv_stringify(_buf)                  // serialises 2N
+      //
+      // The stream had no other consumer — it was pure ceremony around an
+      // already-complete buffer, so its only effect was to double the chunk.
+      // (The sibling exportAllPmJobsCsv() in this file is the correct idiom:
+      // it fills _buf ONLY from the 'data' handler, never directly.)
+      // Serialise the buffer we already built; row order is unchanged.
+      csv_stringify(_buf, { header: isFirstChunk, columns: fields }, async (err, data) => {
+        if (err) {
+          return reject(err instanceof Error ? err : new Error(String(err)))
+        }
+        console.log('targetFile write', _buf.length)
+        targetFile.write(data);
+        return resolve();
       })
     } catch (e) {
       reject(e instanceof Error ? e : new Error(String(e)))
