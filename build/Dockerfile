@@ -1,6 +1,35 @@
 # Jobs
 
-FROM node:18.14.0 as build
+# BASE: node 18 on Debian BOOKWORM (not bullseye).
+#
+# 2026-09-08: node:18.14.0 is a BULLSEYE image, and bullseye reached EOL --
+# `bullseye-security` stopped being republished (its Release froze at
+# 2026-08-31 with `Valid-Until: 2026-09-07`) while its pool was cleaned. Every
+# build after that expiry fails at the export stage's `apt install`:
+#
+#   E: Release file for .../bullseye-security/InRelease is expired
+#      (invalid since ...). Updates for this repository will not be applied.
+#   E: Failed to fetch .../systemd_247.3-7+deb11u8_arm64.deb  404  Not Found
+#
+# The 404s are the SYMPTOM; the expired InRelease is the cause (apt refuses the
+# stale index, then resolves against metadata whose files are gone). This broke
+# CD for `arbimon-recording-export-job` on every run from 2026-08-31 onward,
+# which is why no export-job image exists for a349c3c or 9ee8225.
+#
+# WHY BOOKWORM AND NOT TRIXIE: there is no `node:18-trixie` -- trixie ships a
+# newer Node, so adopting it forces a Node MAJOR upgrade (18 -> 20/22) and turns
+# a build fix into an app migration. Bookworm keeps node 18 (18.14.0 -> 18.20.8,
+# a PATCH bump with an IDENTICAL ABI: process.versions.modules == 108 on both),
+# is actively republished (oldstable, rolling Valid-Until), and installs this
+# file's exact package list at exit 0. The Node major bump + trixie is real work
+# that is owed (node 18 is EOL upstream) but belongs in its own PR with app
+# testing -- see runbooks/DECISION-2026-09-08-bookworm-vs-trixie-for-arbimon-legacy.md
+#
+# NOTE: this `build` stage is the parent of BOTH job images
+# (arbimon-recording-delete-job AND arbimon-recording-export-job), so a change
+# here is validated against both. The `arbimon` web stage below is independent
+# (ubuntu:18.04) and is deliberately NOT touched by this change.
+FROM node:18-bookworm as build
 WORKDIR /app
 COPY ["jobs/package.json", "jobs/package-lock.json*", "/app/"]
 # The vendored @rfcx/notification-templates (file: dep) must exist before
@@ -47,12 +76,15 @@ COPY app/model/tags.js /app/app/model/tags.js
 COPY app/model/soundscape-composition.js /app/app/model/soundscape-composition.js
 COPY app/model/sites.js /app/app/model/sites.js
 COPY app/model/classifications.js /app/app/model/classifications.js
+# `python-dev` (python2 dev headers) was REMOVED after bullseye and has no
+# installation candidate on bookworm or trixie -- keeping it fails the whole
+# `apt install` with "Package 'python-dev' has no installation candidate".
+# Nothing in the export path compiles against python2. Dropped 2026-09-08.
 RUN apt update \
     && apt install -y \
         curl \
         sox \
         imagemagick \
-        python-dev \
         software-properties-common \
         libsox-fmt-all \
         libsox-dev \
