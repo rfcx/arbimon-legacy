@@ -249,7 +249,39 @@ tags.resourceDefs.recording = {
             insertedAt = new Date();
             return q.ninvoke(dbpool, 'queryHandler',
                 "INSERT INTO recording_tags(recording_id, site_id, tag_id, user_id, datetime, t0, f0, t1, f1)\n"+
-                "VALUES (?, ?, ?, ?, NOW(), ?, ?, ?, ?)", [
+                "VALUES (?, ?, ?, ?, NOW(), ?, ?, ?, ?)\n"+
+                // IDEMPOTENT ON THE UNIQUE KEY (2026-09-09, rfcx-local §292
+                // follow-up): recording_tags' only unique constraint besides
+                // the pk is (recording_id, tag_id, user_id). Before this
+                // clause, a user re-adding a tag they had ALREADY placed on
+                // the same recording (double-click, retry after a slow
+                // response, or the 6.4 read-your-own-write window hiding a
+                // seconds-old write from the PG-served GET) hit an unhandled
+                // ER_DUP_ENTRY and the route 500'd -- 21 user-facing failures
+                // in 7 d, incl. one user 6x on one recording in 39 s. The
+                // user's intent ('this tag is on this recording') is already
+                // satisfied, so the correct outcome is SUCCESS, not an error.
+                //
+                // ON DUPLICATE KEY UPDATE makes the insert atomic-idempotent:
+                // the winner inserts; every concurrent/repeat caller takes
+                // the update branch, which is a deliberate NO-OP
+                // (first-write-wins on the box coordinates t0/f0/t1/f1 -- the
+                // original annotation is preserved). The
+                // LAST_INSERT_ID(recording_tag_id) idiom makes the duplicate
+                // branch report the EXISTING row's pk as insertId, so the
+                // created-row echo below works unchanged and returns the real
+                // recording_tag_id on both paths. (`datetime` in the echo is
+                // still the client's now; the durable row keeps its original
+                // timestamp. The SPA refetches after a successful PUT, so the
+                // echo is transient.)
+                //
+                // Dialect note: this is MariaDB-only syntax, exactly like the
+                // `INSERT IGNORE INTO tags` above in this same function. The
+                // write path stays on MariaDB until mysql2pg Phase 7; P7 must
+                // port this whole function (PG equivalent: ON CONFLICT
+                // (recording_id, tag_id, user_id) DO NOTHING + re-select, or
+                // sqlutil.isDuplicateKeyError's 23505 branch).
+                "ON DUPLICATE KEY UPDATE recording_tag_id = LAST_INSERT_ID(recording_tag_id)", [
                     recording.recording_id, recording.site_id, tagId, userId,
                     tag.t0 || null, tag.f0 || null,
                     tag.t1 || null, tag.f1 || null
