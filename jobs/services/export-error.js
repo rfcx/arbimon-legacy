@@ -47,13 +47,16 @@ function formatExportError (e) {
  * @returns {boolean}
  */
 function isEmptyExportFile (filePath) {
-    // NOTE: this early return is BEHAVIOURALLY REDUNDANT -- statSync(undefined)
-    // throws and the catch below already yields false (verified by mutation
-    // test: removing this line keeps all 5 tests green). It is kept because it
-    // states the intent explicitly rather than depending on a throw for
-    // control flow, and because the falsy case is the one that must never be
-    // reported as "no matching recordings". Do not read its presence as
-    // evidence of a behaviour the tests pin.
+    // Do not touch the filesystem for input we already know is invalid.
+    // collectData passes filePath=undefined on early failures, and that is an
+    // ERROR path that must never be answered with "no matching recordings".
+    //
+    // The catch below would also yield false here, so this line was briefly
+    // unpinned by the tests (a 2026-09-09 mutation test deleted it and all five
+    // tests stayed green). It is now pinned on its OBSERVABLE effect --
+    // "short-circuits BEFORE touching the filesystem for a falsy path" in
+    // test/export-empty-result.test.js, with a positive control proving a real
+    // path still reaches statSync. Deleting this line now fails that test.
     if (!filePath) { return false }
     try { return fs.statSync(filePath).size === 0 } catch (e) { return false }
 }

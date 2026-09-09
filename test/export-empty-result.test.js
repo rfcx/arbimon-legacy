@@ -67,4 +67,39 @@ describe('isEmptyExportFile', function () {
         expect(isEmptyExportFile(null)).to.equal(false);
         expect(isEmptyExportFile('')).to.equal(false);
     });
+
+    /**
+     * PINS THE EARLY RETURN ITSELF.
+     *
+     * The three assertions above pass EITHER WAY -- with the `if (!filePath)`
+     * guard, or without it, because fs.statSync(undefined) throws and the
+     * catch already yields false. That was proven by mutation test on
+     * 2026-09-09: deleting the guard left all five tests green, i.e. the guard
+     * was real code that no test could see. A line whose own comment has to say
+     * "do not read this as a behaviour the tests pin" is an invitation for
+     * someone to delete it during a refactor and lose the intent.
+     *
+     * This pins it on the OBSERVABLE difference: with the guard, a falsy path
+     * never reaches the filesystem at all. Without it, statSync is called (and
+     * throws). Asserting "we do not touch the fs for input we already know is
+     * invalid" is the actual contract -- cheap, and it makes the mutant die.
+     */
+    it('short-circuits BEFORE touching the filesystem for a falsy path', function () {
+        var calls = [];
+        var realStatSync = fs.statSync;
+        fs.statSync = function (p) { calls.push(p); return realStatSync.apply(fs, arguments); };
+        try {
+            expect(isEmptyExportFile(undefined)).to.equal(false);
+            expect(isEmptyExportFile(null)).to.equal(false);
+            expect(isEmptyExportFile('')).to.equal(false);
+            expect(calls).to.deep.equal([]);   // the guard did the work, not the catch
+
+            // Positive control: a REAL path must still reach statSync, or this
+            // test would also pass against a function that does nothing at all.
+            isEmptyExportFile(write('control.csv', ''));
+            expect(calls.length).to.equal(1);
+        } finally {
+            fs.statSync = realStatSync;
+        }
+    });
 });
