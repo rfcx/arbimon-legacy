@@ -22,11 +22,50 @@ const rfmClassification = require('./rfm-classification')
 const { streamToBuffer, zipDirectory } = require('../services/file-helper')
 // formatExportError: '{}'-proof + SQL-safe rendering of a thrown value.
 // Standalone module so it is unit-testable without the DB stack.
-const { formatExportError } = require('../services/export-error')
+// isEmptyExportFile: 0-byte (== 0-row) detection that refuses to treat a
+// missing file as "empty". Standalone module so both are unit-testable
+// without the DB stack.
+const { formatExportError, isEmptyExportFile } = require('../services/export-error')
 
 const S3_EXPORT_BUCKET_ARBIMON = process.env.S3_BUCKET_ARBIMON
 
 const tmpFilePath = 'jobs/arbimon-recording-export-job/tmpfilecache'
+
+// A completed export that legitimately matched NOTHING.
+//
+// WHY THIS EXISTS (2026-09-09): an export whose filters match 0 recordings
+// produces a 0-BYTE file -- the CSV header is only written inside writeChunk(),
+// which never runs when there are no chunks. Uploading that hit the s3-proxy
+// zero-byte write guard (EmptyObjectRejected, correctly -- a 0-byte object is
+// definitionally corrupt), which used to crash the consumer and, after the
+// crash was fixed, still left the user with SILENCE: the row went terminal and
+// no mail was ever sent.
+//
+// Measured instance: project 10073 'projeto teste', a VALID request (filter
+// 78453 is a real project_class in that project -- Bufo hololius / Common Song)
+// against a project with 0 recordings and 0 validations. The user asked once on
+// 2026-09-01, received nothing, and never tried again.
+//
+// "0 results" is a SUCCESSFUL outcome, not an error: tell the user plainly and
+// mark the row processed. Do NOT upload an empty object and do NOT reach for
+// the s3-proxy's X-Rfcx-Allow-Empty escape hatch -- emailing somebody a 0-byte
+// CSV is worse than telling them there was nothing to export, and it would
+// weaken a guard that is doing its job.
+async function sendEmptyExportEmail (rowData, reportLabel) {
+    const textHeader = `<p style="color:black;margin-top:0">Hello,</p>
+      <p style="color:black;">Thanks so much for using Arbimon! Your export for the project "${rowData.name}" has finished, but <strong>no recordings matched the filters you selected</strong>, so there is no file to download.</p>
+      <p style="color:black;">This usually means the project has no recordings yet, or the species/site/date filters were narrower than intended. Adjust the filters and run the export again.</p>`
+    const textFooter = `<p style="color:black;">If you have any questions about Arbimon, check out our <a href="https://help.arbimon.org/">support docs</a>.</p>
+      <p style="color:black;"><span> - The Arbimon Team </span></p>`
+    const message = {
+        from_email: 'no-reply@arbimon.org',
+        to: [{ email: rowData.user_email }],
+        subject: `Export finished (no matching recordings) — ${rowData.name}`,
+        html: textHeader + textFooter,
+        text: `Hello,\n\nThanks so much for using Arbimon! Your export for the project "${rowData.name}" has finished, but no recordings matched the filters you selected, so there is no file to download.\n\nThis usually means the project has no recordings yet, or the species/site/date filters were narrower than intended. Adjust the filters and run the export again.\n\nIf you have any questions about Arbimon, check out our support docs: https://help.arbimon.org/\n\n- The Arbimon Team`
+    }
+    return sendMessage(message, reportLabel)
+}
 
 // Record a terminal failure on the export row + notify, never throwing itself.
 // A throw from the error path would escape the enclosing async callback as an
@@ -248,6 +287,17 @@ async function processExportRow (rowData) {
                         // (the #1759 poison-row class, in the default branch;
                         // caught live in the 2026-07-23 E2E).
                         throw err
+                    }
+                    // 0 rows is a SUCCESSFUL outcome, not a failure. Tell the
+                    // user and complete the row; uploading a 0-byte object
+                    // would (correctly) be refused by the zero-byte write
+                    // guard and leave them with no answer at all.
+                    if (isEmptyExportFile(filePath)) {
+                        console.log(`Arbimon Export job: 0 rows matched, sending empty-export notice for ${message}`)
+                        await sendEmptyExportEmail(rowData, 'recordings-export.csv')
+                        await updateExportRecordings(rowData, { processed_at: currentTime })
+                        console.log(`Arbimon Export job finished (no matching recordings): ${message}`)
+                        return
                     }
                     console.log('Arbimon Export job: uploading file to S3')
                     const { url, stats } = await saveFile(filePath, currentTime, rowData.project_id, 'recordings-export')

@@ -1,3 +1,5 @@
+const fs = require('fs')
+
 // Pure helpers for recording export failures.
 //
 // Deliberately a standalone module with NO db/aws imports so it can be unit
@@ -29,4 +31,31 @@ function formatExportError (e) {
     return String(raw).replace(/[\\']/g, ' ').replace(/\s+/g, ' ').slice(0, 2000)
 }
 
-module.exports = { formatExportError }
+/**
+ * True when collectData produced a file with NO ROWS AT ALL (0 bytes).
+ *
+ * The CSV header is written inside writeChunk(), which never runs when there
+ * are no chunks -- so "no results" is unambiguously 0 bytes, not header-only.
+ *
+ * ⚠️ Returns FALSE for a missing/unstattable path. That is deliberate and is
+ * the load-bearing case: collectData passes filePath=undefined on early
+ * failures, and an fs fault must NEVER be answered with "no matching
+ * recordings" -- that would turn a real failure into a false, confident answer
+ * to the user.
+ *
+ * @param {string|undefined|null} filePath
+ * @returns {boolean}
+ */
+function isEmptyExportFile (filePath) {
+    // NOTE: this early return is BEHAVIOURALLY REDUNDANT -- statSync(undefined)
+    // throws and the catch below already yields false (verified by mutation
+    // test: removing this line keeps all 5 tests green). It is kept because it
+    // states the intent explicitly rather than depending on a throw for
+    // control flow, and because the falsy case is the one that must never be
+    // reported as "no matching recordings". Do not read its presence as
+    // evidence of a behaviour the tests pin.
+    if (!filePath) { return false }
+    try { return fs.statSync(filePath).size === 0 } catch (e) { return false }
+}
+
+module.exports = { formatExportError, isEmptyExportFile }
