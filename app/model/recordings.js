@@ -2965,7 +2965,7 @@ var Recordings = {
 
     /* fetch count of project recordings.
     */
-    deleteMatching: function(filters, project_id, idToken){
+    deleteMatching: function(filters, project_id, idToken, archivedBy){
         return this.buildSearchQuery(filters, true).then(function(builder){
             builder.addProjection.apply(builder, [
                 'r.recording_id as id',
@@ -2975,7 +2975,18 @@ var Recordings = {
             ]);
             delete builder.orderBy;
             return dbpool.query(builder.getSQL()).then(function(rows){
-                return Q.ninvoke(Recordings, 'delete', rows, project_id, idToken);
+                // NOTE (2026-09-09): `Q.ninvoke` appends the node-style callback
+                // as the LAST argument, so it lands in `delete`'s 4th slot and a
+                // 5th positional arg is never passed (verified empirically on the
+                // deployed image). Call `delete` directly with an explicit
+                // callback instead, so `archivedBy` actually reaches the model —
+                // otherwise every bulk archive records archived_by = NULL.
+                return Q.Promise(function (resolve, reject) {
+                    Recordings.delete(rows, project_id, idToken, function (err, result) {
+                        if (err) { return reject(err); }
+                        resolve(result);
+                    }, archivedBy);
+                });
             });
         });
     },
@@ -3042,18 +3053,69 @@ var Recordings = {
         });
     },
 
-    deleteBySiteAndUris: async function (site_id, uris) {
+    /**
+     * PHASE B (2026-09-09): archive instead of destroy.
+     *
+     * Ingest's re-upload path used to HARD-DELETE the previous rows for a
+     * (site, uri) pair. It now archives them, for the same reason the user
+     * delete does: the row is the only home for the recording's analysis
+     * results, and post-6.4 a hard delete on MariaDB is INVISIBLE to PG
+     * (`recordings` is append-synced by id and is in no delete-capture set),
+     * so the row survives on the PG read side forever as a "ghost".
+     *
+     * Idempotent: `archived_at IS NULL` means a repeat call is a no-op
+     * rather than a second archive with a later timestamp.
+     */
+    archiveBySiteAndUris: async function (site_id, uris) {
         if (!site_id || !uris || !uris.length) {
             return
         }
-        const q = `DELETE FROM recordings WHERE site_id = ? AND uri IN (?)`
+        const q = `UPDATE recordings SET archived_at = NOW(), archived_by = NULL
+            WHERE site_id = ? AND uri IN (?) AND archived_at IS NULL`
         return dbpool.query(q, [site_id, uris])
     },
 
-    deleteRecordingsFromArbimon: async function(recIds, query) {
-        // Remove multiple rows
-        const q = `DELETE FROM recordings
-            WHERE recording_id IN (${recIds})`
+    /**
+     * PHASE B: the archive write. Replaces the `DELETE FROM recordings` that
+     * this method used to perform.
+     *
+     * `archived_at`/`archived_by` are the ONLY columns the forward sync leg
+     * carries to PG (delta_sync mechanism 7, COLUMN_UPDATE_CAPTURE), so the
+     * archive becomes visible on the PG read side within one delta-sync cycle.
+     * A hard DELETE has no such leg — that asymmetry is the whole reason
+     * this is an UPDATE.
+     *
+     * Idempotent by `archived_at IS NULL`.
+     */
+    archiveRecordingsInArbimon: async function(recIds, archivedBy, query) {
+        const by = (archivedBy === undefined || archivedBy === null) ? 'NULL' : Number(archivedBy);
+        const q = `UPDATE recordings
+            SET archived_at = NOW(), archived_by = ${by}
+            WHERE recording_id IN (${recIds})
+            AND archived_at IS NULL`
+        return query(q);
+    },
+
+    /**
+     * PHASE B: archiving removes playlist membership (PLAN ruling C2).
+     * The FK cascade used to do this as a side effect of the row delete;
+     * with the row now surviving, it must be explicit. Restore does NOT
+     * re-add membership.
+     */
+    removeArchivedFromPlaylists: async function(recIds, query) {
+        const q = `DELETE FROM playlist_recordings WHERE recording_id IN (${recIds})`
+        return query(q);
+    },
+
+    /**
+     * PHASE B: clear the archive flags. Idempotent by `archived_at IS NOT
+     * NULL`. Playlist membership is deliberately NOT restored (C2).
+     */
+    restoreRecordingsInArbimon: async function(recIds, query) {
+        const q = `UPDATE recordings
+            SET archived_at = NULL, archived_by = NULL
+            WHERE recording_id IN (${recIds})
+            AND archived_at IS NOT NULL`
         return query(q);
     },
 
@@ -3084,7 +3146,15 @@ var Recordings = {
         return query(q)
     },
 
-    delete: async function(recs, project_id, token, callback) {
+    /**
+     * PHASE B (2026-09-09): this is now an ARCHIVE, not a destroy.
+     *
+     * Kept named `delete` so every existing caller (/delete, /delete-matching,
+     * deleteMatching) keeps working and the response shape is unchanged.
+     *
+     * @param {number|null} [archivedBy] user_id to record in `archived_by`.
+     */
+    delete: async function(recs, project_id, token, callback, archivedBy) {
         let db
         return dbpool.getConnection()
             .then(async (connection) => {
@@ -3101,22 +3171,27 @@ var Recordings = {
                         msg: 'No recordings were deleted'
                     }
                 }
-                const params = {}
-                recs.forEach(rec => {
-                    if (params[rec.site_external_id]) {
-                        params[rec.site_external_id].starts.push(rec.datetime_utc)
-                    }
-                    else {
-                        params[rec.site_external_id] = {
-                            stream: rec.site_external_id,
-                            starts: [rec.datetime_utc]
-                        }
-                    }
-                })
-                await this.deleteRecordingsInCoreAPI(Object.values(params), token)
-                await this.deleteRecordingInAnalyses(recIds, query)
-                await this.deleteRecordingsFromArbimon(recIds, query)
-                await this.deleteRecordingsFromS3(rows)
+                // PHASE B (2026-09-09) — "delete" is now an ARCHIVE.
+                //
+                // REMOVED, deliberately, per PLAN-delete-to-archive §0/§2 step 4:
+                //   deleteRecordingsInCoreAPI  — ruling R1: archive never touches
+                //     core. That call was the ONE-WAY DOOR (it moves segments to
+                //     the `trashes00000` stream and overwrites
+                //     `stream_source_files.sha1_checksum` with md5(random()),
+                //     with no untrash path).
+                //   deleteRecordingInAnalyses  — §0 Premise: analysis results and
+                //     tags STAY attached to an archived recording; the row
+                //     persists, so they remain usable.
+                //   deleteRecordingsFromS3     — the audio is the thing we are
+                //     preserving. (It was also a silent no-op for every modern
+                //     recording: it targets AWS_BUCKETNAME=arbimon2 while modern
+                //     uris live in rfcx-streams-production.)
+                //
+                // What remains: flip the archive flags, drop playlist membership
+                // (C2), and keep writing the tombstone (R2 — Insights hides on it;
+                // restore does not remove it).
+                await this.archiveRecordingsInArbimon(recIds, archivedBy, query)
+                await this.removeArchivedFromPlaylists(recIds, query)
 
                 // Keep deleted recording in the recordings_deleted table
                 // to sync this data with the Biodiversity website
@@ -3126,9 +3201,14 @@ var Recordings = {
                 await db.release();
 
                 let s = recIds.length > 1 ? 's' : '';
+                // The `deleted` KEY is deliberately unchanged: the SPA and the
+                // uploader both parse it, and renaming it here would break them
+                // before the step-6 client work lands. Only the human-readable
+                // message changes, because the recording is archived, not gone.
                 return {
                     deleted: recIds,
-                    msg: `recording ${s} deleted successfully`
+                    archived: recIds,
+                    msg: `recording ${s} archived successfully`
                 }
             })
             .catch(async (err) => {
