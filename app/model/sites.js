@@ -776,21 +776,14 @@ var Sites = {
             })
     },
 
-    // DEPRECATED (2026-09-09): no longer called. `removeSite` now uses
-    // `archiveRecordingsBySite`. Kept for one release so an out-of-band caller
-    // is not silently broken; delete once nothing references it.
-    deleteRecordingInAnalyses: async function(recIds, connection) {
-        let queries = [
-            `DELETE FROM pattern_matching_rois WHERE recording_id in (${recIds})`,
-            `UPDATE templates set deleted=1 WHERE recording_id in (${recIds})`,
-        ];
-
-        console.log('--deleteRecordingInAnalyses recIds', recIds)
-        const executeQuery = connection ? (sql) => dbpool.queryWithConn(connection, sql) : dbpool.query;
-        for (const query of queries) {
-            await executeQuery(query);
-        }
-    },
+    // REMOVED 2026-09-09: `deleteRecordingInAnalyses`.
+    //
+    // It hard-deleted `pattern_matching_rois` for every recording on a site
+    // being removed. `removeSite` has used `archiveRecordingsBySite` since
+    // #1851, so this had no callers. It was kept "for one release" and is now
+    // deleted for the same reason as its twin in recordings.js: an unused
+    // destructive helper is how recording destruction gets re-introduced.
+    // `git revert` if a legitimate need ever appears.
 
     getRecordingIdsbySite: async function(site_id) {
         const q = `SELECT recording_id
