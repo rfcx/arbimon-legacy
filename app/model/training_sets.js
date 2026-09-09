@@ -52,8 +52,17 @@ var TrainingSets = {
         var constraints = ["TS.removed=0"];
 
         if(query) {
+            // 2026-09-09 (rfcx-local, OPEN-ITEMS §291): `id` and `project` used
+            // to be mutually exclusive (`if (id) ... else if (project)`), so a
+            // caller passing BOTH silently got an id-only lookup -- which is
+            // exactly how the router.param for `:trainingSet` ended up
+            // unscoped. They now COMBINE, so an id can be bound to a project.
             if (query.id) {
                 constraints.push('TS.training_set_id = ' + dbpool.escape(query.id));
+
+                if (query.project) {
+                    constraints.push('TS.project_id = ' + dbpool.escape(query.project));
+                }
             }
             else if (query.project) {
                 constraints.push('TS.project_id = ' + dbpool.escape(query.project));

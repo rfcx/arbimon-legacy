@@ -7,8 +7,14 @@ var model = require('../../../model');
 var csv_stringify = require("csv-stringify");
 
 
+// 2026-09-09 (rfcx-local, OPEN-ITEMS §291): scope the lookup to the URL's
+// project. This router.param EXISTED but resolved by id alone, so it 404'd a
+// nonexistent training set while happily resolving one belonging to another
+// project -- a param that reads as protection under a 'has a router.param?'
+// audit while providing none. (`find` also had to be fixed: `id` and `project`
+// were mutually exclusive, so passing both was silently id-only.)
 router.param('trainingSet', function(req, res, next, trainingSet){
-    model.trainingSets.find({ id: trainingSet }, function(err, trainingSets) {
+    model.trainingSets.find({ id: trainingSet, project: req.project && req.project.project_id }, function(err, trainingSets) {
         if(err) return next(err);
 
         if(!trainingSets.length){
@@ -101,7 +107,12 @@ router.get('/:trainingSet/unshare', function(req, res, next) {
 
 router.get('/:trainingSet/shared-list', function(req, res, next) {
     res.type('json');
-    return model.trainingSets.find({ id: req.params.trainingSet }, function(err, data) {
+    // 2026-09-09 (OPEN-ITEMS §291): scope by project. This handler re-looked-up
+    // the id from req.params directly, bypassing the (now project-scoped)
+    // router.param -- so scoping the param alone would NOT have covered it.
+    return model.trainingSets.find({ id: req.params.trainingSet, project: req.project.project_id }, function(err, data) {
+        if (err) return next(err);
+        if (!data.length) return res.status(404).json({ error: 'training set not found' });
         const opts = data[0];
         model.trainingSets.getSharedTrainingSet(opts)
             .then((rows) => {
@@ -215,12 +226,15 @@ router.post('/combine', async function(req, res, next) {
         name: req.body.name
     }
 
-    const term1Data = await model.trainingSets.find({ id: opts.term1 })
+    // 2026-09-09 (OPEN-ITEMS §291): both operands of a training-set combination
+    // must belong to the project in the URL, or a user could union another
+    // project's training set into their own.
+    const term1Data = await model.trainingSets.find({ id: opts.term1, project: opts.projectId })
     if (term1Data.length === 0) {
         return res.status(404).json({ field: 'term1', error: 'Training set not found.'});
     }
 
-    const term2Data = await model.trainingSets.find({ id: opts.term2 })
+    const term2Data = await model.trainingSets.find({ id: opts.term2, project: opts.projectId })
     if (term2Data.length === 0) {
         return res.status(404).json({ field: 'term2', error: 'Training set not found.'});
     }

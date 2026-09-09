@@ -279,7 +279,10 @@ router.post('/:patternMatching/remove', function(req, res, next) {
             throw new Error("You don't have permission to delete pattern matchings");
         }
     }).then(function(){
-        return model.patternMatchings.delete(patternMatchingId | 0);
+        // 2026-09-09 (OPEN-ITEMS §291): pass the project so the UPDATE is
+        // scoped to it -- haveAccess above authorises the URL's project, which
+        // is only meaningful if the entity is bound to the same project.
+        return model.patternMatchings.delete(patternMatchingId | 0, projectId);
     }).then(async function() {
         res.json({ok: true});
         const userId = req.session.user.id

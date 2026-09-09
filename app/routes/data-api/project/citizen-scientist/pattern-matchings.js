@@ -316,7 +316,11 @@ router.post('/:patternMatching/remove', function(req, res, next) {
             throw new Error("You don't have permission to delete pattern matchings");
         }
     }).then(function(){
-        return model.patternMatchings.delete(req.params.patternMatching | 0);
+        // 2026-09-09 (OPEN-ITEMS §291): scope the delete to the URL's project.
+        // A THIRD instance of the same shape, found by enumerating every caller
+        // of the changed signature rather than by reading the routers -- the
+        // project_id was already in scope here and simply was not passed.
+        return model.patternMatchings.delete(req.params.patternMatching | 0, project_id);
     }).then(function(){
         res.json({ok: true});
     }).catch(next);

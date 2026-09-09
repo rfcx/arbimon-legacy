@@ -371,9 +371,21 @@ var Templates = {
      * @param {int} templateId
      * @return {Promise} resolved after inserting the template
      */
-    delete: function (templateId) {
+    /** Soft-delete a template.
+     *
+     * 2026-09-09 (rfcx-local, OPEN-ITEMS §291): `projectId` is REQUIRED and is
+     * part of the WHERE clause. `templates.js` has a router-level `haveAccess`
+     * gate, but it authorises the project in the URL while the handler passed a
+     * bare id -- so a user with 'manage templates' on any one of their own
+     * projects could soft-delete any of ~68,286 live templates across 2,291
+     * projects. Scoped at the layer that mutates.
+     */
+    delete: function (templateId, projectId) {
+        if (projectId === undefined || projectId === null) {
+            return q.reject(new Error('templates.delete requires projectId'));
+        }
         return dbpool.query(
-            "UPDATE templates SET deleted=1 WHERE template_id = ?", [templateId]
+            "UPDATE templates SET deleted=1 WHERE template_id = ? AND project_id = ?", [templateId, projectId]
         );
     },
 

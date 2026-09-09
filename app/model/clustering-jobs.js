@@ -356,9 +356,20 @@ select.push(
         )
     },
 
-    delete: function (jobId) {
-        const q = `UPDATE job_params_audio_event_clustering SET deleted=1 WHERE job_id = ${jobId}`;
-        return dbpool.query(q);
+    /** Soft-delete a clustering job's params row.
+     *
+     * 2026-09-09 (rfcx-local, OPEN-ITEMS §291): `projectId` is REQUIRED and is
+     * part of the WHERE clause. `/:clusteringJobId/remove` authorised the
+     * project in the URL and then passed a bare id -- the same URL-vs-entity
+     * confusion as the classification delete, on a destructive route whose READ
+     * siblings are correctly scoped (`findOne(id, { project })`).
+     */
+    delete: function (jobId, projectId) {
+        if (projectId === undefined || projectId === null) {
+            return q.reject(new Error('ClusteringJobs.delete requires projectId'));
+        }
+        const sql = `UPDATE job_params_audio_event_clustering SET deleted=1 WHERE job_id = ${Number(jobId) | 0} AND project_id = ${Number(projectId) | 0}`;
+        return dbpool.query(sql);
     },
 
     totalClusteringSpeciesDetected: async function(projectId) {
