@@ -24,7 +24,8 @@ router.get('/:resource', function(req, res, next) {
 
 router.get('/:resource/:id', function(req, res, next) {
     res.type('json');
-    model.tags.getTagsFor(req.params.resource, req.params.id).then(function(tags){
+    // 2026-09-09 (OPEN-ITEMS §292): bind the id to the project in the URL.
+    model.tags.getTagsFor(req.params.resource, req.params.id, req.project.project_id).then(function(tags){
         res.json(tags);
     }).catch(next);
 });
@@ -57,7 +58,8 @@ router.put('/:resource/:id', function(req, res, next) {
 
 router.delete('/:resource/:id/:tagId', function(req, res, next) {
     res.type('json');
-    model.tags.removeTagFrom(req.params.resource, req.params.id, req.params.tagId).then(function(results){
+    // 2026-09-09 (OPEN-ITEMS §292): bind the id to the project in the URL.
+    model.tags.removeTagFrom(req.params.resource, req.params.id, req.params.tagId, req.project.project_id).then(function(results){
         res.json(results);
     }).catch(next);
 });

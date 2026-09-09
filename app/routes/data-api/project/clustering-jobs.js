@@ -167,7 +167,8 @@ router.post('/:clusteringJobId/remove', function(req, res, next) {
         return model.ClusteringJobs.delete(job_id, project_id);
     }).then(async function() {
         res.json({ ok: true });
-        await model.jobs.hideAsync(job_id)
+        // 2026-09-09 (OPEN-ITEMS §292): hide is now project-scoped.
+        await model.jobs.hideAsync(job_id, project_id)
     }).catch(next);
 });
 

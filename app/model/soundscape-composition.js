@@ -127,13 +127,28 @@ var SoundscapeComposition = {
             ]);
     },
 
+    /** Fetches soundscape-composition annotations for a recording.
+     *
+     * 2026-09-09 (rfcx-local, OPEN-ITEMS §292): `options.project` is REQUIRED
+     * and constrains the recording to that project. The route authorised the
+     * project in the URL and then passed a bare recording id, so any logged-in
+     * user could read another project's annotations by id (615,471 annotations
+     * over 94,115 recordings). Scoped via recordings->sites, the same join the
+     * rest of this codebase uses to bind a recording to its project.
+     */
     getAnnotationsFor: function(options){
         options = options || {};
+        if (options.project === undefined || options.project === null) {
+            return q.reject(new Error('getAnnotationsFor requires options.project'));
+        }
         return dbpool.query(
             "SELECT RSCA.scclassId, RSCA.present\n" +
             "FROM recording_soundscape_composition_annotations RSCA\n" +
-            "WHERE RSCA.recordingId = ?\n", [
-            options.recording
+            "JOIN recordings r ON r.recording_id = RSCA.recordingId\n" +
+            "JOIN sites s ON s.site_id = r.site_id\n" +
+            "WHERE RSCA.recordingId = ?\n" +
+            "AND s.project_id = ?\n", [
+            options.recording, options.project
         ]).then(function(annotations){
             if(options.groupResults){
                 return annotations.reduce(function(_, annotation){
@@ -148,6 +163,11 @@ var SoundscapeComposition = {
 
     annotateSchema : joi.object().keys({
         recording: joi.number(),
+        // 2026-09-09 (OPEN-ITEMS §292): `project` is validated by annotate()
+        // itself (the recording must belong to it) and must be DECLARED here,
+        // because joi validates the whole options object -- an undeclared key
+        // makes validation fail and would reject every annotate call.
+        project: joi.number(),
         annotation: joi.object().keys({
             class: joi.string(),
             val: joi.number()
@@ -162,7 +182,28 @@ var SoundscapeComposition = {
      * @param {Integer} options.annotation.val   - value used to annotate the class in the given recording.
      * @return {Promise} resolved after adding the annotations.
      */
+    /** Writes/clears soundscape-composition annotations for a recording.
+     *
+     * 2026-09-09 (rfcx-local, OPEN-ITEMS §292): `options.project` is REQUIRED.
+     * The per-class INSERT/DELETE below key on `recordingId` alone, so the
+     * route's permission check (on the URL's project) did not bind the target.
+     * The recording is verified to belong to the project ONCE, before the
+     * per-class loop -- cheaper than repeating the join in each statement, and
+     * it fails closed.
+     */
     annotate: function (options) {
+        options = options || {};
+        if (options.project === undefined || options.project === null) {
+            return q.reject(new Error('annotate requires options.project'));
+        }
+        return dbpool.query(
+            "SELECT 1 FROM recordings r JOIN sites s ON s.site_id = r.site_id\n" +
+            "WHERE r.recording_id = ? AND s.project_id = ?", [options.recording, options.project]
+        ).then(function(rows){
+            if (!rows || !rows.length) {
+                return q.reject(new Error('recording not found in this project'));
+            }
+        }).then(function(){
         return q.ninvoke(joi, 'validate', options, SoundscapeComposition.annotateSchema).then(function(){
             return q.all(options.annotation.class.split(',').map(function(scclassId){
                 var annotation = {
@@ -193,6 +234,7 @@ var SoundscapeComposition = {
                     return annotation;
                 });
             }));
+        });
         });
     },
 
