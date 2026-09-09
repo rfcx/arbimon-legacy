@@ -46,6 +46,13 @@ app.disable('x-powered-by');
 app.set('views', path.resolve(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
+// Cache-busting for the built front-end bundles. Exposed as a view local so
+// every template (and every fragment) can call `assetUrl('/includes/js/...')`.
+// See app/asset-version.js for WHY: Cloudflare rewrites our `max-age=0` to
+// `max-age=14400`, so an unhashed bundle URL means users run stale JS for up
+// to 4 hours after a deploy. Computed once at startup; fails open.
+app.locals.assetUrl = require('./asset-version').assetUrl;
+
 if (app.get('env') === 'production') {
     app.enable('trust proxy');
 }

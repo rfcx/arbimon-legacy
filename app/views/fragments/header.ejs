@@ -15,7 +15,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" type="text/css" href="/includes/font-awesome/css/font-awesome.min.css" rel="stylesheet">
-<link rel="stylesheet" type="text/css" href="/includes/css/style.css">
+<link rel="stylesheet" type="text/css" href="<%= assetUrl('/includes/css/style.css') %>">
 <link rel="stylesheet" type="text/css" href="/includes/ng-table/ng-table.min.css">
 <link rel="stylesheet" type="text/css" href="/includes/angular-ui-select/select.min.css">
 <link rel="stylesheet" type="text/css" href="/includes/angular-ui-select/selectize.default.css">
@@ -55,8 +55,13 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <script src="/includes/angular-file-upload/angular-file-upload.min.js"></script>
 <script src="/includes/qr-js/qr.min.js"></script>
 <script src="/includes/plotly.js/plotly.js"></script>
-<script src="/includes/js/arbimon2.js"></script>
-<script src="/includes/js/arbimon2-templates.js"></script>
+<%# Content-hashed query (app/asset-version.js): these are the app's OWN built
+    bundles, served at fixed unhashed paths. Cloudflare rewrites our
+    `max-age=0` to `max-age=14400`, so WITHOUT this a deploy stays invisible to
+    returning users for up to 4 hours. The hash changes only when the bytes
+    change, so this busts on every real change and never churns otherwise. %>
+<script src="<%= assetUrl('/includes/js/arbimon2.js') %>"></script>
+<script src="<%= assetUrl('/includes/js/arbimon2-templates.js') %>"></script>
 
 <!-- Superuser masquerade widget (Phase 1): top safety banner + floating tray.
      Framework-free so it works on EVERY legacy page (admin, visualizer,
