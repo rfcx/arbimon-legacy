@@ -10,7 +10,7 @@ var fs = require('fs');
 
 var debug = require('debug')('arbimon2:model:recordings');
 var async = require('async');
-var AWS   = require('aws-sdk');
+// `aws-sdk` was required only by deleteRecordingsFromS3, removed 2026-09-09.
 var joi   = require('joi');
 var _     = require('lodash');
 
@@ -22,7 +22,8 @@ const soundscapeCompositionModel = require('./soundscape-composition')
 const { arbimon2PublicUrl, mediaAssetUrl, mediaStreamId } = require('../utils/asset-url')
 
 var config       = require('../config');
-const { coreApiBaseUrl } = require('../utils/core-api-url');
+// `coreApiBaseUrl` was required only by deleteRecordingsInCoreAPI, removed
+// 2026-09-09 (ruling R1: archive never touches core).
 var SQLBuilder  = require('../utils/sqlbuilder');
 var arrays_util  = require('../utils/arrays');
 var tmpfilecache = require('../utils/tmpfilecache');
@@ -3006,52 +3007,28 @@ var Recordings = {
         return query(q);
     },
 
-    deleteRecordingsInCoreAPI: async function(params, idToken) {
-        if (!params.length) return
-        console.log('- deleteRecordingsInCoreAPI', params)
-        const options = {
-            method: 'DELETE',
-            url: `${coreApiBaseUrl()}/internal/arbimon/recordings`,
-            headers: {
-                'content-type': 'application/json',
-                Authorization: `Bearer ${idToken}`,
-                source: 'arbimon'
-            },
-            body: JSON.stringify(params)
-        }
-        return rp(options).then((response) => {
-            if (response.statusCode !== 200) {
-                throw new Error('Failed to delete recordings');
-            }
-        })
-    },
-
-    deleteRecordingsFromS3: async function(rows) {
-        // Remove multiple rows
-        let dataToDelete = []
-
-        for (const rec of rows) {
-            const ext = path.extname(rec.uri)
-            const thumbnailUri = rec.uri.replace(ext, '.thumbnail.png')
-            dataToDelete.push({ Key: rec.uri })
-            dataToDelete.push({ Key: thumbnailUri })
-        }
-
-        const params = {
-            Bucket: config('aws').bucketName,
-            Delete: {
-                Objects: dataToDelete
-            }
-        }
-
-        return s3.deleteObjects(params, function(err, data) {
-            if (err && err.code != 'NoSuchKey') {
-                console.error(err);
-                return new Error(err);
-            }
-            console.info(data);
-        });
-    },
+    // REMOVED 2026-09-09 (Phase B completion): `deleteRecordingsInCoreAPI` and
+    // `deleteRecordingsFromS3`.
+    //
+    // They had no callers left after #1847 converted the delete transaction to
+    // an archive, and were kept "for one release". Keeping them is now the
+    // risk: they are a loaded gun that lets recording destruction be
+    // re-introduced by a single call, and the whole point of this arc is that
+    // hard-deleting a recording through the app should be impossible by
+    // CONSTRUCTION, not by convention.
+    //
+    //   * deleteRecordingsInCoreAPI -- the ONE-WAY DOOR (ruling R1). It moved
+    //     core segments to the `trashes00000` stream and overwrote
+    //     `stream_source_files.sha1_checksum` with md5(random()), with no
+    //     untrash path. Archive never touches core.
+    //   * deleteRecordingsFromS3 -- deleted the audio (and its
+    //     `.thumbnail.png`), which is precisely what archiving preserves. It
+    //     was also a silent no-op for every modern recording: it targeted
+    //     AWS_BUCKETNAME=arbimon2 while modern uris live in
+    //     rfcx-streams-production.
+    //
+    // Recovering either is a `git revert` away if a legitimate need appears --
+    // but it must be a deliberate, reviewed act, not an available method.
 
     /**
      * PHASE B (2026-09-09): archive instead of destroy.
@@ -3119,22 +3096,17 @@ var Recordings = {
         return query(q);
     },
 
-    deleteRecordingInAnalyses: async function(recIds, queryExecutor) {
-        const queryFn = queryExecutor || dbpool.query;
-
-        let queries = [
-            `DELETE FROM audio_event_detections_clustering WHERE recording_id in (${recIds})`,
-            `DELETE FROM classification_results WHERE recording_id in (${recIds})`,
-            `DELETE FROM pattern_matching_rois WHERE recording_id in (${recIds})`,
-            `DELETE FROM soundscape_region_tags WHERE recording_id in (${recIds})`,
-            `UPDATE templates set deleted=1 WHERE recording_id in (${recIds})`,
-            `DELETE FROM training_set_roi_set_data WHERE recording_id in (${recIds})`
-        ];
-
-        for (let query of queries) {
-            await queryFn(query)
-        }
-    },
+    // REMOVED 2026-09-09 (Phase B completion): `deleteRecordingInAnalyses`.
+    //
+    // It hard-deleted a recording's analysis results across five tables
+    // (audio_event_detections_clustering, classification_results,
+    // pattern_matching_rois, soundscape_region_tags,
+    // training_set_roi_set_data). §0 Premise of the plan is the opposite:
+    // analysis results and tags STAY attached to an archived recording,
+    // because the recording persists and they remain usable.
+    //
+    // Callerless since #1847. Deleted rather than kept, for the same reason as
+    // the two above: an unused destructive helper is an invitation.
 
     insertToRecordingsDeleted: async function(rows, query) {
         // Remove multiple rows
