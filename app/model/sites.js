@@ -669,7 +669,17 @@ var Sites = {
                     const recIdsBySite = await this.getRecordingIdsbySite(site_id)
                     const recIds = recIdsBySite.map(rec => rec.recording_id)
                     if (recIds && recIds.length) {
-                        await this.deleteRecordingInAnalyses(recIdsBySite.map(rec => rec.recording_id), db)
+                        // PHASE B (2026-09-09): removing a site ARCHIVES its
+                        // recordings; it no longer destroys their analysis
+                        // results. This is the last destructive recording path
+                        // left after the Delete button was converted
+                        // (arbimon-legacy #1847). Same rationale, same rulings:
+                        // §0 Premise keeps analysis results attached, and a hard
+                        // DELETE on MariaDB is invisible to the PG read side
+                        // (`recordings` is append-synced and in no
+                        // delete-capture set), whereas `archived_at` IS carried
+                        // by delta_sync mechanism 7.
+                        await this.archiveRecordingsBySite(recIds, db)
                     }
                     await this.removeFromProjectAsync(site_id, project_id, db);
                     if (rfcxConfig.coreAPIEnabled) {
@@ -680,13 +690,52 @@ var Sites = {
                 await db.release();
             })
             .catch(async (err) => {
-                console.log('err', err);
+                // 2026-09-09: keep the CAUSE. This handler used to log a bare
+                // `err` and then throw a fresh Error with the SAME text that
+                // `deleteInCoreAPI` throws, so a core-API failure and a DB
+                // failure were indistinguishable in the logs — 30 d of
+                // production showed 20 occurrences of `err Error: Failed to
+                // delete site`, i.e. the wrapper catching its own wrapper, with
+                // the real cause (and the core HTTP status) already discarded.
+                console.error('removeSite failed', {
+                    siteIds, project_id,
+                    message: err && err.message,
+                    statusCode: err && (err.statusCode || err.status)
+                });
                 if (db) {
                     await db.rollback();
                     await db.release();
                 }
-                throw new Error('Failed to delete site');
+                const wrapped = new Error(`Failed to delete site: ${err && err.message ? err.message : 'unknown error'}`);
+                wrapped.cause = err;
+                throw wrapped;
             })
+    },
+
+    /**
+     * PHASE B: archive a site's recordings instead of destroying their
+     * analysis results. Idempotent (`archived_at IS NULL`), and column-scoped
+     * so delta_sync mechanism 7 carries it to PostgreSQL.
+     *
+     * Playlist membership is removed to match the recording-level archive
+     * (ruling C2) — the row now survives, so the FK cascade no longer does it.
+     */
+    archiveRecordingsBySite: async function(recIds, connection) {
+        if (!recIds || !recIds.length) { return }
+        const executeQuery = connection ? (sql) => dbpool.queryWithConn(connection, sql) : dbpool.query;
+        const queries = [
+            `UPDATE recordings SET archived_at = NOW()
+              WHERE recording_id IN (${recIds}) AND archived_at IS NULL`,
+            `DELETE FROM playlist_recordings WHERE recording_id IN (${recIds})`,
+            // Templates remain soft-deleted: a template is a user-authored
+            // artefact pointing at the recording, and `deleted=1` is already
+            // reversible, unlike the pattern_matching_rois hard DELETE this
+            // replaces.
+            `UPDATE templates SET deleted = 1 WHERE recording_id IN (${recIds})`
+        ];
+        for (const query of queries) {
+            await executeQuery(query);
+        }
     },
 
     softRemoveAllSites: async function(projectId, idToken) {
@@ -711,15 +760,25 @@ var Sites = {
                 await db.release();
             })
             .catch(async (err) => {
-                console.log('err', err);
+                // Same cause-preserving shape as removeSite (2026-09-09).
+                console.error('softRemoveAllSites failed', {
+                    projectId,
+                    message: err && err.message,
+                    statusCode: err && (err.statusCode || err.status)
+                });
                 if (db) {
                     await db.rollback();
                     await db.release();
                 }
-                throw new Error('Failed to delete site');
+                const wrapped = new Error(`Failed to delete site: ${err && err.message ? err.message : 'unknown error'}`);
+                wrapped.cause = err;
+                throw wrapped;
             })
     },
 
+    // DEPRECATED (2026-09-09): no longer called. `removeSite` now uses
+    // `archiveRecordingsBySite`. Kept for one release so an out-of-band caller
+    // is not silently broken; delete once nothing references it.
     deleteRecordingInAnalyses: async function(recIds, connection) {
         let queries = [
             `DELETE FROM pattern_matching_rois WHERE recording_id in (${recIds})`,
@@ -770,7 +829,13 @@ var Sites = {
         }
         return rp(options).then((response) => {
             if (response.statusCode !== 204) {
-                throw new Error('Failed to delete site');
+                // 2026-09-09: name the LAYER and carry the status. This used to
+                // throw the exact same text as removeSite's catch, so the logs
+                // could not distinguish a core-API rejection from a local DB
+                // failure (20 such indistinguishable errors in 30 d).
+                const e = new Error(`core API refused stream delete (HTTP ${response.statusCode})`);
+                e.statusCode = response.statusCode;
+                throw e;
             }
         })
     },
