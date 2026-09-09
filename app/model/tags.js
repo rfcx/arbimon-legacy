@@ -160,7 +160,15 @@ tags.resourceDefs.recording = {
         // recordings are archived, of which 4 carry tags (projects 7890 and
         // 8937). Small today and growing as Phase B archives more.
         return q.ninvoke(dbpool, 'queryHandler',
-            "SELECT RT.recording_tag_id as id, T.tag_id, T.tag, user_id, datetime, t0, f0, t1, f1\n" +
+            // 2026-09-09 (rfcx-local): every projected column is QUALIFIED.
+            // The archive-scope commit added `JOIN recordings r`, and
+            // `recordings` also has a `datetime` column -- so the previously
+            // unqualified `datetime`, `user_id`, `t0/f0/t1/f1` became
+            // ambiguous and the route 500'd on BOTH engines
+            // (MariaDB ER_NON_UNIQ_ERROR / PG 42702 "column reference
+            // \"datetime\" is ambiguous"). Qualifying them is the minimal fix
+            // and keeps the response shape byte-identical.
+            "SELECT RT.recording_tag_id as id, T.tag_id, T.tag, RT.user_id, RT.datetime, RT.t0, RT.f0, RT.t1, RT.f1\n" +
             "FROM recording_tags RT\n" +
             "JOIN tags T ON RT.tag_id = T.tag_id\n" +
             "JOIN recordings r ON r.recording_id = RT.recording_id\n" +
