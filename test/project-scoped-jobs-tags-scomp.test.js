@@ -97,7 +97,14 @@ describe('§292 — tags reads/deletes are project-scoped', function() {
     it('recording getFor requires projectId and constrains by site', function() {
         var src = read(M + 'tags.js');
         var i = src.indexOf('getFor: async function');
-        var fn = src.slice(i, i + 1200);
+        // Bound by the FUNCTION, not a fixed character count. The original
+        // slice(i, i+1200) broke when the archive-scope commit added a
+        // rationale comment that pushed `RT.site_id IN` past 1,200 chars --
+        // a brittle-window false positive, not a regression (the predicate
+        // was still in the code). Slice to the next top-level member instead.
+        var end = src.indexOf('\n    getForType', i);
+        if (end < 0) end = i + 4000;
+        var fn = src.slice(i, end);
         expect(fn).to.contain('requires projectId');
         expect(fn).to.contain('getProjectSites');
         expect(fn).to.contain('RT.site_id IN');

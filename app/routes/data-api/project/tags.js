@@ -50,6 +50,16 @@ router.put('/:resource/:id', function(req, res, next) {
         if (!recording || !recording.length) {
             throw new Error('Recording not found')
         }
+        // 2026-09-09 (rfcx-local, IRR on OPEN-ITEMS §292): refuse ARCHIVED
+        // recordings. `findByIdAsync` is deliberately unscoped (it is used by
+        // paths that must see archived rows), so the check belongs here. The
+        // GET below now applies `recordingArchiveScope`, and the project-wide
+        // tag view always did -- so without this a user could still ADD a tag
+        // to an archived recording and then never see it again. Fails closed
+        // with the same message shape as the not-found case above.
+        if (recording[0].archived_at) {
+            throw new Error('Recording not found')
+        }
         model.tags.addTagTo(req.params.resource, recording[0], tag).then(function(tags){
             res.json(tags);
         }).catch(next);

@@ -148,11 +148,24 @@ tags.resourceDefs.recording = {
         }
         const sites = await projects.getProjectSites(projectId);
         if (!sites || !sites.length) return [];
+        // 2026-09-09 (rfcx-local, IRR on OPEN-ITEMS §292): also honour the
+        // ARCHIVE scope. `getForType` below applies
+        // `recordingArchiveScope('r','active')` -- Phase A "hide-by-parent" --
+        // so the project-wide tag view deliberately hides tags on archived
+        // recordings. This per-recording read scoped by site only and never
+        // joined `recordings`, so it could still surface them: the two views
+        // disagreed about the same rows.
+        //
+        // Not hypothetical since the L1 retro-archive (2026-09-08): 32,473
+        // recordings are archived, of which 4 carry tags (projects 7890 and
+        // 8937). Small today and growing as Phase B archives more.
         return q.ninvoke(dbpool, 'queryHandler',
             "SELECT RT.recording_tag_id as id, T.tag_id, T.tag, user_id, datetime, t0, f0, t1, f1\n" +
             "FROM recording_tags RT\n" +
             "JOIN tags T ON RT.tag_id = T.tag_id\n" +
+            "JOIN recordings r ON r.recording_id = RT.recording_id\n" +
             "WHERE RT.recording_id = ?\n" +
+            "AND " + require('../utils/sqlutil').recordingArchiveScope('r', 'active') + "\n" +
             "AND RT.site_id IN (" + dbpool.escape(sites.map(s => s.id)) + ")", [id]
         ).get(0);
     },
