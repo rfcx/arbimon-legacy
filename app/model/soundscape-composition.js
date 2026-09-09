@@ -147,7 +147,14 @@ var SoundscapeComposition = {
             "JOIN recordings r ON r.recording_id = RSCA.recordingId\n" +
             "JOIN sites s ON s.site_id = r.site_id\n" +
             "WHERE RSCA.recordingId = ?\n" +
-            "AND s.project_id = ?\n", [
+            "AND s.project_id = ?\n" +
+            // 2026-09-09 (rfcx-local, IRR on OPEN-ITEMS §292): honour the
+            // ARCHIVE scope, as `getClassesFor`'s tally already does a few
+            // lines above (soundscape-composition.js:33). Without it the
+            // per-recording annotation read disagreed with the project-wide
+            // tally about the same rows. Measured 2026-09-09: 2 archived
+            // recordings carry 5 annotations.
+            "AND " + require('../utils/sqlutil').recordingArchiveScope('r', 'active') + "\n", [
             options.recording, options.project
         ]).then(function(annotations){
             if(options.groupResults){
@@ -196,9 +203,18 @@ var SoundscapeComposition = {
         if (options.project === undefined || options.project === null) {
             return q.reject(new Error('annotate requires options.project'));
         }
+        // 2026-09-09 (rfcx-local, IRR on §292): the ownership check now ALSO
+        // refuses an ARCHIVED recording. An archive is "this recording is no
+        // longer part of the active dataset", so accepting new annotations on
+        // it writes rows the project-wide tally then hides -- the write
+        // succeeds and the user never sees the result. Reads are scoped in the
+        // same commit; scoping the read without the write would leave a
+        // write-only black hole.
         return dbpool.query(
             "SELECT 1 FROM recordings r JOIN sites s ON s.site_id = r.site_id\n" +
-            "WHERE r.recording_id = ? AND s.project_id = ?", [options.recording, options.project]
+            "WHERE r.recording_id = ? AND s.project_id = ?\n" +
+            "AND " + require('../utils/sqlutil').recordingArchiveScope('r', 'active'),
+            [options.recording, options.project]
         ).then(function(rows){
             if (!rows || !rows.length) {
                 return q.reject(new Error('recording not found in this project'));
