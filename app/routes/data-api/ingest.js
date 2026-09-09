@@ -98,7 +98,10 @@ router.post('/recordings/delete', verifyToken(), hasRole(['systemUser']), async 
     if (!site) {
       throw new EmptyResultError('Site with given external_id not found.');
     }
-    await model.recordings.deleteBySiteAndUris(site.site_id, converter.transformedArray.map(r => r.uri));
+    // PHASE B (2026-09-09): archive rather than hard-delete. See
+    // model.recordings.archiveBySiteAndUris for why (analysis results stay
+    // attached, and a hard delete here is invisible to the PG read side).
+    await model.recordings.archiveBySiteAndUris(site.site_id, converter.transformedArray.map(r => r.uri));
     res.sendStatus(204)
   } catch (e) {
     httpErrorHandler(req, res, 'Failed deleting recordings')(e);

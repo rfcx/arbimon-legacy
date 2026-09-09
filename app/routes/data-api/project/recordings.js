@@ -607,6 +607,10 @@ router.post('/delete', function(req, res, next) {
     const idToken = req.headers.authorization?.split(' ')[1];
     return model.playlists.findRecordingsPlaylists(recIds).then(function(result) {
         playlists = result
+        // PHASE B (2026-09-09): this archives rather than destroys; the
+        // acting user is recorded in `archived_by`. The playlist refresh below
+        // still matters -- archiving REMOVES playlist membership (ruling C2),
+        // so the cached totals must be recomputed exactly as before.
         model.recordings.delete(recs, req.project.project_id, req.session.idToken === undefined ? idToken : req.session.idToken, async function(err, result) {
             if(err) return next(err);
 
@@ -614,7 +618,7 @@ router.post('/delete', function(req, res, next) {
             for (let playlist of playlists) {
                 await model.playlists.refreshTotalRecs(playlist.playlist_id)
             }
-        });
+        }, req.session.user && req.session.user.id);
     })
 });
 
@@ -630,7 +634,7 @@ router.post('/delete-matching', function(req, res, next) {
 
     params.project_id = req.project.project_id;
     const idToken = req.headers.authorization?.split(' ')[1];
-    model.recordings.deleteMatching(params, req.project.project_id, req.session.idToken === undefined ? idToken : req.session.idToken).then(function(result) {
+    model.recordings.deleteMatching(params, req.project.project_id, req.session.idToken === undefined ? idToken : req.session.idToken, req.session.user && req.session.user.id).then(function(result) {
         res.json(result);
     }).catch(next);
 });
