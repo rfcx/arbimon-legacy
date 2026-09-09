@@ -35,7 +35,8 @@ router.use(function(req, res, next) {
 router.get('/hide/:jId', function(req, res, next) {
     res.type('json');
 
-    model.jobs.hide(req.params.jId, function(err, rows) {
+    // 2026-09-09 (OPEN-ITEMS §292): bind the job id to the project in the URL.
+    model.jobs.hide(req.params.jId, req.project.project_id, function(err, rows) {
         if(err) return next(err);
         model.jobs.activeJobs({ id: req.project.project_id, last3Months: true }, function(err, row) {
             if(err) return next(err);
@@ -47,10 +48,25 @@ router.get('/hide/:jId', function(req, res, next) {
 router.get('/cancel/:jId', function(req, res, next) {
     res.type('json');
 
-    model.jobs.cancel(req.params.jId, function(err, rows) {
+    // 2026-09-09 (OPEN-ITEMS §292): bind the job id to the project in the URL.
+    model.jobs.cancel(req.params.jId, req.project.project_id, function(err, rows) {
         if(err) return next(err);
-        
-        model.jobs.activeJobs(req.params.projectUrl, function(err, row) {
+
+        // 2026-09-09 (OPEN-ITEMS §292): this previously passed
+        // `req.params.projectUrl`, which is ALWAYS `undefined` here -- this
+        // router is a plain express.Router() with no `mergeParams`, so the
+        // parent's `/:projectUrl` param is not inherited. `activeJobs(undefined)`
+        // does not fail: it skips the whole `if (project)` block, leaving only
+        // `J.hidden = 0`, so the response was FLEET-WIDE (measured: 134,558
+        // unhidden jobs across 2,525 projects, each enriched with per-job
+        // parameters) -- a cross-project disclosure on the RESPONSE side.
+        //
+        // Fixed by passing the project the handler already has, matching the
+        // sibling /progress route. Deliberately NOT fixed with `mergeParams`:
+        // that would make `projectUrl` resolve and switch activeJobs to its
+        // `P.url = ...` branch, changing behaviour on four other routers that
+        // rely on params NOT being inherited.
+        model.jobs.activeJobs({ id: req.project.project_id }, function(err, row) {
             if(err) return next(err);
 
             res.json(row);

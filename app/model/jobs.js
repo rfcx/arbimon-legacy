@@ -238,24 +238,50 @@ var Jobs = {
      *  @param {int} jId - job id to set the flag to.
      *  @param {Function} callback - callback to return after setting the flag.
      */
-    hide: function(jId, callback) {
-        const q = "update `jobs` set `hidden`  = 1 where `job_id` = ?";
-        queryHandler(q, [jId], callback);
+    /** Hides a job from the project's job list.
+     *
+     * 2026-09-09 (rfcx-local, OPEN-ITEMS §292): `projectId` is REQUIRED and is
+     * part of the WHERE clause. The route authorised `manage project jobs` on
+     * the URL's project and then passed a bare job id, so a user holding that
+     * permission on ANY of their own projects could hide any of 168,090 jobs
+     * across 2,603 projects. Scoped at the layer that mutates.
+     */
+    hide: function(jId, projectId, callback) {
+        if (typeof projectId === 'function') {
+            return projectId(new Error('jobs.hide requires projectId'));
+        }
+        const q = "update `jobs` set `hidden`  = 1 where `job_id` = ? and `project_id` = ?";
+        queryHandler(q, [jId, projectId], callback);
     },
 
-    hideAsync: function(jId) {
+    /** Promise wrapper for hide().
+     *
+     * 2026-09-09 (OPEN-ITEMS §292): now takes projectId and forwards it, so
+     * every hide is project-scoped. All five call sites already had a project
+     * in scope (verified by enumerating callers, the method that found the
+     * third bare-id site in §291).
+     */
+    hideAsync: function(jId, projectId) {
         let hideJob = util.promisify(this.hide)
-        return hideJob(jId)
+        return hideJob(jId, projectId)
     },
 
     /** Sets the cancel_requestted flag for the given job id.
      *  @param {int} jId - job id to set the flag to.
      *  @param {Function} callback - callback to return after setting the flag.
      */
-    cancel: function(jId, callback) {
-        var q = "update `jobs` set `cancel_requested`  = 1 where `job_id` = ?";
+    /** Sets cancel_requested for a job.
+     *
+     * 2026-09-09 (rfcx-local, OPEN-ITEMS §292): `projectId` REQUIRED, same
+     * reasoning as hide() above.
+     */
+    cancel: function(jId, projectId, callback) {
+        if (typeof projectId === 'function') {
+            return projectId(new Error('jobs.cancel requires projectId'));
+        }
+        var q = "update `jobs` set `cancel_requested`  = 1 where `job_id` = ? and `project_id` = ?";
 
-        queryHandler(q, [jId], callback);
+        queryHandler(q, [jId, projectId], callback);
     },
 
     /** Queries the database to search if a given classification name already exists for a given project.

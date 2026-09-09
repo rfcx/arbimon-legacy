@@ -188,7 +188,8 @@ router.get('/:classiId/delete', function(req, res) {
             return res.status(500).json({ error: 'Failed to delete the classification. Please try again.' });
         }
         res.json(data)
-        await model.jobs.hideAsync(job_id)
+        // 2026-09-09 (OPEN-ITEMS §292): hide is now project-scoped.
+        await model.jobs.hideAsync(job_id, req.project.project_id)
     });
 });
 

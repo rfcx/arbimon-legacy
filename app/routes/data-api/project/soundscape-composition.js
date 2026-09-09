@@ -63,6 +63,8 @@ router.get('/annotations/:id', function(req, res, next) {
     res.type('json');
     model.SoundscapeComposition.getAnnotationsFor({
         recording: req.params.id,
+        // 2026-09-09 (OPEN-ITEMS §292): bind the recording to the URL's project.
+        project: req.project.project_id,
         groupResults : true
     }).then(function(annotations){
         res.json(annotations);
@@ -81,6 +83,8 @@ router.post('/annotate/:id', function(req, res, next) {
     res.type('json');
     model.SoundscapeComposition.annotate({
         recording: req.params.id,
+        // 2026-09-09 (OPEN-ITEMS §292): bind the recording to the URL's project.
+        project: req.project.project_id,
         annotation : req.body
     }).then(function(annotations){
         res.json(annotations);

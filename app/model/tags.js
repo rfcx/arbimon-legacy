@@ -20,13 +20,15 @@ var tags = {
      *  @returns {Promise} Promise resolving to fetched tags, or rejecting if the
      *     resource type does not support tags or any error occurred.
      */
-    getTagsFor : function(resource, id){
+    getTagsFor : function(resource, id, projectId){
         var resourceDef = this.resourceDefs[resource];
         if(!resourceDef){
             return q.reject(new APIError(resource + " resources do not support tags.", 415));
         }
 
-        return resourceDef.getFor(id);
+        // 2026-09-09 (OPEN-ITEMS §292): projectId is forwarded so the resource
+        // def can bind the id to the project in the URL.
+        return resourceDef.getFor(id, projectId);
     },
     /** Fetches the tags for a given resource.type
      *  @param {String} resource - the type of resource whose tags to fetch.
@@ -69,13 +71,14 @@ var tags = {
      *  @returns {Promise} Promise resolving to fetched tags, or rejecting if the
      *     resource type does not support tags or any error occurred.
      */
-    removeTagFrom: function(resource, id, resourceTagId){
+    removeTagFrom: function(resource, id, resourceTagId, projectId){
         var resourceDef = this.resourceDefs[resource];
         if(!resourceDef){
             return q.reject(new APIError(resource + " resources do not support tags.", 415));
         }
 
-        return resourceDef.removeFrom(id, resourceTagId);
+        // 2026-09-09 (OPEN-ITEMS §292): forward projectId, as above.
+        return resourceDef.removeFrom(id, resourceTagId, projectId);
     },
 
     /** Searches for tags matching the given query.
@@ -132,12 +135,25 @@ tags.resourceDefs.recording = {
      *  @param {String} id - the id of the recording whose tags to fetch.
      *  @returns {Promise} Promise resolving to fetched tags.
      */
-    getFor: function(id){
+    getFor: async function(id, projectId){
+        // 2026-09-09 (rfcx-local, OPEN-ITEMS §292): scope by project.
+        // The route authorised the project in the URL and then passed a bare
+        // recording id, so any logged-in user could read another project's
+        // recording tags by id. `recording_tags` carries `site_id`, and
+        // `getForType` right below already scopes that way via
+        // `projects.getProjectSites` -- reuse the same shape rather than
+        // hand-rolling a join.
+        if (projectId === undefined || projectId === null) {
+            throw new Error('tags.recording.getFor requires projectId');
+        }
+        const sites = await projects.getProjectSites(projectId);
+        if (!sites || !sites.length) return [];
         return q.ninvoke(dbpool, 'queryHandler',
             "SELECT RT.recording_tag_id as id, T.tag_id, T.tag, user_id, datetime, t0, f0, t1, f1\n" +
             "FROM recording_tags RT\n" +
             "JOIN tags T ON RT.tag_id = T.tag_id\n" +
-            "WHERE RT.recording_id = ?", [id]
+            "WHERE RT.recording_id = ?\n" +
+            "AND RT.site_id IN (" + dbpool.escape(sites.map(s => s.id)) + ")", [id]
         ).get(0);
     },
     /** Fetches the tags for a given resource.type
@@ -256,10 +272,23 @@ tags.resourceDefs.recording = {
      *  @param {Number} recordingTagId - id of recording tag entry to be removed from the recording.
      *  @returns {Promise} Promise resolving to the count of removed tags.
      */
-    removeFrom: function(id, recordingTagId){
+    removeFrom: async function(id, recordingTagId, projectId){
+        // 2026-09-09 (rfcx-local, OPEN-ITEMS §292): scope the DELETE by project.
+        // Same defect as getFor above, on the destructive side: the route
+        // checked `manage project recordings` on the URL's project and then
+        // deleted by bare recording id. Scoping the DELETE itself means the
+        // guarantee survives a future caller that forgets the route guard --
+        // the lesson from §291, where a third bare-id call site was found only
+        // by enumerating callers.
+        if (projectId === undefined || projectId === null) {
+            throw new Error('tags.recording.removeFrom requires projectId');
+        }
+        const sites = await projects.getProjectSites(projectId);
+        if (!sites || !sites.length) return [];
         return q.ninvoke(dbpool, 'queryHandler',
             "DELETE FROM recording_tags\n" +
-            "WHERE recording_id = ? AND recording_tag_id = ?", [id, recordingTagId]
+            "WHERE recording_id = ? AND recording_tag_id = ?\n" +
+            "AND site_id IN (" + dbpool.escape(sites.map(s => s.id)) + ")", [id, recordingTagId]
         ).get(0);
     },
 };

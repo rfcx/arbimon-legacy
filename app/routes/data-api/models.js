@@ -234,7 +234,10 @@ router.get('/project/:projectUrl/models/:mid/delete', function(req, res, next) {
             try {
                 const jobData = await model.models.getModelJobId(model_id)
                 if (jobData && jobData.job_id) {
-                    await model.jobs.hideAsync(jobData.job_id)
+                    // 2026-09-09 (OPEN-ITEMS §292): hide is now project-scoped.
+                    // `project_id` here is resolved from the URL's project and
+                    // is what the haveAccess check above already used.
+                    await model.jobs.hideAsync(jobData.job_id, project_id)
                 } else {
                     console.log(`models/${model_id}/delete: no training-job row; nothing to hide`)
                 }

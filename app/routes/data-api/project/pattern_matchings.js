@@ -288,7 +288,8 @@ router.post('/:patternMatching/remove', function(req, res, next) {
         const userId = req.session.user.id
         await model.patternMatchings.unvalidateRois(patternMatchingId, userId, projectId)
         const jobData = await model.patternMatchings.getPMjobId(patternMatchingId)
-        await model.jobs.hideAsync(jobData.job_id)
+        // 2026-09-09 (OPEN-ITEMS §292): hide is now project-scoped.
+        await model.jobs.hideAsync(jobData.job_id, projectId)
     }).catch(next);
 });
 
