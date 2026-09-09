@@ -20,10 +20,28 @@ const soundscape = require('./soundscape')
 const template = require('./template')
 const rfmClassification = require('./rfm-classification')
 const { streamToBuffer, zipDirectory } = require('../services/file-helper')
+// formatExportError: '{}'-proof + SQL-safe rendering of a thrown value.
+// Standalone module so it is unit-testable without the DB stack.
+const { formatExportError } = require('../services/export-error')
 
 const S3_EXPORT_BUCKET_ARBIMON = process.env.S3_BUCKET_ARBIMON
 
 const tmpFilePath = 'jobs/arbimon-recording-export-job/tmpfilecache'
+
+// Record a terminal failure on the export row + notify, never throwing itself.
+// A throw from the error path would escape the enclosing async callback as an
+// unhandled rejection and kill the process -- the very class this fixes.
+async function recordExportFailure (rowData, message, jobName, exportReportType, e) {
+    console.error(`Arbimon Export ${exportReportType} job error`, e)
+    try { await errorMessage(message, jobName) } catch (notifyErr) {
+        console.error('Failed to send export error notification', notifyErr)
+    }
+    try {
+        await updateExportRecordings(rowData, { error: formatExportError(e) })
+    } catch (uErr) {
+        console.error('Failed to record export error on row', uErr)
+    }
+}
 
 async function processExportRow (rowData) {
   try {
@@ -39,7 +57,7 @@ async function processExportRow (rowData) {
         projection_parameters = JSON.parse(rowData.projection_parameters)
     } catch (error) {
         console.error('Error parse params of Arbimon export job.', error)
-        await updateExportRecordings(rowData, { error: JSON.stringify(error) })
+        await updateExportRecordings(rowData, { error: formatExportError(error) })
         await errorMessage(message, jobName)
         return
     }
@@ -82,26 +100,32 @@ async function processExportRow (rowData) {
         await getMultipleOccupancyModelsData(projection_parameters, filters, rowData, currentTime, message, jobName)
     } else if (projection_parameters && projection_parameters.rfmClassify) {
         //----------------Arbimon export Classification Result--------------
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             const exportReportType = 'RFM Classification';
             console.log(`Arbimon Export ${exportReportType} job`)
             rfmClassification.collectData(projection_parameters, async (err, filePath, fileName, jobMeta) => {
-                if (err) {
-                    console.error('Arbimon Export job error', err)
-                    // filePath is undefined on early failures — fs.unlink(undefined)
-                    // throws SYNCHRONOUSLY (same class fixed in the default branch,
-                    // caught again here by the 2026-07-23 forced-failure E2E).
+                // Everything after the err check runs in an async callback whose
+                // rejection nobody awaits => unhandled rejection => process exit
+                // (see the recordings branch below for the measured instance).
+                try {
+                    if (err) {
+                        // filePath is undefined on early failures — fs.unlink(undefined)
+                        // throws SYNCHRONOUSLY (same class fixed in the default branch,
+                        // caught again here by the 2026-07-23 forced-failure E2E).
+                        throw err
+                    }
+                    console.log('Arbimon Export job: uploading file to S3')
+                    const { url, stats } = await saveFile(filePath, currentTime, rowData.project_id, fileName)
+                    console.log('Arbimon Export job: file is accessible by url', url, 'stats', stats, 'jobMeta', jobMeta)
+                    await sendRfmResultsEmail(rowData, url, stats, jobMeta)
+                    await updateExportRecordings(rowData, { processed_at: currentTime })
+                    console.log(`Arbimon Export job finished: export recordings report for ${message}`)
+                } catch (e) {
+                    await recordExportFailure(rowData, message, jobName, exportReportType, e)
+                } finally {
                     if (filePath) { try { fs.unlink(filePath, () => {}) } catch (_) {} }
-                    return reject(err)
+                    resolve()
                 }
-                console.log('Arbimon Export job: uploading file to S3')
-                const { url, stats } = await saveFile(filePath, currentTime, rowData.project_id, fileName)
-                console.log('Arbimon Export job: file is accessible by url', url, 'stats', stats, 'jobMeta', jobMeta)
-                await sendRfmResultsEmail(rowData, url, stats, jobMeta)
-                await updateExportRecordings(rowData, { processed_at: currentTime })
-                fs.unlink(filePath, () => {})
-                console.log(`Arbimon Export job finished: export recordings report for ${message}`)
-                resolve()
             })
         })
     } else if (projection_parameters && (projection_parameters.pmAll || projection_parameters.pmIds)) {
@@ -132,19 +156,10 @@ async function processExportRow (rowData) {
                     await updateExportRecordings(rowData, { processed_at: currentTime })
                     console.log(`Arbimon Export ${exportReportType} job finished: ${message}`)
                 } catch (e) {
-                    console.error(`Arbimon Export ${exportReportType} job error`, e)
-                    await errorMessage(message, jobName)
-                    // updateExportRecordings interpolates the value inside a
-                    // single-quoted SQL literal WITHOUT escaping, so a stack
-                    // trace containing a quote/backslash/newline would break the
-                    // UPDATE and throw again. Sanitize to a safe single line.
-                    const raw = e instanceof Error ? (e.message || String(e)) : JSON.stringify(e)
-                    const errStr = String(raw).replace(/[\\']/g, ' ').replace(/\s+/g, ' ').slice(0, 2000)
-                    try {
-                        await updateExportRecordings(rowData, { error: errStr })
-                    } catch (uErr) {
-                        console.error('Failed to record export error on row', uErr)
-                    }
+                    // The original implementation of this handler is what
+                    // recordExportFailure/formatExportError were hoisted FROM
+                    // (it was the only branch that got both hazards right).
+                    await recordExportFailure(rowData, message, jobName, exportReportType, e)
                 } finally {
                     try { fs.rmSync(tmpFilePath, { recursive: true, force: true }) } catch (_) {}
                     if (zipPath) { try { fs.rmSync(zipPath, { recursive: true, force: true }) } catch (_) {} }
@@ -154,7 +169,7 @@ async function processExportRow (rowData) {
         })
     }   else if (projection_parameters && projection_parameters.projectTemplate) {
             //----------------Arbimon export all project templates----------------
-            return new Promise((resolve, reject) => {
+            return new Promise((resolve) => {
                 const exportReportType = 'Templates';
                 console.log(`Arbimon Export ${exportReportType} job`)
                 try {
@@ -168,60 +183,86 @@ async function processExportRow (rowData) {
                 template.collectData(projection_parameters, filters, async (err, filePath) => {
                     // err was silently IGNORED here (a failed template export
                     // still zipped/emailed whatever partial state existed).
-                    // Mirror the RFM/recordings discipline: record + reject.
-                    if (err) {
-                        console.error(`Arbimon Export ${exportReportType} job error`, err)
-                        return reject(err)
+                    // Mirror the RFM/recordings discipline: record + resolve.
+                    // The awaits below are in an async callback nobody awaits =>
+                    // an unhandled rejection would kill the process.
+                    try {
+                        if (err) { throw err }
+                        await template.buildTemplateFolder()
+                        await sendZipFolderToTheUser(rowData, currentTime, jobName, message, 'template_export')
+                        console.log(`Arbimon Export ${exportReportType} job finished: export templates for ${message}`)
+                    } catch (e) {
+                        await recordExportFailure(rowData, message, jobName, exportReportType, e)
+                    } finally {
+                        resolve()
                     }
-                    await template.buildTemplateFolder()
-                    await sendZipFolderToTheUser(rowData, currentTime, jobName, message, 'template_export')
-                    console.log(`Arbimon Export ${exportReportType} job finished: export templates for ${message}`)
-                    resolve()
                 })
             })
     }   else if (projection_parameters && projection_parameters.soundscapes) {
         //----------------Arbimon export all project soundscapes----------------
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             const exportReportType = 'Soundscapes';
             console.log(`Arbimon Export ${exportReportType} job`)
             soundscape.collectData(projection_parameters, filters, async (err, filePath) => {
                 // err was silently IGNORED here — same class as the template
-                // branch. Record + reject so the consumer sets terminal error.
-                if (err) {
-                    console.error(`Arbimon Export ${exportReportType} job error`, err)
-                    return reject(err)
+                // branch. Record + resolve so the consumer sets terminal error.
+                // The awaits below are in an async callback nobody awaits =>
+                // an unhandled rejection would kill the process.
+                try {
+                    if (err) { throw err }
+                    console.log('--start buildSoundscapeFolder', filePath);
+                    await soundscape.buildSoundscapeFolder()
+                    console.log('--end buildSoundscapeFolder');
+                    await sendZipFolderToTheUser(rowData, currentTime, jobName, message, 'soundscape_export')
+                    console.log(`Arbimon Export ${exportReportType} job finished: export soundscapes for ${message}`)
+                } catch (e) {
+                    await recordExportFailure(rowData, message, jobName, exportReportType, e)
+                } finally {
+                    resolve()
                 }
-                console.log('--start buildSoundscapeFolder', filePath);
-                await soundscape.buildSoundscapeFolder()
-                console.log('--end buildSoundscapeFolder');
-                await sendZipFolderToTheUser(rowData, currentTime, jobName, message, 'soundscape_export')
-                console.log(`Arbimon Export ${exportReportType} job finished: export soundscapes for ${message}`)
-                resolve()
             })
         })
     }   else {
         //----------------Arbimon export recordings----------------
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             recordingsExport.collectData(projection_parameters, filters, async (err, filePath) => {
-                if (err) {
-                    console.error('Arbimon Export job error', err)
-                    // filePath is UNDEFINED on early failures (e.g. joi
-                    // validation) — fs.unlink(undefined) throws SYNCHRONOUSLY
-                    // (ERR_INVALID_ARG_TYPE), an unhandled exception that
-                    // killed the process before the row's error was recorded
-                    // (the #1759 poison-row class, in the default branch;
-                    // caught live in the 2026-07-23 E2E).
+                // The `if (err)` guard below only covers the callback's ERROR
+                // argument. Everything AFTER it runs in an async callback whose
+                // rejection is returned to nobody -- so a failure there is an
+                // UNHANDLED REJECTION, and node 18 defaults to
+                // --unhandled-rejections=throw with no handler registered
+                // anywhere in /app/jobs => PID 1 dies before the consumer's
+                // terminal/DLQ machinery can run. Measured 2026-09-09: 94
+                // crashes in 7 days (~12/day) from ONE row, project 10073,
+                // whose empty result set produced a 0-byte CSV that the
+                // s3-proxy zero-byte write guard (correctly) refused with
+                // EmptyObjectRejected. The row never went terminal, so the
+                // reconciler recovered the 120-min-stale claim and republished
+                // it every ~2h05m, forever.
+                try {
+                    if (err) {
+                        // filePath is UNDEFINED on early failures (e.g. joi
+                        // validation) — fs.unlink(undefined) throws SYNCHRONOUSLY
+                        // (ERR_INVALID_ARG_TYPE), an unhandled exception that
+                        // killed the process before the row's error was recorded
+                        // (the #1759 poison-row class, in the default branch;
+                        // caught live in the 2026-07-23 E2E).
+                        throw err
+                    }
+                    console.log('Arbimon Export job: uploading file to S3')
+                    const { url, stats } = await saveFile(filePath, currentTime, rowData.project_id, 'recordings-export')
+                    console.log('Arbimon Export job: file is accessible by url', url, 'stats', stats)
+                    await sendEmail('Arbimon Export recording report', 'recordings-export.csv', rowData, url, true, stats)
+                    await updateExportRecordings(rowData, { processed_at: currentTime })
+                    console.log(`Arbimon Export job finished: export recordings report for ${message}`)
+                } catch (e) {
+                    await recordExportFailure(rowData, message, jobName, 'recordings', e)
+                } finally {
                     if (filePath) { try { fs.unlink(filePath, () => {}) } catch (_) {} }
-                    return reject(err)
+                    // resolve (never reject) so the consumer acks and the queue
+                    // advances; the row now carries a terminal error.
+                    resolve()
                 }
-                console.log('Arbimon Export job: uploading file to S3')
-                const { url, stats } = await saveFile(filePath, currentTime, rowData.project_id, 'recordings-export')
-                console.log('Arbimon Export job: file is accessible by url', url, 'stats', stats)
-                await sendEmail('Arbimon Export recording report', 'recordings-export.csv', rowData, url, true, stats)
-                await updateExportRecordings(rowData, { processed_at: currentTime })
-                fs.unlink(filePath, () => {})
-                console.log(`Arbimon Export job finished: export recordings report for ${message}`)
-                resolve()
             })
         })
     }
@@ -326,7 +367,7 @@ async function processClusteringStream (cluster, results, rowData, currentTime, 
                 } catch(error) {
                     console.error('Error while sending clustering-rois-export email', error)
                     await errorMessage(message, jobName)
-                    await updateExportRecordings(rowData, { error: JSON.stringify(error) })
+                    await updateExportRecordings(rowData, { error: formatExportError(error) })
                     resolve()
                 }
             })
@@ -373,7 +414,7 @@ async function sendZipFolderToTheUser(rowData, currentTime, jobName, message, re
             console.error('Error while sending zip folder email.', error)
             await errorMessage(message, jobName)
             fs.rmSync(tmpFilePath, { recursive: true, force: true });
-            await updateExportRecordings(rowData, { error: JSON.stringify(error) })
+            await updateExportRecordings(rowData, { error: formatExportError(error) })
         }
     })
 }
@@ -538,7 +579,7 @@ async function processGroupedDetectionsStream (results, rowData, projection_para
                 } catch(error) {
                     console.error('Error while sending grouped-detections-export email.', error)
                     await errorMessage(message, jobName)
-                    await updateExportRecordings(rowData, { error: JSON.stringify(error) })
+                    await updateExportRecordings(rowData, { error: formatExportError(error) })
                     resolve()
                 }
             })
