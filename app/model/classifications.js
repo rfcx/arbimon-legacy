@@ -86,76 +86,112 @@ var Classifications = {
         queryHandler(q, callback);
     },
 
-    // TODO delete async
     // classificationDelete
+    //
+    // 2026-09-09 (rfcx-local, OPEN-ITEMS §290): this was an `async.waterfall`
+    // of independent auto-commit statements: S3 -> DELETE classification_results
+    // -> DELETE classification_stats -> DELETE job_params_classification.
+    // Three defects, all measured on live data:
+    //
+    //   1. NOT TRANSACTIONAL. Each DELETE committed on its own, so a failure
+    //      (or a pod exit) between them left the classification HALF-DELETED:
+    //      results rows kept, params row gone -- rows no read can reach and no
+    //      user can see. 11 such jobs exist (36,884 rows); measured 2026-09-09.
+    //   2. NOT IDEMPOTENT AT THE FRONT. Step 1 resolved the model uri through
+    //      `job_params_classification`; once that row was gone a retry hit
+    //      'Classification not found' and could never finish the cleanup it
+    //      had started. A user clicking delete again could not converge.
+    //   3. FAILURES WERE INVISIBLE. The route replied `res.json(data)` and
+    //      `hideAsync()`d the job regardless, so a delete that deleted nothing
+    //      still looked successful. Four such clicks are on record for job
+    //      168896 (2026-09-03 22:04-22:13Z).
+    //
+    // Shape follows the in-repo precedent `recordings.delete()`
+    // (app/model/recordings.js:3087): one connection, beginTransaction, all
+    // DELETEs inside it, commit, rollback+rethrow on error.
+    //
+    // ORDER IS DELIBERATE: job_params_classification is deleted LAST, so an
+    // aborted attempt leaves the jpc row intact and the classification stays
+    // fully visible and re-deletable. jpc is also the parent that the
+    // reverse-sync RESCAN_PARENT_GUARD tests to decide whether a legacy delete
+    // really happened (rfcx-local data-stores/arbimon-pg/sync/reverse_sync.py)
+    // -- deleting it first would tell the sync plane the job was deleted while
+    // its result rows were still present.
+    //
+    // NOT CHANGED HERE: the S3 vector delete stays OUTSIDE the transaction (a
+    // bucket op cannot be rolled back) and stays best-effort, matching its
+    // previous behaviour. It runs BEFORE the DB deletes because it needs the
+    // rows to enumerate the objects.
     delete: function(classificationId, callback) {
 
         var cid = dbpool.escape(classificationId);
-        var modUri;
-        var q;
-        var allToDelete;
 
-        // TODO change nested queries to join
-        async.waterfall([
-            function(cb) {
-                q = "SELECT `uri` FROM `models` WHERE `model_id` = "+
-                    "(SELECT `model_id` FROM `job_params_classification` WHERE `job_id` = "+cid+")";
-                queryHandler(q, cb);
-            },
-            function(data, fields, cb) {
-                if(!data.length) return callback(new Error('Classification not found'));
+        return dbpool.getConnection()
+            .then(async (connection) => {
+                const query = util.promisify(connection.query).bind(connection);
 
-                modUri = data[0].uri.replace('.mod','');
-                q = "SELECT `uri` FROM `recordings` WHERE `recording_id` in "+
-                "(SELECT `recording_id` FROM `classification_results` WHERE `job_id` = "+cid+")";
-                queryHandler(q, cb);
-            },
-            function(data, fields, cb) {
-                allToDelete = [];
-                async.each(data, function (elem, next) {
-                    var uri = elem.uri.split("/");
-                    uri = uri[uri.length-1];
-                    allToDelete.push({Key:modUri+'/classification_'+cid+'_'+uri+'.vector'});
-                    next();
-                }, cb);
-            },
-            function(cb) {
-                if(allToDelete.length === 0) {
-                    cb();
+                // Resolve the model uri for the S3 vector keys. Explicit JOIN,
+                // not a nested scalar subquery that bails when the params row is
+                // already gone (defect 2), so a half-finished delete can be
+                // completed by retrying.
+                const modelRows = await query(
+                    "SELECT m.`uri` FROM `job_params_classification` jpc " +
+                    "JOIN `models` m ON m.`model_id` = jpc.`model_id` " +
+                    "WHERE jpc.`job_id` = " + cid);
+
+                // Enumerate the vector objects while the result rows still exist.
+                const recRows = await query(
+                    "SELECT r.`uri` FROM `recordings` r " +
+                    "WHERE r.`recording_id` IN (" +
+                    "SELECT `recording_id` FROM `classification_results` WHERE `job_id` = " + cid + ")");
+
+                // Nothing left on either side => already fully deleted. Return
+                // idempotent success rather than an error.
+                if (!modelRows.length && !recRows.length) {
+                    const stats = await query(
+                        "SELECT COUNT(*) AS n FROM `classification_stats` WHERE `job_id` = " + cid);
+                    if (!stats[0].n) {
+                        connection.release();
+                        return { data: "Classification deleted succesfully" };
+                    }
                 }
-                else {
-                    var params = {
-                        Bucket: config('aws').bucketName,
-                        Delete: {
-                            Objects: allToDelete
-                        }
-                    };
 
-                    s3.deleteObjects(params, function() {
-                        cb();
+                if (modelRows.length && recRows.length) {
+                    const modUri = modelRows[0].uri.replace('.mod', '');
+                    const allToDelete = recRows.map(function(elem) {
+                        const parts = elem.uri.split("/");
+                        return { Key: modUri + '/classification_' + cid + '_' + parts[parts.length - 1] + '.vector' };
                     });
+                    try {
+                        await s3.deleteObjects({
+                            Bucket: config('aws').bucketName,
+                            Delete: { Objects: allToDelete }
+                        }).promise();
+                    } catch (s3err) {
+                        // Best-effort, as before: an orphaned vector object must
+                        // not block the DB cleanup. Logged rather than swallowed
+                        // silently so it is diagnosable.
+                        console.error('classifications.delete: S3 vector cleanup failed for job ' + cid, s3err && s3err.message);
+                    }
                 }
-            },
-            function(cb) {
-                var q = "DELETE FROM `classification_results` WHERE `job_id` = "+cid;
-                // console.log('exc quer 1');
-                queryHandler(q, cb);
-            },
-            function(result, fields, cb) {
-                q = "DELETE FROM `classification_stats` WHERE `job_id` = "+cid ;
-                // console.log('exc quer 2');
-                queryHandler(q, cb);
-            },
-            function(result, fields, cb) {
-                q = "DELETE FROM `job_params_classification` WHERE `job_id` = "+cid;
-                // console.log('exc quer 3');
-                queryHandler(q, cb);
-            }
-        ], function(err) {
-            if(err) return callback(err);
 
-            callback(null, { data:"Classification deleted succesfully" });
-        });
+                await connection.beginTransaction();
+                try {
+                    await query("DELETE FROM `classification_results` WHERE `job_id` = " + cid);
+                    await query("DELETE FROM `classification_stats` WHERE `job_id` = " + cid);
+                    // LAST, deliberately -- see the ordering note above.
+                    await query("DELETE FROM `job_params_classification` WHERE `job_id` = " + cid);
+                    await connection.commit();
+                } catch (err) {
+                    await connection.rollback();
+                    throw err;
+                } finally {
+                    connection.release();
+                }
+
+                return { data: "Classification deleted succesfully" };
+            })
+            .nodeify(callback);
     },
 
     __parse_meta_data : function(data) {
@@ -282,10 +318,23 @@ var Classifications = {
                 "FROM `classification_stats`  cs , \n"+
                 "     `recordings` r, \n"+
                 "     `classification_results` c, \n"+
+                "     `job_params_classification` jpc, \n"+
                 "     `species` as s , \n"+
                 "     `songtypes` as st \n"+
                 "WHERE c.`job_id` = ? \n"+
                 "AND c.`job_id` = cs.`job_id` \n"+
+                // 2026-09-09 (rfcx-local, OPEN-ITEMS §290): join the params row.
+                // Every other read of classification_results in this file joins
+                // job_params_classification, so a job whose params row was
+                // deleted returns nothing. This one did NOT, which made it the
+                // single read able to serve rows belonging to a deleted
+                // classification: measured live, job 10170 returned a full page
+                // (200 OK, 50,701 bytes) while its detail route correctly 404'd.
+                // Harmless for healthy jobs -- they all have a jpc row by
+                // construction (measured: of 3,185 type-2 jobs with no jpc row,
+                // 3,174 have zero result rows and the other 11 are exactly the
+                // known orphans).
+                "AND jpc.`job_id` = c.`job_id` \n"+
                 "AND c.`species_id` = s.`species_id` \n"+
                 "AND c.`songtype_id` = st.`songtype_id` \n"+
                 "AND r.`recording_id` = c.`recording_id` \n"+

@@ -143,7 +143,17 @@ router.get('/:classiId/delete', function(req, res) {
         });
     }
     const job_id = req.params.classiId
+    // 2026-09-09 (rfcx-local, OPEN-ITEMS §290): `err` was ignored entirely --
+    // the route replied with `data` (undefined on failure) and hid the job even
+    // when nothing had been deleted, so a failed delete was indistinguishable
+    // from a successful one. Four such clicks are on record for job 168896
+    // (2026-09-03 22:04-22:13Z), each leaving rows behind with no error shown.
+    // Now: report the failure, and only hide the job once the delete succeeded.
     model.classifications.delete(job_id, async function(err, data) {
+        if (err) {
+            console.error('classifications delete failed for job ' + job_id, err && err.message);
+            return res.status(500).json({ error: 'Failed to delete the classification. Please try again.' });
+        }
         res.json(data)
         await model.jobs.hideAsync(job_id)
     });
