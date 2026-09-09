@@ -54,9 +54,10 @@ describe('tags.addTo — duplicate-key idempotence', function() {
     it('the duplicate branch reports the EXISTING row pk via LAST_INSERT_ID', function() {
         var q = addToInsert();
         // Without the LAST_INSERT_ID(recording_tag_id) idiom, the duplicate
-        // branch's OkPacket has insertId 0 and the created-row echo below the
-        // INSERT would reject with 'Failed to create recording tag' — turning
-        // the fix back into a user-facing error.
+        // branch's OkPacket has insertId 0 — which PASSES the insertId guard
+        // (0 is neither undefined nor null; verified by mutation M2 in the
+        // PR: the echo resolved with id:0), so the UI echo carries a bogus
+        // id 0 instead of the existing row's real pk.
         expect(q.clean).to.contain('LAST_INSERT_ID(recording_tag_id)');
     });
 
