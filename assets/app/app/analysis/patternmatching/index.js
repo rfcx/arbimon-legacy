@@ -986,9 +986,42 @@ angular.module('a2.analysis.patternmatching', [
         a2AudioBarService.loadUrl(a2Templates.getAudioUrlFor(this.patternMatching.template), true);
     },
 
+    // Deep link into the SPA visualizer (operator, 2026-09-09).
+    //
+    // Three dimensions, each deliberate:
+    //
+    // 1. PLAYLIST context. The SPA route is
+    //    `visualizer/:browserType/:browserTypeId/:browserRecId`, so browsing the
+    //    job's own playlist (rather than the bare `rec` mode we used to emit)
+    //    lets the user step through the analysed recordings from where they
+    //    landed. `playlist_id` is NULLable -- /remove nulls it when a job is
+    //    deleted (see app/model/pattern_matchings.js) -- so the `rec` form stays
+    //    as the fallback rather than emitting `playlist/null/<id>`.
+    //
+    // 2. `?a=box,...` ALWAYS. This draws the orange query box and is the only
+    //    dimension that works for every ROI (see 3).
+    //
+    // 3. `?roi=pm:<id>` ONLY WHEN validated === 1, which SELECTS (pins) the ROI
+    //    and shows its job/species attribution. The visualizer's PM layer
+    //    fetches with `validated: 1` hardcoded, and the legacy endpoint behind it
+    //    binds `PMR.validated = ?`, so an unvalidated ROI is never drawn and a
+    //    `?roi=` naming it could never resolve. Measured 2026-09-09: fleet-wide
+    //    only 5,164,477 of ~1.02B pattern_matching_rois are validated=1, and
+    //    27,256,429 are validated=0 (explicitly REJECTED, also not drawn) --
+    //    hence `=== 1`, NOT a null check. Emitting an unresolvable `?roi=` would
+    //    put a claim in the URL that the app silently drops; the box still shows
+    //    the user where the detection is, which is exactly today's behaviour.
     getRoiVisualizerUrl: function(roi){
+        if (!roi) return '';
         var box = ['box', roi.x1, roi.y1, roi.x2, roi.y2].join(',')
-        return roi ? "/p/"+this.projecturl+"/visualizer/rec/"+roi.recording_id+"?a="+box : '';
+        var playlistId = this.patternMatching && this.patternMatching.playlist_id;
+        var base = playlistId
+            ? "/p/"+this.projecturl+"/visualizer/playlist/"+playlistId+"/"+roi.recording_id
+            : "/p/"+this.projecturl+"/visualizer/rec/"+roi.recording_id;
+        // roi.id IS pattern_matching_roi_id (aliased in pmrSqlSelect), which is
+        // the id the SPA's PM layer keys its selection on.
+        var pin = (roi.validated === 1 && roi.id) ? "&roi=pm:"+roi.id : '';
+        return base+"?a="+box+pin;
     },
 
     getTemplateVisualizerUrl: function(template){
