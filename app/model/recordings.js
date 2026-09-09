@@ -448,11 +448,32 @@ var Recordings = {
             }
 
             if(!urlquery.id && !urlquery.site) {
+                // 2026-09-09 — SITE ARCHIVE SCOPE on the project-wide site list.
+                //
+                // This UNION had NO `deleted_at` predicate on either branch, so
+                // a project-wide recording LIST included recordings belonging to
+                // REMOVED sites. Measured when found: 9,903 removed sites across
+                // 959 projects, holding 5,713,205 unarchived recordings
+                // (vs 299,047,266 on live sites — the control that shows the
+                // number is real, not an artefact).
+                //
+                // 🔑 SAFE BY CONSTRUCTION, and this was the falsification that
+                // mattered: removed-site recordings ARE still referenced by live
+                // features — 2,290,255 playlist rows, 861,150 pattern-matching
+                // ROIs, 434 training-set ROIs. None of them break, because every
+                // one of those resolves a recording BY ID
+                // (`findByUrlMatch({id: …})`), and the by-id path skips both the
+                // archive scope above AND this union (`!urlquery.id`). Only the
+                // project-wide LIST is scoped — which is precisely the surface
+                // that should not show recordings from a site the user removed.
+                const _siteActive = sqlutil.siteArchiveScope('', 'active');
                 steps.push(
                     dbpool.query("(\n" +
-                "   SELECT site_id FROM sites WHERE project_id = ?\n" +
+                "   SELECT site_id FROM sites WHERE project_id = ? AND " + _siteActive + "\n" +
                 "   ) UNION (\n" +
-                "   SELECT site_id FROM project_imported_sites WHERE project_id = ?\n" +
+                "   SELECT pis.site_id FROM project_imported_sites pis\n" +
+                "     JOIN sites s ON s.site_id = pis.site_id\n" +
+                "    WHERE pis.project_id = ? AND " + sqlutil.siteArchiveScope('s', 'active') + "\n" +
                 ")", [project_id, project_id])
                     .then(function(sites){
                         constraints.push("S.site_id IN (?)");

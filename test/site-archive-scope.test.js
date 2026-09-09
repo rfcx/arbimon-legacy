@@ -86,3 +86,44 @@ describe('findProjectRecordings — the imported-sites precedence trap', functio
         expect(fn).to.contain('project_imported_sites');
     });
 });
+
+describe('findByUrlMatch — the project-wide site UNION', function () {
+
+    var src = fs.readFileSync(
+        path.join(__dirname, '..', 'app/model/recordings.js'), 'utf8');
+    var i = src.indexOf('findByUrlMatch: function');
+    var end = src.indexOf('\n    countProjectRecordings', i);
+    if (end === -1) { end = src.indexOf('\n    fetchNext', i); }
+    if (end === -1) { end = i + 12000; }
+    var fn = src.slice(i, end);
+
+    it('scopes BOTH union branches to live sites', function () {
+        // The union had no deleted_at predicate on either branch, so a
+        // project-wide LIST returned recordings from REMOVED sites: 9,903 such
+        // sites across 959 projects, holding 5,713,205 unarchived recordings.
+        var union = fn.slice(fn.indexOf('SELECT site_id FROM sites WHERE project_id'));
+        union = union.slice(0, union.indexOf('[project_id, project_id]'));
+
+        // Assert EACH BRANCH SEPARATELY. An earlier version of this test only
+        // checked that a scope appeared SOMEWHERE in the union, which the
+        // imported branch alone satisfied -- so reverting the own-sites branch
+        // to unscoped passed. Caught by mutation testing (M1 survived); split
+        // the assertion rather than trusting one substring.
+        var ownBranch = union.slice(0, union.indexOf('UNION'));
+        var importedBranch = union.slice(union.indexOf('UNION'));
+
+        expect(ownBranch, 'own-sites branch is unscoped').to.contain('_siteActive');
+        expect(importedBranch, 'imported branch is unscoped').to.contain('siteArchiveScope');
+        // the imported branch must JOIN sites to be able to filter at all
+        expect(importedBranch).to.contain('JOIN sites');
+    });
+
+    it('leaves BY-ID lookups unscoped (playlists/PM/training sets must keep working)', function () {
+        // 2,290,255 playlist rows, 861,150 PM ROIs and 434 training-set ROIs
+        // reference recordings on removed sites. They all resolve BY ID, and
+        // the by-id path must skip both the archive scope and the union --
+        // otherwise this fix silently breaks live features.
+        expect(fn).to.contain('!urlquery.id && !urlquery.site');
+        expect(fn).to.contain('!urlquery.id && !options.recording_id');
+    });
+});
