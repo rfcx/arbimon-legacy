@@ -555,9 +555,23 @@ var PatternMatchings = {
      * @param {int} patternMatchingId
      * @return {Promise} resolved after deleting the pattern matching
      */
-    delete: function (patternMatchingId) {
+    /** Soft-delete a pattern matching.
+     *
+     * 2026-09-09 (rfcx-local, OPEN-ITEMS §291): `projectId` is REQUIRED and is
+     * part of the WHERE clause. The route authorises the project in the URL
+     * (`haveAccess(req.project.project_id, 'manage pattern matchings')`) and
+     * then passed a bare id, so a user with that permission on ANY of their own
+     * projects could soft-delete any of ~100,632 live pattern matchings across
+     * 1,995 projects. Scoping the UPDATE itself makes the check meaningful at
+     * the layer that actually mutates -- a route-level guard alone can be
+     * bypassed by the next caller that forgets it.
+     */
+    delete: function (patternMatchingId, projectId) {
+        if (projectId === undefined || projectId === null) {
+            return q.reject(new Error('patternMatchings.delete requires projectId'));
+        }
         return dbpool.query(
-            "UPDATE pattern_matchings SET deleted=1, playlist_id=NULL, citizen_scientist=0, cs_expert=0 WHERE pattern_matching_id = ?", [patternMatchingId]
+            "UPDATE pattern_matchings SET deleted=1, playlist_id=NULL, citizen_scientist=0, cs_expert=0 WHERE pattern_matching_id = ? AND project_id = ?", [patternMatchingId, projectId]
         );
     },
 

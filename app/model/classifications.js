@@ -77,6 +77,27 @@ var Classifications = {
     },
 
     // classificationName
+    /** Resolve a classification WITHIN a project.
+     *
+     * 2026-09-09 (rfcx-local, OPEN-ITEMS §291): the `/:classiId` routes
+     * authorised the project in the URL and then acted on the id from the
+     * path, never checking that the one owned the other. This is the
+     * project-scoped lookup the router.param uses to bind them, mirroring
+     * `playlists.find({ id, project })` and `soundscapes.find({ id, project })`.
+     *
+     * Returns [] when the classification does not belong to `projectId`, so the
+     * caller can 404 exactly as the sibling routers do.
+     */
+    findInProject: function(cid, projectId, callback) {
+        var q = "SELECT jpc.`job_id`, j.`project_id` \n"+
+                "FROM `job_params_classification` jpc \n"+
+                "JOIN `jobs` j ON j.`job_id` = jpc.`job_id` \n"+
+                "WHERE jpc.`job_id` = "+dbpool.escape(cid)+" \n"+
+                "AND j.`project_id` = "+dbpool.escape(projectId);
+
+        queryHandler(q, callback);
+    },
+
     getName: function(cid, callback) {
         var q = "SELECT REPLACE(lower(c.`name`),' ','_') as name, \n"+
                 "   j.`project_id` as pid \n"+

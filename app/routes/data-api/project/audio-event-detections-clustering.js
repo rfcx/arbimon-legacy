@@ -154,7 +154,9 @@ router.post('/:aedJobId/remove', function(req, res, next) {
         const keysArray = [{ Key: uri }]
         return deleteObjects(keysArray, 'arbimon');
     }).then(function() {
-        return model.AudioEventDetectionsClustering.delete(job_id);
+        // 2026-09-09 (OPEN-ITEMS §291): scope the delete to the URL's project,
+        // so the haveAccess check above is about the same object being mutated.
+        return model.AudioEventDetectionsClustering.delete(job_id, project_id);
     }).then(async function(){
         res.json({ ok: true });
         await model.jobs.hideAsync(job_id)

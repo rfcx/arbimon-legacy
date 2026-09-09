@@ -27,6 +27,39 @@ function defineS3Clients () {
     }
 }
 
+// 2026-09-09 (rfcx-local, OPEN-ITEMS §291): bind `:classiId` to the project in
+// the URL.
+//
+// WHY: every handler below authorised `req.project` (the URL) and then acted on
+// `req.params.classiId`, never checking the classification belonged to it. The
+// permission check was real -- it was asked about the wrong object. Measured on
+// live prod: the READ routes carry no permission check at all, the project gate
+// admits any logged-in user to any of 922 PUBLIC projects, and classification
+// ids are global + sequential, so 11,821 jobs across 319 projects (9,663 of them
+// in 249 PRIVATE projects) were reachable by id.
+//
+// This is the same shape the sibling routers already use -- `playlists.js:23`
+// and `soundscapes.js:44` resolve their id via `find({ id, project })` and 404
+// a foreign id. `/csv/:classiId` in this file already did the equivalent by
+// hand (getName() returns jobs.project_id and haveAccess is asked about THAT),
+// so the correct pattern was present twice over; these routes never adopted it.
+//
+// Compatibility measured before shipping, not assumed: 30 d of production logs
+// gave 50 MATCH / 0 MISMATCH of (url project == owning project) for
+// classifications, so no legitimate flow requests a classification through a
+// foreign project url.
+router.param('classiId', function(req, res, next, classiId) {
+    if (!req.project) return next();
+    model.classifications.findInProject(classiId, req.project.project_id, function(err, rows) {
+        if (err) return next(err);
+        if (!rows.length) {
+            return res.status(404).json({ error: 'classification not found' });
+        }
+        req.classification = rows[0];
+        return next();
+    });
+});
+
 router.get('/', function(req, res, next) {
     res.type('json');
     model.classifications.list(req.project.project_id, function(err, rows) {

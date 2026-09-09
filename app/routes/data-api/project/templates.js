@@ -239,7 +239,10 @@ router.post('/add', function(req, res, next) {
 
 router.post('/:template/remove', function(req, res, next) {
     res.type('json');
-    model.templates.delete(req.params.template | 0).then(function() {
+    // 2026-09-09 (OPEN-ITEMS §291): scope the delete to the URL's project. The
+    // router-level haveAccess gate above authorises `req.project`; without this
+    // the id was unbound and any template in any project was reachable.
+    model.templates.delete(req.params.template | 0, req.project.project_id).then(function() {
         res.json({ok: true});
     }).catch(next);
 });

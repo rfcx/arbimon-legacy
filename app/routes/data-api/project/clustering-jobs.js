@@ -161,7 +161,10 @@ router.post('/:clusteringJobId/remove', function(req, res, next) {
         const keysArray = [{ Key: uri }]
         return deleteObjects(keysArray, 'arbimon');
     }).then(function(){
-        return model.ClusteringJobs.delete(job_id);
+        // 2026-09-09 (OPEN-ITEMS §291): scope the delete to the URL's project.
+        // This route's READ siblings already pass `{ project }`; the
+        // destructive one did not.
+        return model.ClusteringJobs.delete(job_id, project_id);
     }).then(async function() {
         res.json({ ok: true });
         await model.jobs.hideAsync(job_id)

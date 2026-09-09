@@ -148,9 +148,22 @@ let AudioEventDetectionsClustering = {
         return dbpool.query(q);
     },
 
-    delete: function (jobId) {
-        const q = `UPDATE job_params_audio_event_detection_clustering SET deleted=1 WHERE job_id = ${jobId}`
-        return dbpool.query(q);
+    /** Soft-delete an AED-clustering job's params row.
+     *
+     * 2026-09-09 (rfcx-local, OPEN-ITEMS §291): `projectId` is REQUIRED and is
+     * part of the WHERE clause. The route authorised the project in the URL
+     * ('manage AED and Clustering job' -- held by 7,333 non-super users on some
+     * project) and then passed a bare id. Scoped at the layer that mutates.
+     *
+     * NOTE: the id is interpolated here (pre-existing style in this file); it is
+     * coerced to a number first so the added predicate cannot be evaded.
+     */
+    delete: function (jobId, projectId) {
+        if (projectId === undefined || projectId === null) {
+            return q.reject(new Error('AudioEventDetectionsClustering.delete requires projectId'));
+        }
+        const sql = `UPDATE job_params_audio_event_detection_clustering SET deleted=1 WHERE job_id = ${Number(jobId) | 0} AND project_id = ${Number(projectId) | 0}`
+        return dbpool.query(sql);
     },
 
     getTotalRecInLast24Hours: async function(opts) {
