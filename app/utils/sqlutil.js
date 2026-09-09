@@ -299,6 +299,48 @@ var sqlutil = {
     },
 
     /**
+     * Site-level archive scope — the SITE mirror of `recordingArchiveScope`.
+     *
+     * 🔑 `sites.deleted_at` IS AN ARCHIVE FLAG, NOT A DELETE. Nothing in the
+     * app destroys a site: removal is `UPDATE sites SET deleted_at = NOW(),
+     * published = 0`, the rows and their recordings all survive, and 19 read
+     * paths simply treat it as "hide this". The name is a historical misnomer
+     * and it misleads — hence this helper, which names the concept correctly
+     * while leaving the physical column alone. (A rename is a cross-engine
+     * migration touching legacy + the mysql2pg sync + bio-api at once; it is
+     * deliberately deferred to its own arc, post-P7.)
+     *
+     * WHY IT MATTERS FOR ARCHIVING (measured 2026-09-09): **5,713,205**
+     * recordings on **9,903** soft-deleted sites are hidden by THIS flag while
+     * `recordings.archived_at IS NULL`. So there are two parallel hiding
+     * mechanisms, and a read that applies only the recording scope can serve
+     * recordings belonging to a removed site. Use BOTH scopes together on any
+     * recording read that joins `sites`.
+     *
+     * Modes mirror the recording helper exactly, so the two compose:
+     *   'active'  (default) → the site is live
+     *   'archived'          → the site has been removed
+     *   'all'               → no predicate
+     *
+     * @param {string} alias  table alias for `sites` (e.g. 's', 'S').
+     * @param {string} [mode] 'active' | 'archived' | 'all'. Unknown/falsy fails
+     *                        safe to 'active'.
+     * @returns {string} a SQL boolean expression, or '' for mode 'all'.
+     */
+    siteArchiveScope: function (alias, mode) {
+        var col = (alias ? alias + '.' : '') + 'deleted_at';
+        switch (mode) {
+            case 'all':
+                return '';
+            case 'archived':
+                return col + ' IS NOT NULL';
+            case 'active':
+            default:
+                return col + ' IS NULL';
+        }
+    },
+
+    /**
      * Normalize an incoming `archived` request param into a scope mode.
      * Accepts: undefined/false/'false'/'0' -> 'active';
      *          true/'true'/'1'/'only'/'archived' -> 'archived';

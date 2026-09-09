@@ -2004,10 +2004,29 @@ var Recordings = {
         var schema = Recordings.SCHEMAS.searchFilters;
 
         return Q.ninvoke(joi, 'validate', params, schema).then(function (parameters) {
-            return dbpool.query("SELECT s.* FROM sites s WHERE s.project_id = ? AND s.deleted_at is null\n" +
-                "OR s.site_id in (\n" +
-                "   SELECT pis.site_id FROM project_imported_sites pis WHERE pis.project_id = ?\n" +
-                ")", [parameters.project_id, parameters.project_id])
+            // 2026-09-09 — OPERATOR-PRECEDENCE FIX + site archive scope.
+            //
+            // This read used to be:
+            //   WHERE s.project_id = ? AND s.deleted_at is null
+            //      OR s.site_id in (imported...)
+            // `AND` binds tighter than `OR`, so it parsed as
+            //   (project AND not-removed) OR (imported)
+            // — the IMPORTED branch carried NO archive predicate at all. A
+            // removed site that is shared into another project would therefore
+            // still enter siteData, and its recordings would be listed.
+            //
+            // Latent rather than live when found: 0 imported links currently
+            // point at a removed site (13 point at live ones, so the join
+            // works). It would have started leaking the first time someone
+            // removed a shared site. Parenthesised, and the archive scope now
+            // applies to BOTH branches via sqlutil so the rule has one home.
+            const _siteActive = sqlutil.siteArchiveScope('s', 'active');
+            return dbpool.query("SELECT s.* FROM sites s WHERE (\n" +
+                "   s.project_id = ?\n" +
+                "   OR s.site_id in (\n" +
+                "      SELECT pis.site_id FROM project_imported_sites pis WHERE pis.project_id = ?\n" +
+                "   )\n" +
+                ") AND " + _siteActive, [parameters.project_id, parameters.project_id])
                 .then(function (sites) {
                     parameters.siteData = {};
                     for (const s of sites) {
