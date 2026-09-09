@@ -34,7 +34,12 @@ describe('archive scope — per-recording READS', function() {
         var src = read(M + 'tags.js');
         var i = src.indexOf('getFor: async function');
         expect(i).to.be.greaterThan(-1);
-        var fn = src.slice(i, i + 2000);
+        // Bound by the FUNCTION, not a character count -- a fixed slice broke
+        // twice today when rationale comments grew past it. Anchor on
+        // structure.
+        var end = src.indexOf('\n    getForType', i);
+        if (end < 0) end = i + 6000;
+        var fn = src.slice(i, end);
         expect(fn, 'must join recordings to reach archived_at')
             .to.contain('JOIN recordings r ON r.recording_id = RT.recording_id');
         expect(fn, 'must apply the shared archive scope helper')
@@ -51,16 +56,38 @@ describe('archive scope — per-recording READS', function() {
     it('both reads use the SHARED helper, not a hand-rolled predicate', function() {
         // A hand-rolled "archived_at IS NULL" would drift from the helper if
         // the archive semantics ever change (e.g. an 'all' mode for admins).
+        // NOTE: comments may legitimately MENTION the phrase, so strip them.
         var t = read(M + 'tags.js');
         var s = read(M + 'soundscape-composition.js');
         var iT = t.indexOf('getFor: async function');
+        var endT = t.indexOf('\n    getForType', iT);
         var iS = s.indexOf('getAnnotationsFor: function');
-        expect(t.slice(iT, iT + 2000)).to.not.contain('archived_at IS NULL');
-        expect(s.slice(iS, iS + 2000)).to.not.contain('archived_at IS NULL');
+        var endS = s.indexOf('\n    annotateSchema', iS);
+        var strip = function(x) { return x.replace(/\/\/[^\n]*/g, ''); };
+        expect(strip(t.slice(iT, endT > 0 ? endT : iT + 6000)))
+            .to.not.contain('archived_at IS NULL');
+        expect(strip(s.slice(iS, endS > 0 ? endS : iS + 6000)))
+            .to.not.contain('archived_at IS NULL');
     });
 });
 
 describe('archive scope — per-recording WRITES must refuse archived rows', function() {
+
+    it('the SELECT list is fully qualified (the JOIN made columns ambiguous)', function() {
+        // Regression guard for the 500 shipped in #1845: adding
+        // `JOIN recordings r` brought a second `datetime` into scope and the
+        // unqualified projection broke on BOTH engines
+        // (ER_NON_UNIQ_ERROR / PG 42702).
+        var src = read(M + 'tags.js');
+        var i = src.indexOf('getFor: async function');
+        var end = src.indexOf('\n    getForType', i);
+        var fn = src.slice(i, end > 0 ? end : i + 6000).replace(/\/\/[^\n]*/g, '');
+        var sel = fn.slice(fn.indexOf('"SELECT'), fn.indexOf('FROM recording_tags'));
+        ['user_id', 'datetime', 't0', 'f0', 't1', 'f1'].forEach(function(col) {
+            expect(sel, col + ' must be qualified once the recordings join exists')
+                .to.contain('RT.' + col);
+        });
+    });
 
     it('the tag PUT route refuses an archived recording', function() {
         var src = read(R + 'tags.js');
