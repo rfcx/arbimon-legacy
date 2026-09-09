@@ -2,7 +2,9 @@
 "use strict";
 
 const util = require('util');
-const async = require('async');
+// NOTE (2026-09-09): the `async` library import was removed with the
+// classifications.delete() waterfall rewrite -- that was its last use in this
+// file. Verified: no remaining async.waterfall/each/map/series/parallel calls.
 const config = require('../config');
 const SQLBuilder = require('../utils/sqlbuilder');
 const dbpool = require('../utils/dbpool');
