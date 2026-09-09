@@ -994,9 +994,18 @@ angular.module('a2.analysis.patternmatching', [
     //    `visualizer/:browserType/:browserTypeId/:browserRecId`, so browsing the
     //    job's own playlist (rather than the bare `rec` mode we used to emit)
     //    lets the user step through the analysed recordings from where they
-    //    landed. `playlist_id` is NULLable -- /remove nulls it when a job is
-    //    deleted (see app/model/pattern_matchings.js) -- so the `rec` form stays
-    //    as the fallback rather than emitting `playlist/null/<id>`.
+    //    landed.
+    //
+    //    The `rec` fallback is DEFENSIVE, not a live case: measured 2026-09-09,
+    //    0 of 100,630 non-deleted PM jobs have a NULL `playlist_id` (the column
+    //    is nullable and /remove nulls it on delete, but a deleted job is not
+    //    listed). What DOES occur is 466 jobs whose `playlist_id` points at a
+    //    playlist row that no longer EXISTS -- a truthy id this check cannot
+    //    detect. That case is deliberately left to degrade in the SPA, which was
+    //    verified to handle it gracefully: with a non-existent playlist id the
+    //    recording still loads from `browserRecId`, the `?a=` box still draws,
+    //    and `?roi=` still pins. So a dangling playlist costs the playlist
+    //    CONTEXT only, never the recording or the ROI.
     //
     // 2. `?a=box,...` ALWAYS. This draws the orange query box and is the only
     //    dimension that works for every ROI (see 3).
