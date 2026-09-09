@@ -44,6 +44,10 @@ jobs:
       repo: arbimon-legacy
       dockerfile: build/Dockerfile
       targets: '["arbimon","arbimon-recording-delete-job","arbimon-recording-export-job"]'
+      # Opt into the shared BuildKit registry cache (rfcx/cicd#10/#11). 3 serialized
+      # builds on the single runner; fails safe (a missing/GC'd cache tag = a miss,
+      # not a failure). Proven on rfcx/arbimon (14.6 -> 2.5 min) + 3 other repos.
+      build-cache: true
       deployments: |
         [
           {"name": "arbimon",                 "image": "arbimon"},
