@@ -67,12 +67,24 @@ describe('project-scoped entity ids — routers resolve the id by project', func
         // The original `if (query.id) ... else if (query.project)` silently
         // ignored the project when both were supplied -- so a "scoped" param
         // would have been a no-op.
+        // Strengthened after MUTATION TESTING: the first version of this
+        // assertion sliced 400 chars after the id constraint and looked for
+        // 'TS.project_id =' -- which the `else if (query.project)` branch also
+        // satisfies, so deleting the NESTED project push left the test GREEN.
+        // Assert the nesting itself: inside the `if (query.id)` block, before
+        // its closing `else`, a project constraint must appear.
         var src = read(M + 'training_sets.js');
         var i = src.indexOf('find: function');
-        var fn = src.slice(i, i + 1200);
+        var fn = src.slice(i, i + 1600);
         var idIdx = fn.indexOf('TS.training_set_id =');
-        var after = fn.slice(idIdx, idIdx + 400);
-        expect(after, 'project must be constrainable alongside id')
+        expect(idIdx, 'id constraint not found').to.be.greaterThan(-1);
+        var elseIdx = fn.indexOf('else if (query.project)', idIdx);
+        expect(elseIdx, 'the else-if branch is the landmark for this test')
+            .to.be.greaterThan(idIdx);
+        var insideIdBlock = fn.slice(idIdx, elseIdx);
+        expect(insideIdBlock,
+            'the id branch must ALSO be able to constrain the project, or a ' +
+            'scoped router.param silently degrades to an id-only lookup')
             .to.contain('TS.project_id =');
     });
 
