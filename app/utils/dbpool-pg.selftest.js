@@ -594,6 +594,28 @@ eq('IN: template-collapsed placeholder shape unchanged',
    m.sqlTemplate("SELECT * FROM t WHERE id IN (1,2,3) AND name='x' AND n=5"),
    'SELECT * FROM t WHERE id IN (?) AND name=? AND n=?');
 
+// ---- COLLATION_EXACT: recordings.uri is NEVER folded (P7 debt #9, 2026-09-10)
+// The 6.4 flip routed recordingInfoGivenUri; the fold on recordings.uri turned
+// its indexed point lookup into a 306M-row seq scan cancelled at 8 s on every
+// call (340/480 pg_route_timeout events in 48 h). Exact match on every pass.
+console.log('== COLLATION_EXACT (recordings.uri exact-match, P7 debt #9) ==');
+var RIU = "SELECT r.recording_id AS id, r.uri, s.site_id FROM recordings r JOIN sites s ON s.site_id = r.site_id WHERE r.uri = '2020/11/18/co8K2020066/e881c16e.flac'";
+eq('exact: recordingInfoGivenUri shape untouched (qualified =)', nfold(RIU), 0);
+eq('exact: predicate emitted verbatim (indexable: no lower() around column or literal)',
+   /WHERE r\.uri = '2020\/11\/18\/co8K2020066\/e881c16e\.flac'$/.test(m.translate(RIU)), true);
+eq('exact: collationClass resolves recordings.uri to null',
+   m.collationClass('r.uri', m.aliasMap('SELECT 1 FROM recordings r')), null);
+eq('exact: bare uri in exists() shape untouched',
+   nfold("SELECT count(recording_id) as count FROM recordings WHERE site_id = 5 AND uri = 'x/y.flac'"), 0);
+eq('exact: IN-list on recordings.uri untouched (archiveBySiteAndUris shape)',
+   nfold("SELECT recording_id FROM recordings WHERE site_id = 5 AND uri IN ('a.flac','B.flac')"), 0);
+eq('exact: ORDER BY r.uri untouched',
+   nfold('SELECT r.uri FROM recordings r ORDER BY r.uri'), 0);
+eq('exact: OTHER uri columns still fold (templates.uri is sv)',
+   nfold("SELECT T.uri FROM templates T WHERE T.uri = 'x'"), 2);
+eq('exact: sibling string column in the same query still folds (sites.name)',
+   nfold("SELECT r.recording_id FROM recordings r JOIN sites s ON s.site_id = r.site_id WHERE r.uri = 'a' AND s.name = 'b'"), 2);
+
 // ---- schema-qualifier strip (P6, 2026-07-29) ------------------------------
 // The first genuine dialect_error caught by the post-#1787 unconditional
 // gate: legacy qualifies two queries with the MySQL schema name `arbimon2.`,
