@@ -21,10 +21,26 @@
 //  - unhandledRejection: log + survive. These arise from post-response tails;
 //    the HTTP response is almost always already sent, so there is nothing to
 //    fail toward. Surviving preserves the other ~100 in-flight requests.
-//  - uncaughtException: log + survive ONLY for ERR_HTTP_HEADERS_SENT (the
-//    known q-tick double-send class, harmless duplicate response); anything
-//    else re-raises after logging -- a truly unknown synchronous corruption
-//    should still fail-stop rather than run in an undefined state.
+//  - uncaughtException: log + survive ONLY for two named post-response-tail
+//    classes; anything else re-raises after logging -- a truly unknown
+//    synchronous corruption should still fail-stop rather than run in an
+//    undefined state. The two classes:
+//     1. ERR_HTTP_HEADERS_SENT (the known q-tick double-send class, harmless
+//        duplicate response).
+//     2. ERR_STREAM_WRITE_AFTER_END on the express-session save/touch TAIL
+//        (2026-09-10, bake day-2 finding: 8 pod-kills / 7d in two bot-probe
+//        waves). express-session intercepts res.end so the session can be
+//        persisted first; when the Redis store callback fires, the deferred
+//        real res.end throws synchronously INSIDE the callback if the
+//        response has already fully ended (client aborted, or a second end
+//        through another wrapper). The response is by definition complete;
+//        the only casualty is that one session persist (an unauthenticated
+//        probe's empty session in every observed case). Match is deliberately
+//        TWO-FACTOR: the error AND an express-session writeend/onsave/
+//        touchend/ontouch frame -- a write-after-end from any other path is
+//        still an unknown corruption and fail-stops. The site-fix belongs
+//        upstream (express-session), deliberately out of scope; every catch
+//        still logs the marker and still trips ArbimonUnhandledErrorNetCatch.
 // ---------------------------------------------------------------------------
 process.on('unhandledRejection', function (reason) {
     try {
@@ -36,9 +52,15 @@ process.on('uncaughtException', function (err) {
     try {
         var isHeadersSent = err && (err.code === 'ERR_HTTP_HEADERS_SENT' ||
             /Cannot set headers after they are sent/.test(err.message || ''));
-        console.error('UNHANDLED_ERROR_NET {"kind":"uncaughtException","survivable":' + !!isHeadersSent + '}',
+        var stack = (err && err.stack) || '';
+        var isSessionSaveTail = err &&
+            (err.code === 'ERR_STREAM_WRITE_AFTER_END' || /write after end/.test(err.message || '')) &&
+            /express-session[\/\\]index\.js/.test(stack) &&
+            /writeend|onsave|touchend|ontouch/.test(stack);
+        var survivable = isHeadersSent || isSessionSaveTail;
+        console.error('UNHANDLED_ERROR_NET {"kind":"uncaughtException","survivable":' + !!survivable + '}',
             (err && err.stack) || String(err));
-        if (isHeadersSent) { return; }
+        if (survivable) { return; }
     } catch (e) { /* fall through to exit */ }
     process.exit(1);
 });

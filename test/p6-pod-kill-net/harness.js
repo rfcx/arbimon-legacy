@@ -141,6 +141,68 @@ const runSub = (code) => {
     setTimeout(()=>console.log('ALIVE'),80);`);
   ok('[E4] a poisoned rejection reason cannot kill the net', rNet4.status === 0 && /ALIVE/.test(rNet4.stdout));
 
+  // 2026-09-10 (bake day-2 finding): the express-session save/touch TAIL is a
+  // second known-benign survivable class. The stacks below are the PRODUCED
+  // shapes, captured from the live pods' 07:50-07:51Z crash wave.
+  const sessionSaveStack = `Error [ERR_STREAM_WRITE_AFTER_END]: write after end
+    at new NodeError (node:internal/errors:387:5)
+    at ServerResponse.end (node:_http_outgoing:968:15)
+    at ServerResponse.wrappedResEnd [as end] (/app/node_modules/newrelic/lib/instrumentation/core/http.js:321:18)
+    at ServerResponse.res.end (/app/node_modules/express-winston/index.js:317:17)
+    at writeend (/app/node_modules/express-session/index.js:262:22)
+    at Object.onsave [as callback] (/app/node_modules/express-session/index.js:336:11)
+    at /app/node_modules/@redis/client/dist/lib/client/index.js:419:38`;
+
+  const rNet5 = runSub(netBlock + `
+    const e = new Error(${JSON.stringify(sessionSaveStack)});
+    e.code = 'ERR_STREAM_WRITE_AFTER_END';
+    e.stack = ${JSON.stringify(sessionSaveStack)};
+    setTimeout(()=>{ throw e; }, 10);
+    setTimeout(()=>console.log('ALIVE'),80);`);
+  ok('[E5] uncaughtException write-after-end on the express-session SAVE tail: survives',
+     rNet5.status === 0 && /ALIVE/.test(rNet5.stdout) && /"survivable":true/.test(rNet5.stderr));
+
+  const unknownStack = `Error [ERR_STREAM_WRITE_AFTER_END]: write after end
+    at new NodeError (node:internal/errors:387:5)
+    at ServerResponse.end (node:_http_outgoing:968:15)
+    at Socket.<anonymous> (/app/app/routes/data-api/project/recordings.js:999:9)`;
+  const rNet6 = runSub(netBlock + `
+    const e = new Error(${JSON.stringify(unknownStack)});
+    e.code = 'ERR_STREAM_WRITE_AFTER_END';
+    e.stack = ${JSON.stringify(unknownStack)};
+    setTimeout(()=>{ throw e; }, 10);
+    setTimeout(()=>console.log('ALIVE'),80);`);
+  ok('[E6] write-after-end from an UNKNOWN path (no session tail): fail-stop preserved',
+     rNet6.status === 1 && !/ALIVE/.test(rNet6.stdout) && /"survivable":false/.test(rNet6.stderr));
+
+  const touchStack = `Error [ERR_STREAM_WRITE_AFTER_END]: write after end
+    at new NodeError (node:internal/errors:387:5)
+    at ServerResponse.end (node:_http_outgoing:968:15)
+    at writeend (/app/node_modules/express-session/index.js:262:22)
+    at Object.ontouch [as callback] (/app/node_modules/express-session/index.js:345:11)
+    at /app/node_modules/@redis/client/dist/lib/client/index.js:419:38`;
+  const rNet7 = runSub(netBlock + `
+    // message-only match (no .code set), NO newrelic frames (post-removal world), TOUCH tail
+    const e = new Error(${JSON.stringify(touchStack)});
+    e.stack = ${JSON.stringify(touchStack)};
+    setTimeout(()=>{ throw e; }, 10);
+    setTimeout(()=>console.log('ALIVE'),80);`);
+  ok('[E7] write-after-end TOUCH tail, message-only + no newrelic frames: survives',
+     rNet7.status === 0 && /ALIVE/.test(rNet7.stdout) && /"survivable":true/.test(rNet7.stderr));
+
+  const incidentalStack = `Error [ERR_STREAM_WRITE_AFTER_END]: write after end
+    at new NodeError (node:internal/errors:387:5)
+    at ServerResponse.end (node:_http_outgoing:968:15)
+    at Object.<anonymous> (/app/node_modules/express-session/index.js:100:5)`;
+  const rNet8 = runSub(netBlock + `
+    const e = new Error(${JSON.stringify(incidentalStack)});
+    e.code = 'ERR_STREAM_WRITE_AFTER_END';
+    e.stack = ${JSON.stringify(incidentalStack)};
+    setTimeout(()=>{ throw e; }, 10);
+    setTimeout(()=>console.log('ALIVE'),80);`);
+  ok('[E8] express-session frame but NOT the save/touch tail: fail-stop preserved (two-factor match)',
+     rNet8.status === 1 && !/ALIVE/.test(rNet8.stdout) && /"survivable":false/.test(rNet8.stderr));
+
   console.log(`\n${pass}/${pass + fail} passed${fail ? '  ***FAILURES***' : ''}`);
   process.exit(fail ? 1 : 0);
 })();
