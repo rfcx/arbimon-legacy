@@ -109,19 +109,24 @@ describe('a recording cannot be hard-deleted through the app', function () {
         expect(HARD_DELETE.test('DELETE FROM `recordings` WHERE site_id = ?')).to.equal(true);
     });
 
-    it('the one surviving hard delete is operator-only tooling, not API-reachable', function () {
-        // scripts/admin/verify-recs.js still hard-deletes rows whose S3 object
-        // is missing. It is deliberately out of scope: not required by any
-        // route, job or manifest. This test pins BOTH facts -- that it is the
-        // only one, and that nothing wires it up -- so the exclusion cannot
-        // quietly widen into the API surface.
+    it('NO hard delete of a recording survives anywhere in the repo, not even in scripts/', function () {
+        // 2026-09-10: this assertion used to carve out ONE deliberate exception,
+        // `scripts/admin/verify-recs.js`. That script is now DELETED (operator
+        // ruling: "we can ignore or retire verify-recs.js if it's just an
+        // 11 year old script not in use"), so the guarantee is UNCONDITIONAL.
+        //
+        // Why it went rather than being converted to archive: it was written
+        // 2015-06-03 in a single commit and never touched again, it was
+        // referenced by no route/job/manifest/CI, and it HEADed each recording
+        // against `config('aws').bucketName` = `arbimon2` -- the mis-bucket.
+        // Modern audio lives in `rfcx-streams-production`, so every modern
+        // recording read as "not found on bucket", and its answer to "not
+        // found" was `DELETE FROM recordings`. It would have destroyed rows
+        // whose audio is perfectly intact, because it was looking in the wrong
+        // place. An archiving version would have acted on the same false
+        // signal, just less destructively.
+        // Full reasoning: runbooks/FINDING-2026-09-10-verify-recs-admin-script-disposition.md
         var scripts = offenders(walk(path.join(ROOT, 'scripts')));
-        expect(scripts).to.deep.equal(['scripts/admin/verify-recs.js']);
-
-        var appFiles = walk(path.join(ROOT, 'app')).concat(walk(path.join(ROOT, 'jobs')));
-        var wired = appFiles.filter(function (f) {
-            return fs.readFileSync(f, 'utf8').indexOf('verify-recs') !== -1;
-        });
-        expect(wired, 'verify-recs is referenced by: ' + wired.join(', ')).to.deep.equal([]);
+        expect(scripts, 'hard-delete SQL found in scripts/: ' + scripts.join(', ')).to.deep.equal([]);
     });
 });
