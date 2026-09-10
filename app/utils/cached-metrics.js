@@ -1,7 +1,71 @@
 var model = require('../model');
 const moment = require('moment');
+const dbpool = require('./dbpool');
+const dbpoolPg = require('./dbpool-pg');
 
 const METRICS_CACHE_TTL_MIN = 90
+
+// COLD-KEY BOUND (P7 debt #9a, 2026-09-10). When a cache key row is ABSENT the
+// original code awaited the full recalculation BEFORE res.json. Measured on the
+// PG leader: `recording-count` (SELECT count(*) FROM recordings, 306 M rows)
+// = 84-100 s, cancelled at the 8 s route statement_timeout on every call and
+// failing open to MariaDB (16 s); `project-<id>-rec` = 18 ms for a mid-size
+// project but 8.4 s for the largest (15.2 M recordings). ~1,700 of 8,295 live
+// projects have no `-rec` key today. At P7 there is no MariaDB to fall open to,
+// so the cold path becomes a user-facing error. Shape: race ONE recalculation
+// against this bound; if it finishes, serve the truth (the common case, ms);
+// if not, serve an estimate and let the SAME promise finish in the background
+// (one query, one pool connection, <= the route statement_timeout, exactly as
+// before -- just off the response path).
+const COLD_KEY_BOUND_MS = parseInt(process.env.METRICS_COLD_BOUND_MS || '2000', 10)
+
+// What to serve when a cold key does not finish inside the bound.
+//   recording-count on PG : pg_class.reltuples (measured 0.003 % off the exact
+//                           count; 16 ms). On MariaDB information_schema
+//                           TABLE_ROWS measured 4.3 % over -> NOT used.
+//   anything else         : null. The dashboard renders `{{ recsQty | number }}`
+//                           and Angular's number filter passes null through as
+//                           blank -- NOT 0, which would read as "my data is
+//                           gone" on a rarely-visited project with real
+//                           recordings. (A literal "calculating..." label is a
+//                           UI change, deliberately not bundled here.)
+const PG_RECORDINGS_ESTIMATE_SQL =
+    "SELECT c.reltuples AS estimate FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace " +
+    "WHERE n.nspname = 'public' AND c.relname = 'recordings'"
+
+const getColdEstimate = async function(k) {
+    if (k === 'recording-count' && dbpoolPg.isPg) {
+        // Engine branch, NOT a translator rule: catalog SQL has no common form
+        // across the two engines, and this branch disappears cleanly at P7.
+        // The estimate is best-effort: if the routed read fails open to
+        // MariaDB (where pg_class does not exist) or errors, serve null
+        // rather than turn a slow count into a 500.
+        try {
+            const rows = await dbpool.query(PG_RECORDINGS_ESTIMATE_SQL)
+            const est = rows && rows[0] && Number(rows[0].estimate)
+            return (isFinite(est) && est > 0) ? Math.round(est) : null
+        } catch (err) {
+            console.error('cached-metrics: reltuples estimate failed: ' + (err && err.message || err))
+            return null
+        }
+    }
+    return null
+}
+
+// Resolve to { done: true, value } if `promise` settles within `ms`, else
+// { done: false } -- the promise itself keeps running (callers attach their
+// own .catch so a late rejection can never become an unhandled rejection).
+const withinBound = function(promise, ms) {
+    let timer
+    const timeout = new Promise(function(resolve) {
+        timer = setTimeout(function() { resolve({ done: false }) }, ms)
+    })
+    const wrapped = promise.then(
+        function(value) { clearTimeout(timer); return { done: true, value: value } },
+        function(err) { clearTimeout(timer); throw err }
+    )
+    return Promise.race([wrapped, timeout])
+}
 
 const getCountForSelectedMetric = async function(key, projectId) {
     let count
@@ -75,7 +139,10 @@ const recalculateMetrics = async function(k, v, params, isInsert) {
 
     const value = await getCountForSelectedMetric(k, params)
     const expiresAt = moment.utc().add(METRICS_CACHE_TTL_MIN, 'minutes').add(getRandomMin(0, 60), 'seconds').format('YYYY-MM-DD HH:mm:ss')
+    // insertCachedMetrics swallows a duplicate key (a sibling pod won the race
+    // to create this cold key -- sqlutil.isDuplicateKeyError, both dialects).
     isInsert ? await model.projects.insertCachedMetrics({ key: v, value, expiresAt }) : await model.projects.updateCachedMetrics({ key: v, value, expiresAt })
+    return value
 }
 
 const getCachedMetrics = async function(req, res, key, params, next) {
@@ -83,8 +150,24 @@ const getCachedMetrics = async function(req, res, key, params, next) {
     const v = Object.values(key)[0]
     model.projects.getCachedMetrics(v).then(async function(results) {
         if (!results.length) {
-            await recalculateMetrics(k, v, params, insert=true)
-            results = await model.projects.getCachedMetrics(v)
+            // COLD KEY: bounded wait, then estimate. See COLD_KEY_BOUND_MS.
+            const recalc = recalculateMetrics(k, v, params, true)
+            // Attach the background handler FIRST so a rejection after the
+            // bound expires is never unhandled (node >= 15 would exit).
+            recalc.catch(function(err) {
+                console.error('cached-metrics: cold refresh failed for ' + v + ': ' + (err && err.message || err))
+            })
+            const outcome = await withinBound(recalc, COLD_KEY_BOUND_MS)
+            if (!outcome.done) {
+                const estimate = await getColdEstimate(k)
+                console.log('cached-metrics: cold key ' + v + ' exceeded ' + COLD_KEY_BOUND_MS + ' ms; served ' +
+                    (estimate === null ? 'null' : 'estimate ' + estimate) + ', refresh continues')
+                return res.json(estimate)
+            }
+            // Finished inside the bound: serve the truth we just computed.
+            // (Do not re-read the row -- a sibling pod's insert may have won
+            // and its row can already be reaped; the value is in hand.)
+            return res.json(outcome.value)
         }
         const [result] = results
         // The insert above may have lost a race to a sibling pod (handled as a
