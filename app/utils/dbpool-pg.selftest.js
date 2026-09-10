@@ -611,6 +611,16 @@ eq('exact: IN-list on recordings.uri untouched (archiveBySiteAndUris shape)',
    nfold("SELECT recording_id FROM recordings WHERE site_id = 5 AND uri IN ('a.flac','B.flac')"), 0);
 eq('exact: ORDER BY r.uri untouched',
    nfold('SELECT r.uri FROM recordings r ORDER BY r.uri'), 0);
+// cached_metrics.key (P7 debt #9 census, 2026-09-10): the same machine-key class;
+// the fold's plan is a 41,888-row Seq Scan on every getCachedMetrics read.
+var CMK = "SELECT * FROM cached_metrics cm WHERE cm.key = 'project-9809-rec'";
+eq('exact: getCachedMetrics read untouched (qualified =)', nfold(CMK), 0);
+eq('exact: getCachedMetrics read emitted verbatim (PK-indexable)',
+   /WHERE cm\.key = 'project-9809-rec'$/.test(m.translate(CMK)), true);
+eq('exact: collationClass resolves cached_metrics.key to null',
+   m.collationClass('cm.key', m.aliasMap('SELECT 1 FROM cached_metrics cm')), null);
+eq('exact: bare key on cached_metrics untouched',
+   nfold("SELECT value FROM cached_metrics WHERE `key` = 'recording-count'"), 0);
 eq('exact: OTHER uri columns still fold (templates.uri is sv)',
    nfold("SELECT T.uri FROM templates T WHERE T.uri = 'x'"), 2);
 eq('exact: sibling string column in the same query still folds (sites.name)',
