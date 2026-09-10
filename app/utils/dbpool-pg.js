@@ -903,8 +903,22 @@ var COLLATION_ENUM = {
 // collation-case-sensitivity-2026-07-27.md, Index note). Every fold pass
 // (qualified, bare, IN-list, ORDER BY) consults this set via collationClass /
 // resolveBareColumn, so an exempt column is never folded anywhere.
+//   cached_metrics.key  41,889 rows, varchar PK (`key` / `unique_key`). Machine-keyed
+//   (`recording-count`, `project-<id>-rec`, ... written by cached-metrics.js and
+//   read back by the same literal); measured 2026-09-10 on the MariaDB master:
+//   0 keys with uppercase, 0 non-ASCII. The fold's plan is a Seq Scan removing
+//   41,888 rows (12.5 s cold on the replica) on EVERY getCachedMetrics read —
+//   at P7 that is the cold path arriving through a different door. Unfolded:
+//   the PK. Per-call census (2026-09-10, same session): the other folded
+//   indexed columns (projects.url, users.login/email, tags.tag, sites.name,
+//   species.*, playlists.name, training_sets.name) are NOT exempted —
+//   projects.url has 3 non-ASCII urls and users.login 750 case-variant /
+//   10,750 `auth0|...` values on the master, so exact match would change
+//   which rows a folded lookup finds; those are their own item. recordings.
+//   filename is bounded only while every shape leads with site_id.
 var COLLATION_EXACT = {
     'recordings.uri': 1,
+    'cached_metrics.key': 1,
 };
 
 // The two folds. Applied to BOTH sides of a predicate.
