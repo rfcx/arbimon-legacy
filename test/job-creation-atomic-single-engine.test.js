@@ -49,6 +49,8 @@ var pmSrc = fs.readFileSync(
     path.join(__dirname, '..', 'app', 'model', 'pattern_matchings.js'), 'utf8');
 var aedSrc = fs.readFileSync(
     path.join(__dirname, '..', 'app', 'model', 'audio-event-detections-clustering.js'), 'utf8');
+var clusterSrc = fs.readFileSync(
+    path.join(__dirname, '..', 'app', 'model', 'clustering-jobs.js'), 'utf8');
 
 /** Extract a top-level function body from a model source by its key. */
 function fnBody(src, name) {
@@ -86,6 +88,17 @@ var cases = [
         childInsert: 'INSERT INTO `job_params_audio_event_detection_clustering`'
     }
 ];
+
+/**
+ * Type 9 is checked SEPARATELY, not folded into `cases`, because its shape
+ * legitimately differs: it builds its SQL into named vars (`jobQuery`,
+ * `clusteringQuery`) rather than inlining the statements, and it has NO
+ * playlist guard SELECT (its child table carries no playlist_id FK). Forcing it
+ * through the shared assertions would have required loosening them for all
+ * three — which would weaken the guards that matter for types 6 and 8.
+ */
+var clusterBody = fnBody(clusterSrc, 'requestNewClusteringJob');
+var clusterCode = codeOnly(clusterBody);
 
 describe('job creation: atomic + single-engine (cross-engine FK class)', function () {
 
@@ -150,5 +163,52 @@ describe('job creation: atomic + single-engine (cross-engine FK class)', functio
         expect(pmSrc).to.contain('ER_NO_REFERENCED_ROW_2');
         expect(pmSrc).to.contain('169766');
         expect(aedSrc).to.contain('BYTE-IDENTICAL');
+    });
+
+    describe('AED clustering (type 9) — clustering-jobs.js', function () {
+
+        it('positive control: the body was extracted and is non-trivial', function () {
+            expect(clusterBody).to.be.a('string');
+            expect(clusterBody.length).to.be.greaterThan(400);
+            expect(clusterCode).to.contain('INSERT INTO jobs');
+            expect(clusterCode).to.contain('INSERT INTO job_params_audio_event_clustering');
+        });
+
+        it('wraps both INSERTs in a single transaction', function () {
+            expect(clusterCode).to.contain('dbpool.performTransaction');
+            expect(clusterCode).to.contain('tx.connection.promisedQuery');
+        });
+
+        it('issues BOTH INSERTs through the transaction helper', function () {
+            // jobQuery + clusteringQuery are the two statement vars; each must
+            // be executed via txq(), not the pooled dbpool.query().
+            expect(clusterCode).to.match(/txq\(\s*jobQuery/);
+            expect(clusterCode).to.match(/txq\(\s*clusteringQuery/);
+        });
+
+        it('does NOT create the job through the pooled dbpool.query', function () {
+            // Other helpers in this file legitimately use the pool; scope the
+            // assertion to the creation function only.
+            expect(clusterCode).to.not.contain('dbpool.query(');
+        });
+
+        it('🔑 keeps the k8s network POST OUTSIDE the transaction', function () {
+            // Holding a pooled DB connection across a network call is a
+            // pool-exhaustion hazard. The dispatch step must sit after the
+            // transaction closes, never inside its callback.
+            var txStart = clusterCode.indexOf('dbpool.performTransaction');
+            var txEnd = clusterCode.indexOf('}))', txStart);
+            var k8s = clusterCode.indexOf('k8sClient.apis.batch');
+            expect(txStart, 'transaction present').to.be.greaterThan(-1);
+            expect(txEnd, 'transaction closes').to.be.greaterThan(txStart);
+            expect(k8s, 'k8s post present').to.be.greaterThan(-1);
+            expect(k8s, 'k8s POST must be AFTER the transaction closes')
+                .to.be.greaterThan(txEnd);
+        });
+
+        it('records the measured orphan so the guard is not "cleaned up"', function () {
+            expect(clusterSrc).to.contain('169816');
+            expect(clusterSrc).to.contain('job_params_aud_ev_cl_ifbk_2');
+        });
     });
 });

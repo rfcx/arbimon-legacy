@@ -426,25 +426,52 @@ select.push(
             || process.env.ANALYSIS_DISPATCH === 'jobqueue';
         const initialState = useJobqueue ? 'waiting' : 'processing';
 
+        // ── 2026-09-10: ATOMIC job creation (orphan class) ───────────────────
+        // The `jobs` INSERT and its `job_params_audio_event_clustering` INSERT
+        // used to be two independent auto-commit statements. When the second
+        // failed, the first had ALREADY COMMITTED, leaving an ORPHAN `jobs`
+        // row: the dispatcher claims it, finds no params row, and the user
+        // sees a job that failed with no recorded reason.
+        //
+        // PROVEN ON THE PRODUCTION MASTER 2026-09-10 (rolled back immediately):
+        // forcing the child INSERT to fail on its OWN user_id FK
+        // (`job_params_aud_ev_cl_ifbk_2`) left job 169816 alive with
+        // child_rows = 0 — a real orphan, produced by exactly this shape.
+        //
+        // ⚠️ SCOPE OF THE TRANSACTION IS DELIBERATE — IT COVERS THE TWO INSERTS
+        // ONLY. The legacy branch below issues a k8s API POST
+        // (`k8sClient…jobs.post`). Holding a pooled DB connection open across a
+        // NETWORK call is how connection pools get exhausted by a slow or
+        // hanging endpoint, so the dispatch step stays OUTSIDE the transaction.
+        // The DB work is atomic; dispatch remains a separate, later concern —
+        // and under ANALYSIS_DISPATCH=jobqueue (live in prod) that branch is a
+        // no-op early return anyway.
+        //
+        // Sibling fixes: pattern_matchings.js + audio-event-detections-clustering.js (#1855).
+        // Unlike those two, this path has NO playlist_id FK on its child table,
+        // so the cross-engine ghost-playlist trigger cannot reach it; this is
+        // the atomicity half only.
         return q.ninvoke(joi, 'validate', payload, ClusteringJobs.JOB_SCHEMA)
-            .then(() => dbpool.query(
-                jobQuery, [
-                    9, data.project_id, data.user_id, initialState, 0, 0, 4, 0, 0
-                ]
-            ).then(result => {
-                data.id = job_id = result.insertId;
-            }).then(() =>
-                dbpool.query(
-                    clusteringQuery, [
-                        data.name, data.project_id, data.user_id, data.id, data.audioEventDetectionJob.jobId,
-                        JSON.stringify({
-                            "Min. Points": data.params.minPoints,
-                            "Distance Threshold": data.params.distanceThreshold,
-                            "Max. Cluster Size": data.params.maxClusterSize
-                        })
+            .then(() => dbpool.performTransaction(tx => {
+                const txq = tx.connection.promisedQuery.bind(tx.connection);
+                return txq(
+                    jobQuery, [
+                        9, data.project_id, data.user_id, initialState, 0, 0, 4, 0, 0
                     ]
-                )
-                ).then(async () => {
+                ).then(result => {
+                    data.id = job_id = result.insertId;
+                    return txq(
+                        clusteringQuery, [
+                            data.name, data.project_id, data.user_id, data.id, data.audioEventDetectionJob.jobId,
+                            JSON.stringify({
+                                "Min. Points": data.params.minPoints,
+                                "Distance Threshold": data.params.distanceThreshold,
+                                "Max. Cluster Size": data.params.maxClusterSize
+                            })
+                        ]);
+                });
+            }))
+                .then(async () => {
                 // rfcx-local: skip the direct AWS-EKS k8s Job post when the
                 // jobqueue dispatcher owns dispatch (it claims the 'waiting'
                 // row above and runs the aed-clustering worker in-cluster).
@@ -465,7 +492,7 @@ select.push(
             }).then(() => {
                 return job_id;
             })
-        ).nodeify(callback);
+            .nodeify(callback);
     },
 
     totalClusteringJobs: function(projectId) {
