@@ -272,25 +272,39 @@ let AudioEventDetectionsClustering = {
                 'Invalid AED clustering parameter(s): ' + invalid.join(', ') +
                 ' must each be a number greater than 0.');
         }
-        return dbpool.query(
-            'SELECT project_id FROM playlists WHERE playlist_id = ?', [data.playlist_id]
-        ).then(function(rows){
-            if (!rows.length) { throw new Error('Playlist not found'); }
-            const projId = rows[0].project_id;
-            return dbpool.query(
-                'INSERT INTO `jobs` (`job_type_id`,`date_created`,`last_update`,`project_id`,`user_id`,`state`,`progress`,`completed`,`progress_steps`,`hidden`,`ncpu`,`uri`,`remarks`) ' +
-                "VALUES (8, now(), now(), ?, ?, 'waiting', 0, 0, 1, 0, 1, '', '')",
-                [projId, data.user_id]
-            ).then(function(jres){
-                const jobId = jres.insertId;
-                return dbpool.query(
-                    'INSERT INTO `job_params_audio_event_detection_clustering` (`name`,`project_id`,`job_id`,`date_created`,`parameters`,`playlist_id`,`user_id`) ' +
-                    'VALUES (?, ?, ?, now(), ?, ?, ?)',
-                    [data.name, projId, jobId, JSON.stringify(params), data.playlist_id, data.user_id]
-                ).then(function(){
+        // ── 2026-09-09: ATOMIC + SINGLE-ENGINE ── see the twin comment in
+        // app/model/pattern_matchings.js enqueuePatternMatchingJob(). This path
+        // had the BYTE-IDENTICAL defect: a pooled guard SELECT on `playlists`
+        // (routed to PostgreSQL post-6.4) followed by INSERTs enforced on
+        // MariaDB, with the `jobs` INSERT committing independently of its
+        // `job_params_audio_event_detection_clustering` row.
+        //
+        // NOT observed firing in production (every type-8 orphan on record
+        // predates the 6.4 read flip and has a different cause), so this half is
+        // a LATENT fix — the FK `job_params_cl_ifbk_4` makes it reachable by
+        // exactly the same user action that produced the type-6 failures:
+        // delete a playlist, then start a job against it before the nightly
+        // full re-copy clears the stale PostgreSQL row.
+        return dbpool.performTransaction(function(tx){
+            const txq = tx.connection.promisedQuery.bind(tx.connection);
+            let projId, jobId;
+            return txq('SELECT project_id FROM playlists WHERE playlist_id = ?', [data.playlist_id])
+                .then(function(rows){
+                    if (!rows.length) { throw new Error('Playlist not found'); }
+                    projId = rows[0].project_id;
+                    return txq(
+                        'INSERT INTO `jobs` (`job_type_id`,`date_created`,`last_update`,`project_id`,`user_id`,`state`,`progress`,`completed`,`progress_steps`,`hidden`,`ncpu`,`uri`,`remarks`) ' +
+                        "VALUES (8, now(), now(), ?, ?, 'waiting', 0, 0, 1, 0, 1, '', '')",
+                        [projId, data.user_id]);
+                }).then(function(jres){
+                    jobId = jres.insertId;
+                    return txq(
+                        'INSERT INTO `job_params_audio_event_detection_clustering` (`name`,`project_id`,`job_id`,`date_created`,`parameters`,`playlist_id`,`user_id`) ' +
+                        'VALUES (?, ?, ?, now(), ?, ?, ?)',
+                        [data.name, projId, jobId, JSON.stringify(params), data.playlist_id, data.user_id]);
+                }).then(function(){
                     return { job_id: jobId, dispatch: 'jobqueue' };
                 });
-            });
         });
     },
 };

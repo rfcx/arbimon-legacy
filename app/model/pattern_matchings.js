@@ -1127,32 +1127,60 @@ var PatternMatchings = {
         const params = (data.params.persite !== undefined && data.params.persite !== null)
             ? { threshold: Number(data.params.threshold), N: data.params.N, persite: data.params.persite }
             : { threshold: Number(data.params.threshold), N: data.params.N };
-        return dbpool.query(
-            'SELECT project_id FROM playlists WHERE playlist_id = ?', [data.playlist]
-        ).then(function(rows){
-            if (!rows.length) { throw new Error('Playlist not found'); }
-            const projId = rows[0].project_id;
-            return dbpool.query(
-                'SELECT species_id, songtype_id FROM templates WHERE template_id = ?', [data.template]
-            ).then(function(trows){
-                if (!trows.length) { throw new Error('Template not found'); }
-                const speciesId = trows[0].species_id;
-                const songtypeId = trows[0].songtype_id;
-                return dbpool.query(
-                    'INSERT INTO `jobs` (`job_type_id`,`date_created`,`last_update`,`project_id`,`user_id`,`state`,`progress`,`completed`,`progress_steps`,`hidden`,`ncpu`,`uri`,`remarks`) ' +
-                    "VALUES (6, now(), now(), ?, ?, 'waiting', 0, 0, 1, 0, 1, '', '')",
-                    [projId, data.user]
-                ).then(function(jres){
-                    const jobId = jres.insertId;
-                    return dbpool.query(
+        // ── 2026-09-09: ATOMIC + SINGLE-ENGINE (cross-engine FK class) ────────
+        // Runs inside ONE transaction on ONE pooled connection. That buys two
+        // distinct fixes, and the second is the non-obvious one:
+        //
+        // (1) ATOMICITY. The `jobs` INSERT used to commit on its own. When the
+        //     `pattern_matchings` INSERT then failed, the job row survived as an
+        //     ORPHAN: the dispatcher claims it, the driver finds no
+        //     pattern_matchings row, logs "no pattern_matchings row for job N;
+        //     marking error" and the user sees a job that failed at progress 0/1
+        //     with EMPTY remarks — indistinguishable from a platform fault.
+        //
+        // (2) SINGLE-ENGINE READ-THEN-WRITE. Post-6.4 (DB_ENGINE=pg) the
+        //     pooled `dbpool.query()` routes eligible plain SELECTs to
+        //     PostgreSQL while INSERTs still go to MariaDB (legacy owns writes
+        //     until Phase 7). The guard SELECT below therefore validated the
+        //     playlist against PG while the INSERT enforced the FK on MariaDB.
+        //     Delta-sync propagates no deletes intra-day, so a playlist deleted
+        //     in MariaDB lingers on PG until the nightly full re-copy — the
+        //     guard PASSED on a row the write engine did not have, and the
+        //     INSERT died on ER_NO_REFERENCED_ROW_2 (fk_pattern_matchings_3).
+        //     MEASURED 2026-09-10: jobs 169766/169767/169768/169770/169778,
+        //     playlist 63834 present on PG, absent on MariaDB.
+        //     `queryWithConnHandler` issues `connection.query` DIRECTLY and so
+        //     BYPASSES the 6.4 read route ⇒ inside this transaction the guard
+        //     reads the SAME engine that enforces the constraint. Do not
+        //     "optimise" these reads back onto the pooled dbpool.query().
+        return dbpool.performTransaction(function(tx){
+            // `promisedQuery` is the connection-scoped helper installed by
+            // dbpool.enable_query_debugging(); it resolves to the ROWS/result
+            // object directly (it applies `.get(0)` internally).
+            const txq = tx.connection.promisedQuery.bind(tx.connection);
+            let projId, speciesId, songtypeId, jobId;
+            return txq('SELECT project_id FROM playlists WHERE playlist_id = ?', [data.playlist])
+                .then(function(rows){
+                    if (!rows.length) { throw new Error('Playlist not found'); }
+                    projId = rows[0].project_id;
+                    return txq('SELECT species_id, songtype_id FROM templates WHERE template_id = ?', [data.template]);
+                }).then(function(trows){
+                    if (!trows.length) { throw new Error('Template not found'); }
+                    speciesId = trows[0].species_id;
+                    songtypeId = trows[0].songtype_id;
+                    return txq(
+                        'INSERT INTO `jobs` (`job_type_id`,`date_created`,`last_update`,`project_id`,`user_id`,`state`,`progress`,`completed`,`progress_steps`,`hidden`,`ncpu`,`uri`,`remarks`) ' +
+                        "VALUES (6, now(), now(), ?, ?, 'waiting', 0, 0, 1, 0, 1, '', '')",
+                        [projId, data.user]);
+                }).then(function(jres){
+                    jobId = jres.insertId;
+                    return txq(
                         'INSERT INTO `pattern_matchings` (`name`,`project_id`,`job_id`,`timestamp`,`species_id`,`songtype_id`,`parameters`,`playlist_id`,`template_id`,`citizen_scientist`) ' +
                         'VALUES (?, ?, ?, now(), ?, ?, ?, ?, ?, ?)',
-                        [data.name, projId, jobId, speciesId, songtypeId, JSON.stringify(params), data.playlist, data.template, citizen]
-                    ).then(function(pres){
-                        return { job_id: jobId, pattern_matching_id: pres.insertId, dispatch: 'jobqueue' };
-                    });
+                        [data.name, projId, jobId, speciesId, songtypeId, JSON.stringify(params), data.playlist, data.template, citizen]);
+                }).then(function(pres){
+                    return { job_id: jobId, pattern_matching_id: pres.insertId, dispatch: 'jobqueue' };
                 });
-            });
         });
     },
 };
