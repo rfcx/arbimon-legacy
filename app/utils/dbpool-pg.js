@@ -875,6 +875,38 @@ var COLLATION_ENUM = {
     'soundscapes.threshold_type': 1,
 };
 
+// ---- EXACT-MATCH EXEMPTIONS (2026-09-10, P7 debt #9 gate 1) ----------------
+// Columns that are MACHINE-KEYED (the app writes them, the app reads them back
+// verbatim) AND indexed by a plain btree on a giant table. Folding one turns an
+// indexed point lookup into a whole-table scan:
+//
+//   recordings.uri  306 M rows, `uri` btree. The 6.4 read flip routed
+//   recordingInfoGivenUri (recordings.js) — one `WHERE r.uri = ?` per CSV line of
+//   GET /models/:id/validation-list — and the fold rewrote it to
+//   `translate(lower(r.uri),..) = translate(lower(?),..)` => Parallel Seq Scan,
+//   cost 19.9 M, cancelled by the 8 s statement_timeout on EVERY call: 340 of
+//   the 480 pg_route_timeout events in 48 h (09-08..09-10), each page 10 x 8 s
+//   = 80 s before failing open to MariaDB. Unfolded: Index Scan, 0.16 ms.
+//   The literal comes from the DB itself (the PM training job copies r.uri into
+//   the validation CSV), so exact match is the correct semantics; a literal-only
+//   fold was REJECTED because 2020-era stream ids carry uppercase
+//   (`2020/11/18/co8K2020066/...`, thousands per 100k ids) and would be missed.
+//   Accepted divergence: MariaDB (utf8mb3_general_ci) would match a case-
+//   VARIANT literal; PG will not. No app path constructs one (the three SQL
+//   sites on `uri` are recordingInfoGivenUri, exists() [site-bounded, 0 calls
+//   in 14 d], archiveBySiteAndUris [UPDATE, site-bounded]).
+//   Alternative that preserves ci semantics: an expression index on the fold
+//   (~28 GB, hours of CIC WAL on the leader) — deliberately not taken.
+//
+// The 2026-07-27 collation finding foresaw this: "if a high-volume `=`
+// predicate is ever routed, re-check the plan" (runbooks/mysql2pg-p6-
+// collation-case-sensitivity-2026-07-27.md, Index note). Every fold pass
+// (qualified, bare, IN-list, ORDER BY) consults this set via collationClass /
+// resolveBareColumn, so an exempt column is never folded anywhere.
+var COLLATION_EXACT = {
+    'recordings.uri': 1,
+};
+
 // The two folds. Applied to BOTH sides of a predicate.
 var FOLD_GEN = "translate(lower(%s),'áàâãäåéèêëíìîïóòôõöúùûüçñýÿ','aaaaaaeeeeiiiiooooouuuucny.')";
 var FOLD_SV  = "translate(lower(%s),'áàâãéèêëíìîïóòôõúùûçñýÿ','aaaaeeeeiiiioooouuucny.')";
@@ -917,6 +949,9 @@ function collationClass(operand, amap) {
     if (!COLLATION_KNOWN[key]) { return null; }
     // PG native enum: folding is a hard type error (measured). Skip.
     if (COLLATION_ENUM[key]) { return null; }
+    // Machine-keyed + btree-indexed on a giant table: exact match (see
+    // COLLATION_EXACT). Skip.
+    if (COLLATION_EXACT[key]) { return null; }
     return COLLATION_SV[key] ? 'sv' : 'gen';
 }
 
@@ -1357,6 +1392,7 @@ function resolveBareColumn(col, amap) {
         var key = t + '.' + name;
         if (!COLLATION_KNOWN[key]) { continue; }
         if (COLLATION_ENUM[key]) { return null; }   // enum in scope -> never fold
+        if (COLLATION_EXACT[key]) { return null; }  // exact-match column in scope -> never fold
         var c = COLLATION_SV[key] ? 'sv' : 'gen';
         hits++;
         if (cls === null) { cls = c; }
