@@ -150,7 +150,11 @@ var Users = {
             if(i !== 'user_id') {
                 values.push(util.format('%s = %s',
                     dbpool.escapeId(i),
-                    dbpool.escape(userData[i])
+                    // TYPE PARITY (P7, 2026-09-11): see sites.js — mysql.escape
+                    // renders a JS boolean as `true`/`false`, which PG refuses
+                    // for smallint/tinyint columns (42804).
+                    dbpool.escape(pgshadow.isPg && typeof userData[i] === 'boolean'
+                                  ? (userData[i] ? 1 : 0) : userData[i])
                 ));
             }
         }

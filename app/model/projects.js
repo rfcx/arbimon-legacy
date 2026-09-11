@@ -482,11 +482,20 @@ var Projects = {
         let result;
         if (pgshadow.isPg && !process.env.DB_PG_DISABLE_PORT_PROJECTS) {
             const cols = Object.keys(project);
-            const placeholders = cols.map(() => '?').join(', ');
+            // TYPE PARITY (P7, measured 2026-09-11): the mysql driver coerces a
+            // JS boolean to 1/0 for a tinyint column; node-pg sends a real
+            // boolean and PG refuses it for smallint (42804 'column is of type
+            // smallint but expression is of type boolean'). arbimon's tinyint
+            // flags (is_private, public_templates_enabled, ...) are smallint on
+            // PG, so booleans must be narrowed here, at the port.
+            const vals = cols.map(c => {
+                const v = project[c];
+                return (typeof v === 'boolean') ? (v ? 1 : 0) : v;
+            });
             result = await queryAsync(
                 'INSERT INTO projects (' + cols.map(c => dbpool.escapeId(c)).join(', ') + ')\n' +
-                'VALUES (' + placeholders + ')',
-                cols.map(c => project[c])
+                'VALUES (' + cols.map(() => '?').join(', ') + ')',
+                vals
             );
         } else {
             result = await queryAsync('INSERT INTO projects SET ?', project);
@@ -547,7 +556,11 @@ var Projects = {
                           'SET ?\n'+
                           'WHERE project_id = ?',
                     pgshadow.isPg
-                        ? Object.keys(projectInfo).map(k => projectInfo[k]).concat([projectId])
+                        // same boolean -> smallint narrowing as the create port
+                        ? Object.keys(projectInfo)
+                              .map(k => typeof projectInfo[k] === 'boolean'
+                                        ? (projectInfo[k] ? 1 : 0) : projectInfo[k])
+                              .concat([projectId])
                         : [projectInfo, projectId]
                 )
             ]);

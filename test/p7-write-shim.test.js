@@ -38,13 +38,17 @@ var ports = {
         ['PG branch for INSERT INTO projects (port #18) incl. the negative-control flag', /pgshadow\.isPg\s*&&\s*!process\.env\.DB_PG_DISABLE_PORT_PROJECTS/],
         ['explicit (cols) VALUES for user_project_role', /INSERT INTO user_project_role \(user_id, project_id, role_id\) VALUES \(\?, \?, \?\)/],
         ['alias-qualified SET ported (cached_metrics)', /SET expires_at = '\$\{opts\.expiresAt\}'/],
-        ['multi-table UPDATE ported to UPDATE ... FROM', /UPDATE recording_validations rv\s*\n\s*SET project_id = \$\{newProjectId\}\s*\n\s*FROM recordings r/]
+        ['multi-table UPDATE ported to UPDATE ... FROM', /UPDATE recording_validations rv\s*\n\s*SET project_id = \$\{newProjectId\}\s*\n\s*FROM recordings r/],
+        ['boolean -> smallint narrowing on the create port (42804 guard)', /typeof v === 'boolean'\) \? \(v \? 1 : 0\) : v/],
+        ['boolean -> smallint narrowing on the update port', /typeof projectInfo\[k\] === 'boolean'/]
     ],
     'app/model/sites.js': [
-        ['SET %s list ported to (cols) VALUES (port #19)', /'INSERT INTO sites \\n'\s*\+\s*\n?\s*'\(' \+ pairs\.map/]
+        ['SET %s list ported to (cols) VALUES (port #19)', /'INSERT INTO sites \\n'\s*\+\s*\n?\s*'\(' \+ pairs\.map/],
+        ['boolean -> smallint narrowing at the escape site (42804 guard)', /typeof site\[j\] === 'boolean'/]
     ],
     'app/model/users.js': [
-        ['SET %s list ported to (cols) VALUES (port #20)', /'INSERT INTO users \\n'\s*\+\s*\n?\s*'\(' \+ pairs\.map/]
+        ['SET %s list ported to (cols) VALUES (port #20)', /'INSERT INTO users \\n'\s*\+\s*\n?\s*'\(' \+ pairs\.map/],
+        ['boolean -> smallint narrowing at the escape site', /typeof userData\[i\] === 'boolean'/]
     ],
     'app/model/templates.js': [
         ['FROM DUAL dropped in the PG branch (port #21)', /NOW\(\), \?, \?\\n"\s*\+\s*\n\s*"WHERE NOT EXISTS/],

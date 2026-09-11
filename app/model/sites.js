@@ -150,7 +150,13 @@ var Sites = {
             if(j !== 'id') {
                 values.push(util.format('%s = %s',
                     dbpool.escapeId(j),
-                    dbpool.escape(site[j])
+                    // TYPE PARITY (P7, measured 2026-09-11): mysql.escape(true)
+                    // yields the literal `true`, which PG refuses for a
+                    // smallint/tinyint column (42804). The mysql driver coerces
+                    // booleans to 1/0 for tinyint; narrow here so the PG branch
+                    // below splices an integer literal, not a boolean.
+                    dbpool.escape(pgshadow.isPg && typeof site[j] === 'boolean'
+                                  ? (site[j] ? 1 : 0) : site[j])
                 ));
             }
         }
