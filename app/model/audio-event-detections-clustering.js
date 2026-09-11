@@ -29,9 +29,20 @@ let AudioEventDetectionsClustering = {
 
         if (!options.playlist && options.dataExtended) {
             select.push("P.playlist_id, P.`name` as `playlist_name`");
-            select.push("PR.first_playlist_recording, PR.playlist_id as playlist_test");
+            // Correlated scalar subquery on the project's own playlists. The
+            // previous form was a derived table `LEFT JOIN (SELECT playlist_id,
+            // MIN(recording_id) ... FROM playlist_recordings GROUP BY playlist_id)`
+            // -- a full aggregate over the whole playlist_recordings table
+            // (~480 M rows) on every jobs-list load, joined to the project's
+            // handful of playlists afterwards. On PG it exceeds the route timeout
+            // (measured 2026-09-11: cancelled at 20 s vs ~1 ms for this form,
+            // which is an index-only MIN on playlist_recordings_pkey). Identical
+            // SQL on MariaDB and PG. `playlist_test` is kept for API-shape
+            // compatibility (no reader in app/ or assets/); it was PR.playlist_id
+            // from the LEFT JOIN, i.e. NULL only when the playlist had no
+            // recordings -- now always P.playlist_id.
+            select.push("(SELECT MIN(PR.recording_id) FROM playlist_recordings PR WHERE PR.playlist_id = P.playlist_id) as first_playlist_recording, P.playlist_id as playlist_test");
             tables.push("JOIN playlists P ON JP.playlist_id = P.playlist_id");
-            tables.push("LEFT JOIN (SELECT playlist_id, MIN(recording_id) as first_playlist_recording FROM playlist_recordings GROUP BY playlist_id) PR ON P.playlist_id = PR.playlist_id");
         }
 
         if (options.user) {
