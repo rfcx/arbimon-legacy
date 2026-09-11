@@ -44,7 +44,8 @@ var ports = {
     ],
     'app/model/sites.js': [
         ['SET %s list ported to (cols) VALUES (port #19)', /'INSERT INTO sites \\n'\s*\+\s*\n?\s*'\(' \+ pairs\.map/],
-        ['boolean -> smallint narrowing at the escape site (42804 guard)', /typeof site\[j\] === 'boolean'/]
+        ['boolean -> smallint narrowing at the escape site (42804 guard)', /typeof site\[j\] === 'boolean'/],
+        ['OPQ-16(a): timezone is SUPPLIED by the joi schema (23502 guard)', /timezone: joi\.string\(\)\.optional\(\)\.default\('UTC'\)/]
     ],
     'app/model/users.js': [
         ['SET %s list ported to (cols) VALUES (port #20)', /'INSERT INTO users \\n'\s*\+\s*\n?\s*'\(' \+ pairs\.map/],
