@@ -87,6 +87,7 @@ var ports = {
     ],
     'app/utils/dbpool-pg.js': [
         ['WRITE_IDENTITY_PK map present', /var WRITE_IDENTITY_PK = \{/],
+        ['map covers the worker/fixture identity tables (insertId-0 gap, 2026-09-11)', /models: 'model_id',[\s\S]{0,400}validation_set: 'validation_set_id'/],
         ['no-row INSERT throws PG_INSERT_NO_ROW', /ne\.code = 'PG_INSERT_NO_ROW'/],
         ['release rolls back + destroys a leaked transaction', /pg_write_tx_leak/],
         ['write dialect errors book into the dialect_error gate metric', /_counters\.dialect_error\+\+; _counters\.write_error\+\+/]
