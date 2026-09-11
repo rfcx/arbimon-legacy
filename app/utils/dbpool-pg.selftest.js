@@ -541,6 +541,40 @@ eq('nulls: NOT-NULL folded key -> fold only, no clause',
 eq('nulls: nullable + collation-folded key -> BOTH (fold then dir then clause)',
    /translate\(lower\(t\.uri\).*\) DESC NULLS LAST/.test(
      m.translate('SELECT t.uri FROM templates t ORDER BY t.uri DESC')), true);
+// ---- LIMIT-1 extreme subquery: two index dives instead of NULLS FIRST/LAST
+// (P7 debt #9, 2026-09-10 — hash ae28794138b7d016, the sites-list per-site
+// first/last; measured 346 ms -> 4.2 ms on an 8-site project, 8 s cancels on
+// giants). Semantics verified live on 5 sites incl. two zero-date sites: PG
+// old == PG new == MariaDB original.
+console.log('== extreme-subquery NULL placement -> two index dives (P7 debt #9) ==');
+var SL = "SELECT s.site_id AS site_id, (SELECT r.datetime FROM recordings r WHERE r.site_id = s.site_id AND r.archived_at IS NULL ORDER BY r.datetime ASC LIMIT 1) AS first_recording_at, (SELECT r.datetime FROM recordings r WHERE r.site_id = s.site_id AND r.archived_at IS NULL ORDER BY r.datetime DESC LIMIT 1) AS last_recording_at FROM sites s WHERE s.site_id IN (1,2)";
+var SLT = m.translate(SL);
+eq('extreme: sites-list shape emits NO NULLS FIRST/LAST', /NULLS (FIRST|LAST)/.test(SLT), false);
+eq('extreme: ASC form = EXISTS(k IS NULL) guard + IS NOT NULL dive',
+   /CASE WHEN EXISTS \(SELECT 1 FROM recordings r WHERE r\.site_id = s\.site_id AND r\.archived_at IS NULL AND r\.datetime IS NULL\) THEN NULL ELSE \(SELECT r\.datetime FROM recordings r WHERE r\.site_id = s\.site_id AND r\.archived_at IS NULL AND r\.datetime IS NOT NULL ORDER BY r\.datetime ASC LIMIT 1\) END\) AS first_recording_at/.test(SLT), true);
+eq('extreme: DESC form = single IS NOT NULL dive, no EXISTS',
+   /\(SELECT r\.datetime FROM recordings r WHERE r\.site_id = s\.site_id AND r\.archived_at IS NULL AND r\.datetime IS NOT NULL ORDER BY r\.datetime DESC LIMIT 1\) AS last_recording_at/.test(SLT), true);
+eq('extreme: the date_range fast path (b83db7de) rewrites too',
+   (m.translate("SELECT MIN(z.f) AS min_date FROM ( SELECT (SELECT r.datetime FROM recordings r WHERE r.site_id = s.site_id AND r.archived_at IS NULL ORDER BY r.datetime ASC LIMIT 1) AS f FROM sites s WHERE s.site_id IN (1) ) z").match(/IS NOT NULL ORDER BY/g) || []).length, 1);
+// the EXACT live text (projects.js getProjectSites compute.rec_count, as the
+// leader log shows it) -- its hash must stay ae28794138b7d016 so the census
+// keeps discriminating; the translated form must be dive-shaped.
+var SL_LIVE = "SELECT s.site_id AS site_id,        (SELECT COUNT(*) FROM recordings r           WHERE r.site_id = s.site_id             AND r.archived_at IS NULL) AS rec_count,        (SELECT r.datetime FROM recordings r           WHERE r.site_id = s.site_id             AND r.archived_at IS NULL           ORDER BY r.datetime ASC LIMIT 1) AS first_recording_at,        (SELECT r.datetime FROM recordings r           WHERE r.site_id = s.site_id             AND r.archived_at IS NULL           ORDER BY r.datetime DESC LIMIT 1) AS last_recording_at FROM sites s WHERE s.site_id IN (88151, 88152)";
+eq('extreme: LIVE sites-list text keeps hash ae28794138b7d016', m.templateHash(SL_LIVE), 'ae28794138b7d016');
+eq('extreme: LIVE sites-list text translates to 2 IS NOT NULL dives + 1 EXISTS and 0 NULLS clauses',
+   [(m.translate(SL_LIVE).match(/IS NOT NULL ORDER BY/g) || []).length, (m.translate(SL_LIVE).match(/EXISTS/g) || []).length, (m.translate(SL_LIVE).match(/NULLS (FIRST|LAST)/g) || []).length].join(','), '2,1,0');
+// fail-safe: anything outside the exact shape keeps the placement clause
+eq('extreme: LIMIT 2 -> untouched (still NULLS FIRST)',
+   /NULLS FIRST LIMIT 2/.test(m.translate('SELECT (SELECT r.datetime FROM recordings r WHERE r.site_id = 5 ORDER BY r.datetime ASC LIMIT 2) AS x')), true);
+eq('extreme: selected column != sort key -> untouched',
+   /NULLS FIRST/.test(m.translate('SELECT (SELECT r.recording_id FROM recordings r WHERE r.site_id = 5 ORDER BY r.datetime ASC LIMIT 1) AS x')), true);
+eq('extreme: top-level (not a parenthesised scalar subquery) -> untouched',
+   /NULLS FIRST LIMIT 1$/.test(m.translate('SELECT r.datetime FROM recordings r WHERE r.site_id = 5 ORDER BY r.datetime ASC LIMIT 1')), true);
+eq('extreme: NOT-NULL sort key never had a clause -> untouched',
+   /IS NOT NULL/.test(m.translate('SELECT (SELECT t.tag FROM tags t WHERE t.tag_id = 5 ORDER BY t.tag ASC LIMIT 1) AS x')), false);
+eq('extreme: nested parens in WHERE -> untouched (fail-safe)',
+   /NULLS FIRST/.test(m.translate('SELECT (SELECT r.datetime FROM recordings r WHERE r.site_id IN (1,2) ORDER BY r.datetime ASC LIMIT 1) AS x')), true);
+
 eq('nulls: G1 DISTINCT -> untouched (no clause)',
    /NULLS/.test(m.translate('SELECT DISTINCT r.datetime FROM recordings r ORDER BY r.datetime DESC')), false);
 eq('nulls: G2 trailing set-op ORDER BY -> untouched',

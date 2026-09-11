@@ -1516,8 +1516,71 @@ function translate(mysqlSql) {
     s = translateBareCollation(s);
     s = translateInCollation(s);
     s = translateOrderByCollation(s);
+    s = translateExtremeSubqueryNulls(s);
     s = restoreLiteralsPg(s, store);
     return s;
+}
+
+// ---- NULL-placement on a LIMIT-1 extreme subquery (P7 debt #9, 2026-09-10) --
+// THE PROBLEM, measured on the PG leader under the 09-10 PM wave: the
+// sites-list per-site first/last subqueries (projects.js getProjectSites
+// compute.rec_count; the recordings.js date_range fast path is the same
+// shape) are
+//     (SELECT r.datetime FROM recordings r WHERE r.site_id = s.site_id
+//        AND r.archived_at IS NULL ORDER BY r.datetime ASC LIMIT 1)
+// which the app wrote as ONE index dive on (site_id, datetime) -- 221.7 s ->
+// 0.5 s on MariaDB (projects.js:257). The NULL-placement leg above then
+// appends `NULLS FIRST` (recordings.datetime is nullable on PG: 598,970 W9
+// zero-date rows across 245 sites), and PG cannot serve `ORDER BY datetime
+// NULLS FIRST LIMIT 1` from a btree whose order is NULLS LAST: it reads every
+// row of the site through recordings__site_id and top-N-heapsorts them.
+// Measured back to back on the leader, one 8-site project: 346 ms / 89 ms
+// with the clause, 4.2 ms without (4,484 buffer reads per site vs 34). It
+// scales with the site's row count, so the 950-site / 350k-recording
+// projects cancel at the 8 s route timeout -- hash ae28794138b7d016, 71
+// cancels in 3 days, 14 across the 09-10 wave, and at P7 a user-facing
+// error with no fail-open.
+//
+// THE FIX keeps MySQL's semantics EXACTLY and gives PG two index dives.
+// For `ORDER BY k ASC NULLS FIRST LIMIT 1` selecting k itself, the MySQL
+// answer is: a NULL if any qualifying row has k IS NULL, else MIN(k). For
+// `DESC NULLS LAST LIMIT 1`: MAX(k) over non-NULL rows, else NULL. Both are
+//   CASE WHEN EXISTS(<same WHERE> AND k IS NULL) THEN NULL
+//        ELSE (<same subquery> AND k IS NOT NULL ORDER BY k ASC LIMIT 1) END
+// (the DESC form needs no EXISTS: a NULL is only the answer when NO non-NULL
+// row exists, which the second dive returns as NULL by itself). The added
+// `k IS NULL` / `k IS NOT NULL` predicates are btree-indexable on
+// (site_id, datetime) -- planned live: InitPlan 1 index dive cost 28,
+// InitPlan 2 cost 1.22.
+//
+// SCOPE, deliberately narrow (fail-safe like every other pass here): only a
+// PARENTHESISED scalar subquery of exactly the shape
+//     (SELECT <a>.<col> FROM <tbl> <a> WHERE <preds> ORDER BY <a>.<col>
+//        [ASC|DESC] NULLS FIRST|LAST LIMIT 1)
+// with a single selected expression equal to the sort key, no GROUP BY /
+// DISTINCT / JOIN / nested parentheses inside the WHERE, and a bare LIMIT 1.
+// Anything else is left exactly as the placement leg emitted it.
+var _EXTREME_SUBQ_RE = new RegExp(
+    '\\(\\s*SELECT\\s+([A-Za-z_]\\w*\\.[A-Za-z_]\\w*)\\s+FROM\\s+([A-Za-z_]\\w*)\\s+(?:AS\\s+)?([A-Za-z_]\\w*)\\s+' +
+    'WHERE\\s+([^()]+?)\\s+ORDER\\s+BY\\s+([A-Za-z_]\\w*\\.[A-Za-z_]\\w*)(\\s+(?:ASC|DESC))?\\s+NULLS\\s+(FIRST|LAST)\\s+LIMIT\\s+1\\s*\\)',
+    'gi');
+
+function translateExtremeSubqueryNulls(sql) {
+    return sql.replace(_EXTREME_SUBQ_RE, function (whole, selCol, tbl, alias, preds, sortKey, dir, placement) {
+        if (selCol.toLowerCase() !== sortKey.toLowerCase()) { return whole; }
+        if (sortKey.split('.')[0].toLowerCase() !== alias.toLowerCase()) { return whole; }
+        if (/\b(GROUP|DISTINCT|JOIN|UNION|HAVING)\b/i.test(preds)) { return whole; }
+        var isDesc = /\bDESC\b/i.test(dir || '');
+        var pl = placement.toUpperCase();
+        // Only the MySQL-shaped pairs the placement leg emits: ASC+FIRST, DESC+LAST.
+        if ((isDesc && pl !== 'LAST') || (!isDesc && pl !== 'FIRST')) { return whole; }
+        var from = 'FROM ' + tbl + ' ' + alias + ' WHERE ' + preds;
+        var nonNull = '(SELECT ' + selCol + ' ' + from + ' AND ' + sortKey + ' IS NOT NULL ORDER BY ' +
+                      sortKey + (isDesc ? ' DESC' : ' ASC') + ' LIMIT 1)';
+        if (isDesc) { return nonNull; }
+        return '(CASE WHEN EXISTS (SELECT 1 ' + from + ' AND ' + sortKey + ' IS NULL) THEN NULL ELSE ' +
+               nonNull + ' END)';
+    });
 }
 
 // ------------------------------------------------------------- normalizer
@@ -2280,6 +2343,7 @@ module.exports = {
     pgReadQuery: pgReadQuery,
     // dbpool.js hook (shadow):
     shadowAfterRead: shadowAfterRead,
+    translateExtremeSubqueryNulls: translateExtremeSubqueryNulls,
     // exported for the self-test + potential Phase-6.4 pg mode:
     classify: classify,
     translate: translate,
