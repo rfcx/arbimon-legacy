@@ -10,6 +10,7 @@ var rp = util.promisify(request);
 var tzlookup = require("tz-lookup");
 var s3;
 var dbpool = require('../utils/dbpool');
+var pgshadow = require('../utils/dbpool-pg'); // P7 write ports (INERT unless DB_ENGINE=pg)
 var queryHandler = dbpool.queryHandler;
 const moment = require('moment');
 let APIError = require('../utils/apierror');
@@ -154,10 +155,24 @@ var Sites = {
             }
         }
 
-        var q = 'INSERT INTO sites \n'+
+        var q;
+        if (pgshadow.isPg) {
+            // P7 port (#19): `INSERT ... SET col = val` is MySQL-only syntax
+            // (42601 on PG) — build an explicit (cols) VALUES list from the
+            // same escaped pairs. The adapter's RETURNING shim maps
+            // site_id -> insertId (sites is a mapped identity table).
+            var pairs = values.map(function (pair) {
+                var eqAt = pair.indexOf(' = ');
+                return [pair.slice(0, eqAt), pair.slice(eqAt + 3)];
+            });
+            q = 'INSERT INTO sites \n'+
+                '(' + pairs.map(function (p) { return p[0]; }).join(', ') + ')\n'+
+                'VALUES (' + pairs.map(function (p) { return p[1]; }).join(', ') + ')';
+        } else {
+            q = 'INSERT INTO sites \n'+
                 'SET %s';
-
-        q = util.format(q, values.join(", "));
+            q = util.format(q, values.join(", "));
+        }
         db ? db.query(q, callback) : queryHandler(q, callback);
     },
 

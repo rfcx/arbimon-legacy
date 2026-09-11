@@ -1,6 +1,7 @@
 "use strict";
 const q = require('q');
 const dbpool = require('../utils/dbpool');
+const pgshadow = require('../utils/dbpool-pg'); // P7 write ports (INERT unless DB_ENGINE=pg)
 const APIError = require('../utils/apierror');
 const projects = require('./projects');
 
@@ -226,10 +227,26 @@ tags.resourceDefs.recording = {
         var insertedAt = null;
 
         var tagIdPromise = tag.id ? q(tag.id) : q.ninvoke(dbpool, 'queryHandler',
-            "INSERT IGNORE INTO tags(tag) VALUES (?)", [tag.text]
+            // P7 port (#22): INSERT IGNORE has no PG spelling (42601).
+            // `tags.tag` is NON-UNIQUE on both engines (verified live, gate
+            // 4a), so the IGNORE never actually suppressed anything —
+            // ON CONFLICT DO NOTHING is the exact-equivalent spelling, and
+            // RETURNING tag_id feeds insertId through the adapter.
+            pgshadow.isPg
+                ? "INSERT INTO tags(tag) VALUES (?) ON CONFLICT DO NOTHING RETURNING tag_id"
+                : "INSERT IGNORE INTO tags(tag) VALUES (?)", [tag.text]
         ).then(function(result){
             return result[0].insertId;
-        }).catch(function(){
+        }).catch(function(err){
+            // NARROWED CATCH (OPQ-4 ruling, port-ordering constraint): only
+            // the adapter's DEFINED no-row outcome (PG_INSERT_NO_ROW, i.e.
+            // ON CONFLICT suppressed the insert) falls through to the SELECT
+            // fallback. Anything else — above all a dialect error like 42601
+            // — must surface loudly, never be swallowed into a wrong/missing
+            // tag_id. On MariaDB this branch is unreachable (IGNORE never
+            // errors on dup and `tag` is non-unique), so behaviour there is
+            // unchanged on the happy path and strictly louder on failure.
+            if (!err || err.code !== 'PG_INSERT_NO_ROW') { throw err; }
             return q.ninvoke(dbpool, 'queryHandler',
                 "SELECT tag_id FROM tags WHERE tag = ?", [tag.text]
             ).get(0).get(0);
@@ -275,13 +292,18 @@ tags.resourceDefs.recording = {
                 // timestamp. The SPA refetches after a successful PUT, so the
                 // echo is transient.)
                 //
-                // Dialect note: this is MariaDB-only syntax, exactly like the
-                // `INSERT IGNORE INTO tags` above in this same function. The
-                // write path stays on MariaDB until mysql2pg Phase 7; P7 must
-                // port this whole function (PG equivalent: ON CONFLICT
-                // (recording_id, tag_id, user_id) DO NOTHING + re-select, or
-                // sqlutil.isDuplicateKeyError's 23505 branch).
-                "ON DUPLICATE KEY UPDATE recording_tag_id = LAST_INSERT_ID(recording_tag_id)", [
+                // P7 port (#23), kept INLINE so the idempotence shape
+                // guards (test/tags-addto-duplicate-idempotent.test.js)
+                // still see the MariaDB clause verbatim: `LAST_INSERT_ID(x)`
+                // has no PG expression (42601), so the PG branch uses ON
+                // CONFLICT on the (recording_id, tag_id, user_id) unique
+                // index (verified present on BOTH engines, gate 4a), with a
+                // deliberate no-op self-assignment (first-write-wins on the
+                // box coordinates) + RETURNING so the duplicate branch
+                // reports the EXISTING row's pk exactly like LAST_INSERT_ID.
+                (pgshadow.isPg
+                    ? "ON CONFLICT (recording_id, tag_id, user_id) DO UPDATE SET recording_tag_id = recording_tags.recording_tag_id RETURNING recording_tag_id"
+                    : "ON DUPLICATE KEY UPDATE recording_tag_id = LAST_INSERT_ID(recording_tag_id)"), [
                     recording.recording_id, recording.site_id, tagId, userId,
                     tag.t0 || null, tag.f0 || null,
                     tag.t1 || null, tag.f1 || null

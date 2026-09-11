@@ -2,6 +2,8 @@ var q = require('q');
 var joi = require('joi');
 var projects = require('./projects');
 var dbpool = require('../utils/dbpool');
+var sqlutil = require('../utils/sqlutil');
+var pgshadow = require('../utils/dbpool-pg'); // P7 write ports (INERT unless DB_ENGINE=pg)
 var APIError = require('../utils/apierror');
 
 /** Soundscape composition model.
@@ -107,7 +109,9 @@ var SoundscapeComposition = {
                     "VALUES (?, ?, ?)",[
                         project, scClass.id, 0
                     ]).catch(function(err){
-                        if(err.code == 'ER_DUP_ENTRY'){
+                        // P7 dup-key port: PG raises SQLSTATE 23505, not
+                        // ER_DUP_ENTRY — dual-dialect check via sqlutil.
+                        if(sqlutil.isDuplicateKeyError(err)){
                             throw new APIError("Soundscape composition class already in project.");
                         } else {
                             throw err;
@@ -241,6 +245,16 @@ var SoundscapeComposition = {
                         scclassId
                     ]) :
                     dbpool.query(
+                        // P7 port: `ON DUPLICATE KEY UPDATE ... VALUES(x)` is
+                        // MariaDB-only (42601 on PG). ON CONFLICT targets the
+                        // (recordingid, scclassid) pkey (columns are LOWERCASE
+                        // on PG — write them BARE so they fold; quoting would
+                        // miss) and EXCLUDED is PG's VALUES() spelling.
+                        pgshadow.isPg ?
+                        "INSERT INTO recording_soundscape_composition_annotations(recordingId, scclassId, present)\n" +
+                        " VALUES (?, ?, ?) \n" +
+                        " ON CONFLICT (recordingId, scclassId) DO UPDATE SET present = EXCLUDED.present"
+                        :
                         "INSERT INTO recording_soundscape_composition_annotations(recordingId, scclassId, present)\n" +
                         " VALUES (?, ?, ?) \n" +
                         " ON DUPLICATE KEY UPDATE present = VALUES(present)", [
