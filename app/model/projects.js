@@ -1286,8 +1286,8 @@ var Projects = {
                 "SELECT m.model_id, \n"+
                 "   CONCAT(UCASE(LEFT(m.name, 1)), \n"+
                 "   SUBSTRING(m.name, 2)) as mname, \n"+
-                "   m.project_id, \n"+
                 "   m.uri, \n"+
+                "   m.project_id, \n"+
                 "   UNIX_TIMESTAMP( m.`date_created` )*1000 as date, \n"+
                 "   m.date_created, \n"+
                 "   CONCAT( \n"+
