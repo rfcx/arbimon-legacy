@@ -155,8 +155,8 @@ var TrainingSets = {
             var cb = Array.prototype.pop.call(arguments);
             scope.in_transaction = true;
             scope.connection.query(
-                "INSERT INTO training_sets (project_id, name, date_created, training_set_type_id) \n" +
-                "VALUES ("+dbpool.escape(data.project_id)+", "+dbpool.escape(data.name)+", NOW(), "+ dbpool.escape(typedef.id)+")",
+                "INSERT INTO training_sets (project_id, name, date_created, training_set_type_id, removed) \n" +
+                "VALUES ("+dbpool.escape(data.project_id)+", "+dbpool.escape(data.name)+", NOW(), "+ dbpool.escape(typedef.id)+", 0)",
             cb);
         });
         tasks.push(function get_insert_id(result){

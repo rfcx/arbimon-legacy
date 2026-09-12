@@ -116,6 +116,18 @@ var dbpool = {
     },
 
     getConnection: function(callback){
+        // Phase 7 write flip (gate 4c / OPQ-4): in `DB_ENGINE=pg` mode the
+        // conn-scoped surface — writes, transactions, direct-conn reads —
+        // routes to PG through the adapter (query/promisedQuery/
+        // beginTransaction/commit/rollback/release, translated, with the
+        // RETURNING shim for insertId). INERT in mysql/shadow mode.
+        if (pgshadow.isPg) {
+            return pgshadow.getWriteConnection(callback);
+        }
+        return dbpool.getMysqlConnection(callback);
+    },
+
+    getMysqlConnection: function(callback){
         return q.ninvoke(dbpool.getPool(), 'getConnection').then(function (connection){
             // Log it here since we cannot using `connection` listener
             // console.log('MySQL pool connection %d is set', connection.threadId);
@@ -204,7 +216,11 @@ var dbpool = {
                 } catch (e) { pgFinal = null; }
                 if (pgFinal !== null) {
                     var mysqlFallback = function () {
-                        dbpool.getConnection(function (err, connection) {
+                        // Explicitly the MARIADB connection — getConnection()
+                        // itself routes to PG in pg mode (P7 write flip), and
+                        // a read fallback that landed on PG again would be a
+                        // silent retry loop, not a fallback.
+                        dbpool.getMysqlConnection(function (err, connection) {
                             if (err) { return callback(err); }
                             dbpool.queryWithConnHandler(connection, query, options, true, callback);
                         });

@@ -61,6 +61,16 @@ describe('tags.addTo — duplicate-key idempotence', function() {
         expect(q.clean).to.contain('LAST_INSERT_ID(recording_tag_id)');
     });
 
+    it('carries the PG port branch inline (P7 gate 4c port #23)', function() {
+        // The MariaDB clause above stays verbatim for the pre-flip engine;
+        // the PG branch must deliver the SAME contract — the duplicate path
+        // reports the EXISTING row's pk — via ON CONFLICT + no-op self-
+        // assignment + RETURNING.
+        var q = addToInsert();
+        expect(q.clean).to.contain('pgshadow.isPg');
+        expect(q.clean).to.contain('ON CONFLICT (recording_id, tag_id, user_id) DO UPDATE SET recording_tag_id = recording_tags.recording_tag_id RETURNING recording_tag_id');
+    });
+
     it('the duplicate branch is a NO-OP: it overwrites nothing (first-write-wins)', function() {
         var q = addToInsert();
         var upd = q.clean.slice(q.clean.indexOf('ON DUPLICATE KEY UPDATE'));

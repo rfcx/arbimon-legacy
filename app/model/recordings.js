@@ -42,6 +42,7 @@ const prewarmDeps = {
     specWidthForDuration: (d) => Recordings.specWidthForDuration(d)
 };
 var dbpool       = require('../utils/dbpool');
+const pgshadow   = require('../utils/dbpool-pg'); // P7 write ports (INERT unless DB_ENGINE=pg)
 var tyler        = require('../utils/tyler.js');
 
 function getExportPgWriter () {
@@ -1515,7 +1516,12 @@ var Recordings = {
                             queryHandler(
                                 "INSERT INTO recording_validations(recording_id, user_id, species_id, songtype_id, project_id, present_review) \n" +
                                 " VALUES (" + dbpool.escape([valobj.recording, valobj.user, valobj.species, valobj.songtype, valobj.project_id, 1]) + ") \n" +
-                                " ON DUPLICATE KEY UPDATE present_review = present_review + 1", function(err, data){
+                                // P7 port: ON DUPLICATE KEY -> ON CONFLICT on
+                                // the (recording_id, species_id, songtype_id)
+                                // unique index (present on both engines).
+                                (pgshadow.isPg
+                                    ? " ON CONFLICT (recording_id, species_id, songtype_id) DO UPDATE SET present_review = recording_validations.present_review + 1"
+                                    : " ON DUPLICATE KEY UPDATE present_review = present_review + 1"), function(err, data){
                                     if (err) { callback(err); return; }
                                     callback(null, valobj);
                                 });
@@ -1538,7 +1544,11 @@ var Recordings = {
                     queryHandler(
                         "INSERT INTO recording_validations(recording_id, user_id, species_id, songtype_id, present, project_id) \n" +
                         " VALUES (" + dbpool.escape([valobj.recording, valobj.user, valobj.species, valobj.songtype, valobj.val, valobj.project_id]) + ") \n" +
-                        " ON DUPLICATE KEY UPDATE present = VALUES(present)", function(err, data){
+                        // P7 port: ON DUPLICATE KEY -> ON CONFLICT; EXCLUDED
+                        // is PG's VALUES() spelling.
+                        (pgshadow.isPg
+                            ? " ON CONFLICT (recording_id, species_id, songtype_id) DO UPDATE SET present = EXCLUDED.present"
+                            : " ON DUPLICATE KEY UPDATE present = VALUES(present)"), function(err, data){
                         if (err) { callback(err); return; }
                         callback(null, valobj);
                     });
@@ -3092,7 +3102,9 @@ var Recordings = {
                 while (hasMore) {
                     let results = [];
                     for (let builder in summaryBuilders) {
-                        const baseSql = summaryBuilders[builder].getSQL().replace(';', '').replace('SELECT', 'SELECT /*+ MAX_EXECUTION_TIME(840000) */')
+                        // P7: the MAX_EXECUTION_TIME optimizer hint is
+                        // MariaDB-only syntax; PG gets the bare statement.
+                        const baseSql = summaryBuilders[builder].getSQL().replace(';', '').replace('SELECT', pgshadow.isPg ? 'SELECT' : 'SELECT /*+ MAX_EXECUTION_TIME(840000) */')
                         const sql = `${baseSql} LIMIT ${chunkSize} OFFSET ${chunkSize * index};`
                         const queryResult = await dbpool.query({ sql, typecast: sqlutil.parseUtcDatetime })
                         results.push(...queryResult)

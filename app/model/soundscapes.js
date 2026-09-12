@@ -8,6 +8,7 @@ let child_process = require('child_process');
 let scidx        = require('../utils/scidx');
 let sqlutil      = require('../utils/sqlutil');
 let dbpool       = require('../utils/dbpool');
+const pgshadow   = require('../utils/dbpool-pg'); // P7 write ports (INERT unless DB_ENGINE=pg)
 let arrays       = require('../utils/arrays');
 let config       = require('../config');
 let arrays_util  = require('../utils/arrays');
@@ -404,10 +405,17 @@ let Soundscapes = {
                     });
                 }).then(function (){
                     return db.promisedQuery(
-                        "INSERT IGNORE INTO playlist_recordings(playlist_id, recording_id)\n VALUES \n" +
+                        (pgshadow.isPg
+                            // P7 port: INSERT IGNORE is MariaDB-only (42601).
+                            // playlist_recordings' pkey is (playlist_id,
+                            // recording_id) on both engines — ON CONFLICT DO
+                            // NOTHING is the exact-equivalent suppression.
+                            ? "INSERT INTO playlist_recordings(playlist_id, recording_id)\n VALUES \n"
+                            : "INSERT IGNORE INTO playlist_recordings(playlist_id, recording_id)\n VALUES \n") +
                         recordings.map(function(){
                             return '   (?, ?)';
-                        }).join(", \n") + ";",
+                        }).join(", \n") +
+                        (pgshadow.isPg ? "\nON CONFLICT (playlist_id, recording_id) DO NOTHING;" : ";"),
                         recordings.reduce(function(_, r){
                             _.push(playlist_id, r);
                             return _;

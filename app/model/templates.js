@@ -10,6 +10,7 @@ const joi = require('joi');
 const q = require('q');
 const config = require('../config');
 const dbpool = require('../utils/dbpool');
+const pgshadow = require('../utils/dbpool-pg'); // P7 write ports (INERT unless DB_ENGINE=pg)
 const Recordings = require('./recordings');
 const { isArray } = require('lodash');
 const { arbimon2PublicUrl, arbimon2PublicUrlBase, roiSpectrogramUrl } = require('../utils/asset-url');
@@ -351,9 +352,28 @@ var Templates = {
         "WHERE NOT EXISTS (SELECT * FROM `templates`\n" +
         "WHERE `name`=? AND `project_id`=? AND `recording_id`=? AND `species_id`=? AND `deleted`=0 LIMIT 1)";
 
+        // P7 port (#21): `FROM DUAL` is MySQL-only (42P01 on PG — measured in
+        // the gate-4a re-attack); PG selects without a FROM clause. Explicit
+        // RETURNING template_id; when the NOT EXISTS guard suppresses the row
+        // the adapter throws PG_INSERT_NO_ROW (MySQL yielded insertId:0 and
+        // this code then wrote `templates/undefined.png`.../0.png — 0 live
+        // rows reference that, verified in gate 4a), which we convert into a
+        // defined error rather than an undefined id.
+        const queryPg =
+        "INSERT INTO templates (\n" +
+        "    `name`, `uri`,\n" +
+        "    `project_id`, `recording_id`,\n" +
+        "    `species_id`, `songtype_id`,\n" +
+        "    `x1`, `y1`, `x2`, `y2`,\n" +
+        "    `date_created`, `source_project_id`, `user_id`\n" +
+        ") SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?\n" +
+        "WHERE NOT EXISTS (SELECT 1 FROM `templates`\n" +
+        "WHERE `name`=? AND `project_id`=? AND `recording_id`=? AND `species_id`=? AND `deleted`=0 LIMIT 1)\n" +
+        "RETURNING template_id";
+
         return q.ninvoke(joi, 'validate', data, this.SCHEMA).then(
             () => dbpool.query(
-                    query, [
+                    pgshadow.isPg ? queryPg : query, [
                     data.name, null,
                     data.project, data.recording, data.species, data.songtype,
                     data.x1, data.y1, data.x2, data.y2, data.source_project_id ? data.source_project_id : null, data.user_id,
@@ -361,6 +381,11 @@ var Templates = {
                 ]
             ).then(result => {
                 data.id = result.insertId
+            }, err => {
+                if (err && err.code === 'PG_INSERT_NO_ROW') {
+                    throw new Error('Template already exists for this project/recording/species/songtype');
+                }
+                throw err;
             })
         ).then(
             () => this.createTemplateImage(data)

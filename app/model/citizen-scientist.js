@@ -6,6 +6,7 @@ var joi     = require('joi');
 var debug = require('debug')('arbimon2:model:citizen-scientist');
 var q = require('q');
 var dbpool = require('../utils/dbpool');
+var pgshadow = require('../utils/dbpool-pg'); // P7 write ports (INERT unless DB_ENGINE=pg)
 var sqlutil      = require('../utils/sqlutil');
 var PatternMatchings = require('./pattern_matchings');
 
@@ -209,8 +210,12 @@ var CitizenScientist = {
                 return "   ?, ?, ?, NOW()\n";
             }).join("), (\n") +
             ")\n" +
-            "ON DUPLICATE KEY UPDATE\n" +
-            "    validated = VALUES(validated)", rois.reduce(function(_, roi) {
+            // P7 port: ON CONFLICT targets the (pattern_matching_roi_id,
+            // user_id) unique index (present on both engines).
+            (pgshadow.isPg
+                ? "ON CONFLICT (pattern_matching_roi_id, user_id) DO UPDATE SET\n    validated = EXCLUDED.validated"
+                : "ON DUPLICATE KEY UPDATE\n" +
+                  "    validated = VALUES(validated)"), rois.reduce(function(_, roi) {
                 _.push(roi, userId, validation);
                 return _;
             }, [])
@@ -326,11 +331,19 @@ var CitizenScientist = {
         for (let key in userStats) {
             let stat = userStats[key];
             let confidence = (stat.correct + 1) / (stat.correct + stat.incorrect + 1);
-            let q2 = `INSERT INTO pattern_matching_user_statistics (user_id, project_id, species_id,
-                            songtype_id, validated, correct, incorrect, pending, confidence, last_update)
-                      VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
-                      ON DUPLICATE KEY UPDATE validated=VALUES(validated), correct=VALUES(correct), incorrect=VALUES(incorrect), pending=VALUES(pending),
-                            confidence=VALUES(confidence), last_update=VALUES(last_update)`;
+            let q2 = pgshadow.isPg
+                // P7 port: ON CONFLICT targets the (user_id, project_id,
+                // species_id, songtype_id) unique index (both engines).
+                ? `INSERT INTO pattern_matching_user_statistics (user_id, project_id, species_id,
+                        songtype_id, validated, correct, incorrect, pending, confidence, last_update)
+                  VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+                  ON CONFLICT (user_id, project_id, species_id, songtype_id) DO UPDATE SET validated=EXCLUDED.validated, correct=EXCLUDED.correct, incorrect=EXCLUDED.incorrect, pending=EXCLUDED.pending,
+                        confidence=EXCLUDED.confidence, last_update=EXCLUDED.last_update`
+                : `INSERT INTO pattern_matching_user_statistics (user_id, project_id, species_id,
+                        songtype_id, validated, correct, incorrect, pending, confidence, last_update)
+                  VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+                  ON DUPLICATE KEY UPDATE validated=VALUES(validated), correct=VALUES(correct), incorrect=VALUES(incorrect), pending=VALUES(pending),
+                        confidence=VALUES(confidence), last_update=VALUES(last_update)`;
             await dbpool.query(q2, [parseInt(key), project_id, species_id, songtype_id, stat.validated, stat.correct, stat.incorrect, stat.pending, confidence])
         }
     },

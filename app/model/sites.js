@@ -10,6 +10,7 @@ var rp = util.promisify(request);
 var tzlookup = require("tz-lookup");
 var s3;
 var dbpool = require('../utils/dbpool');
+var pgshadow = require('../utils/dbpool-pg'); // P7 write ports (INERT unless DB_ENGINE=pg)
 var queryHandler = dbpool.queryHandler;
 const moment = require('moment');
 let APIError = require('../utils/apierror');
@@ -129,7 +130,25 @@ var Sites = {
             alt: joi.number().optional().default(null),
             site_type_id: joi.number().optional().default(2), // default mobile recorder
             external_id: joi.string().optional().default(null),
-            hidden: joi.number().optional().default(0)
+            hidden: joi.number().optional().default(0),
+            // P7 / OPQ-16 (a) — `timezone` is NOT NULL with NO DEFAULT on BOTH
+            // engines, and this INSERT used to omit it entirely. MariaDB runs
+            // with sql_mode='' and therefore supplied an IMPLICIT default ('');
+            // PostgreSQL has no such behaviour and raises 23502, so at the P7
+            // write flip site creation would break outright.
+            // (Measured 2026-09-11, gate 4c: MariaDB accepted the identical
+            // column list and stored timezone=''; PG 23502'd. FINDING-2026-09-11-
+            // p7-mysql-implicit-defaults-vs-pg-notnull.md.)
+            //
+            // The value is supplied HERE rather than leaning on the engine:
+            // 'UTC' is exactly what setCountryCodeAndTimezone() already writes
+            // when the CoreAPI lookup yields no zone (sites.js:879), so the
+            // INSERT now lands the same value that follow-up UPDATE would, and
+            // a caller that knows the real zone can still pass it.
+            // stripUnknown:true means a key absent from this schema can NEVER
+            // reach the INSERT — which is why adding it to the schema, not just
+            // to the column list, is the fix.
+            timezone: joi.string().optional().default('UTC')
         };
 
         var result = joi.validate(site, schema, {
@@ -149,15 +168,35 @@ var Sites = {
             if(j !== 'id') {
                 values.push(util.format('%s = %s',
                     dbpool.escapeId(j),
-                    dbpool.escape(site[j])
+                    // TYPE PARITY (P7, measured 2026-09-11): mysql.escape(true)
+                    // yields the literal `true`, which PG refuses for a
+                    // smallint/tinyint column (42804). The mysql driver coerces
+                    // booleans to 1/0 for tinyint; narrow here so the PG branch
+                    // below splices an integer literal, not a boolean.
+                    dbpool.escape(pgshadow.isPg && typeof site[j] === 'boolean'
+                                  ? (site[j] ? 1 : 0) : site[j])
                 ));
             }
         }
 
-        var q = 'INSERT INTO sites \n'+
+        var q;
+        if (pgshadow.isPg) {
+            // P7 port (#19): `INSERT ... SET col = val` is MySQL-only syntax
+            // (42601 on PG) — build an explicit (cols) VALUES list from the
+            // same escaped pairs. The adapter's RETURNING shim maps
+            // site_id -> insertId (sites is a mapped identity table).
+            var pairs = values.map(function (pair) {
+                var eqAt = pair.indexOf(' = ');
+                return [pair.slice(0, eqAt), pair.slice(eqAt + 3)];
+            });
+            q = 'INSERT INTO sites \n'+
+                '(' + pairs.map(function (p) { return p[0]; }).join(', ') + ')\n'+
+                'VALUES (' + pairs.map(function (p) { return p[1]; }).join(', ') + ')';
+        } else {
+            q = 'INSERT INTO sites \n'+
                 'SET %s';
-
-        q = util.format(q, values.join(", "));
+            q = util.format(q, values.join(", "));
+        }
         db ? db.query(q, callback) : queryHandler(q, callback);
     },
 
