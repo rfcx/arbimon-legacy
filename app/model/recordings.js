@@ -25,6 +25,8 @@ var config       = require('../config');
 // `coreApiBaseUrl` was required only by deleteRecordingsInCoreAPI, removed
 // 2026-09-09 (ruling R1: archive never touches core).
 var SQLBuilder  = require('../utils/sqlbuilder');
+var persiteSort = require('../utils/persite-sort');
+const dbpoolPg = require('../utils/dbpool-pg');
 var arrays_util  = require('../utils/arrays');
 var tmpfilecache = require('../utils/tmpfilecache');
 var audioTools   = require('../utils/audiotool');
@@ -1971,8 +1973,8 @@ var Recordings = {
         site:        { expr: 'r.site_id',     index: 'recordings_site_datetime_idx' },
         site_id:     { expr: 'r.site_id',     index: 'recordings_site_datetime_idx' },
         datetime:    { expr: 'r.datetime',    index: 'recordings_site_datetime_idx' },
-        filename:    { expr: 'r.filename',    index: 'recordings_site_filename_idx' },
-        upload_time: { expr: 'r.upload_time', index: 'recordings_site_upload_time_idx' }
+        filename:    { expr: 'r.filename',    index: 'recordings_site_filename_idx', nullable: true },
+        upload_time: { expr: 'r.upload_time', index: 'recordings_site_upload_time_idx', nullable: true }
     },
 
     /**
@@ -2009,7 +2011,7 @@ var Recordings = {
             return { clause: 'r.site_id DESC, r.datetime DESC, r.recording_id DESC', index: 'recordings_site_datetime_idx', usingDefault: true };
         }
         // Tie-break on recording_id for a stable, deterministic page order.
-        return { clause: col.expr + ' ' + dir + ', r.recording_id ' + dir, index: col.index, usingDefault: false };
+        return { clause: col.expr + ' ' + dir + ', r.recording_id ' + dir, index: col.index, usingDefault: false, expr: col.expr, nullable: !!col.nullable };
     },
 
     // Eligibility gate for the date_range fast path. Lives in app/utils so it can
@@ -2338,6 +2340,44 @@ var Recordings = {
                     // handles well are unchanged.
                     if (sort.usingDefault) {
                         return runList(sort.clause, null);
+                    }
+                    // PER-SITE TOP-N UNION (2026-09-12, P7 pre-flip sweep):
+                    // on a multi-site project a global ORDER BY across all
+                    // sites cannot be index-served (each composite leads with
+                    // site_id), so both engines materialise + sort the
+                    // project's WHOLE recording set for page 1 — measured
+                    // 100.9 s on MariaDB / deterministic 8 s cancel on PG for
+                    // the 950-site giant (pg_route_timeout f44b4c1f/16670983).
+                    // The union emits one index-walked top-(offset+limit) arm
+                    // per site and merges — full design + measurements in
+                    // app/utils/persite-sort.js. Strictly gated: the same
+                    // structural shape test as the date_range fast path (single
+                    // base table, archive+site-IN predicates only) plus the
+                    // builder's own site-count/window caps. Any filter disables
+                    // it and the historical forced-index shape runs unchanged.
+                    const unionSql = dateRangeFastPathEligible ? persiteSort.buildPerSiteSortSql({
+                        expr: sort.expr,
+                        nullable: sort.nullable,
+                        sortRev: parameters.sortRev,
+                        siteIds: siteIds,
+                        archiveScope: archiveScope,
+                        offset: parameters.offset,
+                        limit: parameters.limit,
+                        isPg: dbpoolPg.isPg
+                    }) : null;
+                    if (unionSql) {
+                        return Q.nfcall(queryHandler, {
+                            sql: unionSql,
+                            typeCast: sqlutil.parseUtcDatetime,
+                        }).catch(function(err){
+                            console.error('recordings per-site union sort failed, falling back to forced-index shape:',
+                                { sortBy: parameters.sortBy, sortRev: parameters.sortRev, error: err && err.message });
+                            return runList(sort.clause, sort.index).catch(function(err2){
+                                console.error('recordings list sort failed, falling back to default order:',
+                                    { sortBy: parameters.sortBy, sortRev: parameters.sortRev, error: err2 && err2.message });
+                                return runList('r.site_id DESC, r.datetime DESC', null);
+                            });
+                        });
                     }
                     // User-requested sort: FORCE the (site_id,<col>) composite
                     // (the optimizer otherwise mis-picks a single-column index

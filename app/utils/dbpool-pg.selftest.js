@@ -660,6 +660,47 @@ eq('exact: OTHER uri columns still fold (templates.uri is sv)',
 eq('exact: sibling string column in the same query still folds (sites.name)',
    nfold("SELECT r.recording_id FROM recordings r JOIN sites s ON s.site_id = r.site_id WHERE r.uri = 'a' AND s.name = 'b'"), 2);
 
+// ---- COLLATION_ORDER_EXACT: recordings.filename is folded in predicates but
+// NEVER in ORDER BY (P7 pre-flip read-timeout sweep, 2026-09-12). The fold on
+// the ORDER BY key defeats the (site_id, filename) composite that serves the
+// per-site top-N union arms (app/utils/persite-sort.js): folded, the giant's
+// filename sort cancelled at the 8 s statement_timeout deterministically
+// (pg_route_timeout f44b4c1fdbb60431/16670983c3ff6008); unfolded, the union
+// runs 1.38 s on the leader.
+console.log('== COLLATION_ORDER_EXACT (recordings.filename order-by exemption) ==');
+var FNS = "SELECT r.recording_id AS id FROM recordings r WHERE r.archived_at IS NULL AND r.site_id IN (6725, 6726) ORDER BY r.filename ASC, r.recording_id ASC LIMIT 0, 10";
+eq('order-exact: filename sort key NOT folded', nfold(m.translate(FNS)), 0);
+eq('order-exact: key kept verbatim + NULLS FIRST (MySQL placement)',
+   m.translate(FNS).indexOf('ORDER BY r.filename ASC NULLS FIRST, r.recording_id ASC') !== -1, true);
+eq('order-exact: DESC gets NULLS LAST',
+   m.translate(FNS.replace(/ASC/g, 'DESC')).indexOf('ORDER BY r.filename DESC NULLS LAST, r.recording_id DESC') !== -1, true);
+eq('order-exact: WHERE r.filename = ? STILL folds (order-only exemption; exists() dedup semantics kept)',
+   nfold(m.translate("SELECT r.recording_id FROM recordings r WHERE r.site_id = 8412 AND r.filename = 'x.wav'")), 2);
+eq('order-exact: collationClass still resolves recordings.filename (fold machinery unchanged for predicates)',
+   m.collationClass('r.filename', m.aliasMap('SELECT 1 FROM recordings r')), 'gen');
+eq('order-exact: other ORDER BY string keys still fold (sites.name control)',
+   nfold(m.translate('SELECT s.site_id FROM sites s WHERE s.project_id = 1523 ORDER BY s.name ASC')), 1);
+// The PG-form union text passes through translate() byte-identical: the arm
+// keys carry explicit NULLS FIRST (no _SORTKEY_RE match) and LIMIT/OFFSET is
+// already PG form. This is what the pg-mode request path runs (translate() is
+// applied to ALL routed SQL, including isPg-branched text).
+var persite = require('./persite-sort.js');
+var unionPg = persite.buildPerSiteSortSql({ expr: 'r.filename', nullable: true, sortRev: false,
+   siteIds: [6725, 6726], archiveScope: 'r.archived_at IS NULL', offset: 0, limit: 10, isPg: true });
+eq('order-exact: PG-form union is a translate() passthrough', m.translate(unionPg) === unionPg, true);
+eq('order-exact: PG-form union arms carry PG-NATIVE placement (index-servable) + IS NULL split',
+   unionPg.indexOf('ORDER BY r.filename ASC NULLS LAST, r.recording_id ASC') !== -1 &&
+   unionPg.indexOf('IS NOT NULL') !== -1 && unionPg.indexOf('IS NULL') !== -1, true);
+eq('order-exact: PG-form union outer carries the app-semantic placement (NULLS FIRST on ASC)',
+   unionPg.indexOf('ORDER BY u.sort_key ASC NULLS FIRST, u.id ASC') !== -1, true);
+var unionMy = persite.buildPerSiteSortSql({ expr: 'r.filename', nullable: true, sortRev: false,
+   siteIds: [6725, 6726], archiveScope: 'r.archived_at IS NULL', offset: 0, limit: 10, isPg: false });
+var unionMyT = m.translate(unionMy);
+eq('order-exact: shadow-path union arms get placement from the #1794 leg, no fold',
+   unionMyT.indexOf('ORDER BY r.filename ASC NULLS FIRST, r.recording_id ASC') !== -1 && nfold(unionMyT) === 0, true);
+eq('order-exact: shadow-path union outer key unresolvable -> untouched',
+   unionMyT.indexOf('ORDER BY u.sort_key ASC, u.id ASC') !== -1, true);
+
 // ---- schema-qualifier strip (P6, 2026-07-29) ------------------------------
 // The first genuine dialect_error caught by the post-#1787 unconditional
 // gate: legacy qualifies two queries with the MySQL schema name `arbimon2.`,
