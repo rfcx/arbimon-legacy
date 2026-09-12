@@ -2203,7 +2203,7 @@ if (ENABLED) { startStatHeartbeat(); }
 // carrying uppercase is mapped lower->original and re-applied to PG rows, so
 // consumers see byte-identical key casing on both engines.
 
-var PG_ROUTE_FALLBACK = (process.env.DB_PG_FALLBACK || '1') !== '0';
+var PG_ROUTE_FALLBACK = (process.env.DB_PG_FALLBACK || '0') !== '0';  // OPQ-5 RULED DISARM 2026-09-12 (operator goifirr 12:24): default disarmed at the flip; env DB_PG_FALLBACK=1 re-arms deliberately
 
 // Build lowercase -> original-case map for the MIXED-CASE identifiers in the
 // source SQL. Only ever restores casing MySQL itself would have returned.
