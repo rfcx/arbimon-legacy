@@ -2324,11 +2324,19 @@ var Recordings = {
                                 }, function (sql) {
                                     return Q.nfcall(queryHandler, { sql: sql, typeCast: sqlutil.parseUtcDatetime });
                                 }).then(function (rows) {
-                                    // COUNT(*) is int8 (a STRING from the PG
-                                    // driver) — coerce before summing.
-                                    return [{ count: rows.reduce(function (acc, siteRows) {
+                                    // COUNT(*) is int8 — already parsed as
+                                    // Number by dbpool-pg's type parser; the
+                                    // Number() is a no-op safety net.
+                                    // CONTRACT: outputs.map entries resolve to
+                                    // the queryHandler's [rows, fields] form —
+                                    // the consumer reads results[i][0] as the
+                                    // ROWS array, so wrap once more. (The
+                                    // unwrapped form 500'd every unfiltered
+                                    // search on a ≤200-site project — caught
+                                    // by the post-deploy page check.)
+                                    return [[{ count: rows.reduce(function (acc, siteRows) {
                                         return acc + ((siteRows && siteRows[0] && Number(siteRows[0].n)) || 0);
-                                    }, 0) }];
+                                    }, 0) }]];
                                 }).catch(countFallback);
                             }
                             // Giants (>200 sites): the aggregate cannot fit the
@@ -2349,7 +2357,8 @@ var Recordings = {
                                 return Q.ninvoke(projectModel, 'getCachedMetrics', 'project-' + parameters.project_id + '-rec')
                                     .then(function (rows) {
                                         if (rows && rows.length) {
-                                            return [{ count: Number(rows[0].value) || 0 }];
+                                            // Same [rows] contract as above.
+                                            return [[{ count: Number(rows[0].value) || 0 }]];
                                         }
                                         return Q.nfcall(queryHandler, {
                                             sql: query.join('\n'),
