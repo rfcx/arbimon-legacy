@@ -921,6 +921,30 @@ var COLLATION_EXACT = {
     'cached_metrics.key': 1,
 };
 
+// ---- ORDER-BY-ONLY EXEMPTIONS (2026-09-12, P7 pre-flip read-timeout sweep) --
+// `recordings.filename`: folding an ORDER BY key defeats the
+// (site_id, filename) composite that serves the per-site top-N arms of the
+// union-per-site list sort (app/utils/persite-sort.js, emitted by
+// findProjectRecordings). A folded arm must heap-fetch and re-sort EVERY row of
+// the site instead of walking the index to LIMIT k — measured on the live giant
+// (950 sites / 11.2 M rows): the folded single-query shape cancels at the 8 s
+// statement_timeout deterministically (pg_route_timeout hashes
+// f44b4c1fdbb60431 / 16670983c3ff6008); the unfolded union runs 1.38 s on the
+// leader. The COLLATION_EXACT comment above foresaw the boundary:
+// "recordings.filename is bounded only while every shape leads with site_id" —
+// the multi-site sort is exactly the shape that does not.
+// ORDER-BY ONLY: `=`/IN/LIKE predicates on filename keep their fold (exists()
+// is site-bounded and the fold is harmless there; changing match semantics for
+// upload dedup is not this PR's business).
+// Accepted divergence, named: on PG the filename sort now follows the column's
+// collation (byte order); MariaDB's utf8mb3_general_ci folds case and accents.
+// Order differs only within case/accent-variant filename sets — the dominant
+// filename shapes (timestamp-leading, e.g. 20220202_043000.WAV) order
+// identically on both engines.
+var COLLATION_ORDER_EXACT = {
+    'recordings.filename': 1,
+};
+
 // The two folds. Applied to BOTH sides of a predicate.
 var FOLD_GEN = "translate(lower(%s),'áàâãäåéèêëíìîïóòôõöúùûüçñýÿ','aaaaaaeeeeiiiiooooouuuucny.')";
 var FOLD_SV  = "translate(lower(%s),'áàâãéèêëíìîïóòôõúùûçñýÿ','aaaaeeeeiiiioooouuucny.')";
@@ -1348,10 +1372,13 @@ function translateOrderByCollation(sql) {
             var nulls = '';
             var parts = km[1].split('.');
             var tbl = amap[parts[0].toLowerCase()];
-            if (tbl && NULLABLE_COLS[tbl + '.' + parts[1].toLowerCase()]) {
+            var colKey = tbl ? (tbl + '.' + parts[1].toLowerCase()) : null;
+            if (colKey && NULLABLE_COLS[colKey]) {
                 nulls = mysqlNullPlacement(km[2]);
             }
-            var cls = collationClass(km[1], amap);
+            // ORDER-BY-only exemptions (COLLATION_ORDER_EXACT): skip the fold
+            // (it defeats the per-site index walk) but KEEP the NULL placement.
+            var cls = (colKey && COLLATION_ORDER_EXACT[colKey]) ? null : collationClass(km[1], amap);
             if (!cls) {
                 // no collation fold; still emit placement when needed
                 return nulls ? (km[1] + (km[2] || '') + nulls) : k.trim();
@@ -2364,6 +2391,7 @@ module.exports = {
     resolveBareColumn: resolveBareColumn,
     aliasMap: aliasMap,
     collationClass: collationClass,
+    COLLATION_ORDER_EXACT: COLLATION_ORDER_EXACT,
     restoreRowCase: restoreRowCase,
     _counters: _counters
 };
