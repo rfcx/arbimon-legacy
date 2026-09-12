@@ -2332,7 +2332,15 @@ var Recordings = {
                                 return persiteCount.runPerSite(siteIds, function (sid) {
                                     return "SELECT COUNT(*) AS n FROM recordings r WHERE r.site_id = " + sid + scopeSuffix;
                                 }, function (sql) {
-                                    return Q.nfcall(queryHandler, { sql: sql, typeCast: sqlutil.parseUtcDatetime });
+                                    // .get(0): queryHandler resolves the [rows, fields]
+                                    // contract (pgReadQuery calls back (null, rows, null)),
+                                    // so each per-site result must be unwrapped to the bare
+                                    // rows array — otherwise siteRows[0] IS the rows array,
+                                    // siteRows[0].n is undefined, and the reduce below sums
+                                    // to 0 (the count=0-on-every-recordings-page defect
+                                    // found live 2026-09-12). dbpool.js:275 unwraps the same
+                                    // contract the same way.
+                                    return Q.nfcall(queryHandler, { sql: sql, typeCast: sqlutil.parseUtcDatetime }).get(0);
                                 }).then(function (rows) {
                                     // COUNT(*) is int8 — already parsed as
                                     // Number by dbpool-pg's type parser; the
