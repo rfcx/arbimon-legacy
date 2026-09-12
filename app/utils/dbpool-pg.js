@@ -550,6 +550,17 @@ function translateFunctions(sql, store) {
     s = s.replace(/\bUNIX_TIMESTAMP\s*\(\s*\)/gi, 'EXTRACT(EPOCH FROM NOW())');
     s = s.replace(/\bUNIX_TIMESTAMP\s*\(\s*([^()]+?)\s*\)/gi, 'EXTRACT(EPOCH FROM $1)');
 
+    // Bare boolean literals in comparisons: mysql's driver inlines JS booleans
+    // as bare true/false, and MySQL accepts tinyint(1) = true — but PG rejects
+    // smallint = boolean (42883). The legacy schema is tinyint->smallint
+    // throughout (the only REAL boolean columns in the PG arbimon DB are in
+    // internal ops tables no app SQL touches — verified 2026-09-12), so
+    // mapping to 1/0 is correct. Measured live 2026-09-12:
+    // /legacy-api/project/<slug>/classifications 500'd on `J.completed = true`
+    // (classifications.js:63, SQLBuilder + mysql.format inline).
+    s = s.replace(/(=|<>|!=)\s*true\b/gi, '$1 1');
+    s = s.replace(/(=|<>|!=)\s*false\b/gi, '$1 0');
+
     // ISNULL(x) -> (x IS NULL)   (PG has no ISNULL function)
     s = rewriteCall(s, 'ISNULL', function (args) {
         if (args.length !== 1) { return null; }
