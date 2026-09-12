@@ -2478,6 +2478,20 @@ var WRITE_IDENTITY_PK = {
     user_account_support_request: 'support_request_id'
 };
 
+// Tables with a NATURAL (non-identity) primary key whose INSERT sites never
+// read a driver-generated id. For these, running without RETURNING is the
+// CORRECT shape, so the write_unmapped_insert divergence line is suppressed --
+// leaving it loud would bake a permanent noise class into the P7 divergence
+// stream that every post-flip session then has to re-baseline against.
+// cached_metrics (PK = varchar `key`): its only INSERT site
+// (model/projects.js insertCachedMetrics) discards the result packet, so
+// insertId 0 has no consumer -- measured post-flip 2026-09-12 (the 4
+// write_unmapped_insert events were all the cold-key insert path, each
+// immediately followed by the real defect: 22001 on the over-long key).
+var WRITE_NO_IDENTITY_PK = {
+    cached_metrics: true
+};
+
 var _W_INSERT_RE = /^\s*INSERT\s+INTO\s+"?([A-Za-z_]\w*)"?\b/i;
 var _W_RETURNING_RE = /\bRETURNING\b/i;
 var _W_TX_BEGIN_RE = /^\s*(BEGIN\b|START\s+TRANSACTION\b)/i;
@@ -2504,7 +2518,7 @@ function pgWriteExec(client, finalSql, connState, cb) {
         if (pk) {
             pgSql = pgSql.replace(/;+\s*$/, '') + ' RETURNING ' + pk;
             shimPk = pk;
-        } else if (divergenceEmitAllowed(templateHash(finalSql))) {
+        } else if (!WRITE_NO_IDENTITY_PK[ins[1]] && divergenceEmitAllowed(templateHash(finalSql))) {
             emitDivergence({ v: 1, ts: new Date().toISOString(),
                 klass: 'write_unmapped_insert', phase: 'shim-pg-write',
                 hash: templateHash(finalSql), tmpl: sqlTemplate(finalSql).slice(0, 400),
@@ -2734,6 +2748,7 @@ module.exports = {
     // P7 write routing (INERT unless DB_ENGINE=pg):
     getWriteConnection: getWriteConnection,
     WRITE_IDENTITY_PK: WRITE_IDENTITY_PK,
+    WRITE_NO_IDENTITY_PK: WRITE_NO_IDENTITY_PK,
     compare: compare,
     snapshot: snapshot,
     compareSnap: compareSnap,

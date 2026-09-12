@@ -129,6 +129,25 @@ const getRandomMin = function(max, min) {
     return Math.floor(Math.random() * (max - min + 1) + min);
 }
 
+// cached_metrics.key is varchar(20) on BOTH engines. On MariaDB (sql_mode
+// empty) an over-long key was silently TRUNCATED on INSERT for years, so the
+// table holds rows like 'project-10005-aed-jo' -- and the SELECT by the full
+// key never matched them, making every long-key request a cold refresh. On
+// PostgreSQL the same INSERT fails (22001: value too long for type character
+// varying(20)) and the cold path 500s -- measured post-flip 2026-09-12 on
+// `project-<id>-aed-job` / `-cl-job` / `-soundsc`, the three 21-char shapes
+// on 5-digit project ids. Bounding the key at this single choke point keeps
+// SELECT/INSERT/UPDATE consistent with the rows that already exist (the
+// maria-truncated forms), so caching RESUMES for those keys instead of
+// erroring. Collision analysis (suffix budget = 20 - len('project-<id>-')):
+// all 13 suffixes stay unique through 6-digit ids; only at 7 digits would
+// the rfm-cl/rfm-sp/rfm-tr triple share one key -- current max legacy
+// project id is ~10153, so that horizon is not realistic.
+const CACHE_KEY_MAX_LEN = 20
+const boundCacheKey = function (v) {
+    return (typeof v === 'string' && v.length > CACHE_KEY_MAX_LEN) ? v.slice(0, CACHE_KEY_MAX_LEN) : v
+}
+
 const recalculateMetrics = async function(k, v, params, isInsert) {
     // we don't want several Pods to refresh the same value at the same time,
     // so we'll extend expiration of an existing record for the time of our own calculation
@@ -147,7 +166,7 @@ const recalculateMetrics = async function(k, v, params, isInsert) {
 
 const getCachedMetrics = async function(req, res, key, params, next) {
     const k = Object.keys(key)[0]
-    const v = Object.values(key)[0]
+    const v = boundCacheKey(Object.values(key)[0])
     model.projects.getCachedMetrics(v).then(async function(results) {
         if (!results.length) {
             // COLD KEY: bounded wait, then estimate. See COLD_KEY_BOUND_MS.
