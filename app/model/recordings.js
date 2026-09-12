@@ -27,6 +27,7 @@ var config       = require('../config');
 var SQLBuilder  = require('../utils/sqlbuilder');
 var persiteSort = require('../utils/persite-sort');
 const dbpoolPg = require('../utils/dbpool-pg');
+var persiteCount = require('../utils/persite-count');
 var arrays_util  = require('../utils/arrays');
 var tmpfilecache = require('../utils/tmpfilecache');
 var audioTools   = require('../utils/audiotool');
@@ -2289,6 +2290,81 @@ var Recordings = {
                         });
                     }
                     if(output !== 'list') {
+                        // PER-SITE FAN-OUT for the UNFILTERED count output
+                        // (2026-09-12, P7 pre-flip sweep — item 2;
+                        // pg_route_timeout hash dae78d5b07accd46, 36 events/24 h):
+                        // one aggregate over every row of the project is
+                        // I/O-bound on PG's heap-scattered rows and blows the
+                        // 8 s routed-read statement_timeout for million-row
+                        // projects (mashpi: >25 s cold / 2.27 s warm on the
+                        // leader; deterministic fail-open today, an error at
+                        // P7). Per-site statements each fit the budget and sum
+                        // exactly (recording_id is unique; the site set is
+                        // unchanged). Design + measurements:
+                        // app/utils/persite-count.js. STRICTLY GATED on the
+                        // same structural shape test as the date_range fast
+                        // path — any filter (which shrinks the scanned set and
+                        // changes which rows count) keeps the historical
+                        // single-statement form.
+                        if (output === 'count' && dateRangeFastPathEligible && siteIds.length) {
+                            if (siteIds.length <= persiteCount.PERSITE_COUNT_MAX_SITES) {
+                                const scopeSuffix = archiveScope ? (' AND ' + archiveScope) : '';
+                                const countFallback = function (err) {
+                                    // Never let the optimization cost a user
+                                    // their page: fall back to the original
+                                    // (slow but proven) statement.
+                                    if (err) { console.error('per-site count fan-out failed, falling back:', err && err.message); }
+                                    return Q.nfcall(queryHandler, {
+                                        sql: query.join('\n'),
+                                        typeCast: sqlutil.parseUtcDatetime,
+                                    });
+                                };
+                                return persiteCount.runPerSite(siteIds, function (sid) {
+                                    return "SELECT COUNT(*) AS n FROM recordings r WHERE r.site_id = " + sid + scopeSuffix;
+                                }, function (sql) {
+                                    return Q.nfcall(queryHandler, { sql: sql, typeCast: sqlutil.parseUtcDatetime });
+                                }).then(function (rows) {
+                                    // COUNT(*) is int8 (a STRING from the PG
+                                    // driver) — coerce before summing.
+                                    return [{ count: rows.reduce(function (acc, siteRows) {
+                                        return acc + ((siteRows && siteRows[0] && Number(siteRows[0].n)) || 0);
+                                    }, 0) }];
+                                }).catch(countFallback);
+                            }
+                            // Giants (>200 sites): the aggregate cannot fit the
+                            // routed-read budget fanned out OR as one statement
+                            // — serve the cached `project-<id>-rec` metric
+                            // (the same number the page header shows via
+                            // /recordings/count; refreshed by that endpoint's
+                            // own traffic and, since this PR, by a per-site
+                            // fan-out fill in totalRecordings). Only when NO
+                            // imported sites are in scope — the metric counts
+                            // own-project sites only, so a project WITH imports
+                            // would under-count. No cache row -> the historical
+                            // live statement (today's behaviour, unchanged).
+                            const hasImported = Object.values(siteData).some(function (s) {
+                                return s.project_id !== parameters.project_id;
+                            });
+                            if (!hasImported) {
+                                return Q.ninvoke(projectModel, 'getCachedMetrics', 'project-' + parameters.project_id + '-rec')
+                                    .then(function (rows) {
+                                        if (rows && rows.length) {
+                                            return [{ count: Number(rows[0].value) || 0 }];
+                                        }
+                                        return Q.nfcall(queryHandler, {
+                                            sql: query.join('\n'),
+                                            typeCast: sqlutil.parseUtcDatetime,
+                                        });
+                                    })
+                                    .catch(function (err) {
+                                        console.error('cached-metrics count read failed, falling back:', err && err.message);
+                                        return Q.nfcall(queryHandler, {
+                                            sql: query.join('\n'),
+                                            typeCast: sqlutil.parseUtcDatetime,
+                                        });
+                                    });
+                            }
+                        }
                         return Q.nfcall(queryHandler, {
                             sql: query.join('\n'),
                             typeCast: sqlutil.parseUtcDatetime,
@@ -3028,19 +3104,68 @@ var Recordings = {
     */
     countProjectRecordings: function(filters){
         return this.buildSearchQuery(filters, true).then(function(builder){
-            builder.addProjection.apply(builder, [
-                's.site_id', 's.name as site', 'pis.site_id IS NOT NULL as imported',
-                'COUNT(DISTINCT(r.recording_id)) as count'
-            ]);
-            builder.setOrderBy('s.site_id');
-            builder.setGroupBy('s.site_id');
-            // PG GROUP BY strictness (42803): s.name is covered by grouping
-            // s.site_id (sites PK, functional dependency) but pis.site_id is a
-            // DIFFERENT table. The LEFT JOIN pins pis.site_id = s.site_id (or
-            // NULL, never mixed within a site), so grouping it too leaves the
-            // groups unchanged; MySQL accepts the extra column.
-            builder.addGroupBy('pis.site_id');
-            return dbpool.query(builder.getSQL());
+            // The historical single-statement form (also the fallback for
+            // filtered searches and >MAX_SITES projects).
+            var runBuilder = function () {
+                builder.addProjection.apply(builder, [
+                    's.site_id', 's.name as site', 'pis.site_id IS NOT NULL as imported',
+                    'COUNT(DISTINCT(r.recording_id)) as count'
+                ]);
+                builder.setOrderBy('s.site_id');
+                builder.setGroupBy('s.site_id');
+                // PG GROUP BY strictness (42803): s.name is covered by grouping
+                // s.site_id (sites PK, functional dependency) but pis.site_id is a
+                // DIFFERENT table. The LEFT JOIN pins pis.site_id = s.site_id (or
+                // NULL, never mixed within a site), so grouping it too leaves the
+                // groups unchanged; MySQL accepts the extra column.
+                builder.addGroupBy('pis.site_id');
+                return dbpool.query(builder.getSQL());
+            };
+            // PER-SITE FAN-OUT for the UNFILTERED per-site counts (2026-09-12,
+            // P7 pre-flip sweep — item 2, same class as dae78d5b): the grouped
+            // COUNT(DISTINCT) over a million-row project is ONE statement that
+            // blows the 8 s routed-read budget on PG (leader-log cancel at
+            // 00:05:49Z 09-12 during the mashpi probes). Gate STRUCTURALLY on
+            // the built query: only the base constraints (project/imported
+            // membership + site archive scope + recording archive scope) — any
+            // filter keeps the historical single statement. Zero-count sites
+            // are dropped to match the inner-JOIN semantics of the grouped
+            // query (no recordings => no row).
+            var archiveScope = sqlutil.recordingArchiveScope('r', sqlutil.normalizeArchivedParam(filters && filters.archived));
+            var expected = ['(s.project_id = ? OR pis.project_id = ?)', 's.deleted_at is null'];
+            if (archiveScope) { expected.push(archiveScope); }
+            var built = (builder.constraints || []).map(function (c) { return c[0]; });
+            var unfiltered = built.length === expected.length && built.every(function (c, i) { return c === expected[i]; });
+            if (unfiltered) {
+                return dbpool.query(
+                    "SELECT s.site_id, s.name, pis.site_id IS NOT NULL AS imported FROM sites s " +
+                    "LEFT JOIN project_imported_sites pis ON s.site_id = pis.site_id AND pis.project_id = ? " +
+                    "WHERE (s.project_id = ? OR pis.project_id = ?) AND s.deleted_at is null",
+                    [filters.project_id, filters.project_id, filters.project_id]
+                ).then(async function (siteRows) {
+                    if (siteRows.length > persiteCount.PERSITE_COUNT_MAX_SITES) { return null; } // giant: caller falls back
+                    var scopeSuffix = archiveScope ? (' AND ' + archiveScope) : '';
+                    var counts = await persiteCount.runPerSite(siteRows.map(function (s) { return s.site_id; }),
+                        function (sid) {
+                            return "SELECT COUNT(*) AS n FROM recordings r WHERE r.site_id = " + sid + scopeSuffix;
+                        },
+                        function (sql) { return dbpool.query(sql); });
+                    var bySiteId = {};
+                    siteRows.forEach(function (s, i) {
+                        var n = Number((counts[i] || 0) && (counts[i][0] ? counts[i][0].n : 0)) || 0;
+                        if (n > 0) {
+                            bySiteId[s.site_id] = { site_id: s.site_id, site: s.name, imported: s.imported, count: n };
+                        }
+                    });
+                    return siteRows.map(function (s) { return bySiteId[s.site_id]; }).filter(Boolean)
+                        .sort(function (a, b) { return a.site_id - b.site_id; });
+                }).then(function (rows) {
+                    if (rows) { return rows; }
+                    // >MAX_SITES: fall through to the historical statement.
+                    return runBuilder();
+                });
+            }
+            return runBuilder();
         });
     },
 

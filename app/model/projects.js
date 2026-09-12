@@ -13,6 +13,7 @@ const rfcxConfig = config('rfcx');
 const fileHelper = require('../utils/file-helper')
 const dbpool = require('../utils/dbpool');
 const sqlutil = require('../utils/sqlutil');
+const persiteCount = require('../utils/persite-count');
 const queryHandler = dbpool.queryHandler;
 const APIError = require('../utils/apierror');
 const { coreApiBaseUrl } = require('../utils/core-api-url');
@@ -242,46 +243,32 @@ var Projects = {
                 });
 
                 return q.all([
-                    options.compute.rec_count ? dbpool.query(
-                        // PER-SITE INDEX DIVES, not one grouped scan.
-                        //
-                        // History: this used to be a single
-                        //   SELECT site_id, COUNT(..), MIN(datetime), MAX(datetime)
-                        //   FROM recordings WHERE site_id IN (?) AND archived_at IS NULL
-                        //   GROUP BY site_id
-                        // and it measured **221.7 s** on a 4M-recording project
-                        // (318M-row table) -- far past the public-router's 60 s
-                        // proxy_read_timeout, so /audiodata/sites returned 504
-                        // rather than merely being slow.
-                        //
-                        // WHY it was slow: the two predicates are each cheap
-                        // alone but pathological together, because no index
-                        // covers (site_id, archived_at, datetime):
-                        //   recs_active_by_site          (site_id, archived_at) -- covers COUNT, no datetime
-                        //   recordings_site_datetime_idx (site_id, datetime)    -- covers MIN/MAX, no archived_at
-                        // Measured: COUNT-only 0.8 s; MIN/MAX-without-archived 3.4 s;
-                        // both together 221.7 s (~8M PK lookups). MariaDB has no
-                        // partial indexes, so `WHERE archived_at IS NULL` cannot
-                        // be indexed directly -- see the 2026-06-16 archiving
-                        // design doc SS6, which predicted exactly this.
-                        //
-                        // THE FIX: (site_id, datetime) already exists, so per site
-                        // `ORDER BY datetime LIMIT 1` is a single index dive and
-                        // archived_at is then checked on one row instead of 8M.
-                        // Driving off `sites` keeps the SQL compact (no giant
-                        // generated UNION: a 5,938-site project would have needed
-                        // ~2.1 MB of SQL; this form is ~36 KB).
-                        //
-                        // Measured after: 221.7 s -> 0.50 s on the 4M project, and
-                        // 91.2 s -> 0.006 s on the largest project (5,938 sites).
-                        // Verified row-by-row identical to the old query
-                        // (0 mismatches; both sum to 4,003,682 recordings).
-                        //
+                    options.compute.rec_count ? (function () {
+                        // PER-SITE FAN-OUT (2026-09-12, P7 pre-flip sweep —
+                        // item 2): the per-site index dives above fixed the
+                        // first/last-datetime legs, but the per-site
+                        // `COUNT(*) … archived_at IS NULL` leg still runs as
+                        // ONE statement over every row of the project — the
+                        // ae28 pg_route_timeout shape (89 events/24 h). On PG
+                        // it is I/O-bound on heap-scattered rows and blows the
+                        // 8 s routed-read statement_timeout for million-row
+                        // projects — and (2026-09-12 evidence) this is NOT a
+                        // giant-project shape: mashpi (20 sites, 1.86 M recs)
+                        // cancels deterministically. As ONE STATEMENT the
+                        // whole project shares the 8 s budget; fanned out,
+                        // each site's statement fits its own budget (largest
+                        // mashpi site: 650,898 rows = 492 ms warm on the
+                        // leader), capped 4-deep so a page load cannot
+                        // monopolise the routed-read pool. Exactness is
+                        // unchanged: same per-site SQL text, one site at a
+                        // time, merged by site_id. Giants (>200 sites) keep
+                        // the single-statement shape — the accepted residual.
                         // NOTE: we select FROM sites BY site_id (the PK list the
                         // caller already computed, which correctly includes
                         // project_imported_sites rows owned by OTHER projects).
                         // Do NOT re-filter by project_id here or imported sites
                         // silently lose their counts.
+                        const recCountSql =
                         "SELECT s.site_id AS site_id, "+
                         "       (SELECT COUNT(*) FROM recordings r "+
                         "          WHERE r.site_id = s.site_id "+
@@ -295,20 +282,35 @@ var Projects = {
                         "            AND " + sqlutil.recordingArchiveScope('r', 'active') + " "+
                         "          ORDER BY r.datetime DESC LIMIT 1) AS last_recording_at "+
                         "FROM sites s "+
-                        "WHERE s.site_id IN (?)",
-                        [siteIds]
-                    ).then(function(results){
-                        sites.forEach(function(site){
-                            site.rec_count=0;
-                            site.first_recording_at=null;
-                            site.last_recording_at=null;
-                        });
-                        results.forEach(function(row){
-                            sitesById[row.site_id].rec_count = row.rec_count;
-                            sitesById[row.site_id].first_recording_at = row.first_recording_at;
-                            sitesById[row.site_id].last_recording_at = row.last_recording_at;
-                        });
-                    }) : q(),
+                        "WHERE s.site_id IN (?)";
+                        const runOne = function (ids) {
+                            return dbpool.query(recCountSql, [ids]);
+                        };
+                        const applyRows = function (results) {
+                            sites.forEach(function(site){
+                                site.rec_count=0;
+                                site.first_recording_at=null;
+                                site.last_recording_at=null;
+                            });
+                            results.forEach(function(row){
+                                if (!sitesById[row.site_id]) { return; }
+                                sitesById[row.site_id].rec_count = row.rec_count;
+                                sitesById[row.site_id].first_recording_at = row.first_recording_at;
+                                sitesById[row.site_id].last_recording_at = row.last_recording_at;
+                            });
+                        };
+                        if (siteIds.length > persiteCount.PERSITE_COUNT_MAX_SITES) {
+                            return runOne(siteIds).then(applyRows);
+                        }
+                        return persiteCount.runPerSite(siteIds,
+                            function (sid) { return [sid]; },
+                            function (ids) { return runOne(ids); })
+                            .then(function (perSite) {
+                                var flat = [];
+                                perSite.forEach(function (rows) { if (rows) { flat.push.apply(flat, rows); } });
+                                applyRows(flat);
+                            });
+                    })() : q(),
                 ]).then(function(){
                     if (options.utcDiff) {
                         const result = sites.map(s => {
@@ -1355,10 +1357,39 @@ var Projects = {
 
     // this includes recordings processing
     totalRecordings: function(projectId) {
+        // PER-SITE FAN-OUT (2026-09-12, P7 pre-flip sweep — item 2): the JOIN
+        // form below is ONE statement over every row of the project — on PG it
+        // is I/O-bound on heap-scattered rows and blows the 8 s routed-read
+        // statement_timeout for million-row projects (mashpi, 1.86 M recs:
+        // 8.7 s WARM on the leader — a nested-loop plan off a rows=4 sites
+        // estimate; deterministic fail-open to MariaDB today, a failed
+        // cached-metrics fill at P7 — pg_route_timeout hash cf1aae07fcd4d314).
+        // Per-site statements each fit the budget (largest mashpi site:
+        // 650,898 rows = 492 ms warm). Exactness is unchanged: the count is
+        // over the same live-site set and recording_id is unique per row.
+        // Full design + measurements: app/utils/persite-count.js.
         const q = "SELECT count(recording_id) as count \n" +
                 "FROM recordings AS r JOIN sites AS s ON s.site_id = r.site_id AND s.deleted_at is null \n"+
                 "WHERE s.project_id = " + dbpool.escape(projectId) + " AND r.archived_at IS NULL";
-        return dbpool.query(q).get(0).get('count');
+        return dbpool.query("SELECT s.site_id FROM sites s WHERE s.project_id = " + dbpool.escape(projectId) +
+            " AND s.deleted_at IS NULL").then(async function(siteRows) {
+                const siteIds = siteRows.map(function (s) { return s.site_id; });
+                if (!siteIds.length) { return 0; }
+                if (siteIds.length > persiteCount.PERSITE_COUNT_MAX_SITES) {
+                    // Giants keep the single-statement shape (the accepted
+                    // ae28-class residual; their counts are served to users via
+                    // the cached_metrics row this fill maintains).
+                    return dbpool.query(q).get(0).get('count');
+                }
+                const rows = await persiteCount.runPerSite(siteIds, function (sid) {
+                    return "SELECT COUNT(*) AS n FROM recordings r WHERE r.site_id = " + sid +
+                        " AND r.archived_at IS NULL";
+                }, function (sql) { return dbpool.query(sql); });
+                // COUNT(*) is int8 (a STRING from the PG driver) — coerce.
+                return rows.reduce(function (acc, siteRows) {
+                    return acc + ((siteRows && siteRows[0] && Number(siteRows[0].n)) || 0);
+                }, 0);
+            });
     },
 
     recordingsMinMaxDates: function (project_id, callback) {
