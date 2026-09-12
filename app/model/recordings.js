@@ -2354,7 +2354,13 @@ var Recordings = {
                                 return s.project_id !== parameters.project_id;
                             });
                             if (!hasImported) {
-                                return Q.ninvoke(projectModel, 'getCachedMetrics', 'project-' + parameters.project_id + '-rec')
+                                // NB: NOT Q.ninvoke — ninvoke resolves only
+                                // via a node-style callback; an async
+                                // function's return value is discarded and the
+                                // promise NEVER SETTLES (hung every giant
+                                // search post-#1866). Q() assimilates the
+                                // native promise correctly.
+                                return Q(projectModel.getCachedMetrics('project-' + parameters.project_id + '-rec'))
                                     .then(function (rows) {
                                         if (rows && rows.length) {
                                             // Same [rows] contract as above.
