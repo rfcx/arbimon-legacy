@@ -408,8 +408,8 @@ select.push(
             "    `job_type_id`, `date_created`,\n" +
             "    `last_update`, `project_id`,\n" +
             "    `user_id`, `state`,\n" +
-            "    `progress`, `completed`, `progress_steps`, `hidden`, `ncpu`\n" +
-            ") SELECT ?, NOW(), NOW(), ?, ?, ?, ?, ?, ?, ?, ?";
+            "    `progress`, `completed`, `progress_steps`, `hidden`, `ncpu`, `remarks`\n" +
+            ") SELECT ?, NOW(), NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ''";
 
         let clusteringQuery =
             "INSERT INTO job_params_audio_event_clustering (\n" +

@@ -1175,8 +1175,8 @@ var PatternMatchings = {
                 }).then(function(jres){
                     jobId = jres.insertId;
                     return txq(
-                        'INSERT INTO `pattern_matchings` (`name`,`project_id`,`job_id`,`timestamp`,`species_id`,`songtype_id`,`parameters`,`playlist_id`,`template_id`,`citizen_scientist`) ' +
-                        'VALUES (?, ?, ?, now(), ?, ?, ?, ?, ?, ?)',
+                        'INSERT INTO `pattern_matchings` (`name`,`project_id`,`job_id`,`timestamp`,`species_id`,`songtype_id`,`parameters`,`playlist_id`,`template_id`,`citizen_scientist`,`cs_expert`) ' +
+                        'VALUES (?, ?, ?, now(), ?, ?, ?, ?, ?, ?, 0)',
                         [data.name, projId, jobId, speciesId, songtypeId, JSON.stringify(params), data.playlist, data.template, citizen]);
                 }).then(function(pres){
                     return { job_id: jobId, pattern_matching_id: pres.insertId, dispatch: 'jobqueue' };
