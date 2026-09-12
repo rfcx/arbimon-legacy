@@ -540,6 +540,16 @@ function translateFunctions(sql, store) {
     s = s.replace(/\bUCASE\s*\(/gi, 'UPPER(');
     s = s.replace(/\bLCASE\s*\(/gi, 'LOWER(');
 
+    // UNIX_TIMESTAMP(x) -> EXTRACT(EPOCH FROM x) — deterministic in its
+    // argument, so safe to fold (the no-arg form maps to NOW()). PG has no
+    // unix_timestamp(); without this, the jobs-list / models-list queries
+    // (classifications.js, projects.js:1267/1291, admin-plots.js) 42883 on the
+    // P7 write-conn path (measured live 2026-09-12, hash 71a84649, ~50/hour).
+    // NOTE: the function stays in FORBIDDEN_FUNCTIONS for the shadow-read
+    // replay classifier — that gate is conservative by design and unaffected.
+    s = s.replace(/\bUNIX_TIMESTAMP\s*\(\s*\)/gi, 'EXTRACT(EPOCH FROM NOW())');
+    s = s.replace(/\bUNIX_TIMESTAMP\s*\(\s*([^()]+?)\s*\)/gi, 'EXTRACT(EPOCH FROM $1)');
+
     // ISNULL(x) -> (x IS NULL)   (PG has no ISNULL function)
     s = rewriteCall(s, 'ISNULL', function (args) {
         if (args.length !== 1) { return null; }
