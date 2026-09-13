@@ -19,6 +19,10 @@ const k8sConfig = config('k8s');
 const jsonTemplates = require('../utils/json-templates');
 const { Client } = require('kubernetes-client');
 const k8sClient = new Client({ version: '1.13' });
+// rfcx-local (§300 item 2): shared gate for the direct k8s Job POST leg.
+// Disabled when the in-cluster dispatcher owns dispatch; and an ENABLED leg
+// that fails is a warning, never a "could not create job".
+const { dispatchJobLeg } = require('../utils/k8s-job-leg');
 
 var Classifications = {
     // classifications -> list
@@ -425,16 +429,24 @@ var Classifications = {
             }
         )
         return q.ninvoke(joi, 'validate', payload, Classifications.JOB_SCHEMA)
-            .then(async () => {
-                data.kubernetesJobName = `arbimon-rfm-classify-${data.jobId}-${new Date().getTime()}`;
-                const jobParam = jsonTemplates.getClassificationJobTemplate('arbimon-rfm-classify', 'job', {
-                    kubernetesJobName: data.kubernetesJobName,
-                    imagePath: k8sConfig.rfmImagePath,
-                    ENV_JOB_ID: `${data.jobId}`
-                });
-                return await k8sClient.apis.batch.v1.namespaces(k8sConfig.namespace).jobs.post({ body: jobParam });
-            }).then(() => {
-                return true;
+            .then(() => dispatchJobLeg({
+                jobType: 'classification',
+                jobId: data.jobId,
+                post: () => {
+                    data.kubernetesJobName = `arbimon-rfm-classify-${data.jobId}-${new Date().getTime()}`;
+                    const jobParam = jsonTemplates.getClassificationJobTemplate('arbimon-rfm-classify', 'job', {
+                        kubernetesJobName: data.kubernetesJobName,
+                        imagePath: k8sConfig.rfmImagePath,
+                        ENV_JOB_ID: `${data.jobId}`
+                    });
+                    return k8sClient.apis.batch.v1.namespaces(k8sConfig.namespace).jobs.post({ body: jobParam });
+                }
+            }))
+            .then((result) => {
+                // Resolve with the leg's outcome so the route can carry a
+                // warning. Never reject on a leg failure: the jobs row is
+                // committed and the dispatcher will claim it.
+                return result;
             }).nodeify(callback);
     },
 };

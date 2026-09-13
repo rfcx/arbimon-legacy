@@ -12,6 +12,8 @@ const k8sConfig = config('k8s');
 const jsonTemplates = require('../utils/json-templates');
 const { Client } = require('kubernetes-client');
 const k8sClient = new Client({ version: '1.13' });
+// rfcx-local (§300 item 2): shared gate for the direct k8s Job POST leg.
+const { dispatchJobLeg } = require('../utils/k8s-job-leg');
 const moment = require('moment');
 let s3;
 const queryHandler = dbpool.queryHandler;
@@ -310,19 +312,24 @@ module.exports = {
             }
         )
         return q.ninvoke(joi, 'validate', payload, this.JOB_SCHEMA)
-            .then(async () => {
-                const jobName = `arbimon-rfm-${isRetrain ? 'retrain' : 'train'}`;
-                data.kubernetesJobName = `${jobName}-${data.jobId}-${new Date().getTime()}`;
-                const rfmJsonTemplate = jsonTemplates.getRfmTemplate
-                const rfmRetrainJsonTemplate = jsonTemplates.getRfmRetrainTemplate
-                const jobParam = (isRetrain ? rfmRetrainJsonTemplate : rfmJsonTemplate)(jobName, 'job', {
-                    kubernetesJobName: data.kubernetesJobName,
-                    imagePath: k8sConfig.rfmImagePath,
-                    ENV_JOB_ID: `${data.jobId}`
-                });
-                return await k8sClient.apis.batch.v1.namespaces(k8sConfig.namespace).jobs.post({ body: jobParam });
-            }).then(() => {
-                return true;
+            .then(() => dispatchJobLeg({
+                jobType: isRetrain ? 'retraining' : 'training',
+                jobId: data.jobId,
+                post: () => {
+                    const jobName = `arbimon-rfm-${isRetrain ? 'retrain' : 'train'}`;
+                    data.kubernetesJobName = `${jobName}-${data.jobId}-${new Date().getTime()}`;
+                    const rfmJsonTemplate = jsonTemplates.getRfmTemplate
+                    const rfmRetrainJsonTemplate = jsonTemplates.getRfmRetrainTemplate
+                    const jobParam = (isRetrain ? rfmRetrainJsonTemplate : rfmJsonTemplate)(jobName, 'job', {
+                        kubernetesJobName: data.kubernetesJobName,
+                        imagePath: k8sConfig.rfmImagePath,
+                        ENV_JOB_ID: `${data.jobId}`
+                    });
+                    return k8sClient.apis.batch.v1.namespaces(k8sConfig.namespace).jobs.post({ body: jobParam });
+                }
+            }))
+            .then((result) => {
+                return result;
             }).nodeify(callback);
     },
 };
