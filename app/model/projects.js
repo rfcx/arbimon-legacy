@@ -556,25 +556,44 @@ var Projects = {
             var projectId = projectInfo.project_id;
             delete projectInfo.project_id;
 
+            var sql = pgshadow.isPg
+                // P7 port: `SET ?` object expansion is unparseable on
+                // PG — explicit `SET col = ?` list instead.
+                ? 'UPDATE projects\nSET ' +
+                  Object.keys(projectInfo).map(k => dbpool.escapeId(k) + ' = ?').join(', ') +
+                  '\nWHERE project_id = ?'
+                : 'UPDATE projects\n'+
+                  'SET ?\n'+
+                  'WHERE project_id = ?';
+            var vals = pgshadow.isPg
+                // same boolean -> smallint narrowing as the create port
+                ? Object.keys(projectInfo)
+                      .map(k => typeof projectInfo[k] === 'boolean'
+                                ? (projectInfo[k] ? 1 : 0) : projectInfo[k])
+                      .concat([projectId])
+                : [projectInfo, projectId];
+
+            // 🔴 MUST go through q.ninvoke (i.e. WITH a callback) when running on a
+            // CONNECTION. The P7 PG write adapter's `conn.query(sql, values)` with NO
+            // callback returns a LAZY `{stream}` stub (dbpool-pg.js
+            // `if (!cb) { return makeStreamQuery(...) }`) and NEVER SENDS THE
+            // STATEMENT — whereas mysql@2.18's Connection.query `_enqueue`s the query
+            // with or without a callback, which is why the old two-arg form worked for
+            // years on MariaDB and silently became a no-op at the DB_ENGINE=pg flip.
+            //
+            // Measured 2026-09-13 on the demo tier against the real adapter: the two-arg
+            // form awaited to `[{}]` (the stub) and left the row UNCHANGED while the
+            // surrounding transaction committed empty and the route reported success —
+            // i.e. every SPA project rename silently diverged the planes (OPEN-ITEMS
+            // §300 item 10; user cases 9806 broken 17 days, 9809 broken mid-flip).
+            // The identical sequence WITH a callback persisted correctly (positive
+            // control in the same probe).
+            //
+            // Keep the callback form even if this is ever refactored: on a connection,
+            // a query without a callback is a NO-OP under PG, not a promise.
             return q.all([
-                (db? db.query : dbpool.query)(
-                    pgshadow.isPg
-                        // P7 port: `SET ?` object expansion is unparseable on
-                        // PG — explicit `SET col = ?` list instead.
-                        ? 'UPDATE projects\nSET ' +
-                          Object.keys(projectInfo).map(k => dbpool.escapeId(k) + ' = ?').join(', ') +
-                          '\nWHERE project_id = ?'
-                        : 'UPDATE projects\n'+
-                          'SET ?\n'+
-                          'WHERE project_id = ?',
-                    pgshadow.isPg
-                        // same boolean -> smallint narrowing as the create port
-                        ? Object.keys(projectInfo)
-                              .map(k => typeof projectInfo[k] === 'boolean'
-                                        ? (projectInfo[k] ? 1 : 0) : projectInfo[k])
-                              .concat([projectId])
-                        : [projectInfo, projectId]
-                )
+                db ? q.ninvoke(db, 'query', sql, vals)
+                   : dbpool.query(sql, vals)
             ]);
         }).nodeify(callback);
     },
@@ -1707,7 +1726,13 @@ var Projects = {
     },
 
     deleteLegacy: async function(project_id, db) {
-        return db.query(
+        // Same class as `update` above: a connection-scoped `query` WITHOUT a
+        // callback returns the PG adapter's lazy `{stream}` stub and never runs,
+        // so the soft-delete silently did nothing under DB_ENGINE=pg while the
+        // caller's `await` resolved. Verified in-pod 2026-09-13 (deleted_at
+        // null -> null inside a rolled-back transaction, awaited value
+        // `{stream}`). Use q.ninvoke so the statement is actually sent.
+        return q.ninvoke(db, 'query',
             "UPDATE projects SET deleted_at = NOW() \n"+
             "WHERE project_id = ?",[
                 project_id

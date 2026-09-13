@@ -270,9 +270,50 @@ router.post('/:projectUrl/info/update', function(req, res, next) {
             }
         },
         function(urlChanged, callback) {
-            model.projects.updateProjectInArbimonAndCoreAPI(newProjectInfo, req.session.idToken);
-            var url = urlChanged ? newProjectInfo.url : undefined;
-            res.json({ success: true , url: url });
+            // ANSWER ONLY AFTER THE TRANSACTION COMMITS.
+            //
+            // This step used to call updateProjectInArbimonAndCoreAPI WITHOUT awaiting it and
+            // answer {success:true} immediately. That model call opens a transaction (the
+            // arbimon `projects` UPDATE, then the core PATCH) and its catch ROLLS THE
+            // TRANSACTION BACK, throwing into nothing because the response was already sent.
+            // So ANY failure left the legacy/PG plane unchanged behind a success response, and
+            // the SPA (biodiversity-api project-profile-bll) went on to write
+            // insights.location_project -- three planes diverged with no error anywhere the
+            // user could see, and every legacy /p/<new-slug>/* panel 404'd.
+            // Two real user cases: project 9806 (broken 17 days) and 9809 (broken mid-flip).
+            // Record: rfcx-local runbooks/FINDING-2026-09-12-spa-rename-no-legacy-propagation.md
+            //
+            // NOTE the earlier waterfall steps (verifyName/verifyUrl) answer and deliberately
+            // never call `callback`, so the waterfall simply stops there and this step does not
+            // run -- that shape is preserved, and the headersSent guard below keeps a late
+            // rejection from ever answering twice (ERR_HTTP_HEADERS_SENT).
+            model.projects.updateProjectInArbimonAndCoreAPI(newProjectInfo, req.session.idToken)
+                .then(function() {
+                    var url = urlChanged ? newProjectInfo.url : undefined;
+                    if (res.headersSent) { return; }
+                    res.json({ success: true , url: url });
+                })
+                .catch(function(err) {
+                    // An EXPLICIT status rather than next(err): the generic handler in
+                    // app/index.js answers an APIError as a bare JSON STRING (res.json(err.message)),
+                    // whereas every other failure answer on this route is a
+                    // {success:false, error:...} object -- so an explicit status keeps one
+                    // response shape for all failures of this endpoint. What actually matters
+                    // downstream is the 5xx itself: the SPA's unpackAxiosError re-throws any
+                    // non-2xx, which aborts updateProjectAndProfile BEFORE its local insights
+                    // write, and the legacy Angular settings page's .error() handler shows
+                    // notify.serverError(). A failed rename now fails atomically for the user
+                    // instead of silently diverging the planes.
+                    console.error('Failed to update project', (err && err.stack) || err);
+                    if (res.headersSent) { return; }
+                    var status = (err && typeof err.status === 'number' && err.status >= 400)
+                        ? err.status
+                        : 500;
+                    var message = (err instanceof APIError && err.message)
+                        ? err.message
+                        : 'Failed to update project';
+                    res.status(status).json({ success: false, error: message });
+                });
         }
     ]);
 });
