@@ -124,6 +124,20 @@ describe('§300 item 1 — orphan audio (#86) answers 404, not 500', function ()
         'image/thumbnail must answer 404 for a missing object');
     });
 
+    // Found by an IRR pass AFTER the first green run: fetchInfo() itself calls
+    // fetchRecordingFile (recordings.js:607) when the row has no cached
+    // sample_rate, so `info` and `tiles` each have a SECOND, earlier orphan
+    // path that the first version of this fix left 500ing. Rare in practice
+    // (pg_stats: sample_rate/duration null_frac = 0) but the same class.
+    it('both fetchInfo call sites guard the earlier orphan path', function () {
+      const sites = src.match(/fetchInfo\(recording, function\(err, rec\)\{[\s\S]{0,700}?next\(err\);/g) || [];
+      assert.strictEqual(sites.length, 2, 'expected the tiles + info fetchInfo call sites');
+      sites.forEach(function (block, i) {
+        assert.ok(/isMissingObjectError\(err\)/.test(block),
+          'fetchInfo call site ' + i + ' must answer 404 for a missing object');
+      });
+    });
+
     it('the audio route still uses the same predicate (no behaviour drift)', function () {
       const dl = src.match(/async function downloadRecordingById[\s\S]*?\n\}/);
       assert.ok(dl, 'downloadRecordingById was not found');

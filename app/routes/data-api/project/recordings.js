@@ -497,6 +497,9 @@ router.get('/tiles/:recordingId/:i/:j/:randomString', function(req, res, next) {
         }
 
         model.recordings.fetchInfo(recording, function(err, rec){
+            // Same second orphan path as the info case above (fetchInfo ->
+            // fetchRecordingFile when sample_rate is not cached).
+            if (isMissingObjectError(err)) { return respondAudioNotFound(res); }
             if(err) return next(err);
             model.recordings.fetchOneSpectrogramTile(rec, i, j, function(err, file){
                 // #86 orphan class: the tile render fetches the SAME audio
@@ -629,6 +632,14 @@ router.get('/:get/:oneRecUrl?', function(req, res, next) {
                 }
                 recording.validations = validations;
                 model.recordings.fetchInfo(recording, function(err, rec){
+                    // fetchInfo ALSO reaches fetchRecordingFile -> getObject
+                    // (only when the row has no cached sample_rate, so this is
+                    // the rarer of the two orphan paths on this route --
+                    // pg_stats puts sample_rate/duration null_frac at 0 today).
+                    // Guarded anyway: it is the same miss and the same honest
+                    // answer, and leaving it would make the route's behaviour
+                    // depend on whether a column happened to be populated.
+                    if (isMissingObjectError(err)) { return respondAudioNotFound(res); }
                     if(err) return next(err);
 
                     model.recordings.fetchSpectrogramTiles(rec, function(err, rec){
