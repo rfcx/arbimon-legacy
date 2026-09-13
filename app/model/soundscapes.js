@@ -19,6 +19,8 @@ const k8sConfig = config('k8s');
 const jsonTemplates = require('../utils/json-templates');
 const { Client } = require('kubernetes-client');
 const k8sClient = new Client({ version: '1.13' });
+// rfcx-local (§300 item 2): shared gate for the direct k8s Job POST leg.
+const { dispatchJobLeg } = require('../utils/k8s-job-leg');
 // local variables
 let s3;
 let queryHandler = dbpool.queryHandler;
@@ -735,17 +737,22 @@ let Soundscapes = {
             }
         )
         return q.ninvoke(joi, 'validate', payload, this.JOB_SCHEMA_SINGLE_SOUNDSCAPE)
-            .then(async () => {
-                const jobName = 'arbimon-single-soundscape';
-                const kubernetesJobName = `${jobName}-${jobId}-${new Date().getTime()}`;
-                const jobParam = jsonTemplates.getSingleSoundscapeTemplate(jobName, 'job', {
-                    kubernetesJobName: kubernetesJobName,
-                    imagePath: k8sConfig.soundscapeImagePath,
-                    ENV_JOB_ID: `${jobId}`
-                });
-                await k8sClient.apis.batch.v1.namespaces(k8sConfig.namespace).jobs.post({ body: jobParam });
-            }).then(() => {
-                return true;
+            .then(() => dispatchJobLeg({
+                jobType: 'soundscape',
+                jobId: jobId,
+                post: () => {
+                    const jobName = 'arbimon-single-soundscape';
+                    const kubernetesJobName = `${jobName}-${jobId}-${new Date().getTime()}`;
+                    const jobParam = jsonTemplates.getSingleSoundscapeTemplate(jobName, 'job', {
+                        kubernetesJobName: kubernetesJobName,
+                        imagePath: k8sConfig.soundscapeImagePath,
+                        ENV_JOB_ID: `${jobId}`
+                    });
+                    return k8sClient.apis.batch.v1.namespaces(k8sConfig.namespace).jobs.post({ body: jobParam });
+                }
+            }))
+            .then((result) => {
+                return result;
             }).nodeify(callback);
     },
 

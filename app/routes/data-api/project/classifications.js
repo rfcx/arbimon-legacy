@@ -265,13 +265,26 @@ router.post('/new', function(req, res, next) {
             }
             return;
         }
+        // rfcx-local 2026-09-13 (OPEN-ITEMS §300 item 2): the `jobs` row above
+        // IS the enqueue — the in-cluster dispatcher claims state='waiting' and
+        // runs the job. The k8s Job POST below is the upstream AWS-EKS
+        // execution path; here it is disabled (ANALYSIS_DISPATCH=jobqueue) and
+        // when it IS enabled its failure does not un-create the job. Either
+        // way the answer is `ok` with the job id. Reporting the leg's error as
+        // "Could not create classification job" told users their analysis had
+        // failed while it ran to `completed` (job 169895, measured 2026-09-12).
         return model.classifications.createClassificationJob({
             jobId: job_id
         }, function(err, data) {
             if (err) {
-                return res.json({ err: 'Could not create classification job' });
+                // Only a programming error reaches here now; the job still
+                // exists, so still answer honestly rather than claiming the
+                // create failed.
+                console.error('createClassificationJob unexpected error for job ' + job_id + ':', err);
             }
-            res.json({ ok: `Job created, classification Job: ${job_id}` });
+            const body = { ok: `Job created, classification Job: ${job_id}` };
+            if (data && data.warning) { body.warning = data.warning; }
+            res.json(body);
         })
     });
 });

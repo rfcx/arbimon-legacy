@@ -110,12 +110,21 @@ router.post('/project/:projectUrl/models/new', function(req, res, next) {
         job_id = _job_id;
         pokeDaMonkey(); // parallel promise
 
+        // rfcx-local 2026-09-13 (OPEN-ITEMS §300 item 2): the `jobs` row from
+        // newJob() above IS the enqueue; the k8s Job POST is the upstream
+        // AWS-EKS execution path and its failure does not un-create the job.
+        // Answering `err` here reported a SUCCESSFUL create as a failure
+        // (job 169894 ran to `completed` while the user saw an error).
         return model.models.createRFM({
             jobId: job_id,
             isRetrain: isRetrain
         }, function(err, data) {
-            if (err) return res.json({ err: `Could not create ${isRetrain ? 'retraining' : 'training'} job` });
-            res.json({ ok: `Job created, ${isRetrain ? 'retraining' : 'training'} Job: ${job_id}` });
+            if (err) {
+                console.error('createRFM unexpected error for job ' + job_id + ':', err);
+            }
+            const body = { ok: `Job created, ${isRetrain ? 'retraining' : 'training'} Job: ${job_id}` };
+            if (data && data.warning) { body.warning = data.warning; }
+            res.json(body);
         })
     }).catch(next);
 });
@@ -465,6 +474,9 @@ router.post('/project/:projectUrl/soundscape/single-batch', function(req, res, n
     res.type('json');
     let response_already_sent;
     let params, job_id;
+    // rfcx-local (§300 item 2): set when the k8s Job POST leg is enabled AND
+    // fails. Carried into the SUCCESS body — the job was still created.
+    let soundscape_leg_warning = null;
 
     async.waterfall([
         function find_project_by_url(next){
@@ -522,8 +534,17 @@ router.post('/project/:projectUrl/soundscape/single-batch', function(req, res, n
         function get_job_id(_job_id){
             let next = arguments[arguments.length -1];
             job_id = _job_id;
+            // rfcx-local 2026-09-13 (OPEN-ITEMS §300 item 2): the `jobs` row
+            // from newJob() above IS the enqueue. The k8s Job POST leg is the
+            // upstream AWS-EKS execution path; passing its error to next()
+            // aborted the waterfall into the `{err:"Could not create soundscape
+            // job"}` handler while the job ran to `completed` (job 169872).
+            // The leg no longer rejects; carry any warning to the response.
             return model.soundscapes.createSingleSoundscape(job_id, function(err, data) {
-                if (err) return next(err);
+                if (err) {
+                    console.error('createSingleSoundscape unexpected error for job ' + job_id + ':', err);
+                }
+                if (data && data.warning) { soundscape_leg_warning = data.warning; }
                 next();
             })
         },
@@ -538,7 +559,9 @@ router.post('/project/:projectUrl/soundscape/single-batch', function(req, res, n
             }
             return;
         } else {
-            res.json({ ok:"job created soundscapeJob:"+job_id });
+            const body = { ok:"job created soundscapeJob:"+job_id };
+            if (soundscape_leg_warning) { body.warning = soundscape_leg_warning; }
+            res.json(body);
         }
     });
 });
