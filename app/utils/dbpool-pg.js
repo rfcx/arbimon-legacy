@@ -2088,7 +2088,15 @@ function shadowAfterRead(finalSql, mariaRows, meta) {
         // read-only transaction so the timeout guard + SELECT share a server
         // connection, and ROLLBACK always releases it clean. SET LOCAL scopes
         // the timeout to this transaction only.
-        var begin = 'BEGIN READ ONLY; SET LOCAL statement_timeout=' + Math.round(TIMEOUT_MS) + ';';
+        // jit=off (2026-09-12): the server default is jit=off via a LIVE-ONLY
+        // postgresql.base.conf edit (absent from the repo CM + DCS — a cluster
+        // rebuild or Patroni config rewrite reverts to the stock jit=on).
+        // Subplan-heavy shadow replays (e.g. the giant sites count, plan cost
+        // 5.4M >> jit_above_cost=100k) would then pay tens of seconds of JIT
+        // COMPILATION inside the 8 s budget — measured 2026-09-12. Pinning
+        // jit=off per transaction (tx-scoped, pgbouncer-safe) makes that
+        // class unreachable regardless of server config.
+        var begin = 'BEGIN READ ONLY; SET LOCAL statement_timeout=' + Math.round(TIMEOUT_MS) + '; SET LOCAL jit=off;';
         client.query(begin, function (gerr) {
             if (clientDead) { return; }   // client already failed + released
             if (gerr) {
@@ -2341,8 +2349,14 @@ function pgReadQuery(finalSql, cb0) {
             releaseOnce(cerr);
             settle({ pgRouteFallback: true, message: 'client error' });
         });
+        // One explicit read-only tx per routed read (pgbouncer is
+        // transaction-pooled); SET LOCAL scopes the timeout — and jit=off —
+        // to this transaction only. jit=off rationale: see the shadow path's
+        // begin string (live-only server config could revert to stock jit=on;
+        // subplan-heavy routed reads would pay JIT compile inside the 8 s
+        // budget).
         client.query('BEGIN READ ONLY; SET LOCAL statement_timeout=' +
-                     Math.round(TIMEOUT_MS) + ';', function (gerr) {
+                     Math.round(TIMEOUT_MS) + '; SET LOCAL jit=off;', function (gerr) {
             if (gerr) {
                 try { client.query('ROLLBACK', function () { releaseOnce(); }); }
                 catch (e) { releaseOnce(); }
