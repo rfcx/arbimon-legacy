@@ -19,7 +19,7 @@ const patternMatching = require('./pattern-matching')
 const soundscape = require('./soundscape')
 const template = require('./template')
 const rfmClassification = require('./rfm-classification')
-const { streamToBuffer, zipDirectory } = require('../services/file-helper')
+const { streamToBuffer, zipDirectory, sanitizeFilename } = require('../services/file-helper')
 // formatExportError: '{}'-proof + SQL-safe rendering of a thrown value.
 // Standalone module so it is unit-testable without the DB stack.
 // isEmptyExportFile: 0-byte (== 0-row) detection that refuses to treat a
@@ -546,7 +546,10 @@ async function processOccupancyModelStream (results, rowData, speciesId, filters
         datastreamOccupancy.push(null);
 
         datastreamOccupancy.on('end', async () => {
-            const title = 'occupancy-' + rowData.species_name + '-' + speciesId + '.csv';
+            // species_name is user-controlled (project class names from the export
+        // filters): sanitize before it becomes a path component — the same '/'
+        // crash class as the rfm-classify writer (2026-09-12).
+        const title = 'occupancy-' + sanitizeFilename(rowData.species_name) + '-' + speciesId + '.csv';
             console.log('[occupancy datastream end] title', title)
             console.log(`[occupancy datastream end] _bufer.length`, _bufer.length)
             const targetFile = fs.createWriteStream(`${tmpFilePath}/${title}`, { flags: 'a' })
