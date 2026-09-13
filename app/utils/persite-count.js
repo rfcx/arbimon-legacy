@@ -65,7 +65,20 @@ var MAX_SITES = 200;
 // and rows merge app-side by site_id exactly like the per-site fan-out.
 // Exactness is unchanged: the per-site SQL text is untouched, only the IN
 // list is batched; every site's subplan is independent of every other site.
-var GIANT_CHUNK_SIZE = 50;
+//
+// SIZING IS SET BY THE WORST CHUNK, NOT THE AVERAGE (measured on the leader,
+// 2026-09-12 — the first pass of this fix used 50 because the AVERAGE chunk was
+// 63 ms, which is the wrong statistic). This project's rows are heavily skewed:
+// a handful of sites hold 361k/342k/331k/325k/313k/307k recordings each, so
+// whichever chunk catches several of them sets the worst case:
+//     size 50 -> 19 statements, MAX 4,734 ms  (1.7x margin on the 8 s budget)
+//     size 25 -> 39 statements, MAX 4,692 ms  (1.7x)
+//     size 10 -> 96 statements, MAX 2,344 ms  (3.4x)
+// Total work is ~8.0 s in all three (same rows, same plans; 8,097 ms at size 10
+// vs 7,998 ms at size 25), so the smaller chunk buys margin essentially for
+// free. 1.7x is not enough head-room for a cold buffer cache — the same
+// statement measured >25 s cold on the replica — hence 10.
+var GIANT_CHUNK_SIZE = 10;
 var GIANT_CHUNK_CAP = 2;
 
 function toIntIds(siteIds) {

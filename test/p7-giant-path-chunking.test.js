@@ -38,8 +38,14 @@ describe('giant-path chunk runner', function () {
         assert.ok(persiteCount.GIANT_CHUNK_SIZE > 0, 'no GIANT_CHUNK_SIZE');
         assert.ok(persiteCount.GIANT_CHUNK_SIZE <= persiteCount.PERSITE_COUNT_MAX_SITES,
             'a chunk must be smaller than the giant threshold or it is not a chunk');
-        // measured: 50 sites / 114k rows = 63.6 ms on the leader
-        assert.strictEqual(persiteCount.GIANT_CHUNK_SIZE, 50);
+        // Sized by the WORST chunk, not the average (measured on the leader):
+        //   50 -> max 4,734 ms (1.7x margin) | 25 -> 4,692 ms | 10 -> 2,344 ms (3.4x)
+        // Total work is ~8.0 s at every size, so the small chunk is free margin.
+        assert.strictEqual(persiteCount.GIANT_CHUNK_SIZE, 10);
+        // Guard the PROPERTY, not just the constant: the worst observed chunk
+        // must leave real head-room under the 8 s routed-read budget.
+        assert.ok(persiteCount.GIANT_CHUNK_SIZE <= 25,
+            'a larger chunk concentrates the giant sites and erodes the timeout margin');
         // keep concurrency modest: the routed pool is shared (PG_POOL_MAX=20)
         assert.ok(persiteCount.GIANT_CHUNK_CAP >= 1 && persiteCount.GIANT_CHUNK_CAP <= 4);
     });
@@ -52,6 +58,9 @@ describe('giant-path chunk runner', function () {
         assert.strictEqual(chunks[0].length, 50);
         assert.strictEqual(chunks[1].length, 50);
         assert.strictEqual(chunks[2].length, 25);
+        // and at the shipped default
+        assert.strictEqual(persiteCount.chunkIds(ids, persiteCount.GIANT_CHUNK_SIZE).length,
+            Math.ceil(125 / persiteCount.GIANT_CHUNK_SIZE));
         assert.deepStrictEqual([].concat(chunks[0], chunks[1], chunks[2]), ids,
             'chunking must be a partition: same ids, same order, none lost or duplicated');
     });
@@ -65,7 +74,7 @@ describe('giant-path chunk runner', function () {
             return [];
         });
         assert.strictEqual(statements.length, Math.ceil(950 / persiteCount.GIANT_CHUNK_SIZE),
-            'expected one statement per chunk (19 for 950 sites at 50/chunk)');
+            'expected one statement per chunk (95 for 950 sites at 10/chunk)');
         // every statement is bounded — this is the whole point of the fix
         statements.forEach(function (s) {
             assert.ok(s.length <= persiteCount.GIANT_CHUNK_SIZE,
