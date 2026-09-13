@@ -272,8 +272,14 @@ var Projects = {
                         // leader), capped 4-deep so a page load cannot
                         // monopolise the routed-read pool. Exactness is
                         // unchanged: same per-site SQL text, one site at a
-                        // time, merged by site_id. Giants (>200 sites) keep
-                        // the single-statement shape — the accepted residual.
+                        // time, merged by site_id. Giants (>200 sites) used to keep
+                        // the single-statement shape (the accepted residual) — RETIRED
+                        // post-flip 2026-09-12: the mega-statement straddles the 8 s
+                        // routed-read budget (7,704 ms warm on the leader; 8,055-8,350 ms
+                        // through the app => cancel => user-facing 500 on the sites page,
+                        // pg_route_timeout ae287941…). Giants now run the SAME statement
+                        // in 50-site chunks, 2-deep (persite-count.js GIANT_CHUNK_*),
+                        // merged by site_id below — exactness unchanged.
                         // NOTE: we select FROM sites BY site_id (the PK list the
                         // caller already computed, which correctly includes
                         // project_imported_sites rows owned by OTHER projects).
@@ -311,7 +317,13 @@ var Projects = {
                             });
                         };
                         if (siteIds.length > persiteCount.PERSITE_COUNT_MAX_SITES) {
-                            return runOne(siteIds).then(applyRows);
+                            return persiteCount.runInChunks(siteIds,
+                                function (ids) { return runOne(ids); })
+                                .then(function (perChunk) {
+                                    var flat = [];
+                                    perChunk.forEach(function (rows) { if (rows) { flat.push.apply(flat, rows); } });
+                                    applyRows(flat);
+                                });
                         }
                         return persiteCount.runPerSite(siteIds,
                             function (sid) { return [sid]; },

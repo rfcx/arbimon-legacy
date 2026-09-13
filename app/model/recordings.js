@@ -3178,8 +3178,40 @@ var Recordings = {
                     "WHERE (s.project_id = ? OR pis.project_id = ?) AND s.deleted_at is null",
                     [filters.project_id, filters.project_id, filters.project_id]
                 ).then(async function (siteRows) {
-                    if (siteRows.length > persiteCount.PERSITE_COUNT_MAX_SITES) { return null; } // giant: caller falls back
                     var scopeSuffix = archiveScope ? (' AND ' + archiveScope) : '';
+                    if (siteRows.length > persiteCount.PERSITE_COUNT_MAX_SITES) {
+                        // GIANT CHUNKING (2026-09-12, post-flip — pg_route_timeout
+                        // hash 04e1b3d8…): the historical single grouped statement
+                        // (runBuilder below) over a giant project straddles the 8 s
+                        // routed-read budget on PG (the sites/recordings pages 500),
+                        // and post-flip there is no fail-open target. Same fix shape
+                        // as getProjectSites: the same COUNT grouped per site, run in
+                        // 50-site chunks 2-deep, merged by site_id. Exactness
+                        // unchanged: COUNT(*) == COUNT(DISTINCT recording_id) per
+                        // site (recording_id is unique per row — the fan-out's
+                        // argument), and zero-count sites stay dropped (the grouped
+                        // query never returned them either).
+                        var bySiteIdG = {};
+                        var siteById = {};
+                        siteRows.forEach(function (s) { siteById[s.site_id] = s; });
+                        var chunkResults = await persiteCount.runInChunks(siteRows.map(function (s) { return s.site_id; }),
+                            function (ids) {
+                                return dbpool.query(
+                                    "SELECT r.site_id AS site_id, COUNT(*) AS n FROM recordings r WHERE r.site_id IN (?)" + scopeSuffix + " GROUP BY r.site_id",
+                                    [ids]);
+                            });
+                        chunkResults.forEach(function (rows) {
+                            (rows || []).forEach(function (r) {
+                                var n = Number(r.n) || 0;
+                                var s = siteById[r.site_id];
+                                if (n > 0 && s) {
+                                    bySiteIdG[r.site_id] = { site_id: r.site_id, site: s.name, imported: s.imported, count: n };
+                                }
+                            });
+                        });
+                        return siteRows.map(function (s) { return bySiteIdG[s.site_id]; }).filter(Boolean)
+                            .sort(function (a, b) { return a.site_id - b.site_id; });
+                    }
                     var counts = await persiteCount.runPerSite(siteRows.map(function (s) { return s.site_id; }),
                         function (sid) {
                             return "SELECT COUNT(*) AS n FROM recordings r WHERE r.site_id = " + sid + scopeSuffix;
@@ -3196,7 +3228,10 @@ var Recordings = {
                         .sort(function (a, b) { return a.site_id - b.site_id; });
                 }).then(function (rows) {
                     if (rows) { return rows; }
-                    // >MAX_SITES: fall through to the historical statement.
+                    // Defensive: the fan-out/chunk branches above always return an
+                    // array for the unfiltered shape; if one ever returned null,
+                    // fall through to the historical single statement rather than
+                    // serving nothing.
                     return runBuilder();
                 });
             }
