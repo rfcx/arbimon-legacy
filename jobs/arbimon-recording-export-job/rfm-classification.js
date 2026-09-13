@@ -4,6 +4,7 @@ const fs = require('fs')
 const stream = require('stream');
 const csv_stringify = require('csv-stringify');
 const { getCsvData, getName, getJobMeta } = require('../services/rfm-classify');
+const { sanitizeFilename } = require('../services/file-helper');
 
 const exportReportType = 'RFM Classification';
 const exportReportJob = `Arbimon Export ${exportReportType} job`
@@ -21,9 +22,44 @@ async function collectData (projection_parameters, cb) {
       return cb(new Error(`classification job ${projection_parameters.rfmClassify} not found`))
     }
     const jobMeta = await getJobMeta(projection_parameters.rfmClassify).catch(() => null)
-    const filePath = path.join(__dirname, `rfm_${res.name}.csv`)
+    // res.name derives from the classification job's user-typed name (getName
+    // lowercases it and turns spaces into underscores — but leaves every other
+    // character). A '/' in it turns the csv target into a SUBDIRECTORY, the
+    // WriteStream open fails ENOENT, and the unhandled 'error' event kills the
+    // whole consumer process — the measured 2026-09-12 crash-loop (job names
+    // like "S. fuscovarius 80/20 B2" -> 'rfm_s._fuscovarius_80/20_b2.csv').
+    // Sanitize HERE, at path-construction time; the raw readable name still
+    // reaches the user via jobMeta.job_name in the notification email.
+    const safeName = sanitizeFilename(res.name)
+    const filePath = path.join(__dirname, `rfm_${safeName}.csv`)
     const targetFile = fs.createWriteStream(filePath, { flags: 'a' })
+    // A WriteStream 'error' with no listener is an UNHANDLED EVENT that throws
+    // out of the event loop and kills the consumer (node:events
+    // "Emitted 'error' event on WriteStream instance") — one bad export must
+    // fail its own row only. Capture the failure and surface it through cb()
+    // so the caller marks the export row failed and the queue advances.
+    const state = { streamError: null }
+    targetFile.on('error', (err) => {
+      console.error('Error export RFM Classification (write stream)', err)
+      if (!state.streamError) state.streamError = err
+    })
+    // Deterministic open gate: the fd open completes on the thread pool, so an
+    // open failure (the ENOENT class) lands on a LATER tick than the first
+    // export-loop iterations. Wait for 'open' or the first 'error' BEFORE
+    // pulling any chunks, so an unwritable target fails the row immediately
+    // instead of racing the loop (or, worse, reporting success on a file that
+    // was never created).
+    await new Promise((resolve) => {
+      targetFile.once('open', resolve)
+      targetFile.once('error', resolve)
+    })
     await exportRFMClassify(projection_parameters.rfmClassify, targetFile, async (err, data) => {
+      if (state.streamError) {
+        // The stream failed at/before write time. Fail the row, never the
+        // process; the reconciler will not re-pick a terminal-error row.
+        try { targetFile.destroy() } catch (_) {}
+        return cb(state.streamError)
+      }
       if (err) {
         console.error('Error export RFM Classification', err)
         targetFile.end()
@@ -31,8 +67,8 @@ async function collectData (projection_parameters, cb) {
       }
       console.log(`${exportReportJob}: finished collecting chunks`)
       targetFile.end()
-      cb(null, path.resolve(filePath), `rfm_${res.name}`, jobMeta)
-    }).catch((e) => {
+      cb(null, path.resolve(filePath), `rfm_${safeName}`, jobMeta)
+    }, state).catch((e) => {
       console.error('Error export RFM Classification', e)
       cb(e)
     })
@@ -42,7 +78,7 @@ async function collectData (projection_parameters, cb) {
   }
 }
 
-async function exportRFMClassify (jobId, targetFile, cb) {
+async function exportRFMClassify (jobId, targetFile, cb, state) {
   try {
     console.log(`${exportReportJob} started`)
     const limit = 5000;
@@ -50,7 +86,10 @@ async function exportRFMClassify (jobId, targetFile, cb) {
     let toProcess = true;
     let isFirstChunk = true
 
-    while (toProcess === true) {
+    // A dead stream is terminal for this export: stop pulling chunks from the
+    // DB (the writes would no-op anyway) and let the callback report the
+    // recorded streamError.
+    while (toProcess === true && !(state && state.streamError)) {
       console.log('next chunk', limit, limit * index)
       const queryResult =  await getCsvData({
         jobId,
@@ -58,7 +97,7 @@ async function exportRFMClassify (jobId, targetFile, cb) {
         offset: limit * index
       });
       toProcess = queryResult.length > 0;
-      if (toProcess) {
+      if (toProcess && !(state && state.streamError)) {
         console.log(`${exportReportJob}: writing chunk`)
         await writeChunk(queryResult, targetFile, isFirstChunk)
       }
