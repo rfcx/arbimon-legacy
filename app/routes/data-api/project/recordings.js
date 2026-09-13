@@ -14,6 +14,68 @@ const fs = require('fs')
 
 let s3, s3RFCx;
 
+/**
+ * Is this error "the recording's AUDIO OBJECT is absent from every storage
+ * layer" -- i.e. the OPEN-ITEMS #86 orphan class (~1.85M `recordings` rows
+ * whose object exists nowhere)?
+ *
+ * WHY THIS IS A NAMED HELPER (2026-09-13, OPEN-ITEMS §300 item 1).
+ * ----------------------------------------------------------------
+ * This predicate already existed, inline, in downloadRecordingById -- the
+ * 2026-08-29 pod-kill fix -- where it turns a missing object into a clean
+ * `404 {error:'recording audio not found'}`. The `info` case of the
+ * /:get/:oneRecUrl? route reaches the SAME miss by a different path
+ * (fetchSpectrogramTiles -> fetchSpectrogramFile -> fetchRecordingFile ->
+ * s3Client.getObject -> callback(err)) and had no equivalent, so it fell
+ * through to `next(err)` and the generic error handler's
+ * `res.status(500).json('Server error')` (app/index.js:185-197).
+ *
+ * Measured on prod (Loki, 7d, 2026-09-13): 18 recordings/{info,tiles} 500s,
+ * of which 4 are this class (recording 106147303, project `wolves`); the
+ * object was confirmed absent by a single headObject through the app's own
+ * S3 client, against a fabricated negative control that also 404s.
+ *
+ * 🔴 WHAT THIS PREDICATE MUST **NOT** MATCH, and why that is the whole point.
+ * The other 14 of those 18 500s are recordings whose audio IS PRESENT in the
+ * bucket (verified, with byte sizes) and which fail for unrelated reasons:
+ *
+ *   - `media-api returned 404 for spectro asset` (model/recordings.js:954) --
+ *     a plain `Error`: no `.code`, no `.statusCode`, `name === 'Error'`.
+ *     The RENDER failed, the recording did not go missing.
+ *   - sox `FLAC ERROR whilst decoding metadata` / Jimp `Could not open image
+ *     file` (utils/tyler.js:30) -- a CORRUPT-but-present object.
+ *
+ * Answering "recording audio not found" for either of those would tell the
+ * user something FALSE and would bury a real media-api / corrupt-object
+ * defect behind a tidy 404. Keeping the predicate strictly
+ * audio-absence-shaped excludes them for free: neither carries any of the
+ * four markers below, so both still reach `next(err)` -> 500 and stay loud.
+ * Real S3 outages and permission errors are likewise untouched.
+ *
+ * Kept byte-identical to the 08-29 audio-route predicate on purpose -- the
+ * two routes must agree about what "missing" means, and the SPA treats their
+ * responses alike.
+ */
+function isMissingObjectError(err) {
+    return !!err && (err.statusCode === 404 || err.code === 'NoSuchKey' ||
+                     err.code === 'NotFound' || err.name === 'XMLParserError');
+}
+
+/**
+ * The single response shape for "this recording's audio is gone".
+ *
+ * Same status AND same body as the audio route has returned since 2026-08-29,
+ * so every consumer can treat the two identically. Consumers verified
+ * 2026-09-13: the SPA (`apiArbimonGetRecording`, axios) throws on any non-2xx
+ * exactly as it did for the 500; the legacy Angular visualizer's own guard
+ * (`assets/app/app/visualizer/visobjects/recording.js:60-63`, `if (!this.tiles)
+ * { this.isDisabled = true; return }`) catches this body and renders its
+ * existing "Unavailable" state -- so neither client regresses to a blank page.
+ */
+function respondAudioNotFound(res) {
+    return res.status(404).json({ error: 'recording audio not found' });
+}
+
 // endpoint-aware: route through s3-proxy/s3-reader/s3-writer chain
 // (AWS_S3_ENDPOINT) instead of AWS S3 directly. See app/utils/storage.js.
 function defineS3Clients() {
@@ -301,10 +363,11 @@ async function downloadRecordingById(req, res, inline, next) {
                 try { res.destroy(); } catch (e) {}
                 return resolve();
             }
-            const missing = err && (err.statusCode === 404 || err.code === 'NoSuchKey' ||
-                                    err.code === 'NotFound' || err.name === 'XMLParserError');
-            if (missing) {
-                res.status(404).json({ error: 'recording audio not found' });
+            // Same predicate the info/tiles/image/thumbnail surfaces use --
+            // hoisted to one helper 2026-09-13 so the routes cannot drift
+            // apart about what "missing" means. Behaviour here is unchanged.
+            if (isMissingObjectError(err)) {
+                respondAudioNotFound(res);
                 return resolve();
             }
             next(err);
@@ -436,6 +499,11 @@ router.get('/tiles/:recordingId/:i/:j/:randomString', function(req, res, next) {
         model.recordings.fetchInfo(recording, function(err, rec){
             if(err) return next(err);
             model.recordings.fetchOneSpectrogramTile(rec, i, j, function(err, file){
+                // #86 orphan class: the tile render fetches the SAME audio
+                // object as the info/image/thumbnail paths, so a missing
+                // object surfaces here too. Answer the shared 404 instead of
+                // the generic 500. Anything else still goes to next(err).
+                if (isMissingObjectError(err)) { return respondAudioNotFound(res); }
                 if(err || !file){ next(err); return; }
                 res.sendFile(file.path, function () {
                     if (fs.existsSync(file.path)) {
@@ -470,6 +538,11 @@ router.get('/:get/:oneRecUrl?', function(req, res, next) {
             res.json(recordings instanceof Array ? recordings[0] : recordings);
         },
         file : function(err, file) {
+            // #86 orphan class (audio / image / thumbnail all resolve the same
+            // underlying object via fetchRecordingFile): a vanished object is a
+            // 404 about THIS recording, not a server fault. Everything else --
+            // real S3 outages, permissions, render failures -- still 500s.
+            if (isMissingObjectError(err)) { return respondAudioNotFound(res); }
             if (err || !file) return next(err);
 
             // For audio: set Content-Type + a Content-Disposition filename
@@ -559,6 +632,15 @@ router.get('/:get/:oneRecUrl?', function(req, res, next) {
                     if(err) return next(err);
 
                     model.recordings.fetchSpectrogramTiles(rec, function(err, rec){
+                        // OPEN-ITEMS §300 item 1 / #86: fetchSpectrogramTiles
+                        // -> fetchSpectrogramFile -> fetchRecordingFile ->
+                        // s3Client.getObject. When the recording's audio
+                        // exists in NO storage layer that callback carries
+                        // NoSuchKey/404, and this route used to hand it to
+                        // next(err) -> the generic 'Server error' 500. The
+                        // audio route has answered a clean 404 for the same
+                        // miss since 2026-08-29; this is the equivalent.
+                        if (isMissingObjectError(err)) { return respondAudioNotFound(res); }
                         if(err) return next(err);
 
                         res.json(rec);
