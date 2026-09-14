@@ -1272,7 +1272,11 @@ angular.module('a2.analysis.patternmatching', [
             }).catch((function(err){
                 console.log('err', err);
                 self.isSaving = false
-                notify.error(err);
+                // §316: `err` is the whole $http response -- notify.error(err) hands
+                // humane an object, which it renders via innerHTML. apiError pulls the
+                // server's field-level message out of a 4xx {error:...} body and falls
+                // back to generic text for 5xx.
+                notify.apiError(err, 'Error creating the pattern matching job');
             }));
         },
         isJobValid: function () {

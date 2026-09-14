@@ -148,6 +148,70 @@ function get (app, p, cb) {
     });
 }
 
+// ---------------------------------------------------------------- client
+// The server fix alone reaches only ONE of the 18 measured events: 5 of the 6
+// routes discard the body (hardcoded text, or no error handler at all). So the
+// client-side surfacing is part of the fix, and is asserted here.
+console.log('C  client: humane.js surfaces a 4xx message, never a 5xx body');
+let notify;
+{
+    const humaneSrc = fs.readFileSync(path.join(root, 'assets/app/services/humane.js'), 'utf8');
+    let factoryFn = null;
+    const angularStub = { module: function () {
+        return { factory: function (n, f) { factoryFn = f; return this; } };
+    } };
+    // eslint-disable-next-line no-new-func
+    new Function('angular', humaneSrc)(angularStub);
+    const shown = [];
+    const humaneStub = {
+        spawn: function () { return function (m) { shown.push(m); }; },
+        error: function (m) { shown.push(m); }
+    };
+    notify = factoryFn ? factoryFn({ humane: humaneStub }) : null;
+    eq('humane.js factory could be loaded', !!notify, true);
+
+    const last = function (fn) { shown.length = 0; fn(); return shown[shown.length - 1]; };
+
+    eq('a 400 {error} body is shown to the user',
+       last(function () { notify.serverError({ status: 400, data: { error: 'params.N: must be a number' } }); }),
+       'params.N: must be a number');
+    // The safety property: a 5xx body is an internal failure and must NOT be echoed.
+    eq('a 500 body is NOT echoed',
+       last(function () { notify.serverError({ status: 500, data: 'Server error' }); }),
+       'Error communicating with server');
+    // `.catch(notify.serverError)` passes a BARE function reference (no `this`).
+    eq('works as an unbound .catch(notify.serverError) reference',
+       last(function () {
+           const bare = notify.serverError;
+           bare({ status: 400, data: { error: 'patternMatching: must be a number' } });
+       }),
+       'patternMatching: must be a number');
+    // Legacy zero-arg call sites must be unaffected.
+    eq('a zero-argument call still works',
+       last(function () { notify.serverError(); }), 'Error communicating with server');
+    eq('a bare Error does not leak or crash',
+       last(function () { notify.serverError(new Error('boom')); }), 'Error communicating with server');
+    // apiError does not exist pre-fix; assert its ABSENCE as a failure rather than
+    // letting the call crash the suite, so the negative control still reaches the
+    // HTTP assertions below (that is the part which proves 500-vs-400).
+    eq('notify.apiError exists', typeof notify.apiError === 'function', true);
+    eq('apiError falls back to the caller text on 5xx',
+       typeof notify.apiError === 'function'
+           ? last(function () { notify.apiError({ status: 500, data: 'Server error' }, 'Error creating the job'); })
+           : '(apiError missing)',
+       'Error creating the job');
+
+    // The pattern-matching caller must use apiError, not notify.error(err): passing
+    // the whole response object to humane renders it via innerHTML.
+    const pmSrc = fs.readFileSync(path.join(root, 'assets/app/app/analysis/patternmatching/index.js'), 'utf8');
+    // Anchor on the call itself rather than on its distance from the .catch(:
+    // an intervening comment must not break the assertion (it did once).
+    eq('the pattern-matching create() catch uses notify.apiError',
+       /notify\.apiError\(err,\s*'[^']+'\)/.test(pmSrc), true);
+    eq('it no longer passes the raw response to notify.error',
+       /self\.isSaving = false\s*\n\s*notify\.error\(err\);/.test(pmSrc), false);
+}
+
 const app = buildApp();
 get(app, '/joi', function (r) {
     eq('joi failure is 400', r.status, 400);
