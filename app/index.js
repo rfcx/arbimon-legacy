@@ -28,6 +28,7 @@ AWS.config.update({
 var systemSettings = require('./utils/settings-monitor');
 var tmpfilecache = require('./utils/tmpfilecache');
 var APIError = require('./utils/apierror');
+var joiHttpError = require('./utils/joi-http-error');
 var model = require('./model');
 
 var www_root_path = path.resolve(__dirname, '..', 'public');
@@ -180,6 +181,12 @@ app.use('/', routes);
 app.use(function(req, res, next) {
     res.status(404).render('not-found');
 });
+
+// §316: normalise joi ValidationErrors into the APIError shape (status 400 +
+// a field-level message body) BEFORE the renderer below. Non-joi errors are
+// passed straight through untouched, so their responses are unchanged.
+// Rationale + the measured regression this avoids: app/utils/joi-http-error.js
+app.use(joiHttpError);
 
 // error handler
 app.use(function(err, req, res, next) {
