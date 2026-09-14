@@ -20,9 +20,18 @@ const METRICS_CACHE_TTL_MIN = 90
 const COLD_KEY_BOUND_MS = parseInt(process.env.METRICS_COLD_BOUND_MS || '2000', 10)
 
 // What to serve when a cold key does not finish inside the bound.
-//   recording-count on PG : pg_class.reltuples (measured 0.003 % off the exact
-//                           count; 16 ms). On MariaDB information_schema
-//                           TABLE_ROWS measured 4.3 % over -> NOT used.
+//   recording-count on PG : pg_class.reltuples (16 ms). On MariaDB
+//                           information_schema TABLE_ROWS measured 4.3 % over
+//                           -> NOT used.
+//   ACCURACY, CORRECTED 2026-09-14 (§300 item F): an earlier version of this
+//   comment claimed reltuples was accurate to three decimal places (a figure
+//   170x too optimistic). RE-DERIVED against an exact
+//   count of 305,018,868 on the PG leader: reltuples = 306,609,408, i.e.
+//   +0.521 % -- 170x the figure once claimed here. It also counts the ~5.75 M
+//   archived rows. It remains the right COLD-key fallback (the alternative is
+//   a blank tile), but do NOT treat it as interchangeable with the exact
+//   count: the cached value it replaces is -0.012 % off, ~43x more accurate.
+//   `n_live_tup` is 0 on this instance and is NOT a usable substitute.
 //   anything else         : null. The dashboard renders `{{ recsQty | number }}`
 //                           and Angular's number filter passes null through as
 //                           blank -- NOT 0, which would read as "my data is
@@ -148,6 +157,54 @@ const boundCacheKey = function (v) {
     return (typeof v === 'string' && v.length > CACHE_KEY_MAX_LEN) ? v.slice(0, CACHE_KEY_MAX_LEN) : v
 }
 
+// WARM-PATH REFRESH SUPPRESSION (§300 item F, 2026-09-14).
+//
+// getCachedMetrics answers from cached_metrics FIRST and only then fires a
+// refresh, so a refresh that dies is invisible to callers -- which is exactly
+// why this ran unnoticed for days. Measured on the PG leader:
+//
+//   `recording-count` = SELECT count(*) FROM recordings (~305 M rows) takes
+//   69-74 s. The routed read path pins statement_timeout=8000 (dbpool-pg.js,
+//   `BEGIN READ ONLY; SET LOCAL statement_timeout=...`), so EVERY attempt is
+//   cancelled at 8 s. There were ZERO successful `UPDATE ... recording-count`
+//   in 3 days of leader log, and 20 of 20 cancels in the 4.9 h window
+//   2026-09-14T04:55-09:50Z were this single statement (64 of 100 on 09-13).
+//
+// Each attempt first takes a 3-minute lock by pushing expires_at forward, then
+// dies, so the next caller past the lock retries forever: ~40 cancels/day,
+// ~5 min/day of 4-worker parallel leader scan that no user is waiting on.
+//
+// WHY SUPPRESS RATHER THAN "FIX" IT:
+//   * Serving pg_class.reltuples instead would be WORSE: +0.521 % vs the
+//     frozen cached value's -0.012 % (~43x less accurate). See getColdEstimate.
+//   * No index helps. The cost is heap visits with the visibility map at
+//     47.8 % coverage; the composite index the shape suggests already exists
+//     and the planner does not choose it.
+//   * Making the refresh completable needs a per-statement timeout override in
+//     the SHARED read path (TIMEOUT_MS is module-global in dbpool-pg.js). That
+//     is a different risk tier and is tracked as its own design item.
+//
+// So this is deliberately the SMALL change: stop scheduling work that provably
+// cannot succeed, and keep serving the value we already serve.
+//
+// SCOPED TO THE PROVEN CASE ONLY. Verified live 2026-09-14 09:5xZ: of the
+// non-project keys, only `recording-count` is stuck (expires_at in the past
+// and unchanged across hours); `job-count`, `species-count` and `project-count`
+// all refresh normally with positive TTLs, so they are untouched. This is NOT
+// a blanket "skip slow refreshes" switch -- adding a key here is a claim that
+// its refresh CANNOT complete, and needs the same measurement.
+//
+// CONSEQUENCE, ACCEPTED AND STATED: the served figure now drifts. The table
+// grows ~618 k rows/30 d (~0.2 %/month), so the public tile reads slightly low
+// and increasingly so over time. It was ALREADY frozen before this change --
+// this makes the freeze honest and cheap instead of hidden and expensive. The
+// durable fix is the escape-hatch item above.
+const UNWINNABLE_WARM_REFRESH_KEYS = { 'recording-count': true }
+
+const isUnwinnableRefresh = function(k) {
+    return UNWINNABLE_WARM_REFRESH_KEYS[k] === true
+}
+
 const recalculateMetrics = async function(k, v, params, isInsert) {
     // we don't want several Pods to refresh the same value at the same time,
     // so we'll extend expiration of an existing record for the time of our own calculation
@@ -206,6 +263,13 @@ const getCachedMetrics = async function(req, res, key, params, next) {
         const isExpiresAtNotValid = !moment.utc(result.expires_at).isValid()
         // Recalculate metrics each day or if the expires_at data not valid, and save the results in the db
         if (isExpiresAtNotValid || (dateNow > dateIndb)) {
+            if (isUnwinnableRefresh(k)) {
+                // See UNWINNABLE_WARM_REFRESH_KEYS. Serving the cached value
+                // above is the whole response; this branch only decides
+                // whether to ALSO burn the leader on a refresh that cannot
+                // finish. For these keys it cannot, so we skip it.
+                return null
+            }
             await recalculateMetrics(k, v, params)
         }
     }).catch(next);
