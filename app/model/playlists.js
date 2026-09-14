@@ -184,11 +184,18 @@ var Playlists = {
             ).nodeify(callback);
         }
 
+        // ORDER BY is REQUIRED, not cosmetic: this query pages with LIMIT/OFFSET,
+        // and its offsets are computed from the row numbers produced by
+        // fetchRecordingsAround/fetchRecordingPosition below. Without a shared,
+        // explicit ordering the two can disagree (an unordered LIMIT/OFFSET scan
+        // is plan-dependent in PostgreSQL), which silently returns the wrong
+        // "next" recording. playlist_recordings' PK is (playlist_id, recording_id),
+        // so ordering by recording_id is both stable and index-backed.
         return dbpool.query(
             "SELECT PLR.recording_id \n" +
             "FROM playlist_recordings PLR \n" +
             "WHERE " + constraints.join(" \n" +
-            "  AND ") + limit_clause,
+            "  AND ") + " \nORDER BY PLR.recording_id" + limit_clause,
             data
         ).then(function(data){
             if(!data.length){
@@ -204,11 +211,16 @@ var Playlists = {
     fetchRecordingsAround: function(playlist, recording, radius, callback){
         async.waterfall([
             (function(next){
+                // ROW_NUMBER() replaces the MySQL `@rownum:=@rownum+1` session-variable
+                // idiom, which PostgreSQL cannot parse at all (42601, "syntax error at
+                // or near :=") -- so under DB_ENGINE=pg this route 500'd on every call.
+                // ORDER BY recording_id must match fetchData()'s ORDER BY above: the row
+                // number produced here is turned into that query's OFFSET.
                 dbpool.queryHandler(
                     "SELECT rPLR.row \n" +
                     "FROM (\n"+
-                    "   SELECT @rownum:=@rownum+1 row, PLR.*  \n" +
-                    "   FROM playlist_recordings PLR, (SELECT @rownum:=0) r \n" +
+                    "   SELECT ROW_NUMBER() OVER (ORDER BY PLR.recording_id) AS row, PLR.*  \n" +
+                    "   FROM playlist_recordings PLR \n" +
                     "   WHERE PLR.playlist_id = " + dbpool.escape(playlist.id) + " \n"+
                     ") as rPLR \n" +
                     "WHERE rPLR.recording_id = " + dbpool.escape(recording),
@@ -239,11 +251,13 @@ var Playlists = {
     fetchRecordingPosition: function(playlist, recording, callback){
         async.waterfall([
             function(next){
+                // Same PG-incompatible @rownum idiom as fetchRecordingsAround (42601);
+                // same ORDER BY as fetchData() so positions and paging agree.
                 dbpool.queryHandler(
                     "SELECT rPLR.row \n" +
                     "FROM (\n"+
-                    "   SELECT @rownum:=@rownum+1 row, PLR.*  \n" +
-                    "   FROM playlist_recordings PLR, (SELECT @rownum:=0) r \n" +
+                    "   SELECT ROW_NUMBER() OVER (ORDER BY PLR.recording_id) AS row, PLR.*  \n" +
+                    "   FROM playlist_recordings PLR \n" +
                     "   WHERE PLR.playlist_id = " + dbpool.escape(playlist.id) + " \n"+
                     ") as rPLR \n" +
                     "WHERE rPLR.recording_id = " + dbpool.escape(recording),
