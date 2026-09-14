@@ -2606,7 +2606,7 @@ function pgWriteExec(client, finalSql, connState, cb) {
 // citizen-scientist stats). P7 must decide between pg-query-stream and
 // keeping these reads on the buffered path.
 function makeStreamQuery(conn, sql, values) {
-    return {
+    var stub = {
         stream: function (/* streamArgs */) {
             var Readable = require('stream').Readable;
             var out = new Readable({ objectMode: true, read: function () {} });
@@ -2619,6 +2619,40 @@ function makeStreamQuery(conn, sql, values) {
             return out;
         }
     };
+    // §300 item E HARDENING (2026-09-14). The lazy stub above is CORRECT for
+    // the deliberate stream consumers (sites.js:445/516, dbpool.js:159/285,
+    // plotdata.js:59 -- all of which call .stream() immediately). It is a
+    // SILENT DATA-LOSS TRAP for anyone who `await`s it instead: `await` on a
+    // non-thenable resolves to the object itself, so the statement is never
+    // sent, the surrounding transaction commits without it, and every
+    // instrument reports success. That cost us project renames + soft-deletes
+    // (#1875) and then every post-flip site's external_id/country_code.
+    //
+    // A `then` here is what makes the difference visible: `await stub` now
+    // THROWS instead of quietly yielding a useless object, while .stream()
+    // is untouched. Promise-detection (`typeof x.then === 'function'`) is the
+    // one behaviour this adds, so the throw fires exactly when someone treats
+    // the stub as a promise -- which is always a bug.
+    Object.defineProperty(stub, 'then', {
+        enumerable: false,
+        configurable: true,
+        value: function () {
+            var e = new Error(
+                'callback-less conn.query() returns a lazy stream stub and ' +
+                'executes NOTHING when awaited: use conn.promisedQuery(sql, values) ' +
+                '(or pass a callback, or call .stream()). SQL: ' +
+                String(sqlText(sql)).slice(0, 200));
+            e.code = 'ERR_LAZY_QUERY_AWAITED';
+            _counters.dialect_error++;
+            emitDivergence({ v: 1, ts: new Date().toISOString(),
+                klass: 'lazy_query_awaited', phase: 'execute-pg-write',
+                hash: templateHash(String(sqlText(sql))),
+                tmpl: sqlTemplate(String(sqlText(sql))).slice(0, 400),
+                detail: 'callback-less conn.query awaited; statement never sent' });
+            throw e;
+        }
+    });
+    return stub;
 }
 
 // The adapter itself: wrap a checked-out node-pg client in the mysql driver

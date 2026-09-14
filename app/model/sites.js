@@ -886,8 +886,23 @@ var Sites = {
         })
     },
 
+    // A connection-scoped `query` WITHOUT a callback returns the P7 PG write
+    // adapter's LAZY `{stream}` stub and never sends the statement, so this
+    // UPDATE silently did nothing under DB_ENGINE=pg while the caller's
+    // `await` resolved (dbpool-pg.js: `if (!cb) { return makeStreamQuery(...) }`).
+    // mysql@2.18 _enqueue's a callback-less query anyway, which is why it
+    // worked for years on MariaDB and broke exactly at the write flip.
+    // Same class as projects.update / projects.deleteLegacy (#1875).
+    // `promisedQuery` exists on BOTH the MariaDB wrapper (dbpool.js:104) and
+    // the PG adapter (dbpool-pg.js:2682), so this is engine-agnostic, and it
+    // REJECTS on failure -- which is what lets the caller's transaction roll
+    // back instead of committing a half-created site.
     setExternalId: function (siteId, externalId, connection) {
-        return (connection? connection.query : dbpool.query)(`UPDATE sites SET external_id = "${externalId}" WHERE site_id = ${siteId}`, [])
+        const sql = 'UPDATE sites SET external_id = ? WHERE site_id = ?';
+        const values = [externalId, siteId];
+        return connection
+            ? connection.promisedQuery(sql, values)
+            : dbpool.query(sql, values);
     },
 
     setCountryCodeAndTimezone: async function (siteId, countryCode, timezone, connection) {
@@ -896,7 +911,15 @@ var Sites = {
         const isTimezoneNull = !timezone || timezone === null || timezone === '' || timezone === undefined || timezone === 'undefined';
         const timezoneToInsert = isTimezoneNull ? 'UTC' : timezone
         console.log('------timezoneToInsert', timezoneToInsert);
-        return (connection? connection.query : dbpool.query)(`UPDATE sites SET country_code = ${isCountryCodeNull ? null : ('"' + countryCode + '"')}, timezone = "${timezoneToInsert}" WHERE site_id = ${siteId}`, [])
+        // Callback-less `connection.query` is a silent no-op on the PG adapter
+        // -- see setExternalId above. Parameterised so the driver renders the
+        // NULL and escapes the values (country codes and IANA timezone names
+        // are external input from the core API).
+        const sql = 'UPDATE sites SET country_code = ?, timezone = ? WHERE site_id = ?';
+        const values = [isCountryCodeNull ? null : countryCode, timezoneToInsert, siteId];
+        return connection
+            ? connection.promisedQuery(sql, values)
+            : dbpool.query(sql, values);
     },
 
     /**

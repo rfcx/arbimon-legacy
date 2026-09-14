@@ -1640,8 +1640,20 @@ var Projects = {
         })
     },
 
+    // Same class as sites.setExternalId / projects.update / deleteLegacy (#1875):
+    // a callback-less connection-scoped `query` returns the PG adapter's lazy
+    // `{stream}` stub and never executes. NOTE its only caller,
+    // createProjectInArbimonAndCoreAPI (:1529), currently has NO callers
+    // repo-wide -- the live create path is routes/data-api/integration.js,
+    // which supplies external_id in the INSERT -- so this site is a no-op
+    // today rather than a live defect. Fixed anyway: it is armed for whoever
+    // calls it next, and the class is what we are retiring.
     setExternalId: function (projectId, externalId, connection) {
-        return (connection? connection.query : dbpool.query)(`UPDATE projects SET external_id = "${externalId}" WHERE project_id = ${projectId}`, [])
+        const sql = 'UPDATE projects SET external_id = ? WHERE project_id = ?';
+        const values = [externalId, projectId];
+        return connection
+            ? connection.promisedQuery(sql, values)
+            : dbpool.query(sql, values);
     },
 
     /**
