@@ -172,7 +172,13 @@ var Projects = {
         }
         if(query.hasOwnProperty("include_location")) {
             selectExtra += 'site.lat as lat, site.lon as lon, '
-            joinExtra += 'LEFT JOIN (SELECT project_id, lat, lon, MAX(site_id) as maxSiteId FROM sites GROUP BY project_id) site ON p.project_id = site.project_id \n'
+            // Same PG 42803 defect + same semantics note as model/users.js
+            // projectList(): DISTINCT ON keeps "the newest site's lat/lon",
+            // which MAX(lat)/MAX(lon) would silently change for 2,363 of
+            // 5,801 projects. This is the include_location=true path, which is
+            // how the super branch of /legacy-api/user/projectlist reaches it.
+            joinExtra += 'LEFT JOIN (SELECT DISTINCT ON (project_id) project_id, lat, lon, site_id AS maxSiteId \n' +
+                         '             FROM sites ORDER BY project_id, site_id DESC) site ON p.project_id = site.project_id \n'
             whereExp.push("1 = 1");
         }
         if(query.hasOwnProperty('q')) {
