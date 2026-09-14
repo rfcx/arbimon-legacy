@@ -130,28 +130,13 @@ angular.module('a2.srv.project', [
                     return response.data;
                 }).catch(notify.serverError);
             },
-            getRecs: function(query, callback) {
-                if(typeof query === "function") {
-                    callback = query;
-                    query = {};
-                }
-                if (query && query.tags) {
-                    query['tags[]'] = query.tags.flat()
-                    delete query.tags
-                }
-                $http.get('/legacy-api/project/'+url+'/recordings/search',{
-                        params: query
-                    })
-                    .success(function(data) {
-                        callback(data);
-                    });
-            },
-            getRecCounts: function(query) {
-                if (query && query.project_url) {
-                    delete query.project_url;
-                }
-                return a2APIService.get('/recordings/search-count', {params:query || {}});
-            },
+            // §316 follow-up (2026-09-14): `getRecs` and `getRecCounts` were DELETED
+            // here -- zero callers anywhere in assets/lib/app (verified against
+            // origin/master; control grep against Project.addClass works). They were
+            // also the only `.success()`-with-no-`.error()` call sites left on the
+            // recordings/search* routes, so they read as a "silent failure" consumer
+            // in every error-path audit. The LIVE consumers of those routes are the
+            // Vue SPA's recordings-page (rfcx/arbimon), not this client.
             getRecordingData: function(filters, projection){
                 if (filters.tags) {
                     filters.tags = filters.tags.flat();
