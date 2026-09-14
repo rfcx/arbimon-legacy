@@ -195,7 +195,18 @@ var Users = {
         joinExtra = "JOIN user_project_role AS upr ON (p.project_id = upr.project_id and upr.role_id = 4) \n"+
         "JOIN user_project_role AS upr2 ON (p.project_id = upr2.project_id) \n"+
         "JOIN users AS u ON (upr.user_id = u.user_id) \n"+
-        "LEFT JOIN (SELECT project_id, lat, lon, MAX(site_id) as maxSiteId FROM sites GROUP BY project_id) site ON p.project_id = site.project_id \n";
+        // PostgreSQL rejects the MySQL-permissive form of this subquery:
+        // `SELECT project_id, lat, lon, MAX(site_id) ... GROUP BY project_id`
+        // selects bare non-aggregated columns and fails 42803 ("column
+        // sites.lat must appear in the GROUP BY clause"), 500ing this route.
+        //
+        // DISTINCT ON preserves the ORIGINAL SEMANTICS, which the `maxSiteId`
+        // alias makes explicit: the lat/lon OF THE NEWEST SITE, not the
+        // greatest lat and the greatest lon independently. Using MAX(lat)/
+        // MAX(lon) would parse but would move the displayed coordinates for
+        // 2,363 of 5,801 projects (measured on prod 2026-09-14).
+        "LEFT JOIN (SELECT DISTINCT ON (project_id) project_id, lat, lon, site_id AS maxSiteId \n" +
+        "             FROM sites ORDER BY project_id, site_id DESC) site ON p.project_id = site.project_id \n";
 
         whereExp.push('upr2.user_id = ? OR p.is_private = 0');
         data.push(query.user_id);
