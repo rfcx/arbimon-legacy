@@ -232,11 +232,22 @@ var Users = {
             whereExp.push('p.deleted_at IS NULL');
         }
 
+        // The GROUP BY exists only to DE-DUPLICATE: the upr2 join multiplies
+        // rows by the number of members on each project. `GROUP BY
+        // p.project_id` alone is MySQL-permissive and PostgreSQL rejects it
+        // with 42803 once any other selected column is not functionally
+        // dependent on the grouping key (here `site.lat`/`site.lon`, which
+        // come from the joined subquery rather than from `projects`).
+        //
+        // DISTINCT expresses the actual intent (one row per project) and is
+        // dialect-neutral, so it cannot rot the same way as the select list
+        // evolves. `p.project_id` is the PK, so the two forms return the same
+        // rows.
         return dbpool.query(
-            "SELECT " + selectExtra + " \n" +
+            "SELECT DISTINCT " + selectExtra + " \n" +
             "FROM projects AS p \n" + joinExtra +
             "WHERE (" + whereExp.join(") \n" +
-            "  AND (") + ") GROUP BY p.project_id", data
+            "  AND (") + ")", data
         ).nodeify(callback);
     },
 
