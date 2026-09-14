@@ -190,7 +190,18 @@ var Users = {
         let selectExtra = '';
         let joinExtra = '';
 
-        selectExtra = "p.project_id AS id, name, url, lat, lon, description, is_private, u.login AS `owner`";
+        // NOTE `description` is deliberately absent: it does not exist on
+        // `projects` on EITHER engine (verified 2026-09-14 — legacy PG and the
+        // frozen MariaDB both carry the same 13 columns, and neither has it;
+        // the column lives on CORE's projects table, a different plane).
+        // Selecting it unqualified used to resolve against the old GROUP BY
+        // subquery's output and silently returned nothing useful; once that
+        // subquery became an explicit DISTINCT ON projection it stopped
+        // resolving at all and PostgreSQL began rejecting the whole statement
+        // with 42703 ("column \"description\" does not exist"), 500ing this
+        // route for every NON-SUPER caller. The search-bar template renders
+        // `match.model.description`, which has therefore always been blank.
+        selectExtra = "p.project_id AS id, name, url, lat, lon, is_private, u.login AS `owner`";
 
         joinExtra = "JOIN user_project_role AS upr ON (p.project_id = upr.project_id and upr.role_id = 4) \n"+
         "JOIN user_project_role AS upr2 ON (p.project_id = upr2.project_id) \n"+
@@ -212,7 +223,10 @@ var Users = {
         data.push(query.user_id);
 
         if(query.hasOwnProperty('q')) {
-            whereExp.push("p.name LIKE '%"+query.q+"%' OR p.description LIKE '%"+query.q+"%'");
+            // `p.description` does not exist (see the selectExtra note above),
+            // so this predicate could only ever have raised or silently
+            // matched nothing. Search on the name alone.
+            whereExp.push("p.name LIKE '%"+query.q+"%'");
         }
         if (query.hasOwnProperty('publicTemplates')) {
             whereExp.push('p.deleted_at IS NULL');
