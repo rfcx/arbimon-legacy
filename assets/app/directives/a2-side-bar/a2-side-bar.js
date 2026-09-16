@@ -8,7 +8,7 @@ angular.module('a2.directive.side-bar', [])
         controller: 'a2SideBarCtrl as controller'
     };
 })
-.controller('a2SideBarCtrl', function($scope, $state, Project, a2UserPermit) {
+.controller('a2SideBarCtrl', function($scope, $state, $timeout, Project, a2UserPermit) {
 
     $scope.showSidebar = false
     $scope.submenuEl = null
@@ -218,6 +218,122 @@ angular.module('a2.directive.side-bar', [])
             $scope.menuState = Object.create(null);
         }
     }
+
+    // =====================================================================
+    // FLYOUT STATE MACHINE (2026-09-16, operator-directed convergence with the
+    // modern rail). Mirrors the SPA's
+    // apps/website/src/_layout/components/side-bar/use-nav-flyout.ts so the two
+    // rails cannot drift in BEHAVIOUR the way they had drifted in link targets.
+    //
+    // The rail no longer widens on hover. Labels and submenus live in a panel
+    // anchored to the RIGHT of the 52px rail, exactly like the SPA.
+    //
+    // Behaviour, copied deliberately rather than reinvented:
+    //   - opens on HOVER *and* on CLICK/TAP -- hover alone is unusable on
+    //     touch, where there is no hover state at all.
+    //   - a HOVER-opened panel closes on pointer-out after GRACE_MS, so the
+    //     pointer can cross the gap from trigger to panel without losing it.
+    //   - a CLICK-opened panel is STICKY: it survives pointer-out and closes
+    //     only on an outside click, or when another flyout opens.
+    //   - opening any flyout closes the previous one, so two are never open.
+    // =====================================================================
+    var GRACE_MS = 220;
+    var closeTimer = null;
+
+    $scope.openFlyoutId = null;
+    $scope.flyoutSticky = false;
+    $scope.flyoutTop = 0;
+
+    function cancelPendingClose() {
+        if (closeTimer !== null) {
+            clearTimeout(closeTimer);
+            closeTimer = null;
+        }
+    }
+
+    // Align the panel with its trigger, then clamp it into the viewport. The
+    // SPA had a MEASURED bug here (it clamped the wrong panel and overflowed by
+    // 97px); anchoring to the trigger's own top and clamping against the
+    // panel's height avoids reproducing it.
+    function positionFlyout(triggerEl) {
+        if (!triggerEl) return;
+        var top = Math.round(triggerEl.getBoundingClientRect().top);
+        $timeout(function () {
+            var panel = document.querySelector('#a2Sidebar .a2-flyout');
+            if (panel) {
+                var maxTop = window.innerHeight - panel.getBoundingClientRect().height - 8;
+                if (top > maxTop) top = Math.max(8, Math.round(maxTop));
+            }
+            $scope.flyoutTop = top;
+        });
+    }
+
+    $scope.isFlyoutOpen = function (id) {
+        return $scope.openFlyoutId === id;
+    };
+
+    $scope.closeFlyout = function () {
+        cancelPendingClose();
+        $scope.openFlyoutId = null;
+        $scope.flyoutSticky = false;
+    };
+
+    // via: 'hover' | 'click'
+    $scope.onFlyoutTrigger = function (event, id, via) {
+        var el = event && (event.currentTarget || event.target);
+        cancelPendingClose();
+        if (via === 'hover') {
+            if ($scope.openFlyoutId === id) return;
+            $scope.openFlyoutId = id;
+            $scope.flyoutSticky = false;
+            positionFlyout(el);
+            return;
+        }
+        // click/tap: toggle, and make it sticky
+        if ($scope.openFlyoutId === id && $scope.flyoutSticky) {
+            $scope.closeFlyout();
+            return;
+        }
+        $scope.openFlyoutId = id;
+        $scope.flyoutSticky = true;
+        positionFlyout(el);
+    };
+
+    $scope.keepFlyoutOpen = function (id) {
+        if ($scope.openFlyoutId === id) cancelPendingClose();
+    };
+
+    $scope.scheduleFlyoutClose = function (id) {
+        if ($scope.flyoutSticky) return;      // click-opened panels persist
+        if ($scope.openFlyoutId !== id) return;
+        cancelPendingClose();
+        closeTimer = setTimeout(function () {
+            $scope.$applyAsync(function () {
+                if (!$scope.flyoutSticky && $scope.openFlyoutId === id) {
+                    $scope.openFlyoutId = null;
+                }
+                closeTimer = null;
+            });
+        }, GRACE_MS);
+    };
+
+    // An outside click dismisses a sticky panel. Bound once, cleaned up with
+    // the scope so a destroyed directive cannot leak the handler.
+    function onDocumentClick(e) {
+        if (!$scope.flyoutSticky || $scope.openFlyoutId === null) return;
+        var rail = document.getElementById('a2Sidebar');
+        var panel = document.querySelector('#a2Sidebar .a2-flyout');
+        var inRail = rail && rail.contains(e.target);
+        var inPanel = panel && panel.contains(e.target);
+        if (!inRail && !inPanel) {
+            $scope.$applyAsync(function () { $scope.closeFlyout(); });
+        }
+    }
+    document.addEventListener('click', onDocumentClick, true);
+    $scope.$on('$destroy', function () {
+        cancelPendingClose();
+        document.removeEventListener('click', onDocumentClick, true);
+    });
 
     $scope.initData()
 })

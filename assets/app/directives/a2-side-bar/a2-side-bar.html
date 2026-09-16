@@ -4,10 +4,9 @@
     class="fixed w-13 top-0 left-0 h-screen transition-transform sm:translate-x-0 bg-echo group transition duration-300 ease-in-out delay-500 sidebar-menu"
     aria-label="Sidebar"
     data-drawer-backdrop="false"
-    ng-mouseenter="showSidebar = true"
-    ng-mouseleave="showSidebar = false; collapse()"
+    ng-mouseleave="closeFlyout()"
 >
-    <div class="h-full pb-4 overflow-y-auto">
+    <div class="h-full pb-4 overflow-visible">
         <div class="row-flex flex-direction-column h-full justify-between">
             <div>
                 <div class="pl-3 pr-2 my-4 h-8 row-flex flex-direction-row flex-align-middle">
@@ -19,14 +18,14 @@
                     </a>
                 </div>
                 <div class="my-4 border-t border-util-gray-02"> </div>
-                <ul class="px-2 row-flex flex-direction-column gap-y-3 mb-0">
+                <ul class="px-2 row-flex flex-direction-column gap-y-2 mb-0">
                     <li ng-repeat="item in allItems track by $index">
                         <a
                             v-show="item.visibleCondition == null || item.visibleCondition() === true"
                             ng-if="item.route"
                             ng-href="{{ item.route }}"
                             title="{{ item.title }}"
-                            
+                            ng-mouseenter="onFlyoutTrigger($event, itemId(item.title), 'hover')"
                             class="row-flex flex-align-middle text-base sidebar-title sidebar-submenu py-1 px-1 h-9"
                         >
                             <span ng-if="item.iconRaw === 'fi-grid'" class="row-flex flex-space-center" style="width: 28px">
@@ -38,14 +37,36 @@
                             <span ng-if="item.iconRaw === 'pres-chart-bar' === true" class="row-flex flex-space-center" style="width: 28px">
                                 <img src="/images/pres-chart-bar.svg" class="icon-fill">
                             </span>
-                            <span ng-if="showSidebar" class="ml-3">{{ item.title }}</span>
                         </a>
+                        <!-- LEAF FLYOUT: the label, in a panel beside the rail.
+                             The SPA gives leaf items a flyout too, at the same
+                             position and with the same open/close rules as a
+                             parent's, so the rail reads as one system. -->
+                        <div
+                            ng-if="item.route && isFlyoutOpen(itemId(item.title))"
+                            class="a2-flyout"
+                            ng-style="{ top: flyoutTop + 'px' }"
+                            role="menu"
+                            ng-mouseenter="keepFlyoutOpen(itemId(item.title))"
+                            ng-mouseleave="scheduleFlyoutClose(itemId(item.title))"
+                        >
+                            <a
+                                ng-href="{{ item.route }}"
+                                class="a2-flyout-row"
+                                role="menuitem"
+                                ng-click="closeFlyout()"
+                            >{{ item.title }}</a>
+                        </div>
                         <button
-                            ng-show="item.children"
+                            ng-if="item.children"
                             type="button"
                             class="mainmenu row-flex flex-align-middle bg-light-50 text-base font-normal py-1 px-1 h-9 sidebar-submenu"
-                            ng-class="{ 'collapsed': menuState[$index] !== true }"
-                            ng-click="toggleMenu($index)"
+                            ng-class="isFlyoutOpen(itemId(item.title)) ? 'bg-util-gray-03 rounded' : ''"
+                            ng-click="onFlyoutTrigger($event, itemId(item.title), 'click')"
+                            ng-mouseenter="onFlyoutTrigger($event, itemId(item.title), 'hover')"
+                            aria-haspopup="menu"
+                            aria-expanded="{{ isFlyoutOpen(itemId(item.title)) }}"
+                            title="{{ item.title }}"
                         >
                             <span ng-if="item.iconRaw === 'fa-search'" class="row-flex flex-space-center" style="width: 28px">
                                 <i class="fa fa-search" style="font-size: 22px;"></i>
@@ -56,40 +77,30 @@
                             <span ng-if="item.iconRaw === 'fi-settings'" class="row-flex flex-space-center">
                                 <img src="/images/fi-settings.svg" class="icon-fill">
                             </span>
-                            <div ng-if="showSidebar" class="row-flex flex-1 ml-3 text-left whitespace-nowrap" style="width: 180px">
-                                <span>{{ item.title }}</span>
-                            </div>
-                            <span ng-if="showSidebar" class="pb-0.9">
-                                <i class="fa fa-chevron-down self-center" style="font-size: 12px;"></i>
-                                <i class="fa fa-chevron-up self-center" style="font-size: 12px;"></i>
-                            </span>
                         </button>
                         <ul
-                            ng-show="item.children !== undefined"
-                            ng-class="{ in: menuState[$index] === true }"
-                            class="collapse submenu"
-                            style="transition: height 0.35s ease;"
+                            ng-if="item.children && isFlyoutOpen(itemId(item.title))"
+                            class="a2-flyout"
+                            ng-style="{ top: flyoutTop + 'px' }"
+                            role="menu"
+                            ng-mouseenter="keepFlyoutOpen(itemId(item.title))"
+                            ng-mouseleave="scheduleFlyoutClose(itemId(item.title))"
                         >
-                            <li
-                                ng-repeat="childItem in item.children"
-                                ui-sref-active="active"
-                                class="sidebar-submenu sidebar-submenu-left"
-                                ng-class="{'mt-3': !childItem.externalRoute || childItem.externalRoute && childItem.visibleCondition() === true}"
-                            >
+                            <li ng-repeat="childItem in item.children" ui-sref-active="active">
                                 <a
                                     ng-if="!childItem.externalRoute"
                                     ui-sref="{{ childItem.route }}"
-                                    class="row-flex flex-align-middle py-1 h-9 w-full text-base font-normal sidebar-title cursor-pointer"
-                                >
-                                    <span>{{ childItem.title }}</span>
-                                </a>
+                                    class="a2-flyout-row"
+                                    role="menuitem"
+                                    ng-click="closeFlyout()"
+                                >{{ childItem.title }}</a>
                                 <a
                                     ng-if="childItem.externalRoute && childItem.visibleCondition() === true"
                                     ng-href="{{ childItem.externalRoute }}"
-                                    class="row-flex flex-align-middle py-1 h-9 w-full text-base font-normal sidebar-title cursor-pointer"
-                                >
-                                    <span>{{ childItem.title }}</span>
-                                </a>
+                                    class="a2-flyout-row"
+                                    role="menuitem"
+                                    ng-click="closeFlyout()"
+                                >{{ childItem.title }}</a>
                             </li>
                         </ul>
                     </li>
@@ -109,7 +120,7 @@
             </div>
             <div>
                 <div class="my-4 border-t border-util-gray-02"></div>
-                <ul class="px-2 row-flex flex-direction-column gap-y-3 mb-0">
+                <ul class="px-2 row-flex flex-direction-column gap-y-2 mb-0">
                     <li class="sidebar-submenu row-flex flex-align-middle">
                         <a
                             title="Arbimon Support"
@@ -119,39 +130,39 @@
                             <span class="row-flex flex-space-center">
                                 <img src="/images/fi-help.svg" class="ml-1 icon-fill self-center">
                             </span>
-                            <span ng-if="showSidebar" class="ml-3.2">Help</span>
+                            
                         </a>
                     </li>
                 </ul>
                 <div class="my-4 border-t border-util-gray-02"></div>
-                <ul class="px-2 row-flex flex-direction-column gap-y-3 mb-0">
+                <ul class="px-2 row-flex flex-direction-column gap-y-2 mb-0">
                     <li class="sidebar-submenu">
-                        <a ng-href="{{getUrlFor('my-projects')}}" class="row-flex flex-align-middle text-base font-normal py-1 px-1 h-9 sidebar-title sidebar-submenu">
+                        <a ng-href="{{getUrlFor('my-projects')}}" title="My Projects" class="row-flex flex-align-middle text-base font-normal py-1 px-1 h-9 sidebar-title sidebar-submenu">
                             <span class="row-flex flex-space-center" style="width: 28px">
                                 <img src="/images/fi-clipboard.svg" class="icon-fill">
                             </span>
-                            <span ng-if="showSidebar" class="ml-3">My Projects</span>
+                            
                         </a>
                     </li>
                     <li class="sidebar-submenu">
-                        <a ng-href="{{ accountSettings }}" class="row-flex flex-align-middle text-base font-normal py-1 px-1 h-9 sidebar-title">
+                        <a ng-href="{{ accountSettings }}" title="Account Settings" class="row-flex flex-align-middle text-base font-normal py-1 px-1 h-9 sidebar-title">
                             <span class="row-flex flex-space-center" style="width: 28px">
                                 <img src="/images/fi-user.svg" class="con-fill">
                             </span>
-                            <span ng-if="showSidebar" class="ml-3">Account Settings</span>
+                            
                         </a>
                     </li>
                     <li class="cursor-pointer text-base font-normal py-1 px-1 h-9 sidebar-submenu">
-                        <a href="/legacy-logout" class="sidebar-title row-flex flex-align-middle flex-direction-row ">
+                        <a href="/legacy-logout" title="Sign Out" class="sidebar-title row-flex flex-align-middle flex-direction-row ">
                             <span class="row-flex flex-space-center" style="width: 28px">
                                 <img src="/images/fi-log-out.svg" class="icon-fill">
                             </span>
-                            <span ng-if="showSidebar" class="ml-2">Sign Out</span>
+                            
                         </a>
                     </li>
                 </ul>
                 <div class="my-4 border-t border-util-gray-02"></div>
-                <ul class="px-2.5 row-flex flex-direction-column gap-y-3 mb-0">
+                <ul class="px-2.5 row-flex flex-direction-column gap-y-2 mb-0">
                     <li class="my-2 row-flex flex-align-middle text-base font-normal h-10">
                         <img
                             class="h-8 w-8 self-center rounded-full"
