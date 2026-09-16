@@ -2561,7 +2561,9 @@ var Recordings = {
                         r.version,
                         r.sample_rate,
                         r.meta,
-                        r.site_id
+                        r.site_id,
+                        r.archived_at,
+                        r.archived_by
                         FROM recordings r WHERE r.recording_id IN (${orderedIds})
                         ORDER BY FIELD(r.recording_id, ${orderedIds})
                     `
@@ -3426,6 +3428,89 @@ var Recordings = {
             WHERE recording_id IN (${recIds})
             AND archived_at IS NOT NULL`
         return query(q);
+    },
+
+    /**
+     * STEP 6 (2026-09-16): which of these ids may this project RESTORE?
+     *
+     * Two gates, both deliberate:
+     *  - `s.project_id = ?` — the recording's OWNING project only, mirroring
+     *    getDeletedRecordingData (an importing project can neither archive
+     *    nor restore a shared site's recordings).
+     *  - `r.archived_by IS NOT NULL` — USER-archived rows only. Rows with
+     *    `archived_by IS NULL` are system archives: the L0/L1 ghost
+     *    retro-archive (their core segments were trashed and sha1-scrambled
+     *    by the old delete — un-trash is PLAN step 7, not started) and the
+     *    09-09 removed-site backfill (`archived_at = sites.deleted_at`).
+     *    Restoring a ghost lists a recording with no playable audio;
+     *    restoring a removed-site row is meaningless while the site stays
+     *    removed. Measured 2026-09-16 (replica): 5,715,607 + 30,917 system
+     *    vs 1,888 user-archived. The gate is server-side so no client can
+     *    widen it.
+     */
+    getRestorableRecordingIds: async function(recIds, project_id, query) {
+        if (!Array.isArray(recIds) || recIds.length === 0) { return []; }
+        const q = `SELECT r.recording_id AS id
+            FROM recordings AS r
+            JOIN sites AS s ON s.site_id = r.site_id
+            WHERE r.recording_id IN (${recIds})
+            AND s.project_id = ${project_id}
+            AND r.archived_at IS NOT NULL
+            AND r.archived_by IS NOT NULL`
+        const rows = await query(q);
+        return rows.map(function (row) { return Number(row.id); });
+    },
+
+    /**
+     * STEP 6 (2026-09-16): the user-facing RESTORE, the inverse of delete().
+     *
+     * One PG write in one transaction (post-P7 `getConnection()` hands out a
+     * `pgshadow.getWriteConnection` adapter; there is no MariaDB leg and no
+     * reconcile mechanism any more — the 09-09 prompt's mechanism-9 premise
+     * is history). What restore does NOT do, by operator ruling:
+     *  - does not re-add playlist membership (C2) — the caller must say so
+     *    in the UI copy rather than let the user discover it;
+     *  - does not remove the `recordings_deleted` tombstone (R2) — Insights
+     *    catches up on its normal re-sync;
+     *  - never touches the core API (R1).
+     *
+     * Response mirrors delete(): `restored` is the id list actually flipped
+     * (a subset of the request when some ids were ineligible), `skipped`
+     * the remainder, so the SPA can report honestly.
+     */
+    restore: async function(recIds, project_id) {
+        let db
+        return dbpool.getConnection()
+            .then(async (connection) => {
+                db = connection;
+                await db.beginTransaction();
+                const query = util.promisify(db.query).bind(db);
+                const requested = (recIds || []).map(Number).filter(function (n) { return Number.isFinite(n) && n > 0; });
+                const eligible = await this.getRestorableRecordingIds(requested, project_id, query)
+                if (eligible.length) {
+                    await this.restoreRecordingsInArbimon(eligible, query)
+                }
+                await db.commit();
+                await db.release();
+                const eligibleSet = new Set(eligible);
+                const skipped = requested.filter(function (id) { return !eligibleSet.has(id); });
+                const s = eligible.length === 1 ? '' : 's';
+                return {
+                    restored: eligible,
+                    skipped: skipped,
+                    msg: eligible.length
+                        ? `${eligible.length} recording${s} restored`
+                        : 'No recordings were restored'
+                }
+            })
+            .catch(async (err) => {
+                console.error('recordings.restore failed', err);
+                if (db) {
+                    await db.rollback();
+                    await db.release();
+                }
+                throw new Error('Failed to restore recordings');
+            })
     },
 
     // REMOVED 2026-09-09 (Phase B completion): `deleteRecordingInAnalyses`.

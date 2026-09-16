@@ -732,4 +732,37 @@ router.post('/delete-matching', function(req, res, next) {
     }).catch(next);
 });
 
+/**
+ * STEP 6 (2026-09-16): RESTORE archived recordings — the inverse of /delete.
+ *
+ * Same permission as the archive it undoes (`manage project recordings`),
+ * same response style (`{ error }` with 200 on a permission miss, matching
+ * /delete so the SPA's existing error handling applies unchanged). Body:
+ * `{ recs: [{id}, …] }` or `{ recIds: [id, …] }`.
+ *
+ * Deliberately NO `/archive` route: `/delete` IS the archive (it also drops
+ * playlist membership per ruling C2 and writes the R2 tombstone); a bare
+ * archive route would be a second, lesser path that skips both.
+ *
+ * Eligibility (owning project + `archived_by IS NOT NULL`) is enforced in
+ * the model — see recordings.getRestorableRecordingIds for why system
+ * archives (ghosts, removed-site backfill) are not restorable from here.
+ */
+router.post('/restore', function(req, res, next) {
+    res.type('json');
+    if(!req.haveAccess(req.project.project_id, "manage project recordings")) {
+        return res.json({ error: "you dont have permission to manage project recordings" });
+    }
+    const body = req.body || {};
+    let recIds = Array.isArray(body.recIds) ? body.recIds
+        : Array.isArray(body.recs) ? body.recs.map(function(rec) { return rec && rec.id; })
+        : null;
+    if(!recIds || !recIds.length) {
+        return res.json({ error: 'missing arguments' });
+    }
+    model.recordings.restore(recIds, req.project.project_id).then(function(result) {
+        res.json(result);
+    }).catch(next);
+});
+
 module.exports = router;
