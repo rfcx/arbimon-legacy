@@ -792,8 +792,37 @@ var Sites = {
         }
     },
 
+    /**
+     * 🔴 THE TRANSACTION HERE IS HELD ACROSS N CORE-API CALLS — see the budget below.
+     *
+     * Measured 2026-09-16 (replica): largest live project **2,473 sites**,
+     * p99 **121**, and a project that was really deleted had **234**. With the
+     * per-call timeout now at 15s, an unlucky large delete could still hold this
+     * transaction for hours — bounding each call does NOT bound their sum. On a
+     * shared Patroni instance that is the §297 hazard (one long transaction
+     * degrades every database on the box).
+     *
+     * So the LOOP has its own wall-clock budget. On exceeding it the whole
+     * delete ABORTS and rolls back — deliberately, and this is the important
+     * property: a partial sites delete is the residue class this work exists to
+     * avoid, so "all or nothing, loudly" beats "as many as we got through".
+     * The caller (the SPA sites leg) already surfaces the failure via
+     * `project_delete_sites_leg_failed`, and the project delete itself is a
+     * separate, already-committed transaction that is NOT undone by this — the
+     * user's project is still deleted, only its site cleanup is reported failed.
+     *
+     * ⚠️ WHY NOT JUST RAISE THE BUDGET FOR BIG PROJECTS: the budget exists to
+     * protect OTHER databases on the instance, not this delete. A project large
+     * enough to blow it needs the batched/out-of-transaction restructure (R2 in
+     * rfcx-local `DESIGN-2026-09-16-project-delete-sites-leg.md`), not a longer
+     * lock hold. The log line below is what tells us that day has arrived.
+     */
     softRemoveAllSites: async function(projectId, idToken) {
         let db;
+        // 120s: comfortably covers p99 (121 sites) at a healthy sub-second core
+        // latency, and covers the 234-site real case; it only bites when core is
+        // genuinely slow or the project is far past anything yet deleted.
+        const LOOP_BUDGET_MS = 120000;
         return dbpool.getConnection()
             .then(async (connection) => {
                 db = connection;
@@ -804,11 +833,28 @@ var Sites = {
                     await db.release();
                     return
                 }
+                const startedAt = Date.now();
+                let done = 0;
                 for (let site of siteIds) {
+                    if (Date.now() - startedAt > LOOP_BUDGET_MS) {
+                        // Named event so this is greppable and alertable: it is
+                        // the signal that the restructure is now required.
+                        console.error(JSON.stringify({
+                            event: 'project_delete_sites_loop_budget_exceeded',
+                            project_id: projectId,
+                            sites_total: siteIds.length,
+                            sites_done: done,
+                            elapsed_ms: Date.now() - startedAt
+                        }));
+                        throw new Error(
+                            `sites delete exceeded its ${LOOP_BUDGET_MS}ms budget after ${done}/${siteIds.length} sites`
+                        );
+                    }
                     await this.removeFromProjectAsync(site.site_id, projectId, db);
                     if (rfcxConfig.coreAPIEnabled) {
                         await this.deleteInCoreAPI(site.site_id, idToken)
                     };
+                    done++;
                 }
                 await db.commit();
                 await db.release();
@@ -864,10 +910,41 @@ var Sites = {
         return dbpool.query(q);
     },
 
+    /**
+     * ⚠️ CALLED IN A LOOP, INSIDE AN OPEN TRANSACTION — hence the timeout.
+     *
+     * `softRemoveAllSites` and `removeSite` both do:
+     *     beginTransaction() → for (site of sites) { db write; deleteInCoreAPI() } → commit
+     * so EVERY second this call waits is a second of held locks, multiplied by
+     * the site count. Until 2026-09-16 this had NO timeout at all (`rp` has no
+     * default), which made the transaction's duration unbounded.
+     *
+     * 🔴 THE NUMBER THAT MAKES THIS REAL, re-derived on the replica rather than
+     * assumed: the largest LIVE project has **2,473 sites**, p99 = 121, and a
+     * project that was ACTUALLY DELETED carried **234**. At a slow-but-alive 2s
+     * per call that is ~8 minutes of open transaction for a delete that already
+     * happened — and with no timeout, a single hung call held it forever. On
+     * this shared Patroni instance one long-lived transaction degrades EVERY
+     * database on it (rfcx-local OPEN-ITEMS §297: a 429s statement cost 229
+     * failed uploads and 19 permanently lost files).
+     *
+     * WHY A TIMEOUT AND NOT A REWRITE: batching the loop or moving the core
+     * calls outside the transaction is the real fix, but it changes delete
+     * semantics for two live routes. This bounds the damage of the existing
+     * shape without changing what it does — the smallest change that removes
+     * the unbounded case. The restructure is tracked separately (R2 in
+     * rfcx-local `DESIGN-2026-09-16-project-delete-sites-leg.md`).
+     *
+     * 15s, not the 10s used by bio-api's project legs: this call is per-SITE and
+     * a large project multiplies it, but it is also the only chance to delete
+     * that stream in core — too tight a budget turns a slow core into permanent
+     * core-side residue. The asymmetry is deliberate and measured, not a guess.
+     */
     deleteInCoreAPI: async function(site_id, idToken) {
         const options = {
             method: 'DELETE',
             url: `${coreApiBaseUrl()}/internal/arbimon/streams/${site_id}`,
+            timeout: 15000,
             headers: {
                 'content-type': 'application/json',
                 Authorization: `Bearer ${idToken}`,
