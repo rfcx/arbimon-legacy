@@ -17,10 +17,29 @@
 //     versa) whenever both live in one process.
 //
 // Role model (defense in depth, mirrors the platform pattern):
-//   - READ pool  = POSTGRES_* env -> arbimon_ro (read-only role; the export
-//     data collection can physically never mutate PG).
+//   - READ pool  = POSTGRES_* env -> arbimon_ro. TRUE SINCE 2026-09-16 (S1 /
+//     OPQ-14): until then this comment was ASPIRATIONAL and both pools
+//     authenticated as arbimon_worker (full DML) -- the manifest said as much
+//     in its own comment while this line claimed otherwise. The privilege is
+//     now enforced by the ROLE, not by code-path discipline: arbimon_ro holds
+//     SELECT only (110-role-grants.sql), verified live
+//     has_table_privilege(arbimon_ro,'recordings_deleted','DELETE') = false.
 //   - WRITE pool = POSTGRES_WRITER_* env -> arbimon_worker (claim + status
 //     writes on recordings_export_parameters ONLY), used via writerQuery().
+//
+// ONE KNOWN EXCEPTION, deliberately left in place (S1, 2026-09-16):
+// `services/recordings.js: deleteRecordings()` issues a DELETE through
+// getConnection() -- i.e. on the READ pool -- and after this change that call
+// would fail with 42501 rather than succeed. It is NOT reachable on this
+// engine: its only caller is CronJob `arbimon-recording-delete-job`, which is
+// suspend=true, sets no EXPORTS_DB_ENGINE, and carries MYSQL_* creds only, so
+// it resolves to jobs/db/mysql.js. Its SQL is also MySQL-only
+// (`DELETE ... ORDER BY ... LIMIT` = 42601 on PG, returned byte-identical by
+// translate()), so it could never have run here regardless of privilege.
+// Fixing it is deferred on purpose: that statement reaps the `recordings_deleted`
+// TOMBSTONE ledger (never recordings), whose retention semantics are an open
+// question in the delete->archive arc -- porting the syntax before the policy
+// is settled would be building it twice.
 const { Pool, types } = require('pg')
 
 // Per-pool type parsing (see header). OIDs: 1114 timestamp, 1184 timestamptz,
