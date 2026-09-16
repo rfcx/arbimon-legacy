@@ -695,13 +695,60 @@ var Sites = {
         })
     },
 
+    /**
+     * ⚠️ SAME UNBOUNDED-LOOP HAZARD AS `softRemoveAllSites` — and WORSE per site.
+     *
+     * This was missed when #1909 bounded `softRemoveAllSites` (caught by the
+     * post-ship IRR, 2026-09-16 08:5x): the two functions are adjacent and
+     * similar, and only ONE of them got a loop budget. It inherited the 15s
+     * per-call timeout — `deleteInCoreAPI` is shared — but a per-call bound does
+     * NOT bound the SUM of N calls.
+     *
+     * Each iteration here does FOUR DB statements plus an HTTP call
+     * (`getRecordingValidationBySiteId` → `resetRecValidationById` →
+     * `getRecordingIdsbySite` → `archiveRecordingsBySite` → `removeFromProject`
+     * → `deleteInCoreAPI`), all inside ONE transaction — strictly heavier than
+     * the loop that was bounded first.
+     *
+     * 🔴 AND ITS N IS CALLER-SUPPLIED AND UNCAPPED: the route is
+     * `POST /project/:projectUrl/sites/delete` with `const sites = req.body.sites`
+     * and no length check anywhere. So N is whatever a client sends, not what a
+     * project happens to contain.
+     *
+     * Budget rationale is the same as `softRemoveAllSites`: it protects every
+     * OTHER database on the shared Patroni instance from a long-lived
+     * transaction (rfcx-local OPEN-ITEMS §297), not this delete. Aborting rolls
+     * the whole thing back, which is the wanted behaviour — a partially deleted
+     * site set is residue, and residue is what this family of work exists to
+     * avoid.
+     */
     removeSite: async function(siteIds, project_id, idToken) {
         let db;
+        // Same 120s budget as softRemoveAllSites, deliberately: these are two
+        // entry points to the same operation and a caller should not be able to
+        // pick the cheaper limit by choosing a route.
+        const LOOP_BUDGET_MS = 120000;
         return dbpool.getConnection()
             .then(async (connection) => {
                 db = connection;
                 await db.beginTransaction();
+                const startedAt = Date.now();
+                let done = 0;
+                const total = (siteIds && siteIds.length) || 0;
                 for (let site_id of siteIds) {
+                    if (Date.now() - startedAt > LOOP_BUDGET_MS) {
+                        console.error(JSON.stringify({
+                            event: 'project_delete_sites_loop_budget_exceeded',
+                            route: 'sites/delete',
+                            project_id: project_id,
+                            sites_total: total,
+                            sites_done: done,
+                            elapsed_ms: Date.now() - startedAt
+                        }));
+                        throw new Error(
+                            `sites delete exceeded its ${LOOP_BUDGET_MS}ms budget after ${done}/${total} sites`
+                        );
+                    }
                     const validationIds = await this.getRecordingValidationBySiteId(site_id)
                     if (validationIds.length) {
                         await this.resetRecValidationById(project_id, validationIds.map(v => v.recording_validation_id), connection)
@@ -725,6 +772,7 @@ var Sites = {
                     if (rfcxConfig.coreAPIEnabled) {
                         await this.deleteInCoreAPI(site_id, idToken)
                     };
+                    done++;
                 }
                 await db.commit();
                 await db.release();

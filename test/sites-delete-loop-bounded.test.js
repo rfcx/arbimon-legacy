@@ -108,4 +108,60 @@ describe('the sites delete loop is bounded (§297: it holds a transaction open)'
         // function is what it calls, so a future divergence is caught.
         expect(bodyOf('removeSite')).to.contain('deleteInCoreAPI');
     });
+
+    it('removeSite ALSO bounds its whole loop (added after the IRR caught the gap)', function () {
+        // 🔴 THE MISS THIS GUARD EXISTS FOR: #1909 bounded softRemoveAllSites and
+        // left removeSite unbounded, even though removeSite is HEAVIER per site
+        // (4 DB statements + an HTTP call) and its N is CALLER-SUPPLIED and
+        // uncapped (`req.body.sites`, no length check on the route).
+        var body = bodyOf('removeSite');
+        expect(body, 'removeSite has no loop budget').to.match(/LOOP_BUDGET_MS\s*=\s*\d+/);
+        expect(body, 'budget is never checked inside the loop').to.contain('Date.now() - startedAt');
+        expect(body, 'exceeding the budget must ABORT').to.match(/throw new Error/);
+        expect(body, 'the operator-facing event is missing')
+            .to.contain('project_delete_sites_loop_budget_exceeded');
+    });
+
+    it('BOTH site-delete loops use the SAME budget (a caller must not pick the cheaper route)', function () {
+        // Two entry points to the same operation. If one is looser, the limit is
+        // whatever a client chooses to call — which is not a limit.
+        var a = /LOOP_BUDGET_MS\s*=\s*(\d+)/.exec(bodyOf('softRemoveAllSites'));
+        var b = /LOOP_BUDGET_MS\s*=\s*(\d+)/.exec(bodyOf('removeSite'));
+        expect(a, 'softRemoveAllSites lost its budget').to.not.equal(null);
+        expect(b, 'removeSite lost its budget').to.not.equal(null);
+        expect(Number(b[1]), 'the two site-delete routes disagree on the budget')
+            .to.equal(Number(a[1]));
+    });
+
+    it('EVERY transaction-holding site LOOP is covered (the class, not the instances)', function () {
+        // The generalisable guard: a function that opens a transaction AND
+        // ITERATES calling the core API must carry a budget. A NEW such function
+        // fails here rather than shipping unbounded — exactly how `removeSite`
+        // slipped through when #1909 bounded only its sibling.
+        //
+        // ⚠️ THE `for` CLAUSE IS LOAD-BEARING, and its absence was a measured
+        // false positive: without it this probe also flagged `updateSite`, which
+        // opens a transaction and calls core but handles exactly ONE site. The
+        // hazard being guarded is N-multiplication inside a transaction, not
+        // "calls core in a transaction" — bounding a single-site update would
+        // have been cargo-culting the guard rather than applying it.
+        var names = [];
+        var re = /(\w+):\s*(?:async\s+)?function[\s\S]{0,600}?beginTransaction[\s\S]{0,1200}?for\s*\([\s\S]{0,3000}?deleteInCoreAPI/g;
+        var m;
+        while ((m = re.exec(code)) !== null) { names.push(m[1]); }
+
+        // Positive control: if the probe matches nothing it would "pass"
+        // vacuously, which is the §TOOL-HYGIENE trap this whole family is about.
+        expect(names.length, 'the probe found no transaction+loop+core functions — it is broken, not the code')
+            .to.be.greaterThan(1);
+        expect(names, 'the two known loops must both be found').to.include('removeSite');
+        expect(names, 'the two known loops must both be found').to.include('softRemoveAllSites');
+        // And the known single-site caller must NOT be swept in.
+        expect(names, 'updateSite is single-site and must not be flagged').to.not.include('updateSite');
+
+        names.forEach(function (n) {
+            expect(bodyOf(n), n + ' loops over sites calling core inside a transaction but has NO loop budget')
+                .to.match(/LOOP_BUDGET_MS/);
+        });
+    });
 });
