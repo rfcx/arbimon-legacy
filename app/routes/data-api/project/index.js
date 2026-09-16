@@ -627,7 +627,15 @@ router.post('/:projectUrl/remove', function(req, res, next) {
     model.projects.removeProject({
         project_id: req.project.project_id,
         external_id: req.body.external_id,
-        idToken: req.session.idToken
+        idToken: req.session.idToken,
+        // WHO deleted it (OPEN-ITEMS §330 item 1).
+        // ⚠️ `user.id`, NOT `user_id`: the session user object is built by
+        // `makeUserObject`, whose field is `id`. Reading `user_id` here yields
+        // undefined and every delete would record NULL — the silent-NULL defect
+        // that hit `archived_by` on 2026-09-09.
+        // Under masquerade `session.user` IS the target user (login.js swaps it
+        // wholesale), so this is the effective identity, which is what we want.
+        deleted_by: req.session.user && req.session.user.id
     }).then(function() {
         res.json({ result: 'success' });
     }).catch(next);
@@ -643,7 +651,9 @@ router.post('/:projectUrl/soft-remove', function(req, res, next) {
     const idToken = req.headers.authorization?.split(' ')[1];
     model.projects.removeProject({
         project_id: req.project.project_id,
-        idToken: req.session.idToken === undefined ? idToken : req.session.idToken
+        idToken: req.session.idToken === undefined ? idToken : req.session.idToken,
+        // See the `/remove` route above: `user.id`, not `user_id`.
+        deleted_by: req.session.user && req.session.user.id
     }).then(function() {
         res.json({ message: 'Removed' });
     }).catch(next);

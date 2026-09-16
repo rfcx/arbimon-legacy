@@ -1706,7 +1706,7 @@ var Projects = {
             .then(async (connection) => {
                 db = connection;
                 await db.beginTransaction();
-                await this.deleteLegacy(options.project_id, db);
+                await this.deleteLegacy(options.project_id, db, options.deleted_by);
                 if (rfcxConfig.coreAPIEnabled) {
                     await this.deleteInCoreAPI(options.external_id, options.idToken)
                 };
@@ -1723,13 +1723,18 @@ var Projects = {
             })
     },
 
+    // NOTE (2026-09-16): this function has NO callers anywhere in the repo
+    // (verified by a whole-tree grep outside node_modules: one hit, its own
+    // definition). The actor is threaded through anyway so it cannot come back as
+    // a silent-NULL writer if someone revives it — but it is NOT an acceptance
+    // path and is not claimed to be tested end-to-end.
     removeLegacyProject: async function(options) {
         let db;
         return dbpool.getConnection()
             .then(async (connection) => {
                 db = connection;
                 await db.beginTransaction();
-                await this.deleteLegacy(options.project_id, db);
+                await this.deleteLegacy(options.project_id, db, options.deleted_by);
                 await db.commit();
                 await db.release();
             })
@@ -1743,16 +1748,37 @@ var Projects = {
             })
     },
 
-    deleteLegacy: async function(project_id, db) {
+    /**
+     * Soft-delete a project, recording WHO did it.
+     *
+     * @param {number} project_id
+     * @param {object} db connection-scoped handle (the transaction)
+     * @param {number|null|undefined} deleted_by acting user id, from
+     *   `req.session.user.id`. NULL is written when there is no acting user
+     *   (see the column comment) rather than guessing one.
+     */
+    deleteLegacy: async function(project_id, db, deleted_by) {
         // Same class as `update` above: a connection-scoped `query` WITHOUT a
         // callback returns the PG adapter's lazy `{stream}` stub and never runs,
         // so the soft-delete silently did nothing under DB_ENGINE=pg while the
         // caller's `await` resolved. Verified in-pod 2026-09-13 (deleted_at
         // null -> null inside a rolled-back transaction, awaited value
         // `{stream}`). Use q.ninvoke so the statement is actually sent.
+        //
+        // ⚠️ AND THE ACTOR GOES IN THE PARAMETER ARRAY, NEVER AS A TRAILING
+        // ARGUMENT: `q.ninvoke` appends the node-style callback LAST, so an extra
+        // positional argument here lands in the driver's callback slot and the
+        // value is silently dropped — the exact defect that made `archived_by`
+        // write NULL on 2026-09-09. Proven then by running Q inside the deployed
+        // pod, not by reading docs.
+        //
+        // `deleted_by` is the acting user's id on THIS plane (legacy
+        // `users.user_id`, bigint). It is deliberately NOT cross-plane: the same
+        // account is a different id on insights and core.
         return q.ninvoke(db, 'query',
-            "UPDATE projects SET deleted_at = NOW() \n"+
+            "UPDATE projects SET deleted_at = NOW(), deleted_by = ? \n"+
             "WHERE project_id = ?",[
+                deleted_by === undefined ? null : deleted_by,
                 project_id
             ]);
     },
