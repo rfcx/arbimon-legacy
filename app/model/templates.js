@@ -17,6 +17,62 @@ const { arbimon2PublicUrl, arbimon2PublicUrlBase, roiSpectrogramUrl } = require(
 
 let s3;
 
+// ---------------------------------------------------------------------------
+// INPUT GUARDS (rfcx-local 2026-09-15) — templates.js builds SQL by string
+// concatenation in six places, and five of them interpolate a value that comes
+// straight off `req.query` (routes/data-api/project/templates.js): `q`,
+// `taxon`, `limit`, `offset`, `classIds`. Only `project` is server-derived.
+//
+// The live symptom was a dialect error, but the defect is an unparameterised
+// interpolation. Measured emissions BEFORE this change:
+//     ?limit=10                -> LIMIT 10 OFFSET undefined      (42703, live)
+//     ?classIds absent         -> pc.project_class_id = undefined (42703, live,
+//                                 12 of 15 records over 7 d)
+//     ?taxon=1 OR 1=1          -> Stx.taxon_id = 1 OR 1=1
+//     ?q=x%%' OR '1'='1         -> ... LIKE '%%x%%' OR '1'='1%%' ...  (quote break-out)
+//
+// ⚠️ ESCAPING ALONE IS NOT ENOUGH FOR THE ID/PAGINATION CASES. dbpool.escape()
+// renders the string "undefined" as the LITERAL 'undefined', which PG then
+// rejects with 22P02 instead of 42703 — quieter, still an error, still
+// user-facing (DB_PG_FALLBACK defaults to '0' since the P7 flip, so a PG error
+// reaches the user rather than falling back to MariaDB). So ids and pagination
+// are VALIDATED as positive integers and IGNORED when absent/invalid, which is
+// what the caller already expects for a missing filter.
+//
+// The search text cannot be int-validated, so it is escaped as a VALUE and the
+// LIKE pattern is assembled in SQL via CONCAT — the literal can no longer
+// terminate its own quoting.
+function positiveInt(value) {
+    if (value === undefined || value === null || value === '') { return null; }
+    if (typeof value === 'number') {
+        return Number.isInteger(value) && value > 0 ? value : null;
+    }
+    if (typeof value !== 'string' || !/^[0-9]+$/.test(value.trim())) { return null; }
+    var n = parseInt(value.trim(), 10);
+    return Number.isSafeInteger(n) && n > 0 ? n : null;
+}
+
+// LIKE '%<user text>%' with the value escaped and the pattern built in SQL.
+// LIMIT/OFFSET, validated. A missing or invalid limit means NO pagination
+// clause at all; a missing offset defaults to 0 (the route's own
+// `if (req.query.offset)` is falsy for 0, which is how `LIMIT n OFFSET
+// undefined` reached production).
+function paginationClause(options) {
+    var limit = positiveInt(options.limit);
+    if (limit === null) { return ''; }
+    var offsetRaw = options.offset;
+    var offset = (offsetRaw === undefined || offsetRaw === null || offsetRaw === '')
+        ? 0 : positiveInt(offsetRaw);
+    if (offset === null) { offset = (String(offsetRaw).trim() === '0') ? 0 : null; }
+    if (offset === null) { return ''; }
+    return 'LIMIT ' + limit + ' OFFSET ' + offset;
+}
+
+// LIKE '%<user text>%' with the value escaped and the pattern built in SQL.
+function likeContains(column, value) {
+    return column + " LIKE CONCAT('%', " + dbpool.escape(String(value)) + ", '%')";
+}
+
 // exports
 var Templates = {
     /** Finds templates, given a (non-empty) query.
@@ -128,13 +184,17 @@ var Templates = {
         }
 
         if (options.q) {
-            constraints.push(`(T.name LIKE '%${options.q}%' OR ${options.projectTemplates ? 'P2.name' : 'P.name'} LIKE '%${options.q}%' OR Sp.scientific_name LIKE '%${options.q}%')`);
+            var qProjectCol = options.projectTemplates ? 'P2.name' : 'P.name';
+            constraints.push('(' + likeContains('T.name', options.q) +
+                ' OR ' + likeContains(qProjectCol, options.q) +
+                ' OR ' + likeContains('Sp.scientific_name', options.q) + ')');
         }
 
-        if (options.taxon) {
+        var taxonId = positiveInt(options.taxon);
+        if (taxonId !== null) {
             tables.push('JOIN species_taxons Stx ON Stx.taxon_id = Sp.taxon_id');
             select.push('Stx.taxon_id, Stx.taxon')
-            constraints.push('Stx.taxon_id = ' + options.taxon);
+            constraints.push('Stx.taxon_id = ' + taxonId);
         }
 
         if (constraints.length === 0){
@@ -145,7 +205,7 @@ var Templates = {
             FROM ${tables.join(' ')}
             WHERE ${constraints.join(' AND ')}
             ORDER BY date_created DESC
-            ${options.limit ? ('LIMIT ' + options.limit + ' OFFSET ' + options.offset) : ''}`
+            ${paginationClause(options)}`
         ).then(function(rows) {
             // Post-map: `uri` = the dynamic media-api render when the recording
             // has a stream external_id (auth-free ingest path, hot-cache-backed);
@@ -218,7 +278,7 @@ var Templates = {
             }
         }
         else {
-            q += ` ${where} AND T.project_id=${project}`
+            q += ` ${where} AND T.project_id=${dbpool.escape(project)}`
         }
         if (whereCondition) {
             q += whereCondition
@@ -231,13 +291,15 @@ var Templates = {
         let where = ''
         if (options.q) {
             join += ` ${options.projectTemplates ? 'LEFT JOIN projects P2 ON T.source_project_id = P2.project_id' : ''}`;
-            where += ` AND (T.name LIKE '%${options.q}%' OR ${options.projectTemplates ? 'P2.name' : 'P.name'} LIKE '%${options.q}%' OR S.scientific_name LIKE '%${options.q}%')`
+            const pagQCol = options.projectTemplates ? 'P2.name' : 'P.name';
+            where += ` AND (${likeContains('T.name', options.q)} OR ${likeContains(pagQCol, options.q)} OR ${likeContains('S.scientific_name', options.q)})`
         }
-        if (options.taxon) {
+        const pagTaxonId = positiveInt(options.taxon);
+        if (pagTaxonId !== null) {
             join += ` JOIN species_taxons Stx ON Stx.taxon_id = S.taxon_id`;
-            where += ` AND Stx.taxon_id = ${options.taxon}`
+            where += ` AND Stx.taxon_id = ${pagTaxonId}`
         }
-        const count = (options.q || options.taxon) ? await Templates.templatesCount(
+        const count = (options.q || pagTaxonId !== null) ? await Templates.templatesCount(
             options.project,
             options.publicTemplates,
             join,
@@ -253,6 +315,10 @@ var Templates = {
 
     getTemplatesByClass: async function (classIds) {
         classIds = Array.isArray(classIds) ? classIds : [classIds];
+        // Drop absent/non-numeric ids rather than interpolating them: an absent
+        // ?classIds used to emit `pc.project_class_id = undefined` (42703).
+        classIds = classIds.map(positiveInt).filter(function (v) { return v !== null; });
+        if (!classIds.length) { return []; }
         let query = ''
         classIds.forEach((cl, index) => {
             let constraints = [];
@@ -283,7 +349,9 @@ var Templates = {
             constraints.push('P.public_templates_enabled = 1')
             constraints.push('T.source_project_id IS NULL');
             tables.push('JOIN project_classes pc ON pc.species_id = T.species_id AND pc.songtype_id = T.songtype_id');
-            constraints.push(`pc.project_class_id = ${cl}`);
+            // `cl` is a validated positive integer (filtered through positiveInt
+            // above), so this is a number, never caller text.
+            constraints.push('pc.project_class_id = ' + positiveInt(cl));
 
             const sql = `(SELECT ${select.join(', ')}
                 FROM ${tables.join(' ')}
