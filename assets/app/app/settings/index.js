@@ -71,32 +71,21 @@ angular.module('a2.settings',[
         });
     };
 
-    $scope.deleteProject = function() {
-        if(!a2UserPermit.can('delete project')) {
-            notify.error('You do not have permission to delete this project');
-            return;
-        }
-
-        $scope.popup = {
-            title: 'Delete project',
-            messages: ['Are you sure you want to delete this project?'],
-            btnOk: 'Yes',
-            btnCancel: 'No',
-        };
-
-        var modalInstance = $modal.open({
-            templateUrl: '/common/templates/pop-up.html',
-            scope: $scope
-        });
-
-        modalInstance.result.then(function() {
-            return Project.removeProject({ external_id: $scope.project.external_id })
-                .then(function() {
-                    notify.log('Project deleted');
-                    $window.location.href = '/my-projects';
-                });
-        });
-    }
+    // ⛔ $scope.deleteProject REMOVED 2026-09-16, together with its button in
+    // details.html and the route it called (POST .../remove, now 410 Gone).
+    //
+    // It was the only client of that route. It performed the WEAKER delete —
+    // legacy-only, no membership snapshot, no ownership reassignment to the
+    // `arbimon-deleted@` tombstone, and insights never told (rfcx-local §332),
+    // leaving the project live on insights indefinitely: the divergence class
+    // §329 drove from 296 to 0.
+    //
+    // Project deletion now has exactly ONE path — the modern settings page →
+    // bio-api `DELETE /projects/:id` — which satisfies the operator ruling
+    // (2026-09-16 02:31) that delete must work the same for SPA and legacy.
+    //
+    // `Project.removeProject` in a2services/project-service.js is removed in the
+    // same commit; nothing else referenced it.
 
     $scope.changePlan = function() {
         var modalInstance = a2order.changePlan({});

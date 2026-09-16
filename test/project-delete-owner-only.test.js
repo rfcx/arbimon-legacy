@@ -50,17 +50,30 @@ describe('project delete is owner-only (super must masquerade)', function() {
     expect(haveAccessBody).to.not.match(/isSuper === 1\)\s*\n?\s*return true/);
   });
 
-  it('both project delete routes still gate on delete project', function() {
-    // If either route stopped calling haveAccess with 'delete project', the
-    // narrowing above would protect nothing.
+  it('the LIVE project delete route still gates on delete project', function() {
+    // UPDATED 2026-09-16: this asserted BOTH routes. `/remove` was RETIRED that
+    // day (410 Gone, rfcx-local OPEN-ITEMS §330 (6)) and no longer deletes
+    // anything, so it correctly has no authz check left to make — there is
+    // nothing behind it to protect.
+    //
+    // The invariant this test exists for is unchanged and still enforced on the
+    // one route that CAN delete: /soft-remove, the SPA's legacy leg.
+    var softRemove = projectRoutesSrc.indexOf("'/:projectUrl/soft-remove'");
+    expect(softRemove).to.be.above(-1);
+    var softBlock = projectRoutesSrc.slice(softRemove, softRemove + 900);
+    expect(softBlock).to.match(/haveAccess\([^)]*["']delete project["']\)/);
+  });
+
+  it('the retired /remove route deletes nothing (so needing no gate is SAFE)', function() {
+    // The pairing that makes the relaxation above honest: a route with no authz
+    // check is only acceptable while it also has no delete. If someone restores
+    // the delete without restoring the gate, THIS fails.
     var remove = projectRoutesSrc.indexOf("'/:projectUrl/remove'");
     var softRemove = projectRoutesSrc.indexOf("'/:projectUrl/soft-remove'");
     expect(remove).to.be.above(-1);
-    expect(softRemove).to.be.above(-1);
     var removeBlock = projectRoutesSrc.slice(remove, softRemove);
-    var softBlock = projectRoutesSrc.slice(softRemove, softRemove + 900);
-    expect(removeBlock).to.match(/haveAccess\([^)]*["']delete project["']\)/);
-    expect(softBlock).to.match(/haveAccess\([^)]*["']delete project["']\)/);
+    expect(removeBlock).to.not.match(/removeProject/);
+    expect(removeBlock).to.match(/410/);
   });
 
   it('the masquerade swap still hard-pins isSuper to 0 (so a masquerading super uses the owner path)', function() {
