@@ -87,7 +87,14 @@
                         </div>
                     </div>
                     <div class="ml-3" ng-if="selected.soundscape">
+                        <!-- on-error-src: the arbimon2 soundscape PNGs were retired
+                             2026-09-06 (11.4M objects deleted, operator-directed), but this
+                             url is still minted from `soundscapes.uri` in playlists.js:119.
+                             Without a fallback the user sees a BROKEN IMAGE. Same directive
+                             + same placeholder the visualizer soundscape card has always
+                             used (visualizer/browser/soundscapes/card.html). -->
                         <img ng-src="{{selected.soundscape_thumbnail}}" alt=""
+                        on-error-src="https://rfcx-web-static.s3.eu-west-1.amazonaws.com/arbimon/unavaliable.png"
                         class="crisp-image"
                         width="300"
                         height="154"
