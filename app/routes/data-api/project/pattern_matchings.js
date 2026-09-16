@@ -199,13 +199,36 @@ router.get('/:patternMatching/audio/:roiUrl', function(req, res, next) {
 
 router.post('/:patternMatching/update', function(req, res, next) {
     res.type('json');
-    model.patternMatchings.updateJobName(req.params.patternMatching, req.body.name).then(function() {
+    // 2026-09-16 (rfcx-local OPEN-ITEMS §333): this route renamed a PM job with
+    // NO permission check -- the same omission as /validate below. Gated on the
+    // same permission its sibling /remove uses, since both mutate the job.
+    if(!req.haveAccess(req.project.project_id, "manage pattern matchings")){
+        return res.status(403).json({ error: "You don't have permission to update pattern matchings" });
+    }
+    model.patternMatchings.updateJobName(req.params.patternMatching, req.body.name, req.project.project_id).then(function() {
         res.json();
     }).catch(next);
 });
 
+// 2026-09-16 (rfcx-local OPEN-ITEMS §333): this route had NO permission gate at
+// all, while its siblings /remove and /new (below) both gate on 'manage pattern
+// matchings'. The permission 'validate pattern matchings' already existed in the
+// DB (Admin/Owner/Expert) and was enforced ONLY in the legacy Angular client
+// (assets/app/app/analysis/patternmatching/index.js:1127) -- i.e. a check that
+// any non-UI caller (curl, devtools, the ported SPA control) simply skipped.
+//
+// WHY THIS PERMISSION AND NOT 'manage pattern matchings': 30 d of production
+// traffic attributed to roles (2,621 successful calls, 100 % parse) showed
+// 2,610 (99.58 %) of callers ALREADY hold 'validate pattern matchings'
+// (Admin 1,553 / Expert 726 / Owner 331) and that User/Guest/Data Entry made
+// ZERO calls -- so both candidate permissions refuse exactly the same calls and
+// the semantic one wins. Measured worst case: 3 refused calls in 30 days.
+// Evidence: rfcx-local runbooks/evidence/s7-validate-role-attribution-20260916.md
 router.post('/:patternMatching/validate', function(req, res, next) {
     res.type('json');
+    if(!req.haveAccess(req.project.project_id, "validate pattern matchings")){
+        return res.status(403).json({ error: "You don't have permission to validate the matched rois" });
+    }
     const validation = req.body.validation
     model.patternMatchings.getRoi(req.params.patternMatching, req.body.rois, req.project.project_id).then(async function(rois) {
         // Two very different cases used to be conflated here, and both returned
@@ -253,7 +276,7 @@ router.post('/:patternMatching/validate', function(req, res, next) {
                 });
             });
         };
-        model.patternMatchings.validateRois(req.params.patternMatching, updatedRoiIds, validation)
+        model.patternMatchings.validateRois(req.params.patternMatching, updatedRoiIds, validation, req.project.project_id)
             .then(async function(validatedRois) {
                 for (let roi of updatedRois) {
                     const previousValidation = roi.validated;
