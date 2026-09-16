@@ -251,7 +251,63 @@ var CitizenScientist = {
      * @param {Array[int]} rois - ids of the given rois.
      */
     computeConsensusValidations(patternMatchingId, rois){
-        return dbpool.query(
+        // P7 port: `UPDATE <t> JOIN <u> ... SET <t>.<col> = ...` is MySQL-only
+        // STATEMENT SHAPE -- 42601 on PostgreSQL, and the translator does NOT
+        // rewrite it (it rewrites EXPRESSIONS, e.g. IF() -> CASE, but not the
+        // shape). Under DB_ENGINE=pg this raised a syntax error, and because
+        // validateCSRois awaits this AFTER the validation INSERT, the user's
+        // validation was written while the derived consensus counters silently
+        // stopped tracking it -- a partial write, not a clean failure.
+        //
+        // PG form: UPDATE ... SET (a, b, c) = (SELECT ...) FROM pattern_matchings.
+        // WHY THIS FORM AND NOT THE OBVIOUS ONES (all measured on the replica):
+        //   * `FROM pattern_matchings pm LEFT JOIN (...) PMV ON ... pmr....`
+        //     is ILLEGAL -- PG refuses to join the UPDATE target inside FROM
+        //     ("invalid reference to FROM-clause entry for table pmr"). Same for
+        //     LEFT JOIN LATERAL against the target.
+        //   * The comma/derived-table form parses but INNER-joins the aggregate,
+        //     which SILENTLY SKIPS rois that have no validation rows. That is not
+        //     hypothetical: on a real CS pattern matching, 2000 of 2000 sampled
+        //     rois had ZERO validation rows, so an inner join would have dropped
+        //     every one. The original LEFT JOIN is load-bearing -- it is what
+        //     resets counters to (0, 0, NULL).
+        // The single multi-column assignment also evaluates the aggregate ONCE
+        // per row (verified: one SubPlan returning $2,$3,$4) instead of three
+        // times, and rides the existing unique index on
+        // (pattern_matching_roi_id, user_id).
+        //
+        // Equivalence PROVEN BY EXECUTION against the frozen MariaDB on the same
+        // roi ids, both row classes: unvalidated rois -> (0, 0, NULL) on both
+        // engines; validated rois -> (0, 1, cn=3, NULL) on both engines.
+        //
+        // DUAL-ARM, not a replacement: MariaDB REJECTS the PG multi-column form
+        // with ERROR 1064 (measured), so the original statement stays as the
+        // MariaDB arm. Both prod executors (arbimon, arbimon-ingest-consumer)
+        // currently run DB_ENGINE=pg, but MariaDB remains the rollback horizon
+        // and this file already uses this dual-arm convention (see :215, :363).
+        const sqlPg =
+            "UPDATE pattern_matching_rois\n" +
+            "SET (cs_val_present, cs_val_not_present, consensus_validated) = (\n" +
+            "    SELECT COALESCE(_A.cs_present, 0),\n" +
+            "           COALESCE(_A.cs_not_present, 0),\n" +
+            "           (CASE\n" +
+            "               WHEN _A.cs_present >= pattern_matchings.consensus_number THEN 1\n" +
+            "               WHEN _A.cs_not_present >= pattern_matchings.consensus_number THEN 0\n" +
+            "               ELSE NULL\n" +
+            "           END)\n" +
+            "    FROM (\n" +
+            "        SELECT SUM(CASE WHEN _PMV.validated = 1 THEN 1 ELSE 0 END) as cs_present,\n" +
+            "               SUM(CASE WHEN _PMV.validated = 0 THEN 1 ELSE 0 END) as cs_not_present\n" +
+            "        FROM pattern_matching_validations _PMV\n" +
+            "        WHERE _PMV.pattern_matching_roi_id = pattern_matching_rois.pattern_matching_roi_id\n" +
+            "    ) _A\n" +
+            ")\n" +
+            "FROM pattern_matchings\n" +
+            "WHERE pattern_matchings.pattern_matching_id = pattern_matching_rois.pattern_matching_id\n" +
+            "  AND pattern_matching_rois.pattern_matching_id = ?\n" +
+            "  AND pattern_matching_rois.pattern_matching_roi_id IN (?)";
+
+        const sqlMysql =
             "UPDATE pattern_matching_rois\n" +
             "    JOIN pattern_matchings ON pattern_matching_rois.pattern_matching_id = pattern_matchings.pattern_matching_id\n" +
             "    LEFT JOIN (\n" +
@@ -270,7 +326,9 @@ var CitizenScientist = {
             "        ELSE NULL\n" +
             "    END)\n" +
             "WHERE pattern_matching_rois.pattern_matching_id = ?\n" +
-            "  AND pattern_matching_rois.pattern_matching_roi_id IN (?)", [
+            "  AND pattern_matching_rois.pattern_matching_roi_id IN (?)";
+
+        return dbpool.query(pgshadow.isPg ? sqlPg : sqlMysql, [
             patternMatchingId,
             rois
         ]);
