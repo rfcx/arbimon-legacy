@@ -10,6 +10,7 @@ var rp = util.promisify(request);
 var tzlookup = require("tz-lookup");
 var s3;
 var dbpool = require('../utils/dbpool');
+const siteRecCount = require('./site-rec-count'); // S2: sites.rec_count maintenance
 var pgshadow = require('../utils/dbpool-pg'); // P7 write ports (INERT unless DB_ENGINE=pg)
 var queryHandler = dbpool.queryHandler;
 const moment = require('moment');
@@ -718,7 +719,7 @@ var Sites = {
                         // (`recordings` is append-synced and in no
                         // delete-capture set), whereas `archived_at` IS carried
                         // by delta_sync mechanism 7.
-                        await this.archiveRecordingsBySite(recIds, db)
+                        await this.archiveRecordingsBySite(recIds, db, site_id)
                     }
                     await this.removeFromProjectAsync(site_id, project_id, db);
                     if (rfcxConfig.coreAPIEnabled) {
@@ -759,12 +760,26 @@ var Sites = {
      * Playlist membership is removed to match the recording-level archive
      * (ruling C2) — the row now survives, so the FK cascade no longer does it.
      */
-    archiveRecordingsBySite: async function(recIds, connection) {
+    archiveRecordingsBySite: async function(recIds, connection, site_id) {
         if (!recIds || !recIds.length) { return }
-        const executeQuery = connection ? (sql) => dbpool.queryWithConn(connection, sql) : dbpool.query;
-        const queries = [
+        // S2 (rec_count cache): site_id is REQUIRED. The only caller
+        // (softRemoveAllSites) already iterates one site at a time and holds
+        // it; making it a parameter turns "mixed-site id list" into a
+        // programming error here rather than a silent miscount downstream.
+        if (site_id === undefined || site_id === null || !Number.isFinite(Number(site_id))) {
+            throw new Error('archiveRecordingsBySite: site_id is required (got ' + site_id + ')')
+        }
+        const executeQuery = connection ? (sql, params) => dbpool.queryWithConn(connection, sql, params) : dbpool.query;
+        // The archive UPDATE runs FIRST and its affectedRows -- the rows that
+        // actually flipped NULL -> archived_at -- drives the decrement. Not
+        // recIds.length: an already-archived id must not decrement again.
+        const archived = await executeQuery(
             `UPDATE recordings SET archived_at = NOW()
-              WHERE recording_id IN (${recIds}) AND archived_at IS NULL`,
+              WHERE recording_id IN (${recIds}) AND archived_at IS NULL`);
+        const packet = Array.isArray(archived) ? archived[0] : archived
+        const n = (packet && packet.affectedRows) || 0
+        await siteRecCount.decrementForArchive(executeQuery, site_id, n)
+        const queries = [
             `DELETE FROM playlist_recordings WHERE recording_id IN (${recIds})`,
             // Templates remain soft-deleted: a template is a user-authored
             // artefact pointing at the recording, and `deleted=1` is already

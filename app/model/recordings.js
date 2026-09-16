@@ -15,6 +15,11 @@ var joi   = require('joi');
 var _     = require('lodash');
 
 const siteModel = require('./sites')
+// S2 of rfcx-local DESIGN-2026-09-16-rec-count-event-driven-cache: every
+// count-changing write below runs in a transaction and bumps sites.rec_count
+// (+ first/last_recording_at) in that same transaction. See the helper's
+// header for the contract, and for the ONE column it must never touch.
+const siteRecCount = require('./site-rec-count')
 const projectModel = require('./projects')
 const classificationsModel = require('./classifications')
 const tagsModel = require('./tags')
@@ -1651,14 +1656,45 @@ var Recordings = {
         joi.validate(recording, Recordings.recordingInsertSchema, { stripUnknown: true }, function(err, rec) {
             if(err) return callback(err);
 
-            queryHandler('INSERT INTO recordings (\n' +
+            Recordings._insertWithRecCount('INSERT INTO recordings (\n' +
                 '`site_id`, `uri`, `datetime`, `mic`, `recorder`, `version`, `sample_rate`, \n'+
                 '`precision`, `duration`, `samples`, `file_size`, `bit_rate`, `sample_encoding`, `upload_time`, `datetime_utc`, `meta`\n' +
             ') VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);', [
                 rec.site_id, rec.uri, rec.datetime, rec.mic || '(not specified)', rec.recorder || '(not specified)', rec.version || '(not specified)', rec.sample_rate,
                 rec.precision, rec.duration, rec.samples, rec.file_size, rec.bit_rate, rec.sample_encoding, rec.upload_time, rec.datetime_utc, rec.meta
-            ], callback);
+            ], [rec], callback);
         });
+    },
+
+    /**
+     * Run `insertSql` with `insertParams`, then bump the per-site counters for
+     * `recs`, INSIDE ONE TRANSACTION on the conn-scoped write path
+     * (dbpool.getConnection routes to PG's getWriteConnection under
+     * DB_ENGINE=pg). Either both land or neither does -- a crash between the
+     * INSERT and the bump is otherwise a silent, permanent drift that only the
+     * repair plane could ever find (design D3). Same shape as jobs.js
+     * newJob(): getConnection -> sqlutil.transaction.perform -> release.
+     */
+    _insertWithRecCount: function(insertSql, insertParams, recs, callback) {
+        var connection;
+        return dbpool.getConnection().then(function (conn) {
+            connection = conn;
+            var tx = new sqlutil.transaction(connection);
+            return tx.perform(function () {
+                return Q.ninvoke(connection, 'query', insertSql, insertParams).then(function (result) {
+                    var execQuery = function (sql, params) {
+                        return Q.ninvoke(connection, 'query', sql, params);
+                    };
+                    return siteRecCount.bumpForInsertedRows(execQuery, recs).then(function () {
+                        // mysql-shaped result packet: callers read insertId /
+                        // affectedRows from it exactly as before.
+                        return Array.isArray(result) ? result[0] : result;
+                    });
+                });
+            }).finally(function () {
+                if (connection) { connection.release(); }
+            });
+        }).nodeify(callback);
     },
 
     insertAsync: function(recording) {
@@ -1675,10 +1711,13 @@ var Recordings = {
             })
             if(err) return callback(err);
 
-            queryHandler('INSERT INTO recordings (\n' +
+            // The batch CAN interleave sites (recs.map keeps whatever order the
+            // ingest request sent), so the bump groups by site_id app-side --
+            // one UPDATE per site per batch, never per row.
+            Recordings._insertWithRecCount('INSERT INTO recordings (\n' +
                 '`site_id`, `uri`, `datetime`, `mic`, `recorder`, `version`, `sample_rate`, \n'+
                 '`precision`, `duration`, `samples`, `file_size`, `bit_rate`, `sample_encoding`, `upload_time`, `datetime_utc`, `meta`\n' +
-            ') VALUES ?;', [data], callback);
+            ') VALUES ?;', [data], recs, callback);
         });
     },
 
@@ -3324,7 +3363,25 @@ var Recordings = {
         }
         const q = `UPDATE recordings SET archived_at = NOW(), archived_by = NULL
             WHERE site_id = ? AND uri IN (?) AND archived_at IS NULL`
-        return dbpool.query(q, [site_id, uris])
+        // S2: archive + counter decrement in ONE transaction. The decrement
+        // uses the UPDATE's own affectedRows -- rows that actually flipped
+        // NULL -> archived_at -- so re-archiving an already-archived uri
+        // decrements by 0, not by uris.length.
+        let connection
+        try {
+            connection = await dbpool.getConnection()
+            const tx = new sqlutil.transaction(connection)
+            return await tx.perform(async () => {
+                const result = await Q.ninvoke(connection, 'query', q, [site_id, uris])
+                const packet = Array.isArray(result) ? result[0] : result
+                const n = (packet && packet.affectedRows) || 0
+                const execQuery = (sql, params) => Q.ninvoke(connection, 'query', sql, params)
+                await siteRecCount.decrementForArchive(execQuery, site_id, n)
+                return packet
+            })
+        } finally {
+            if (connection) connection.release()
+        }
     },
 
     /**
