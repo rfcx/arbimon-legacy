@@ -36,22 +36,34 @@ angular.module('a2.directive.side-bar', [])
         Project.getInfo(function(info) {
             $scope.projectData = info;
             const url = info.url
+            // NOTE: arbimonUrl is still read here because other call sites
+            // use it, but the RAIL's own links are deliberately PATH-ONLY
+            // below. On the demo tier bioAnalyticsBaseUrl is
+            // https://arbimon.org (measured 2026-09-16), so host-qualified
+            // rail links sent demo users into LIVE PRODUCTION mid-test.
+            // Path-only links resolve against the current origin, so demo
+            // stays on demo and prod stays on prod with no config at all.
             $scope.arbimonUrl = info.bioAnalyticsBaseUrl
-            $scope.accountSettings = $scope.arbimonUrl + '/account-settings'
+            $scope.accountSettings = '/account-settings'
             $scope.allItems  = [
                 {
                     title: 'Overview',
                     iconRaw: 'fi-grid',
                     public: true,
-                    route: $scope.arbimonUrl + '/p/' + url + '/overview'
+                    route: '/p/' + url + '/overview'
                 },
                 {
                     title: 'Import',
                     iconRaw: 'cloud-upload',
-                    route: $scope.arbimonUrl + '/p/' + url + '/import-recordings'
+                    route: '/p/' + url + '/import-recordings'
                 },
                 {
-                    title: 'Explore',
+                    // 'Browse data', NOT 'Explore' -- the SPA renamed this on
+                    // 2026-08-28 because the rail's 'Explore' sat inches from
+                    // the top-nav's 'Projects' link and the two go to
+                    // completely different places (this browses the CURRENT
+                    // project; that one is the public project directory).
+                    title: 'Browse data',
                     iconRaw: 'fa-search',
                     children: [
                         {
@@ -67,28 +79,28 @@ angular.module('a2.directive.side-bar', [])
                             visibleCondition: () => {
                                 return true
                             },
-                            externalRoute: $scope.arbimonUrl + '/p/' + url + '/visualizer'
+                            externalRoute: '/p/' + url + '/visualizer'
                         },
                         {
                             title: 'Sites',
                             visibleCondition: () => {
                                 return true
                             },
-                            externalRoute: $scope.arbimonUrl + '/p/' + url + '/audiodata/sites'
+                            externalRoute: '/p/' + url + '/audiodata/sites'
                         },
                         {
                             title: 'Recordings',
                             visibleCondition: () => {
                                 return true
                             },
-                            externalRoute: $scope.arbimonUrl + '/p/' + url + '/audiodata/recordings'
+                            externalRoute: '/p/' + url + '/audiodata/recordings'
                         },
                         {
                             title: 'Species',
                             visibleCondition: () => {
                                 return true
                             },
-                            externalRoute: $scope.arbimonUrl + '/p/' + url + '/audiodata/species'
+                            externalRoute: '/p/' + url + '/audiodata/species'
                         },
                         {
                             // SPA PLAYLISTS (rfcx-local, operator 2026-09-16).
@@ -100,7 +112,7 @@ angular.module('a2.directive.side-bar', [])
                             visibleCondition: () => {
                                 return true
                             },
-                            externalRoute: $scope.arbimonUrl + '/p/' + url + '/analysis/playlists'
+                            externalRoute: '/p/' + url + '/analysis/playlists'
                         }
                     ]
                 },
@@ -146,7 +158,7 @@ angular.module('a2.directive.side-bar', [])
                             visibleCondition: () => {
                                 return $scope.isRfcx()
                             },
-                            externalRoute: $scope.arbimonUrl + '/p/' + url + '/analyse/cnn'
+                            externalRoute: '/p/' + url + '/analyse/cnn'
                         },
                         {
                             title: 'Citizen Scientist',
@@ -161,7 +173,7 @@ angular.module('a2.directive.side-bar', [])
                 {
                     title: 'Ecological insights',
                     iconRaw: 'pres-chart-bar',
-                    route: $scope.arbimonUrl + '/p/' + url + '/insights'
+                    route: '/p/' + url + '/insights'
                 },
                 {
                     title: 'Project settings',
@@ -172,14 +184,14 @@ angular.module('a2.directive.side-bar', [])
                             visibleCondition: () => {
                                 return true
                             },
-                            externalRoute: $scope.arbimonUrl + '/p/' + url + '/settings'
+                            externalRoute: '/p/' + url + '/settings'
                         },
                         {
                             title: 'Members',
                             visibleCondition: () => {
                                 return true
                             },
-                            externalRoute: $scope.arbimonUrl + '/p/' + url + '/users'
+                            externalRoute: '/p/' + url + '/users'
                         }
                     ]
                 }
@@ -192,9 +204,9 @@ angular.module('a2.directive.side-bar', [])
         if (page == 'citizen-scientist'){
             return '/citizen-scientist/' + projectUrl + '/';
         } else if (page == 'reports') {
-            return $scope.arbimonUrl
+            return '/'
         } else if (page == 'my-projects') {
-            return $scope.arbimonUrl + '/my-projects'
+            return '/my-projects'
         }
     }
 

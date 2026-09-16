@@ -18,6 +18,20 @@
                     </a>
                 </div>
                 <div class="my-4 border-t border-util-gray-02"> </div>
+                <!-- MY PROJECTS: its own section directly under the logo with a
+                     divider each side, matching the SPA rail order (measured
+                     2026-09-16). It previously sat in the foot. -->
+                <ul class="px-2 row-flex flex-direction-column gap-y-2 mb-0">
+                    <li class="sidebar-submenu">
+                        <a ng-href="{{getUrlFor('my-projects')}}" title="My Projects" class="row-flex flex-align-middle text-base font-normal py-1 px-1 h-9 sidebar-title sidebar-submenu">
+                            <span class="row-flex flex-space-center" style="width: 28px">
+                                <img src="/images/fi-clipboard.svg" class="icon-fill">
+                            </span>
+                            
+                        </a>
+                    </li>
+                </ul>
+                <div class="my-4 border-t border-util-gray-02"> </div>
                 <ul class="px-2 row-flex flex-direction-column gap-y-2 mb-0">
                     <li ng-repeat="item in allItems track by $index">
                         <a
@@ -105,18 +119,6 @@
                         </ul>
                     </li>
                 </ul>
-                <div class="my-4 border-t border-util-gray-02"> </div>
-                <div
-                    ng-if="showSidebar"
-                    class="px-4.5"
-                >
-                    <p class="text-xs text-util-gray-02 m-0 font-medium">
-                        Project name
-                    </p>
-                    <p class="text-sm text-util-gray-01 m-0 mt-1 font-normal text-wrap">
-                        {{ projectData.name }}
-                    </p>
-                </div>
             </div>
             <div>
                 <div class="my-4 border-t border-util-gray-02"></div>
@@ -129,17 +131,6 @@
                         >
                             <span class="row-flex flex-space-center">
                                 <img src="/images/fi-help.svg" class="ml-1 icon-fill self-center">
-                            </span>
-                            
-                        </a>
-                    </li>
-                </ul>
-                <div class="my-4 border-t border-util-gray-02"></div>
-                <ul class="px-2 row-flex flex-direction-column gap-y-2 mb-0">
-                    <li class="sidebar-submenu">
-                        <a ng-href="{{getUrlFor('my-projects')}}" title="My Projects" class="row-flex flex-align-middle text-base font-normal py-1 px-1 h-9 sidebar-title sidebar-submenu">
-                            <span class="row-flex flex-space-center" style="width: 28px">
-                                <img src="/images/fi-clipboard.svg" class="icon-fill">
                             </span>
                             
                         </a>
