@@ -107,7 +107,15 @@ router.use(function create_user_object(req, res, next) {
 router.use(function(req, res, next) {
 
     req.haveAccess = function(project_id, permission_name) {
-        if(req.session.user.isSuper === 1)
+        // Super users pass every project permission check -- EXCEPT
+        // 'delete project' (operator ruling 2026-09-15 23:34): deletion is
+        // owner-only, and a super who needs to delete must MASQUERADE as the
+        // owner. The masquerade swap above presents the TARGET as session.user
+        // with isSuper hard-pinned to 0 and the target's real permissions, so a
+        // masquerading super falls through to the ordinary owner check below
+        // and passes exactly when the owner would. Only the bare-super bypass
+        // is narrowed; every other super capability is untouched.
+        if(req.session.user.isSuper === 1 && permission_name !== 'delete project')
             return true;
 
         var projectPerms = req.session.user.permissions && req.session.user.permissions[project_id];
