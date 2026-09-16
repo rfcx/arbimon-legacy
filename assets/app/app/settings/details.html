@@ -36,12 +36,19 @@
             </form>
         </div>
     </div>
-    <hr>
-    <div class="row">
-        <div class="col-sm-12">
-            <button class="btn btn-danger" ng-click="deleteProject()">
-                <i class="fa fa-times"></i> Delete project
-            </button>
-        </div>
-    </div>
+    <!--
+      ⛔ "Delete project" button REMOVED 2026-09-16 with the retirement of
+      POST /legacy-api/project/:projectUrl/remove (410 Gone).
+
+      It performed the WEAKER delete: legacy-only, no membership snapshot, no
+      ownership reassignment to the tombstone account, and insights was never
+      told (the arbimon→bio ingest leg cannot carry it — rfcx-local §332), so the
+      project stayed live on insights forever. Deleting a project is now done
+      from the modern settings page, which deletes core + insights + legacy in
+      one path with actor attribution.
+
+      This page is itself unused (14 d edge measurement: zero human loads), so
+      removing the button changes nothing a user can see today — it removes a
+      destructive control that would now fail.
+    -->
 </div>

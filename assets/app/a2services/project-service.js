@@ -382,9 +382,13 @@ angular.module('a2.srv.project', [
                         callback(response);
                     });
             },
-            removeProject: function(data) {
-                return $http.post('/legacy-api/project/'+url+'/remove', data);
-            }
+            // ⛔ `removeProject` REMOVED 2026-09-16 — it POSTed to
+            // /legacy-api/project/:slug/remove, which is now 410 Gone.
+            // Its only caller was the legacy settings page's Delete button,
+            // removed in the same commit. Project deletion now has exactly ONE
+            // path: the modern settings page → bio-api DELETE /projects/:id
+            // (snapshot → verify → reassign owner → soft-delete, with actor
+            // attribution, in one transaction). See rfcx-local §330 (6).
         };
     })
 ;

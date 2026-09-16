@@ -617,28 +617,55 @@ router.post('/:projectUrl/user/del', async function(req, res, next) {
     }).catch(next);
 });
 
+// ⛔ RETIRED 2026-09-16 — THIS ROUTE IS SEALED. It answers 410 Gone and deletes
+// nothing.
+//
+// WHY (rfcx-local OPEN-ITEMS §330 item (6); evidence
+// runbooks/evidence/legacy-settings-page-usage-2026-09-16.md +
+// legacy-delete-route-usage-census-2026-09-16.md):
+//
+// 1. NOBODY REACHES IT. Its only client was the legacy AngularJS settings page
+//    (`assets/app/app/settings/details.html` → `settings/index.js` →
+//    `a2services/project-service.js`), and that page is UNUSED: measured at the
+//    edge over 14 d, `GET /legacy/project/<slug>/settings` = 1 and that one hit
+//    was an engineer's own curl; the Angular `#/settings` route = 0; all 21
+//    `/legacy/...` hits were hostile scanners (`phpinfo.php`, `.env`). The
+//    modern SPA settings page served the real traffic. The UI is removed in this
+//    same commit, so the route has no client at all.
+// 2. IT IS THE WEAKER DELETE, AND THAT IS THE HAZARD. It calls `removeProject`,
+//    which soft-deletes on LEGACY only: no membership snapshot, no ownership
+//    reassignment to the `arbimon-deleted@` tombstone, other members left
+//    attached, and — critically — **insights is never told**, because the
+//    arbimon→bio ingest leg cannot carry it (§332). A project deleted here stays
+//    LIVE on insights indefinitely. That is the 296-project divergence class
+//    that §329 spent a session driving to zero.
+// 3. OPERATOR RULING 2026-09-16 02:31: "delete should work the same for SPA and
+//    legacy." With exactly ONE delete path that is true by construction.
+//    Retirement is the cheapest way to satisfy it, and it REMOVES the hazard
+//    rather than building parity machinery around a path no user reaches.
+//
+// THE ONE REAL DELETE PATH IS NOW: SPA → bio-api `DELETE /projects/:id`
+// (snapshot → verify → reassign owner → soft-delete + actor attribution, one
+// transaction), which then chains `/soft-remove` below for the legacy plane.
+//
+// ⚠️ 410, NOT 404, AND NOT A SILENT DELETION OF THE ROUTE. 410 Gone is the
+// honest status for "this existed and was withdrawn", it is greppable in the
+// edge logs, and it means any UNKNOWN caller (a saved curl, a partner script —
+// code search cannot see those) gets a loud, diagnosable failure instead of a
+// silent behaviour change. If such a caller surfaces, the fix is to point it at
+// bio-api, not to unseal this.
+//
+// ⚠️ `removeProject` is deliberately LEFT IN PLACE: `/soft-remove` below still
+// uses it as the SPA's legacy leg. Only this ENTRY POINT is sealed.
 router.post('/:projectUrl/remove', function(req, res, next) {
     res.type('json');
-
-    if(!req.haveAccess(req.project.project_id, "delete project")) {
-        next(new APIError('You do not have permission to delete this project'));
-        return;
-    }
-    model.projects.removeProject({
-        project_id: req.project.project_id,
-        external_id: req.body.external_id,
-        idToken: req.session.idToken,
-        // WHO deleted it (OPEN-ITEMS §330 item 1).
-        // ⚠️ `user.id`, NOT `user_id`: the session user object is built by
-        // `makeUserObject`, whose field is `id`. Reading `user_id` here yields
-        // undefined and every delete would record NULL — the silent-NULL defect
-        // that hit `archived_by` on 2026-09-09.
-        // Under masquerade `session.user` IS the target user (login.js swaps it
-        // wholesale), so this is the effective identity, which is what we want.
-        deleted_by: req.session.user && req.session.user.id
-    }).then(function() {
-        res.json({ result: 'success' });
-    }).catch(next);
+    console.log('SEALED_ROUTE_CALLED ' + JSON.stringify({
+        route: 'project/:projectUrl/remove',
+        project_id: req.project && req.project.project_id,
+        user: req.session && req.session.user && req.session.user.email,
+        at: new Date().toISOString()
+    }));
+    next(new APIError('This endpoint has been retired. Delete a project from the project settings page.', 410));
 });
 
 router.post('/:projectUrl/soft-remove', function(req, res, next) {

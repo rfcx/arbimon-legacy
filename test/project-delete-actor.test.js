@@ -134,10 +134,29 @@ describe('project delete: actor attribution (deleted_by)', function () {
                 .to.match(/deleted_by:\s*req\.session\.user && req\.session\.user\.id/);
         });
 
-        it('both delete routes supply deleted_by', function () {
+        it('every SURVIVING delete route supplies deleted_by', function () {
+            // UPDATED 2026-09-16: this asserted exactly 2 (both /remove and
+            // /soft-remove). `/remove` was RETIRED the same day — 410 Gone, it
+            // deletes nothing — so only ONE delete route remains and only it can
+            // record an actor. See rfcx-local OPEN-ITEMS §330 (6).
+            //
+            // Asserting the COUNT rather than ">= 1" is deliberate: it is what
+            // caught the seal in the first place, and it will catch a future
+            // route that deletes without recording the actor.
             var occurrences = routesCode.match(/deleted_by:\s*req\.session\.user/g) || [];
-            expect(occurrences.length, 'both /remove and /soft-remove must record the actor')
-                .to.equal(2);
+            expect(occurrences.length, '/soft-remove is the one remaining legacy delete route and must record the actor')
+                .to.equal(1);
+        });
+
+        it('the retired /remove route no longer records an actor (because it no longer deletes)', function () {
+            var remove = routesCode.indexOf("'/:projectUrl/remove'");
+            var softRemove = routesCode.indexOf("'/:projectUrl/soft-remove'");
+            expect(remove).to.be.above(-1);
+            var removeBlock = routesCode.slice(remove, softRemove);
+            expect(removeBlock, 'a sealed route must not still be wired to the delete model')
+                .to.not.match(/removeProject/);
+            expect(removeBlock, 'and it must not pretend to attribute an actor')
+                .to.not.match(/deleted_by/);
         });
 
         it('NO delete route reads the non-existent session field user_id', function () {
