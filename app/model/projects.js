@@ -1707,8 +1707,47 @@ var Projects = {
                 db = connection;
                 await db.beginTransaction();
                 await this.deleteLegacy(options.project_id, db, options.deleted_by);
-                if (rfcxConfig.coreAPIEnabled) {
+                // Only tell core when we actually HAVE a core id.
+                //
+                // WHY THE `external_id` GUARD (rfcx-local OPEN-ITEMS §330 item (6);
+                // evidence runbooks/evidence/project-delete-caller-enumeration-2026-09-16.md):
+                // this function is shared by TWO routes. `/remove` passes
+                // `req.body.external_id`, so its core call is real. `/soft-remove`
+                // passes NOTHING, so for years its call was built against the literal
+                // string `/projects/undefined`. That is not theoretical — Loki shows
+                // **12 such requests in 14 days**, i.e. essentially every SPA delete,
+                // and §330's recorded "blast radius 0" was measured by grepping the
+                // WRONG WORKLOAD (the request is logged by core-api, not arbimon).
+                //
+                // 🔴 AND THREE OF THOSE RETURNED 204, NOT 404: core's
+                // `DELETE /projects/:id` computes `deletableBy = undefined` for a
+                // super/system-role caller, skips the permission pre-check, and runs
+                // `Project.destroy({where:{id:'undefined'}})`, which matches 0 rows and
+                // does not throw — so the route answers 204. The status encodes the
+                // CALLER'S PRIVILEGE, not the outcome. A core-side delete that
+                // "succeeds" against a nonexistent id is why this has been invisible.
+                //
+                // The SPA path does not need this call at all: it deletes core+insights
+                // via bio-api FIRST and only then calls `/soft-remove`, so by the time we
+                // get here core is already soft-deleted. Restoring a real id here would
+                // therefore issue a redundant delete against an already-deleted project
+                // (a 0-row 204), not repair anything. Skipping is the honest behaviour
+                // AND is exactly what already happens — this guard just stops us lying
+                // about it in the logs.
+                //
+                // ⚠️ DO NOT "fix" this by passing `req.project.external_id` from the
+                // `/soft-remove` route without also making `deleteInCoreAPI` able to fail
+                // loudly (today `rp` resolves on ANY status and the `APIError` throw sits
+                // inside `catch (e) {}`). That belongs to the one-delete-path
+                // consolidation, §330 item (6) — not to this guard.
+                if (rfcxConfig.coreAPIEnabled && options.external_id) {
                     await this.deleteInCoreAPI(options.external_id, options.idToken)
+                } else if (rfcxConfig.coreAPIEnabled) {
+                    console.log(JSON.stringify({
+                        event: 'project_delete_core_leg_skipped',
+                        reason: 'no external_id supplied by the caller',
+                        project_id: options.project_id
+                    }));
                 };
                 await db.commit();
                 await db.release();
