@@ -29,6 +29,46 @@ var tagRoutes = require('./tags');
 var audioEventDetectionsClusteringRoutes = require('./audio-event-detections-clustering');
 var clusteringRoutes = require('./clustering-jobs');
 
+// 2026-09-16 (rfcx-local FINDING-2026-09-16-citizen-scientist-TWO-MORE-DEAD-REDIRECTS
+// §2+§3, operator GO 04:15): the pre-2026 code computed
+//     rows.reduce(function(_, p) { _[p.name] = true; return _; })
+// with NO initial value over the PROJECT result rows, so `permissionsMap` was
+// the project OBJECT itself and `permissionsMap['use citizen scientist
+// interface']` was undefined — the citizen-scientist redirect below has been
+// dead since it was written (proven in-pod: map === project object). Its
+// target was also wrong: it redirected to /citizen-scientist/<project_id>/
+// while app/routes/citizen-scientist.js binds :projecturl and resolves it via
+// find({ url }) — a SLUG. Fixing one without the other would have exposed the
+// second, so they ship together.
+//
+// Consumer audit (a precondition named by the finding, done before this
+// change): `permissionsMap` was referenced ONLY at its own definition + the
+// redirect condition (whole-repo grep), and no other model.projects.find
+// caller treats the rows as permission rows (all use .get(0)/rows[0]).
+//
+// WHAT THIS ACTIVATES, stated plainly: this redirect has never fired before.
+// Its firing set is bounded twice — (1) the user must hold 'use citizen
+// scientist interface' on THIS project (checked against the REAL per-project
+// permission rows: {id, name} from model.users.getPermissions, either cached
+// on the session or freshly fetched), and (2) req.inAppUrl must be set, which
+// ONLY routes/citizen-scientist.js's prefix-stripping middleware does — i.e.
+// requests arriving through the citizen-scientist URL space. Ordinary
+// /legacy-api traffic has inAppUrl undefined and is unaffected. Measured 7 d
+// exposure at merge time: 16 hits on /citizen-scientist/*, all
+// unauthenticated login redirects. No redirect loop: the target is the CS
+// home page (served by citizen-scientist.js's GET handler), whose own XHRs
+// use absolute /legacy-api/... URLs without the CS prefix.
+function citizenScientistHomeRedirect(req, project, permissions) {
+    var holdsCsPermission = (permissions || []).some(function(p) {
+        return p && p.name === 'use citizen scientist interface';
+    });
+    // Allow the navigation to the Visualizer page for citizen scientist users
+    if (holdsCsPermission && req.inAppUrl && !req.inAppUrl.startsWith('visualizer')) {
+        return '/citizen-scientist/' + project.url + '/';
+    }
+    return undefined;
+}
+
 router.param('projectUrl', function(req, res, next, project_url){
     res.type('json');
     model.projects.find({ url: project_url }, function(err, rows) {
@@ -41,16 +81,6 @@ router.param('projectUrl', function(req, res, next, project_url){
         }
 
         const project = rows[0];
-
-        let permissionsMap = rows.reduce(function(_, p) {
-            _[p.name] = true;
-            return _;
-        })
-        // Allow the navigation to the Visualizer page for citizen scientist users
-        if (permissionsMap['use citizen scientist interface'] &&
-            (req.inAppUrl && !req.inAppUrl.startsWith('visualizer'))) {
-                return res.redirect('/citizen-scientist/' + project.project_id + '/');
-        }
 
         // rfcx-local 2026-08-31 (OPEN-ITEMS §40 rider #4): req.session.user can be
         // UNDEFINED on an anonymous / expired-session path. The unguarded property
@@ -79,12 +109,23 @@ router.param('projectUrl', function(req, res, next, project_url){
                 req.session.user.permissions[project.project_id] = rows;
                 req.session.loggedIn = true
 
+                // 2026-09-16: see citizenScientistHomeRedirect above — the CS
+                // redirect now runs AFTER the real permission rows exist.
+                var csHome = citizenScientistHomeRedirect(req, project, rows);
+                if (csHome) {
+                    return res.redirect(csHome);
+                }
+
                 req.project = project;
 
                 return next();
             });
         }
         else {
+            var csHomeCached = citizenScientistHomeRedirect(req, project, permissions);
+            if (csHomeCached) {
+                return res.redirect(csHomeCached);
+            }
             req.project = project;
             return next();
         }
