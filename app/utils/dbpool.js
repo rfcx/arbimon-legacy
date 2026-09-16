@@ -10,6 +10,26 @@ var showQueriesInConsole = true;
 // arbimon-recording-export worker sets EXPORTS_DB_ENGINE=pg, app/model/* reads
 // in this process execute against PG via the P6 translator. The web app does
 // not set this env var, so its Phase-6 shadow behavior is untouched.
+//
+// ⚠️ EXPORTS_DB_ENGINE IS READ IN TWO PLACES WITH DIFFERENT SCOPES -- know both
+// before reasoning about which engine (or which CREDENTIAL) served a query:
+//   1. jobs/db/backend.js  -- selects the engine for the jobs/services/* facade.
+//   2. HERE               -- silently reroutes app/model/* reads in THIS process.
+// (2) is the surprising one: a module that looks like "the web app's model"
+// (app/model/recordings.exportRecordingData, which builds the recordings CSV)
+// runs on the EXPORT WORKER'S pool, not on the web pool, whenever this flag is
+// set. Concretely, dbpool.query() below routes to jobs/db/pg.js readQuery(),
+// i.e. the POSTGRES_* READ pool (arbimon_ro since 2026-09-16), NOT to
+// PG_SHADOW_USER and NOT to the MySQL pool.
+//
+// 🔑 HOW TO PROVE IT, because guessing here is easy and wrong (measured
+// 2026-09-16, S1): probing `dbpool.getConnection()` in the export pod answers
+// `arbimon@%` on MariaDB -- that is the RAW MySQL path and is NOT the path
+// exportRecordingData uses. Probe `dbpool.query("SELECT current_user")` instead;
+// it answers `arbimon_ro` on PG. Same module, two shapes, two different engines
+// AND two different identities. The row count settles it: that export read 4,397
+// rows, which is PG's active count for the project (MariaDB, frozen at the P7
+// flip, holds 4,364).
 var EXPORTS_PG_ENGINE = (process.env.EXPORTS_DB_ENGINE || '').toLowerCase() === 'pg';
 var pgjobs = null;
 function getExportPgJobs () {
