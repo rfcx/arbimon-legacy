@@ -3494,7 +3494,20 @@ var Recordings = {
                 // What remains: flip the archive flags, drop playlist membership
                 // (C2), and keep writing the tombstone (R2 — Insights hides on it;
                 // restore does not remove it).
+                // S2 of the rec_count design (rfcx-local 2026-09-16): this is
+                // the browser-facing archive path (POST /recordings/delete via
+                // the SPA and the legacy UI) and it was MISSED by the first
+                // write-surface enumeration -- caught during S2's own acceptance
+                // pass. Per-site decrement in THIS transaction, sized by the rows
+                // that will actually flip: `rows` came from getDeletedRecordingData
+                // with no archived_at filter, so an already-archived id in the
+                // request would over-decrement if counted naively. Select the
+                // still-active subset first (same tx, same snapshot), then archive.
+                const activeRows = await query(
+                    `SELECT site_id FROM recordings
+                      WHERE recording_id IN (${recIds}) AND archived_at IS NULL`)
                 await this.archiveRecordingsInArbimon(recIds, archivedBy, query)
+                await siteRecCount.decrementForArchivedRows(query, activeRows)
                 await this.removeArchivedFromPlaylists(recIds, query)
 
                 // Keep deleted recording in the recordings_deleted table
