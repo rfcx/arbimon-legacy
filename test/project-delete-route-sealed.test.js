@@ -122,6 +122,53 @@ describe('legacy project-delete route is SEALED', function () {
         });
     });
 
+    describe('the core-delete leg stays UNREACHABLE (the property that makes a known defect harmless)', function () {
+        /**
+         * `projects.deleteInCoreAPI` still cannot fail loudly: `rp` resolves on ANY
+         * status and its `APIError` throw sits inside `catch (e) {}`
+         * (rfcx-local OPEN-ITEMS §330 item (6)).
+         *
+         * That defect is currently HARMLESS only because the function is
+         * unreachable, and it is unreachable because of a two-part accident of
+         * history that nothing else asserts:
+         *   1. `removeProject` only calls it when `options.external_id` is truthy
+         *      (the guard a sibling seat shipped 2026-09-16), and
+         *   2. `/soft-remove` — now the ONLY caller of `removeProject`, since
+         *      `/remove` was sealed — passes no `external_id` at all.
+         *
+         * Add `external_id` to the `/soft-remove` call site and the swallow-the-
+         * error defect is live again, silently, on the one delete path real users
+         * traverse. These guards make that impossible to do by accident: whoever
+         * does it must either fix `deleteInCoreAPI` or consciously edit this test.
+         *
+         * This is deliberately a PAIR: the guard on the call site would be
+         * satisfiable by deleting the guard in the model, and vice versa.
+         */
+        var modelSrc = stripComments(read(MODEL));
+
+        function softRemoveBlock() {
+            var i = routesCode.indexOf("'/:projectUrl/soft-remove'");
+            expect(i, 'soft-remove route missing').to.be.greaterThan(-1);
+            return routesCode.slice(i, i + 900);
+        }
+
+        it('/soft-remove passes NO external_id (so the core leg is never entered)', function () {
+            expect(softRemoveBlock(), 'adding external_id here re-arms the swallowed-error defect on the live delete path — fix deleteInCoreAPI first')
+                .to.not.match(/external_id/);
+        });
+
+        it('the core call is still gated on external_id in the model', function () {
+            expect(modelSrc, 'removing this guard would make every soft-remove hit core with an undefined id again')
+                .to.match(/coreAPIEnabled\s*&&\s*options\.external_id/);
+        });
+
+        it('control: the external_id pattern matches a real instance', function () {
+            // Proves the absence assertion above is not vacuous: the same pattern
+            // DOES match the shape it is looking for when one is present.
+            expect('        external_id: req.body.external_id,').to.match(/external_id/);
+        });
+    });
+
     describe('controls: these assertions are not vacuous', function () {
         it('the absence patterns match a real instance when one exists', function () {
             expect('removeProject: function(data) {').to.match(/removeProject\s*:/);
