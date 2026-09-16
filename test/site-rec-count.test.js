@@ -189,3 +189,75 @@ describe('site-rec-count — the three live write sites are wired', function () 
         assert.ok(/archiveRecordingsBySite\(recIds, db, site_id\)/.test(sitesSrc), 'caller does not pass site_id');
     });
 });
+describe('site-rec-count — bumpForRestoredRows (the RESTORE path, OPEN-ITEMS 336)', function () {
+    it('groups restored rows by site and emits ONE +n UPDATE per site', async function () {
+        const exec = recorder();
+        await src.bumpForRestoredRows(exec, [
+            { site_id: 10, datetime: '2026-01-02 00:00:00' },
+            { site_id: 11, datetime: '2026-01-03 00:00:00' },
+            { site_id: 10, datetime: '2026-01-01 00:00:00' }
+        ]);
+        assert.strictEqual(exec.calls.length, 2, 'expected one UPDATE per site');
+        const bySite = {};
+        exec.calls.forEach(c => { bySite[c.params[5]] = c.params[0]; });
+        assert.deepStrictEqual(bySite, { 10: 2, 11: 1 });
+    });
+
+    it('ADDS (never subtracts) and widens the range with LEAST/GREATEST + COALESCE', async function () {
+        const exec = recorder();
+        // Real datetime strings, deliberately passed newest-FIRST: the helper
+        // must pick min/max by value, not by argument order.
+        await src.bumpForRestoredRows(exec, [
+            { site_id: 5, datetime: '2026-09-10 12:00:00' },
+            { site_id: 5, datetime: '2025-08-22 05:00:00' }
+        ]);
+        const c = exec.calls[0];
+        assert.ok(/rec_count = rec_count \+ \?/.test(c.sql), c.sql);
+        assert.ok(!/GREATEST\(rec_count - \?/.test(c.sql), 'restore must not decrement: ' + c.sql);
+        assert.ok(/LEAST\(COALESCE\(first_recording_at, \?\), \?\)/.test(c.sql), c.sql);
+        assert.ok(/GREATEST\(COALESCE\(last_recording_at, \?\), \?\)/.test(c.sql), c.sql);
+        assert.deepStrictEqual(c.params,
+            [2, '2025-08-22 05:00:00', '2025-08-22 05:00:00',
+                '2026-09-10 12:00:00', '2026-09-10 12:00:00', 5]);
+    });
+
+    it('is a no-op when nothing actually flipped (every id was already active)', async function () {
+        const exec = recorder();
+        await src.bumpForRestoredRows(exec, []);
+        assert.strictEqual(exec.calls.length, 0);
+    });
+
+    it('never mentions rec_count_updated_at (the S3/S4 trust flag)', async function () {
+        const exec = recorder();
+        await src.bumpForRestoredRows(exec, [{ site_id: 1, datetime: 'a' }]);
+        exec.calls.forEach(c => assert.ok(!/rec_count_updated_at/.test(c.sql), c.sql));
+    });
+});
+
+describe('site-rec-count — restore() is wired (OPEN-ITEMS 336: it shipped 57 min after S2 and was NOT)', function () {
+    it('selects the about-to-flip rows BEFORE the restore UPDATE, then bumps from them', function () {
+        const i = recordingsSrc.indexOf('restore: async function(recIds, project_id)');
+        assert.ok(i > 0, 'restore() not found');
+        const body = recordingsSrc.slice(i, i + 3000);
+        const sel = body.indexOf('archived_at IS NOT NULL`)');
+        const res = body.indexOf('restoreRecordingsInArbimon(eligible, query)');
+        const bump = body.indexOf('siteRecCount.bumpForRestoredRows(query, flipping)');
+        assert.ok(sel > 0, 'restore() does not read the about-to-flip rows');
+        assert.ok(res > 0, 'restore() does not call restoreRecordingsInArbimon');
+        assert.ok(bump > 0, 'restore() does not maintain rec_count — this is the 336 defect');
+        // ORDER MATTERS, mirroring the delete path: the SELECT must precede the
+        // UPDATE (after it, `archived_at IS NOT NULL` matches nothing and the
+        // bump is silently 0), and the bump must follow the UPDATE.
+        assert.ok(sel < res, 'the about-to-flip SELECT must run BEFORE the restore UPDATE');
+        assert.ok(res < bump, 'the bump must follow the restore UPDATE');
+    });
+
+    it('the bump is inside the SAME transaction as the restore (same `query`, before commit)', function () {
+        const i = recordingsSrc.indexOf('restore: async function(recIds, project_id)');
+        const body = recordingsSrc.slice(i, i + 3000);
+        const bump = body.indexOf('siteRecCount.bumpForRestoredRows(query, flipping)');
+        const commit = body.indexOf('db.commit()');
+        assert.ok(commit > 0, 'commit not found');
+        assert.ok(bump < commit, 'the counter write must happen before COMMIT, in the same tx');
+    });
+});

@@ -3488,7 +3488,21 @@ var Recordings = {
                 const requested = (recIds || []).map(Number).filter(function (n) { return Number.isFinite(n) && n > 0; });
                 const eligible = await this.getRestorableRecordingIds(requested, project_id, query)
                 if (eligible.length) {
+                    // rec_count maintenance (rfcx-local OPEN-ITEMS 336): restore is
+                    // the one archive-family path that ADDS active rows, and it
+                    // shipped without a counter call, so every restore left
+                    // sites.rec_count permanently low (this plane has no TTL and
+                    // no self-heal by design). Same shape as the delete path:
+                    // read the rows that WILL flip, in THIS transaction, BEFORE
+                    // the UPDATE -- so an id that is already active adds 0
+                    // instead of double-counting. `datetime` comes along so the
+                    // range can widen (a restored row may pre-date or post-date
+                    // everything currently active).
+                    const flipping = await query(
+                        `SELECT site_id, datetime FROM recordings
+                          WHERE recording_id IN (${eligible}) AND archived_at IS NOT NULL`)
                     await this.restoreRecordingsInArbimon(eligible, query)
+                    await siteRecCount.bumpForRestoredRows(query, flipping)
                 }
                 await db.commit();
                 await db.release();

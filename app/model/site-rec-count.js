@@ -97,7 +97,14 @@ function aggregateBySite(recs) {
  * @returns {Promise}
  */
 function bumpForInsertedRows(execQuery, recs) {
-    var aggs = aggregateBySite(recs);
+    return applyBump(execQuery, aggregateBySite(recs));
+}
+
+/**
+ * The shared +n / widen-range write, used by BOTH row-adding paths (insert and
+ * restore). One UPDATE per site, never per row.
+ */
+function applyBump(execQuery, aggs) {
     var p = Promise.resolve();
     aggs.forEach(function (a) {
         p = p.then(function () {
@@ -115,6 +122,33 @@ function bumpForInsertedRows(execQuery, recs) {
         });
     });
     return p;
+}
+
+/**
+ * After RESTORING rows (un-archiving them) inside the SAME transaction, add
+ * them back to their sites' counters.
+ *
+ * WHY THIS EXISTS (rfcx-local OPEN-ITEMS 336, 2026-09-16): `recordings.restore()`
+ * shipped 57 minutes AFTER the first version of this module and flipped
+ * `archived_at` back to NULL with no counter call, so every restore left
+ * `sites.rec_count` permanently LOW. This plane has no TTL and no self-heal by
+ * design, so nothing corrected it. Restore is the ONE archive-family path that
+ * ADDS active rows, which is why it bumps rather than decrements.
+ *
+ * RANGE: restore may legitimately WIDEN first/last_recording_at (a restored row
+ * can be older or newer than everything currently active), so it uses the same
+ * LEAST/GREATEST shape as the insert path. It can never need to SHRINK the
+ * range -- that stays the repair plane's job.
+ *
+ * @param {Function} execQuery  (sql, params) -> Promise, on the tx connection.
+ * @param {Array}    rows       [{site_id, datetime}, ...] -- the rows that WILL
+ *                              flip. Select them with `archived_at IS NOT NULL`
+ *                              in the same transaction BEFORE the restore
+ *                              UPDATE, so re-restoring an already-active id
+ *                              adds 0 (mirrors decrementForArchivedRows).
+ */
+function bumpForRestoredRows(execQuery, rows) {
+    return applyBump(execQuery, aggregateBySite(rows));
 }
 
 /**
@@ -165,6 +199,7 @@ function decrementForArchivedRows(execQuery, rows) {
 module.exports = {
     aggregateBySite: aggregateBySite,
     bumpForInsertedRows: bumpForInsertedRows,
+    bumpForRestoredRows: bumpForRestoredRows,
     decrementForArchive: decrementForArchive,
     decrementForArchivedRows: decrementForArchivedRows
 };
