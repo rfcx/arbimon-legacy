@@ -12,7 +12,10 @@
 //  3. Archive decrements by the UPDATE's affectedRows, never below 0, and
 //     REFUSES a missing site_id (the design's "derive site from rows changed"
 //     guard, expressed as a required parameter because both callers hold it).
-//  4. Source-level: the three live write sites in recordings.js / sites.js
+//  4. Source-level: the FOUR live write sites in recordings.js / sites.js
+//     (the browser-facing recordings.delete() was MISSED by the first
+//     enumeration and caught during S2's acceptance pass -- pinned here so it
+//     cannot silently regress)
 //     actually call into this module, and the old autocommit shape is gone.
 //
 // NEGATIVE CONTROL: with the helper stubbed to emit a rec_count_updated_at
@@ -112,6 +115,49 @@ describe('site-rec-count — decrementForArchive', function () {
         await assert.rejects(() => src.decrementForArchive(exec, undefined, 1), /requires a numeric site_id/);
         await assert.rejects(() => src.decrementForArchive(exec, 'abc', 1), /requires a numeric site_id/);
         assert.strictEqual(exec.calls.length, 0);
+    });
+});
+
+describe('site-rec-count — decrementForArchivedRows (the multi-site browser delete path)', function () {
+    it('groups the about-to-flip rows by site and emits one decrement per site', async function () {
+        const exec = recorder();
+        await src.decrementForArchivedRows(exec, [
+            { site_id: 10 }, { site_id: 11 }, { site_id: 10 }, { site_id: 10 }
+        ]);
+        const bySite = {};
+        exec.calls.forEach(c => { bySite[c.params[1]] = c.params[0]; });
+        assert.deepStrictEqual(bySite, { 10: 3, 11: 1 });
+        assert.strictEqual(exec.calls.length, 2);
+    });
+
+    it('decrements by NOTHING for an empty active set (all ids already archived)', async function () {
+        const exec = recorder();
+        await src.decrementForArchivedRows(exec, []);
+        assert.strictEqual(exec.calls.length, 0);
+    });
+
+    it('never mentions rec_count_updated_at', async function () {
+        const exec = recorder();
+        await src.decrementForArchivedRows(exec, [{ site_id: 1 }]);
+        exec.calls.forEach(c => assert.ok(!/rec_count_updated_at/.test(c.sql), c.sql));
+    });
+});
+
+describe('site-rec-count — the FOUR live write sites are wired (the fourth was missed by the first enumeration)', function () {
+    it('recordings.delete() selects the still-active subset BEFORE archiving and decrements from it', function () {
+        const i = recordingsSrc.indexOf('delete: async function(recs, project_id, token, callback, archivedBy)');
+        assert.ok(i > 0, 'delete() not found');
+        const body = recordingsSrc.slice(i, i + 4000);
+        const sel = body.indexOf('archived_at IS NULL`)');
+        const arch = body.indexOf('archiveRecordingsInArbimon(recIds, archivedBy, query)');
+        const dec = body.indexOf('siteRecCount.decrementForArchivedRows(query, activeRows)');
+        assert.ok(sel > 0 && arch > 0 && dec > 0, 'delete() is not wired');
+        // ORDER MATTERS: the active-subset SELECT must precede the archive UPDATE
+        // (else it reads zero rows and never decrements), and the decrement must
+        // follow the archive (same tx, same snapshot either way, but this order
+        // is what the comment promises).
+        assert.ok(sel < arch, 'active-subset SELECT must run BEFORE the archive UPDATE');
+        assert.ok(arch < dec, 'decrement must follow the archive UPDATE');
     });
 });
 

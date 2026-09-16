@@ -141,8 +141,30 @@ function decrementForArchive(execQuery, site_id, n) {
     );
 }
 
+/**
+ * Multi-site archive decrement, for callers that archive an id list spanning
+ * sites (the browser-facing recordings.delete()). `rows` are the rows that
+ * WILL flip -- select them with `archived_at IS NULL` in the same transaction
+ * before the archive UPDATE, so an already-archived id in the request does not
+ * over-decrement. One UPDATE per site.
+ *
+ * @param {Function} execQuery  (sql[, params]) -> Promise, on the tx connection
+ * @param {Array}    rows       [{site_id}, ...] the about-to-flip rows
+ */
+function decrementForArchivedRows(execQuery, rows) {
+    var aggs = aggregateBySite(rows);
+    var p = Promise.resolve();
+    aggs.forEach(function (a) {
+        p = p.then(function () {
+            return decrementForArchive(execQuery, a.site_id, a.n);
+        });
+    });
+    return p;
+}
+
 module.exports = {
     aggregateBySite: aggregateBySite,
     bumpForInsertedRows: bumpForInsertedRows,
-    decrementForArchive: decrementForArchive
+    decrementForArchive: decrementForArchive,
+    decrementForArchivedRows: decrementForArchivedRows
 };
