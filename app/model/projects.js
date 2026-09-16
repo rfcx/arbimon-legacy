@@ -1810,6 +1810,46 @@ var Projects = {
     },
 
     /**
+     * Undo a soft-delete of this plane's project row (compensation leg of the
+     * bio-api-owned delete chain, §330 item (6); route
+     * `POST /project/:projectUrl/soft-restore`).
+     *
+     * NOT connection-scoped, unlike `deleteLegacy`: the chain's compensation
+     * calls arrive as their own HTTP requests, each its own statement — there
+     * is no caller transaction to join, and joining one would be wrong (a
+     * compensation that rolls back with the thing it compensates is not a
+     * compensation).
+     *
+     * `AND deleted_at IS NOT NULL` makes the statement a true no-op on a live
+     * project rather than a meaningless write, and makes the returned
+     * affected-row count meaningful to the caller: 1 = a delete was undone,
+     * 0 = the project was already in the desired (live) state.
+     *
+     * Same `q.ninvoke` + parameter-array rules as `deleteLegacy` above — the
+     * lazy `{stream}` stub and the trailing-argument trap both apply here.
+     *
+     * Clears `deleted_by` with `deleted_at`: the pair describes one delete
+     * event; leaving the actor behind on a live row would attribute a delete
+     * that, as far as every listing is concerned, never completed.
+     *
+     * @param {number} project_id
+     * @returns {Promise<number>} affected rows (1 = restored, 0 = was not deleted)
+     */
+    restoreLegacy: async function(project_id) {
+        // `dbpool.query` (the pool-level promise API), NOT a connection handle:
+        // the comment on `deleteLegacy` about the lazy `{stream}` stub is about
+        // connection-scoped calls without a callback. The PG adapter maps
+        // `rowCount` -> `affectedRows` (dbpool-pg.js), so the packet shape is
+        // the same on both engines.
+        const packet = await dbpool.query(
+            "UPDATE projects SET deleted_at = NULL, deleted_by = NULL \n"+
+            "WHERE project_id = ? AND deleted_at IS NOT NULL",[
+                project_id
+            ]);
+        return (packet && packet.affectedRows) || 0;
+    },
+
+    /**
      * Gets personal project url for given user
      * @param {*} user
      * @param {integer} user.user_id
