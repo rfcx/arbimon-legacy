@@ -561,6 +561,62 @@ function translateFunctions(sql, store) {
     s = s.replace(/(=|<>|!=)\s*true\b/gi, '$1 1');
     s = s.replace(/(=|<>|!=)\s*false\b/gi, '$1 0');
 
+    // Bare boolean literals in LIST positions -- the same class, the other half
+    // of the shape space (rfcx-local 2026-09-15, live 42804 on the write path).
+    // The fold above is anchored on a COMPARISON OPERATOR, so it cannot see a
+    // literal that has no operator in front of it:
+    //     INSERT INTO job_params_soundscape(..., `normalize`) VALUES (..., false)
+    // (app/model/jobs.js:78-85, soundscape_job.new -- `params.normalize` is a JS
+    // boolean straight off req.body.nv, and dbpool.escape() inlines a JS boolean
+    // as a BARE SQL `false`; it is NOT in the source, so no grep can find this
+    // family). PG then rejects smallint <- boolean with
+    //     42804 column "normalize" is of type smallint but expression is of type boolean
+    // and because the INSERT sits inside sqlutil.transaction the WHOLE soundscape
+    // job rolls back: measured live, no soundscape job created since
+    // 2026-09-14 03:07:42Z, user sees {err:"Could not create soundscape job"}.
+    //
+    // SAFETY, in three parts:
+    //  1. STRING CONTENTS CANNOT BE REACHED. translate() calls protectLiterals()
+    //     FIRST and restoreLiteralsPg() LAST, so by the time this runs every
+    //     '...'/"..." literal is a \u0001L<n>\u0001 placeholder. Proven by
+    //     consequence: the comparison fold above already leaves
+    //     `note = 'flag = false'` intact.
+    //  2. IDENTIFIERS ARE PROTECTED by the delimiter anchor + \b -- a column
+    //     named false_positive has no [(,] before it and no [,)] after it.
+    //  3. NO REAL BOOLEAN COLUMN IS AT RISK. Re-verified live 2026-09-15 on the
+    //     PG leader: public has exactly 3 boolean columns
+    //     (mysql2pg_verify_state.matched, requeue_release_plan.passes_floor /
+    //     .playlist_exists) -- all internal ops tables, none written by app SQL.
+    //     Every app-touched flag column (normalize/completed/disabled/deleted,
+    //     9 of 9) is smallint, so 1/0 is the correct rendering.
+    //
+    // SCOPE CHOICE (deliberate, and wider than VALUES on purpose): the anchor is
+    // "element of a parenthesised/comma-delimited list", which covers VALUES
+    // lists, IN (...) lists and function arguments alike. Those are exactly the
+    // positions escape() can inject a runtime boolean into, and in THIS schema
+    // they are all smallint targets. A VALUES-only rule would leave the IN-list
+    // and function-arg forms of the identical defect live for the next session.
+    //
+    // THE ONE PLACE A BARE BOOLEAN IS GENUINELY REQUIRED is a PREDICATE, where
+    // PG demands boolean and would reject the integer: `WHERE (true)`,
+    // `AND (false)`, `ON (true)`. Those are guarded below and left alone.
+    // (Measured in this codebase: 0 source-visible occurrences of any of these
+    // shapes -- but source counts bound nothing here, since the literal is
+    // injected at runtime, which is the whole reason for folding rather than
+    // patching the call site.)
+    s = s.replace(/([(,]\s*)(true|false)\b(?=\s*[,)])/gi, function (m, open, val, off, str) {
+        if (open.charAt(0) === '(') {
+            // Walk back over any run of '(' + whitespace, so a nested predicate
+            // like `AND ((true))` is still recognised as a predicate.
+            var i = off;
+            while (i > 0 && (str.charAt(i - 1) === '(' || /\s/.test(str.charAt(i - 1)))) { i--; }
+            if (/\b(?:where|and|or|not|on|having|when)\s*$/i.test(str.slice(Math.max(0, i - 12), i))) {
+                return m;   // predicate position -- PG requires a boolean here
+            }
+        }
+        return open + (val.toLowerCase() === 'true' ? '1' : '0');
+    });
+
     // ISNULL(x) -> (x IS NULL)   (PG has no ISNULL function)
     s = rewriteCall(s, 'ISNULL', function (args) {
         if (args.length !== 1) { return null; }
