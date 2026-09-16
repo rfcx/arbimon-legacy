@@ -107,7 +107,12 @@
                                 </div>
                             </div>
                             <div class="patternWidth">
-                                <img id="paternImage" ng-src="{{ model.pattern.thumbnail }}"  class="patternImg"/> <!-- margin-left:16px;width:100%;height:auto;min-height:0px;/> -->
+                                <!-- on-error-src: see classinfo.html - the models/*.png family is
+                                     partially retired; the url must still be minted because
+                                     retrain parses the job id out of it. -->
+                                <img id="paternImage" ng-src="{{ model.pattern.thumbnail }}"
+                                     on-error-src="https://rfcx-web-static.s3.eu-west-1.amazonaws.com/arbimon/unavaliable.png"
+                                     class="patternImg"/> <!-- margin-left:16px;width:100%;height:auto;min-height:0px;/> -->
                             </div>
                             <div class="patternWidthAxis">
                                 <div class="secs0axis">0s</div>
