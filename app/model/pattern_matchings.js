@@ -875,26 +875,45 @@ var PatternMatchings = {
         return dbpool.query(sql)
     },
 
-    validateRois(patternMatchingId, rois, validation) {
-        return rois.length ? dbpool.query(
+    // 2026-09-16 (rfcx-local OPEN-ITEMS §333): the UPDATE now carries the project
+    // predicate itself. Defence in depth at the layer that MUTATES -- a route
+    // guard alone is bypassed by the next caller that forgets it (the #1841
+    // lesson). `projectId` is optional so existing internal callers that do not
+    // have one keep working unchanged; when supplied it constrains the write.
+    validateRois(patternMatchingId, rois, validation, projectId) {
+        if (!rois.length) return Promise.resolve();
+        const scoped = projectId !== undefined && projectId !== null;
+        // NOTE THE SHAPE: a correlated EXISTS subquery, NOT `UPDATE ... JOIN ... SET`.
+        // Multi-table UPDATE-with-JOIN is MySQL-only syntax and PG is the write
+        // engine since the 2026-09-12 P7 flip (see the same note at
+        // model/projects.js:997). A subquery is valid on BOTH engines, so this
+        // needs no dialect branch.
+        return dbpool.query(
             `UPDATE pattern_matching_rois\n` +
             "SET validated = ?\n" +
             "WHERE pattern_matching_id = ?\n" +
-            "AND pattern_matching_roi_id IN (?)", [
-            validation,
-            patternMatchingId,
-            rois,
-        ]) : Promise.resolve();
+            (scoped
+                ? "AND EXISTS (SELECT 1 FROM pattern_matchings PM\n" +
+                  "            WHERE PM.pattern_matching_id = pattern_matching_rois.pattern_matching_id\n" +
+                  "            AND PM.project_id = ?)\n"
+                : "") +
+            "AND pattern_matching_roi_id IN (?)",
+            scoped
+                ? [validation, patternMatchingId, projectId, rois]
+                : [validation, patternMatchingId, rois]
+        );
     },
 
-    updateJobName(patternMatchingId, name){
+    // 2026-09-16 (§333): project-scoped for the same reason as validateRois.
+    updateJobName(patternMatchingId, name, projectId){
+        const scoped = projectId !== undefined && projectId !== null;
         return dbpool.query(
             "UPDATE pattern_matchings\n" +
             "SET name = ?\n" +
-            "WHERE pattern_matching_id = ?", [
-            name,
-            patternMatchingId
-        ])
+            "WHERE pattern_matching_id = ?" +
+            (scoped ? "\nAND project_id = ?" : ""),
+            scoped ? [name, patternMatchingId, projectId] : [name, patternMatchingId]
+        )
     },
 
     getRoi(patternMatchingId, roisId, projectId){
@@ -911,8 +930,15 @@ var PatternMatchings = {
             `FROM pattern_matching_rois PMR\n` +
             "JOIN recordings R ON R.recording_id = PMR.recording_id\n" +
             "JOIN sites S ON S.site_id = R.site_id\n" +
-            "WHERE PMR.pattern_matching_id = ? AND PMR.pattern_matching_roi_id IN (?)", [
-            Number(patternMatchingId), roisId
+            // 2026-09-16 (rfcx-local OPEN-ITEMS §333): bind the rows to the
+            // project in the URL. Previously `projectId` was accepted and used
+            // ONLY by getRoiUrl() below to build URLs, so the project was
+            // DECORATIVE on this path -- measured live 2026-09-10, a request
+            // naming a non-existent slug still returned 200 and wrote.
+            "JOIN pattern_matchings PM ON PM.pattern_matching_id = PMR.pattern_matching_id\n" +
+            "WHERE PMR.pattern_matching_id = ? AND PM.project_id = ?\n" +
+            "AND PMR.pattern_matching_roi_id IN (?)", [
+            Number(patternMatchingId), projectId, roisId
         ]).then((rois) => {
             return this.getRoiUrl(rois, projectId);
         });
