@@ -727,6 +727,42 @@ router.post('/:projectUrl/soft-remove', function(req, res, next) {
     }).catch(next);
 });
 
+// Compensation counterpart of `/soft-remove` (rfcx-local OPEN-ITEMS §330 item (6);
+// design runbooks/DESIGN-2026-09-16-project-delete-one-path.md §3).
+//
+// WHY THIS EXISTS: with the delete chain consolidated into bio-api, legacy's
+// soft-delete is leg 2 of an ordered chain (legacy → core → insights-commit).
+// If leg 3 (core) or leg 4 (insights commit) fails, bio-api must be able to
+// UNDO this leg — the compensation is one UPDATE on a row the chain just wrote.
+// Every leg being a reversible SOFT delete is the premise that makes
+// compensate-backwards possible at all; without this route the premise was true
+// in the schema and false over HTTP.
+//
+// SAME GATE AS THE DELETE ('delete project'): the caller is bio-api forwarding
+// the deleting user's bearer, so the identity that was allowed to delete is the
+// identity allowed to un-delete. A restore is not a privilege escalation — it
+// undoes what the same caller just did.
+//
+// ⚠️ THIS IS NOT A GENERAL UNDELETE ENDPOINT and must not grow into one: it
+// restores ONLY the project row marker (`deleted_at`/`deleted_by`). It does not
+// un-archive recordings, restore memberships, or touch any other plane — the
+// admin three-plane restore runbook
+// (rfcx-local RUNBOOK-admin-project-undelete-2026-09-15.md) owns that shape.
+router.post('/:projectUrl/soft-restore', function(req, res, next) {
+    res.type('json');
+
+    if(!req.haveAccess(req.project.project_id, 'delete project')) {
+        next(new APIError('You do not have permission to delete this project'));
+        return;
+    }
+    model.projects.restoreLegacy(req.project.project_id).then(function(restored) {
+        // `restored` is the affected-row count. 0 means the project was not
+        // soft-deleted — for a compensation call that is already the desired
+        // end state, so it is reported, not errored.
+        res.json({ message: 'Restored', restored: restored });
+    }).catch(next);
+});
+
 router.get('/:projectUrl/user-permissions', function(req, res, next) {
     res.type('json');
     model.users.getPermissions(
