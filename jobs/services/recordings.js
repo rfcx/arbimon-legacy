@@ -59,12 +59,30 @@ async function updateExportRecordings (options, attrs) {
     return rows
 }
 
-async function getCountConnections (options = {}) {
-    const connection = await mysql.getConnection()
-    const sql = `SELECT COUNT(*) FROM information_schema.PROCESSLIST WHERE state IS NOT NULL`
-    const [rows, fields] = await connection.execute(sql)
-    return rows
-}
+// REMOVED 2026-09-16 (operator ruling, S1b): `getCountConnections`.
+//
+// It read `information_schema.PROCESSLIST` -- a MySQL-only catalog that the P6
+// translator does NOT rewrite -- so on EXPORTS_DB_ENGINE=pg it threw 42P01
+// inside its caller's swallowing `catch`, i.e. the export job's own overload
+// throttle FAILED OPEN. It was also semantically stale: it throttled on
+// MariaDB thread count while this path's data now lives in PG, where an `idle`
+// pgbouncer server connection is held capacity, not load (measured 2026-09-16:
+// 68-92 backends `state IS NOT NULL`, of which only 2-3 `active`, against a
+// `> 10` threshold calibrated for MariaDB -- a faithful port would have bailed
+// the job on EVERY invocation, forever, silently).
+//
+// Measured dead, four ways, before deletion: unreachable from the live consumer
+// (`consumer.js` imports `processExportRow`, not `main()`); its only real caller
+// -- CronJob `arbimon-recording-export-job` -- is `suspend=true`, last scheduled
+// 2026-06-22, last success 2026-07-15; its log line fired 0 times in 7 days
+// against a 436-line positive control in the same stream; and it threw before
+// it could throttle anyway.
+//
+// Overload protection on this path now rests on `replicas=1` + `EXPORTS_PREFETCH=1`
+// (one export in flight by construction), `FOR UPDATE SKIP LOCKED` claim
+// serialisation, and pgbouncer `default_pool_size=20` vs `max_connections=400`.
+// If the CronJob is ever un-suspended, design a throttle THEN against measured
+// PG behaviour -- do not restore this one.
 
 async function exportOccupancyModels (specie, filters) {
     const connection = await mysql.getConnection()
@@ -115,6 +133,5 @@ module.exports = {
   getExportRecordingsRow,
   getRecordingByIds,
   updateExportRecordings,
-  getCountConnections,
   getCountSitesRecPerDates
 }

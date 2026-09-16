@@ -7,7 +7,7 @@ const mandrill = require('mandrill-api/mandrill')
 const axios = require('axios')
 const moment = require('moment')
 const { renderEmail } = require('@rfcx/notification-templates')
-const { exportOccupancyModels, getExportRecordingsRow, getCountSitesRecPerDates, updateExportRecordings, getCountConnections } = require('../services/recordings')
+const { exportOccupancyModels, getExportRecordingsRow, getCountSitesRecPerDates, updateExportRecordings } = require('../services/recordings')
 const { errorMessage } = require('../services/stats')
 const recordings = require('../../app/model/recordings')
 const clusterings = require('../../app/model/clustering-jobs')
@@ -326,12 +326,10 @@ async function main () {
   try {
     console.log('Arbimon export job started.')
 
-    const countConnections = await getCountConnections()
-    if (countConnections > 10) {
-        console.log('Arbimon export job stopped due to high mysql db connections count.')
-        return
-    }
-
+    // The MariaDB PROCESSLIST overload throttle that stood here was RETIRED
+    // 2026-09-16 (operator ruling, S1b) -- see jobs/services/recordings.js for
+    // the measurement. Overload protection is now structural: replicas=1 +
+    // EXPORTS_PREFETCH=1, FOR UPDATE SKIP LOCKED, and the pgbouncer pool cap.
     const currentTime = moment.utc().format('YYYY-MM-DD HH:mm:ss')
     const limit = 1
     const [rowData] =  await getExportRecordingsRow({
