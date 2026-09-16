@@ -55,8 +55,19 @@ angular.module('a2.directive.side-bar', [])
                     iconRaw: 'fa-search',
                     children: [
                         {
+                            // SPA VISUALIZER (rfcx-local, operator 2026-09-16).
+                            // The modern rail points here as of rfcx/arbimon
+                            // #2694; keeping this one on the legacy state was
+                            // the single visible inconsistency between the two
+                            // rails on a page a user can reach from either.
+                            // NOTE externalRoute REQUIRES visibleCondition --
+                            // a2-side-bar.html:87 calls it inside ng-if, so an
+                            // entry without one throws and vanishes.
                             title: 'Visualizer',
-                            route: 'visualizer'
+                            visibleCondition: () => {
+                                return true
+                            },
+                            externalRoute: $scope.arbimonUrl + '/p/' + url + '/visualizer'
                         },
                         {
                             title: 'Sites',
@@ -80,8 +91,16 @@ angular.module('a2.directive.side-bar', [])
                             externalRoute: $scope.arbimonUrl + '/p/' + url + '/audiodata/species'
                         },
                         {
+                            // SPA PLAYLISTS (rfcx-local, operator 2026-09-16).
+                            // The modern rail has pointed here since the
+                            // 2026-08-28 per-page flag split shipped
+                            // VITE_TOGGLE_PORT_PLAYLISTS=true to production
+                            // (re-derived from the live bundle, not assumed).
                             title: 'Playlists',
-                            route: 'audiodata.playlists'
+                            visibleCondition: () => {
+                                return true
+                            },
+                            externalRoute: $scope.arbimonUrl + '/p/' + url + '/analysis/playlists'
                         }
                     ]
                 },
