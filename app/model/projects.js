@@ -247,7 +247,27 @@ var Projects = {
                 "       s.timezone_locked, \n"+
                 "       s.hidden, \n"+
                 "       s.project_id != ? AS imported, \n"+
-                "       s.country_code \n" +
+                "       s.country_code, \n" +
+                // S4 of the rec_count design (rfcx-local 2026-09-16): the three
+                // per-site aggregates are now COLUMNS on `sites`, maintained by
+                // the write path (S2) and backfilled once (S3). This replaces the
+                // per-site COUNT(*)/MIN/MAX fan-out that ran below (translator
+                // hash ae28794138b7d016): >8 s cold vs 214 ms warm for the SAME
+                // plan on a 225 GB table that cannot fit shared_buffers -- 7
+                // real-user 500s in 7 d on /sites. See the design doc for why no
+                // index and no longer timeout could fix that.
+                //
+                // THE GUARD: rec_count_updated_at IS NULL means "never backfilled"
+                // -- a site created after S3 that some write path S2 does not
+                // see has touched (the repair plane's territory). For those we
+                // must not serve the column's 0 as a fact, so they get NULL here
+                // and the fallback below recounts them live (cheap: such a site
+                // has ~0 rows). After S3 this is non-NULL on every row, so the
+                // fallback is belt-and-braces, not a hot path.
+                "       s.rec_count_updated_at IS NOT NULL AS rec_count_trusted, \n" +
+                "       s.rec_count, \n" +
+                "       s.first_recording_at, \n" +
+                "       s.last_recording_at \n" +
                 "FROM sites AS s \n"+
                 "LEFT JOIN project_imported_sites as pis ON s.site_id = pis.site_id AND pis.project_id = ? \n"+
                 "WHERE (s.project_id = ? OR pis.project_id = ?) AND s.deleted_at is null",  typeCast: sqlutil.parseUtcDatetime },
@@ -261,85 +281,44 @@ var Projects = {
 
                 return q.all([
                     options.compute.rec_count ? (function () {
-                        // PER-SITE FAN-OUT (2026-09-12, P7 pre-flip sweep —
-                        // item 2): the per-site index dives above fixed the
-                        // first/last-datetime legs, but the per-site
-                        // `COUNT(*) … archived_at IS NULL` leg still runs as
-                        // ONE statement over every row of the project — the
-                        // ae28 pg_route_timeout shape (89 events/24 h). On PG
-                        // it is I/O-bound on heap-scattered rows and blows the
-                        // 8 s routed-read statement_timeout for million-row
-                        // projects — and (2026-09-12 evidence) this is NOT a
-                        // giant-project shape: mashpi (20 sites, 1.86 M recs)
-                        // cancels deterministically. As ONE STATEMENT the
-                        // whole project shares the 8 s budget; fanned out,
-                        // each site's statement fits its own budget (largest
-                        // mashpi site: 650,898 rows = 492 ms warm on the
-                        // leader), capped 4-deep so a page load cannot
-                        // monopolise the routed-read pool. Exactness is
-                        // unchanged: same per-site SQL text, one site at a
-                        // time, merged by site_id. Giants (>200 sites) used to keep
-                        // the single-statement shape (the accepted residual) — RETIRED
-                        // post-flip 2026-09-12: the mega-statement straddles the 8 s
-                        // routed-read budget (7,704 ms warm on the leader; 8,055-8,350 ms
-                        // through the app => cancel => user-facing 500 on the sites page,
-                        // pg_route_timeout ae287941…). Giants now run the SAME statement
-                        // in 50-site chunks, 2-deep (persite-count.js GIANT_CHUNK_*),
-                        // merged by site_id below — exactness unchanged.
-                        // NOTE: we select FROM sites BY site_id (the PK list the
-                        // caller already computed, which correctly includes
-                        // project_imported_sites rows owned by OTHER projects).
-                        // Do NOT re-filter by project_id here or imported sites
-                        // silently lose their counts.
-                        const recCountSql =
-                        "SELECT s.site_id AS site_id, "+
-                        "       (SELECT COUNT(*) FROM recordings r "+
-                        "          WHERE r.site_id = s.site_id "+
-                        "            AND " + sqlutil.recordingArchiveScope('r', 'active') + ") AS rec_count, "+
-                        "       (SELECT r.datetime FROM recordings r "+
-                        "          WHERE r.site_id = s.site_id "+
-                        "            AND " + sqlutil.recordingArchiveScope('r', 'active') + " "+
-                        "          ORDER BY r.datetime ASC LIMIT 1) AS first_recording_at, "+
-                        "       (SELECT r.datetime FROM recordings r "+
-                        "          WHERE r.site_id = s.site_id "+
-                        "            AND " + sqlutil.recordingArchiveScope('r', 'active') + " "+
-                        "          ORDER BY r.datetime DESC LIMIT 1) AS last_recording_at "+
-                        "FROM sites s "+
-                        "WHERE s.site_id IN (?)";
-                        const runOne = function (ids) {
-                            return dbpool.query(recCountSql, [ids]);
-                        };
-                        const applyRows = function (results) {
-                            sites.forEach(function(site){
-                                site.rec_count=0;
-                                site.first_recording_at=null;
-                                site.last_recording_at=null;
+                        // S4: the values arrived on the row. Drop the transport
+                        // flag; strip the three fields when the caller did NOT
+                        // ask for counts (previous behaviour: absent unless
+                        // compute.rec_count). Sites whose count is not yet
+                        // trusted are recounted live, one bounded statement per
+                        // such site -- normally zero sites.
+                        var untrusted = [];
+                        sites.forEach(function (site) {
+                            if (!site.rec_count_trusted) { untrusted.push(site.id); }
+                            delete site.rec_count_trusted;
+                        });
+                        if (!untrusted.length) { return q(); }
+                        return dbpool.query(
+                            "SELECT s.site_id AS site_id, " +
+                            "       (SELECT COUNT(*) FROM recordings r WHERE r.site_id = s.site_id AND " + sqlutil.recordingArchiveScope('r', 'active') + ") AS rec_count, " +
+                            "       (SELECT r.datetime FROM recordings r WHERE r.site_id = s.site_id AND " + sqlutil.recordingArchiveScope('r', 'active') + " ORDER BY r.datetime ASC LIMIT 1) AS first_recording_at, " +
+                            "       (SELECT r.datetime FROM recordings r WHERE r.site_id = s.site_id AND " + sqlutil.recordingArchiveScope('r', 'active') + " ORDER BY r.datetime DESC LIMIT 1) AS last_recording_at " +
+                            "FROM sites s WHERE s.site_id IN (?)", [untrusted]
+                        ).then(function (rows) {
+                            rows.forEach(function (row) {
+                                var site = sitesById[row.site_id];
+                                if (!site) { return; }
+                                site.rec_count = row.rec_count;
+                                site.first_recording_at = row.first_recording_at;
+                                site.last_recording_at = row.last_recording_at;
                             });
-                            results.forEach(function(row){
-                                if (!sitesById[row.site_id]) { return; }
-                                sitesById[row.site_id].rec_count = row.rec_count;
-                                sitesById[row.site_id].first_recording_at = row.first_recording_at;
-                                sitesById[row.site_id].last_recording_at = row.last_recording_at;
-                            });
-                        };
-                        if (siteIds.length > persiteCount.PERSITE_COUNT_MAX_SITES) {
-                            return persiteCount.runInChunks(siteIds,
-                                function (ids) { return runOne(ids); })
-                                .then(function (perChunk) {
-                                    var flat = [];
-                                    perChunk.forEach(function (rows) { if (rows) { flat.push.apply(flat, rows); } });
-                                    applyRows(flat);
-                                });
-                        }
-                        return persiteCount.runPerSite(siteIds,
-                            function (sid) { return [sid]; },
-                            function (ids) { return runOne(ids); })
-                            .then(function (perSite) {
-                                var flat = [];
-                                perSite.forEach(function (rows) { if (rows) { flat.push.apply(flat, rows); } });
-                                applyRows(flat);
-                            });
-                    })() : q(),
+                        });
+                    })() : (function () {
+                        // caller did not ask for counts: keep the response shape
+                        // identical to before S4 (fields absent, not present).
+                        sites.forEach(function (site) {
+                            delete site.rec_count_trusted;
+                            delete site.rec_count;
+                            delete site.first_recording_at;
+                            delete site.last_recording_at;
+                        });
+                        return q();
+                    })(),
                 ]).then(function(){
                     if (options.utcDiff) {
                         const result = sites.map(s => {
@@ -353,6 +332,14 @@ var Projects = {
                     else return sites;
                 });
             }
+            // S4: no `compute` at all -> same contract as before: the count
+            // fields are ABSENT. Strip them and the internal transport flag.
+            sites.forEach(function (site) {
+                delete site.rec_count_trusted;
+                delete site.rec_count;
+                delete site.first_recording_at;
+                delete site.last_recording_at;
+            });
             return sites;
         });
     },

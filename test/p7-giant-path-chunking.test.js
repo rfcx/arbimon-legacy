@@ -147,14 +147,30 @@ describe('giant call sites use the chunk runner', function () {
         }).join('\n');
     }
 
-    it('projects.getProjectSites chunks the >MAX_SITES rec_count path', function () {
+    // RETIRED 2026-09-16 by rec_count design step S4 (rfcx-local
+    // DESIGN-2026-09-16-rec-count-event-driven-cache): getProjectSites no longer
+    // computes rec_count at read time AT ALL -- neither chunked nor
+    // mega-statement. The three values are columns on `sites`, maintained by the
+    // write path (S2) and backfilled (S3). So "does the giant branch chunk?" has
+    // no subject: there is no giant branch. What this guard protected against
+    // (a single >8 s COUNT over a >200-site project) is now impossible from
+    // this function by construction. The invariant that REPLACES it is pinned
+    // in test/rec-count-read-path.test.js: no recCountSql, no runPerSite, no
+    // runInChunks in getProjectSites, and exactly ONE residual COUNT gated on
+    // the never-backfilled list. This test now asserts the retirement so a
+    // future edit cannot silently re-introduce EITHER shape.
+    it('projects.getProjectSites has NO read-time rec_count path left to chunk (retired by S4)', function () {
         var src = srcOf('app/model/projects.js');
-        assert.ok(/siteIds\.length > persiteCount\.PERSITE_COUNT_MAX_SITES/.test(src),
-            'the giant branch disappeared');
-        assert.ok(/persiteCount\.runInChunks\(siteIds/.test(src),
-            'the giant branch does not use runInChunks');
-        assert.ok(!/return runOne\(siteIds\)\.then\(applyRows\)/.test(src),
-            'the single mega-statement giant path is still present (the defect)');
+        var start = src.indexOf('getProjectSites: function(project_id, options)');
+        var end = src.indexOf('\n    },', start);
+        var fn = src.slice(start, end);
+        assert.ok(start > 0 && end > start, 'getProjectSites not found');
+        assert.ok(!/persiteCount\.runInChunks\(siteIds/.test(fn),
+            'a chunked giant path re-appeared in getProjectSites');
+        assert.ok(!/return runOne\(siteIds\)\.then\(applyRows\)/.test(fn),
+            'the single mega-statement giant path re-appeared');
+        assert.ok(!/recCountSql/.test(fn), 'recCountSql re-appeared in getProjectSites');
+        assert.ok(/s\.rec_count, /.test(fn), 'rec_count is not read from the sites column');
     });
 
     it('recordings.countProjectRecordings chunks the >MAX_SITES path instead of falling back', function () {
