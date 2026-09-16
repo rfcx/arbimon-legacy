@@ -74,6 +74,44 @@ var MAX_DIFF_ROWS = numEnv('DB_SHADOW_MAX_DIFF_ROWS', 2000);
 var DIV_PREFIX = 'DBPOOL_SHADOW_DIVERGENCE ';
 var STAT_PREFIX = 'DBPOOL_SHADOW_STAT ';
 
+// 2026-09-16: FAIL LOUDLY instead of silently selecting a read-only role.
+//
+// WHY. The `|| 'arbimon_ro'` default below is correct for ENGINE=shadow (a
+// background verifier that only ever SELECTs). At the P7 write flip it became
+// a trap: under ENGINE=pg this same pool serves the REQUEST path, which
+// WRITES (the cached_metrics refresh). A deployment that forgets
+// PG_SHADOW_USER therefore connects read-only and every write fails
+// `42501 permission denied` -- silently, because the refresh is fire-and-
+// forget. Measured: 149 such errors in one 6 h bucket on flip day 2026-09-12
+// (cached_metrics 124, audio_event_detections_clustering 22, jobs 3), and the
+// same window produced a user-visible rename bug when a PG write rolled back
+// (card 20260912-phase1-db-cutover-005). Nothing alerted; it was found days
+// later by a log census.
+//
+// SCOPE, deliberately narrow -- this must NOT become a module-load crash:
+//   * The check runs at the top of getPool(), LAZILY at first pool use, not at
+//     require() time -- and OUTSIDE getPool()'s try/catch, because that catch
+//     turns any init failure into a `pool_init_failed` stat + null return,
+//     i.e. the same silent degradation we are removing.
+//   * It fires ONLY when ENGINE === 'pg'. Under 'shadow' the read-only default
+//     is correct and stays; under 'mysql' this function is never reached.
+//   * WHY THAT MATTERS: jobs/db/pg.js requires this module for translate()
+//     ONLY and documents itself as "INERT otherwise" -- and the
+//     arbimon-export-consumer runs with PG_SHADOW_USER UNSET and no
+//     DB_ENGINE. A module-level throw, or one not gated on ENGINE, would
+//     crash a workload that is correctly inert. 12 app/model/* files import
+//     this module the same way.
+function assertPgUserConfigured() {
+    if (ENGINE !== 'pg') { return; }
+    if (process.env.PG_SHADOW_USER) { return; }
+    throw new Error(
+        'dbpool-pg: DB_ENGINE=pg requires PG_SHADOW_USER. Refusing to fall back to ' +
+        "the read-only 'arbimon_ro' role: under pg this pool serves the request path, " +
+        'which writes, and a read-only connection fails 42501 silently on every write ' +
+        '(see the 2026-09-12 flip-day window).'
+    );
+}
+
 function pgConf() {
     return {
         host: process.env.PG_SHADOW_HOST || 'arbimon-pgbouncer.data.svc.cluster.local',
@@ -1936,6 +1974,11 @@ var _pool = null;
 var _poolFailed = false;
 
 function getPool() {
+    // OUTSIDE the try/catch ON PURPOSE. The catch below swallows any init
+    // failure into a `pool_init_failed` stat and returns null -- which is
+    // exactly the silent-degradation shape this guard exists to prevent. A
+    // misconfigured PG_SHADOW_USER must propagate, not become a stat line.
+    assertPgUserConfigured();
     if (_poolFailed) { return null; }
     if (_pool) { return _pool; }
     try {
