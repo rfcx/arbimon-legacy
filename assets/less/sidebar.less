@@ -1,25 +1,64 @@
+// FIXED-WIDTH ICON RAIL + FLYOUTS (2026-09-16, operator-directed).
+//
+// The rail used to widen to 264px on hover and reveal inline labels and an
+// accordion. The modern SPA rail STOPPED doing that on 2026-08-18 (operator-
+// directed) and moved labels/submenus into panels anchored to the right of a
+// fixed 52px rail. This mirrors that, so a user crossing between the two apps
+// sees one behaviour instead of two.
+//
+// The hover-widen block is deliberately GONE -- it is what made the two rails
+// feel like different applications.
 .sidebar-menu {
   border-right: 1px solid #4b4b4b;
   z-index: 101;
-  &:hover {
-    width: 264px;
-    transition-delay: 300ms;
-    border-color: @insight;
-    ::-webkit-scrollbar {
-      width: 8px !important;
-      overflow-y: auto;
-      scrollbar-width: thin;
-    }
-    ::-webkit-scrollbar-track {
-      background: transparent !important;
-    }
-    ::-webkit-scrollbar-track:hover {
-      background: transparent !important;
-    }
-    ::-webkit-scrollbar-thumb {
-      background-color: hsla(0, 8%, 80%, 0.496)!important;
-      border-radius: 6px;
-    }
+  // Flyouts are position:fixed and must be able to leave the rail at any
+  // height; a scroll/clip container here would trap them (the SPA hit exactly
+  // this: its inner wrapper's overflow-y-auto clipped every flyout AND stole a
+  // pixel from the 52px rail).
+  overflow: visible;
+}
+
+// The panel itself. Geometry mirrors the SPA's `fixed left-13 ml-1 z-60
+// min-w-56 rounded-lg border border-util-gray-03 bg-echo shadow-xl py-1`.
+.a2-flyout {
+  position: fixed;
+  left: 56px;             // 52px rail + 4px gap (SPA: left-13 + ml-1)
+  z-index: 120;           // above the rail (101), below modals
+  min-width: 224px;       // SPA min-w-56 (14rem @16px). NOT 14rem: this
+                          // document's root font-size is 10px, so rem
+                          // here is 62.5% of the SPA's rem. Measured.
+  margin: 0;
+  padding: 4px 0;         // py-1 (0.25rem @16px)
+  list-style: none;
+  border-radius: 8px;     // rounded-lg (0.5rem @16px)
+  border: 1px solid #3f3f3f;
+  background-color: @echo;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.35), 0 8px 10px -6px rgba(0, 0, 0, 0.35);
+  // Enter 130ms, operator-specified on the SPA side. Dismissal is instant
+  // there by design, so there is no leave transition to mirror.
+  animation: a2-flyout-in 130ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes a2-flyout-in {
+  from { opacity: 0; transform: translateX(-4px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.a2-flyout-row {
+  display: block;
+  padding: 8px 12px;                // px-3 py-2 (0.5/0.75rem @16px)
+  font-size: 14px;                  // text-sm (0.875rem @16px)
+  line-height: 20px;
+  white-space: nowrap;
+  color: @insight;
+  text-decoration: none;
+  cursor: pointer;
+
+  &:hover,
+  &:focus {
+    background-color: #3f3f3f;      // util-gray-03
+    color: @insight;
+    text-decoration: none;
   }
 }
 
