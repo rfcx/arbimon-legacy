@@ -72,12 +72,51 @@
  *   - 2..MAX_SITES sites (a 1-site project is already index-served; >2000 is
  *     the ~2-project tail whose SQL text would exceed ~700 KB — they keep the
  *     old shape, i.e. the accepted §270 giant-sort residual),
- *   - offset+limit <= MAX_WINDOW (per-arm k grows with the page; §270 owns
- *     deep-page cost),
+ *   - offset+limit <= MAX_WINDOW (§270 owns the residual deep-page cost; see
+ *     the MAX_WINDOW note below for why 20,000 and not 500),
  *   - a finite positive limit (the dump-everything path keeps the old shape).
  */
 var MAX_SITES = 2000;
-var MAX_WINDOW = 500;
+
+/**
+ * Deepest `offset+limit` this shape will serve. **500 -> 20000 on 2026-09-16**
+ * (operator goifirr 21:54), after measuring that the original bound was far
+ * more conservative than the physics requires.
+ *
+ * THE ORIGINAL REASONING WAS THAT PER-ARM k GROWS WITH THE PAGE, so a deep
+ * page would make each of the ~970 arms return k rows and the union would
+ * degenerate into a full read. **That is not what the planner does.** The arms
+ * are each already in index order, so PG plans the union as a **Merge Append**,
+ * which streams them in globally sorted order and STOPS after k rows.
+ *
+ * Measured on `puerto-rico-island-wide` (970 sites / 11,240,229 rows,
+ * postgres-1-0, two runs per k to control for cache):
+ *
+ *   k=    500   5,877 / 5,369 ms   Merge Append actual rows =    500
+ *   k=  5,000   7,751 / 7,313 ms   Merge Append actual rows =  5,000
+ *   k= 20,000   7,758 / 7,463 ms   Merge Append actual rows = 20,000
+ *
+ * `actual rows == k` at every k -- the union never materialises 485,000 or
+ * 11.2M rows; the eye-watering `rows=18568826` in the plan is the planner's
+ * ESTIMATE, not what ran. Cost is dominated by OPENING ~970 index scans (the
+ * fixed ~5-7 s), not by k, so raising the bound is close to free.
+ *
+ * WHAT THIS BUYS: at limit=100 the fast path reached page 5; it now reaches
+ * page 200. Past the bound the caller falls back to the global sort, which on
+ * this project scans all 11.2M rows and costs 10.9 s (datetime) to 13.6 s
+ * (filename) at ANY page -- i.e. the bound was a cliff, not a gradient.
+ *
+ * WHAT IT DOES NOT BUY: the giant project is still ~5-8 s on this shape. The
+ * ~970-arm fixed cost is the reason, and only a different access pattern
+ * (keyset/seek, §270 option 1) removes it. This raise moves the cliff; it does
+ * not make the giant fast.
+ *
+ * ⚠️ The other gate still binds: >MAX_SITES sites keeps the old shape because
+ * the generated SQL text would exceed ~700 KB. At 970 sites and k=20000 the
+ * text is unchanged in SIZE (k is a number, not more arms), so this raise does
+ * not interact with that limit.
+ */
+var MAX_WINDOW = 20000;
 
 function buildPerSiteSortSql(o) {
     if (!o || !o.expr) { return null; }

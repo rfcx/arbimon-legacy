@@ -102,9 +102,30 @@ describe('recordings per-site union sort builder', function () {
     expect(build(Object.assign({}, BASE, { siteIds: ok }))).to.be.a('string');
   });
 
-  it('returns null for deep pages (per-arm LIMIT = offset+limit degenerates; §270 owns deep-page cost)', function () {
+  it('returns null for deep pages (§270 owns the residual deep-page cost)', function () {
     expect(build(Object.assign({}, BASE, { offset: persite.PERSITE_SORT_MAX_WINDOW }))).to.equal(null);
     expect(build(Object.assign({}, BASE, { offset: persite.PERSITE_SORT_MAX_WINDOW - 10 }))).to.be.a('string');
+  });
+
+  /**
+   * The bound moved 500 -> 20000 on 2026-09-16 after measuring that the union
+   * plans as a Merge Append (streams the already-sorted arms and stops at k),
+   * so cost is dominated by opening ~970 index scans, not by k.
+   *
+   * Pinned as a VALUE, not just symbolically: the whole point of the change is
+   * WHICH pages get the fast path, so a silent revert to 500 -- or an
+   * over-eager raise -- must fail here rather than only show up as a
+   * production timeout on the one project big enough to notice.
+   */
+  it('serves the pages the 2026-09-16 raise was made for', function () {
+    expect(persite.PERSITE_SORT_MAX_WINDOW).to.equal(20000);
+
+    // limit=100: page 200 is inside, page 201 is not.
+    expect(build(Object.assign({}, BASE, { limit: 100, offset: 19900 }))).to.be.a('string');
+    expect(build(Object.assign({}, BASE, { limit: 100, offset: 20000 }))).to.equal(null);
+
+    // The old bound's cliff edge (page 6 at limit=100) is now firmly inside.
+    expect(build(Object.assign({}, BASE, { limit: 100, offset: 500 }))).to.be.a('string');
   });
 
   it('returns null without a positive finite limit (the dump-everything path keeps the old shape)', function () {
