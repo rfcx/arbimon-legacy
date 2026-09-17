@@ -199,6 +199,36 @@ function buildLateralSortSql(siteIds, o, dir, k, scope, limit, offset) {
  */
 var MAX_WINDOW = 20000;
 
+/**
+ * Build a SAFE SQL literal for an anchor sort key, BY TYPE. Returns null for
+ * anything it does not recognise, which makes the caller decline keyset mode
+ * rather than emit an unvalidated literal.
+ *
+ * The three sortable keys are two timestamps and one text column:
+ *   datetime / upload_time -> TIMESTAMP 'YYYY-MM-DD HH:MM:SS'
+ *   filename               -> a single-quoted string, quotes doubled
+ *
+ * Deliberately strict: a timestamp must MATCH the shape, not merely parse. A
+ * permissive parse is how a crafted value gets through.
+ */
+function anchorKeySql(key, type) {
+    if (key === undefined || key === null) { return null; }
+    var s = String(key);
+    if (s.length > 64) { return null; }
+    if (type === 'timestamp') {
+        // strict: YYYY-MM-DD[ T]HH:MM[:SS[.ffffff]]
+        if (!/^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}(:\d{2}(\.\d{1,6})?)?$/.test(s)) { return null; }
+        return "TIMESTAMP '" + s.replace('T', ' ') + "'";
+    }
+    if (type === 'text') {
+        // No control characters; escape by doubling the single quote (the only
+        // metacharacter inside a standard-conforming SQL string literal).
+        if (/[\u0000-\u001f]/.test(s)) { return null; }
+        return "'" + s.replace(/'/g, "''") + "'";
+    }
+    return null;
+}
+
 function buildPerSiteSortSql(o) {
     if (!o || !o.expr) { return null; }
     var siteIds = (o.siteIds || []).map(function (s) { return parseInt(s, 10); })
@@ -207,7 +237,21 @@ function buildPerSiteSortSql(o) {
     var limit = parseInt(o.limit, 10);
     var offset = Math.max(0, parseInt(o.offset, 10) || 0);
     if (!Number.isFinite(limit) || limit <= 0) { return null; }
-    if (offset + limit > MAX_WINDOW) { return null; }
+
+    // KEYSET (seek) MODE — the anchor replaces the OFFSET walk entirely.
+    //
+    // When the caller supplies the previous page's last row, every arm takes an
+    // INDEX BOUND from it and stops at ~limit, so cost is constant in depth:
+    // measured on the live leader at the prod 8 s bound, giant project (970
+    // sites), page 33,180 -> 206 ms and the TRUE LAST page (112,402) -> 10.7 ms,
+    // against a form that is CANCELLED at every offset past MAX_WINDOW today.
+    //
+    // MAX_WINDOW does NOT apply in this mode. That bound exists because the
+    // OFFSET form must produce-and-discard `offset` rows; a seek produces none.
+    // This is what lets the list serve any depth instead of capping at 20,000.
+    var anchor = o.anchor && o.isPg ? o.anchor : null;
+    if (anchor && !(anchor.id !== undefined && anchor.id !== null)) { anchor = null; }
+    if (!anchor && offset + limit > MAX_WINDOW) { return null; }
 
     var dir = o.sortRev ? 'DESC' : 'ASC';
     var k = offset + limit;
@@ -231,26 +275,90 @@ function buildPerSiteSortSql(o) {
     // default IS this, so nothing is emitted there.
     var outerPlacement = (o.isPg && o.nullable) ? (o.sortRev ? ' NULLS LAST' : ' NULLS FIRST') : '';
 
+    // ── KEYSET PREDICATES ────────────────────────────────────────────────────
+    // ⚠️ THESE GO INSIDE THE ARM, ON A PG-NATIVE-PLACED SORT KEY. Applying an
+    // app-semantic placement (e.g. DESC NULLS LAST) to the anchored key defeats
+    // the (site_id, <col>) composite: measured `Index Scan Backward` ->
+    // `Index Scan using recordings__site_id` + Sort, 139 ms -> 9,182 ms (66x).
+    // The existing arm split is what makes this safe — the value arm is
+    // NULL-free and the NULL arm's key is constant — so placement inside an arm
+    // is irrelevant and the index is preserved. Do NOT apply the anchor to the
+    // merged outer result: that also destroys the per-arm early stop.
+    var cmp = o.sortRev ? '<' : '>';
+    var valueSeek = '';
+    var nullSeek = '';
+    if (anchor) {
+        // 🔒 parseInt is TOO PERMISSIVE for a security boundary: parseInt('1 OR 1=1')
+        // returns 1, silently ACCEPTING an injected value by truncating it. The id
+        // arrives from a URL, so require the whole string to be an integer.
+        var aidRaw = anchor.id;
+        if (typeof aidRaw === 'string' && !/^\d{1,19}$/.test(aidRaw.trim())) { return null; }
+        var aid = typeof aidRaw === 'number' ? aidRaw : parseInt(String(aidRaw).trim(), 10);
+        if (!Number.isInteger(aid) || aid < 0 || !Number.isSafeInteger(aid)) { return null; }
+        if (anchor.isNull) {
+            // The anchor sits INSIDE the NULL band. The sort key is constant
+            // there, so only the tiebreaker orders — and every VALUE row has
+            // already been passed (DESC NULLS LAST) or is still ahead (ASC
+            // NULLS FIRST). A band-blind anchor here silently drops the whole
+            // band: measured 250 of 400 rows lost.
+            nullSeek = ' AND r.recording_id ' + cmp + ' ' + aid;
+            valueSeek = null;   // this arm is fully consumed; suppress it
+        } else {
+            var keyLiteral = anchorKeySql(anchor.key, o.anchorType);
+            // 🔒 REFUSE rather than interpolate anything we did not build here.
+            // The anchor key arrives from a URL; this module's own history has an
+            // SQL-injection path via a raw sortBy (fixed 2026-06-18), so the
+            // literal is constructed BY TYPE inside the module or the whole
+            // keyset shape is declined and the caller falls back.
+            if (keyLiteral === null) { return null; }
+            // Row-value comparison => PG turns this into an index bound.
+            valueSeek = ' AND (' + o.expr + ', r.recording_id) ' + cmp +
+                ' (' + keyLiteral + ', ' + aid + ')';
+            // NULLs have not been reached yet on DESC (they sort last), so the
+            // NULL arm stays whole; on ASC they were already passed.
+            nullSeek = o.sortRev ? '' : null;
+        }
+    }
+
+    // In keyset mode each arm needs only ONE page of rows — that is the entire
+    // win. In OFFSET mode it still needs offset+limit (k) to merge correctly.
+    var armLimit = anchor ? limit : k;
+
     var arms = [];
     siteIds.forEach(function (sid) {
         var base = '(SELECT r.recording_id AS id, ' + o.expr + ' AS sort_key ' +
             'FROM recordings r WHERE r.site_id = ' + sid + scope;
         var ord = ' ORDER BY ' + o.expr + ' ' + dir + armPlacement +
-            ', r.recording_id ' + dir + ' LIMIT ' + k + ')';
+            ', r.recording_id ' + dir + ' LIMIT ' + armLimit + ')';
         if (o.nullable) {
-            arms.push(base + ' AND ' + o.expr + ' IS NOT NULL' + ord);
-            arms.push(base + ' AND ' + o.expr + ' IS NULL' + ord);
+            if (valueSeek !== null) {
+                arms.push(base + ' AND ' + o.expr + ' IS NOT NULL' + (valueSeek || '') + ord);
+            }
+            if (nullSeek !== null) {
+                arms.push(base + ' AND ' + o.expr + ' IS NULL' + (nullSeek || '') + ord);
+            }
         } else {
-            arms.push(base + ord);
+            arms.push(base + (valueSeek || '') + ord);
         }
     });
+    if (!arms.length) { return null; }
+    // In keyset mode there is no OFFSET to apply — the anchor already positioned
+    // every arm, so the merge just takes the first `limit` rows.
+    var tail;
+    if (anchor) {
+        tail = 'LIMIT ' + limit;
+    } else if (o.isPg) {
+        tail = 'LIMIT ' + limit + ' OFFSET ' + offset;
+    } else {
+        tail = 'LIMIT ' + offset + ', ' + limit;
+    }
     return 'SELECT u.id FROM (\n' + arms.join('\nUNION ALL\n') + '\n) u\n' +
-        'ORDER BY u.sort_key ' + dir + outerPlacement + ', u.id ' + dir + '\n' +
-        (o.isPg ? ('LIMIT ' + limit + ' OFFSET ' + offset) : ('LIMIT ' + offset + ', ' + limit));
+        'ORDER BY u.sort_key ' + dir + outerPlacement + ', u.id ' + dir + '\n' + tail;
 }
 
 module.exports = {
     buildPerSiteSortSql: buildPerSiteSortSql,
+    anchorKeySql: anchorKeySql,
     PERSITE_SORT_MAX_SITES: MAX_SITES,
     PERSITE_SORT_MAX_WINDOW: MAX_WINDOW
 };

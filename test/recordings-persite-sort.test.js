@@ -202,3 +202,103 @@ describe('recordings per-site union sort builder', function () {
     expect((sql.match(/\(SELECT r\.recording_id AS id/g) || []).length).to.equal(4); // 2 sites x 2 bands
   });
 });
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// KEYSET (seek) mode — rfcx-local OPEN-ITEMS §270, 2026-09-17.
+//
+// WHY: past MAX_WINDOW the OFFSET form is refused and the caller falls through
+// to a global sort that the prod 8 s statement_timeout CANCELS at every depth
+// measured (offsets 20,100 / 100k / 1M / 9.9M were 4-of-4 dead on the live
+// leader). An anchor turns each arm's scan into an INDEX BOUND, so the same
+// pages cost 0.2–1.1 s at ANY depth — page 112,402 measured at 10.7 ms.
+//
+// These tests pin the four properties that silently break keyset. Each failure
+// mode below has actually been measured on this data, not imagined.
+// ─────────────────────────────────────────────────────────────────────────────
+describe('per-site sort — keyset (seek) mode', function () {
+  var PG = Object.assign({}, BASE, { isPg: true, expr: 'r.datetime', anchorType: 'timestamp' });
+  var ANCHOR = { key: '2023-01-01 00:00:00', id: 12345, isNull: false };
+
+  it('refuses past MAX_WINDOW WITHOUT an anchor (unchanged behaviour)', function () {
+    var sql = build(Object.assign({}, PG, { offset: 3317949, limit: 100 }));
+    expect(sql).to.equal(null);
+  });
+
+  it('SERVES past MAX_WINDOW WITH an anchor — the whole point', function () {
+    var sql = build(Object.assign({}, PG, { offset: 3317949, limit: 100, anchor: ANCHOR }));
+    expect(sql).to.be.a('string');
+    // BASE sorts ASC, so the seek comparator must be '>'; DESC must give '<'.
+    // Pinning BOTH directions is the point — an inverted comparator silently
+    // walks the list backwards and looks like data loss, not like a bug.
+    expect(sql).to.contain('(r.datetime, r.recording_id) >');
+    var desc = build(Object.assign({}, PG, {
+      offset: 3317949, limit: 100, anchor: ANCHOR, sortRev: true
+    }));
+    expect(desc).to.contain('(r.datetime, r.recording_id) <');
+  });
+
+  it('emits NO OFFSET in keyset mode — a seek produces no rows to discard', function () {
+    var sql = build(Object.assign({}, PG, { offset: 3317949, limit: 100, anchor: ANCHOR }));
+    expect(sql).to.not.contain('OFFSET');
+  });
+
+  it('per-arm LIMIT is the PAGE SIZE, not offset+limit (the cost win)', function () {
+    // In OFFSET mode every arm must produce k=offset+limit rows so the merge is
+    // correct. With an anchor each arm needs only one page — that is what makes
+    // the cost constant in depth instead of linear.
+    var sql = build(Object.assign({}, PG, { offset: 3317949, limit: 100, anchor: ANCHOR }));
+    expect(sql).to.contain('LIMIT 100)');
+    expect(sql).to.not.contain('LIMIT 3318049)');
+  });
+
+  it('keeps the anchor INSIDE the arm on a PG-NATIVE-placed key (the 66x trap)', function () {
+    // Applying app-semantic placement to the anchored key defeats the
+    // (site_id,<col>) composite: measured Index Scan Backward -> Index Scan +
+    // Sort, 139 ms -> 9,182 ms. The arm split is what keeps this safe.
+    var sql = build(Object.assign({}, PG, { offset: 3317949, limit: 100, anchor: ANCHOR, sortRev: true }));
+    var armIdx = sql.indexOf('(r.datetime, r.recording_id) <');
+    var outerIdx = sql.indexOf('ORDER BY u.sort_key');
+    expect(armIdx).to.be.greaterThan(-1);
+    expect(armIdx).to.be.lessThan(outerIdx);   // predicate precedes the merge
+  });
+
+  it('a NULL-band anchor orders by the TIEBREAKER ONLY, and drops the value arm', function () {
+    // Inside the NULL band the sort key is constant, so a band-blind anchor
+    // silently loses the whole band — measured 250 of 400 rows.
+    var sql = build(Object.assign({}, PG, {
+      offset: 0, limit: 100, sortRev: true,
+      anchor: { id: 777, isNull: true }
+    }));
+    expect(sql).to.contain('IS NULL AND r.recording_id < 777');
+    expect(sql).to.not.contain('IS NOT NULL');   // value arm already consumed
+  });
+
+  it('is PG-ONLY — MariaDB keeps the untouched OFFSET shape', function () {
+    var sql = build(Object.assign({}, PG, {
+      isPg: false, offset: 0, limit: 10, anchor: ANCHOR
+    }));
+    expect(sql).to.not.contain('(r.datetime, r.recording_id)');
+  });
+
+  // ── the anchor is attacker-controlled (it comes from a URL) ───────────────
+  it('REFUSES an injected anchor key rather than interpolating it', function () {
+    var evil = { key: "2024-01-01 00:00:00'; DROP TABLE recordings--", id: 1, isNull: false };
+    var sql = build(Object.assign({}, PG, { offset: 3317949, limit: 100, anchor: evil }));
+    expect(sql).to.equal(null);
+  });
+
+  it('REFUSES a non-numeric anchor id', function () {
+    var evil = { key: '2023-01-01 00:00:00', id: '1 OR 1=1', isNull: false };
+    var sql = build(Object.assign({}, PG, { offset: 3317949, limit: 100, anchor: evil }));
+    expect(sql).to.equal(null);
+  });
+
+  it('anchorKeySql escapes text by doubling quotes, and refuses control chars', function () {
+    expect(persite.anchorKeySql("o'brien.wav", 'text')).to.equal("'o''brien.wav'");
+    expect(persite.anchorKeySql("a\u0000b", 'text')).to.equal(null);
+    expect(persite.anchorKeySql('2024-05-02 14:25:00', 'timestamp'))
+      .to.equal("TIMESTAMP '2024-05-02 14:25:00'");
+    expect(persite.anchorKeySql('not-a-timestamp', 'timestamp')).to.equal(null);
+  });
+});
