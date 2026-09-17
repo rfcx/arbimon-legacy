@@ -31,6 +31,7 @@ var config       = require('../config');
 // 2026-09-09 (ruling R1: archive never touches core).
 var SQLBuilder  = require('../utils/sqlbuilder');
 var persiteSort = require('../utils/persite-sort');
+var pageAnchor = require('../utils/page-anchor');
 const dbpoolPg = require('../utils/dbpool-pg');
 var persiteCount = require('../utils/persite-count');
 var arrays_util  = require('../utils/arrays');
@@ -2309,6 +2310,40 @@ var Recordings = {
                 });
 
                 return Q.all(outputs.map(function(output){
+                    // ── anchor_coverage ── how deep are this project's checkpoints?
+                    //
+                    // The SPA uses this to decide how many pages the pager may
+                    // OFFER. It is deliberately a SERVER-side fact: the client
+                    // cannot know which projects the operator-gated backfill has
+                    // reached, and guessing would either amputate a project that
+                    // works or offer a page that gets CANCELLED at 8 s.
+                    //
+                    // 0 => no checkpoints for this (project, sort) => the caller
+                    // keeps whatever static bound it applies today. That is what
+                    // lets the static cap be removed WITHOUT re-exposing the
+                    // cancelling deep pages on projects not yet built (at the time
+                    // of writing: the two largest).
+                    if (output === 'anchor_coverage') {
+                        const col = pageAnchor.isCheckpointable(parameters.sortBy)
+                            ? parameters.sortBy : 'datetime';
+                        if (!dbpoolPg.isPg) {
+                            return Q.resolve([[{ max_rank: 0, interval: pageAnchor.INTERVAL, sort_col: col }]]);
+                        }
+                        return Q.nfcall(pageAnchor.coverageFor, dbpoolPg.pgReadQuery,
+                                parameters.project_id, col)
+                            .then(function (cov) {
+                                return [[{
+                                    max_rank: (cov && cov.maxRank) || 0,
+                                    interval: (cov && cov.interval) || pageAnchor.INTERVAL,
+                                    sort_col: col
+                                }]];
+                            })
+                            .catch(function () {
+                                // Fail SAFE: unknown coverage reads as none, so the
+                                // pager stays conservative rather than optimistic.
+                                return [[{ max_rank: 0, interval: pageAnchor.INTERVAL, sort_col: col }]];
+                            });
+                    }
                     let query=[
                         select_clause[output],
                         from_clause,
@@ -2463,7 +2498,7 @@ var Recordings = {
                     // which is today's behaviour — the fallback is always the
                     // status quo, never an error.
                     const anchorIdNum = parameters.anchorId;
-                    const keysetAnchor = (sort.anchorType && anchorIdNum !== undefined && anchorIdNum !== null &&
+                    let keysetAnchor = (sort.anchorType && anchorIdNum !== undefined && anchorIdNum !== null &&
                         (parameters.anchorNull === true || parameters.anchorKey !== undefined))
                         ? {
                             id: anchorIdNum,
@@ -2471,6 +2506,80 @@ var Recordings = {
                             isNull: parameters.anchorNull === true
                         }
                         : null;
+
+                    // ── CHECKPOINT-RESOLVED ANCHOR (arbitrary-page seeks) ──────────
+                    //
+                    // A client can only anchor on a row it has ON SCREEN, so until
+                    // now only a ±1 move produced a cursor and every other jump
+                    // (First, Last, a typed page) fell back to OFFSET — which is
+                    // CANCELLED at any depth past MAX_WINDOW on a many-site project
+                    // (rfcx-local OPEN-ITEMS §270).
+                    //
+                    // `recording_page_anchor` stores one checkpoint per 100 rows of
+                    // each project's globally-ordered stream, so a jump to page P
+                    // becomes: nearest checkpoint at rank <= P's first row, seek from
+                    // it, walk forward at most 99 rows. Resolving it HERE rather than
+                    // in the SPA means every consumer of this endpoint (export, CLI,
+                    // integrations) gets deep pages, and no caller needs to know the
+                    // checkpoint interval or the rank arithmetic.
+                    //
+                    // 🔴 STRICTLY ADDITIVE AND FAIL-SAFE. It applies only when the
+                    // caller supplied NO anchor of its own, the sort is
+                    // checkpointable, and PG is serving reads. Every failure path in
+                    // page-anchor.js returns null => this stays on exactly today's
+                    // OFFSET behaviour. A project with no checkpoints (at the time of
+                    // writing, the two largest) is therefore unchanged by this code.
+                    const wantsCheckpointAnchor = !keysetAnchor &&
+                        dbpoolPg.isPg &&
+                        parameters.offset > 0 &&
+                        pageAnchor.isCheckpointable(parameters.sortBy) &&
+                        sort.anchorType;
+                    const resolveCheckpointAnchor = function () {
+                        if (!wantsCheckpointAnchor) { return Q.resolve(null); }
+                        // A DESCENDING rank is N+1-rank, so it needs the project's
+                        // TRUE live row count — a partial count returns the WRONG ROW
+                        // with no error anywhere (measured: 65834072 instead of
+                        // 28937575 on project 1533). An ASCENDING rank is just
+                        // offset+1 and needs no total at all.
+                        //
+                        // For the total we read `sum(sites.rec_count)`, which is
+                        // O(sites) rather than a COUNT over 273M rows, and is the
+                        // same count plane the prod `count-repair-plane` CronJob
+                        // maintains. Verified against measured live counts on both
+                        // test projects: delta 0 over 1,820 sites. This branch only
+                        // runs when `dateRangeFastPathEligible` is true — i.e. no
+                        // filters beyond archive+site scope — so the project total IS
+                        // the filtered total; any filter disables the fast path and
+                        // this whole block with it.
+                        //
+                        // ⚠️ The total is fetched for BOTH directions, not just DESC.
+                        // My first cut passed a placeholder on ASC (where the rank is
+                        // simply offset+1) — but `ascRankFor` also uses the total as a
+                        // BOUNDS CHECK (`offset >= total` => refuse), so a placeholder
+                        // of 1 made every ASC jump past row 1 resolve to null and
+                        // silently kept the OFFSET path. Cheap either way: O(sites).
+                        const pidSafe = pageAnchor.safeInt(parameters.project_id);
+                        if (pidSafe === null) { return Q.resolve(null); }
+                        const totalPromise = Q.nfcall(dbpoolPg.pgReadQuery,
+                            'SELECT coalesce(sum(rec_count), 0) AS n FROM sites WHERE project_id = ' + pidSafe)
+                            .then(function (rows) {
+                                const r = Array.isArray(rows) ? rows[0] : null;
+                                return r ? pageAnchor.safeInt(r.n) : null;
+                            })
+                            .catch(function () { return null; });
+                        return totalPromise.then(function (total) {
+                            const ascRank = pageAnchor.ascRankFor(
+                                parameters.offset, parameters.limit, parameters.sortRev, total);
+                            if (ascRank === null) { return null; }
+                            return Q.nfcall(pageAnchor.lookup, dbpoolPg.pgReadQuery,
+                                parameters.project_id, parameters.sortBy, ascRank);
+                        }).catch(function (err) {
+                            console.error('checkpoint anchor resolve failed, using OFFSET:',
+                                { projectId: parameters.project_id, sortBy: parameters.sortBy,
+                                  error: err && err.message });
+                            return null;
+                        });
+                    };
                     // Force the (site_id, <col>) composite for the list query.
                     // Without it the optimizer mis-picks a single-column index
                     // and full-scans the 273M-row table -> max_statement_time.
@@ -2526,13 +2635,40 @@ var Recordings = {
                     // base table, archive+site-IN predicates only) plus the
                     // builder's own site-count/window caps. Any filter disables
                     // it and the historical forced-index shape runs unchanged.
+                    // Resolve a checkpoint anchor FIRST when one is wanted, then build.
+                    // The resolver is async (one small indexed lookup, plus an
+                    // O(sites) total), so the union build moves inside its `then`.
+                    // When nothing is wanted or nothing resolves, this is the same
+                    // synchronous path as before with `keysetAnchor` untouched.
+                    return resolveCheckpointAnchor().then(function (cp) {
+                    // The walk is the residual offset AFTER seeking to the
+                    // checkpoint: bounded by INTERVAL-1 (99 rows, i.e. under one
+                    // page), versus the millions of rows the plain OFFSET form
+                    // would have to produce and discard. `buildPerSiteSortSql`
+                    // already applies `offset` on top of an anchor's position, so
+                    // handing it (anchor, walk) yields exactly the requested page.
+                    let effectiveOffset = parameters.offset;
+                    if (cp && cp.anchor) {
+                        keysetAnchor = cp.anchor;
+                        effectiveOffset = cp.walk;
+                        console.log('DBPOOL_PAGE_ANCHOR', JSON.stringify({
+                            ev: 'checkpoint_anchor_used',
+                            project: parameters.project_id,
+                            sortBy: parameters.sortBy,
+                            sortRev: !!parameters.sortRev,
+                            requestedOffset: parameters.offset,
+                            checkpointRank: cp.checkpointRank,
+                            walk: cp.walk,
+                            band: !!cp.anchor.isNull
+                        }));
+                    }
                     const unionSql = dateRangeFastPathEligible ? persiteSort.buildPerSiteSortSql({
                         expr: sort.expr,
                         nullable: sort.nullable,
                         sortRev: parameters.sortRev,
                         siteIds: siteIds,
                         archiveScope: archiveScope,
-                        offset: parameters.offset,
+                        offset: effectiveOffset,
                         limit: parameters.limit,
                         isPg: dbpoolPg.isPg,
                         anchorType: sort.anchorType,
@@ -2566,6 +2702,7 @@ var Recordings = {
                             { sortBy: parameters.sortBy, sortRev: parameters.sortRev, error: err && err.message });
                         return runList('r.site_id DESC, r.datetime DESC', null);
                     });
+                    });   // end resolveCheckpointAnchor().then
                 }));
             }).then(async function (results) {
                 // Get recording data for the output='list'
@@ -2723,7 +2860,7 @@ var Recordings = {
                 joi.boolean(),
                 joi.string().valid('active', 'archived', 'only', 'all', 'true', 'false', '0', '1')
             ),
-            output:  arrayOrSingle(joi.string().valid('count','list','date_range','sql')).default('list')
+            output:  arrayOrSingle(joi.string().valid('count','list','date_range','sql','anchor_coverage')).default('list')
         },
         exportProjections: {
             recording: arrayOrSingle(joi.string().valid(
