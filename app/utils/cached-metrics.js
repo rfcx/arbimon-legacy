@@ -43,8 +43,7 @@ const PG_RECORDINGS_ESTIMATE_SQL =
     "WHERE n.nspname = 'public' AND c.relname = 'recordings'"
 
 const getColdEstimate = async function(k) {
-    if (k === 'recording-count' && dbpoolPg.isPg) {
-        // Engine branch, NOT a translator rule: catalog SQL has no common form
+    if (k === 'recording-count' && dbpoolPg.isPg) {        // Engine branch, NOT a translator rule: catalog SQL has no common form
         // across the two engines, and this branch disappears cleanly at P7.
         // The estimate is best-effort: if the routed read fails open to
         // MariaDB (where pg_class does not exist) or errors, serve null
@@ -90,6 +89,15 @@ const getCountForSelectedMetric = async function(key, projectId) {
             break;
         case 'recording-count':
             count = await model.recordings.countAllRecordings()
+            break;
+        case 'recording-minutes':
+            // Minutes of audio across the whole corpus (Option-1, §315, ruled
+            // 2026-09-17). The SAME unfiltered set as recording-count. The sum
+            // is a 4-worker parallel scan measured at ~55 s on the prod leader
+            // — it is UNWINNABLE in the request path (see
+            // UNWINNABLE_WARM_REFRESH_KEYS + getColdEstimate) and is refreshed
+            // out-of-band only.
+            count = await model.recordings.sumAllRecordingMinutes()
             break;
         case 'project-species-count':
             count = await model.species.countProjectSpecies(projectId)
@@ -199,7 +207,7 @@ const boundCacheKey = function (v) {
 // and increasingly so over time. It was ALREADY frozen before this change --
 // this makes the freeze honest and cheap instead of hidden and expensive. The
 // durable fix is the escape-hatch item above.
-const UNWINNABLE_WARM_REFRESH_KEYS = { 'recording-count': true }
+const UNWINNABLE_WARM_REFRESH_KEYS = { 'recording-count': true, 'recording-minutes': true }
 
 const isUnwinnableRefresh = function(k) {
     return UNWINNABLE_WARM_REFRESH_KEYS[k] === true
@@ -227,6 +235,16 @@ const getCachedMetrics = async function(req, res, key, params, next) {
     model.projects.getCachedMetrics(v).then(async function(results) {
         if (!results.length) {
             // COLD KEY: bounded wait, then estimate. See COLD_KEY_BOUND_MS.
+            // §297: an unwinnable key (a 55 s leader scan) must NOT be
+            // launched from the request path even as a backgrounded promise —
+            // the bounded wait still starts the work. Serve the estimate and
+            // leave the compute to the out-of-band refresh.
+            if (isUnwinnableRefresh(k)) {
+                const estimate = await getColdEstimate(k)
+                console.log('cached-metrics: cold key ' + v + ' is unwinnable in-request; served ' +
+                    (estimate === null ? 'null' : 'estimate ' + estimate) + ', refresh left to out-of-band')
+                return res.json(estimate)
+            }
             const recalc = recalculateMetrics(k, v, params, true)
             // Attach the background handler FIRST so a rejection after the
             // bound expires is never unhandled (node >= 15 would exit).

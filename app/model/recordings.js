@@ -3381,6 +3381,24 @@ var Recordings = {
         return dbpool.query(q).get(0).get('count')
     },
 
+    /* Total audio duration across the whole corpus, in MINUTES.
+     * Option-1 corpus (§315, ruled 2026-09-17): the SAME unfiltered set as
+     * countAllRecordings() — no archived/deleted exclusion — so the public
+     * count + minutes composite reads consistently.
+     *
+     * `duration` is `real` (float4) SECONDS; a naive sum over ~306 M float4s
+     * accumulates float error, so we sum as double precision. The slow part is
+     * the table scan (a 4-worker parallel aggregate, measured 55 s on the prod
+     * leader 2026-09-17) — so this is served ONLY through the cached-metrics
+     * out-of-band refresh, never in the request path (it is in
+     * UNWINNABLE_WARM_REFRESH_KEYS; see cached-metrics.js).
+     */
+    sumAllRecordingMinutes: function() {
+        const q = 'SELECT round(sum(duration::double precision) / 60.0) AS count FROM recordings WHERE duration IS NOT NULL AND duration > 0'
+
+        return dbpool.query(q).get(0).get('count')
+    },
+
     /* fetch count of project recordings.
     */
     countProjectRecordings: function(filters){
