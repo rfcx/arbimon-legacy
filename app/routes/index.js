@@ -81,6 +81,14 @@ router.get('/legacy-api/recordings-count', function(req, res, next) {
     res.type('json');
     getCachedMetrics(req, res, { 'recording-count': 'recording-count' }, null, next);
 });
+// Minutes-of-audio composite (§315, Option 1 ruled 2026-09-17): the SAME
+// unfiltered corpus as recordings-count, expressed in minutes. Served from the
+// cached_metrics row; the heavy sum(duration) is out-of-band only
+// (UNWINNABLE_WARM_REFRESH_KEYS). Public, above the login gate, like the count.
+router.get('/legacy-api/recordings-minutes', function(req, res, next) {
+    res.type('json');
+    getCachedMetrics(req, res, { 'recording-minutes': 'recording-minutes' }, null, next);
+});
 
 router.use('/', parseTokenData(), login);
 
