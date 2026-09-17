@@ -2569,49 +2569,37 @@ var Recordings = {
                         sort.anchorType;
                     const resolveCheckpointAnchor = function () {
                         if (!wantsCheckpointAnchor) { return Q.resolve(null); }
-                        // A DESCENDING rank is N+1-rank, so it needs the project's
-                        // TRUE live row count — a partial count returns the WRONG ROW
-                        // with no error anywhere (measured: 65834072 instead of
-                        // 28937575 on project 1533). An ASCENDING rank is just
-                        // offset+1 and needs no total at all.
+                        // 🔑 ONE STATEMENT, ONE SNAPSHOT (2026-09-17 18:2x).
+                        // This first read the total, then the anchor, in two
+                        // separate statements -- so on a project with concurrent
+                        // uploads a row could land between them and the DESC
+                        // conversion (N+1-rank) would use one N while the lookup
+                        // used a table consistent with another: an off-by-k page,
+                        // silently. `resolveForOffset` does both in one statement,
+                        // which removes the race by construction rather than by
+                        // timing luck, and saves a round trip.
                         //
-                        // For the total we read `sum(sites.rec_count)`, which is
-                        // O(sites) rather than a COUNT over 273M rows, and is the
-                        // same count plane the prod `count-repair-plane` CronJob
-                        // maintains. Verified against measured live counts on both
-                        // test projects: delta 0 over 1,820 sites. This branch only
-                        // runs when `dateRangeFastPathEligible` is true — i.e. no
-                        // filters beyond archive+site scope — so the project total IS
-                        // the filtered total; any filter disables the fast path and
-                        // this whole block with it.
+                        // ⚠️ Exposure today is ZERO -- all 13 covered projects are
+                        // dormant (0 uploads in 90 d) and the one actively-ingesting
+                        // >2M project has 13 sites so it is never capped. This is
+                        // cheap insurance, not a postmortem.
                         //
-                        // ⚠️ The total is fetched for BOTH directions, not just DESC.
-                        // My first cut passed a placeholder on ASC (where the rank is
-                        // simply offset+1) — but `ascRankFor` also uses the total as a
-                        // BOUNDS CHECK (`offset >= total` => refuse), so a placeholder
-                        // of 1 made every ASC jump past row 1 resolve to null and
-                        // silently kept the OFFSET path. Cheap either way: O(sites).
-                        const pidSafe = pageAnchor.safeInt(parameters.project_id);
-                        if (pidSafe === null) { return Q.resolve(null); }
-                        const totalPromise = Q.nfcall(dbpoolPg.pgReadQuery,
-                            'SELECT coalesce(sum(rec_count), 0) AS n FROM sites WHERE project_id = ' + pidSafe)
-                            .then(function (rows) {
-                                const r = Array.isArray(rows) ? rows[0] : null;
-                                return r ? pageAnchor.safeInt(r.n) : null;
-                            })
-                            .catch(function () { return null; });
-                        return totalPromise.then(function (total) {
-                            const ascRank = pageAnchor.ascRankFor(
-                                parameters.offset, parameters.limit, parameters.sortRev, total);
-                            if (ascRank === null) { return null; }
-                            return Q.nfcall(pageAnchor.lookup, dbpoolPg.pgReadQuery,
-                                parameters.project_id, parameters.sortBy, ascRank);
-                        }).catch(function (err) {
-                            console.error('checkpoint anchor resolve failed, using OFFSET:',
-                                { projectId: parameters.project_id, sortBy: parameters.sortBy,
-                                  error: err && err.message });
-                            return null;
-                        });
+                        // N is the project's TRUE live row count; a partial count
+                        // returns the WRONG ROW with no error anywhere (measured:
+                        // 65834072 instead of 28937575 on project 1533). It is also
+                        // the bounds check (offset >= total => refuse), which BOTH
+                        // sort directions need -- passing a placeholder on ASC made
+                        // every ASC jump past row 1 resolve to null and silently keep
+                        // OFFSET.
+                        return Q.nfcall(pageAnchor.resolveForOffset, dbpoolPg.pgReadQuery,
+                                parameters.project_id, parameters.sortBy,
+                                parameters.offset, parameters.limit, parameters.sortRev)
+                            .catch(function (err) {
+                                console.error('checkpoint anchor resolve failed, using OFFSET:',
+                                    { projectId: parameters.project_id, sortBy: parameters.sortBy,
+                                      error: err && err.message });
+                                return null;
+                            });
                     };
                     // Force the (site_id, <col>) composite for the list query.
                     // Without it the optimizer mis-picks a single-column index

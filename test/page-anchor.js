@@ -352,3 +352,90 @@ describe('adaptation: archived / deleted / added rows', function () {
         return function (sql, cb) { cb(null, rows); };
     }
 });
+
+describe('resolveForOffset — one statement, one snapshot (the N-race fix)', function () {
+    function poolWith(rows, capture) {
+        return function (sql, cb) { if (capture) { capture.sql = sql; } cb(null, rows); };
+    }
+
+    it('resolves total + anchor in a SINGLE query (that IS the fix)', function (done) {
+        var cap = {};
+        var pool = poolWith([{ total: 574436, asc_rank: 499901, rank: 499901,
+                               sort_key: '2021-09-12 05:51:00', recording_id: 69625801 }], cap);
+        pageAnchor.resolveForOffset(pool, 3165, 'datetime', 499900, 100, false, function (err, res) {
+            expect(res.anchor.id).to.equal(69625801);
+            expect(res.walk).to.equal(0);
+            expect(res.total).to.equal(574436);
+            // one statement, and it carries BOTH reads
+            expect(cap.sql).to.contain('sum(rec_count)');
+            expect(cap.sql).to.contain('recording_page_anchor');
+            done();
+        });
+    });
+
+    it('🔴 derives the ASC rank with INTEGER division (sum() is NUMERIC — `/` would not truncate)', function () {
+        // The same trap that broke my staleness formula: sum(rec_count) is
+        // numeric, so `(n-1)/100*100+1` returns n itself. The SQL must use div().
+        var cap = {};
+        pageAnchor.resolveForOffset(poolWith([], cap), 3165, 'datetime', 0, 100, true, function () {});
+        expect(cap.sql).to.contain('LEAST');
+        expect(cap.sql).to.contain('GREATEST');
+    });
+
+    it('DESC conversion is expressed in SQL, from the SAME total it selected', function () {
+        var cap = {};
+        pageAnchor.resolveForOffset(poolWith([], cap), 1533, 'datetime', 0, 100, true, function () {});
+        // n + 1 - LEAST(offset+limit, n) -- the measured-correct DESC mapping
+        expect(cap.sql).to.contain('n + 1 - LEAST(0 + 100, n)');
+    });
+
+    it('refuses an offset past the end (bounds check, in SQL)', function (done) {
+        var cap = {};
+        // asc_rank comes back NULL when offset >= n; the resolver must decline
+        pageAnchor.resolveForOffset(poolWith([{ total: 100, asc_rank: null, rank: null,
+                                                sort_key: null, recording_id: null }], cap),
+            1533, 'datetime', 5000, 100, false, function (err, res) {
+                expect(res).to.equal(null);
+                expect(cap.sql).to.contain('>= n THEN NULL');
+                done();
+            });
+    });
+
+    it('falls back (null) when no checkpoint exists for the project', function (done) {
+        pageAnchor.resolveForOffset(poolWith([{ total: 11240222, asc_rank: 499901, rank: null,
+                                                sort_key: null, recording_id: null }]),
+            1989, 'datetime', 499900, 100, false, function (err, res) {
+                expect(res).to.equal(null);
+                done();
+            });
+    });
+
+    it('🔒 refuses a non-whitelisted sort column without querying', function (done) {
+        var queried = false;
+        pageAnchor.resolveForOffset(function (sql, cb) { queried = true; cb(null, []); },
+            1989, "datetime'--", 100, 100, false, function (err, res) {
+                expect(res).to.equal(null);
+                expect(queried).to.be.false;
+                done();
+            });
+    });
+
+    it('flags a NULL-band anchor so the seek uses the band predicate', function (done) {
+        pageAnchor.resolveForOffset(poolWith([{ total: 755233, asc_rank: 618801, rank: 618801,
+                                                sort_key: null, recording_id: 99001 }]),
+            8360, 'datetime', 618800, 100, false, function (err, res) {
+                expect(res.anchor.isNull).to.be.true;
+                expect(res.anchor.key).to.equal(undefined);
+                done();
+            });
+    });
+
+    it('🔴 REFUSES an out-of-grid result rather than serve an unbounded walk', function (done) {
+        pageAnchor.resolveForOffset(poolWith([{ total: 574436, asc_rank: 500000, rank: 1,
+                                                sort_key: '2018-01-01 00:00:00', recording_id: 5 }]),
+            3165, 'datetime', 499999, 100, false, function (err, res) {
+                expect(res).to.equal(null);
+                done();
+            });
+    });
+});

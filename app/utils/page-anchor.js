@@ -243,6 +243,92 @@ function coverageFor(queryFn, projectId, sortCol, callback) {
     });
 }
 
+
+/**
+ * ONE-STATEMENT resolve: the project total AND the nearest checkpoint together.
+ *
+ * WHY: `recordings.js` originally read the total, then the anchor, in two
+ * separate statements. On a project with concurrent uploads a row can land
+ * between them, so the DESC conversion (`N + 1 - rank`) uses one N while the
+ * lookup uses a table consistent with another -- an off-by-k page, silently.
+ * Both reads in ONE statement share a snapshot, which removes the race by
+ * construction rather than by timing luck. It also saves a round trip.
+ *
+ * ⚠️ CURRENT EXPOSURE IS ZERO, AND THAT IS WHY THIS IS CHEAP INSURANCE, NOT A
+ * FIX FOR AN OBSERVED BUG: measured 2026-09-17, all 13 projects that HAVE
+ * checkpoints are dormant (0 uploads in 90 d), and the one actively-ingesting
+ * >2M project has 13 sites so it is never capped and needs no checkpoints. The
+ * race needs a concurrent writer on a COVERED project; today there is none.
+ * Stated so nobody reads this as a postmortem.
+ *
+ * `sortRev` decides whether the total is even needed for the rank, but it is
+ * always selected: it costs one O(sites) aggregate and it is also the bounds
+ * check (`offset >= total` => refuse), which BOTH directions need.
+ *
+ * @param {function} queryFn (sql, cb) => cb(err, rows)
+ * @param {function} callback (err, {anchor, walk, checkpointRank, total} | null)
+ */
+function resolveForOffset(queryFn, projectId, sortCol, offset, limit, sortRev, callback) {
+    if (typeof queryFn !== 'function') { return callback(null, null); }
+    var pid = safeInt(projectId);
+    if (pid === null || pid <= 0 || !isCheckpointable(sortCol)) { return callback(null, null); }
+    var off = safeInt(offset), lim = safeInt(limit);
+    if (off === null || lim === null || lim <= 0) { return callback(null, null); }
+
+    // One snapshot. The CTE computes the total, derives the ASC rank from it in
+    // SQL (same arithmetic as ascRankFor -- integer division via div(), because
+    // sum() is NUMERIC and `/` would NOT truncate), then picks the nearest
+    // checkpoint at or before that rank.
+    var rev = sortRev ? 'true' : 'false';
+    var sql =
+        'WITH t AS (SELECT coalesce(sum(rec_count), 0)::bigint AS n FROM sites WHERE project_id = ' + pid + '), ' +
+        'r AS (SELECT n, CASE WHEN n <= 0 OR ' + off + ' >= n THEN NULL ' +
+        '                WHEN ' + rev + ' THEN GREATEST(n + 1 - LEAST(' + off + ' + ' + lim + ', n), 1) ' +
+        '                ELSE ' + off + ' + 1 END AS asc_rank FROM t) ' +
+        'SELECT r.n AS total, r.asc_rank, a.rank, a.sort_key, a.recording_id ' +
+        'FROM r LEFT JOIN recording_page_anchor a ' +
+        '  ON a.project_id = ' + pid + " AND a.sort_col = '" + sortCol + "' " +
+        '  AND a.rank = (SELECT max(a2.rank) FROM recording_page_anchor a2 ' +
+        '                 WHERE a2.project_id = ' + pid + " AND a2.sort_col = '" + sortCol + "' " +
+        '                   AND a2.rank <= r.asc_rank)';
+
+    queryFn(sql, function (err, rows) {
+        if (err) {
+            console.error('page-anchor resolveForOffset failed, falling back to OFFSET:', {
+                projectId: pid, sortCol: sortCol, offset: off,
+                code: err && err.code, error: String(err && (err.message || err)).slice(0, 200)
+            });
+            return callback(null, null);
+        }
+        var row = firstRow(rows);
+        if (!row) { return callback(null, null); }
+        var total = safeInt(row.total);
+        var ascRank = row.asc_rank === null || row.asc_rank === undefined ? null : safeInt(row.asc_rank);
+        var cpRank = row.rank === null || row.rank === undefined ? null : safeInt(row.rank);
+        if (ascRank === null || cpRank === null || row.recording_id === undefined || row.recording_id === null) {
+            return callback(null, null);
+        }
+        var walk = ascRank - cpRank;
+        if (!Number.isFinite(walk) || walk < 0 || walk >= INTERVAL) {
+            console.error('page-anchor rank out of grid, falling back to OFFSET:', {
+                projectId: pid, sortCol: sortCol, ascRank: ascRank, cpRank: cpRank, walk: walk
+            });
+            return callback(null, null);
+        }
+        callback(null, {
+            anchor: {
+                id: row.recording_id,
+                key: row.sort_key === null || row.sort_key === undefined ? undefined : String(row.sort_key),
+                isNull: row.sort_key === null || row.sort_key === undefined
+            },
+            walk: walk,
+            checkpointRank: cpRank,
+            total: total,
+            ascRank: ascRank
+        });
+    });
+}
+
 module.exports = {
     INTERVAL: INTERVAL,
     SORT_COLS: SORT_COLS,
@@ -252,5 +338,6 @@ module.exports = {
     lookupSql: lookupSql,
     coverageSql: coverageSql,
     lookup: lookup,
+    resolveForOffset: resolveForOffset,
     coverageFor: coverageFor
 };
