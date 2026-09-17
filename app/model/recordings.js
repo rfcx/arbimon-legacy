@@ -2020,11 +2020,17 @@ var Recordings = {
      * free-text `comments`/`meta` are NOT sortable by design.
      */
     RECORDING_SORT_COLUMNS: {
+        // `anchorType` drives the KEYSET literal built in persite-sort.js. It is
+        // the column's SQL type, not a display hint: the builder refuses to
+        // interpolate an anchor whose value does not match this type exactly
+        // (the anchor arrives from a URL). `site`/`site_id` carry none, so a
+        // keyset anchor is declined for them and the OFFSET path still serves
+        // those sorts unchanged.
         site:        { expr: 'r.site_id',     index: 'recordings_site_datetime_idx' },
         site_id:     { expr: 'r.site_id',     index: 'recordings_site_datetime_idx' },
-        datetime:    { expr: 'r.datetime',    index: 'recordings_site_datetime_idx' },
-        filename:    { expr: 'r.filename',    index: 'recordings_site_filename_idx', nullable: true },
-        upload_time: { expr: 'r.upload_time', index: 'recordings_site_upload_time_idx', nullable: true }
+        datetime:    { expr: 'r.datetime',    index: 'recordings_site_datetime_idx', anchorType: 'timestamp' },
+        filename:    { expr: 'r.filename',    index: 'recordings_site_filename_idx', nullable: true, anchorType: 'text' },
+        upload_time: { expr: 'r.upload_time', index: 'recordings_site_upload_time_idx', nullable: true, anchorType: 'timestamp' }
     },
 
     /**
@@ -2448,6 +2454,23 @@ var Recordings = {
                     // whitelisted column is backed by a (site_id, <col>)
                     // composite index so this stays fast on the ~273M-row table.
                     const sort = Recordings.resolveRecordingSort(parameters.sortBy, parameters.sortRev);
+
+                    // Assemble the keyset anchor, or null. Deliberately strict:
+                    // an anchor is only honoured when the sort column HAS a type
+                    // (so `site` is excluded), the id is present, and either the
+                    // key is present or the anchor is flagged as inside the NULL
+                    // band. Anything else falls through to the OFFSET path,
+                    // which is today's behaviour — the fallback is always the
+                    // status quo, never an error.
+                    const anchorIdNum = parameters.anchorId;
+                    const keysetAnchor = (sort.anchorType && anchorIdNum !== undefined && anchorIdNum !== null &&
+                        (parameters.anchorNull === true || parameters.anchorKey !== undefined))
+                        ? {
+                            id: anchorIdNum,
+                            key: parameters.anchorKey,
+                            isNull: parameters.anchorNull === true
+                        }
+                        : null;
                     // Force the (site_id, <col>) composite for the list query.
                     // Without it the optimizer mis-picks a single-column index
                     // and full-scans the 273M-row table -> max_statement_time.
@@ -2511,7 +2534,13 @@ var Recordings = {
                         archiveScope: archiveScope,
                         offset: parameters.offset,
                         limit: parameters.limit,
-                        isPg: dbpoolPg.isPg
+                        isPg: dbpoolPg.isPg,
+                        anchorType: sort.anchorType,
+                        // Only a COMPLETE anchor is forwarded. A partial one
+                        // (id without key, outside the NULL band) would silently
+                        // change which rows the user sees, so it is dropped and
+                        // the OFFSET path runs — the same result as today.
+                        anchor: keysetAnchor
                     }) : null;
                     if (unionSql) {
                         return Q.nfcall(queryHandler, {
@@ -2665,6 +2694,24 @@ var Recordings = {
             }).optionalKeys('th')),
             limit:  joi.number(),
             offset: joi.number(),
+            // KEYSET (seek) pagination — rfcx-local OPEN-ITEMS §270.
+            //
+            // `anchorId` is the recording_id of the LAST row of the page the
+            // client just displayed; `anchorKey` is that row's sort-column
+            // value; `anchorNull` says the anchor sits inside the NULL band
+            // (where the sort key is constant and only the tiebreaker orders).
+            //
+            // Supplying them switches the per-site sort to a SEEK, whose cost is
+            // constant in depth — measured on the live leader at the prod 8 s
+            // bound: page 33,180 -> 206 ms, page 112,402 (the last) -> 10.7 ms,
+            // against a form that is CANCELLED at every depth past MAX_WINDOW.
+            // Omitting them is exactly today's behaviour.
+            //
+            // Validated as strings and re-validated BY TYPE inside
+            // persite-sort.js, which refuses anything it did not build itself.
+            anchorId:   joi.number().integer().min(0),
+            anchorKey:  joi.string().max(64),
+            anchorNull: joi.boolean(),
             sortBy: joi.string(),
             sortByMult: arrayOrSingle(arrayOrSingle(joi.string())),
             sortRev: joi.boolean(),
