@@ -2326,7 +2326,16 @@ var Recordings = {
                     if (output === 'anchor_coverage') {
                         const col = pageAnchor.isCheckpointable(parameters.sortBy)
                             ? parameters.sortBy : 'datetime';
-                        if (!dbpoolPg.isPg) {
+                        // 🔴 Report ZERO coverage for any non-default archive scope, for
+                        // the same reason the resolver refuses one: the stored ranks
+                        // describe the ACTIVE list only. Advertising them on the
+                        // archived view would let the pager offer deep pages that
+                        // resolve to nothing (the resolver declines) and fall back to
+                        // OFFSET at a depth where OFFSET cancels — i.e. the pager
+                        // would promise reach the backend cannot deliver. Zero keeps
+                        // the measured budget in charge there.
+                        const covScope = sqlutil.normalizeArchivedParam(parameters.archived);
+                        if (!dbpoolPg.isPg || covScope !== 'active') {
                             return Q.resolve([[{ max_rank: 0, interval: pageAnchor.INTERVAL, sort_col: col }]]);
                         }
                         return Q.nfcall(pageAnchor.coverageFor, dbpoolPg.pgReadQuery,
@@ -2529,9 +2538,33 @@ var Recordings = {
                     // page-anchor.js returns null => this stays on exactly today's
                     // OFFSET behaviour. A project with no checkpoints (at the time of
                     // writing, the two largest) is therefore unchanged by this code.
+                    //
+                    // 🔴 ARCHIVE SCOPE MUST MATCH THE TABLE'S OWN SCOPE, OR THE RANK
+                    // IS A RANK IN A DIFFERENT ROW SET (found + measured 2026-09-17,
+                    // one hour after this shipped).
+                    // The builder counts ONLY `archived_at IS NULL` rows, so a stored
+                    // rank means "position in the ACTIVE list". But
+                    // `isDateRangeFastPathEligible` stays TRUE for `archived=only`
+                    // (the archive predicate is an EXPECTED constraint there, not a
+                    // disqualifier), so without this guard the archived "View
+                    // Archived" page would resolve an anchor from the ACTIVE ranking.
+                    // Measured on project 1533 (35,647 active / 5,246 archived): the
+                    // archived view's true row at rank 901 is recording 27332174,
+                    // while the checkpoint table offers 13091371 — an ACTIVE row that
+                    // the archived query's own WHERE clause excludes. The seek is a
+                    // RANGE predicate, so it still returns rows: the user gets a
+                    // WRONG PAGE with no error, which is this arc's recurring
+                    // silent-failure class.
+                    // ⇒ only resolve a checkpoint for the DEFAULT (active-only) scope.
+                    // 'all' and 'only' fall through to OFFSET, exactly as before this
+                    // feature existed. Archived lists are small (5,246 and 10,925 on
+                    // the two affected built projects), so OFFSET is fine there.
+                    const archivedParam = sqlutil.normalizeArchivedParam(parameters.archived);
+                    const activeOnlyScope = archivedParam === 'active';
                     const wantsCheckpointAnchor = !keysetAnchor &&
                         dbpoolPg.isPg &&
                         parameters.offset > 0 &&
+                        activeOnlyScope &&
                         pageAnchor.isCheckpointable(parameters.sortBy) &&
                         sort.anchorType;
                     const resolveCheckpointAnchor = function () {

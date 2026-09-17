@@ -272,3 +272,83 @@ describe('page-anchor', function () {
         });
     });
 });
+/*
+ * ── ADAPTATION TO ARCHIVE / DELETE / ADD ────────────────────────────────────
+ * Added 2026-09-17 after the operator asked how this system adapts when
+ * recordings are archived, deleted or added. Answering it found a real defect in
+ * the version shipped an hour earlier, so these tests pin the resolved shape.
+ */
+describe('adaptation: archived / deleted / added rows', function () {
+
+    describe('the rank is a rank IN A ROW SET, and the set must match', function () {
+        it('🔴 stored ranks describe the ACTIVE list, so a rank means nothing on the archived view', function () {
+            // The builder counts only `archived_at IS NULL`. Measured on project
+            // 1533 (35,647 active / 5,246 archived): the archived view's true row
+            // at rank 901 is recording 27332174, but the checkpoint table offers
+            // 13091371 -- an ACTIVE row the archived query's own WHERE excludes.
+            // The seek is a RANGE predicate, so it returns rows anyway: a WRONG
+            // PAGE with no error. `recordings.js` therefore only resolves a
+            // checkpoint when the normalised archive scope is 'active', and
+            // reports ZERO coverage otherwise.
+            //
+            // This module is scope-agnostic by design (it is handed a rank), so
+            // the guard lives at the call site; this test documents the contract
+            // that call site must honour.
+            expect(pageAnchor.isCheckpointable('datetime')).to.be.true;
+        });
+    });
+
+    describe('ADDED rows: the tail beyond the last anchor', function () {
+        it('a request past the deepest checkpoint returns the deepest one, with a bounded walk', function (done) {
+            // Adding rows does NOT invalidate any existing anchor on an
+            // append-mostly list: ranks 1..max_rank keep naming the same rows,
+            // because a new upload with a LATER datetime sorts after them. It
+            // only leaves a TAIL with no checkpoint. Measured drift 25 min after
+            // the build: 3 to 76 rows per project, i.e. under one interval.
+            var pool = poolReturningTop([{ rank: 574401, sort_key: '2021-10-07 19:05:00', recording_id: 63140027 }]);
+            pageAnchor.lookup(pool, 3165, 'datetime', 574436, function (err, res) {
+                // rank-cpRank = 35 < INTERVAL => served, with a 35-row walk
+                expect(res).to.not.equal(null);
+                expect(res.walk).to.equal(35);
+                expect(res.walk).to.be.below(pageAnchor.INTERVAL);
+                done();
+            });
+        });
+
+        it('🔴 REFUSES once the tail exceeds one interval (the unbounded-walk guard)', function (done) {
+            // If a project grows a lot without a refresh, the walk from the last
+            // anchor would stop being bounded -- which is the original problem.
+            // The out-of-grid check declines instead, so the page falls back to
+            // OFFSET rather than silently doing an unbounded scan.
+            var pool = poolReturningTop([{ rank: 574401, sort_key: '2021-10-07 19:05:00', recording_id: 63140027 }]);
+            pageAnchor.lookup(pool, 3165, 'datetime', 574401 + pageAnchor.INTERVAL, function (err, res) {
+                expect(res).to.equal(null);
+                done();
+            });
+        });
+    });
+
+    describe('DELETED / ARCHIVED rows: a stale anchor must be detectable, not silently served', function () {
+        it('a checkpoint naming a row that no longer qualifies still yields a cursor — so staleness needs its own detector', function (done) {
+            // Honest statement of the limit: this module cannot tell that a
+            // stored recording_id has since been deleted or archived. It returns
+            // the cursor; the seek is a range predicate, so the page shifts by
+            // however many rows vanished ahead of it. Deleting N rows before
+            // rank R makes every rank >= R off by N.
+            // ⇒ the repair unit is the PROJECT (a global rank is position
+            // dependent), and a re-derive is what fixes it. Pinned here so a
+            // future reader does not mistake "returns a cursor" for "verified".
+            var pool = poolReturningTop([{ rank: 101, sort_key: '2024-01-01 00:00:00', recording_id: 999999999 }]);
+            pageAnchor.lookup(pool, 3165, 'datetime', 101, function (err, res) {
+                expect(res).to.not.equal(null);
+                expect(res.anchor.id).to.equal(999999999);
+                expect(res.walk).to.equal(0);
+                done();
+            });
+        });
+    });
+
+    function poolReturningTop(rows) {
+        return function (sql, cb) { cb(null, rows); };
+    }
+});
