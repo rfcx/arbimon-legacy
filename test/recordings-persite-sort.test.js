@@ -93,13 +93,76 @@ describe('recordings per-site union sort builder', function () {
     expect(build(Object.assign({}, BASE, { siteIds: [6725] }))).to.equal(null);
   });
 
-  it('returns null above MAX_SITES (SQL size bound; the ~2-project tail keeps the old shape)', function () {
+  it('MariaDB: returns null above MAX_SITES (no LATERAL there; the SQL-text bound still applies)', function () {
     var ids = [];
     for (var i = 1; i <= persite.PERSITE_SORT_MAX_SITES + 1; i++) { ids.push(i); }
     expect(build(Object.assign({}, BASE, { siteIds: ids }))).to.equal(null);
     var ok = [];
     for (var j = 1; j <= persite.PERSITE_SORT_MAX_SITES; j++) { ok.push(j); }
     expect(build(Object.assign({}, BASE, { siteIds: ok }))).to.be.a('string');
+  });
+
+  /**
+   * THE >MAX_SITES LATERAL BRANCH (PG only, added 2026-09-17; operator GO
+   * 04:33; evidence rfcx-local runbooks/evidence/keyset-p1-g1-refutation-2026-09-17.md).
+   * Until this change the >MAX_SITES class (exactly ONE project: 3165, 2,473
+   * sites) was gated OFF the fast path and timed out on ANY non-default sort.
+   * The union cannot serve it (~465 KB of SQL at 2,473 sites vs the ~700 KB
+   * text bound); LATERAL's text is ~30 KB. LATERAL is deliberately NOT the
+   * default for smaller projects: it has no Merge Append early stop, and on
+   * the dense 970-site giant at k=20,000 it cancels at the 8 s prod bound
+   * where the union returns in ~195 ms (measured on the live leader, twice).
+   * These tests pin the branch gate and the emitted SHAPE.
+   */
+  var BIG = { isPg: true, offset: 19900, limit: 100 }; // k = 20,000: deepest served page
+  var bigIds = function () {
+    var ids = [];
+    for (var i = 10; i <= persite.PERSITE_SORT_MAX_SITES + 10; i++) { ids.push(i); }
+    return ids;
+  };
+
+  it('PG above MAX_SITES emits the LATERAL form: one array literal, one CROSS JOIN LATERAL per band, per-LATERAL LIMIT = offset+limit', function () {
+    var sql = build(Object.assign({}, BASE, BIG, { siteIds: bigIds() }));
+    expect(sql).to.be.a('string');
+    expect(sql).to.contain('FROM unnest(ARRAY[10,11,12');
+    expect(sql).to.contain(']::bigint[]) AS t(site_id)');
+    expect((sql.match(/CROSS JOIN LATERAL/g) || []).length).to.equal(2); // value band + NULL band
+    expect((sql.match(/r\.filename IS NOT NULL/g) || []).length).to.equal(1);
+    expect((sql.match(/r\.filename IS NULL/g) || []).length).to.equal(1);
+    expect((sql.match(/LIMIT 20000\n\) x/g) || []).length).to.equal(2); // k = 19900 + 100, per LATERAL
+    expect(sql).to.contain('WHERE r.site_id = t.site_id AND r.archived_at IS NULL');
+    expect(sql).to.contain('LIMIT 100 OFFSET 19900'); // PG outer form
+  });
+
+  it('PG LATERAL branch: arms PG-native placement (index-servable), outer MySQL-semantic placement — the NULL-split is preserved', function () {
+    var asc = build(Object.assign({}, BASE, BIG, { siteIds: bigIds() }));
+    expect(asc).to.contain('ORDER BY r.filename ASC NULLS LAST, r.recording_id ASC');
+    expect(asc).to.contain('ORDER BY u.sort_key ASC NULLS FIRST, u.id ASC');
+    var desc = build(Object.assign({}, BASE, BIG, { siteIds: bigIds(), sortRev: true }));
+    expect(desc).to.contain('ORDER BY r.filename DESC NULLS FIRST, r.recording_id DESC');
+    expect(desc).to.contain('ORDER BY u.sort_key DESC NULLS LAST, u.id DESC');
+  });
+
+  it('PG LATERAL branch, non-nullable sort column: ONE LATERAL, no IS NULL split, no placement keywords', function () {
+    var sql = build(Object.assign({}, BASE, BIG, { siteIds: bigIds(), expr: 'r.datetime', nullable: false }));
+    expect((sql.match(/CROSS JOIN LATERAL/g) || []).length).to.equal(1);
+    expect(sql).to.not.contain('NULLS');
+    expect(sql).to.not.contain('IS NOT NULL');
+    expect(sql).to.contain('ORDER BY r.datetime ASC, r.recording_id ASC');
+  });
+
+  it('PG LATERAL branch still obeys MAX_WINDOW and the positive-limit gate', function () {
+    expect(build(Object.assign({}, BASE, { isPg: true, siteIds: bigIds(), offset: 20000, limit: 100 }))).to.equal(null);
+    expect(build(Object.assign({}, BASE, { isPg: true, siteIds: bigIds(), limit: 0 }))).to.equal(null);
+    expect(build(Object.assign({}, BASE, { isPg: true, siteIds: [6725] }))).to.equal(null); // 1-site: still the old path
+  });
+
+  it('PG LATERAL branch coerces/drops non-integer site ids (the array literal is not parameterized)', function () {
+    var ids = bigIds().concat(['x; DROP TABLE recordings', '31337']);
+    var sql = build(Object.assign({}, BASE, BIG, { siteIds: ids }));
+    expect(sql).to.be.a('string');
+    expect(sql).to.not.contain('DROP');
+    expect(sql).to.contain(',31337]'); // the one valid trailing id survives, at the end of the array
   });
 
   it('returns null for deep pages (§270 owns the residual deep-page cost)', function () {

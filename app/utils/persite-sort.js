@@ -69,14 +69,95 @@
  *   ASC/DESC x pages 1-2 (mashpi, NULL band leading on ASC page 1).
  *
  * GATES (all must hold; the caller checks the structural ones):
- *   - 2..MAX_SITES sites (a 1-site project is already index-served; >2000 is
- *     the ~2-project tail whose SQL text would exceed ~700 KB — they keep the
- *     old shape, i.e. the accepted §270 giant-sort residual),
+ *   - 2..MAX_SITES sites take the UNION form (a 1-site project is already
+ *     index-served). >MAX_SITES takes the PG-only LATERAL branch described
+ *     below; on MariaDB >MAX_SITES keeps the old shape (MariaDB has no
+ *     LATERAL, and the ~700 KB SQL-text bound still applies there),
  *   - offset+limit <= MAX_WINDOW (§270 owns the residual deep-page cost; see
  *     the MAX_WINDOW note below for why 20,000 and not 500),
  *   - a finite positive limit (the dump-everything path keeps the old shape).
  */
 var MAX_SITES = 2000;
+
+/**
+ * THE >MAX_SITES LATERAL BRANCH (added 2026-09-17, seat
+ * ms4-keyset-p1-verify-20260917; operator GO 04:33; rfcx-local evidence
+ * `runbooks/evidence/keyset-p1-g1-refutation-2026-09-17.md`).
+ *
+ * WHY IT EXISTS: until today, >MAX_SITES was a GATE — the two biggest projects
+ * were excluded from the fast path entirely, so ANY non-default sort on them
+ * ran the global sort and timed out (measured on 3165
+ * `plains-wanderer-queensland`, 2,473 sites: today's path hit a 120 s probe
+ * cap with 0 rows, twice; in prod it dies at the 8 s routed-read cancel).
+ * The union cannot serve them: at 2,473 sites its TEXT is ~465 KB, brushing
+ * the ~700 KB generated-SQL bound MAX_SITES exists to enforce. The LATERAL
+ * form's text is ~30 KB at 2,473 sites (the site list is one array literal,
+ * not one arm per site), so the text bound disappears.
+ *
+ * WHY IT IS GATED TO >MAX_SITES — LATERAL IS NOT A REPLACEMENT FOR THE UNION.
+ * The union plans as a Merge Append: arms arrive in index order, PG streams
+ * them and STOPS at k (`actual rows == k` exactly). LATERAL has no early stop:
+ * it materialises min(k, rows_in_site) per arm and sorts the lot. Measured on
+ * the LIVE LEADER at the prod 8 s bound, 2026-09-16/17 (twice, incl. one
+ * independent falsification pass):
+ *   - dense giant 1989 (970 sites, ~11,588 rows/site), k=20,000:
+ *     UNION 194-197 ms / 100 rows — LATERAL CANCELLED at 8.00 s, 0 rows,
+ *     5 runs of 5 (true cost ~58.8 s under a 60 s cap).
+ *   - => a blanket rewrite would have turned a working ~195 ms page into a
+ *     fail-open that silently drops the user's chosen sort. The UNION stays
+ *     the default for 2..MAX_SITES.
+ *
+ * WHY IT IS SAFE AT THE FULL MAX_WINDOW HERE (measured, leader, 8 s cap,
+ * 2026-09-17): cost scales with per-site DENSITY x k, and the only estate
+ * member of the >MAX_SITES class is SPARSE — 3165 carries 574,436 recordings
+ * over 2,473 sites (avg 232, max 480 rows/site), so every arm saturates at
+ * 480 rows and the ladder is FLAT:
+ *   datetime DESC: 776 / 511 / 187 / 191 / 190 / 240 ms at k =
+ *   100/500/2000/5000/10000/20000; filename DESC (2 arms/site, worst case):
+ *   176 / 280 / 280 / 280 / 297 / 320 ms. All 12 runs returned 100 rows,
+ *   zero errors, max 320 ms = a 25x margin under the 8 s routed-read bound.
+ * ⚠️ DENSITY CAVEAT: a FUTURE >2000-site project with giant-class density
+ * (~11k rows/site) would cancel at depth on this branch (that is exactly
+ * what the giant does). The class is enumerable and has ONE member (the
+ * runner-up, 2408, is 745 sites below the bar); if a dense project crosses
+ * MAX_SITES, re-measure before trusting this branch at MAX_WINDOW depth —
+ * the fall-through past the bound is the old shape, i.e. no worse than today.
+ *
+ * OUTPUT IDENTITY (the gate that matters): the LATERAL form below is
+ * byte-order identical to the union form — 12/12 cases IDENTICAL id sequences
+ * (projects 1989/3941/8869/35/3165 x datetime/filename/upload_time x k in
+ * {100..20000}), incl. a NEGATIVE CONTROL that fires (flip the outer
+ * tiebreaker and the harness names the first differing row). On 3165 the
+ * oracle was a cap-bypassed union (today's global sort returns nothing):
+ * 100/100 ids identical. The two-arm NULL split is preserved — one LATERAL
+ * per band, unioned — for the same btree null-placement reason as above.
+ */
+function buildLateralSortSql(siteIds, o, dir, k, scope, limit, offset) {
+    // PG-only caller. Placement rules are the union's, restated for one arm:
+    // PG-native INSIDE each LATERAL (index-servable; placement irrelevant
+    // within a band), app-semantic on the OUTER (small sort, not an index
+    // walk). Same translate() passthrough property: explicit placement on the
+    // arm keys keeps the #1794 NULL-placement leg from rewriting them.
+    var armPlacement = o.nullable ? (o.sortRev ? ' NULLS FIRST' : ' NULLS LAST') : '';
+    var outerPlacement = o.nullable ? (o.sortRev ? ' NULLS LAST' : ' NULLS FIRST') : '';
+    var arr = 'ARRAY[' + siteIds.join(',') + ']::bigint[]';
+    var arm = function (nullpred) {
+        return 'SELECT x.id, x.sort_key FROM unnest(' + arr + ') AS t(site_id)\n' +
+            'CROSS JOIN LATERAL (\n' +
+            '  SELECT r.recording_id AS id, ' + o.expr + ' AS sort_key\n' +
+            '  FROM recordings r\n' +
+            '  WHERE r.site_id = t.site_id' + scope + nullpred + '\n' +
+            '  ORDER BY ' + o.expr + ' ' + dir + armPlacement +
+            ', r.recording_id ' + dir + '\n' +
+            '  LIMIT ' + k + '\n) x';
+    };
+    var inner = o.nullable
+        ? arm(' AND ' + o.expr + ' IS NOT NULL') + '\nUNION ALL\n' + arm(' AND ' + o.expr + ' IS NULL')
+        : arm('');
+    return 'SELECT u.id FROM (\n' + inner + '\n) u\n' +
+        'ORDER BY u.sort_key ' + dir + outerPlacement + ', u.id ' + dir + '\n' +
+        'LIMIT ' + limit + ' OFFSET ' + offset;
+}
 
 /**
  * Deepest `offset+limit` this shape will serve. **500 -> 20000 on 2026-09-16**
@@ -96,10 +177,10 @@ var MAX_SITES = 2000;
  *   k=  5,000   7,751 / 7,313 ms   Merge Append actual rows =  5,000
  *   k= 20,000   7,758 / 7,463 ms   Merge Append actual rows = 20,000
  *
- * `actual rows == k` at every k -- the union never materialises 485,000 or
- * 11.2M rows; the eye-watering `rows=18568826` in the plan is the planner's
- * ESTIMATE, not what ran. Cost is dominated by OPENING ~970 index scans (the
- * fixed ~5-7 s), not by k, so raising the bound is close to free.
+ * `actual rows == k` at every k -- the eye-watering `rows=18568826` in the
+ * plan is the planner's ESTIMATE, not what ran. Cost is dominated by OPENING
+ * ~970 index scans (the fixed ~5-7 s), not by k, so raising the bound is
+ * close to free.
  *
  * WHAT THIS BUYS: at limit=100 the fast path reached page 5; it now reaches
  * page 200. Past the bound the caller falls back to the global sort, which on
@@ -111,10 +192,10 @@ var MAX_SITES = 2000;
  * (keyset/seek, §270 option 1) removes it. This raise moves the cliff; it does
  * not make the giant fast.
  *
- * ⚠️ The other gate still binds: >MAX_SITES sites keeps the old shape because
- * the generated SQL text would exceed ~700 KB. At 970 sites and k=20000 the
- * text is unchanged in SIZE (k is a number, not more arms), so this raise does
- * not interact with that limit.
+ * ⚠️ The MAX_SITES interaction CHANGED on 2026-09-17: >MAX_SITES no longer
+ * keeps the old shape on PG — it takes the LATERAL branch above, which is
+ * measured flat to this same 20,000 bound on the only estate member (3165;
+ * see the branch header). On MariaDB the old gate still applies.
  */
 var MAX_WINDOW = 20000;
 
@@ -122,13 +203,23 @@ function buildPerSiteSortSql(o) {
     if (!o || !o.expr) { return null; }
     var siteIds = (o.siteIds || []).map(function (s) { return parseInt(s, 10); })
         .filter(function (s) { return Number.isFinite(s); });
-    if (siteIds.length < 2 || siteIds.length > MAX_SITES) { return null; }
+    if (siteIds.length < 2) { return null; }
     var limit = parseInt(o.limit, 10);
     var offset = Math.max(0, parseInt(o.offset, 10) || 0);
     if (!Number.isFinite(limit) || limit <= 0) { return null; }
     if (offset + limit > MAX_WINDOW) { return null; }
 
     var dir = o.sortRev ? 'DESC' : 'ASC';
+    var k = offset + limit;
+    var scope = o.archiveScope ? (' AND ' + o.archiveScope) : '';
+
+    // >MAX_SITES: the union's TEXT would exceed the ~700 KB generated-SQL
+    // bound. PG takes the LATERAL branch (measured + identity-proven — see the
+    // branch header); MariaDB has no LATERAL and keeps the old shape.
+    if (siteIds.length > MAX_SITES) {
+        return o.isPg ? buildLateralSortSql(siteIds, o, dir, k, scope, limit, offset) : null;
+    }
+
     // Arm placement: PG-native (index-servable); semantically irrelevant inside
     // an arm (one arm is NULL-free, the other is NULL-only). Emitted ONLY on PG
     // — MariaDB rejects NULLS FIRST/LAST syntax, and its defaults are identical
@@ -139,8 +230,6 @@ function buildPerSiteSortSql(o) {
     // on DESC. PG's default is the opposite, so PG needs it explicit; MariaDB's
     // default IS this, so nothing is emitted there.
     var outerPlacement = (o.isPg && o.nullable) ? (o.sortRev ? ' NULLS LAST' : ' NULLS FIRST') : '';
-    var k = offset + limit;
-    var scope = o.archiveScope ? (' AND ' + o.archiveScope) : '';
 
     var arms = [];
     siteIds.forEach(function (sid) {
