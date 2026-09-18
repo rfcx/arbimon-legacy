@@ -477,3 +477,99 @@ describe('🔴 resolveRecordingSort must FORWARD anchorType (the gate that silen
         expect(src).to.match(/wantsCheckpointAnchor[\s\S]{0,400}sort\.anchorType/);
     });
 });
+
+describe('🔒 GENERALISED: every RECORDING_SORT_COLUMNS field must survive resolveRecordingSort', function () {
+    // WHY THIS EXISTS, generalised from the 2026-09-17 20:4x incident.
+    // `anchorType` was declared in RECORDING_SORT_COLUMNS but omitted from the
+    // non-default return, so `sort.anchorType` was always undefined, the gate
+    // `&& sort.anchorType` never opened, and the checkpoint resolver NEVER RAN in
+    // production for 3.5 hours while five separate layers of verification
+    // reported success.
+    //
+    // A guard naming only `anchorType` would re-fail the day someone adds a
+    // fourth field. This asserts the PROPERTY: whatever the map declares, the
+    // return must forward. Source-asserted because requiring recordings.js pulls
+    // the full app dependency tree (aws-sdk, jwt) which does not load under a
+    // bare mocha run -- and the property is purely structural.
+    var fs = require('fs');
+    var src = fs.readFileSync(__dirname + '/../app/model/recordings.js', 'utf8');
+
+    function mapBlock () {
+        var m = src.match(/RECORDING_SORT_COLUMNS:\s*\{[\s\S]*?\n    \},/);
+        expect(m, 'RECORDING_SORT_COLUMNS block not found').to.not.equal(null);
+        return m[0];
+    }
+
+    function nonDefaultReturn () {
+        var m = src.match(/return \{ clause: col\.expr[^;]*\};/);
+        expect(m, 'non-default return not found').to.not.equal(null);
+        return m[0];
+    }
+
+    it('every field declared on any sort column is forwarded by the return', function () {
+        var block = mapBlock();
+        var ret = nonDefaultReturn();
+        // ⚠️ Parse only the ENTRY OBJECTS (the `{ ... }` after each `name:`), and
+        // only up to the first `}` -- a naive `{[^}]*}` sweep over the block also
+        // swallows the leading COMMENT (matching prose like "hint") and the entry
+        // KEYS themselves (site, datetime, ...), which made my first version of
+        // this test report `hint, site` as missing fields. Strip comments first.
+        var noComments = block.replace(/\/\/[^\n]*/g, '');
+        var fields = {};
+        // Anchor on a LINE START so the outer `RECORDING_SORT_COLUMNS: {` header
+        // is not itself treated as an entry -- it was, and it captured the first
+        // entry key (`site`) as if it were a field. Third revision of this
+        // extractor; each failure was the test correctly refusing to pass.
+        var entryRx = /^\s+[a-zA-Z_][a-zA-Z0-9_]*\s*:\s*\{([^}]*)\}/gm;
+        var m;
+        while ((m = entryRx.exec(noComments)) !== null) {
+            (m[1].match(/([a-zA-Z_][a-zA-Z0-9_]*)\s*:/g) || []).forEach(function (f) {
+                fields[f.replace(/\s*:$/, '')] = true;
+            });
+        }
+        expect(Object.keys(fields).length, 'no fields parsed -- the extractor is broken').to.be.above(2);
+        var missing = Object.keys(fields).filter(function (f) {
+            return ret.indexOf('col.' + f) === -1;
+        });
+        expect(missing, 'fields declared in RECORDING_SORT_COLUMNS but NOT forwarded: ' + missing.join(', '))
+            .to.deep.equal([]);
+    });
+
+    it('the map declares at least the four known fields (so the check above is not vacuous)', function () {
+        var block = mapBlock();
+        ['expr', 'index', 'nullable', 'anchorType'].forEach(function (f) {
+            expect(block, 'expected ' + f + ' in the map').to.contain(f + ':');
+        });
+    });
+});
+
+describe('🔴 INERTNESS DETECTOR: a deep checkpointable request that does NOT open the gate must be logged', function () {
+    // The 2026-09-17 defect was invisible for 3.5 h because a closed gate is
+    // indistinguishable from "no checkpoints yet" from the outside. This detector
+    // makes the difference greppable, and names WHICH conjunct refused.
+    var fs = require('fs');
+    var src = fs.readFileSync(__dirname + '/../app/model/recordings.js', 'utf8');
+
+    it('emits checkpoint_gate_closed for a deep page on a checkpointable sort', function () {
+        expect(src).to.contain("ev: 'checkpoint_gate_closed'");
+        expect(src).to.match(/parameters\.offset > 20000 && pageAnchor\.isCheckpointable/);
+    });
+
+    it('reports WHICH conjunct was false (otherwise it is not diagnosable)', function () {
+        var block = src.match(/checkpoint_gate_closed[\s\S]{0,600}/)[0];
+        expect(block).to.contain('isPg:');
+        expect(block).to.contain('activeOnlyScope:');
+        expect(block).to.contain('hasAnchorType:');
+    });
+
+    it('🔒 cannot fire on the healthy path (it requires !wantsCheckpointAnchor)', function () {
+        expect(src).to.match(/!keysetAnchor && !wantsCheckpointAnchor &&\s*\n\s*parameters\.offset > 20000/);
+    });
+
+    it('is a log line only — it must not alter the served result', function () {
+        // the detector block must contain no assignment to keysetAnchor and no return
+        var block = src.match(/if \(!keysetAnchor && !wantsCheckpointAnchor &&[\s\S]{0,900}?\n                    \}/)[0];
+        expect(block).to.not.match(/keysetAnchor\s*=/);
+        expect(block).to.not.contain('return ');
+    });
+});
