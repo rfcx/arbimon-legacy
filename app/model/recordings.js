@@ -2582,6 +2582,39 @@ var Recordings = {
                         activeOnlyScope &&
                         pageAnchor.isCheckpointable(parameters.sortBy) &&
                         sort.anchorType;
+                    // 🔴 INERTNESS DETECTOR (added 2026-09-17 21:1x, after the `anchorType`
+                    // defect left this whole path DEAD IN PRODUCTION FOR 3.5 HOURS while
+                    // five layers of verification reported success).
+                    //
+                    // The failure mode is specific and silent: a request that SHOULD be
+                    // served by a checkpoint isn't, because one of the gate's conjuncts is
+                    // quietly false. Nothing errors -- it falls back to OFFSET, which at
+                    // depth CANCELS at 8 s and surfaces as a 500 that looks like a slow
+                    // query rather than a dead feature.
+                    //
+                    // So: when a request is DEEP (past the window where OFFSET can work)
+                    // and the sort is checkpointable, but the gate did NOT open, say so --
+                    // and say WHICH conjunct was false. That turns "inert for hours,
+                    // invisible" into one greppable line. It cannot fire on the healthy
+                    // path (the gate is open there), and it is a log line only: no
+                    // behaviour change, no added query, no new failure mode.
+                    //
+                    // Deliberately NOT gated on `isCheckpointable` alone -- the point is to
+                    // catch the case where we BELIEVE we are checkpointable and are not.
+                    if (!keysetAnchor && !wantsCheckpointAnchor &&
+                        parameters.offset > 20000 && pageAnchor.isCheckpointable(parameters.sortBy)) {
+                        console.warn('DBPOOL_PAGE_ANCHOR', JSON.stringify({
+                            ev: 'checkpoint_gate_closed',
+                            project: parameters.project_id,
+                            sortBy: parameters.sortBy,
+                            offset: parameters.offset,
+                            // which conjunct refused -- this is what makes it diagnosable
+                            isPg: !!dbpoolPg.isPg,
+                            activeOnlyScope: !!activeOnlyScope,
+                            hasAnchorType: !!sort.anchorType,
+                            note: 'deep page will fall back to OFFSET and may cancel'
+                        }));
+                    }
                     const resolveCheckpointAnchor = function () {
                         if (!wantsCheckpointAnchor) { return Q.resolve(null); }
                         // 🔑 ONE STATEMENT, ONE SNAPSHOT (2026-09-17 18:2x).
