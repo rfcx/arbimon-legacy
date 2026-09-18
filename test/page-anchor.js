@@ -439,3 +439,41 @@ describe('resolveForOffset — one statement, one snapshot (the N-race fix)', fu
             });
     });
 });
+
+describe('🔴 resolveRecordingSort must FORWARD anchorType (the gate that silently never opened)', function () {
+    // Found 2026-09-17 by driving the real authed deep page: page 112,400 of the
+    // 11.24M-row giant 500'd after ~16 s. The checkpoint resolver had NEVER run
+    // in production, because `wantsCheckpointAnchor` ends with `&& sort.anchorType`
+    // and resolveRecordingSort dropped that field -- SORT_COLUMNS carried it, the
+    // return statement did not.
+    //
+    // Every unit test passed throughout, because they hand page-anchor.js and
+    // persite-sort.js an EXPLICIT anchorType, so neither could observe the gap.
+    // Only the end-to-end page exposed it.
+    //
+    // Asserted on the SOURCE rather than by requiring the model: recordings.js
+    // pulls the full app dependency tree (aws-sdk, jwt, ...) which does not load
+    // under a bare mocha run. The property being guarded is purely structural.
+    var fs = require('fs');
+    var src = fs.readFileSync(__dirname + '/../app/model/recordings.js', 'utf8');
+
+    it('the non-default return forwards anchorType from SORT_COLUMNS', function () {
+        expect(src).to.match(/usingDefault: false,[^;]*anchorType: col\.anchorType/);
+    });
+
+    it('SORT_COLUMNS still declares the three anchorable columns', function () {
+        expect(src).to.match(/datetime:\s*\{[^}]*anchorType: 'timestamp'/);
+        expect(src).to.match(/filename:\s*\{[^}]*anchorType: 'text'/);
+        expect(src).to.match(/upload_time:\s*\{[^}]*anchorType: 'timestamp'/);
+    });
+
+    it('🔒 `site` declares NO anchorType — it must stay un-anchorable', function () {
+        var m = src.match(/\n\s*site:\s*\{[^}]*\}/);
+        expect(m).to.not.equal(null);
+        expect(m[0]).to.not.contain('anchorType');
+    });
+
+    it('the gate still requires anchorType (so a future drop fails loudly here)', function () {
+        expect(src).to.match(/wantsCheckpointAnchor[\s\S]{0,400}sort\.anchorType/);
+    });
+});
