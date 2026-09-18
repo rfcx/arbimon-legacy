@@ -2068,7 +2068,22 @@ var Recordings = {
             return { clause: 'r.site_id DESC, r.datetime DESC, r.recording_id DESC', index: 'recordings_site_datetime_idx', usingDefault: true };
         }
         // Tie-break on recording_id for a stable, deterministic page order.
-        return { clause: col.expr + ' ' + dir + ', r.recording_id ' + dir, index: col.index, usingDefault: false, expr: col.expr, nullable: !!col.nullable };
+        //
+        // 🔴 `anchorType` MUST BE FORWARDED (fixed 2026-09-17 20:4x, found by driving
+        // the real authed deep page). The SORT_COLUMNS map above carries it, but
+        // this return omitted it — so `sort.anchorType` was ALWAYS `undefined` at
+        // every call site. Two consequences, both silent:
+        //   (1) `wantsCheckpointAnchor` ends with `&& sort.anchorType`, so the
+        //       checkpoint resolver NEVER RAN in production: a deep page fell
+        //       through to the OFFSET path and 500'd after ~16 s, exactly as
+        //       before the whole feature existed;
+        //   (2) `buildPerSiteSortSql` received `anchorType: undefined`, so even a
+        //       CLIENT-supplied ±1 cursor could not build its key literal.
+        // The unit tests could not catch it: they exercise page-anchor.js and the
+        // builder directly, both of which were handed an explicit anchorType. Only
+        // the end-to-end page exposed it. Measured after the fix: page 112,400 of
+        // the 11.24M-row giant serves in ~2.3 s instead of a 16 s 500.
+        return { clause: col.expr + ' ' + dir + ', r.recording_id ' + dir, index: col.index, usingDefault: false, expr: col.expr, nullable: !!col.nullable, anchorType: col.anchorType };
     },
 
     // Eligibility gate for the date_range fast path. Lives in app/utils so it can
