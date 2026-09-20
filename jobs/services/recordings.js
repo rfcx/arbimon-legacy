@@ -1,5 +1,5 @@
-// mysql2pg: engine-selectable backend (EXPORTS_DB_ENGINE=pg -> PG via the P6
-// translator; default mysql = legacy behavior, byte-identical SQL).
+// mysql2pg: the `mysql` binding below is jobs/db/backend.js, which is PostgreSQL-only
+// since P7 step 5 (MySQL-dialect SQL here is run through the P6 translator).
 const mysql = require('../db/backend')
 
 async function deleteRecordings (options = {}) {

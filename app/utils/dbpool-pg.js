@@ -2335,7 +2335,10 @@ if (ENABLED) { startStatHeartbeat(); }
 // carrying uppercase is mapped lower->original and re-applied to PG rows, so
 // consumers see byte-identical key casing on both engines.
 
-var PG_ROUTE_FALLBACK = (process.env.DB_PG_FALLBACK || '0') !== '0';  // OPQ-5 RULED DISARM 2026-09-12 (operator goifirr 12:24): default disarmed at the flip; env DB_PG_FALLBACK=1 re-arms deliberately
+// DB_PG_FALLBACK (the MariaDB read-retry, OPQ-5: disarmed by default at the
+// 2026-09-12 flip) was RETIRED at P7 step 5 (2026-09-20): there is no other
+// engine. pgReadQuery still hands back a `pgRouteFallback`-tagged error on
+// route-path failures; dbpool.js now surfaces it to the caller unchanged.
 
 // Build lowercase -> original-case map for the MIXED-CASE identifiers in the
 // source SQL. Only ever restores casing MySQL itself would have returned.
@@ -2398,9 +2401,10 @@ function pgRouteEligible(sql) {
 
 /**
  * Execute a read on PG and return MySQL-shaped rows (6.4 response routing).
- * cb(err, rows). On any PG-side failure with DB_PG_FALLBACK enabled (default),
- * cb is called with a sentinel so dbpool.js can retry on MariaDB — a read flip
- * must degrade to the old engine, never to an error page.
+ * cb(err, rows). On any PG-side failure cb receives an error tagged
+ * `pgRouteFallback: true` (kept for the `fallback` counter and for log
+ * triage; since P7 step 5 dbpool.js surfaces it to the caller — there is no
+ * other engine to retry on).
  */
 function pgReadQuery(finalSql, cb0) {
     var text = sqlText(finalSql);
@@ -2538,7 +2542,7 @@ function pgReadQuery(finalSql, cb0) {
 //
 // INERT unless DB_ENGINE=pg: in mysql/shadow mode nothing below is reachable
 // (dbpool.js gates on pgshadow.isPg before calling getWriteConnection).
-// There is NO write fallback by design — DB_PG_FALLBACK is a READ path
+// There is NO write fallback by design — the (now retired) DB_PG_FALLBACK was a READ path
 // (pgReadQuery only); a failed write must surface, never silently retry on
 // the other engine and fork the data.
 
@@ -2887,7 +2891,6 @@ module.exports = {
     isShadow: ENGINE === 'shadow',
     // Phase 6.4 response routing (INERT unless DB_ENGINE=pg):
     isPg: ENGINE === 'pg',
-    pgFallbackEnabled: PG_ROUTE_FALLBACK,
     pgRouteEligible: pgRouteEligible,
     pgReadQuery: pgReadQuery,
     // dbpool.js hook (shadow):

@@ -1,12 +1,13 @@
 // PostgreSQL backend for the jobs/ tree (mysql2pg — arbimon exports on PG).
 //
-// Exposes the SAME facade shape as jobs/db/mysql.js (getConnection() ->
-// { execute(sql) -> [rows, fields] }) so jobs/services/* switch engines via
-// jobs/db/backend.js with no per-call-site changes. MySQL-dialect SQL is run
+// Exposes the facade shape jobs/services/* were written against (getConnection()
+// -> { execute(sql) -> [rows, fields] }, the mysql2/promise shape; that backend
+// was removed at P7 step 5, rfcx-local OPEN-ITEMS §320, 2026-09-20) so the
+// services needed no per-call-site changes. MySQL-dialect SQL is run
 // through the P6 translate() layer (app/utils/dbpool-pg.js) before execution
 // — the same translator the Phase-6 shadow canary validates in production.
 //
-// Parity choices (deliberate, mirror the mysql2 config in ./mysql.js):
+// Parity choices (deliberate, mirror the retired mysql2 config: dateStrings:true):
 //   - dateStrings parity: timestamp/date OIDs parse to raw STRINGS so CSV/
 //     email formatting sees identical values on both engines.
 //   - numerics parse to Numbers (mysql2 default; values here are ids/counts/
@@ -29,13 +30,14 @@
 //
 // ONE KNOWN EXCEPTION, deliberately left in place (S1, 2026-09-16):
 // `services/recordings.js: deleteRecordings()` issues a DELETE through
-// getConnection() -- i.e. on the READ pool -- and after this change that call
-// would fail with 42501 rather than succeed. It is NOT reachable on this
-// engine: its only caller is CronJob `arbimon-recording-delete-job`, which is
-// suspend=true, sets no EXPORTS_DB_ENGINE, and carries MYSQL_* creds only, so
-// it resolves to jobs/db/mysql.js. Its SQL is also MySQL-only
-// (`DELETE ... ORDER BY ... LIMIT` = 42601 on PG, returned byte-identical by
-// translate()), so it could never have run here regardless of privilege.
+// getConnection() -- i.e. on the READ pool -- and that call fails with 42501
+// rather than succeed. It is NOT reachable: its only caller is CronJob
+// `arbimon-recording-delete-job`, which is suspend=true and carries MYSQL_*
+// creds only (parked at `mariadb.retired.invalid`); since P7 step 5 there is no
+// mysql backend for it to resolve to, so a resume fails loudly at the pool
+// (no POSTGRES_* env). Its SQL is also MySQL-only (`DELETE ... ORDER BY ...
+// LIMIT` = 42601 on PG, returned byte-identical by translate()), so it could
+// never have run here regardless of privilege.
 // Fixing it is deferred on purpose: that statement reaps the `recordings_deleted`
 // TOMBSTONE ledger (never recordings), whose retention semantics are an open
 // question in the delete->archive arc -- porting the syntax before the policy
@@ -96,8 +98,8 @@ function getWritePool () {
   return writePool
 }
 
-// mysql.js facade parity: getConnection() -> { execute }. The services hand
-// us MySQL-dialect SQL (values interpolated, no placeholders) — translate,
+// Facade parity (the former mysql.js shape): getConnection() -> { execute }.
+// The services hand us MySQL-dialect SQL (values interpolated, no placeholders) — translate,
 // then execute on the READ (arbimon_ro) pool.
 async function getConnection () {
   const pool = getReadPool()

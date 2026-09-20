@@ -1,15 +1,22 @@
+// `mysql` is kept as a FORMATTER dependency only (mysql.format / escape /
+// escapeId render `?` placeholders and literals for the PG path — see
+// queryHandler below and dbpool-pg.js getWriteConnection). The MariaDB
+// CONNECTION arm (mysql.createPool / getPool / getMysqlConnection / the
+// DB_PG_FALLBACK read-fallback) was retired at P7 step 5 (rfcx-local
+// OPEN-ITEMS §320, 2026-09-20): PostgreSQL is the only engine. `sqlstring`
+// is the same formatter extracted from this module (API-identical) and is
+// the swap target if `mysql` is ever dropped from package.json — that swap
+// needs its own datetime-rendering proof (timezone 'Z', dt-fold class).
 var mysql = require('mysql');
 var config = require('../config');
 var sqlutil = require('./sqlutil');
-var tap = require('./dbpool-tap'); // mysql2pg parity tap - OFF unless DBPOOL_TAP=1
-var pgshadow = require('./dbpool-pg'); // mysql2pg Phase 6 shadow-read - INERT unless DB_ENGINE=shadow
+var pgshadow = require('./dbpool-pg'); // the PostgreSQL adapter (route path + write conn adapter)
 var q = require('q');
-var showQueriesInConsole = true;
 
-// Export-worker early PG cutover (OPEN-ITEMS #64): when ONLY the
+// Export-worker engine switch (OPEN-ITEMS #64): when the
 // arbimon-recording-export worker sets EXPORTS_DB_ENGINE=pg, app/model/* reads
-// in this process execute against PG via the P6 translator. The web app does
-// not set this env var, so its Phase-6 shadow behavior is untouched.
+// in this process execute against PG via jobs/db/pg.js (the POSTGRES_* READ
+// pool, arbimon_ro). The web app does not set this env var.
 //
 // ⚠️ EXPORTS_DB_ENGINE IS READ IN TWO PLACES WITH DIFFERENT SCOPES -- know both
 // before reasoning about which engine (or which CREDENTIAL) served a query:
@@ -20,16 +27,21 @@ var showQueriesInConsole = true;
 // runs on the EXPORT WORKER'S pool, not on the web pool, whenever this flag is
 // set. Concretely, dbpool.query() below routes to jobs/db/pg.js readQuery(),
 // i.e. the POSTGRES_* READ pool (arbimon_ro since 2026-09-16), NOT to
-// PG_SHADOW_USER and NOT to the MySQL pool.
+// PG_SHADOW_USER.
 //
 // 🔑 HOW TO PROVE IT, because guessing here is easy and wrong (measured
 // 2026-09-16, S1): probing `dbpool.getConnection()` in the export pod answers
-// `arbimon@%` on MariaDB -- that is the RAW MySQL path and is NOT the path
-// exportRecordingData uses. Probe `dbpool.query("SELECT current_user")` instead;
-// it answers `arbimon_ro` on PG. Same module, two shapes, two different engines
-// AND two different identities. The row count settles it: that export read 4,397
-// rows, which is PG's active count for the project (MariaDB, frozen at the P7
-// flip, holds 4,364).
+// the PG_SHADOW_* identity (and THROWS there, because the export pair sets no
+// PG_SHADOW_USER -- that surface is unreachable from the export path by
+// design). Probe `dbpool.query("SELECT current_user FROM sites LIMIT 1")`
+// instead; it answers `arbimon_ro` on PG. Same module, two shapes, two
+// different pools AND two different identities.
+//
+// ⚠️ ORDERING IS LOAD-BEARING (P7 step 5, 2026-09-20): the EXPORTS branch in
+// queryHandler MUST be consulted BEFORE the pgshadow route path. The export
+// image runs WITHOUT PG_SHADOW_USER, and pgshadow.getPool() refuses to build a
+// pool without it (the 2026-09-16 read-only-role guard) -- so a routed read
+// that reached pgshadow first would throw in every export/reconciler process.
 var EXPORTS_PG_ENGINE = (process.env.EXPORTS_DB_ENGINE || '').toLowerCase() === 'pg';
 var pgjobs = null;
 function getExportPgJobs () {
@@ -37,126 +49,18 @@ function getExportPgJobs () {
     return pgjobs;
 }
 
-const QUERY_TIMEOUT = 25000;
-
 var dbpool = {
-    pool: undefined,
-    getPool: function(){
-        if (!dbpool.pool) {
-            // console.log("MySQL pool is being created")
-            dbpool.pool = mysql.createPool({
-                connectionLimit : 30,
-                connectTimeout  : 30 * 1000,
-                acquireTimeout  : 30 * 1000,
-                timeout         : 30 * 1000,
-                host : config('db').host,
-                port : config('db').port || 3306,
-                user : config('db').user,
-                password : config('db').password,
-                database : config('db').database,
-                timezone: config('db').timezone
-            })
-            // dbpool.pool.on('connection', function (connection) {
-            //     console.log('MySQL pool connection %d is set', connection.threadId);
-            // });
-            // dbpool.pool.on('release', function(connection) {
-            //     console.log('MySQL pool connection %d is released', connection.threadId);
-            // })
-        }
-        return dbpool.pool
-    },
-
     format: mysql.format.bind(mysql),
     escape: mysql.escape.bind(mysql),
     escapeId: mysql.escapeId.bind(mysql),
 
-    enable_query_debugging : function(connection) {
-        connection.$_lastQuery_$ = '';
-        connection.$_timeout_$ = setTimeout(() => {
-            console.log(`ALERT: connection taken for query ${connection.$_lastQuery_$} is not freed after ${QUERY_TIMEOUT}`);
-            connection.$_lastQuery_$ = '';
-        }, QUERY_TIMEOUT);
-
-        if(connection.$_qd_enabled_$){
-            return connection;
-        }
-        var query_fn = connection.query;
-        var release_fn = connection.release;
-
-        connection.$_qd_enabled_$ = true;
-        connection.query = function(sql, values, cb) {
-            connection.$_lastQuery_$ = sql
-            if (values instanceof Function) {
-                cb = values;
-                values = undefined;
-            }
-            var tapRec = tap.enabled ? tap.begin(sql, values) : null;
-            if(cb){
-                query_fn.call(connection, sql, values, function(err, rows, fields) {
-                    if (tapRec) { tap.finish(tapRec, err, rows); }
-                    // Phase 6 shadow: MariaDB result is authoritative and is
-                    // handed to cb() below unchanged. The PG replay+diff is
-                    // fire-and-forget (never awaited, never affects cb). Only
-                    // successful read results are shadowed.
-                    if (pgshadow.isShadow && !err) {
-                        try {
-                            // Format with the SAME timezone the pool uses
-                            // ('Z'): mysql.format defaults to local time for
-                            // Date params, which would shadow a different
-                            // datetime literal than the driver actually sent.
-                            var rawSql = (typeof sql === 'string') ? sql
-                                : (sql && typeof sql.sql === 'string') ? sql.sql : null;
-                            if (rawSql !== null) {
-                                var finalSql = mysql.format(rawSql, values, false,
-                                    config('db').timezone || 'Z');
-                                pgshadow.shadowAfterRead(finalSql, rows, null);
-                            }
-                        } catch (e) { /* shadow must never break the query path */ }
-                    }
-                    cb(err, rows, fields);
-                });
-            } else {
-                // streamed / evented use: capture sql+params only (kept cheap)
-                if (tapRec) { tap.finishStream(tapRec); }
-                return query_fn.call(connection, sql, values);
-            }
-        };
-        connection.promisedQuery = function(sql, values){
-            return q.ninvoke(this, 'query', sql, values).get(0);
-        };
-        connection.release = function(){
-            release_fn.apply(this, Array.prototype.slice.call(arguments));
-            if (connection.$_timeout_$) {
-                clearTimeout(connection.$_timeout_$);
-                connection.$_timeout_$ = null;
-                connection.$_lastQuery_$ = '';
-            }
-        };
-        return connection;
-    },
-
     getConnection: function(callback){
-        // Phase 7 write flip (gate 4c / OPQ-4): in `DB_ENGINE=pg` mode the
-        // conn-scoped surface — writes, transactions, direct-conn reads —
-        // routes to PG through the adapter (query/promisedQuery/
-        // beginTransaction/commit/rollback/release, translated, with the
-        // RETURNING shim for insertId). INERT in mysql/shadow mode.
-        if (pgshadow.isPg) {
-            return pgshadow.getWriteConnection(callback);
-        }
-        return dbpool.getMysqlConnection(callback);
-    },
-
-    getMysqlConnection: function(callback){
-        return q.ninvoke(dbpool.getPool(), 'getConnection').then(function (connection){
-            // Log it here since we cannot using `connection` listener
-            // console.log('MySQL pool connection %d is set', connection.threadId);
-            dbpool.enable_query_debugging(connection);
-            return connection;
-        }).catch(function (err){
-            console.error('connection error:', err);
-            throw err;
-        }).nodeify(callback);
+        // Conn-scoped surface -- writes, transactions, direct-conn reads --
+        // is a checked-out PG client wrapped to the mysql driver's surface
+        // (query/promisedQuery/beginTransaction/commit/rollback/release,
+        // translated, with the RETURNING shim for insertId). See
+        // dbpool-pg.js "PHASE 7 -- WRITE ROUTING".
+        return pgshadow.getWriteConnection(callback);
     },
 
     performTransaction: function(transactionFn){
@@ -218,49 +122,12 @@ var dbpool = {
             callback = options;
             options = undefined;
         }
-        // -------- Phase 6.4 read flip (INERT unless DB_ENGINE=pg) ----------
-        // Serve eligible plain SELECTs from PostgreSQL. Writes and anything the
-        // allowlist classifier does not positively identify as a plain read fall
-        // through to MariaDB untouched (legacy still OWNS writes until Phase 7).
-        // Any PG-side failure falls back to MariaDB (DB_PG_FALLBACK=0 disables),
-        // so a read flip degrades to the previous engine rather than to an error
-        // page. Placed at the SAME chokepoint the shadow taps, so the code path
-        // validated for a week by shadow is the code path that now serves.
-        if (pgshadow.isPg) {
-            var pgRaw = (typeof query === 'string') ? query
-                : (query && typeof query.sql === 'string') ? query.sql : null;
-            if (pgRaw !== null && pgshadow.pgRouteEligible(pgRaw)) {
-                var pgFinal = null;
-                try {
-                    pgFinal = mysql.format(pgRaw, options, false, config('db').timezone || 'Z');
-                } catch (e) { pgFinal = null; }
-                if (pgFinal !== null) {
-                    var mysqlFallback = function () {
-                        // Explicitly the MARIADB connection — getConnection()
-                        // itself routes to PG in pg mode (P7 write flip), and
-                        // a read fallback that landed on PG again would be a
-                        // silent retry loop, not a fallback.
-                        dbpool.getMysqlConnection(function (err, connection) {
-                            if (err) { return callback(err); }
-                            dbpool.queryWithConnHandler(connection, query, options, true, callback);
-                        });
-                    };
-                    return pgshadow.pgReadQuery(pgFinal, function (pgErr, rows) {
-                        if (pgErr) {
-                            if (pgErr.pgRouteFallback && pgshadow.pgFallbackEnabled) {
-                                return mysqlFallback();
-                            }
-                            return callback(pgErr);
-                        }
-                        callback(null, rows, null);
-                    });
-                }
-            }
-        }
+        var rawSql = (typeof query === 'string') ? query
+            : (query && typeof query.sql === 'string') ? query.sql : null;
+
+        // -------- export worker (EXPORTS_DB_ENGINE=pg) -- FIRST, see above --
         if (EXPORTS_PG_ENGINE) {
             try {
-                var rawSql = (typeof query === 'string') ? query
-                    : (query && typeof query.sql === 'string') ? query.sql : null;
                 if (rawSql === null) {
                     throw new Error('EXPORTS_DB_ENGINE=pg only supports string/sql-object queries')
                 }
@@ -278,6 +145,27 @@ var dbpool = {
                 callback(err);
             }
             return;
+        }
+
+        // -------- routed reads (Phase 6.4, the only read path since step 5) --
+        // Eligible plain SELECTs run on the PG read route (one READ ONLY tx
+        // each, statement_timeout scoped). Writes and anything the allowlist
+        // classifier does not positively identify as a plain read fall through
+        // to the conn-scoped PG adapter below. A route-path failure surfaces
+        // to the caller: there is no other engine to fall back to (the
+        // DB_PG_FALLBACK MariaDB retry was disarmed at the 09-12 flip, OPQ-5,
+        // and retired with the MariaDB arm at step 5).
+        if (rawSql !== null && pgshadow.pgRouteEligible(rawSql)) {
+            var pgFinal = null;
+            try {
+                pgFinal = mysql.format(rawSql, options, false, config('db').timezone || 'Z');
+            } catch (e) { pgFinal = null; }
+            if (pgFinal !== null) {
+                return pgshadow.pgReadQuery(pgFinal, function (pgErr, rows) {
+                    if (pgErr) { return callback(pgErr); }
+                    callback(null, rows, null);
+                });
+            }
         }
 
         dbpool.getConnection(function(err, connection) {
