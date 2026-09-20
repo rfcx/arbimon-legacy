@@ -82,8 +82,10 @@ var ports = {
         ['user statistics upsert ported', /ON CONFLICT \(user_id, project_id, species_id, songtype_id\) DO UPDATE SET validated=EXCLUDED\.validated/]
     ],
     'app/utils/dbpool.js': [
-        ['getConnection routes to the PG adapter when isPg', /if \(pgshadow\.isPg\) \{\s*\n\s*return pgshadow\.getWriteConnection\(callback\);/],
-        ['read fallback uses the explicitly-MySQL connection', /dbpool\.getMysqlConnection\(function \(err, connection\) \{\s*\n\s*if \(err\) \{ return callback\(err\); \}/]
+        // P7 step 5 (2026-09-20): getConnection is UNCONDITIONALLY the PG adapter; the
+        // MariaDB arm (getMysqlConnection / mysqlFallback) no longer exists.
+        ['getConnection is the PG adapter, unconditionally', /getConnection: function\(callback\)\{[\s\S]{0,600}?return pgshadow\.getWriteConnection\(callback\);/],
+        ['no MariaDB connection arm remains', !/getMysqlConnection|mysql\.createPool|mysqlFallback/.test(stripComments(fs.readFileSync(path.join(ROOT, 'app/utils/dbpool.js'), 'utf8'))) ? /./ : /(?!)/]
     ],
     'app/utils/dbpool-pg.js': [
         ['WRITE_IDENTITY_PK map present', /var WRITE_IDENTITY_PK = \{/],

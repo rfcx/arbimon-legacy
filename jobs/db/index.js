@@ -1,8 +1,8 @@
-const mysql = require('./mysql')
+// PostgreSQL is the only engine since P7 step 5 (rfcx-local OPEN-ITEMS §320,
+// 2026-09-20); jobs/db/mysql.js and the mysql2 driver were removed.
 const pg = require('./pg')
 
 async function closeAll () {
-  await mysql.closeConnection()
   await pg.closeConnection()
 }
 
@@ -26,7 +26,6 @@ async function getAllByChunks (func, filters = {}, options = {}, chunkSize = 100
 }
 
 module.exports = {
-  mysql,
   closeAll,
   getAllByChunks
 }

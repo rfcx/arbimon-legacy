@@ -1,36 +1,42 @@
-// OPQ-5 (RULED DISARM 2026-09-12): the read-fallback to MariaDB is disarmed BY DEFAULT.
-// Asserts the shape of the default in dbpool-pg.js — string-level, no live DB.
-// Negative control: this test FAILS against the pre-OPQ-5 tree (default was '1').
+// OPQ-5 (RULED DISARM 2026-09-12) -> RETIRED at P7 step 5 (2026-09-20, rfcx-local
+// OPEN-ITEMS §320): the MariaDB read-fallback no longer exists at all. This test
+// used to pin the DISARMED default of DB_PG_FALLBACK; it now pins its ABSENCE, so a
+// re-introduction of a second engine behind a flag fails here.
+// String-level, no live DB. Negative control: FAILS against the pre-step-5 tree.
 'use strict';
 const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
 
-const src = fs.readFileSync(path.join(__dirname, '..', 'app', 'utils', 'dbpool-pg.js'), 'utf8');
+const strip = s => s.split('\n').filter(l => !/^\s*(\/\/|\*|\/\*)/.test(l)).join('\n');
+const pgSrc = strip(fs.readFileSync(path.join(__dirname, '..', 'app', 'utils', 'dbpool-pg.js'), 'utf8'));
+const dbSrc = strip(fs.readFileSync(path.join(__dirname, '..', 'app', 'utils', 'dbpool.js'), 'utf8'));
 
-describe('OPQ-5 — DB_PG_FALLBACK is disarmed by default at the flip', function () {
-  it('the PG_ROUTE_FALLBACK default is the disarmed value', function () {
-    // The armed default is `|| '1'`; disarmed is `|| '0'`. After the flip the
-    // deliberate re-arm path is env DB_PG_FALLBACK=1.
-    assert.ok(
-      /var PG_ROUTE_FALLBACK = \(process\.env\.DB_PG_FALLBACK \|\| '0'\) !== '0'/.test(src),
-      'expected PG_ROUTE_FALLBACK to default to disarmed (\'0\')'
-    );
+describe('P7 step 5 — the DB_PG_FALLBACK read-fallback (OPQ-5) is retired, not merely disarmed', function () {
+  it('dbpool-pg.js no longer reads DB_PG_FALLBACK or defines PG_ROUTE_FALLBACK', function () {
+    assert.ok(!/process\.env\.DB_PG_FALLBACK/.test(pgSrc), 'DB_PG_FALLBACK is still read');
+    assert.ok(!/PG_ROUTE_FALLBACK/.test(pgSrc), 'PG_ROUTE_FALLBACK is still defined');
+    assert.ok(!/pgFallbackEnabled/.test(pgSrc), 'pgFallbackEnabled is still exported');
   });
 
-  it('no armed default remains on the PG_ROUTE_FALLBACK assignment', function () {
-    assert.ok(
-      !/var PG_ROUTE_FALLBACK = \(process\.env\.DB_PG_FALLBACK \|\| '1'\) !== '0'/.test(src),
-      'an armed default (\'1\') is still present'
-    );
+  it('dbpool.js has no MariaDB fallback closure and no MariaDB pool', function () {
+    assert.ok(!/mysqlFallback/.test(dbSrc), 'mysqlFallback closure still present');
+    assert.ok(!/getMysqlConnection/.test(dbSrc), 'getMysqlConnection still present');
+    assert.ok(!/mysql\.createPool/.test(dbSrc), 'mysql.createPool still present');
+    assert.ok(!/pgFallbackEnabled/.test(dbSrc), 'dbpool.js still consults pgFallbackEnabled');
   });
 
-  it('the env still overrides the default both ways (re-arm and re-disarm)', function () {
-    // The expression form `(process.env.X || '0') !== '0'` means env '1' re-arms and
-    // env '0' (or unset) leaves it disarmed. Assert the override shape is intact.
-    assert.ok(
-      /process\.env\.DB_PG_FALLBACK \|\| '0'\) !== '0'/.test(src),
-      'the env override shape changed — re-arm via DB_PG_FALLBACK=1 would break'
-    );
+  it('a routed-read failure surfaces to the caller (no retry on another engine)', function () {
+    // The exact shape: pgReadQuery's error callback returns callback(pgErr) directly.
+    assert.ok(/pgshadow\.pgReadQuery\(pgFinal, function \(pgErr, rows\) \{\s*\n\s*if \(pgErr\) \{ return callback\(pgErr\); \}/.test(dbSrc),
+      'expected the routed read to hand pgErr straight to the caller');
+  });
+
+  it('CONTROL: mysql.format is STILL required — it renders placeholders for the PG path', function () {
+    assert.ok(/require\('mysql'\)/.test(dbSrc), 'dbpool.js must keep the mysql formatter');
+    assert.ok(/mysql\.format\(rawSql, options, false/.test(dbSrc) || /mysql\.format\(/.test(dbSrc),
+      'mysql.format must still render the routed-read SQL');
+    // positive control for the negative asserts above: a token that IS present is detected
+    assert.ok(/getWriteConnection/.test(dbSrc), 'positive control: getWriteConnection is present');
   });
 });
