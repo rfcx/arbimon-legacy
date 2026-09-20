@@ -14,7 +14,6 @@ const rp = util.promisify(request);
 const rfcxConfig = config('rfcx');
 
 var dbpool = require('../utils/dbpool');
-var pgshadow = require('../utils/dbpool-pg'); // P7 write ports (INERT unless DB_ENGINE=pg)
 var queryHandler = dbpool.queryHandler;
 var sha256 = require('../utils/sha256');
 var generator = require('../utils/generator');
@@ -153,29 +152,22 @@ var Users = {
                     // TYPE PARITY (P7, 2026-09-11): see sites.js — mysql.escape
                     // renders a JS boolean as `true`/`false`, which PG refuses
                     // for smallint/tinyint columns (42804).
-                    dbpool.escape(pgshadow.isPg && typeof userData[i] === 'boolean'
+                    dbpool.escape(typeof userData[i] === 'boolean'
                                   ? (userData[i] ? 1 : 0) : userData[i])
                 ));
             }
         }
 
-        var q;
-        if (pgshadow.isPg) {
-            // P7 port (#20): `INSERT ... SET col = val` is MySQL-only syntax
-            // (42601 on PG) — explicit (cols) VALUES list from the same
-            // escaped pairs. RETURNING shim maps user_id -> insertId.
-            var pairs = values.map(function (pair) {
-                var eqAt = pair.indexOf(' = ');
-                return [pair.slice(0, eqAt), pair.slice(eqAt + 3)];
-            });
-            q = 'INSERT INTO users \n'+
-                '(' + pairs.map(function (p) { return p[0]; }).join(', ') + ')\n'+
-                'VALUES (' + pairs.map(function (p) { return p[1]; }).join(', ') + ')';
-        } else {
-            q = 'INSERT INTO users \n'+
-                'SET %s';
-            q = util.format(q, values.join(", "));
-        }
+        // P7 port (#20): `INSERT ... SET col = val` is MySQL-only syntax
+        // (42601 on PG) — explicit (cols) VALUES list from the same
+        // escaped pairs. RETURNING shim maps user_id -> insertId.
+        var pairs = values.map(function (pair) {
+            var eqAt = pair.indexOf(' = ');
+            return [pair.slice(0, eqAt), pair.slice(eqAt + 3)];
+        });
+        var q = 'INSERT INTO users \n'+
+            '(' + pairs.map(function (p) { return p[0]; }).join(', ') + ')\n'+
+            'VALUES (' + pairs.map(function (p) { return p[1]; }).join(', ') + ')';
 
         queryHandler(q, callback);
     },
