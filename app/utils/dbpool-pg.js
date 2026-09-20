@@ -1,86 +1,90 @@
 'use strict';
 /**
- * DBPOOL-PG — PostgreSQL adapter + shadow-read engine for the mysql2pg
- * migration (rfcx-local OPEN-ITEMS #40, migration plan Phase 6).
+ * DBPOOL-PG — the PostgreSQL adapter for arbimon-legacy (mysql2pg,
+ * rfcx-local OPEN-ITEMS #40). PostgreSQL is the ONLY engine since P7 step 5
+ * (2026-09-20, §320); the migration is complete.
  *
- * THREE engine modes, selected by env `DB_ENGINE` (default `mysql`):
+ * What this file is NOW:
+ *   - the MySQL->PG SQL translator (translate()) + the allowlist read
+ *     classifier (classify()), used to route plain reads and every
+ *     conn-scoped statement;
+ *   - the routed-read executor (pgReadQuery): one READ ONLY transaction per
+ *     read, statement_timeout + jit=off scoped per tx, MySQL-shaped rows
+ *     restored (column case);
+ *   - the write-path connection adapter (getWriteConnection): a checked-out
+ *     node-pg client wrapped to the mysql driver's surface, with the
+ *     RETURNING shim for insertId;
+ *   - the PG pool (pgConf / getPool).
  *
- *   mysql   (default) — this module is INERT. dbpool.js does not call it.
- *                       Ships safe: zero behavior change, one boolean check.
- *   shadow           — MariaDB stays authoritative and serves EVERY user
- *                       response. Read-only statements are ALSO replayed
- *                       asynchronously on the PG `arbimon` copy, the two
- *                       results normalized+diffed, and mismatches emitted
- *                       as structured `DBPOOL_SHADOW_DIVERGENCE` log lines
- *                       (promtail -> Loki, same lane as the P3 tap).
- *                       Replay is fire-and-forget with a concurrency cap +
- *                       per-statement timeout: a PG error, slowness, or
- *                       outage can NEVER affect the user response.
- *   pg               — (Phase 6.4, operator-gated, NOT this session) route
- *                       SELECTs to PG for the response. Scaffolded here but
- *                       the response-routing path is intentionally left as
- *                       an explicit throw so it cannot be enabled by accident.
- *
- * SAFETY MODEL (mirrors the P3 replay harness, data-stores/arbimon-pg/replay/):
- *   - Only statements the allowlist classifier POSITIVELY identifies as
- *     plain read-only SELECTs are ever sent to PG. Everything else is
- *     skipped (logged-only). This is an allowlist, not a denylist.
- *   - Defense in depth: the PG connection uses the read-only role
- *     (arbimon_ro) inside a `default_transaction_read_only=on` session, so
- *     even a misclassified statement physically cannot mutate PG.
- *   - The shadow path NEVER runs inside the app's request promise chain;
- *     it is scheduled after the MariaDB result is already handed back.
+ * HISTORY (kept because the env names and log prefixes still carry it): this
+ * file began life as a `DB_ENGINE=mysql|shadow|pg` triple-mode module whose
+ * `shadow` mode replayed MariaDB reads against PG and diffed them
+ * (DBPOOL_SHADOW_DIVERGENCE). The comparator, the shadow engine modes, the
+ * shadow-only env (DB_SHADOW_SAMPLE / DB_SHADOW_MAX_INFLIGHT /
+ * DB_SHADOW_MAX_DIFF_ROWS / DB_SHADOW_EMIT_*), and the normalizer were
+ * retired at P7 step 5 — their purpose (validate the translator before the
+ * flip) is discharged. The DBPOOL_SHADOW_STAT counter heartbeat is KEPT (it
+ * is the route path's only in-process instrument: routed / routed_ok /
+ * fallback / pg_error / pg_timeout / dialect_error / write_*).
  *
  * Controls (env):
- *   DB_ENGINE=mysql|shadow|pg          engine mode (default mysql)
- *   DB_SHADOW_SAMPLE=1.0               fraction of read stmts to shadow (0..1)
- *   DB_SHADOW_MAX_INFLIGHT=8           concurrency cap for PG replays
- *   DB_SHADOW_TIMEOUT_MS=8000          per-statement PG statement_timeout
- *   DB_SHADOW_MAX_DIFF_ROWS=2000       skip diffing above this row count
  *   PG_SHADOW_HOST / PG_SHADOW_PORT / PG_SHADOW_USER / PG_SHADOW_PASSWORD /
- *   PG_SHADOW_DATABASE                 PG target (defaults below)
+ *   PG_SHADOW_DATABASE                 PG target (defaults below). The
+ *                                        PG_SHADOW_* names are historical
+ *                                        (the flip-era credential); they are
+ *                                        the LIVE write identity.
+ *   DB_PG_STATEMENT_TIMEOUT_MS=8000    per-statement statement_timeout on
+ *                                      every routed read (was
+ *                                      DB_SHADOW_TIMEOUT_MS — the old name
+ *                                      is honored as a fallback for one
+ *                                      release).
+ *   DB_PG_POOL_MAX=20                  pool size for the route/write pool.
  *
- * The translator + classifier + normalizer are deliberately a JS port of
- * the Python P3 harness so shadow findings match the offline baseline. The
- * translator handles the measured hot spots; anything it does not yet cover
- * surfaces as a `dialect_error` divergence — which IS the Phase-6 work queue.
+ * The translator handles the measured hot spots; anything it does not yet
+ * cover surfaces as a `dialect_error` stat/divergence line.
  */
 
 var crypto = require('crypto');
 
 // -------------------------------------------------------------- config
 
-var ENGINE = (process.env.DB_ENGINE || 'mysql').toLowerCase();
-var ENABLED = ENGINE === 'shadow' || ENGINE === 'pg';
+// P7 step 5 (2026-09-20): the DB_ENGINE tri-state is gone. This module IS the
+// database layer; there is no inert or shadow mode to select. DB_ENGINE is
+// still READ (once, here) purely to fail loudly on a value that says the
+// process was configured for a shape the code no longer provides:
+var DB_ENGINE_ENV = (process.env.DB_ENGINE || 'pg').toLowerCase();
+if (DB_ENGINE_ENV !== 'pg') {
+    throw new Error(
+        'dbpool-pg: DB_ENGINE=' + DB_ENGINE_ENV + ' is not an engine. MariaDB was retired ' +
+        '(rfcx-local OPEN-ITEMS §320, P7 step 5); PostgreSQL is the only engine. ' +
+        'Unset DB_ENGINE or set DB_ENGINE=pg.'
+    );
+}
 
 function numEnv(name, def) {
     var v = parseFloat(process.env[name]);
     return isNaN(v) ? def : v;
 }
 
-var SAMPLE = numEnv('DB_SHADOW_SAMPLE', 1.0);
-if (SAMPLE < 0) { SAMPLE = 0; }
-if (SAMPLE > 1) { SAMPLE = 1; }
-var MAX_INFLIGHT = numEnv('DB_SHADOW_MAX_INFLIGHT', 8);
-// 6.4 (2026-09-08): in `pg` mode the SAME pool serves real user reads, and
-// sizing it off the shadow in-flight cap (min(MAX_INFLIGHT,10)) was found on
-// the 09-07 flip to queue the 7th concurrent routed read behind a 5 s connect
-// timeout. DB_PG_POOL_MAX sizes the route-path pool independently; the shadow
-// keeps its own small cap. Default 20 (pgbouncer transaction-pools behind it;
-// arbimon_ro measured 17 conns fleet-wide during the 09-08 hold).
+// 6.4 (2026-09-08): the pool serves real user reads, and sizing it off the
+// (retired) shadow in-flight cap was found on the 09-07 flip to queue the 7th
+// concurrent routed read behind a 5 s connect timeout. Default 20 (pgbouncer
+// transaction-pools behind it; arbimon_ro measured 17 conns fleet-wide during
+// the 09-08 hold).
 var PG_POOL_MAX = numEnv('DB_PG_POOL_MAX', 20);
-var TIMEOUT_MS = numEnv('DB_SHADOW_TIMEOUT_MS', 8000);
-var MAX_DIFF_ROWS = numEnv('DB_SHADOW_MAX_DIFF_ROWS', 2000);
+// P7 step 5: DB_SHADOW_TIMEOUT_MS was NEVER a shadow knob in pg mode — it is
+// the statement_timeout on EVERY routed read. Renamed to what it is; the old
+// name is honored as a fallback for one release so the rfcx-local env edit
+// cannot silently change the live timeout.
+var TIMEOUT_MS = numEnv('DB_PG_STATEMENT_TIMEOUT_MS', numEnv('DB_SHADOW_TIMEOUT_MS', 8000));
 var DIV_PREFIX = 'DBPOOL_SHADOW_DIVERGENCE ';
 var STAT_PREFIX = 'DBPOOL_SHADOW_STAT ';
 
 // 2026-09-16: FAIL LOUDLY instead of silently selecting a read-only role.
 //
-// WHY. The `|| 'arbimon_ro'` default below is correct for ENGINE=shadow (a
-// background verifier that only ever SELECTs). At the P7 write flip it became
-// a trap: under ENGINE=pg this same pool serves the REQUEST path, which
-// WRITES (the cached_metrics refresh). A deployment that forgets
-// PG_SHADOW_USER therefore connects read-only and every write fails
+// WHY. The `|| 'arbimon_ro'` default below would be a trap: this pool serves
+// the REQUEST path, which WRITES (the cached_metrics refresh). A deployment
+// that forgets PG_SHADOW_USER connects read-only and every write fails
 // `42501 permission denied` -- silently, because the refresh is fire-and-
 // forget. Measured: 149 such errors in one 6 h bucket on flip day 2026-09-12
 // (cached_metrics 124, audio_event_detections_clustering 22, jobs 3), and the
@@ -93,20 +97,16 @@ var STAT_PREFIX = 'DBPOOL_SHADOW_STAT ';
 //     require() time -- and OUTSIDE getPool()'s try/catch, because that catch
 //     turns any init failure into a `pool_init_failed` stat + null return,
 //     i.e. the same silent degradation we are removing.
-//   * It fires ONLY when ENGINE === 'pg'. Under 'shadow' the read-only default
-//     is correct and stays; under 'mysql' this function is never reached.
 //   * WHY THAT MATTERS: jobs/db/pg.js requires this module for translate()
-//     ONLY and documents itself as "INERT otherwise" -- and the
-//     arbimon-export-consumer runs with PG_SHADOW_USER UNSET and no
-//     DB_ENGINE. A module-level throw, or one not gated on ENGINE, would
-//     crash a workload that is correctly inert. 12 app/model/* files import
-//     this module the same way.
+//     ONLY -- and the arbimon-export-consumer runs with PG_SHADOW_USER UNSET
+//     and never reaches getPool() (its reads go through jobs/db/pg.js's own
+//     pool). A module-level throw would crash a workload that is correctly
+//     inert. 12 app/model/* files import this module the same way.
 function assertPgUserConfigured() {
-    if (ENGINE !== 'pg') { return; }
     if (process.env.PG_SHADOW_USER) { return; }
     throw new Error(
-        'dbpool-pg: DB_ENGINE=pg requires PG_SHADOW_USER. Refusing to fall back to ' +
-        "the read-only 'arbimon_ro' role: under pg this pool serves the request path, " +
+        'dbpool-pg: the request-path pool requires PG_SHADOW_USER. Refusing to fall back to ' +
+        "the read-only 'arbimon_ro' role: this pool serves the request path, " +
         'which writes, and a read-only connection fails 42501 silently on every write ' +
         '(see the 2026-09-12 flip-day window).'
     );
@@ -119,11 +119,8 @@ function pgConf() {
         user: process.env.PG_SHADOW_USER || 'arbimon_ro',
         password: process.env.PG_SHADOW_PASSWORD || '',
         database: process.env.PG_SHADOW_DATABASE || 'arbimon',
-        // shadow: keep the pool small (background verifier, max<=MAX_INFLIGHT
-        // so we never queue behind the cap). pg: this IS the request path --
-        // size it from DB_PG_POOL_MAX, decoupled from the shadow knob.
-        max: ENGINE === 'pg' ? Math.max(2, PG_POOL_MAX)
-                             : Math.max(2, Math.min(MAX_INFLIGHT, 10)),
+        // this IS the request path -- size it from DB_PG_POOL_MAX.
+        max: Math.max(2, PG_POOL_MAX),
         idleTimeoutMillis: 30000,
         connectionTimeoutMillis: 5000,
         // pgbouncer is transaction-pooled; disable pg's own keepalive probes
@@ -1729,244 +1726,13 @@ function translateExtremeSubqueryNulls(sql) {
     });
 }
 
-// ------------------------------------------------------------- normalizer
-// JS port of replay.py canon_value/normalize_result/compare. Turns two raw
-// result sets into a comparable canonical form and classifies any diff.
+// ------------------------------------------------------------ emit helpers
 
-var _ORDER_BY_RE = /\border\s+by\b/i;
-function hasOrderBy(sql) { return _ORDER_BY_RE.test(sql); }
-
-// --- float canonicalization (rfcx-local 2026-07-28, clock-week finding) ---
-// MariaDB renders float/double to client text with C printf %.6g semantics
-// (6 significant digits, HALF-EVEN rounding); PG renders shortest-roundtrip.
-// Same stored float32 bits therefore arrive as DIFFERENT JS numbers
-// (measured inside a live pod, same row: mysql driver 7.92533 vs pg driver
-// 7.9253335; bit-level proof on the master: time_min = CAST(7.9253335 AS
-// FLOAT) -> 1). The old epsilon quantization (1e-9, absolute-scale) cannot
-// bridge a ~3.5e-6 RELATIVE gap, so identical data emitted as
-// result_mismatch — measured at ~20% of the day-1 clock census across 6
-// templates (recording_tags t0/f0/t1/f1, pattern_matching_rois x1/x2/score,
-// audio_event_detections_clustering time/frequency).
-//
-// FIX: canonicalize non-integer numbers at 6 significant digits with
-// HALF-EVEN rounding — the SAME convention the delta-sync fingerprint
-// compare has always used (delta_sync.py::_fp_norm, '%.6g' % float(v), the
-// P2-checksums normalizer). Fidelity proven against C printf %.6g on a
-// 20,000-value random-float32 fuzz (0 mismatches).
-//
-// Rejected shapes (tested, see the p6 collation runbook §7g):
-//   - Math.fround: a 6-digit truncation loses MORE than a float32 ulp, so
-//     fround cannot re-converge the two renderings.
-//   - bare toPrecision(6): JS rounds half-AWAY; fails on the live value
-//     21281.25 (maria %.6g half-even -> 21281.2, toPrecision -> 21281.3).
-//   - raising epsilon: it is an absolute-scale quantum; no single value
-//     works across magnitudes (22171.9 needs ~1e-1, 0.691209 needs ~1e-6).
-function g6HalfEven(x) {
-    if (!isFinite(x)) { return String(x); }
-    if (x === 0) { return '0'; }
-    var neg = x < 0;
-    var ax = Math.abs(x);
-    var exp = Math.floor(Math.log10(ax));
-    var scale = Math.pow(10, 5 - exp);       // 6 significant digits
-    var scaled = ax * scale;
-    var fl = Math.floor(scaled);
-    var frac = scaled - fl;
-    var r;
-    // half-even at the rounding boundary (C printf semantics; MariaDB's
-    // renderer). 1e-7 tolerance identifies an exact-half within float64 noise.
-    if (Math.abs(frac - 0.5) < 1e-7) { r = (fl % 2 === 0) ? fl : fl + 1; }
-    else { r = Math.round(scaled); }
-    var out = r / scale;
-    var s = out.toPrecision(6);
-    // strip trailing zeros ONLY when a decimal point exists — a bare
-    // /\.?0+$/ eats integer zeros ('28000.0' is safe, '28000' would become
-    // '28'; that exact bug appeared in this fix's own first fuzz harness).
-    if (s.indexOf('e') < 0 && s.indexOf('.') >= 0) {
-        s = s.replace(/0+$/, '').replace(/\.$/, '');
-    }
-    return neg ? '-' + s : s;
+function emit(prefix, obj) {
+    try { process.stdout.write(prefix + JSON.stringify(obj) + '\n'); } catch (e) { /* never break app */ }
 }
-
-function canonValue(v, epsilon) {
-    if (v === null || v === undefined) { return 'null'; }
-    if (typeof v === 'boolean') { return 'num:' + (v ? 1 : 0); }
-    if (typeof v === 'number') {
-        if (Number.isInteger(v)) { return 'num:' + v; }
-        // Non-integer: 6-sig-digit half-even canonicalization (see g6HalfEven
-        // above). Subsumes the old epsilon quantization — %.6g is coarser than
-        // 1e-9 at every magnitude and is scale-free, which epsilon is not.
-        return 'num:' + g6HalfEven(v);
-    }
-    if (typeof v === 'bigint') { return 'num:' + v.toString(); }
-    if (Buffer.isBuffer(v)) {
-        var asStr = v.toString('utf8');
-        // if it round-trips as utf8 use str, else hex
-        if (Buffer.compare(Buffer.from(asStr, 'utf8'), v) === 0) { return 'str:' + asStr; }
-        return 'bytes:' + v.toString('hex');
-    }
-    if (v instanceof Date) {
-        // WHOLE-SECOND canonicalization (2026-08-04, the b0cc625e class).
-        // Temporal parity is defined at whole-second precision CLUSTER-WIDE:
-        // every datetime column in the arbimon2 reference schema is fsp 0
-        // (information_schema datetime_precision > 0 count = 0, verified
-        // live 2026-08-04), the forward-sync fingerprint already truncates
-        // (delta_sync.py::_fp_norm s[:19]), and the reverse-sync write path
-        // measurably FLOORS PG micros into MariaDB DATETIME (all 556
-        // post-flip rows with micros >= .5s: Maria == PG floor, never
-        // floor+1). Post-flip PG-owned writes carry real sub-second
-        // precision (jobs.last_update 501/564, soundscapes.date_created
-        // 33/80) that is UNREPRESENTABLE on the MariaDB side by schema —
-        // comparing it manufactures permanent divergence on identical
-        // stored facts (same class as the g6HalfEven float4 fold above).
-        // slice(0,19) truncates the ISO string at seconds ('YYYY-MM-DDTHH:
-        // MM:SS'), matching _fp_norm's convention exactly. A real drift of
-        // >= 1s still differs. NOTE: V8 Date already truncated pg micros
-        // to ms at parse time (OID-1114 parser), so this folds ms -> s.
-        return 'dt:' + v.toISOString().slice(0, 19) + 'Z';
-    }
-    if (typeof v === 'object') {
-        // arrays (pg text[]), json — canonicalize deterministically
-        try { return 'json:' + JSON.stringify(v); } catch (e) { return 'str:' + String(v); }
-    }
-    // Decimal-as-string (pg numeric) and everything else: bridge numeric strings
-    if (typeof v === 'string' && /^-?\d+(\.\d+)?$/.test(v)) {
-        var f = parseFloat(v);
-        if (Number.isInteger(f)) { return 'num:' + f; }
-        return 'num:' + g6HalfEven(f);
-    }
-    return 'str:' + String(v);
-}
-
-// Per-row canonical column map: { colLower: canonString }. Built SYNCHRONOUSLY
-// at snapshot time so it is immune to the app mutating the row objects later.
-function rowMaps(rows, epsilon) {
-    return rows.map(function (r) {
-        var mp = {};
-        Object.keys(r).forEach(function (k) { mp[k.toLowerCase()] = canonValue(r[k], epsilon); });
-        return mp;
-    });
-}
-
-// Join per-row maps into comparable canonical strings over a fixed column
-// list (sorted). Missing column in a row canonicalizes as absent -> 'null'.
-function joinMaps(maps, colList, sortRows) {
-    var cols = colList.slice().sort();
-    var out = maps.map(function (mp) {
-        return cols.map(function (k) {
-            return k + '=' + (mp.hasOwnProperty(k) ? mp[k] : canonValue(null, 0));
-        }).join('\u0002');
-    });
-    if (sortRows) { out.sort(); }
-    return out;
-}
-
-function normalizeRows(rows, epsilon, sortRows) {
-    // Back-compat: canonical strings over each row's own columns (union not
-    // needed here — callers that mix column sets use joinMaps + a fixed list).
-    var maps = rowMaps(rows, epsilon);
-    var colUnion = {};
-    maps.forEach(function (mp) { Object.keys(mp).forEach(function (k) { colUnion[k] = true; }); });
-    return joinMaps(maps, Object.keys(colUnion), sortRows);
-}
-
-function colSet(rows) {
-    if (!rows.length) { return []; }
-    return Object.keys(rows[0]).map(function (k) { return k.toLowerCase(); }).sort();
-}
-
-// --- two-phase compare ---
-// snapshot(): canonicalize the authoritative rows SYNCHRONOUSLY at hook time.
-// The app MUTATES returned row objects after the query callback (measured
-// live: login.js attaches `picture` to the users row), so holding references
-// across the async PG replay poisons the diff. Canonical strings are
-// immutable — snapshot once, compare later.
-function snapshot(sql, rows, epsilon) {
-    var ordered = hasOrderBy(sql);
-    return {
-        ordered: ordered,
-        underdetermined: !ordered && /\blimit\b/i.test(neutralize(sql)),
-        cols: colSet(rows),
-        n: rows.length,
-        epsilon: epsilon,
-        maps: rowMaps(rows, epsilon)   // per-column, projectable, mutation-safe
-    };
-}
-
-// compareSnap(): diff a prior snapshot against freshly-returned PG rows.
-function compareSnap(snap, sql, rowsB, epsilon) {
-    var ordered = snap.ordered;
-    var ca = snap.cols, cb = colSet(rowsB);
-    var pgMaps = rowMaps(rowsB, epsilon);
-    // Column-set difference handling. The SAME SQL runs on both engines, so a
-    // column set difference is NOT query-derived. The mutation is
-    // ONE-DIRECTIONAL: the app mutates ONLY MariaDB's authoritative row
-    // objects after the callback (measured live: login.js attaches `picture`,
-    // a column in NEITHER schema, onto users rows). PG rows are diffed then
-    // discarded — the app never touches them. Therefore:
-    //   - MariaDB-only extra columns (ca − cb)  = app mutations → suppress.
-    //   - PG-only extra columns     (cb − ca)  = CANNOT be a mutation; they
-    //     signal a real translation/aliasing artifact → REPORT (never mask).
-    var colList = ca;
-    if (snap.n && rowsB.length && ca.join(',') !== cb.join(',')) {
-        var caSet = {}; ca.forEach(function (k) { caSet[k] = true; });
-        var cbSet = {}; cb.forEach(function (k) { cbSet[k] = true; });
-        var pgOnly = cb.filter(function (k) { return !caSet[k]; });
-        if (pgOnly.length) {
-            // PG produced a column MariaDB did not — not an app mutation.
-            return { klass: 'result_mismatch',
-                detail: 'pg-only column(s) [' + pgOnly + ']: maria=[' + ca + '] pg=[' + cb + ']' };
-        }
-        // Only MariaDB-side extras remain: compare over the shared set (= cb).
-        colList = ca.filter(function (k) { return cbSet[k]; });
-        if (!colList.length) {
-            return { klass: 'result_mismatch', detail: 'no shared columns: [' + ca + '] vs [' + cb + ']' };
-        }
-    }
-    var na = joinMaps(snap.maps, colList, !ordered);
-    var nb = joinMaps(pgMaps, colList, !ordered);
-    if (na.length !== nb.length) {
-        return { klass: 'result_mismatch', detail: 'row counts differ: ' + na.length + ' vs ' + nb.length };
-    }
-    var equal = true;
-    for (var i = 0; i < na.length; i++) { if (na[i] !== nb[i]) { equal = false; break; } }
-    if (equal) { return null; }
-    if (ordered) {
-        var sa = na.slice().sort(), sb = nb.slice().sort();
-        var multisetEqual = true;
-        for (var j = 0; j < sa.length; j++) { if (sa[j] !== sb[j]) { multisetEqual = false; break; } }
-        if (multisetEqual) {
-            // Same multiset, order differs. Second chance: if the two results
-            // are IN-ORDER equal after casefolding, the only difference is a
-            // ci-collation vs byte ORDER BY (equal). Otherwise it is a genuine
-            // ordering divergence. (Compare original order, NOT sorted.)
-            if (casefoldEqual(na, nb)) { return null; }
-            return { klass: 'ordering_only', detail: 'same rows, different ORDER BY order' };
-        }
-    }
-    if (casefoldEqual(na.slice().sort(), nb.slice().sort())) {
-        return { klass: 'result_mismatch', detail: 'differs only by string case (ci-collation)' };
-    }
-    // LIMIT without ORDER BY: the SQL contract does not determine WHICH rows
-    // are returned — each engine may legitimately pick different rows. Tag
-    // distinctly so triage/waivers can separate this class from real drift.
-    if (snap.underdetermined) {
-        return { klass: 'underdetermined_limit', detail: 'LIMIT without ORDER BY: engines returned different (individually valid) row sets' };
-    }
-    return { klass: 'result_mismatch', detail: 'row sets differ' };
-}
-
-// back-compat single-shot compare (selftests + e2e harness use this)
-function compare(sql, rowsA, rowsB, epsilon) {
-    return compareSnap(snapshot(sql, rowsA, epsilon), sql, rowsB, epsilon);
-}
-
-function casefoldEqual(a, b) {
-    if (a.length !== b.length) { return false; }
-    for (var i = 0; i < a.length; i++) {
-        if (a[i].toLowerCase() !== b[i].toLowerCase()) { return false; }
-    }
-    return true;
-}
+function emitDivergence(obj) { emit(DIV_PREFIX, obj); }
+function emitStat(obj) { emit(STAT_PREFIX, obj); }
 
 // ------------------------------------------------------------ pg pool (lazy)
 
@@ -2037,36 +1803,18 @@ function getPool() {
     }
 }
 
-// ------------------------------------------------------------ emit helpers
-
-function emit(prefix, obj) {
-    try { process.stdout.write(prefix + JSON.stringify(obj) + '\n'); } catch (e) { /* never break app */ }
-}
-function emitDivergence(obj) { emit(DIV_PREFIX, obj); }
-function emitStat(obj) { emit(STAT_PREFIX, obj); }
-
-// ------------------------------------------------------------ shadow engine
-
-var _inflight = 0;
-var _counters = { seen: 0, sampled: 0, replayed: 0, skipped_class: 0, dropped_cap: 0,
-                  diff: 0, dialect_error: 0, ok: 0, pg_error: 0, pg_timeout: 0,
-                  emit_capped: 0,
-                  // 6.4 (DB_ENGINE=pg) route-path counters (2026-09-08):
-                  // routed = reads that entered pgReadQuery;
-                  // routed_ok = served from PG; fallback = pgRouteFallback
-                  // sentinel handed back to dbpool.js (MariaDB retry). In pg
-                  // mode `ok` above also increments on a served read.
-                  routed: 0, routed_ok: 0, fallback: 0,
-                  // P7 (DB_ENGINE=pg) WRITE path (the conn adapter, 2026-09-11):
-                  // write_routed = statements that entered pgWriteExec;
-                  // write_ok = served; write_error = PG-side failure (a
-                  // dialect-shaped one ALSO increments dialect_error so the
-                  // gate metric sees it).
+// ------------------------------------------------------------ counters
+// Route-path counters (2026-09-08): routed = reads that entered pgReadQuery;
+// routed_ok = served; fallback = a pgRouteFallback-tagged error handed back
+// (surfaced to the caller since step 5). write_routed / write_ok / write_error
+// for the conn adapter (a dialect-shaped one ALSO increments dialect_error so
+// the gate metric sees it).
+var _counters = { routed: 0, routed_ok: 0, fallback: 0,
+                  dialect_error: 0, ok: 0, pg_error: 0, pg_timeout: 0,
                   write_routed: 0, write_ok: 0, write_error: 0 };
 
-// Per-template divergence emit cap: full detail for the first N occurrences
-// of a template per window, then counters only (the heartbeat still carries
-// totals, so recurrence is never hidden — only the log volume is bounded).
+// Per-template divergence emit cap (kept: the write path's write_unmapped_insert
+// line is the one remaining unbounded emitter).
 var EMIT_CAP_PER_TEMPLATE = numEnv('DB_SHADOW_EMIT_CAP', 5);
 var EMIT_CAP_WINDOW_MS = numEnv('DB_SHADOW_EMIT_WINDOW_MS', 600000); // 10 min
 var _emitCounts = {};   // hash -> count in current window
@@ -2080,7 +1828,7 @@ function divergenceEmitAllowed(hash) {
     }
     var c = (_emitCounts[hash] || 0) + 1;
     _emitCounts[hash] = c;
-    if (c > EMIT_CAP_PER_TEMPLATE) { _counters.emit_capped++; return false; }
+    if (c > EMIT_CAP_PER_TEMPLATE) { return false; }
     return true;
 }
 
@@ -2090,213 +1838,19 @@ function sqlText(sql) {
     return String(sql);
 }
 
-/**
- * Called by dbpool.js after a MariaDB read query completes (callback form).
- * FIRE-AND-FORGET: this function returns immediately; all PG work happens on
- * later ticks and its result only ever produces a log line.
- *
- * @param finalSql  the FINAL literal-bearing MySQL SQL (mysql.format applied)
- * @param mariaRows the rows MariaDB returned (array) — the authoritative side
- * @param meta      { caller } optional
- */
-function shadowAfterRead(finalSql, mariaRows, meta) {
-    if (ENGINE !== 'shadow') { return; }
-    if (!Array.isArray(mariaRows)) { return; } // OkPacket (write) or stream — skip
-    _counters.seen++;
-    if (SAMPLE < 1 && Math.random() >= SAMPLE) { return; }
-    _counters.sampled++;
-    var text = sqlText(finalSql);
-    var verdict = classify(text);
-    if (!verdict.replayable) { _counters.skipped_class++; return; }
-    if (_inflight >= MAX_INFLIGHT) { _counters.dropped_cap++; return; }
-    var pool = getPool();
-    if (!pool) { return; }
-    // Cap the diff work for pathologically large results.
-    if (mariaRows.length > MAX_DIFF_ROWS) { return; }
-    // SNAPSHOT NOW, synchronously: the app mutates returned row objects after
-    // the callback (e.g. login.js attaches `picture` to a users row), so the
-    // canonical form must be captured before yielding to the event loop.
-    var snap;
-    try { snap = snapshot(text, mariaRows, 1e-9); } catch (e) { return; }
-
-    _inflight++;
-    _counters.replayed++;
-    var pgSql;
-    try { pgSql = translate(text); } catch (e) {
-        _inflight--; _counters.dialect_error++;
-        emitDivergence({ v: 1, ts: new Date().toISOString(), klass: 'dialect_error',
-            phase: 'translate', hash: templateHash(text), tmpl: sqlTemplate(text).slice(0, 400),
-            detail: String(e && e.message || e).slice(0, 200), caller: meta && meta.caller });
-        return;
-    }
-
-    var done = false;
-    var finish = function () { if (!done) { done = true; _inflight--; } };
-
-    pool.connect(function (err, client, release) {
-        if (err) {
-            finish(); _counters.pg_error++;
-            emitStat({ ev: 'connect_error', err: String(err && err.message || err).slice(0, 200) });
-            return;
-        }
-        // CHECKED-OUT CLIENT ERROR GUARD (rfcx-local 2026-07-26).
-        // The pool-level `_pool.on('error')` in getPool() only covers clients
-        // sitting IDLE in the pool. A client that is CHECKED OUT and mid-query
-        // when its server connection dies emits 'error' on ITSELF; with no
-        // listener, Node rethrows it as an uncaught exception and the PROCESS
-        // EXITS. A PG failover (or a pgbouncer restart) kills exactly these
-        // in-flight connections.
-        //
-        // Observed in production 2026-07-25: Patroni failed over TL 61->62 at
-        // 23:36:17Z and the shadow pod died 6s later at 23:36:23Z with
-        // "Error: Connection terminated unexpectedly / Emitted 'error' event on
-        // Client instance" — 4 restarts in ~3.5h across repeated failovers
-        // (5 failovers in 6 days on this cluster). The shadow is meant to be
-        // strictly fire-and-forget: it must NEVER be able to kill the app.
-        // This matters most at the Phase-6 stage-3 rollout, where DB_ENGINE=
-        // shadow moves onto the MAIN user-facing replicas.
-        //
-        // Counted as pg_error (a connection fault), never as a divergence.
-        var clientDead = false;
-        // release() is reachable from SEVERAL paths (the client 'error'
-        // handler, the BEGIN callback, the query callback, and the ROLLBACK
-        // callback nested inside those). pg-pool THROWS on a double release
-        // ("Release called on client which has already been released to the
-        // pool") and that throw is itself uncaught -> process exit. So funnel
-        // every path through one idempotent wrapper.
-        // PROVEN NECESSARY: the first version of this fix guarded only the
-        // outer callbacks with `clientDead`, but an in-flight ROLLBACK callback
-        // still fired release() after the error handler had already released,
-        // and the pod died with the double-release throw during a live Patroni
-        // switchover acceptance test (2026-07-26).
-        var released = false;
-        var releaseOnce = function (relErr) {
-            if (released) { return; }
-            released = true;
-            try { release(relErr); } catch (e) { /* pool already reclaimed it */ }
-        };
-        client.on('error', function (cerr) {
-            if (clientDead) { return; }
-            clientDead = true;
-            _counters.pg_error++;
-            emitStat({ ev: 'client_error',
-                err: String(cerr && cerr.message || cerr).slice(0, 200) });
-            // Release WITH the error so pg DESTROYS this client instead of
-            // returning a broken connection to the pool.
-            releaseOnce(cerr);
-            finish();
-        });
-
-        // pgbouncer is transaction-pooled: wrap everything in ONE explicit
-        // read-only transaction so the timeout guard + SELECT share a server
-        // connection, and ROLLBACK always releases it clean. SET LOCAL scopes
-        // the timeout to this transaction only.
-        // jit=off (2026-09-12): the server default is jit=off via a LIVE-ONLY
-        // postgresql.base.conf edit (absent from the repo CM + DCS — a cluster
-        // rebuild or Patroni config rewrite reverts to the stock jit=on).
-        // Subplan-heavy shadow replays (e.g. the giant sites count, plan cost
-        // 5.4M >> jit_above_cost=100k) would then pay tens of seconds of JIT
-        // COMPILATION inside the 8 s budget — measured 2026-09-12. Pinning
-        // jit=off per transaction (tx-scoped, pgbouncer-safe) makes that
-        // class unreachable regardless of server config.
-        var begin = 'BEGIN READ ONLY; SET LOCAL statement_timeout=' + Math.round(TIMEOUT_MS) + '; SET LOCAL jit=off;';
-        client.query(begin, function (gerr) {
-            if (clientDead) { return; }   // client already failed + released
-            if (gerr) {
-                try { client.query('ROLLBACK', function () { releaseOnce(); }); } catch (e) { releaseOnce(); }
-                finish(); _counters.pg_error++; return;
-            }
-            client.query(pgSql, function (qerr, pgRes) {
-                if (clientDead) { return; }   // client already failed + released
-                // Always end the transaction + release the client.
-                try { client.query('ROLLBACK', function () { releaseOnce(); }); } catch (e) { releaseOnce(); }
-                finish();
-                if (qerr) {
-                    // 57014 = query_canceled (our statement_timeout): a slow
-                    // PG query is a PERFORMANCE observation, not a dialect
-                    // divergence — do not pollute the divergence report.
-                    if (qerr.code === '57014') {
-                        _counters.pg_timeout++;
-                        emitStat({ ev: 'pg_timeout', hash: templateHash(text),
-                            tmpl: sqlTemplate(text).slice(0, 200) });
-                        return;
-                    }
-                    // CONNECTION-LIFETIME error, not a SQL error (rfcx-local
-                    // 2026-07-27). A server-side connection death (failover,
-                    // pgbouncer restart, admin terminate) surfaces here as an
-                    // Error with NO SQLSTATE `.code` — e.g. "Connection
-                    // terminated unexpectedly" / "server conn crashed?" — OR,
-                    // for an ADMINISTRATIVE termination, WITH one (57P01 &c;
-                    // see CONN_LIFETIME_SQLSTATES). The client 'error' handler
-                    // above catches these when it wins the race, but the QUERY
-                    // callback frequently fires first (that ordering is exactly
-                    // what #1781 established), so the same fault also lands here.
-                    // Counting it as dialect_error corrupted the O5 gate's
-                    // headline metric: MEASURED on 2026-07-27, the ~07:03Z
-                    // TL68->69 organic failover pushed pod r4h9l's
-                    // dialect_error counter 0->1 with NO divergence record
-                    // (the emission was swallowed by the per-template emit cap),
-                    // making a clean day look dirty and costing a triage cycle
-                    // to reconcile counters against Loki. A dialect_error must
-                    // mean "PG rejected or mis-executed our SQL", nothing else.
-                    // 2026-07-29: #1781's `!qerr.code` test was INCOMPLETE for
-                    // exactly that reason — the 04:04Z failover booked two
-                    // 57P01s as dialect_error (the 19:11Z one booked zero: the
-                    // race, not the fault, decides). Now SQLSTATE-aware.
-                    if (isConnLifetimeError(qerr)) {
-                        _counters.pg_error++;
-                        emitStat({ ev: 'query_conn_error',
-                            err: String(qerr && qerr.message || qerr).slice(0, 200),
-                            pg_code: qerr && qerr.code,
-                            hash: templateHash(text) });
-                        return;
-                    }
-                    _counters.dialect_error++;
-                    var dhash = templateHash(text);
-                    if (divergenceEmitAllowed(dhash)) {
-                        emitDivergence({ v: 1, ts: new Date().toISOString(), klass: 'dialect_error',
-                            phase: 'execute', hash: dhash, tmpl: sqlTemplate(text).slice(0, 400),
-                            detail: String(qerr && qerr.message || qerr).slice(0, 240),
-                            pg_code: qerr && qerr.code, caller: meta && meta.caller });
-                    }
-                    return;
-                }
-                var pgRows = (pgRes && pgRes.rows) || [];
-                var cmp;
-                try { cmp = compareSnap(snap, text, pgRows, 1e-9); } catch (e) { cmp = null; }
-                if (cmp) {
-                    _counters.diff++;
-                    var chash = templateHash(text);
-                    if (divergenceEmitAllowed(chash)) {
-                        emitDivergence({ v: 1, ts: new Date().toISOString(), klass: cmp.klass,
-                            phase: 'compare', hash: chash, tmpl: sqlTemplate(text).slice(0, 400),
-                            detail: cmp.detail, rows_maria: mariaRows.length, rows_pg: pgRows.length,
-                            caller: meta && meta.caller });
-                    }
-                } else {
-                    _counters.ok++;
-                }
-            });
-        });
-    });
-}
-
-// periodic stats heartbeat so a silent shadow (0 divergences) is observable
+// periodic stats heartbeat — the route path's only in-process instrument
+// (2026-09-08: the pg pods went SILENT for the whole 6.4 hold when this was
+// shadow-only). Carries routed / routed_ok / fallback / pg_error / pg_timeout
+// / dialect_error / write_*.
 var _statTimer = null;
-// 2026-09-08: also runs in `pg` mode. On the 6.4 read flip the pg pods went
-// SILENT for the whole hold because this guard was shadow-only, which made
-// the pre-staged "counters must read engine:pg with ok climbing" gate
-// unsatisfiable and left routing provable only by a positive-control query.
-// In pg mode the line carries routed / routed_ok / fallback / pg_error /
-// pg_timeout / dialect_error; the shadow-only fields stay at 0.
 function startStatHeartbeat() {
-    if (_statTimer || !ENABLED) { return; }
+    if (_statTimer) { return; }
     _statTimer = setInterval(function () {
-        emitStat({ ev: 'counters', inflight: _inflight, engine: ENGINE, c: _counters });
+        emitStat({ ev: 'counters', c: _counters });
     }, 60000);
     if (_statTimer.unref) { _statTimer.unref(); }
 }
-if (ENABLED) { startStatHeartbeat(); }
+startStatHeartbeat();
 
 // ==================================================================
 // PHASE 6.4 — `DB_ENGINE=pg` RESPONSE ROUTING (ships INERT)
@@ -2886,33 +2440,24 @@ function getWriteConnection(callback) {
 }
 
 module.exports = {
-    engine: ENGINE,
-    enabled: ENABLED,
-    isShadow: ENGINE === 'shadow',
-    // Phase 6.4 response routing (INERT unless DB_ENGINE=pg):
-    isPg: ENGINE === 'pg',
+    // `isPg` is kept as a constant while the 26 model-file branches collapse
+    // file-by-file (PR-3); it now always reads true.
+    isPg: true,
     pgRouteEligible: pgRouteEligible,
     pgReadQuery: pgReadQuery,
-    // dbpool.js hook (shadow):
-    shadowAfterRead: shadowAfterRead,
     translateExtremeSubqueryNulls: translateExtremeSubqueryNulls,
-    // exported for the self-test + potential Phase-6.4 pg mode:
+    // exported for the self-test:
     classify: classify,
     translate: translate,
-    // P7 write routing (INERT unless DB_ENGINE=pg):
+    // P7 write routing:
     getWriteConnection: getWriteConnection,
     WRITE_IDENTITY_PK: WRITE_IDENTITY_PK,
     WRITE_NO_IDENTITY_PK: WRITE_NO_IDENTITY_PK,
-    compare: compare,
-    snapshot: snapshot,
-    compareSnap: compareSnap,
     sqlTemplate: sqlTemplate,
     templateHash: templateHash,
     isConnLifetimeError: isConnLifetimeError,
     CONN_LIFETIME_SQLSTATES: CONN_LIFETIME_SQLSTATES,
-    normalizeRows: normalizeRows,
     columnCaseMap: columnCaseMap,
-    g6HalfEven: g6HalfEven,
     translateCollation: translateCollation,
     translateOrderByCollation: translateOrderByCollation,
     translateBareCollation: translateBareCollation,

@@ -57,13 +57,13 @@ function beginStrings(text) {
     return out;
 }
 
-describe('P7 — routed/shadow reads pin jit=off per transaction', function () {
+describe('P7 — routed reads pin jit=off per transaction', function () {
 
-    it('finds BOTH read-path BEGIN blocks (the shadow path and pgReadQuery)', function () {
+    it('finds THE read-path BEGIN block (pgReadQuery; the shadow path was retired at step 5)', function () {
         // If this count ever changes, the assertions below no longer cover the
         // whole surface — fail loudly rather than silently testing one of two.
-        assert.strictEqual(beginStrings(src).length, 2,
-            'expected exactly 2 "BEGIN READ ONLY" statement strings in dbpool-pg.js');
+        assert.strictEqual(beginStrings(src).length, 1,
+            'expected exactly 1 "BEGIN READ ONLY" statement string in dbpool-pg.js');
     });
 
     it('every read-path transaction sets jit=off', function () {
