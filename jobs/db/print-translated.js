@@ -1,7 +1,8 @@
 // Dev harness: print the P6-translated PG SQL for every export-path query in
 // jobs/services/*, with representative params, for EXPLAIN validation against
 // the live PG replica. Read-only; not shipped in the image CMD.
-process.env.DB_ENGINE = 'mysql' // keep dbpool-pg INERT; we only use translate()
+// No DB_ENGINE set: since P7 step 5 the module IS the (single-engine) adapter;
+// we only use translate(), which never touches the pool.
 const t = require('../../app/utils/dbpool-pg')
 
 const Q = {
