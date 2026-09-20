@@ -1,7 +1,6 @@
 "use strict";
 const q = require('q');
 const dbpool = require('../utils/dbpool');
-const pgshadow = require('../utils/dbpool-pg'); // P7 write ports (INERT unless DB_ENGINE=pg)
 const APIError = require('../utils/apierror');
 const projects = require('./projects');
 
@@ -232,9 +231,7 @@ tags.resourceDefs.recording = {
             // 4a), so the IGNORE never actually suppressed anything —
             // ON CONFLICT DO NOTHING is the exact-equivalent spelling, and
             // RETURNING tag_id feeds insertId through the adapter.
-            pgshadow.isPg
-                ? "INSERT INTO tags(tag) VALUES (?) ON CONFLICT DO NOTHING RETURNING tag_id"
-                : "INSERT IGNORE INTO tags(tag) VALUES (?)", [tag.text]
+            "INSERT INTO tags(tag) VALUES (?) ON CONFLICT DO NOTHING RETURNING tag_id", [tag.text]
         ).then(function(result){
             return result[0].insertId;
         }).catch(function(err){
@@ -301,9 +298,7 @@ tags.resourceDefs.recording = {
                 // deliberate no-op self-assignment (first-write-wins on the
                 // box coordinates) + RETURNING so the duplicate branch
                 // reports the EXISTING row's pk exactly like LAST_INSERT_ID.
-                (pgshadow.isPg
-                    ? "ON CONFLICT (recording_id, tag_id, user_id) DO UPDATE SET recording_tag_id = recording_tags.recording_tag_id RETURNING recording_tag_id"
-                    : "ON DUPLICATE KEY UPDATE recording_tag_id = LAST_INSERT_ID(recording_tag_id)"), [
+                "ON CONFLICT (recording_id, tag_id, user_id) DO UPDATE SET recording_tag_id = recording_tags.recording_tag_id RETURNING recording_tag_id", [
                     recording.recording_id, recording.site_id, tagId, userId,
                     tag.t0 || null, tag.f0 || null,
                     tag.t1 || null, tag.f1 || null
