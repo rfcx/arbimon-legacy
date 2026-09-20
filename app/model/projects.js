@@ -14,7 +14,6 @@ const fileHelper = require('../utils/file-helper')
 const dbpool = require('../utils/dbpool');
 const sqlutil = require('../utils/sqlutil');
 const persiteCount = require('../utils/persite-count');
-const pgshadow = require('../utils/dbpool-pg'); // P7 write ports (INERT unless DB_ENGINE=pg)
 const queryHandler = dbpool.queryHandler;
 const APIError = require('../utils/apierror');
 const { coreApiBaseUrl } = require('../utils/core-api-url');
@@ -64,12 +63,8 @@ var Projects = {
 
     updateExpirationDate: async function(opts) {
         // P7 port: PG rejects alias-qualified SET targets (`SET cm.col`).
-        const q = pgshadow.isPg
-            ? `UPDATE cached_metrics cm
+        const q = `UPDATE cached_metrics cm
                  SET expires_at = '${opts.expiresAt}'
-                 WHERE cm.key = '${opts.key}'`
-            : `UPDATE cached_metrics cm
-                 SET cm.expires_at = '${opts.expiresAt}'
                  WHERE cm.key = '${opts.key}'`
 
         return dbpool.query(q)
@@ -77,12 +72,8 @@ var Projects = {
 
     updateCachedMetrics: async function(opts) {
         // P7 port: PG rejects alias-qualified SET targets (`SET cm.col`).
-        const q = pgshadow.isPg
-            ? `UPDATE cached_metrics cm
+        const q = `UPDATE cached_metrics cm
                 SET value = ${opts.value}, expires_at = '${opts.expiresAt}'
-                WHERE cm.key = '${opts.key}'`
-            : `UPDATE cached_metrics cm
-                SET cm.value = ${opts.value}, cm.expires_at = '${opts.expiresAt}'
                 WHERE cm.key = '${opts.key}'`
 
         return dbpool.query(q)
@@ -478,49 +469,33 @@ var Projects = {
         let queryAsync = util.promisify(connection.query);
         // P7 port (#18): the mysql-driver `SET ?` object expansion is not SQL
         // PG can parse at all (42601, measured in the gate-4a re-attack), so
-        // the PG branch builds an explicit (cols) VALUES list. The conn
-        // adapter's RETURNING shim supplies `insertId` (projects ->
-        // project_id). NEGATIVE CONTROL (gate 4c §5.8):
-        // DB_PG_DISABLE_PORT_PROJECTS=1 forces the unported statement on PG,
-        // which MUST fail loudly with 42601 — if it ever succeeds, the
-        // rehearsal harness is not discriminating and no pass counts.
-        let result;
-        if (pgshadow.isPg && !process.env.DB_PG_DISABLE_PORT_PROJECTS) {
-            const cols = Object.keys(project);
-            // TYPE PARITY (P7, measured 2026-09-11): the mysql driver coerces a
-            // JS boolean to 1/0 for a tinyint column; node-pg sends a real
-            // boolean and PG refuses it for smallint (42804 'column is of type
-            // smallint but expression is of type boolean'). arbimon's tinyint
-            // flags (is_private, public_templates_enabled, ...) are smallint on
-            // PG, so booleans must be narrowed here, at the port.
-            const vals = cols.map(c => {
-                const v = project[c];
-                return (typeof v === 'boolean') ? (v ? 1 : 0) : v;
-            });
-            result = await queryAsync(
-                'INSERT INTO projects (' + cols.map(c => dbpool.escapeId(c)).join(', ') + ')\n' +
-                'VALUES (' + cols.map(() => '?').join(', ') + ')',
-                vals
-            );
-        } else {
-            result = await queryAsync('INSERT INTO projects SET ?', project);
-        }
+        // this builds an explicit (cols) VALUES list. The conn adapter's
+        // RETURNING shim supplies `insertId` (projects -> project_id). (The
+        // gate-4c DB_PG_DISABLE_PORT_PROJECTS negative-control switch went
+        // with the MySQL branch at P7 step 5.)
+        const cols = Object.keys(project);
+        // TYPE PARITY (P7, measured 2026-09-11): the mysql driver coerces a
+        // JS boolean to 1/0 for a tinyint column; node-pg sends a real
+        // boolean and PG refuses it for smallint (42804 'column is of type
+        // smallint but expression is of type boolean'). arbimon's tinyint
+        // flags (is_private, public_templates_enabled, ...) are smallint on
+        // PG, so booleans must be narrowed here, at the port.
+        const vals = cols.map(c => {
+            const v = project[c];
+            return (typeof v === 'boolean') ? (v ? 1 : 0) : v;
+        });
+        const result = await queryAsync(
+            'INSERT INTO projects (' + cols.map(c => dbpool.escapeId(c)).join(', ') + ')\n' +
+            'VALUES (' + cols.map(() => '?').join(', ') + ')',
+            vals
+        );
         let projectId = result.insertId;
-        let values = {
-            user_id: owner_id,
-            project_id: projectId,
-            role_id: 4
-        };
-        if (pgshadow.isPg && !process.env.DB_PG_DISABLE_PORT_PROJECTS) {
-            // user_project_role's PK is (user_id, project_id); no insertId is
-            // read here, so a plain INSERT is the whole port.
-            await queryAsync(
-                'INSERT INTO user_project_role (user_id, project_id, role_id) VALUES (?, ?, ?)',
-                [owner_id, projectId, 4]
-            );
-        } else {
-            await queryAsync('INSERT INTO user_project_role SET ?', values);
-        }
+        // user_project_role's PK is (user_id, project_id); no insertId is
+        // read here, so a plain INSERT is the whole port.
+        await queryAsync(
+            'INSERT INTO user_project_role (user_id, project_id, role_id) VALUES (?, ?, ?)',
+            [owner_id, projectId, 4]
+        );
         return projectId;
     },
 
@@ -549,22 +524,16 @@ var Projects = {
             var projectId = projectInfo.project_id;
             delete projectInfo.project_id;
 
-            var sql = pgshadow.isPg
-                // P7 port: `SET ?` object expansion is unparseable on
-                // PG — explicit `SET col = ?` list instead.
-                ? 'UPDATE projects\nSET ' +
+            // P7 port: `SET ?` object expansion is unparseable on
+            // PG — explicit `SET col = ?` list instead.
+            var sql = 'UPDATE projects\nSET ' +
                   Object.keys(projectInfo).map(k => dbpool.escapeId(k) + ' = ?').join(', ') +
-                  '\nWHERE project_id = ?'
-                : 'UPDATE projects\n'+
-                  'SET ?\n'+
-                  'WHERE project_id = ?';
-            var vals = pgshadow.isPg
-                // same boolean -> smallint narrowing as the create port
-                ? Object.keys(projectInfo)
+                  '\nWHERE project_id = ?';
+            // same boolean -> smallint narrowing as the create port
+            var vals = Object.keys(projectInfo)
                       .map(k => typeof projectInfo[k] === 'boolean'
                                 ? (projectInfo[k] ? 1 : 0) : projectInfo[k])
-                      .concat([projectId])
-                : [projectInfo, projectId];
+                      .concat([projectId]);
 
             // 🔴 MUST go through q.ninvoke (i.e. WITH a callback) when running on a
             // CONNECTION. The P7 PG write adapter's `conn.query(sql, values)` with NO
@@ -652,21 +621,12 @@ var Projects = {
                 }
             }
 
-            var q;
-            if (pgshadow.isPg) {
-                // P7 port: `INSERT ... SET col = val` is MySQL-only syntax
-                // (42601 on PG) — explicit (cols) VALUES list. project_news
-                // has an identity pk (news_feed_id); the conn adapter's
-                // RETURNING shim covers the id if it is ever read.
-                q = 'INSERT INTO project_news \n'+
+            // P7 port: `INSERT ... SET col = val` is MySQL-only syntax
+            // (42601 on PG) — explicit (cols) VALUES list. project_news
+            // has an identity pk (news_feed_id); the conn adapter's
+            // RETURNING shim covers the id if it is ever read.
+            var q = 'INSERT INTO project_news \n'+
                     '(user_id, project_id, data, news_type_id) VALUES (%s, %s, %s, %s)';
-            } else {
-                q = 'INSERT INTO project_news \n'+
-                    'SET user_id = %s, '+
-                    'project_id = %s, '+
-                    'data = %s, '+
-                    'news_type_id = %s';
-            }
 
             q = util.format(q,
                 dbpool.escape(newsVal.user_id),
@@ -997,17 +957,11 @@ var Projects = {
         // P7 port: PG has no multi-table `UPDATE ... LEFT JOIN ... SET` — the
         // equivalent is `UPDATE ... FROM`. (The LEFT JOIN collapses to INNER
         // here either way: `r.site_id = ?` rejects NULL-extended rows.)
-        const sql = pgshadow.isPg
-            ? `UPDATE recording_validations rv
+        const sql = `UPDATE recording_validations rv
         SET project_id = ${newProjectId}
         FROM recordings r
         WHERE r.recording_id = rv.recording_id
             AND rv.project_id = ${originalProjectId}
-            AND r.site_id = ${siteId}`
-            : `UPDATE recording_validations rv
-        LEFT JOIN recordings r on r.recording_id = rv.recording_id
-        SET rv.project_id = ${newProjectId}
-        WHERE rv.project_id = ${originalProjectId}
             AND r.site_id = ${siteId}`
 
         if (connection) {
@@ -1122,16 +1076,10 @@ var Projects = {
                     q = util.format(q, role_id, user.user_id, project_id);
                     connection ? connection.query(q, callback) : queryHandler(q, callback);
                 }  else {
-                    let q;
-                    if (pgshadow.isPg) {
-                        // P7 port: `INSERT ... SET col = val` is MySQL-only
-                        // syntax (42601 on PG) — explicit (cols) VALUES list.
-                        q = 'INSERT INTO user_project_role \n'+
+                    // P7 port: `INSERT ... SET col = val` is MySQL-only
+                    // syntax (42601 on PG) — explicit (cols) VALUES list.
+                    let q = 'INSERT INTO user_project_role \n'+
                         '(user_id, role_id, project_id) VALUES (%s, %s, %s)';
-                    } else {
-                        q = 'INSERT INTO user_project_role \n'+
-                        'SET user_id = %s, role_id = %s, project_id = %s';
-                    }
                     q = util.format(q, user.user_id, role_id, project_id);
                     connection ? connection.query(q, callback) : queryHandler(q, callback);
                 }

@@ -35,7 +35,7 @@ function stripComments(src) {
 // ---------------------------------------------------------------- (1) shape
 var ports = {
     'app/model/projects.js': [
-        ['PG branch for INSERT INTO projects (port #18) incl. the negative-control flag', /pgshadow\.isPg\s*&&\s*!process\.env\.DB_PG_DISABLE_PORT_PROJECTS/],
+        ['INSERT INTO projects is the explicit (cols) VALUES port (#18); the MySQL SET ? arm is gone', /INSERT INTO projects \(' \+ cols\.map/],
         ['explicit (cols) VALUES for user_project_role', /INSERT INTO user_project_role \(user_id, project_id, role_id\) VALUES \(\?, \?, \?\)/],
         ['alias-qualified SET ported (cached_metrics)', /SET expires_at = '\$\{opts\.expiresAt\}'/],
         ['multi-table UPDATE ported to UPDATE ... FROM', /UPDATE recording_validations rv\s*\n\s*SET project_id = \$\{newProjectId\}\s*\n\s*FROM recordings r/],
@@ -63,7 +63,7 @@ var ports = {
     ],
     'app/model/playlists.js': [
         ['dup-key branch via sqlutil.isDuplicateKeyError', /if \(!sqlutil\.isDuplicateKeyError\(err\)\) \{\s*\n\s*throw err;/],
-        ['MAX_EXECUTION_TIME hint gated off PG', /pgshadow\.isPg \? '' : '\/\*\+ MAX_EXECUTION_TIME\(360000\) \*\/ '/]
+        ['MAX_EXECUTION_TIME hint gone with MariaDB (step 5)', /INSERT INTO playlist_recordings\(recording_id, playlist_id\) SELECT DISTINCT r\.recording_id/]
     ],
     'app/model/soundscape-composition.js': [
         ['dup-key branch via sqlutil.isDuplicateKeyError', /if\(sqlutil\.isDuplicateKeyError\(err\)\)\{\s*\n\s*throw new APIError\("Soundscape composition class already in project\."\);/],
@@ -75,7 +75,7 @@ var ports = {
     'app/model/recordings.js': [
         ['present_review increment ported (ON CONFLICT + self-reference)', /ON CONFLICT \(recording_id, species_id, songtype_id\) DO UPDATE SET present_review = recording_validations\.present_review \+ 1/],
         ['present upsert ported (EXCLUDED)', /ON CONFLICT \(recording_id, species_id, songtype_id\) DO UPDATE SET present = EXCLUDED\.present/],
-        ['MAX_EXECUTION_TIME 840000 hint gated off PG', /pgshadow\.isPg \? 'SELECT' : 'SELECT \/\*\+ MAX_EXECUTION_TIME\(840000\) \*\/'/]
+        ['MAX_EXECUTION_TIME 840000 hint gone with MariaDB (step 5)', /const baseSql = summaryBuilders\[builder\]\.getSQL\(\)\.replace\(';', ''\)\n/]
     ],
     'app/model/citizen-scientist.js': [
         ['pm validations upsert ported', /ON CONFLICT \(pattern_matching_roi_id, user_id\) DO UPDATE SET/],

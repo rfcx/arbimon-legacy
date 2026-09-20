@@ -11,7 +11,6 @@ var tzlookup = require("tz-lookup");
 var s3;
 var dbpool = require('../utils/dbpool');
 const siteRecCount = require('./site-rec-count'); // S2: sites.rec_count maintenance
-var pgshadow = require('../utils/dbpool-pg'); // P7 write ports (INERT unless DB_ENGINE=pg)
 var queryHandler = dbpool.queryHandler;
 const moment = require('moment');
 let APIError = require('../utils/apierror');
@@ -171,33 +170,25 @@ var Sites = {
                     dbpool.escapeId(j),
                     // TYPE PARITY (P7, measured 2026-09-11): mysql.escape(true)
                     // yields the literal `true`, which PG refuses for a
-                    // smallint/tinyint column (42804). The mysql driver coerces
-                    // booleans to 1/0 for tinyint; narrow here so the PG branch
-                    // below splices an integer literal, not a boolean.
-                    dbpool.escape(pgshadow.isPg && typeof site[j] === 'boolean'
+                    // smallint/tinyint column (42804). Narrow here so the
+                    // INSERT below splices an integer literal, not a boolean.
+                    dbpool.escape(typeof site[j] === 'boolean'
                                   ? (site[j] ? 1 : 0) : site[j])
                 ));
             }
         }
 
-        var q;
-        if (pgshadow.isPg) {
-            // P7 port (#19): `INSERT ... SET col = val` is MySQL-only syntax
-            // (42601 on PG) — build an explicit (cols) VALUES list from the
-            // same escaped pairs. The adapter's RETURNING shim maps
-            // site_id -> insertId (sites is a mapped identity table).
-            var pairs = values.map(function (pair) {
-                var eqAt = pair.indexOf(' = ');
-                return [pair.slice(0, eqAt), pair.slice(eqAt + 3)];
-            });
-            q = 'INSERT INTO sites \n'+
-                '(' + pairs.map(function (p) { return p[0]; }).join(', ') + ')\n'+
-                'VALUES (' + pairs.map(function (p) { return p[1]; }).join(', ') + ')';
-        } else {
-            q = 'INSERT INTO sites \n'+
-                'SET %s';
-            q = util.format(q, values.join(", "));
-        }
+        // P7 port (#19): `INSERT ... SET col = val` is MySQL-only syntax
+        // (42601 on PG) — build an explicit (cols) VALUES list from the
+        // same escaped pairs. The adapter's RETURNING shim maps
+        // site_id -> insertId (sites is a mapped identity table).
+        var pairs = values.map(function (pair) {
+            var eqAt = pair.indexOf(' = ');
+            return [pair.slice(0, eqAt), pair.slice(eqAt + 3)];
+        });
+        var q = 'INSERT INTO sites \n'+
+            '(' + pairs.map(function (p) { return p[0]; }).join(', ') + ')\n'+
+            'VALUES (' + pairs.map(function (p) { return p[1]; }).join(', ') + ')';
         db ? db.query(q, callback) : queryHandler(q, callback);
     },
 

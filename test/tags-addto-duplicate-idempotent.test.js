@@ -46,36 +46,34 @@ function addToInsert() {
 
 describe('tags.addTo — duplicate-key idempotence', function() {
 
-    it('the recording_tags INSERT carries ON DUPLICATE KEY UPDATE', function() {
+    it('the recording_tags INSERT carries an ON CONFLICT upsert on the (recording_id, tag_id, user_id) index', function() {
         var q = addToInsert();
-        expect(q.clean).to.contain('ON DUPLICATE KEY UPDATE');
+        expect(q.clean).to.contain('ON CONFLICT (recording_id, tag_id, user_id) DO UPDATE SET');
     });
 
-    it('the duplicate branch reports the EXISTING row pk via LAST_INSERT_ID', function() {
+    it('the duplicate branch reports the EXISTING row pk (no-op self-assignment + RETURNING)', function() {
+        // Without this idiom the duplicate branch's result has no id — the
+        // MariaDB-era LAST_INSERT_ID(recording_tag_id) trick (retired at P7
+        // step 5 with that engine) returned insertId 0, which PASSED the
+        // insertId guard and put a bogus id 0 in the UI echo. The PG port
+        // delivers the same contract via ON CONFLICT + no-op self-assignment
+        // + RETURNING.
         var q = addToInsert();
-        // Without the LAST_INSERT_ID(recording_tag_id) idiom, the duplicate
-        // branch's OkPacket has insertId 0 — which PASSES the insertId guard
-        // (0 is neither undefined nor null; verified by mutation M2 in the
-        // PR: the echo resolved with id:0), so the UI echo carries a bogus
-        // id 0 instead of the existing row's real pk.
-        expect(q.clean).to.contain('LAST_INSERT_ID(recording_tag_id)');
-    });
-
-    it('carries the PG port branch inline (P7 gate 4c port #23)', function() {
-        // The MariaDB clause above stays verbatim for the pre-flip engine;
-        // the PG branch must deliver the SAME contract — the duplicate path
-        // reports the EXISTING row's pk — via ON CONFLICT + no-op self-
-        // assignment + RETURNING.
-        var q = addToInsert();
-        expect(q.clean).to.contain('pgshadow.isPg');
         expect(q.clean).to.contain('ON CONFLICT (recording_id, tag_id, user_id) DO UPDATE SET recording_tag_id = recording_tags.recording_tag_id RETURNING recording_tag_id');
+    });
+
+    it('no MariaDB arm remains (step 5: single engine)', function() {
+        var q = addToInsert();
+        expect(q.clean).to.not.contain('ON DUPLICATE KEY UPDATE');
+        expect(q.clean).to.not.contain('LAST_INSERT_ID');
+        expect(q.clean).to.not.contain('pgshadow.isPg');
     });
 
     it('the duplicate branch is a NO-OP: it overwrites nothing (first-write-wins)', function() {
         var q = addToInsert();
-        var upd = q.clean.slice(q.clean.indexOf('ON DUPLICATE KEY UPDATE'));
+        var upd = q.clean.slice(q.clean.indexOf('ON CONFLICT (recording_id, tag_id, user_id) DO UPDATE SET'));
         // The only assignment allowed in the duplicate branch is the pk
-        // self-assignment that carries LAST_INSERT_ID. Updating t0/f0/t1/f1
+        // no-op self-assignment. Updating t0/f0/t1/f1
         // or datetime would silently REPLACE a user's earlier annotation box
         // on a re-click — the original annotation must win.
         ['t0 =', 'f0 =', 't1 =', 'f1 =', 'datetime =', 'site_id =', 'user_id ='].forEach(function(col) {

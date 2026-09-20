@@ -3,7 +3,6 @@ var joi = require('joi');
 var projects = require('./projects');
 var dbpool = require('../utils/dbpool');
 var sqlutil = require('../utils/sqlutil');
-var pgshadow = require('../utils/dbpool-pg'); // P7 write ports (INERT unless DB_ENGINE=pg)
 var APIError = require('../utils/apierror');
 
 /** Soundscape composition model.
@@ -250,14 +249,9 @@ var SoundscapeComposition = {
                         // (recordingid, scclassid) pkey (columns are LOWERCASE
                         // on PG — write them BARE so they fold; quoting would
                         // miss) and EXCLUDED is PG's VALUES() spelling.
-                        pgshadow.isPg ?
                         "INSERT INTO recording_soundscape_composition_annotations(recordingId, scclassId, present)\n" +
                         " VALUES (?, ?, ?) \n" +
-                        " ON CONFLICT (recordingId, scclassId) DO UPDATE SET present = EXCLUDED.present"
-                        :
-                        "INSERT INTO recording_soundscape_composition_annotations(recordingId, scclassId, present)\n" +
-                        " VALUES (?, ?, ?) \n" +
-                        " ON DUPLICATE KEY UPDATE present = VALUES(present)", [
+                        " ON CONFLICT (recordingId, scclassId) DO UPDATE SET present = EXCLUDED.present", [
                         annotation.recordingId, annotation.scclassId, annotation.present
                     ])
                 ).then(function(){

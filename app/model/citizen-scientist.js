@@ -6,7 +6,6 @@ var joi     = require('joi');
 var debug = require('debug')('arbimon2:model:citizen-scientist');
 var q = require('q');
 var dbpool = require('../utils/dbpool');
-var pgshadow = require('../utils/dbpool-pg'); // P7 write ports (INERT unless DB_ENGINE=pg)
 var sqlutil      = require('../utils/sqlutil');
 var PatternMatchings = require('./pattern_matchings');
 
@@ -212,10 +211,7 @@ var CitizenScientist = {
             ")\n" +
             // P7 port: ON CONFLICT targets the (pattern_matching_roi_id,
             // user_id) unique index (present on both engines).
-            (pgshadow.isPg
-                ? "ON CONFLICT (pattern_matching_roi_id, user_id) DO UPDATE SET\n    validated = EXCLUDED.validated"
-                : "ON DUPLICATE KEY UPDATE\n" +
-                  "    validated = VALUES(validated)"), rois.reduce(function(_, roi) {
+            "ON CONFLICT (pattern_matching_roi_id, user_id) DO UPDATE SET\n    validated = EXCLUDED.validated", rois.reduce(function(_, roi) {
                 _.push(roi, userId, validation);
                 return _;
             }, [])
@@ -280,11 +276,9 @@ var CitizenScientist = {
         // roi ids, both row classes: unvalidated rois -> (0, 0, NULL) on both
         // engines; validated rois -> (0, 1, cn=3, NULL) on both engines.
         //
-        // DUAL-ARM, not a replacement: MariaDB REJECTS the PG multi-column form
-        // with ERROR 1064 (measured), so the original statement stays as the
-        // MariaDB arm. Both prod executors (arbimon, arbimon-ingest-consumer)
-        // currently run DB_ENGINE=pg, but MariaDB remains the rollback horizon
-        // and this file already uses this dual-arm convention (see :215, :363).
+        // (Until P7 step 5 this was dual-arm: MariaDB rejected the PG
+        // multi-column form with ERROR 1064, so the original JOIN...SET
+        // statement rode alongside as the MariaDB arm. Retired with MariaDB.)
         const sqlPg =
             "UPDATE pattern_matching_rois\n" +
             "SET (cs_val_present, cs_val_not_present, consensus_validated) = (\n" +
@@ -307,28 +301,7 @@ var CitizenScientist = {
             "  AND pattern_matching_rois.pattern_matching_id = ?\n" +
             "  AND pattern_matching_rois.pattern_matching_roi_id IN (?)";
 
-        const sqlMysql =
-            "UPDATE pattern_matching_rois\n" +
-            "    JOIN pattern_matchings ON pattern_matching_rois.pattern_matching_id = pattern_matchings.pattern_matching_id\n" +
-            "    LEFT JOIN (\n" +
-            "        SELECT _PMV.pattern_matching_roi_id,\n" +
-            "            SUM(IF(_PMV.validated = 1, 1, 0)) as cs_present,\n" +
-            "            SUM(IF(_PMV.validated = 0, 1, 0)) as cs_not_present\n" +
-            "        FROM pattern_matching_validations _PMV\n" +
-            "        GROUP BY _PMV.pattern_matching_roi_id\n" +
-            "    ) AS PMV ON PMV.pattern_matching_roi_id = pattern_matching_rois.pattern_matching_roi_id\n" +
-            "SET \n" +
-            "    pattern_matching_rois.cs_val_present = COALESCE(PMV.cs_present, 0),\n" +
-            "    pattern_matching_rois.cs_val_not_present = COALESCE(PMV.cs_not_present, 0),\n" +
-            "    pattern_matching_rois.consensus_validated = (CASE\n" +
-            "        WHEN PMV.cs_present >= pattern_matchings.consensus_number THEN 1\n" +
-            "        WHEN PMV.cs_not_present >= pattern_matchings.consensus_number THEN 0\n" +
-            "        ELSE NULL\n" +
-            "    END)\n" +
-            "WHERE pattern_matching_rois.pattern_matching_id = ?\n" +
-            "  AND pattern_matching_rois.pattern_matching_roi_id IN (?)";
-
-        return dbpool.query(pgshadow.isPg ? sqlPg : sqlMysql, [
+        return dbpool.query(sqlPg, [
             patternMatchingId,
             rois
         ]);
@@ -389,19 +362,13 @@ var CitizenScientist = {
         for (let key in userStats) {
             let stat = userStats[key];
             let confidence = (stat.correct + 1) / (stat.correct + stat.incorrect + 1);
-            let q2 = pgshadow.isPg
-                // P7 port: ON CONFLICT targets the (user_id, project_id,
-                // species_id, songtype_id) unique index (both engines).
-                ? `INSERT INTO pattern_matching_user_statistics (user_id, project_id, species_id,
+            // P7 port: ON CONFLICT targets the (user_id, project_id,
+            // species_id, songtype_id) unique index.
+            let q2 = `INSERT INTO pattern_matching_user_statistics (user_id, project_id, species_id,
                         songtype_id, validated, correct, incorrect, pending, confidence, last_update)
                   VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
                   ON CONFLICT (user_id, project_id, species_id, songtype_id) DO UPDATE SET validated=EXCLUDED.validated, correct=EXCLUDED.correct, incorrect=EXCLUDED.incorrect, pending=EXCLUDED.pending,
-                        confidence=EXCLUDED.confidence, last_update=EXCLUDED.last_update`
-                : `INSERT INTO pattern_matching_user_statistics (user_id, project_id, species_id,
-                        songtype_id, validated, correct, incorrect, pending, confidence, last_update)
-                  VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
-                  ON DUPLICATE KEY UPDATE validated=VALUES(validated), correct=VALUES(correct), incorrect=VALUES(incorrect), pending=VALUES(pending),
-                        confidence=VALUES(confidence), last_update=VALUES(last_update)`;
+                        confidence=EXCLUDED.confidence, last_update=EXCLUDED.last_update`;
             await dbpool.query(q2, [parseInt(key), project_id, species_id, songtype_id, stat.validated, stat.correct, stat.incorrect, stat.pending, confidence])
         }
     },
