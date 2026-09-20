@@ -8,7 +8,6 @@ const moment = require('moment');
 
 var sqlutil = require('../utils/sqlutil');
 var dbpool = require('../utils/dbpool');
-var pgshadow = require('../utils/dbpool-pg'); // P7 write ports (INERT unless DB_ENGINE=pg)
 var APIError = require('../utils/apierror');
 // TODO remove circular dependencies
 var model = require('../model');
@@ -356,7 +355,7 @@ var Playlists = {
                     const testCreatingTime = moment().format('YYYY-MM-DD HH:mm:ss');
                     console.log('Playlist: start insert', testCreatingTime);
                     const insertSelect =
-                        `INSERT INTO playlist_recordings(recording_id, playlist_id) SELECT ${pgshadow.isPg ? '' : '/*+ MAX_EXECUTION_TIME(360000) */ '}DISTINCT r.recording_id, ${playlistId} ${sqlParts[1]} ${sqlParts[2]}`;
+                        `INSERT INTO playlist_recordings(recording_id, playlist_id) SELECT DISTINCT r.recording_id, ${playlistId} ${sqlParts[1]} ${sqlParts[2]}`;
                     const result = await dbpool.queryWithConn(connection, insertSelect);
                     totalInserted = result.affectedRows || 0;
                     const testInsertingTime = moment().format('YYYY-MM-DD HH:mm:ss');
