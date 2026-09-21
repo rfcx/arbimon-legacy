@@ -49,23 +49,22 @@ router.get('/cancel/:jId', function(req, res, next) {
     res.type('json');
 
     // 2026-09-09 (OPEN-ITEMS §292): bind the job id to the project in the URL.
-    model.jobs.cancel(req.params.jId, req.project.project_id, function(err, rows) {
+    // 2026-09-20 (OPEN-ITEMS §357): the model now also marks the row terminal
+    // in the same guarded statement; affectedRows distinguishes "cancelled"
+    // from "already finished/cancelled" (the state guard matches 0 rows), so
+    // the UI can say which happened instead of silently succeeding.
+    model.jobs.cancel(req.params.jId, req.project.project_id, function(err, result) {
         if(err) return next(err);
 
-        // 2026-09-09 (OPEN-ITEMS §292): this previously passed
-        // `req.params.projectUrl`, which is ALWAYS `undefined` here -- this
-        // router is a plain express.Router() with no `mergeParams`, so the
-        // parent's `/:projectUrl` param is not inherited. `activeJobs(undefined)`
-        // does not fail: it skips the whole `if (project)` block, leaving only
-        // `J.hidden = 0`, so the response was FLEET-WIDE (measured: 134,558
-        // unhidden jobs across 2,525 projects, each enriched with per-job
-        // parameters) -- a cross-project disclosure on the RESPONSE side.
-        //
-        // Fixed by passing the project the handler already has, matching the
-        // sibling /progress route. Deliberately NOT fixed with `mergeParams`:
-        // that would make `projectUrl` resolve and switch activeJobs to its
-        // `P.url = ...` branch, changing behaviour on four other routers that
-        // rely on params NOT being inherited.
+        if (!result || !result.affectedRows) {
+            return res.json({ cancelled: false,
+                              reason: "job is not running (already finished or cancelled)" });
+        }
+
+        // (§292 note carried from below: pass the project the handler already
+        // has -- this router has no `mergeParams`, so `req.params.projectUrl`
+        // is ALWAYS undefined here, and `activeJobs(undefined)` returns the
+        // FLEET. See the longer comment in the /hide twin.)
         model.jobs.activeJobs({ id: req.project.project_id }, function(err, row) {
             if(err) return next(err);
 
