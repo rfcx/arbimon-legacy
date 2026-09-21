@@ -6,6 +6,7 @@ const AWS = require('aws-sdk');
 const q = require('q');
 const config = require('../config');
 const sqlutil = require('../utils/sqlutil');
+const dispatchHint = require('./dispatch-hint');
 const SQLBuilder = require('../utils/sqlbuilder');
 const dbpool = require('../utils/dbpool');
 const Recordings = require('./recordings');
@@ -1207,6 +1208,11 @@ var PatternMatchings = {
                 }).then(function(pres){
                     return { job_id: jobId, pattern_matching_id: pres.insertId, dispatch: 'jobqueue' };
                 });
+        }).then(function(res){
+            // Post-commit dispatch hint (fire-and-forget; dispatcher's
+            // reconcile remains the correctness floor). P3 2026-09-21.
+            if (res && res.job_id) { dispatchHint.hint(res.job_id, 6); }
+            return res;
         });
     },
 };

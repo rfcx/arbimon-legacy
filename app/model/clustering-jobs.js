@@ -6,6 +6,7 @@ const AWS = require('aws-sdk');
 const { createS3Client } = require('../utils/storage');
 const q = require('q');
 const dbpool = require('../utils/dbpool');
+const dispatchHint = require('./dispatch-hint');
 const { roiSpectrogramUrl } = require('../utils/asset-url');
 const Recordings = require('./recordings');
 const config = require('../config');
@@ -490,6 +491,11 @@ select.push(
                 });
                 await k8sClient.apis.batch.v1.namespaces(k8sConfig.namespace).jobs.post({ body: jobParam });
             }).then(() => {
+                // Post-commit dispatch hint (fire-and-forget) — only on the
+                // jobqueue path, where the row is 'waiting' and the
+                // dispatcher will actually claim it. The legacy direct-post
+                // path (state='processing') gets no hint. P3 2026-09-21.
+                if (useJobqueue) { dispatchHint.hint(job_id, 9); }
                 return job_id;
             })
             .nodeify(callback);

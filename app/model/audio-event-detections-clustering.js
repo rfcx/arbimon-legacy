@@ -7,6 +7,7 @@ const q = require('q');
 const lambda = new AWS.Lambda();
 const config = require('../config');
 const dbpool = require('../utils/dbpool');
+const dispatchHint = require('./dispatch-hint');
 const moment = require('moment');
 
 let AudioEventDetectionsClustering = {
@@ -316,6 +317,10 @@ let AudioEventDetectionsClustering = {
                 }).then(function(){
                     return { job_id: jobId, dispatch: 'jobqueue' };
                 });
+        }).then(function(res){
+            // Post-commit dispatch hint (fire-and-forget). P3 2026-09-21.
+            if (res && res.job_id) { dispatchHint.hint(res.job_id, 8); }
+            return res;
         });
     },
 };
