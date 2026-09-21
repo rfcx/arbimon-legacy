@@ -274,12 +274,29 @@ var Jobs = {
      *
      * 2026-09-09 (rfcx-local, OPEN-ITEMS §292): `projectId` REQUIRED, same
      * reasoning as hide() above.
+     *
+     * 2026-09-20 (rfcx-local, OPEN-ITEMS §357): also mark the row terminal
+     * (`state='canceled'`) in the SAME statement, guarded to non-terminal
+     * states only. Before this, cancel set the flag and nothing else: the
+     * row sat 'processing' forever (the lane-queue consumers never write a
+     * terminal state, and the reaper skips cancelled jobs), and the jobs
+     * page's "Cancel" button called hide() instead -- so a user "cancel"
+     * only hid the row while the job ran to completion. 'canceled' is a
+     * known value of the job_state enum (the legacy per-job worker library
+     * wrote it) and renders fine on the jobs page. The state guard makes the
+     * write idempotent and race-safe: a job that finished between the page
+     * load and the click matches 0 rows, and the dispatcher's claim path
+     * excludes cancel_requested rows (so a cancelled 'waiting' job is never
+     * dispatched). The result's affectedRows tells the route which case
+     * fired.
      */
     cancel: function(jId, projectId, callback) {
         if (typeof projectId === 'function') {
             return projectId(new Error('jobs.cancel requires projectId'));
         }
-        var q = "update `jobs` set `cancel_requested`  = 1 where `job_id` = ? and `project_id` = ?";
+        var q = "update `jobs` set `cancel_requested` = 1, `state` = 'canceled', `last_update` = NOW() " +
+                "where `job_id` = ? and `project_id` = ? " +
+                "and `state` in ('waiting','initializing','processing')";
 
         queryHandler(q, [jId, projectId], callback);
     },

@@ -53,6 +53,34 @@ angular.module('a2.jobs', [
             });
     };
 
+    // 2026-09-20 (rfcx-local, OPEN-ITEMS §357): the "Cancel" button on a
+    // running job used to call /jobs/hide/ -- the row vanished from the list
+    // but the job kept running to completion (measured live: a 1.05M-recording
+    // PM job "cancelled" this way kept the fleet busy for hours). The button
+    // now calls the real cancel route, which sets cancel_requested=1 AND
+    // marks the row 'canceled'; the dispatcher's sweeper retires the queued
+    // chunks. The row STAYS VISIBLE as 'canceled' (the user can Hide it
+    // after) -- an honest record beats a vanished one.
+    var cancelJob = function(jobId) {
+        $http.get('/legacy-api/project/' + Project.getUrl() + '/jobs/cancel/' + jobId)
+            .success(function(data) {
+                    JobsData.updateJobs();
+                    if (data && data.cancelled === false) {
+                        notify.log('Job already finished.');
+                    } else {
+                        notify.log('Job canceled successfully.');
+                    }
+            })
+            .error(function(data) {
+                if(data.error) {
+                    notify.error(data.error);
+                }
+                else {
+                    notify.serverError();
+                }
+            });
+    };
+
     JobsData.getJobTypes().success(function(data) {
         var colors = ['#1482f8', '#df3627', '#40af3b', '#9f51bf', '#d37528', '#ffff00', '#5bc0de', '#80BDFF'];
         var job_types_id = [1, 2, 4, 6, 7, 8, 9, 10];
@@ -136,7 +164,9 @@ angular.module('a2.jobs', [
         $scope.infoInfo = "Loading...";
         $scope.showInfo = true;
         if (job.percentage < 100) {
-            confirm('Cancel', 'cancel', hideJob, jobId, 'canceled');
+            // §357: running job -> the modal's "Cancel" button really cancels
+            // (it used to call hideJob, which only hid the row).
+            confirm('Cancel', 'cancel', cancelJob, jobId, 'canceled');
         }
         else {
             hideJob(jobId, 'hidden');
