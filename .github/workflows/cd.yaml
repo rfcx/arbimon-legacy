@@ -43,15 +43,20 @@ jobs:
     with:
       repo: arbimon-legacy
       dockerfile: build/Dockerfile
-      targets: '["arbimon","arbimon-recording-delete-job","arbimon-recording-export-job"]'
+      # 2026-09-21: the IMAGE was renamed `arbimon` -> `arbimon-legacy` (stage
+      # name in build/Dockerfile; image name == stage name). The DEPLOYMENT
+      # names stay `arbimon` / `arbimon-ingest-consumer` — only the image
+      # contract changed. runbooks/DESIGN-2026-09-21-arbimon-legacy-image-rename.md
+      # in evity-squibbon/rfcx-local. Do not 'tidy' the names back into sync.
+      targets: '["arbimon-legacy","arbimon-recording-delete-job","arbimon-recording-export-job"]'
       # Opt into the shared BuildKit registry cache (rfcx/cicd#10/#11). 3 serialized
       # builds on the single runner; fails safe (a missing/GC'd cache tag = a miss,
       # not a failure). Proven on rfcx/arbimon (14.6 -> 2.5 min) + 3 other repos.
       build-cache: true
       deployments: |
         [
-          {"name": "arbimon",                 "image": "arbimon"},
-          {"name": "arbimon-ingest-consumer", "image": "arbimon"},
+          {"name": "arbimon",                 "image": "arbimon-legacy"},
+          {"name": "arbimon-ingest-consumer", "image": "arbimon-legacy"},
           {"name": "arbimon-export-consumer",  "image": "arbimon-recording-export-job"},
           {"name": "arbimon-export-reconciler", "image": "arbimon-recording-export-job", "kind": "cronjob"}
         ]
