@@ -18,15 +18,28 @@
 // (tests/dev); in prod the shared app redis client already points at redis-ha
 // (the SAME instance the dispatcher reads), so no new env is needed.
 
-const redis = require('../utils/redis')
-
+// LAZY REQUIRE — load-bearing (2026-09-21, defect found at close-out; see
+// rfcx/arbimon-legacy #1930/#1931 and the export-consumer log flood).
+// `app/utils/redis.js` calls createClient().connect() AT IMPORT TIME. The
+// export/jobs image reuses model files (clustering-jobs.js requires this
+// module) but has NO REDIS_URL and no need to emit hints — a top-level
+// require therefore opened a client against the default ::1:6379 and logged
+// ECONNREFUSED on a reconnect loop forever (measured: 238 errors in 2 min)
+// in a workload that must never touch redis at all. Requiring INSIDE hint()
+// keeps the client creation on the path that actually emits, so a process
+// that never creates a job never connects. Do not hoist this back to the top.
 const KEY = process.env.DISPATCH_HINT_REDIS_KEY || 'jobs:dispatch:hint'
 const ENABLED = (process.env.DISPATCH_HINT_ENABLED || '1') !== '0'
 
 function hint (jobId, typeId) {
   if (!ENABLED) return
   if (jobId === undefined || jobId === null || !typeId) return
+  // Belt-and-braces: without a configured redis endpoint there is nothing to
+  // emit to, and connecting to the default localhost is exactly the failure
+  // this module caused in the export image.
+  if (!process.env.REDIS_URL && !process.env.REDIS_HOST) return
   try {
+    const redis = require('../utils/redis')
     // The shared client is legacyMode:true, so the modern API lives under
     // .v4 (same pattern as app/utils/prewarm.js). sAdd returns a promise; we
     // deliberately do not return or await it — fire and forget.
