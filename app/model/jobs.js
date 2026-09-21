@@ -7,6 +7,7 @@ const joi = require('joi');
 const moment = require('moment')
 const dbpool = require('../utils/dbpool');
 const sqlutil = require('../utils/sqlutil');
+const dispatchHint = require('./dispatch-hint');
 const queryHandler = dbpool.queryHandler;
 const { capitalize } = require('../utils/string')
 const models = require('./index')
@@ -221,6 +222,11 @@ var Jobs = {
                 });
             }).finally(function(){
                 connection.release();
+            }).then(function(id){
+                // Post-commit only: a hint must never outrun the transaction.
+                // Fire-and-forget — see app/model/dispatch-hint.js.
+                dispatchHint.hint(id, job_type.type_id);
+                return id;
             });
         }).nodeify(callback);
     },
