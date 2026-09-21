@@ -66,6 +66,7 @@ COPY app/k8s/index.js /app/app/k8s/index.js
 COPY app/model/recordings.js /app/app/model/recordings.js
 COPY app/model/soundscapes.js /app/app/model/soundscapes.js
 COPY app/model/clustering-jobs.js /app/app/model/clustering-jobs.js
+COPY app/model/dispatch-hint.js /app/app/model/dispatch-hint.js
 COPY app/model/projects.js /app/app/model/projects.js
 COPY app/model/users.js /app/app/model/users.js
 COPY app/model/auth0.js /app/app/model/auth0.js
