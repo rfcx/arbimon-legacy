@@ -19,7 +19,10 @@
                         {{ row.last_update | moment: 'lll' }}
                     </field>
                     <field title="State" key="state">
-                        <span ng-hide="isProcessing(row)">{{ row.state }}</span>
+                        <!-- 2026-09-21: surface the worker's error text (remarks
+                             is returned by /jobs/progress but was rendered
+                             nowhere - a failed job showed a bare 'error'). -->
+                        <span ng-hide="isProcessing(row)" ng-attr-title="{{ row.remarks || undefined }}">{{ row.state }}</span>
                         <span ng-show="isProcessing(row)"
                             aria-valuemax="100"
                             aria-valuemin="0"
@@ -35,6 +38,12 @@
                         </button>
                     </field>
                     <expand-select>
+                        <div class="row" ng-if="selected.remarks">
+                            <div class="pl-4 pb-2" style="max-width: 900px;">
+                                <strong>Error details</strong>
+                                <div style="white-space: pre-wrap; word-break: break-word;">{{ selected.remarks }}</div>
+                            </div>
+                        </div>
                         <div class="row">
                             <div>
                                 <ul class="pl-4">
