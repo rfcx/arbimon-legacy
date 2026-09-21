@@ -116,7 +116,12 @@ CMD ["node", "--max-old-space-size=8192", "jobs/arbimon-recording-export-job/ind
 
 # Frontend and backend
 
-FROM ubuntu:18.04 as arbimon
+# The STAGE is `arbimon-legacy`; the image it produces is therefore
+# `arbimon-legacy` (image name == stage name via rfcx/cicd rfcx-local-cd).
+# Renamed from `arbimon` 2026-09-21 so the image matches this repo's name — a
+# LIVE CONTRACT consumed by the rfcx-local manifests; the WORKLOAD names
+# (Deployment `arbimon` etc.) intentionally did NOT change. Do not 'tidy' back.
+FROM ubuntu:18.04 as arbimon-legacy
 RUN apt update \
     && apt install -y \
         curl \
