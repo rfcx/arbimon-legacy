@@ -276,7 +276,7 @@ router.post('/:patternMatching/validate', function(req, res, next) {
                 });
             });
         };
-        model.patternMatchings.validateRois(req.params.patternMatching, updatedRoiIds, validation, req.project.project_id)
+        model.patternMatchings.validateRois(req.params.patternMatching, updatedRoiIds, validation, req.project.project_id, req.session.user.id)
             .then(async function(validatedRois) {
                 for (let roi of updatedRois) {
                     const previousValidation = roi.validated;
