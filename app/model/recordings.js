@@ -3,6 +3,7 @@
 
 // dependencies
 var util  = require('util');
+const protectProbe = require('./protect-probe'); // PROBE — never merge
 const crypto = require('crypto');
 var path   = require('path');
 var Q = require('q');
