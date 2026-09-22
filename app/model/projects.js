@@ -812,7 +812,8 @@ var Projects = {
         var schema = {
             species: joi.string().required(),
             songtype: joi.string().required(),
-            project_id: joi.number().required()
+            project_id: joi.number().required(),
+            user_id: joi.number().allow(null).optional()
         };
         var value, classSpecies, classSong;
 
@@ -851,12 +852,16 @@ var Projects = {
                 return { error: "class already in project" };
             }
 
+            // user_id (attribution slice 2, rfcx-local OPEN-ITEMS 375): the user
+            // adding the class; nullable, go-forward. Every caller that has a
+            // session passes it; the AED/PM auto-add paths pass theirs too.
             return dbpool.query(
-                'INSERT INTO project_classes(project_id, species_id, songtype_id) \n'+
-                'VALUES (?, ?, ?)', [
+                'INSERT INTO project_classes(project_id, species_id, songtype_id, user_id) \n'+
+                'VALUES (?, ?, ?, ?)', [
                 value.project_id,
                 classSpecies.id,
-                classSong.id
+                classSong.id,
+                (value.user_id === undefined || value.user_id === null) ? null : Number(value.user_id)
             ]).then(function(result){
                 return {
                     class: result.insertId,
@@ -879,9 +884,10 @@ var Projects = {
         }).nodeify(callback);
     },
 
-    insertBatchClassesAsync: async function(projectId, classes) {
+    insertBatchClassesAsync: async function(projectId, classes, userId) {
+        const batchActor = (userId === undefined || userId === null) ? null : Number(userId);
         let data = classes.map((cl) => {
-            return [projectId, cl.specieId, cl.songtypeId]
+            return [projectId, cl.specieId, cl.songtypeId, batchActor]
         });
         const uniqueStrings = new Set();
         data = data.filter(arr => {
@@ -890,7 +896,7 @@ var Projects = {
             uniqueStrings.add(str);
             return true;
         });
-        return dbpool.query('INSERT INTO project_classes(project_id, species_id, songtype_id) VALUES ?;', [data]);
+        return dbpool.query('INSERT INTO project_classes(project_id, species_id, songtype_id, user_id) VALUES ?;', [data]);
     },
 
     recognizeClasses: async function(projectId, projectClasses) {
@@ -931,8 +937,12 @@ var Projects = {
 
     insertClassAsync: function(projectClass, connection) {
         const {projectId, specieId, songtypeId} = projectClass
-        const sql = `INSERT INTO project_classes(project_id, species_id, songtype_id)
-        VALUES(${projectId}, ${specieId}, ${songtypeId})`
+        // user_id: nullable actor (attribution slice 2). Rendered as a literal
+        // like its neighbours; NULL when the caller has no acting user (the
+        // site-import auto-add path is one such caller today).
+        const classActor = (projectClass.userId === undefined || projectClass.userId === null) ? 'NULL' : Number(projectClass.userId);
+        const sql = `INSERT INTO project_classes(project_id, species_id, songtype_id, user_id)
+        VALUES(${projectId}, ${specieId}, ${songtypeId}, ${classActor})`
 
         if (connection) {
             return dbpool.queryWithConn(connection, sql);

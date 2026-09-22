@@ -260,7 +260,8 @@ router.post('/:patternMatching/validate', function(req, res, next) {
             var projectClass = {
                 songtype: req.body.cls.songtype,
                 species: req.body.cls.species,
-                project_id: req.project.project_id
+                project_id: req.project.project_id,
+                user_id: req.session.user.id
             };
             model.projects.insertClass(projectClass, function(err, result){
                 if(err) return next(err);

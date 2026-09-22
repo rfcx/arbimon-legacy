@@ -167,6 +167,7 @@ router.post('/add', function(req, res, next) {
         
         model.trainingSets.insert({
             project_id : req.project.project_id,
+            user_id : req.session.user.id,
             name    : req.body.name,
             type    : req.body.type,
             extras  : req.body
@@ -219,6 +220,7 @@ router.post('/combine', async function(req, res, next) {
 
     const opts = {
         projectId: req.project.project_id,
+        user_id: req.session.user.id,
         term1: req.body.term1,
         term2: req.body.term2,
         species: req.body.species,

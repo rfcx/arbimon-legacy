@@ -390,10 +390,13 @@ let Soundscapes = {
                     }
 
                     let name = soundscape.name + ', ' + region.name + ' recordings sample';
+                    // user_id: the user adding the region (attribution slice 2,
+                    // rfcx-local OPEN-ITEMS 375); NULL when absent, never invented.
+                    const regionActor = (params.user_id === undefined || params.user_id === null) ? null : Number(params.user_id);
                     return db.promisedQuery(
-                        "INSERT INTO playlists(project_id, name, playlist_type_id, uri, status) \n" +
-                        " VALUES (?, ?, ?, ?, ?)",[
-                        soundscape.project, name, Soundscapes.PLAYLIST_TYPE, null, 20
+                        "INSERT INTO playlists(project_id, name, playlist_type_id, uri, status, user_id) \n" +
+                        " VALUES (?, ?, ?, ?, ?, ?)",[
+                        soundscape.project, name, Soundscapes.PLAYLIST_TYPE, null, 20, regionActor
                     ]).then(function(results){
                         region.playlist = results.insertId;
                         playlist_id = region.playlist;

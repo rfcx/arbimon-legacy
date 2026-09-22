@@ -8,6 +8,9 @@ const moment = require('moment');
 
 var sqlutil = require('../utils/sqlutil');
 var dbpool = require('../utils/dbpool');
+// Nullable actor for attribution columns (rfcx-local OPEN-ITEMS 375): an
+// absent user is stored as NULL, never as 0 or a sentinel.
+const actorId = (v) => (v === undefined || v === null) ? null : Number(v);
 var APIError = require('../utils/apierror');
 // TODO remove circular dependencies
 var model = require('../model');
@@ -316,9 +319,13 @@ var Playlists = {
         try {
             await dbpool.queryWithConn(connection, 'START TRANSACTION');
             try {
+                // user_id (2026-09-22, user-attribution slice 2 -- rfcx-local
+                // OPEN-ITEMS 375): the creating user, nullable, go-forward only.
+                // NULL = created before the column shipped or by a path with no
+                // acting user; history is deliberately not backfilled.
                 playlistId = (await dbpool.queryWithConn(connection,
-                    `INSERT INTO playlists(project_id, name, playlist_type_id, status) VALUES (?, ?, ?, ?)`,
-                    [data.project_id, data.name, 1, status.WAITING]
+                    `INSERT INTO playlists(project_id, name, playlist_type_id, status, user_id) VALUES (?, ?, ?, ?, ?)`,
+                    [data.project_id, data.name, 1, status.WAITING, actorId(data.user_id)]
                 )).insertId;
             } catch (err) {
                 // P7 dup-key port: PG raises SQLSTATE 23505, not ER_DUP_ENTRY.
@@ -436,6 +443,7 @@ var Playlists = {
             operation: Joi.string().required(),
             term1: Joi.number().required(),
             term2: Joi.number().required(),
+            user_id: Joi.number().allow(null).optional(),
         };
 
         return q.ninvoke(Joi, 'validate', data, schema).catch(function(err){
@@ -459,12 +467,12 @@ var Playlists = {
             }
 
             return dbpool.query(
-                "INSERT INTO playlists(project_id, name, playlist_type_id, metadata, status) \n"+
-                "VALUES (?, ?, ?, ?, ?)", [
+                "INSERT INTO playlists(project_id, name, playlist_type_id, metadata, status, user_id) \n"+
+                "VALUES (?, ?, ?, ?, ?, ?)", [
                     data.project, data.name, operation.type, JSON.stringify({
                         term1:data.term1,
                         term2:data.term2,
-                    }), status.WAITING
+                    }), status.WAITING, actorId(data.user_id)
                 ]).get('insertId').then(async function(newPlaylistId){
                     const result = await operation.eval(data.term1, data.term2, newPlaylistId);
                     await Playlists.refreshTotalRecs(newPlaylistId)
