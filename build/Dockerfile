@@ -49,6 +49,15 @@ FROM build as arbimon-recording-delete-job
 # DB_ENGINE=pg/shadow).
 RUN mkdir -p /app/app/utils
 COPY app/utils /app/app/utils
+# app/utils/dbpool-pg.js reaches `require('../config')` (app/config.js) from
+# _dbTimezone(), which runs on the conn.query() interpolation path -- i.e. at
+# RUNTIME, not at load. This stage never copied it, so the delete job would
+# throw MODULE_NOT_FOUND mid-run rather than at start (which is why no build
+# and no start-up smoke test has ever caught it). app/config.js in turn reads
+# AND fs.watch()es ../config, so that directory must be present too.
+# Found 2026-09-22 by build/check-stage-copy-closure.js on its first run.
+COPY app/config.js /app/app/config.js
+COPY config/ /app/config
 CMD ["node", "jobs/arbimon-recording-delete-job/index.js"]
 
 # -- arbimon-recording-export-job --
