@@ -35,9 +35,30 @@ jobs:
             echo "::set-output name=namespace::testing"
           fi
 
+  # GATE: the export/delete job stages of build/Dockerfile copy app/model/*
+  # INDIVIDUALLY BY NAME while the web stage copies app/ whole, so a PR that
+  # adds a model file the job path requires builds all three images GREEN and
+  # then CrashLoops arbimon-export-consumer on MODULE_NOT_FOUND once CD rolls.
+  # Bitten twice: #1892->#1893 (2026-09-16, ~3 min), #1939->#1940 (2026-09-22,
+  # ~9 min, CrashLoop x3) -- both caught POST-roll by a hand-run soak check.
+  # This job runs BEFORE deploy-rfcx-local (via `needs:`), so a gap fails the
+  # run instead of reaching production. Red-tested before merge; see
+  # runbooks/evidence/irr-ledger-2026-09-22-export-copy-gate.md in rfcx-local.
+  check-stage-copy-closure:
+    name: 'Gate: export/delete stage COPY closure'
+    runs-on: ubuntu-latest
+    needs: [prepare]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: 'require() closure vs Dockerfile COPY coverage'
+        run: node build/check-stage-copy-closure.js
+
   deploy-rfcx-local:
     name: 'Deploy: rfcx-local'
-    needs: [prepare, configure]
+    needs: [prepare, configure, check-stage-copy-closure]
     if: ${{ needs.configure.outputs.namespace == 'production' }}
     uses: rfcx/cicd/.github/workflows/rfcx-local-cd.yaml@master
     with:
