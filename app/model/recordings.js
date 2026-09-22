@@ -20,6 +20,7 @@ const siteModel = require('./sites')
 // (+ first/last_recording_at) in that same transaction. See the helper's
 // header for the contract, and for the ONE column it must never touch.
 const siteRecCount = require('./site-rec-count')
+const playlistRecCount = require('./playlist-rec-count')
 const projectModel = require('./projects')
 const classificationsModel = require('./classifications')
 const tagsModel = require('./tags')
@@ -3694,10 +3695,16 @@ var Recordings = {
      * The FK cascade used to do this as a side effect of the row delete;
      * with the row now surviving, it must be explicit. Restore does NOT
      * re-add membership.
+     *
+     * 2026-09-22: also recounts `playlists.total_recordings` for the playlists
+     * that lost rows, in the same transaction, so the playlists list route
+     * (which now READS that column instead of COUNT(*)-ing per playlist) stays
+     * exact. The route-level `refreshTotalRecs` loop after `delete()` becomes
+     * redundant but is harmless (idempotent recount).
      */
     removeArchivedFromPlaylists: async function(recIds, query) {
-        const q = `DELETE FROM playlist_recordings WHERE recording_id IN (${recIds})`
-        return query(q);
+        const ids = Array.isArray(recIds) ? recIds : String(recIds).split(',')
+        return playlistRecCount.removeRecordingsAndRecount(query, ids);
     },
 
     /**

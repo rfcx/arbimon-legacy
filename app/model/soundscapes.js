@@ -13,6 +13,7 @@ let config       = require('../config');
 let arrays_util  = require('../utils/arrays');
 let tmpfilecache = require('../utils/tmpfilecache');
 const { arbimon2PublicUrl } = require('../utils/asset-url');
+const playlistRecCount = require('./playlist-rec-count'); // playlists.total_recordings maintenance (2026-09-22)
 const { createS3Client } = require('../utils/storage');
 const k8sConfig = config('k8s');
 const jsonTemplates = require('../utils/json-templates');
@@ -420,6 +421,14 @@ let Soundscapes = {
                             return _;
                         }, [])
                     );
+                }).then(function () {
+                    // Keep `playlists.total_recordings` exact for this sample
+                    // playlist, same transaction (2026-09-22). This path used to
+                    // leave it at the INSERT default (0) forever -- measured on
+                    // puerto-rico-island-wide: 8 'soundscape region' playlists
+                    // stored 0 while holding 33-694 rows. Recounted rather than
+                    // += n because ON CONFLICT DO NOTHING makes n unknown.
+                    return playlistRecCount.recount(function (sql) { return db.promisedQuery(sql); }, [playlist_id]);
                 });
             });
         }).thenResolve(region).nodeify(callback);

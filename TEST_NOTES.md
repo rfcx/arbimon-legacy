@@ -3,6 +3,11 @@ Test Notes are used to list what pages / components / features / user flows are 
 
 ## next
 
+- Playlists list (`GET …/playlists`) serves each playlist's `count` from `playlists.total_recordings` instead of counting `playlist_recordings` per playlist
+  - Visualizer "Browse Recordings by Playlist" dropdown + the Playlists page: counts shown are unchanged for normal playlists; soundscape-region sample playlists that showed 0 now show their real size
+  - Create a playlist (from recordings, from AED, from a search), combine two playlists, create a soundscape-region sample playlist, delete recordings that belong to a playlist, remove a site: the affected playlists' counts update immediately
+  - Expected: `…/playlists` on a large project (1,000+ playlists) returns in well under a second instead of 2–4 s
+
 - Visualizer: `recordings/info` no longer renders a full-width spectrogram to compute the tile grid (non-legacy recordings)
   - Open the visualizer on any project, click through 10+ recordings of a site/day: spectrogram tiles, y-axis, playback, tags/validations/templates overlays all render as before
   - Check a short recording (< 60 s) and a 60 s one: tile count and the rightmost partial tile unchanged

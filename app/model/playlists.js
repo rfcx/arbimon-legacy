@@ -63,11 +63,22 @@ var Playlists = {
         }
 
         if(options.count){
-            // agregate = true;
-            projection.push("(\n" +
-            "   SELECT COUNT(*) FROM playlist_recordings PLR WHERE PL.playlist_id = PLR.playlist_id\n" +
-            ") as count");
-            // joins.push("JOIN playlist_recordings PLR ON PL.playlist_id = PLR.playlist_id");
+            // `count` is served from the maintained `playlists.total_recordings`
+            // column (2026-09-22). It used to be a correlated
+            //   (SELECT COUNT(*) FROM playlist_recordings PLR WHERE PLR.playlist_id = PL.playlist_id)
+            // per row -- on puerto-rico-island-wide that is 1,710 loops over
+            // 43.3 M index rows: 25.9 s cold / 3.7 s warm on the replica,
+            // 2.1-3.7 s as seen by the visualizer on EVERY page load (it was
+            // the slowest call in every sample), to fill a dropdown badge.
+            //
+            // The column is exact on every write this code can see (create,
+            // combine, soundscape-region samples, archive/delete -- each
+            // goes through `refreshTotalRecs` or sets it from affectedRows
+            // inside its own transaction; see `setTotalRecsForPlaylists`), and
+            // the rfcx-local `count-repair-plane` CronJob audits + repairs
+            // drift from writers this code cannot see (same contract as
+            // sites.rec_count, operator ruling 2026-09-22 10:52).
+            projection.push("PL.total_recordings as count");
         }
 
         projection.push("PLT.name as type");
@@ -557,11 +568,37 @@ var Playlists = {
     refreshTotalRecs: async function(playlist_id) {
         const total = await this.getRecordingsCount(playlist_id)
         console.log('total inserted', total)
-        if (total === null) {
-            return
-        }
+        // A playlist whose LAST recording was just removed has zero rows in
+        // playlist_recordings, and the GROUP BY count above returns no row
+        // (null) -- the old early-return here left `total_recordings` at its
+        // stale pre-removal value forever. Zero is a real count; write it.
         const q = 'UPDATE playlists SET total_recordings = ?, status = ? WHERE playlist_id = ?'
-        return await dbpool.query(q, [total, status.CREATED , playlist_id])
+        return await dbpool.query(q, [total === null ? 0 : total, status.CREATED , playlist_id])
+    },
+
+    /**
+     * Recompute `playlists.total_recordings` for every playlist that contains
+     * any of `recIds`, on the SAME connection as the membership change (so it
+     * commits or rolls back with it). One statement, no per-playlist loop:
+     * a recording can sit in many playlists (an archive of a site's day can
+     * touch hundreds), and the visualizer reads the column on every load.
+     *
+     * Call this AFTER the DELETE FROM playlist_recordings, passing the SAME
+     * id list -- the affected playlists are found from playlist_recordings
+     * BEFORE the delete by the caller (`findRecordingsPlaylists`) or, more
+     * simply, by passing the playlist ids directly. Both forms accepted.
+     *
+     * @param {Function} execQuery (sql, params) -> Promise on the transaction's connection
+     * @param {number[]} playlistIds
+     */
+    setTotalRecsForPlaylists: async function(execQuery, playlistIds) {
+        const ids = (playlistIds || []).map(Number).filter(n => Number.isInteger(n) && n > 0)
+        if (!ids.length) return
+        return execQuery(
+            'UPDATE playlists SET total_recordings = (' +
+            '  SELECT COUNT(*) FROM playlist_recordings PLR WHERE PLR.playlist_id = playlists.playlist_id' +
+            ') WHERE playlist_id IN (' + ids.join(',') + ')'
+        )
     },
 
     findRecordingsPlaylists: function(recIds) {
