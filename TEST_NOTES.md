@@ -1,6 +1,14 @@
 # Arbimon Test Notes
 Test Notes are used to list what pages / components / features / user flows are affected by each update.
 
+## next
+
+- Visualizer: `recordings/info` no longer renders a full-width spectrogram to compute the tile grid (non-legacy recordings)
+  - Open the visualizer on any project, click through 10+ recordings of a site/day: spectrogram tiles, y-axis, playback, tags/validations/templates overlays all render as before
+  - Check a short recording (< 60 s) and a 60 s one: tile count and the rightmost partial tile unchanged
+  - Check a LEGACY recording (uri starts with `project_`): still renders (uses the old path)
+  - Expected: the first click on a recording that nobody has opened recently is ~2 s faster; nothing else changes
+
 ## v3.0.81
 
 - Improve RAM usage in recordings-export job
