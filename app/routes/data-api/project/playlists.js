@@ -116,7 +116,8 @@ router.post('/create', function(req, res, next) {
             name:    req.body.playlist_name,
             params:  req.body.params,
             recIdsIncluded: req.body.recIdsIncluded === true,
-            aedIdsIncluded: req.body.aedIdsIncluded === true
+            aedIdsIncluded: req.body.aedIdsIncluded === true,
+            user_id: req.session.user.id
         };
         model.playlists.create(opts).then(function(plist) {
             debug("playlist added", plist);
@@ -160,6 +161,7 @@ router.post('/combine', function(req, res, next) {
         return model.playlists.combine({
             name: req.body.name,
             project: req.project.project_id,
+            user_id: req.session.user.id,
             operation: req.body.operation,
             term1: req.body.term1,
             term2: req.body.term2,

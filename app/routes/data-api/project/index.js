@@ -416,7 +416,7 @@ router.post('/:projectUrl/class/bulk-add', function(req, res, next) {
         return res.status(401).json({ error: "you dont have permission to manage project species'" });
     }
     const projectClasses = req.body.classes;
-    return model.projects.insertBatchClassesAsync(req.project.project_id,projectClasses)
+    return model.projects.insertBatchClassesAsync(req.project.project_id,projectClasses, req.session.user.id)
             .then(() => {
                 res.status(201).json({ message: 'The classes were successfully added to the selected project.' })
             })

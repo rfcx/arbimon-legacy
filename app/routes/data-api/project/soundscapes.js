@@ -450,7 +450,8 @@ region_router.get('/:region', function(req, res, next) {
 region_router.post('/:region/sample', function(req, res, next) {
     res.type('json');
     model.soundscapes.sampleRegion(req.soundscape, req.region, {
-        count : (req.region.count * (req.body.percent|0) / 100.0) | 0
+        count : (req.region.count * (req.body.percent|0) / 100.0) | 0,
+        user_id : req.session.user.id
     }, function(err, region){
         if(err){
             next(err);

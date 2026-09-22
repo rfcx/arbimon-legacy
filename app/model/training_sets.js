@@ -154,9 +154,12 @@ var TrainingSets = {
         tasks.push(function run_insert_query(){
             var cb = Array.prototype.pop.call(arguments);
             scope.in_transaction = true;
+            // user_id (attribution slice 2, rfcx-local OPEN-ITEMS 375): nullable,
+            // go-forward; escaped like its neighbours (this insert is string-built).
+            const tsActor = (data.user_id === undefined || data.user_id === null) ? null : Number(data.user_id);
             scope.connection.query(
-                "INSERT INTO training_sets (project_id, name, date_created, training_set_type_id, removed) \n" +
-                "VALUES ("+dbpool.escape(data.project_id)+", "+dbpool.escape(data.name)+", NOW(), "+ dbpool.escape(typedef.id)+", 0)",
+                "INSERT INTO training_sets (project_id, name, date_created, training_set_type_id, removed, user_id) \n" +
+                "VALUES ("+dbpool.escape(data.project_id)+", "+dbpool.escape(data.name)+", NOW(), "+ dbpool.escape(typedef.id)+", 0, "+dbpool.escape(tsActor)+")",
             cb);
         });
         tasks.push(function get_insert_id(result){
@@ -224,12 +227,13 @@ var TrainingSets = {
      * @param {Object} data.term2  training_set_id in format of term2.
      */
     combine: async function(data) {
-        const q = `INSERT INTO training_sets (project_id, name, date_created, training_set_type_id, removed, metadata)
-                VALUES (?, ?, NOW(), 1, 0, ?)`
+        const q = `INSERT INTO training_sets (project_id, name, date_created, training_set_type_id, removed, metadata, user_id)
+                VALUES (?, ?, NOW(), 1, 0, ?, ?)`
+        const combineActor = (data.user_id === undefined || data.user_id === null) ? null : Number(data.user_id);
         const newInserted = await dbpool.query(q, [data.projectId, data.name, JSON.stringify({
             term1:data.term1,
             term2:data.term2,
-        })])
+        }), combineActor])
         const combine_q = `INSERT INTO training_set_roi_set_data (training_set_id, recording_id, species_id, songtype_id, x1, x2, y1, y2, uri)
                         SELECT DISTINCT ?, recording_id, species_id, songtype_id, x1, x2, y1, y2, uri
                         FROM training_set_roi_set_data
