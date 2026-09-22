@@ -49,6 +49,7 @@ const prewarmDeps = {
 };
 var dbpool       = require('../utils/dbpool');
 var tyler        = require('../utils/tyler.js');
+var tileGrid     = require('../utils/tile-grid.js');
 
 function getExportPgWriter () {
     // app/utils module (NOT jobs/db/*): the arbimon WEB image ships app/ but
@@ -1215,11 +1216,25 @@ var Recordings = {
             function(rec_info,  next){
                 recording = rec_info;
                 recording.contrast = 105;
-                Recordings.fetchSpectrogramFile(recording, next);
-            },
-            function(specFile, next){
                 const isLegacy = Recordings.isLegacy(recording)
-                tyler(specFile.path, isLegacy, next);
+                // FAST PATH (2026-09-22): for a non-legacy recording the tile
+                // grid is a pure function of `duration` — the media-api render
+                // we used to fetch here has exactly the dimensions we asked for
+                // (specWidthForDuration × 255), and tyler() only read the PNG
+                // to learn them. Skip S3 + media-api + Jimp entirely; the
+                // browser mints its own tile images from the windows below.
+                // Measured cold cost of the old path: 1.8–2.7 s per recording
+                // (65 % the full-width render) — on the visualizer's critical
+                // path for every recording change. See app/utils/tile-grid.js
+                // for the 6/6 live equivalence check.
+                if (tileGrid.canComputeWithoutRender(recording, isLegacy)) {
+                    const width = Recordings.specWidthForDuration(recording.duration);
+                    return next(null, tileGrid.gridFor(width, tileGrid.MEDIA_API_SPECTRO_HEIGHT), null);
+                }
+                Recordings.fetchSpectrogramFile(recording, function(err, specFile){
+                    if (err) return next(err);
+                    tyler(specFile.path, isLegacy, next);
+                });
             },
             function(specTiles, specFile, next){
                 // Intentionally do NOT fs.unlink(specFile) here.
