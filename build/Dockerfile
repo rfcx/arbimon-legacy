@@ -84,6 +84,7 @@ COPY app/model/classifications.js /app/app/model/classifications.js
 # on the first S2 deploy (c6811f6, 4 restarts in 106 s, caught by the
 # post-deploy four-pin check). The web `arbimon` stage copies app/ whole.
 COPY app/model/site-rec-count.js /app/app/model/site-rec-count.js
+COPY app/model/playlist-rec-count.js /app/app/model/playlist-rec-count.js
 # `python-dev` (python2 dev headers) was REMOVED after bullseye and has no
 # installation candidate on bookworm or trixie -- keeping it fails the whole
 # `apt install` with "Package 'python-dev' has no installation candidate".
