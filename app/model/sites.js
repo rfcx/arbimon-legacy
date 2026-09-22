@@ -11,6 +11,7 @@ var tzlookup = require("tz-lookup");
 var s3;
 var dbpool = require('../utils/dbpool');
 const siteRecCount = require('./site-rec-count'); // S2: sites.rec_count maintenance
+const playlistRecCount = require('./playlist-rec-count'); // playlists.total_recordings maintenance (2026-09-22)
 var queryHandler = dbpool.queryHandler;
 const moment = require('moment');
 let APIError = require('../utils/apierror');
@@ -818,8 +819,10 @@ var Sites = {
         const packet = Array.isArray(archived) ? archived[0] : archived
         const n = (packet && packet.affectedRows) || 0
         await siteRecCount.decrementForArchive(executeQuery, site_id, n)
+        // Playlist membership removal + `playlists.total_recordings` recount for
+        // the playlists that lost rows, same transaction (2026-09-22).
+        await playlistRecCount.removeRecordingsAndRecount(executeQuery, recIds)
         const queries = [
-            `DELETE FROM playlist_recordings WHERE recording_id IN (${recIds})`,
             // Templates remain soft-deleted: a template is a user-authored
             // artefact pointing at the recording, and `deleted=1` is already
             // reversible, unlike the pattern_matching_rois hard DELETE this
