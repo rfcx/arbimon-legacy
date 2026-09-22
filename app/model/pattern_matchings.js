@@ -728,8 +728,37 @@ var PatternMatchings = {
         PMR.uri_param1, PMR.uri_param2, PMR.score, PMR.validated,
         S.external_id, R.datetime_utc, R.sample_rate FROM pattern_matching_rois AS PMR`,
 
+    // `pmr.datetime` is PMR.denorm_recording_datetime, a DENORMALISED cache of
+    // recordings.datetime. It can be NULL: the mysql2pg fold turned the legacy
+    // MySQL '0000-00-00' zero-date sentinel into a real NULL, so every ROI of an
+    // affected recording carries a null datetime (OPEN-ITEMS §216 -- 37,309
+    // zero-date recordings whose sites carry an empty `timezone`).
+    //
+    // Until 2026-09-22 this called .toISOString() unconditionally, so ONE null
+    // row threw `TypeError: Cannot read properties of null (reading
+    // 'toISOString')` and took down the WHOLE page or CSV export -- the user saw
+    // "Error communicating with server" and could not view their results at all.
+    // Measured that day: 782 pattern_matchings / 3,826,274 ROI rows are exposed,
+    // and a real user (PM 122499, 146/146 rows null) hit it in production.
+    //
+    // This guard is DELIBERATELY NOT a data repair -- the underlying zero-date
+    // recordings still need §216's three-datastore fix, and refreshing the denorm
+    // from a still-invalid source would write the defect INTO the cache (card
+    // 20260909-arbimon-data-003). It degrades one ROW to blank date columns
+    // instead of failing the whole RESPONSE.
+    //
+    // The five keys are LEFT ABSENT rather than defaulted: `year`/`month`/`day`/
+    // `hour`/`minute` are emitted as CSV columns, and a fabricated 1970 (or a 0)
+    // would be a plausible-looking WRONG date in a scientific export. Absent =
+    // an empty cell, which is honest.
     combineDatetime (pmr) {
-        const d = pmr.datetime.toISOString()
+        if (!pmr || pmr.datetime === null || pmr.datetime === undefined) { return }
+        // Normalise to a Date, then reject an Invalid Date BEFORE calling
+        // toISOString() -- toISOString() throws RangeError on an invalid date, so
+        // testing the string afterwards would be unreachable code.
+        const dt = (pmr.datetime instanceof Date) ? pmr.datetime : new Date(pmr.datetime)
+        if (isNaN(dt.getTime())) { return }
+        const d = dt.toISOString()
         pmr.year = parseInt(d.substring(0, 4))
         pmr.month = parseInt(d.substring(5, 7))
         pmr.day = parseInt(d.substring(8, 10))
