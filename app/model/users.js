@@ -301,6 +301,17 @@ var Users = {
         return dbpool.query(q).get(0);
     },
 
+    /** Batch email -> user_id lookup for ingest attribution (rfcx-local
+     *  OPEN-ITEMS 375). Case-insensitive on the UNIQUE email index; bounded by
+     *  the distinct emails in ONE ingest request. */
+    findByEmailsAsync: function(emails) {
+        if (!Array.isArray(emails) || !emails.length) return Promise.resolve([]);
+        return dbpool.query(
+            "SELECT user_id, email FROM users WHERE LOWER(email) IN (?)",
+            [emails.map(e => String(e).toLowerCase())]
+        );
+    },
+
     findOwnedProjects: function(user_id, query) {
         return dbpool.query(
             "SELECT p.* \n"+

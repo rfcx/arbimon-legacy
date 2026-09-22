@@ -127,6 +127,11 @@ var Recordings = {
         upload_time:     joi.string(),
         datetime_utc:    joi.string(),
         meta:  joi.string().optional(),
+        // 2026-09-22 (rfcx-local OPEN-ITEMS 375, user-attribution): the
+        // uploading user's arbimon users.user_id, resolved by the ingest route
+        // from the email core-api forwards. Nullable; NULL means unknown,
+        // unresolved, or pre-column -- never a sentinel.
+        uploaded_by:     joi.number().integer().allow(null).optional(),
     },
     parseUrl: function(recording_url){
         var patternFound = false, resolved = false;
@@ -1670,10 +1675,11 @@ var Recordings = {
 
             Recordings._insertWithRecCount('INSERT INTO recordings (\n' +
                 '`site_id`, `uri`, `datetime`, `mic`, `recorder`, `version`, `sample_rate`, \n'+
-                '`precision`, `duration`, `samples`, `file_size`, `bit_rate`, `sample_encoding`, `upload_time`, `datetime_utc`, `meta`\n' +
-            ') VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);', [
+                '`precision`, `duration`, `samples`, `file_size`, `bit_rate`, `sample_encoding`, `upload_time`, `datetime_utc`, `meta`, `uploaded_by`\n' +
+            ') VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);', [
                 rec.site_id, rec.uri, rec.datetime, rec.mic || '(not specified)', rec.recorder || '(not specified)', rec.version || '(not specified)', rec.sample_rate,
-                rec.precision, rec.duration, rec.samples, rec.file_size, rec.bit_rate, rec.sample_encoding, rec.upload_time, rec.datetime_utc, rec.meta
+                rec.precision, rec.duration, rec.samples, rec.file_size, rec.bit_rate, rec.sample_encoding, rec.upload_time, rec.datetime_utc, rec.meta,
+                Recordings._uploadedBy(rec)
             ], [rec], callback);
         });
     },
@@ -1714,12 +1720,19 @@ var Recordings = {
         return insert(recording)
     },
 
+    /** Nullable actor for `recordings.uploaded_by`: an absent/unresolved uploader is
+     *  stored as NULL, never 0 or a sentinel (rfcx-local OPEN-ITEMS 375). */
+    _uploadedBy: function(rec) {
+        return (rec.uploaded_by === undefined || rec.uploaded_by === null) ? null : Number(rec.uploaded_by);
+    },
+
     insertBatch: function(recordings, callback) {
         const array = joi.array().items(Recordings.recordingInsertSchema)
         array.validate(recordings, function(err, recs) {
             const data = recs.map((rec) => {
                 return [rec.site_id, rec.uri, rec.datetime, rec.mic || '(not specified)', rec.recorder || '(not specified)', rec.version || '(not specified)', rec.sample_rate,
-                rec.precision, rec.duration, rec.samples, rec.file_size, rec.bit_rate, rec.sample_encoding, rec.upload_time, rec.datetime_utc, rec.meta]
+                rec.precision, rec.duration, rec.samples, rec.file_size, rec.bit_rate, rec.sample_encoding, rec.upload_time, rec.datetime_utc, rec.meta,
+                Recordings._uploadedBy(rec)]
             })
             if(err) return callback(err);
 
@@ -1728,7 +1741,7 @@ var Recordings = {
             // one UPDATE per site per batch, never per row.
             Recordings._insertWithRecCount('INSERT INTO recordings (\n' +
                 '`site_id`, `uri`, `datetime`, `mic`, `recorder`, `version`, `sample_rate`, \n'+
-                '`precision`, `duration`, `samples`, `file_size`, `bit_rate`, `sample_encoding`, `upload_time`, `datetime_utc`, `meta`\n' +
+                '`precision`, `duration`, `samples`, `file_size`, `bit_rate`, `sample_encoding`, `upload_time`, `datetime_utc`, `meta`, `uploaded_by`\n' +
             ') VALUES ?;', [data], recs, callback);
         });
     },

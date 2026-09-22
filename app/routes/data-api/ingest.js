@@ -10,6 +10,29 @@ const verifyToken = authentication.verifyToken;
 const hasRole = authentication.hasRole;
 const { EmptyResultError, httpErrorHandler, ArrayConverter } = require('@rfcx/http-utils');
 
+/**
+ * Resolve the distinct uploader emails in one batch to arbimon users.user_id
+ * (one bounded SELECT per request, never per row). Unknown emails are simply
+ * absent from the map -> the caller stores NULL. Fail-open by design: an
+ * attribution lookup must never fail an ingest.
+ */
+async function resolveUploaderIds(rows) {
+  const emails = Array.from(new Set(rows
+    .map(r => r.uploaded_by_email)
+    .filter(e => typeof e === 'string' && e.length > 0)
+    .map(e => e.toLowerCase())));
+  if (!emails.length) return {};
+  try {
+    const found = await model.users.findByEmailsAsync(emails);
+    const map = {};
+    for (const u of found) { if (u && u.email) map[String(u.email).toLowerCase()] = u.user_id; }
+    return map;
+  } catch (e) {
+    console.warn('[ingest] uploaded_by resolution failed (storing NULL):', e && e.message);
+    return {};
+  }
+}
+
 router.post('/recordings/create', verifyToken(), hasRole(['systemUser']), async function(req, res) {
   try {
     const converter = new ArrayConverter(req.body)
@@ -32,6 +55,12 @@ router.post('/recordings/create', verifyToken(), hasRole(['systemUser']), async 
     converter.convert('recorder').toString().optional().default('Unknown');
     converter.convert('mic').toString().optional().default('Unknown');
     converter.convert('sver').toString().optional().default('Unknown');
+    // 2026-09-22 (rfcx-local OPEN-ITEMS 375): the uploader's EMAIL, forwarded by
+    // core-api from ingest.stream_uploads via core users. Email is the identity
+    // bridge the two user tables already share (arbimon users.email is UNIQUE;
+    // the legacy user-sync keys on it as rfcx_id). Resolved to users.user_id
+    // below; unresolvable or absent => NULL, never invented.
+    converter.convert('uploaded_by_email').toString().optional();
 
     await converter.validate();
     const siteExternalId = converter.transformedArray[0].site_external_id
@@ -40,6 +69,7 @@ router.post('/recordings/create', verifyToken(), hasRole(['systemUser']), async 
       throw new EmptyResultError('Site with given external_id not found.');
     }
     const timezone = await model.sites.getSiteTimezoneAsync(site.site_id);
+    const uploaderIds = await resolveUploaderIds(converter.transformedArray);
     const recordings = converter.transformedArray.map((data) => {
       const metaData = data.meta.replace(/'/g, "\\'");
       let recordingData = {
@@ -57,7 +87,8 @@ router.post('/recordings/create', verifyToken(), hasRole(['systemUser']), async 
         bit_rate: data.bit_rate,
         sample_encoding: data.sample_encoding,
         upload_time: moment.utc().toISOString(),
-        meta: metaData
+        meta: metaData,
+        uploaded_by: data.uploaded_by_email ? (uploaderIds[data.uploaded_by_email.toLowerCase()] || null) : null
       };
       const parsedData = data.meta ? JSON.parse(data.meta) : null;
 			const artist = parsedData && parsedData.ARTIST ? parsedData.ARTIST : parsedData.artist
