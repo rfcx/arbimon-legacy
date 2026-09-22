@@ -598,7 +598,7 @@ var PatternMatchings = {
         // chain). Behaviour on success is unchanged.
         const rois = await PatternMatchings.getPresentRois(patternMatchingId)
         const ids = rois.map(roi => { return roi.id })
-        return PatternMatchings.validateRois(patternMatchingId, ids, null)
+        return PatternMatchings.validateRois(patternMatchingId, ids, null, projectId, userId)
             .then(async function(validatedRois) {
                 for (let roi of rois) {
                     const previousValidation = roi.validated;
@@ -881,17 +881,34 @@ var PatternMatchings = {
     // guard alone is bypassed by the next caller that forgets it (the #1841
     // lesson). `projectId` is optional so existing internal callers that do not
     // have one keep working unchanged; when supplied it constrains the write.
-    validateRois(patternMatchingId, rois, validation, projectId) {
+    // `userId` (2026-09-22, user-attribution program slice 1 -- rfcx-local
+    // OPEN-ITEMS 375, design DESIGN-2026-09-22-user-attribution.md 3.1 shape B):
+    // the acting user is recorded in `expert_validation_user_id`. That column
+    // was previously written ONLY by the citizen-scientist expert path
+    // (citizen-scientist.js expertValidateCSRois, paired with
+    // `expert_validated`), so 32.46M validated ROIs across ~95% of projects
+    // carried no actor at all. Its meaning is now WIDENED, not changed: "the
+    // user who last set `validated` OR `expert_validated`". `expert_validated`
+    // itself is untouched here, so a CS-expert row and an ordinary expert row
+    // stay distinguishable by that column. A `null` validation (un-validate)
+    // still records who cleared it -- clearing is an act too. `userId`
+    // undefined/null leaves the column alone (`COALESCE(?, existing)`), so
+    // any internal caller without a session cannot erase attribution.
+    // History before this shipped is unrecoverable (the UPDATE carried no
+    // user) and is deliberately NOT backfilled.
+    validateRois(patternMatchingId, rois, validation, projectId, userId) {
         if (!rois.length) return Promise.resolve();
         const scoped = projectId !== undefined && projectId !== null;
+        const actor = (userId === undefined || userId === null) ? null : Number(userId);
         // NOTE THE SHAPE: a correlated EXISTS subquery, NOT `UPDATE ... JOIN ... SET`.
         // Multi-table UPDATE-with-JOIN is MySQL-only syntax and PG is the write
         // engine since the 2026-09-12 P7 flip (see the same note at
         // model/projects.js:997). A subquery is valid on BOTH engines, so this
-        // needs no dialect branch.
+        // needs no dialect branch. COALESCE is likewise valid on both.
         return dbpool.query(
             `UPDATE pattern_matching_rois\n` +
-            "SET validated = ?\n" +
+            "SET validated = ?,\n" +
+            "    expert_validation_user_id = COALESCE(?, expert_validation_user_id)\n" +
             "WHERE pattern_matching_id = ?\n" +
             (scoped
                 ? "AND EXISTS (SELECT 1 FROM pattern_matchings PM\n" +
@@ -900,8 +917,8 @@ var PatternMatchings = {
                 : "") +
             "AND pattern_matching_roi_id IN (?)",
             scoped
-                ? [validation, patternMatchingId, projectId, rois]
-                : [validation, patternMatchingId, rois]
+                ? [validation, actor, patternMatchingId, projectId, rois]
+                : [validation, actor, patternMatchingId, rois]
         );
     },
 
