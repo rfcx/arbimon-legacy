@@ -1,0 +1,39 @@
+# PR GATE — runs the export/delete-stage module-closure check on every pull
+# request, so a gap is visible BEFORE the merge rather than only before the roll.
+#
+# WHY THIS IS A SEPARATE WORKFLOW AND NOT A `pull_request:` TRIGGER ON cd.yaml:
+# cd.yaml's `notify` job is `if: ${{ always() }}` and posts to the team Slack
+# channel with the deploy result. Adding `pull_request` to cd.yaml would fire
+# that notification on EVERY pull request, reporting a deploy that never
+# happened ("Deploy (rfcx-local): n/a"). Keeping the PR gate in its own file
+# gives the same check with no Slack noise and no CD machinery.
+#
+# NO `paths:` FILTER, DELIBERATELY. This job is intended to be a REQUIRED status
+# check on `master`; a path-filtered workflow simply does not run for a PR that
+# touches no matching path, the required check then never reports, and the PR is
+# blocked forever with no way to clear it. Running always (it is ~20 s of node on
+# ubuntu-latest, no Docker, no registry, no cluster) is the cheap, safe choice.
+#
+# Background on what it checks: build/check-stage-copy-closure.js, and
+# runbooks/evidence/irr-ledger-2026-09-22-export-copy-gate.md in
+# evity-squibbon/rfcx-local.
+name: 'PR gate'
+on:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: pr-gate-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check-stage-copy-closure:
+    name: 'Gate: export/delete stage COPY closure'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: 'require() closure vs Dockerfile COPY coverage'
+        run: node build/check-stage-copy-closure.js
