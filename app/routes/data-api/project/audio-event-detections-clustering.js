@@ -95,7 +95,8 @@ router.post('/validate', function(req, res, next) {
                     const projectClass = {
                         project_id: opts.projectId,
                         species: params.species_name,
-                        songtype: params.songtype_name
+                        songtype: params.songtype_name,
+                        user_id: req.session.user.id
                     };
                     model.projects.insertClass(projectClass, function(err, result){
                         if(err) return next(err);

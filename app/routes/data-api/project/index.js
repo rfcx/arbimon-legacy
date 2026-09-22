@@ -437,7 +437,8 @@ router.post('/:projectUrl/class/add', function(req, res, next) {
     var projectClass = {
         songtype: req.body.songtype,
         species: req.body.species,
-        project_id: req.project.project_id
+        project_id: req.project.project_id,
+        user_id: req.session.user.id
     };
 
     model.projects.insertClass(projectClass, function(err, result){

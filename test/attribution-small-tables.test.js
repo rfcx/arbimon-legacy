@@ -73,6 +73,19 @@ describe('attribution slice 2: the routes pass the session user', function() {
   it('batch class add', function() {
     expect(projectRoute).to.match(/insertBatchClassesAsync\(req\.project\.project_id,\s*projectClasses,\s*req\.session\.user\.id\)/);
   });
+  it('EVERY insertClass caller builds its projectClass with user_id (the demo proof caught this one)', function() {
+    // Measured on demo 2026-09-22: class/add returned 200 and wrote user_id=NULL because the
+    // route's projectClass literal never carried the session user -- the model's null guard
+    // did exactly what it should and the attribution was silently absent. Assert per caller.
+    var aedRoute = src('app/routes/data-api/project/audio-event-detections-clustering.js');
+    var pmRoute = src('app/routes/data-api/project/pattern_matchings.js');
+    [projectRoute, aedRoute, pmRoute].forEach(function(r, i) {
+      var re = /projectClass = \{[\s\S]{0,260}?\};\s*\n\s*model\.projects\.insertClass\(/g;
+      var m, n = 0;
+      while ((m = re.exec(r)) !== null) { n++; expect(m[0], 'caller #' + i).to.match(/user_id: req\.session\.user\.id/); }
+      expect(n, 'insertClass literal not found in route #' + i).to.be.above(0);
+    });
+  });
 });
 
 describe('attribution slice 2: NULL semantics and the translator map', function() {
