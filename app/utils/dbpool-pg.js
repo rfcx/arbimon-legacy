@@ -1272,6 +1272,7 @@ var NULLABLE_COLS = {
     'recordings.sample_rate': 1,
     'recordings.samples': 1,
     'recordings.upload_time': 1,
+    'recordings.uploaded_by': 1,
     'recordings_deleted.duration': 1,
     'recordings_errors.error': 1,
     'recordings_export_parameters.created_at': 1,
