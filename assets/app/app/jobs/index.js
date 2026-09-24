@@ -154,8 +154,25 @@ angular.module('a2.jobs', [
     };
 
     $scope.hide = function(job) {
-        if (!a2UserPermit.can('manage project jobs') || (a2UserPermit.can('manage project jobs') && !a2UserPermit.can('export report'))) {
-            notify.error('You do not have permission to hide or cancel jobs');
+        // 2026-09-24 (rfcx-local, Carolina/job 170726): split the gate by action.
+        // CANCEL of an unfinished job needs only 'manage project jobs' -- the
+        // exact permission the server's /jobs/cancel route checks -- so a
+        // User/Expert who launched a job can stop it. HIDE keeps the 2024
+        // #1566 restriction ("Prevent delete job for the user/expert roles":
+        // 'export report' = Owner/Admin only). The 2024 gate predates a real
+        // cancel (09-20, §357), when this button only ever hid the row.
+        // CANCEL = the job is still unfinished -- the same three states the
+        // server's cancel statement accepts (jobs.cancel: waiting/
+        // initializing/processing). NOT `percentage < 100`: an errored or
+        // cancelled job that stopped part-way is finished, so it is a HIDE
+        // (Owner/Admin), and the server would refuse to cancel it anyway.
+        const isCancel = $scope.isCancelable(job);
+        if (!a2UserPermit.can('manage project jobs')) {
+            notify.error('You do not have permission to cancel jobs');
+            return;
+        }
+        if (!isCancel && !a2UserPermit.can('export report')) {
+            notify.error('Only project owners and admins can hide jobs');
             return;
         }
 
@@ -163,7 +180,7 @@ angular.module('a2.jobs', [
 
         $scope.infoInfo = "Loading...";
         $scope.showInfo = true;
-        if (job.percentage < 100) {
+        if (isCancel) {
             // §357: running job -> the modal's "Cancel" button really cancels
             // (it used to call hideJob, which only hid the row).
             confirm('Cancel', 'cancel', cancelJob, jobId, 'canceled');
@@ -183,6 +200,10 @@ angular.module('a2.jobs', [
 
     $scope.isWaiting = function (row) {
         return row.state === 'waiting'
+    }
+
+    $scope.isCancelable = function (row) {
+        return row.state === 'waiting' || row.state === 'initializing' || row.state === 'processing'
     }
 
     $scope.openJob = function (row) {
