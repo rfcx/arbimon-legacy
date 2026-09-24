@@ -6,6 +6,8 @@ var express = require('express');
 var router = express.Router();
 var model = require('../../../model');
 var csv_stringify = require("csv-stringify");
+const config = require('../../../config');
+const { recordingDownloadUrl } = require('../../../utils/recording-download-url');
 const dayInMs = 24 * 60 * 60 * 1000;
 const fs = require('fs');
 const path = require('path');
@@ -133,14 +135,15 @@ router.get('/:patternMatching/:fileName?', function(req, res, next) {
 
     filters.project_id = req.project.project_id | 0;
 
-    model.patternMatchings.getPmRoiRecordingUri(req.params.patternMatching).then(async (rows) => {
-        const recObj = {}
-        for (let row of rows) {
-            if (!recObj[row.recording_id]) {
-                const signedUrl = await model.patternMatchings.getSignedUrl(row.uri)
-                recObj[row.recording_id] = signedUrl ? signedUrl : 'no data'
-            }
-        }
+    // 2026-09-24: the `url` column is the auth-gated app download link, not a
+    // raw storage presigned URL (the storage chain ignores the signature, so those
+    // were permanent anonymous links to private audio). A Proxy keeps
+    // exportDataFormatted's recObj[recording_id] contract without a per-row
+    // storage round-trip.
+    const projectUrl = req.project.url;
+    const publicUrl = config('hosts').publicUrl;
+    Promise.resolve().then(async () => {
+        const recObj = new Proxy({}, { get: (_t, recId) => recordingDownloadUrl(publicUrl, projectUrl, recId) || 'no data' });
         return model.patternMatchings.exportRois(req.params.patternMatching, filters).then(function(results) {
             const datastream = results[0];
             const fields = results[1].map(function(f) { return f.name });
