@@ -6,12 +6,9 @@ const stream = require('stream');
 const csv_stringify = require('csv-stringify');
 const archiver = require('archiver');
 const { getPmRois, getProjectPMJobs, getProjectSites } = require('../services/pattern-matching')
-const { zipDirectory, nameToUrl, isLegacy } = require('../services/file-helper')
-const { getSignedUrl } = require('../services/storage')
-const { getRecordingByIds } = require('../services/recordings')
-
-const S3_LEGACY_BUCKET_ARBIMON = process.env.AWS_BUCKETNAME
-const S3_RFCX_BUCKET_ARBIMON = process.env.AWS_RFCX_BUCKETNAME
+const { zipDirectory, nameToUrl } = require('../services/file-helper')
+const config_hosts = require('../../config/hosts')
+const { recordingDownloadUrl } = require('../../app/utils/recording-download-url')
 
 const exportReportType = 'Pattern Matchings';
 const exportReportJob = `Arbimon Export ${exportReportType} job`
@@ -185,7 +182,7 @@ async function exportAllPmJobs (projectId, projection_parameters, cb) {
         toProcess = queryResult.length > 0;
         if (toProcess) {
           console.log('Arbimon Export PM job: writing chunk: rows length', queryResult.length)
-          await writeChunk(queryResult, targetFile, projectSites, isFirstChunk)
+          await writeChunk(queryResult, targetFile, projectSites, isFirstChunk, projection_parameters.projectUrl)
         }
         isFirstChunk = false
         index++
@@ -274,7 +271,7 @@ async function exportAllPmJobsCsv (results) {
   })
 }
 
-async function writeChunk (results, targetFile, projectSites, isFirstChunk) {
+async function writeChunk (results, targetFile, projectSites, isFirstChunk, projectUrl) {
   return new Promise(async function (resolve, reject) {
     try {
       let fields = [];
@@ -286,9 +283,6 @@ async function writeChunk (results, targetFile, projectSites, isFirstChunk) {
 
       let _buf = []
 
-      let recordingIds = results.map(r => r.recording_id)
-      recordingIds = [...new Set(recordingIds)]
-      const recs = await getRecordingByIds({ recordingIds })
       for (let result of results) {
         const curSite = projectSites.filter(s => s.site_id === result.site_id)
         result.site_name = result.site_id && curSite.length ? projectSites.filter(s => s.site_id === result.site_id)[0].name : '---';
@@ -297,17 +291,10 @@ async function writeChunk (results, targetFile, projectSites, isFirstChunk) {
             result[f] = '---'}
           }
         )
-        const rec = recs.filter(r => r.recording_id === result.recording_id)[0]
-        const recUrl = rec ? rec.uri : null;
-        let url = '---'
-        if (recUrl) {
-          url = await getSignedUrl({
-            Bucket: isLegacy(recUrl) ? S3_LEGACY_BUCKET_ARBIMON : S3_RFCX_BUCKET_ARBIMON,
-            Key: recUrl,
-            isLegacy: isLegacy(recUrl)
-          });
-        }
-        result.audio_url = url;
+        // 2026-09-24: auth-gated app download link, NOT a raw storage presigned
+        // URL (our storage chain ignores the signature, so those were permanent
+        // anonymous links to private audio). See app/utils/recording-download-url.js.
+        result.audio_url = recordingDownloadUrl(config_hosts.publicUrl, projectUrl, result.recording_id) || '---';
         _buf.push(result);
       }
 
