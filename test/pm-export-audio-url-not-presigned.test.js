@@ -111,6 +111,36 @@ describe('PM export audio links', function () {
         expect(du.recordingDownloadUrl('https://arbimon.org', '', 1)).to.equal(null);
     });
 
+    // 2026-09-24 21:56: #1947 shipped getRecordingsForAudioUrls WITHOUT exporting it,
+    // so every PM export would have thrown 'is not a function' (caught in-pod BEFORE any
+    // export ran). The source-text checks below could not see it; this loads the REAL
+    // modules the job requires and checks every name it destructures actually exists.
+    it('every name pattern-matching.js destructures from a local module is exported', function () {
+        const jobDir = path.join(ROOT, 'jobs/arbimon-recording-export-job');
+        const src = read('jobs/arbimon-recording-export-job/pattern-matching.js');
+        const re = /const \{([^}]+)\} = require\('(\.[^']+)'\)/g;
+        // Stub the DB facade (jobs/ is its own npm package; `pg` is not in the root
+        // node_modules) so this checks the EXPORT LIST only, never a connection.
+        const dbPath = require.resolve(path.join(ROOT, 'jobs/db/backend'));
+        const saved = require.cache[dbPath];
+        require.cache[dbPath] = { id: dbPath, filename: dbPath, loaded: true, exports: { getConnection () {}, readQuery () {}, writerQuery () {} } };
+        let m, checked = 0;
+        try {
+        while ((m = re.exec(src))) {
+            const modPath = require.resolve(path.join(jobDir, m[2]));
+            // services with DB-only deps (the facade is stubbed); file-helper needs `archiver` (jobs-only npm) -> skip
+            if (!/jobs\/services\/(recordings|pattern-matching)\.js$/.test(modPath)) continue;
+            delete require.cache[modPath];
+            const mod = require(modPath);
+            for (const name of m[1].split(',').map(x => x.trim()).filter(Boolean)) {
+                expect(typeof mod[name], m[2] + ' exports ' + name).to.not.equal('undefined');
+                checked++;
+            }
+        }
+        } finally { if (saved) require.cache[dbPath] = saved; else delete require.cache[dbPath]; }
+        expect(checked > 0, 'parsed at least one destructured require').to.equal(true);
+    });
+
     it('queued PM zip export emits exportAudioUrl, never presigns', function () {
         const src = read('jobs/arbimon-recording-export-job/pattern-matching.js');
         expect(/getSignedUrl/.test(src), 'job file still calls getSignedUrl').to.equal(false);
