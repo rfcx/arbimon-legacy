@@ -28,8 +28,22 @@ function sanitizeStem (name) {
  * @param {number} count      rows sharing site_id + filename
  * @returns {string} e.g. "20210405_003000.wav" or "20260920_050000.001.wav"
  */
+/**
+ * The original upload name. Modern rows carry it in `filename`; legacy
+ * `project_*` rows have NO filename (measured: rec 126313, filename empty),
+ * but their storage key IS the uploaded name
+ * (`project_38/site_211/2015/2/T34_20150225_190000.flac`). Modern keys are
+ * storage UUIDs (`2021/04/05/<stream>/<uuid>.flac`) and must never be used.
+ */
+function originalName (rec) {
+    if (!rec) return '';
+    if (rec.filename && String(rec.filename).trim()) return rec.filename;
+    if (typeof rec.uri === 'string' && rec.uri.indexOf('project_') === 0) return rec.uri;
+    return '';
+}
+
 function recordingDownloadName (rec, index, count) {
-    const stem = sanitizeStem(rec && rec.filename) || `recording-${rec && rec.recording_id}`;
+    const stem = sanitizeStem(originalName(rec)) || `recording-${rec && rec.recording_id}`;
     if (count > 1 && index >= 1) {
         const width = Math.max(3, String(count).length);
         return `${stem}.${String(index).padStart(width, '0')}.wav`;
@@ -37,4 +51,4 @@ function recordingDownloadName (rec, index, count) {
     return `${stem}.wav`;
 }
 
-module.exports = { recordingDownloadName, sanitizeStem };
+module.exports = { recordingDownloadName, sanitizeStem, originalName };

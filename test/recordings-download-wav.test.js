@@ -28,6 +28,12 @@ describe('recording download filename', function() {
         expect(recordingDownloadName({ filename: null, recording_id: 42 }, 1, 1)).to.equal('recording-42.wav');
         expect(recordingDownloadName({ filename: '   ', recording_id: 42 }, 1, 1)).to.equal('recording-42.wav');
     });
+    it('legacy project_* rows (no filename) use the uploaded name from the storage key', function() {
+        expect(recordingDownloadName({ filename: '', uri: 'project_38/site_211/2015/2/T34_20150225_190000.flac', recording_id: 126313 }, 1, 1)).to.equal('T34_20150225_190000.wav');
+    });
+    it('never uses a modern storage key (a UUID) as the name', function() {
+        expect(recordingDownloadName({ filename: '', uri: '2021/04/05/aos2q1qflsbk/4599f1d4-9bf4-42e7-ae75-4ea823b3617e.flac', recording_id: 7 }, 1, 1)).to.equal('recording-7.wav');
+    });
     it('never carries a path or a header-breaking character', function() {
         expect(sanitizeStem('../../etc/passwd.wav')).to.equal('passwd');
         expect(sanitizeStem('C:\\rec\\a.wav')).to.equal('a');
