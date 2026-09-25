@@ -99,7 +99,16 @@ var OWNED_SQL = {
         'WHERE ts.training_set_id = ? AND ts.project_id = ? AND ts.project_id = ? LIMIT 1',
     job:
         'SELECT 1 AS owned FROM jobs j ' +
-        'WHERE j.job_id = ? AND j.project_id = ? AND j.project_id = ? LIMIT 1'
+        'WHERE j.job_id = ? AND j.project_id = ? AND j.project_id = ? LIMIT 1',
+    // §393 (2026-09-25). A pattern matching belongs to exactly one project
+    // (pattern_matchings.project_id); nothing links or imports it into another.
+    // Measured before binding (7 d + 30 d edge census, every PM id route incl.
+    // citizen-scientist): ZERO legitimate cross-project opens -- the SPA and
+    // legacy UI build PM links from the PM's own project. DELETED PMs still
+    // count (ownership, not listing): an own deleted PM keeps today's answer.
+    pattern_matching:
+        'SELECT 1 AS owned FROM pattern_matchings pm ' +
+        'WHERE pm.pattern_matching_id = ? AND pm.project_id = ? AND pm.project_id = ? LIMIT 1'
 };
 
 /** Strictly a positive integer id (number or all-digit string). Anything else
@@ -124,7 +133,7 @@ function makeProjectScope(query) {
     if (typeof query !== 'function') { throw new Error('project-scope: query function required'); }
 
     /**
-     * @param {'recording'|'site'|'model'|'model_own'|'playlist'|'training_set'|'job'} kind
+     * @param {'recording'|'site'|'model'|'model_own'|'playlist'|'training_set'|'job'|'pattern_matching'} kind
      * @param {number|string} id
      * @param {number} projectId  req.project.project_id
      * @return {Promise<boolean>}  true only when a row proves ownership

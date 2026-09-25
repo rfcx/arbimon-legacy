@@ -202,19 +202,31 @@ var CitizenScientist = {
     },
 
     validateCSRois(patternMatchingId, userId, rois, validation){
+        // §393 (rfcx-local OPEN-ITEMS §393, 2026-09-25): this INSERT used to
+        // take the body's roi ids VERBATIM, with no link to the PM in the URL
+        // -- so any caller could write a citizen-scientist validation onto
+        // ANY roi of ANY project (which then feeds that project's consensus +
+        // user stats) by posting its id under a PM they can open. The rois
+        // are now selected FROM the PM: an id that is not one of
+        // `patternMatchingId`'s rois inserts nothing. The route binds the PM
+        // to the URL project, so together a write reaches only that
+        // project's rois. Same shape expertValidateCSRois already had
+        // (`WHERE pattern_matching_id = ? AND roi IN (?)`).
+        rois = (Array.isArray(rois) ? rois : [rois]).filter(function(r) {
+            return r !== undefined && r !== null && r !== '';
+        });
         return (rois.length ? dbpool.query(
             "INSERT INTO pattern_matching_validations(\n" +
             "    pattern_matching_roi_id, user_id, validated, timestamp\n" +
-            ") VALUES (\n" + rois.map(function(roi) {
-                return "   ?, ?, ?, NOW()\n";
-            }).join("), (\n") +
             ")\n" +
+            "SELECT PMR.pattern_matching_roi_id, ?, ?, NOW()\n" +
+            "FROM pattern_matching_rois PMR\n" +
+            "WHERE PMR.pattern_matching_id = ?\n" +
+            "  AND PMR.pattern_matching_roi_id IN (?)\n" +
             // P7 port: ON CONFLICT targets the (pattern_matching_roi_id,
             // user_id) unique index (present on both engines).
-            "ON CONFLICT (pattern_matching_roi_id, user_id) DO UPDATE SET\n    validated = EXCLUDED.validated", rois.reduce(function(_, roi) {
-                _.push(roi, userId, validation);
-                return _;
-            }, [])
+            "ON CONFLICT (pattern_matching_roi_id, user_id) DO UPDATE SET\n    validated = EXCLUDED.validated",
+            [userId, validation, patternMatchingId, rois]
         ) : Promise.resolve()).then(() => {
             return this.computeConsensusValidations(patternMatchingId, rois);
         }).then(() => {
