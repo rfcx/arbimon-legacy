@@ -196,7 +196,15 @@ angular.module('a2.browser_recordings_by_playlist', [
             this.is_at_last_page  = this.current_page === this.last_page;
 
             if(this.block_tracks_page){
-                this.show_block((this.current_page - this.block_size/2 + (this.block_size%2)) / this.block_size);
+                // A WINDOW centred on the current page, not an aligned block.
+                // Before (2014-11 .. 2026-09): this passed the block INDEX of
+                // page - 3 (BlockSize 7) to show_block, so the menu showed the
+                // aligned block holding page - 3. Stepping with ">|" past the
+                // last button of a block left the menu on the OLD block for
+                // three pages (113-115 kept showing 106-112, it jumped at 116),
+                // i.e. the current page was not in the menu at all. User report
+                // wendy.schackwitz@gmail.com 2026-09-10.
+                this.show_window(this.current_page);
             } else {
                 this.show_block(this.current_page / this.block_size);
             }
@@ -216,7 +224,11 @@ angular.module('a2.browser_recordings_by_playlist', [
             this.last_page        = ((this.item_count-1) / this.page_size) | 0;
             this.last_page_block  = (this.last_page / this.block_size) | 0;
             this.is_at_last_page  = this.current_page >= this.last_page;
-            this.show_block(this.current_page_block);
+            if (this.block_tracks_page) {
+                this.show_window(this.current_page | 0);
+            } else {
+                this.show_block(this.current_page_block);
+            }
         },
         show_block : function(block){
             // Ensure inputs are valid numbers and prevent NaN
@@ -234,6 +246,20 @@ angular.module('a2.browser_recordings_by_playlist', [
                     this.block.push(i);
                 }
             }
+        },
+        show_window : function(page){
+            var size  = Math.max(1, this.block_size | 0);
+            var last  = Math.max(0, this.last_page | 0);
+            var cur   = Math.max(0, Math.min(page | 0, last));
+            var start = cur - ((size / 2) | 0);
+            start = Math.max(0, Math.min(start, last - size + 1));
+            var end   = Math.min(last, start + size - 1);
+            this.block = [];
+            for (var i = start; i <= end; ++i) { this.block.push(i); }
+            this.current_page_block_first_page = start;
+            this.current_page_block_last_page  = end;
+            this.is_at_first_page_block = start <= 0;
+            this.is_at_last_page_block  = end >= last;
         },
         has_page : function(page){
             return 0 <= page && page <= this.last_page;
