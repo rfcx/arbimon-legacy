@@ -8,7 +8,8 @@ const archiver = require('archiver');
 const { getPmRois, getProjectPMJobs, getProjectSites } = require('../services/pattern-matching')
 const { zipDirectory, nameToUrl } = require('../services/file-helper')
 const config_hosts = require('../../config/hosts')
-const { recordingDownloadUrl } = require('../../app/utils/recording-download-url')
+const { exportAudioUrl } = require('../../app/utils/recording-download-url')
+const { getRecordingsForAudioUrls } = require('../services/recordings')
 
 const exportReportType = 'Pattern Matchings';
 const exportReportJob = `Arbimon Export ${exportReportType} job`
@@ -283,6 +284,9 @@ async function writeChunk (results, targetFile, projectSites, isFirstChunk, proj
 
       let _buf = []
 
+      // One lookup per chunk (<=5000 ROIs): uri, datetime_utc, duration, site external_id.
+      const recIds = [...new Set(results.map(r => r.recording_id).filter(x => x !== undefined && x !== null))]
+      const recById = new Map((await getRecordingsForAudioUrls(recIds)).map(r => [String(r.recording_id), r]))
       for (let result of results) {
         const curSite = projectSites.filter(s => s.site_id === result.site_id)
         result.site_name = result.site_id && curSite.length ? projectSites.filter(s => s.site_id === result.site_id)[0].name : '---';
@@ -291,10 +295,11 @@ async function writeChunk (results, targetFile, projectSites, isFirstChunk, proj
             result[f] = '---'}
           }
         )
-        // 2026-09-24: auth-gated app download link, NOT a raw storage presigned
-        // URL (our storage chain ignores the signature, so those were permanent
-        // anonymous links to private audio). See app/utils/recording-download-url.js.
-        result.audio_url = recordingDownloadUrl(config_hosts.publicUrl, projectUrl, result.recording_id) || '---';
+        // 2026-09-24: media-api WAV, stream-token signed, 7-day exp (= the archive
+        // link's lifetime); falls back to the auth-gated app route. NEVER a raw
+        // storage presigned URL (the storage chain ignores those signatures).
+        const rec = recById.get(String(result.recording_id))
+        result.audio_url = (rec && exportAudioUrl(config_hosts.publicUrl, projectUrl, rec)) || '---';
         _buf.push(result);
       }
 

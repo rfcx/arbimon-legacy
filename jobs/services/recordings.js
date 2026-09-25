@@ -19,6 +19,19 @@ async function getRecordingByIds (options = {}) {
   return rows
 }
 
+// For export audio links: just the fields exportAudioUrl() needs. ANY() + a bound
+// int array (no string-built IN list); site external_id is the stream-id fallback.
+// Timestamps come back as raw strings (jobs/db/pg.js OID 1114 parser).
+async function getRecordingsForAudioUrls (recordingIds) {
+  const ids = (recordingIds || []).map(Number).filter(Number.isInteger)
+  if (!ids.length) return []
+  // PG-native + parameterised: readQuery, NOT the translated execute() facade.
+  return mysql.readQuery(
+    `select r.recording_id, r.uri, r.datetime, r.datetime_utc, r.duration, s.external_id
+       from recordings r left join sites s on s.site_id = r.site_id
+      where r.recording_id = ANY($1::bigint[])`, [ids])
+}
+
 async function getExportRecordingsRow (options = {}) {
     const connection = await mysql.getConnection()
     const sql = `SELECT rep.*, p.name FROM recordings_export_parameters rep

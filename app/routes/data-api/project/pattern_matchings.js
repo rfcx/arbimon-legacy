@@ -7,7 +7,7 @@ var router = express.Router();
 var model = require('../../../model');
 var csv_stringify = require("csv-stringify");
 const config = require('../../../config');
-const { recordingDownloadUrl } = require('../../../utils/recording-download-url');
+const { recordingDownloadUrl, exportAudioUrl } = require('../../../utils/recording-download-url');
 const dayInMs = 24 * 60 * 60 * 1000;
 const fs = require('fs');
 const path = require('path');
@@ -135,15 +135,16 @@ router.get('/:patternMatching/:fileName?', function(req, res, next) {
 
     filters.project_id = req.project.project_id | 0;
 
-    // 2026-09-24: the `url` column is the auth-gated app download link, not a
-    // raw storage presigned URL (the storage chain ignores the signature, so those
-    // were permanent anonymous links to private audio). A Proxy keeps
-    // exportDataFormatted's recObj[recording_id] contract without a per-row
-    // storage round-trip.
+    // 2026-09-24: the `url` column is a media-api WAV link signed with a 7-day
+    // stream-token (same lifetime as an export archive link), falling back to the
+    // auth-gated app download route -- NEVER a raw storage presigned URL (the
+    // storage chain ignores those signatures). See app/utils/recording-download-url.js.
     const projectUrl = req.project.url;
     const publicUrl = config('hosts').publicUrl;
     Promise.resolve().then(async () => {
-        const recObj = new Proxy({}, { get: (_t, recId) => recordingDownloadUrl(publicUrl, projectUrl, recId) || 'no data' });
+        const recs = await model.patternMatchings.getPmRecordingsForAudioUrls(req.params.patternMatching, req.project.project_id);
+        const byId = new Map((recs || []).map(r => [String(r.recording_id), exportAudioUrl(publicUrl, projectUrl, r)]));
+        const recObj = new Proxy({}, { get: (_t, recId) => byId.get(String(recId)) || recordingDownloadUrl(publicUrl, projectUrl, recId) || 'no data' });
         return model.patternMatchings.exportRois(req.params.patternMatching, filters).then(function(results) {
             const datastream = results[0];
             const fields = results[1].map(function(f) { return f.name });
