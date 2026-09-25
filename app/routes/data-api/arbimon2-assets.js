@@ -28,6 +28,28 @@ const router = express.Router();
 let s3;
 const notFound = (res) => res.status(404).json({ error: 'asset not available' });
 
+// Per-client token bucket (in-process, no dependency). Signature checks are
+// in-memory, but a VALIDLY signed URL costs a storage fetch or a soundscape
+// render, so bound what one client can pull. Generous for real pages: a PM
+// results grid is <= ~200 images; clustering grids similar. Per-pod, so the
+// effective cap is (pods x limit) -- a backstop, not a quota.
+const RL_BURST = 600, RL_PER_SEC = 50, RL_MAX_CLIENTS = 20000;
+const buckets = new Map();
+function rateLimit (req, res, next) {
+    const ip = String(req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.ip || '').split(',')[0].trim();
+    const now = Date.now();
+    let b = buckets.get(ip);
+    if (!b) {
+        if (buckets.size >= RL_MAX_CLIENTS) buckets.clear(); // bounded memory; resets are harmless
+        b = { t: now, tok: RL_BURST }; buckets.set(ip, b);
+    }
+    b.tok = Math.min(RL_BURST, b.tok + (now - b.t) / 1000 * RL_PER_SEC); b.t = now;
+    if (b.tok < 1) { res.set('Retry-After', '5'); return res.status(429).json({ error: 'too many requests' }); }
+    b.tok -= 1;
+    next();
+}
+router.use(rateLimit);
+
 router.get('/soundscape/:id.png', function (req, res) {
     const id = verifySoundscape(req.params.id, String(req.query.s || ''), req.query.e);
     if (!id) return notFound(res);
