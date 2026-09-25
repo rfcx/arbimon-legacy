@@ -259,9 +259,9 @@ for (const file of walk(BASE)) {
 // get index.js's projectUrl authorisation (Express params are per-router).
 // Measured 2026-09-25: data-api/models.js (14 routes). Each such file must be
 // on this list, with its tracking item; a NEW one fails the gate.
-const OUTSIDE_KNOWN = {
-  'app/routes/data-api/models.js': '§394 — no projectUrl authorisation; tracked, not yet bound'
-}
+// §394 (2026-09-25): models.js moved under project/ — the list is EMPTY and
+// should stay so; adding an entry is adding an unauthorised route file.
+const OUTSIDE_KNOWN = {}
 function walkAll (dir) {
   const out = []
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {

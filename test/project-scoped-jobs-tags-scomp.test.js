@@ -55,7 +55,7 @@ describe('§292 — jobs hide/cancel are project-scoped', function() {
 
     it('EVERY hideAsync caller passes a project (no bare-id call sites)', function() {
         var files = [
-            'app/routes/data-api/models.js',
+            R + 'models.js', // §394: moved from app/routes/data-api/models.js
             R + 'pattern_matchings.js',
             R + 'classifications.js',
             R + 'clustering-jobs.js',
