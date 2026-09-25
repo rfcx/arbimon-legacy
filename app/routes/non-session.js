@@ -13,5 +13,11 @@ var router = express.Router();
 // Do not add unguarded routes to this file.
 router.use('/legacy-api/ingest', require('./data-api/ingest'));
 router.use('/legacy-api/integration', require('./data-api/integration'));
+// 2026-09-24: SIGNED + EXPIRING arbimon2 image / soundscape-render route. Authorised
+// by its HMAC (app/utils/arbimon2-asset-url.js), not the session, so it lives ABOVE
+// the Force-login gate -- a signed <img> must never 302 to /legacy-login (the SPA
+// can be authenticated while the legacy session is anonymous). Replaces public
+// s3.arbimon.org/arbimon2 URLs, which served any key to anyone, forever.
+router.use('/legacy-api/arbimon2-asset', require('./data-api/arbimon2-assets'));
 
 module.exports = router;

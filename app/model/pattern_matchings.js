@@ -14,7 +14,8 @@ const Templates = require('./templates');
 const models = require("./index");
 const lambda = new AWS.Lambda();
 const { getSignedUrl } = require('../utils/storage')
-const { arbimon2PublicUrl, roiSpectrogramUrl } = require('../utils/asset-url')
+const { roiSpectrogramUrl } = require('../utils/asset-url')
+const { arbimon2AssetUrl } = require('../utils/arbimon2-asset-url')
 
 // exports
 var PatternMatchings = {
@@ -1152,7 +1153,8 @@ var PatternMatchings = {
         const detectionsFolder = process.env.NODE_ENV === 'production' ? 'detections' : 'detections_dev'
         const {projectId, jobId, uriParam1, uriParam2} = opts
         const key = `project_${projectId}/${detectionsFolder}/${jobId}/${uriParam1}${uriParam2 !== null ? '_' + uriParam2 : ''}.png`;
-        return arbimon2PublicUrl(key);
+        // 2026-09-24: auth-gated (app/utils/arbimon2-asset-url.js), never a public s3.arbimon.org/arbimon2 url.
+        return arbimon2AssetUrl(key);
     },
 
     JOB_SCHEMA : joi.object().keys({
