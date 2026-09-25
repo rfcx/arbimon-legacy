@@ -145,6 +145,7 @@ module.exports = {
   exportOccupancyModels,
   getExportRecordingsRow,
   getRecordingByIds,
+  getRecordingsForAudioUrls,
   updateExportRecordings,
   getCountSitesRecPerDates
 }
