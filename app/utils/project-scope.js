@@ -108,7 +108,14 @@ var OWNED_SQL = {
     // count (ownership, not listing): an own deleted PM keeps today's answer.
     pattern_matching:
         'SELECT 1 AS owned FROM pattern_matchings pm ' +
-        'WHERE pm.pattern_matching_id = ? AND pm.project_id = ? AND pm.project_id = ? LIMIT 1'
+        'WHERE pm.pattern_matching_id = ? AND pm.project_id = ? AND pm.project_id = ? LIMIT 1',
+    // §393 slice B (2026-09-25). A clustering run lives in exactly one project
+    // (job_params_audio_event_clustering.project_id); measured live: 0 of 3,251
+    // rows disagree with the jobs table, and 0 of 3,251 have their AED job in
+    // another project. Deleted runs still count (ownership, not listing).
+    clustering_job:
+        'SELECT 1 AS owned FROM job_params_audio_event_clustering c ' +
+        'WHERE c.job_id = ? AND c.project_id = ? AND c.project_id = ? LIMIT 1'
 };
 
 /** Strictly a positive integer id (number or all-digit string). Anything else
@@ -133,7 +140,7 @@ function makeProjectScope(query) {
     if (typeof query !== 'function') { throw new Error('project-scope: query function required'); }
 
     /**
-     * @param {'recording'|'site'|'model'|'model_own'|'playlist'|'training_set'|'job'|'pattern_matching'} kind
+     * @param {'recording'|'site'|'model'|'model_own'|'playlist'|'training_set'|'job'|'pattern_matching'|'clustering_job'} kind
      * @param {number|string} id
      * @param {number} projectId  req.project.project_id
      * @return {Promise<boolean>}  true only when a row proves ownership

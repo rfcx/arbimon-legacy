@@ -169,6 +169,22 @@ select.push(
             }
         }
 
+        // §393 slice B (2026-09-25): constrain the ROIs to recordings the
+        // project OWNS (own or imported sites -- the §391 recordings rule).
+        // Set by the /rois-details route from req.project, and honoured from
+        // `project_id` as well so the export job's already-scoped call is
+        // covered by the same predicate. Joins are 1:1 on PKs -- no fan-out,
+        // so the perDate GROUP BY is unaffected. Applied AFTER the aed/rec
+        // narrowing, so the extra join rides the already-tiny row set.
+        const scopeProject = options.project !== undefined ? options.project : options.project_id;
+        if (scopeProject !== undefined && scopeProject !== null) {
+            tables.push("JOIN recordings RSCO ON A.recording_id = RSCO.recording_id");
+            tables.push("JOIN sites SSCO ON SSCO.site_id = RSCO.site_id");
+            constraints.push('(SSCO.project_id = ' + dbpool.escape(scopeProject) +
+                ' OR EXISTS (SELECT 1 FROM project_imported_sites pis WHERE pis.site_id = RSCO.site_id AND pis.project_id = ' +
+                dbpool.escape(scopeProject) + '))');
+        }
+
         if (options.rec_id) {
             constraints.push('A.recording_id = ' + dbpool.escape(options.rec_id));
         }

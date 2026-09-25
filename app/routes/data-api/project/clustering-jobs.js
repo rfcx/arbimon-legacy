@@ -12,6 +12,9 @@ const config = require('../../../config');
 const q = require('q');
 const fs = require('fs');
 const { deleteObjects } = require('../../../utils/storage')
+const projectScope = require('../../../utils/project-scope');
+const JOB_NOT_FOUND = { error: 'clustering job not found' };
+const REC_NOT_FOUND = { error: 'recording not found' };
 
 router.get('/', function(req, res, next) {
     res.type('json');
@@ -48,6 +51,32 @@ router.get('/asset', function(req, res, next) {
     });
 });
 
+// §393 slice B (rfcx-local OPEN-ITEMS §393, 2026-09-25): a NUMERIC :job_id must
+// be a clustering run of the URL project (proven on prod: /clustering-details
+// served a foreign project's full S3 cluster JSON, and /rois-details the AED
+// rows). A NON-numeric id is the rois-details placeholder: the SPA's visualizer
+// layer POSTs `/clustering-jobs/_/rois-details` because that route reads
+// everything from the BODY (4,916 `_` + 3,176 `undefined` requests in 30 d --
+// a param that 404s placeholders would break the visualizer's event layer).
+// Placeholders fall through to the route, which binds the BODY ids (below).
+router.param('job_id', function (req, res, next, jobId) {
+    if (!/^\d+$/.test(jobId)) { return next(); }
+    projectScope.ownedByProject('clustering_job', jobId, req.project.project_id).then(function (owned) {
+        if (!owned) { return res.status(404).json(JOB_NOT_FOUND); }
+        return next();
+    }).catch(next);
+});
+
+// §393 slice B: the recording in `/:recId/audio/:aedId` must belong to the URL
+// project (own or imported site -- the §391 recordings rule). Proven on prod:
+// a foreign project's AED audio streamed under a member project.
+router.param('recId', function (req, res, next, recId) {
+    projectScope.ownedByProject('recording', recId, req.project.project_id).then(function (owned) {
+        if (!owned) { return res.status(404).json(REC_NOT_FOUND); }
+        return next();
+    }).catch(next);
+});
+
 // project-scope: model findOne
 router.get('/:job_id/job-details', function (req, res, next) {
     res.type('json');
@@ -58,13 +87,21 @@ router.get('/:job_id/job-details', function (req, res, next) {
     }).catch(next);
 });
 
-// project-scope: debt §393 findRois/getClusteringPlaylist take aed/rec ids from the body, no project predicate
+// The entity ids here come from the BODY (aed[] / rec_id): findRois is now
+// constrained to recordings the URL project owns (own or imported sites -- the
+// §391 recordings rule), so a foreign aed/rec simply yields no rows, and a
+// foreign rec_id takes the same `[]` an own recording with no detections gets
+// (no oracle). The placeholder :job_id is intentionally NOT bound (see the
+// param above); a NUMERIC :job_id is bound by it. getClusteringPlaylist would
+// name a foreign recording's playlists, so it runs only after the recording
+// is proven owned.
 router.post('/:job_id/rois-details', function(req, res, next) {
     res.type('json');
     const recId = req.body.rec_id
     const params = {
         aed: req.body.aed,
-        rec_id: recId
+        rec_id: recId,
+        project: req.project.project_id
     };
     if (req.body.perSite) params.perSite = req.body.perSite;
     if (req.body.perDate) params.perDate = req.body.perDate;
@@ -72,6 +109,8 @@ router.post('/:job_id/rois-details', function(req, res, next) {
     return model.ClusteringJobs.findRois(params)
         .then(async function(data){
             if (recId) {
+                const owned = await projectScope.ownedByProject('recording', recId, req.project.project_id);
+                if (!owned) { return res.json([]); }
                 const playlists = await model.ClusteringJobs.getClusteringPlaylist(recId)
                 const result = playlists.map(pl => {
                     const aed = data.find(aed => aed.aed_id === pl.aed_id)
@@ -83,7 +122,7 @@ router.post('/:job_id/rois-details', function(req, res, next) {
         }).catch(next);
 });
 
-// project-scope: debt §393 getRoiAudioFile by (recId, aedId) with no project predicate
+// project-scope: params aedId resolved WITHIN the bound recording (getRoiAudioFile: A.recording_id = recId AND A.aed_id = aedId)
 router.get('/:recId/audio/:aedId', function(req, res, next) {
     model.ClusteringJobs.getRoiAudioFile({ recId: req.params.recId, aedId: req.params.aedId, gain: req.query.gain }).then(function(roiAudio) {
         if(!roiAudio){
@@ -101,7 +140,8 @@ router.get('/:recId/audio/:aedId', function(req, res, next) {
     }).catch(next);
 });
 
-// project-scope: debt §393 reads the job's S3 JSON by job_id with no project check
+// :job_id is bound by the router.param above (numeric ids only; placeholders
+// are the rois-details shape and never reach this route meaningfully).
 router.get('/:job_id/clustering-details', function (req, res, next) {
     res.type('json');
     const uri = `audio_events/${config('aws').env}/clustering/${req.params.job_id}/${req.params.job_id}_${req.query.aed_info ? 'aed_info' : 'lda'}.json`;

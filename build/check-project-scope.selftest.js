@@ -147,6 +147,23 @@ async function partA () {
   ok(await gp.ownedByProject('pattern_matching', '_', 10) === false && pcalls.length === pb, 'pattern_matching: non-numeric id never reaches the DB')
   ok(g._sql.pattern_matching === 'SELECT 1 AS owned FROM pattern_matchings pm WHERE pm.pattern_matching_id = ? AND pm.project_id = ? AND pm.project_id = ? LIMIT 1',
     'pattern_matching SQL is EXACTLY: id AND the row\'s project (no deleted filter)')
+  // §393 slice B: clustering_job. Project 10 owns run 70 (live) and 71 (deleted flag — ownership, not listing);
+  // project 20 owns 80.
+  const cjs = { 70: 10, 71: 10, 80: 20 }
+  const cc = []
+  const gc = makeProjectScope(function (sql, params) {
+    cc.push(sql)
+    const [id, pid, pid2] = params
+    if (pid !== pid2) throw new Error('project param mismatch')
+    if (!/FROM job_params_audio_event_clustering c/.test(sql)) throw new Error('unexpected sql')
+    return Promise.resolve(cjs[id] === pid ? [{ owned: 1 }] : [])
+  })
+  ok(await gc.ownedByProject('clustering_job', 70, 10) === true, 'clustering_job: own → true')
+  ok(await gc.ownedByProject('clustering_job', '71', '10') === true, 'clustering_job: own deleted-flag → true')
+  ok(await gc.ownedByProject('clustering_job', 80, 10) === false, 'clustering_job: FOREIGN → false')
+  ok(await gc.ownedByProject('clustering_job', 9999, 10) === false, 'clustering_job: MISSING → false')
+  ok(g._sql.clustering_job === 'SELECT 1 AS owned FROM job_params_audio_event_clustering c WHERE c.job_id = ? AND c.project_id = ? AND c.project_id = ? LIMIT 1',
+    'clustering_job SQL is EXACTLY: id AND the row\'s project')
   // SQL shape: both predicates present, both params bound
   const sql = g._sql.recording
   ok(/s\.project_id = \?/.test(sql) && /pis\.project_id = \?/.test(sql) && /r\.recording_id = \?/.test(sql), 'recording SQL binds id + own-site + imported-site predicates')
