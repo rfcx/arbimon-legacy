@@ -63,7 +63,43 @@ var OWNED_SQL = {
         'SELECT 1 AS owned FROM sites s ' +
         'WHERE s.site_id = ? AND (s.project_id = ? OR EXISTS (' +
         'SELECT 1 FROM project_imported_sites pis WHERE pis.site_id = s.site_id AND pis.project_id = ?' +
-        ')) LIMIT 1'
+        ')) LIMIT 1',
+    // §394 (2026-09-25). A random-forest model is READABLE from project P when
+    // its row is P's (an original trained in P, or a SHARED COPY that
+    // share-model inserted into P -- the copy keeps the source's
+    // `project_<source>/...` uri but its project_id is P), OR it was imported
+    // into P through the legacy project_imported_models link (159 rows, newest
+    // 2018; the row stays the source project's). Deleted rows still count:
+    // ownership, not listing.
+    model:
+        'SELECT 1 AS owned FROM models m ' +
+        'WHERE m.model_id = ? AND (m.project_id = ? OR EXISTS (' +
+        'SELECT 1 FROM project_imported_models pim WHERE pim.model_id = m.model_id AND pim.project_id = ?' +
+        ')) LIMIT 1',
+    // WRITES (threshold, delete, share-from) need the ROW to be P's: an
+    // imported model is another project's row, and writing it from P would
+    // change the source project's model. The repeated project predicate keeps
+    // the (id, project, project) parameter shape every kind shares.
+    model_own:
+        'SELECT 1 AS owned FROM models m ' +
+        'WHERE m.model_id = ? AND m.project_id = ? AND m.project_id = ? LIMIT 1',
+    // Job INPUTS named in a request body (models/new, soundscape/single-batch).
+    // Playlists and training sets are COPIED when shared (never linked), and
+    // the pickers offer only the project's own rows, so a project owns exactly
+    // the rows carrying its project_id. Measured 2026-09-25 on the replica:
+    // the last soundscape job on another project's playlist is from 2015 (24,
+    // all project 13 <- 14), the last training job on another project's
+    // training set from 2020 (7), and 36/36 retraining jobs retrain a job of
+    // their own project.
+    playlist:
+        'SELECT 1 AS owned FROM playlists pl ' +
+        'WHERE pl.playlist_id = ? AND pl.project_id = ? AND pl.project_id = ? LIMIT 1',
+    training_set:
+        'SELECT 1 AS owned FROM training_sets ts ' +
+        'WHERE ts.training_set_id = ? AND ts.project_id = ? AND ts.project_id = ? LIMIT 1',
+    job:
+        'SELECT 1 AS owned FROM jobs j ' +
+        'WHERE j.job_id = ? AND j.project_id = ? AND j.project_id = ? LIMIT 1'
 };
 
 /** Strictly a positive integer id (number or all-digit string). Anything else
@@ -88,7 +124,7 @@ function makeProjectScope(query) {
     if (typeof query !== 'function') { throw new Error('project-scope: query function required'); }
 
     /**
-     * @param {'recording'|'site'} kind
+     * @param {'recording'|'site'|'model'|'model_own'|'playlist'|'training_set'|'job'} kind
      * @param {number|string} id
      * @param {number} projectId  req.project.project_id
      * @return {Promise<boolean>}  true only when a row proves ownership

@@ -68,35 +68,42 @@ module.exports = {
         return dbpool.query(sql).get(0);
     },
 
+    // §394 (2026-09-25): every id below reaches SQL as a BOUND parameter.
+    // They were template-interpolated from req.params / req.query / req.body,
+    // i.e. injectable from any logged-in session.
     getModelJobId: function (model_id) {
         const sql = `SELECT jpt.job_id FROM job_params_training jpt
             JOIN models m ON jpt.trained_model_id = m.model_id
-            WHERE m.model_id = ${model_id}`
-        return dbpool.query(sql).get(0);
+            WHERE m.model_id = ?`
+        return dbpool.query(sql, [model_id]).get(0);
     },
 
     getModelById: function (model_id, callback) {
-        const sql = `SELECT * from models WHERE model_id = ${model_id}`;
+        const sql = dbpool.format('SELECT * from models WHERE model_id = ?', [model_id]);
         return queryHandler(sql, callback);
     },
 
     getModelRetrainingDates: function (jobId, callback) {
-        const sql = `SELECT j.date_created
+        const sql = dbpool.format(`SELECT j.date_created
             from jobs j
             where j.job_id in (
                 select jpr.job_id from jobs j2
                 join job_params_retraining jpr on j2.job_id = jpr.trained_job_id
-                where j2.job_id = ${jobId}
-            );`;
+                where j2.job_id = ?
+            );`, [jobId]);
         return queryHandler(sql, callback);
     },
 
+    // §394: parameterised (was string-interpolated from the request body).
+    // Callers must have bound modelId to the source project and projectIdTo
+    // to a project the user may manage models in -- the model layer copies
+    // exactly the row it is told to.
     shareModel: function(opts, callback) {
-        const q = `insert into models(name, model_type_id, uri, date_created, project_id, user_id, training_set_id, validation_set_id, deleted, threshold)
-            select  m2.name, m2.model_type_id, m2.uri, m2.date_created, ${opts.projectIdTo}, m2.user_id, m2.training_set_id, m2.validation_set_id, m2.deleted, m2.threshold
+        const q = dbpool.format(`insert into models(name, model_type_id, uri, date_created, project_id, user_id, training_set_id, validation_set_id, deleted, threshold)
+            select  m2.name, m2.model_type_id, m2.uri, m2.date_created, ?, m2.user_id, m2.training_set_id, m2.validation_set_id, m2.deleted, m2.threshold
             from models m2
-            where m2.model_id = ${opts.modelId};
-        `;
+            where m2.model_id = ?;
+        `, [opts.projectIdTo, opts.modelId]);
         queryHandler(q, callback);
     },
 
@@ -109,9 +116,13 @@ module.exports = {
         return await dbpool.query(sql, [prjectIdLength, opts.projectId, opts.projectId, opts.modelName]);
     },
 
+    // §394: deletes ONLY a shared COPY of `opts.sourceUri` (the copy keeps
+    // the source's `project_<source>/...` uri) that lives in ANOTHER project.
+    // An original can never match: its uri starts with its own project, and
+    // the route passes the source model's uri, whose project is the URL's.
     unshareModel: async function (opts) {
-        const sql = `delete from models where project_id = ? and model_id = ?;`;
-        return await dbpool.query(sql, [opts.projectId, opts.modelId]);
+        const sql = `delete from models where project_id = ? and model_id = ? and uri = ? and project_id <> ?;`;
+        return await dbpool.query(sql, [opts.projectId, opts.modelId, opts.sourceUri, opts.sourceProjectId]);
     },
 
     isModelRetrained: async function (jobId) {
@@ -120,8 +131,8 @@ module.exports = {
     },
 
     getModelByUri: async function (projectId, uri) {
-        const sql = `SELECT * from models WHERE project_id = ${projectId} and uri = '${uri}'`;
-        return dbpool.query(sql).get(0);
+        const sql = `SELECT * from models WHERE project_id = ? and uri = ?`;
+        return dbpool.query(sql, [projectId, uri]).get(0);
     },
     
     details: function(model_id, opts, callback) {
@@ -238,18 +249,29 @@ module.exports = {
     },
 
     checkExistingModel: function(opts, callback) {
-        const q = `select * from models where project_id = ${opts.projectIdTo} and name = '${opts.modelName}';`;
+        const q = dbpool.format('select * from models where project_id = ? and name = ?;', [opts.projectIdTo, opts.modelName]);
         queryHandler(q, callback);
     },
 
+    // §394: a SHARED COPY's `uri` is the SOURCE project's .mod file (share-
+    // model copies the row, not the object). Deleting a copy therefore only
+    // soft-deletes its row; the S3 objects stay with the project that owns
+    // them. Before this, deleting a copy from the target project deleted the
+    // source project's model file.
     delete: function(model_id, callback) {
-        let q = "SELECT `uri` FROM `models` WHERE `model_id` ="+model_id;
+        let q = "SELECT `uri`, `project_id` FROM `models` WHERE `model_id` ="+dbpool.escape(model_id);
 
         queryHandler(q,
             function (err,rows)
             {
                 if (err) {
-                    callback();
+                    return callback(err);
+                }
+                if (!rows || !rows[0]) {
+                    return callback(new Error('model not found'));
+                }
+                if (!String(rows[0].uri).startsWith('project_' + rows[0].project_id + '/')) {
+                    return queryHandler("UPDATE `models` SET deleted = 1 WHERE model_id = "+dbpool.escape(model_id), callback);
                 }
                 if(!s3){
                     s3 = createS3Client('aws'); // endpoint-aware: routes via s3-proxy chain
@@ -275,7 +297,7 @@ module.exports = {
                         callback();
                     }
                     else {
-                        let q = "UPDATE `models` SET deleted = 1 WHERE model_id = "+model_id;
+                        let q = "UPDATE `models` SET deleted = 1 WHERE model_id = "+dbpool.escape(model_id);
                         queryHandler(q, callback);
                     }
                 });
@@ -293,9 +315,13 @@ module.exports = {
         queryHandler(q, callback);
     },
 
-    savethreshold: function(m,t,callback) {
+    // §394: scoped to the model's own project. The route has already
+    // bound `m` to the URL project; the predicate makes the UPDATE a no-op
+    // for any other row even if a future caller forgets to.
+    savethreshold: function(m, t, projectId, callback) {
         let q = "UPDATE `models` SET `threshold` = "+dbpool.escape(t)+
-                " WHERE `models`.`model_id` ="+dbpool.escape(m)+";";
+                " WHERE `models`.`model_id` ="+dbpool.escape(m)+
+                " AND `models`.`project_id` ="+dbpool.escape(projectId)+";";
 
         queryHandler(q, callback);
     },

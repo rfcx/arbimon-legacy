@@ -89,6 +89,45 @@ async function partA () {
   const parser = { parseUrlQuery: u => Promise.resolve(u === '1000' ? { id: { '=': 1000 } } : u === '3000.flac' ? { id: { '=': 3000 } } : {}) }
   ok(await g.recordingUrlOwned(parser, '1000', 10) === true, 'recordingUrlOwned own → true')
   ok(await g.recordingUrlOwned(parser, '3000.flac', 10) === false, 'recordingUrlOwned foreign → false')
+  // §394: model kinds. Project 10 owns original 500 and shared COPY 501 (a row
+  // in 10 whose uri names project 20); project 20 owns 600, IMPORTED into 10
+  // via project_imported_models; project 30 owns 700. Same fake-DB contract:
+  // a row proves ownership, nothing else does.
+  const models = { 500: 10, 501: 10, 600: 20, 700: 30 }
+  const pim = [[600, 10]]
+  const mcalls = []
+  function fakeModelQuery (sql, params) {
+    mcalls.push({ sql, params })
+    const [id, pid, pid2] = params
+    if (pid !== pid2) throw new Error('project param mismatch')
+    if (!/FROM models m/.test(sql)) throw new Error('unexpected sql')
+    if (models[id] === undefined) return Promise.resolve([])
+    const row = models[id] === pid
+    const imp = /project_imported_models/.test(sql) && pim.some(([m, p]) => m === id && p === pid)
+    return Promise.resolve(row || imp ? [{ owned: 1 }] : [])
+  }
+  const gm = makeProjectScope(fakeModelQuery)
+  ok(await gm.ownedByProject('model', 500, 10) === true, 'model: own original → true')
+  ok(await gm.ownedByProject('model', 501, 10) === true, 'model: shared COPY in the project → true')
+  ok(await gm.ownedByProject('model', 600, 10) === true, 'model: IMPORTED (project_imported_models) → true')
+  ok(await gm.ownedByProject('model', 700, 10) === false, 'model: FOREIGN → false')
+  ok(await gm.ownedByProject('model', 9999, 10) === false, 'model: MISSING → false')
+  ok(await gm.ownedByProject('model_own', 500, 10) === true, 'model_own: own original → true')
+  ok(await gm.ownedByProject('model_own', 501, 10) === true, 'model_own: shared copy row is the project\'s → true')
+  ok(await gm.ownedByProject('model_own', 600, 10) === false, 'model_own: IMPORTED is NOT writable from the importer → false')
+  ok(await gm.ownedByProject('model_own', 700, 10) === false, 'model_own: FOREIGN → false')
+  const mb = mcalls.length
+  ok(await gm.ownedByProject('model', '1 OR 1=1', 10) === false && mcalls.length === mb, 'model: malformed id never reaches the DB')
+  ok(!/project_imported_models/.test(g._sql.model_own), 'model_own SQL has no import branch (writes need the row)')
+  // The fake DB above cannot SEE the SQL, so pin the exact shapes here: dropping a predicate must go red.
+  ok(g._sql.model === 'SELECT 1 AS owned FROM models m WHERE m.model_id = ? AND (m.project_id = ? OR EXISTS (' +
+    'SELECT 1 FROM project_imported_models pim WHERE pim.model_id = m.model_id AND pim.project_id = ?)) LIMIT 1',
+    'model SQL is EXACTLY: id AND (own row OR imported into the project)')
+  ok(g._sql.model_own === 'SELECT 1 AS owned FROM models m WHERE m.model_id = ? AND m.project_id = ? AND m.project_id = ? LIMIT 1',
+    'model_own SQL is EXACTLY: id AND own row')
+  for (const k of ['playlist', 'training_set', 'job']) {
+    ok(/project_id = \? AND \w+\.project_id = \? LIMIT 1$/.test(g._sql[k]), `${k} SQL binds the row's project_id`)
+  }
   // SQL shape: both predicates present, both params bound
   const sql = g._sql.recording
   ok(/s\.project_id = \?/.test(sql) && /pis\.project_id = \?/.test(sql) && /r\.recording_id = \?/.test(sql), 'recording SQL binds id + own-site + imported-site predicates')

@@ -112,7 +112,7 @@ describe('arbimon2 images are signed + expiring, never public storage urls', fun
     it('NO app/ or jobs/ source builds a public arbimon2 url any more', function () {
         const files = ['app/model/pattern_matchings.js', 'app/model/templates.js', 'app/model/training_sets.js',
             'app/model/soundscapes.js', 'app/model/playlists.js', 'app/model/models.js', 'app/model/recordings.js',
-            'app/routes/data-api/models.js', 'app/routes/data-api/project/classifications.js', 'jobs/services/template.js'];
+            'app/routes/data-api/project/models.js', 'app/routes/data-api/project/classifications.js', 'jobs/services/template.js'];
         for (const f of files) {
             expect(/arbimon2PublicUrl(Base)?\(/.test(read(f)), f + ' still calls arbimon2PublicUrl').to.equal(false);
         }

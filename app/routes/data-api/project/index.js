@@ -28,6 +28,9 @@ var patternMatchingRoutes = require('./pattern_matchings');
 var tagRoutes = require('./tags');
 var audioEventDetectionsClusteringRoutes = require('./audio-event-detections-clustering');
 var clusteringRoutes = require('./clustering-jobs');
+var modelRoutes = require('./models');
+var projectScope = require('../../../utils/project-scope');
+var pokeDaMonkey = require('../../../utils/monkey');
 
 // 2026-09-16 (rfcx-local FINDING-2026-09-16-citizen-scientist-TWO-MORE-DEAD-REDIRECTS
 // §2+§3, operator GO 04:15): the pre-2026 code computed
@@ -789,6 +792,119 @@ router.get('/:projectUrl/user-permissions', function(req, res, next) {
     );
 });
 
+// §394 (2026-09-25): moved here from data-api/models.js, where index.js's
+// projectUrl param never ran for it (a non-member read a PRIVATE project's
+// validation stats: measured 200 on prod). The model call already filters by
+// the URL's project; it now gets the one index.js authorised.
+router.get('/:projectUrl/validations', function(req, res, next) {
+    res.type('json');
+    if(!req.query.species_id || !req.query.sound_id) {
+        return res.status(400).json({ error: "missing query parameters" });
+    }
+    model.projects.validationsStats(req.project.url, req.query.species_id, req.query.sound_id, function(err, stats) {
+        if(err) return next(err);
+
+        res.json(stats);
+    });
+});
+
+// §394: moved here from data-api/models.js (same reason). It already asked
+// haveAccess of the URL's project; the PLAYLIST in the body is now bound to
+// that project too (it was never checked, so a manager of P could run a
+// soundscape job over another project's playlist).
+router.post('/:projectUrl/soundscape/single-batch', function(req, res, next) {
+    res.type('json');
+    let response_already_sent;
+    let params, job_id;
+    // rfcx-local (§300 item 2): set when the k8s Job POST leg is enabled AND
+    // fails. Carried into the SUCCESS body — the job was still created.
+    let soundscape_leg_warning = null;
+
+    async.waterfall([
+        function gather_job_params(next){
+            let project_id = req.project.project_id;
+
+            if(!req.haveAccess(project_id, "manage soundscapes")) {
+                console.log('user cannot create soundscape');
+                response_already_sent = true;
+                res.status(403).json({ err: "you dont have permission to 'manage soundscapes'" });
+                return next(new Error());
+            }
+            params = {
+                name        : (req.body.n),
+                user        : req.session.user.id,
+                project     : project_id,
+                playlist    : (req.body.p && req.body.p.id),
+                aggregation : (req.body.a),
+                threshold   : (req.body.t),
+                threshold_type : (req.body.tr),
+                bin         : (req.body.b),
+                maxhertz    : (req.body.m),
+                frequency   : (req.body.f),
+                normalize   : (req.body.nv)
+            };
+
+            projectScope.ownedByProject('playlist', params.playlist, project_id).then(function(owned) {
+                if (!owned) {
+                    response_already_sent = true;
+                    res.status(404).json({ err: "playlist not found" });
+                    return next(new Error());
+                }
+                next();
+            }, next);
+        },
+        function check_sc_exists(next){
+            model.jobs.soundscapeNameExists({name:params.name,pid:params.project}, next);
+        },
+        function abort_if_already_exists(row) {
+            let next = arguments[arguments.length -1];
+            if(row[0].count !== 0){
+                res.json({ name:"repeated"});
+                response_already_sent = true;
+                next(new Error());
+                return;
+            }
+
+            next();
+        },
+        function add_job(next) {
+            model.jobs.newJob(params, 'soundscape_job', next);
+        },
+        function get_job_id(_job_id){
+            let next = arguments[arguments.length -1];
+            job_id = _job_id;
+            // rfcx-local 2026-09-13 (OPEN-ITEMS §300 item 2): the `jobs` row
+            // from newJob() above IS the enqueue. The k8s Job POST leg is the
+            // upstream AWS-EKS execution path; passing its error to next()
+            // aborted the waterfall into the `{err:"Could not create soundscape
+            // job"}` handler while the job ran to `completed` (job 169872).
+            // The leg no longer rejects; carry any warning to the response.
+            return model.soundscapes.createSingleSoundscape(job_id, function(err, data) {
+                if (err) {
+                    console.error('createSingleSoundscape unexpected error for job ' + job_id + ':', err);
+                }
+                if (data && data.warning) { soundscape_leg_warning = data.warning; }
+                next();
+            })
+        },
+        function poke_the_monkey(next){
+            pokeDaMonkey();
+            next();
+        }
+    ], function(err){
+        if(err){
+            if(!response_already_sent){
+                res.json({ err:"Could not create soundscape job"});
+            }
+            return;
+        } else {
+            const body = { ok:"job created soundscapeJob:"+job_id };
+            if (soundscape_leg_warning) { body.warning = soundscape_leg_warning; }
+            res.json(body);
+        }
+    });
+});
+
 router.get('/:projectUrl/validations/count', function(req, res, next) {
     res.type('json');
     model.projects.validationsCount(req.project.project_id, function(err, result) {
@@ -799,6 +915,8 @@ router.get('/:projectUrl/validations/count', function(req, res, next) {
 });
 
 router.use('/:projectUrl/streams', require('./streams'));
+// §394: was data-api/models.js at the data-api root, outside this router's projectUrl authorisation.
+router.use('/:projectUrl/models', modelRoutes);
 router.use('/:projectUrl/recordings', recording_routes);
 router.use('/:projectUrl/training-sets', training_set_routes);
 router.use('/:projectUrl/playlists', playlist_routes);

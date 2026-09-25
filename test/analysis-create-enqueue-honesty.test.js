@@ -291,7 +291,7 @@ describe('§300.2 route sources no longer answer err on the job-leg callback', f
     });
 
     it('models/new: createRFM callback answers ok, not err', function () {
-        var s = src('../app/routes/data-api/models.js');
+        var s = src('../app/routes/data-api/project/models.js'); // §394: moved
         var i = s.indexOf('createRFM({');
         expect(i).to.be.greaterThan(-1);
         var tail = s.slice(i, i + 900);
@@ -300,7 +300,7 @@ describe('§300.2 route sources no longer answer err on the job-leg callback', f
     });
 
     it('soundscape/single-batch: the leg no longer aborts the waterfall via next(err)', function () {
-        var s = src('../app/routes/data-api/models.js');
+        var s = src('../app/routes/data-api/project/index.js'); // §394: moved
         var i = s.indexOf('createSingleSoundscape(job_id');
         expect(i).to.be.greaterThan(-1);
         var tail = s.slice(i, i + 700);

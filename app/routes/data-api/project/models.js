@@ -1,68 +1,118 @@
 /* jshint node:true */
 "use strict";
 
+/**
+ * /legacy-api/project/:projectUrl/models/*  (mounted by ./index.js)
+ *
+ * rfcx-local OPEN-ITEMS §394 (2026-09-25). These routes used to live in
+ * app/routes/data-api/models.js, mounted at the data-api ROOT, so index.js's
+ * `router.param('projectUrl')` -- the only thing that checks the session user
+ * can open the project -- never ran for them (Express params are per-router).
+ * Measured on prod before the move, as a NON-member, non-super user:
+ * `/project/<private project>/models` → 200 with all 469 models;
+ * `/project/<own project>/models/<another project's model id>` → 200 details.
+ * Three write routes had no permission check at all (savethreshold,
+ * share-model, :mid/unshare) and share-model string-interpolated the body
+ * into an INSERT … SELECT.
+ *
+ * Now: mounted as `router.use('/:projectUrl/models', …)` inside the project
+ * router, so `req.project` is the URL's project, already authorised; every
+ * model id is bound to it (build/check-project-scope.js enforces that); every
+ * write asks `req.haveAccess(…, 'manage models and classification')`.
+ *
+ * OWNERSHIP (app/utils/project-scope.js):
+ *   'model'     readable from P: the row is P's (an original, or a SHARED COPY
+ *               share-model inserted into P) OR it is imported into P via
+ *               project_imported_models. Used by every read.
+ *   'model_own' writable from P: the row is P's. An imported model is another
+ *               project's row; writing it from P would change the source.
+ * A foreign id is answered EXACTLY like an unknown one (404 "model not found").
+ */
+
 const express = require('express');
 const async = require('async');
-const AWS = require('aws-sdk');
 const q = require('q');
 
-const model = require('../../model');
-const pokeDaMonkey = require('../../utils/monkey');
-const config = require('../../config');
-const { mediaAssetUrl, mediaStreamId } = require('../../utils/asset-url');
-const { arbimon2AssetUrl } = require('../../utils/arbimon2-asset-url');
-const APIError = require('../../utils/apierror');
+const model = require('../../../model');
+const pokeDaMonkey = require('../../../utils/monkey');
+const config = require('../../../config');
+const { mediaAssetUrl, mediaStreamId } = require('../../../utils/asset-url');
+const { arbimon2AssetUrl } = require('../../../utils/arbimon2-asset-url');
+const APIError = require('../../../utils/apierror');
+const projectScope = require('../../../utils/project-scope');
 const router = express.Router();
-const { createS3Client } = require('../../utils/storage');
+const { createS3Client } = require('../../../utils/storage');
 // endpoint-aware: route through s3-proxy/s3-reader/s3-writer chain.
 const s3 = createS3Client('aws');
 const s3RFCx = createS3Client('aws_rfcx');
 const { httpErrorHandler } = require('@rfcx/http-utils');
 const moment = require('moment');
 
+const MANAGE = 'manage models and classification';
+const NOT_FOUND = { error: 'model not found' };
+const NO_PERMISSION = { error: "you dont have permission to 'manage models and classification'" };
+
+/** The models row for `mid` (or undefined). An explicit callback, not
+ *  q.ninvoke: ninvoke's resolved shape depends on how many args queryHandler
+ *  passes (rows vs [rows, fields]). */
+function modelRow(mid) {
+    return new Promise(function(resolve, reject) {
+        model.models.getModelById(mid, function(err, rows) {
+            if (err) { return reject(err); }
+            resolve(rows && rows[0]);
+        });
+    });
+}
+
+/** 404 unless model `mid` is readable ('model') / writable ('model_own') from the URL project. */
+function requireModel(kind, mid, req, res, next, then) {
+    projectScope.ownedByProject(kind, mid, req.project.project_id).then(function(owned) {
+        if (!owned) { return res.status(404).json(NOT_FOUND); }
+        return then();
+    }).catch(next);
+}
+
 // ------------------------ models routes -------------------------------------
 
-router.get('/project/:projectUrl/models', function(req, res, next) {
+router.get('/', function(req, res, next) {
     res.type('json');
 
-    model.projects.modelList(req.params.projectUrl, async function(err, rows) {
+    model.projects.modelList(req.project.url, async function(err, rows) {
         if (err) return next(err);
-        for (let row of rows) {
-            row.retrained = await model.models.isModelRetrained(row.job_id);
-        }
+        try {
+            for (let row of rows) {
+                row.retrained = await model.models.isModelRetrained(row.job_id);
+            }
+        } catch (e) { return next(e); }
         res.json(rows);
     });
 });
 
-router.get('/project/:projectUrl/models/forminfo', function(req, res, next) {
+router.get('/forminfo', function(req, res, next) {
     res.type('json');
 
     model.models.types(function(err, row1) {
         if(err) return next(err);
-        
-        model.projects.trainingSets( req.params.projectUrl, function(err, row2) {
+
+        model.projects.trainingSets( req.project.url, function(err, row2) {
             if(err) return next(err);
-            
+
             res.json({ types:row1 , trainings:row2});
         });
     });
 });
 
-router.post('/project/:projectUrl/models/new', function(req, res, next) {
+router.post('/new', function(req, res, next) {
     res.type('application/json');
     let project_id, name, train_id, classifier_id, usePresentTraining;
     let useNotPresentTraining, usePresentValidation, useNotPresentValidation, user_id;
     let job_id, params1, params2, trainedJobId, isRetrain;
-    
-    return model.projects.findByUrl(req.params.projectUrl).then(function gather_job_params(rows){
-        if(!rows.length){
-            throw new APIError({ error: "project not found"}, 404);
-        }
-        
-        project_id = rows[0].project_id;
-        
-        if(!req.haveAccess(project_id, "manage models and classification")){
-            throw new APIError({ error: "you dont have permission to 'manage models and classification'"});
+
+    return q.fcall(function gather_job_params(){
+        project_id = req.project.project_id;
+
+        if(!req.haveAccess(project_id, MANAGE)){
+            throw new APIError(NO_PERMISSION);
         }
         isRetrain = req.body.isRetrain;
         name = (req.body.n);
@@ -74,7 +124,8 @@ router.post('/project/:projectUrl/models/new', function(req, res, next) {
         useNotPresentValidation  = req.body.vn;
         user_id = req.session.user.id;
         if (isRetrain) {
-            const reg = /job_(\d+)_/.exec(req.body.modelUri);
+            const reg = /job_(\d+)_/.exec(req.body.modelUri || '');
+            if (!reg) { throw new APIError({ error: 'model not found' }, 404); }
             trainedJobId = +reg[1];
         }
         params1 = {
@@ -93,6 +144,18 @@ router.post('/project/:projectUrl/models/new', function(req, res, next) {
             user: user_id,
             project: project_id
         };
+        // §394: the job's INPUTS come from the body, so bind them to this
+        // project too -- a retrain retrains one of this project's jobs; a new
+        // model trains on one of this project's training sets.
+        return (isRetrain
+            ? projectScope.ownedByProject('job', trainedJobId, project_id)
+            : projectScope.ownedByProject('training_set', train_id, project_id)
+        ).then(function(owned) {
+            if (!owned) {
+                throw new APIError({ error: isRetrain ? 'model not found' : 'training set not found' }, 404);
+            }
+        });
+    }).then(function check_name() {
         if (isRetrain) return;
         return q.ninvoke(model.jobs, 'modelNameExists', {
             name: name,
@@ -130,7 +193,88 @@ router.post('/project/:projectUrl/models/new', function(req, res, next) {
     }).catch(next);
 });
 
-router.get('/project/:projectUrl/models/:mid', function(req, res, next) {
+// Body-addressed writes. Declared BEFORE `/:mid` so the literal segments win.
+
+// The body model id is bound to req.project (model_own) before the UPDATE.
+router.post('/savethreshold', function(req, res, next) {
+    res.type('json');
+    if (!req.haveAccess(req.project.project_id, MANAGE)) {
+        return res.status(403).json(NO_PERMISSION);
+    }
+    requireModel('model_own', req.body.m, req, res, next, function() {
+        model.models.savethreshold(req.body.m, req.body.t, req.project.project_id, function(err, row) {
+            if(err) return next(err);
+
+            res.json({ok:'saved'});
+        });
+    });
+});
+
+// share-model copies one of THIS project's models into another project. It is
+// a cross-project write by design, so both ends are authorised: the source
+// must be an ORIGINAL of this project (a copy or an import is not ours to
+// re-share -- the legacy UI already hides those), and the user must be able to
+// manage models in the TARGET (the same Admin/Owner/Expert set the picker,
+// /get-projects-by-role, offers).
+router.post('/share-model', function(req, res, next) {
+    res.type('json');
+    const projectIdTo = Number(req.body.projectId);
+    const modelId = req.body.modelId;
+    if (!req.haveAccess(req.project.project_id, MANAGE)) {
+        return res.status(403).json(NO_PERMISSION);
+    }
+    if (!(projectIdTo > 0) || Math.floor(projectIdTo) !== projectIdTo || projectIdTo === req.project.project_id) {
+        return res.status(400).json({ error: 'invalid target project' });
+    }
+    requireModel('model_own', modelId, req, res, next, function() {
+        modelRow(modelId).then(function(source) {
+            if (!source || !String(source.uri || '').startsWith(`project_${req.project.project_id}/`)) {
+                return res.status(404).json(NOT_FOUND);
+            }
+            return canManageModelsIn(req, projectIdTo).then(function(allowed) {
+                if (!allowed) {
+                    return res.status(403).json({ error: "you dont have permission to 'manage models and classification' in the selected project" });
+                }
+                const opts = { modelId: source.model_id, modelName: source.name, projectIdTo: projectIdTo };
+                model.models.checkExistingModel(opts, function(err, result) {
+                    if (err) return next(err);
+                    if (result.length) return res.json({ ok:'This model has been shared to selected project.' });
+                    return model.models.shareModel(opts, function(err) {
+                        if(err) return next(err);
+                        res.json({ ok:'The model was successfully shared with the selected project.' });
+                    });
+                });
+            });
+        }).catch(next);
+    });
+});
+
+/** req.haveAccess for a project the session may not have loaded permissions for yet. */
+function canManageModelsIn(req, projectId) {
+    const user = req.session && req.session.user;
+    if (!user) { return Promise.resolve(false); }
+    const cached = user.permissions && user.permissions[projectId];
+    if ((cached && cached.length) || user.isSuper === 1) {
+        return Promise.resolve(req.haveAccess(projectId, MANAGE));
+    }
+    return Promise.resolve(model.users.getPermissions(user.id, projectId)).then(function(rows) {
+        return (rows || []).some(function(p) { return p && p.name === MANAGE; });
+    });
+}
+
+// ------------------------ :mid routes ---------------------------------------
+
+// Every :mid / :modelId below is READABLE-bound to the URL project (own row,
+// shared copy in it, or imported into it) before any handler runs. Writes
+// re-check with 'model_own'.
+router.param('mid', function(req, res, next, mid) {
+    requireModel('model', mid, req, res, next, next);
+});
+router.param('modelId', function(req, res, next, modelId) {
+    requireModel('model', modelId, req, res, next, next);
+});
+
+router.get('/:mid', function(req, res, next) {
     res.type('json');
     model.models.getModelById(req.params.mid, async function(err, modelData) {
         // Guarded 2026-08-09: err was ignored and `[data]` destructured
@@ -139,20 +283,25 @@ router.get('/project/:projectUrl/models/:mid', function(req, res, next) {
         // `data.uri` inside an un-awaited async callback = pod kill.
         if (err) return next(err);
         const [data] = modelData || [];
-        if (!data) return res.status(404).json({ error: 'model not found' });
+        if (!data) return res.status(404).json(NOT_FOUND);
         const isSharedModel = !data.uri.startsWith(`project_${data.project_id}`)
         let opts = {
             isSharedModel
         };
-        if (isSharedModel) {
-            opts.sourceTrainingSetId = data.training_set_id;
-            const regexResult = /project_(\d+)/.exec(data.uri);
-            const sourceProjectId = +regexResult[1];
-            const sourceModelData = await model.models.getModelByUri(sourceProjectId, data.uri);
-            opts.sourceModelId = sourceModelData.model_id;
-            const reg = /job_(\d+)_/.exec(data.uri);
-            opts.sourceJobId = +reg[1];
-        }
+        try {
+            if (isSharedModel) {
+                opts.sourceTrainingSetId = data.training_set_id;
+                const regexResult = /project_(\d+)/.exec(data.uri);
+                const sourceProjectId = +regexResult[1];
+                const sourceModelData = await model.models.getModelByUri(sourceProjectId, data.uri);
+                // A copy whose source row is gone (33 of 67 copies on
+                // 2026-09-25) has nothing to read details from.
+                if (!sourceModelData) return res.status(404).json(NOT_FOUND);
+                opts.sourceModelId = sourceModelData.model_id;
+                const reg = /job_(\d+)_/.exec(data.uri);
+                opts.sourceJobId = +reg[1];
+            }
+        } catch (e) { return next(e); }
         model.models.details(req.params.mid, opts, function(err, model) {
             if(err) {
                 if(err.message == "model not found") {
@@ -167,61 +316,47 @@ router.get('/project/:projectUrl/models/:mid', function(req, res, next) {
     })
 });
 
-router.post('/project/:projectUrl/models/savethreshold', function(req, res, next) {
+// unshare is called from the SOURCE model's page: `:mid` is this project's
+// original, and the body names one of its copies in another project (a row of
+// GET /:mid/shared). The copy may be deleted only when it is a copy OF `:mid`
+// (same uri) and lives elsewhere; the DELETE itself repeats both predicates.
+// (:mid is read-bound by router.param above; the handler re-binds it as model_own.)
+router.post('/:mid/unshare', function(req, res, next) {
     res.type('json');
-    model.models.savethreshold(req.body.m,req.body.t, function(err, row) {
-        if(err) return next(err);
-
-        res.json({ok:'saved'});
+    if (!req.haveAccess(req.project.project_id, MANAGE)) {
+        return res.status(403).json(NO_PERMISSION);
+    }
+    requireModel('model_own', req.params.mid, req, res, next, function() {
+        modelRow(req.params.mid).then(function(source) {
+            if (!source || !String(source.uri || '').startsWith(`project_${req.project.project_id}/`)) {
+                return res.status(404).json(NOT_FOUND);
+            }
+            return model.models.unshareModel({
+                modelId: req.body.model,
+                projectId: req.body.project,
+                sourceUri: source.uri,
+                sourceProjectId: req.project.project_id
+            }).then(function(result) {
+                const affected = result && (result.affectedRows !== undefined ? result.affectedRows : result.rowCount);
+                if (affected === 0) {
+                    return res.status(404).json({ error: 'shared model not found' });
+                }
+                res.status(201).json({ message: 'The model was successfully unshared from the project.' });
+            });
+        }).catch(next);
     });
 });
 
-router.post('/project/:projectUrl/models/share-model', function(req, res, next) {
+// (:mid is read-bound by router.param above; the handler re-binds it as model_own.)
+router.get('/:mid/delete', function(req, res, next) {
     res.type('json');
-    const opts = {
-        modelId: req.body.modelId,
-        modelName: req.body.modelName,
-        projectIdTo: req.body.projectId,
+    const project_id = req.project.project_id;
+
+    if(!req.haveAccess(project_id, MANAGE)) {
+        return res.json(NO_PERMISSION);
     }
-    model.models.checkExistingModel(opts, function(err, result) {
-        if (err) return next(err);
-        if (result.length) return res.json({ ok:'This model has been shared to selected project.' });
-        return model.models.shareModel(opts, function(err, result) {
-            if(err) return next(err);
-            res.json({ ok:'The model was successfully shared with the selected project.' });
-        });
-    });
-});
-
-router.post('/project/:projectUrl/models/:mid/unshare', function(req, res, next) {
-    res.type('json');
-    let opts = {
-        modelId: req.body.model,
-        projectId: req.body.project,
-    }
-    model.models.unshareModel(opts)
-        .then((rows) => {
-            res.status(201).json({ message: 'The model was successfully unshared from the project.' });
-        })
-        .catch(next)
-});
-
-router.get('/project/:projectUrl/models/:mid/delete', function(req, res, next) {
-    res.type('json');
-    model.projects.findByUrl(req.params.projectUrl, function(err, rows) {
-        if(err) return next(err);
-
-        if(!rows.length){
-            res.status(404).json({ error: "project not found"});
-            return;
-        }
-
-        const project_id = rows[0].project_id;
-
-        if(!req.haveAccess(project_id, "manage models and classification")) {
-            return res.json({ error: "you dont have permission to 'manage models and classification'" });
-        }
-        const model_id = req.params.mid
+    const model_id = req.params.mid
+    requireModel('model_own', model_id, req, res, next, function() {
         model.models.delete(model_id, async function(err, row) {
             if(err) return next(err);
             res.json('Model deleted');
@@ -245,20 +380,21 @@ router.get('/project/:projectUrl/models/:mid/delete', function(req, res, next) {
                 const jobData = await model.models.getModelJobId(model_id)
                 if (jobData && jobData.job_id) {
                     // 2026-09-09 (OPEN-ITEMS §292): hide is now project-scoped.
-                    // `project_id` here is resolved from the URL's project and
-                    // is what the haveAccess check above already used.
+                    // `project_id` here is the URL's project, which the
+                    // haveAccess check above already used.
                     await model.jobs.hideAsync(jobData.job_id, project_id)
                 } else {
-                    console.log(`models/${model_id}/delete: no training-job row; nothing to hide`)
+                    console.log('models/%s/delete: no training-job row; nothing to hide', String(model_id))
                 }
             } catch(e) {
-                console.error(`models/${model_id}/delete: post-delete job-hide failed (model already deleted, response already sent):`, e && e.message)
+                // a literal format string: the id never reaches console's %-formatting (CodeQL js/tainted-format-string)
+                console.error('models/%s/delete: post-delete job-hide failed (model already deleted, response already sent): %s', String(model_id), e && e.message)
             }
         });
     });
 });
 
-router.get('/project/:projectUrl/models/:modelId/validation-list', async function(req, res, next) {
+router.get('/:modelId/validation-list', async function(req, res, next) {
     res.type('json');
     if (!req.params.modelId) return res.json({ error: 'missing values' });
     return model.projects.modelValidationUri(req.params.modelId, async function (err, row) {
@@ -282,7 +418,6 @@ async function getModelsData(validationUri, limit, offset) {
     const isProd = process.env.NODE_ENV === 'production';
     const awsConfig = isProd ? config('aws') : config('aws_rfcx');
     const awsBucket = isProd ? awsConfig.bucketName : awsConfig.bucketNameStaging;
-    const awsRegion = isProd ? awsConfig.region : awsConfig.region;
     // CRASH CONTAINMENT (2026-08-08). This was `new Promise(async ...)` with
     // an ASYNC s3 callback inside it. A throw in either position escapes as an
     // UNHANDLED REJECTION rather than rejecting this promise -- fatal under
@@ -382,50 +517,68 @@ async function getModelsData(validationUri, limit, offset) {
     })
 }
 
-router.get('/project/:projectUrl/models/:mid/retraining', function(req, res, next) {
+// ?jobId= is the model's training job, as GET /:mid reported it: the jpt job
+// for an original, the SOURCE job (named in the copied uri) for a shared copy.
+// Any other job id reads nothing. (uri job == jpt job for 6,469 of 6,484
+// originals; accepting both keeps the other 15 working.)
+router.get('/:mid/retraining', function(req, res, next) {
     res.type('json');
-    model.models.getModelRetrainingDates(req.query.jobId, function(err, rows) {
-        if(err) return next(err);
-        res.json(rows);
+    model.models.getModelById(req.params.mid, function(err, rows) {
+        if (err) return next(err);
+        const data = rows && rows[0];
+        const reg = data && /job_(\d+)_/.exec(data.uri || '');
+        const asked = String(req.query.jobId);
+        Promise.resolve(model.models.getModelJobId(req.params.mid)).then(function(jpt) {
+            const allowed = [reg && reg[1], jpt && jpt.job_id !== undefined && String(jpt.job_id)].filter(Boolean);
+            if (allowed.indexOf(asked) < 0) {
+                return res.json([]);
+            }
+            model.models.getModelRetrainingDates(asked, function(err, rows) {
+                if(err) return next(err);
+                res.json(rows);
+            });
+        }).catch(next);
     });
 });
 
-router.get('/project/:projectUrl/models/:mid/shared', function(req, res, next) {
+router.get('/:mid/shared', function(req, res, next) {
     res.type('json');
     let opts = {
-        modelName: req.query.modelName
+        modelName: req.query.modelName,
+        projectId: req.project.project_id
     }
-    return model.projects.find({ url: req.params.projectUrl }, function(err, data) {
-        opts.projectId = data[0].project_id;
-        model.models.getSharedModels(opts)
-            .then((rows) => {
-                res.status(200).json(rows);
-            })
-            .catch(next)
-    })
+    model.models.getSharedModels(opts)
+        .then((rows) => {
+            res.status(200).json(rows);
+        })
+        .catch(next)
 });
 
-router.get('/project/:projectUrl/models/:modelId/training-vector/:recId', function(req, res, next) {
+// project-scope: params recId read through the bound model's training vectors (an S3 key under the model's job)
+router.get('/:modelId/training-vector/:recId', function(req, res, next) {
     res.type('json');
     if(!req.params.modelId || !req.params.recId) {
         return res.status(400).json({ error: 'missing parameters'});
     }
     model.models.getModelById(req.params.modelId, async function(err, modelData) {
-        // Guarded 2026-08-09: same shape as the /models/:mid route above.
+        // Guarded 2026-08-09: same shape as the /:mid route above.
         if (err) return next(err);
         const [data] = modelData || [];
-        if (!data) return res.status(404).json({ error: 'model not found' });
+        if (!data) return res.status(404).json(NOT_FOUND);
         const isSharedModel = !data.uri.startsWith(`project_${data.project_id}`);
         let sourceModelId;
-        if (isSharedModel) {
-            const regexResult = /project_(\d+)/.exec(data.uri);
-            const sourceProjectId = +regexResult[1];
-            const sourceModelData = await model.models.getModelByUri(sourceProjectId, data.uri);
-            sourceModelId = sourceModelData.model_id;
-        }
+        try {
+            if (isSharedModel) {
+                const regexResult = /project_(\d+)/.exec(data.uri);
+                const sourceProjectId = +regexResult[1];
+                const sourceModelData = await model.models.getModelByUri(sourceProjectId, data.uri);
+                if (!sourceModelData) return res.status(404).json(NOT_FOUND);
+                sourceModelId = sourceModelData.model_id;
+            }
+        } catch (e) { return next(e); }
         model.models.getTrainingVector(isSharedModel ? sourceModelId : req.params.modelId, req.params.recId, function(err, result) {
             if(err) return next(err);
-            
+
             const vectorUri = result;
             const isProd = process.env.NODE_ENV === 'production';
             const awsConfig = isProd ? config('aws') : config('aws_rfcx');
@@ -453,119 +606,5 @@ router.get('/project/:projectUrl/models/:modelId/training-vector/:recId', functi
     });
 
 });
-
-
-// --------------------- validations routes -----------------------------------
-
-router.get('/project/:projectUrl/validations', function(req, res, next) {
-    res.type('json');
-    if(!req.query.species_id || !req.query.sound_id) {
-        return res.status(400).json({ error: "missing query parameters" });
-    }
-    model.projects.validationsStats(req.params.projectUrl, req.query.species_id, req.query.sound_id, function(err, stats) {
-        if(err) return next(err);
-        
-        res.json(stats);
-    });
-});
-
-// --------------------- soundscapes routes
-
-router.post('/project/:projectUrl/soundscape/single-batch', function(req, res, next) {
-    res.type('json');
-    let response_already_sent;
-    let params, job_id;
-    // rfcx-local (§300 item 2): set when the k8s Job POST leg is enabled AND
-    // fails. Carried into the SUCCESS body — the job was still created.
-    let soundscape_leg_warning = null;
-
-    async.waterfall([
-        function find_project_by_url(next){
-            model.projects.findByUrl(req.params.projectUrl, next);
-        },
-        function gather_job_params(rows){
-            let next = arguments[arguments.length -1];
-            if(!rows.length){
-                res.status(404).json({ err: "project not found"});
-                response_already_sent = true;
-                next(new Error());
-                return;
-            }
-            let project_id = rows[0].project_id;
-
-            if(!req.haveAccess(project_id, "manage soundscapes")) {
-                console.log('user cannot create soundscape');
-                response_already_sent = true;
-                res.status(403).json({ err: "you dont have permission to 'manage soundscapes'" });
-                return next(new Error());
-            }
-            params = {
-                name        : (req.body.n),
-                user        : req.session.user.id,
-                project     : project_id,
-                playlist    : (req.body.p.id),
-                aggregation : (req.body.a),
-                threshold   : (req.body.t),
-                threshold_type : (req.body.tr),
-                bin         : (req.body.b),
-                maxhertz    : (req.body.m),
-                frequency   : (req.body.f),
-                normalize   : (req.body.nv)
-            };
-
-            next();
-        },
-        function check_sc_exists(next){
-            model.jobs.soundscapeNameExists({name:params.name,pid:params.project}, next);
-        },
-        function abort_if_already_exists(row) {
-            let next = arguments[arguments.length -1];
-            if(row[0].count !== 0){
-                res.json({ name:"repeated"});
-                response_already_sent = true;
-                next(new Error());
-                return;
-            }
-
-            next();
-        },
-        function add_job(next) {
-            model.jobs.newJob(params, 'soundscape_job', next);
-        },
-        function get_job_id(_job_id){
-            let next = arguments[arguments.length -1];
-            job_id = _job_id;
-            // rfcx-local 2026-09-13 (OPEN-ITEMS §300 item 2): the `jobs` row
-            // from newJob() above IS the enqueue. The k8s Job POST leg is the
-            // upstream AWS-EKS execution path; passing its error to next()
-            // aborted the waterfall into the `{err:"Could not create soundscape
-            // job"}` handler while the job ran to `completed` (job 169872).
-            // The leg no longer rejects; carry any warning to the response.
-            return model.soundscapes.createSingleSoundscape(job_id, function(err, data) {
-                if (err) {
-                    console.error('createSingleSoundscape unexpected error for job ' + job_id + ':', err);
-                }
-                if (data && data.warning) { soundscape_leg_warning = data.warning; }
-                next();
-            })
-        },
-        function poke_the_monkey(next){
-            pokeDaMonkey();
-            next();
-        }
-    ], function(err){
-        if(err){
-            if(!response_already_sent){
-                res.json({ err:"Could not create soundscape job"});
-            }
-            return;
-        } else {
-            const body = { ok:"job created soundscapeJob:"+job_id };
-            if (soundscape_leg_warning) { body.warning = soundscape_leg_warning; }
-            res.json(body);
-        }
-    });
-});
-
 
 module.exports = router;
