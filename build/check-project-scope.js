@@ -63,7 +63,7 @@ const path = require('path')
 
 // Ceiling on `debt` declarations. Lowering it is always welcome; RAISING it is
 // the one way to add an unbound id route and must be argued in the PR.
-const DEBT_MAX = 20
+const DEBT_MAX = 7
 // A scan that sees fewer declarations than this is not a scan of this tree.
 const MIN_DECLS = 60
 

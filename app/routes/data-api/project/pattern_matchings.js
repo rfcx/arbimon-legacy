@@ -8,6 +8,8 @@ var model = require('../../../model');
 var csv_stringify = require("csv-stringify");
 const config = require('../../../config');
 const { recordingDownloadUrl, exportAudioUrl } = require('../../../utils/recording-download-url');
+const projectScope = require('../../../utils/project-scope');
+const PM_NOT_FOUND = { error: 'pattern matching not found' };
 const dayInMs = 24 * 60 * 60 * 1000;
 const fs = require('fs');
 const path = require('path');
@@ -61,9 +63,23 @@ async function getPatternMatchings(req, res, next) {
     }
 }
 
+// §393 (rfcx-local OPEN-ITEMS §393, 2026-09-25): every :patternMatching route
+// below resolved the PM by id ALONE -- details/rois/site-index/export/audio of
+// ANY project's PM were readable by quoting its id under a project the caller
+// can open (proven on prod as a non-super user: a private project's PM export,
+// 228 KB, 200). The PM must now be the URL project's; a foreign id gets the
+// SAME 404 as an unknown one (no existence oracle). Bound HERE, once, so every
+// route under the param is covered by construction and a new one cannot forget.
+// Handlers keep reading req.params.patternMatching -- now proven owned.
+router.param('patternMatching', function(req, res, next, patternMatching) {
+    projectScope.ownedByProject('pattern_matching', patternMatching, req.project.project_id).then(function(owned) {
+        if (!owned) { return res.status(404).json(PM_NOT_FOUND); }
+        return next();
+    }).catch(next);
+});
+
 /** Return a pattern matching's data.
  */
-// project-scope: debt §393 findOne({id}) with no project
 router.get('/:patternMatching/details', function(req, res, next) {
     res.type('json');
     model.patternMatchings.findOne({
@@ -105,7 +121,6 @@ router.param('paging', function(req, res, next, paging){
     return next();
 });
 
-// project-scope: debt §393 getPmRois queries by pattern_matching_id only
 router.get('/:patternMatching/rois/:paging', async function(req, res, next) {
     res.type('json');
     model.patternMatchings.getPmRois(req)
@@ -113,7 +128,6 @@ router.get('/:patternMatching/rois/:paging', async function(req, res, next) {
         .catch(next);
 });
 
-// project-scope: debt §393 getSitesForPM by pattern_matching_id only
 router.get('/:patternMatching/site-index', function(req, res, next) {
     res.type('json');
     model.patternMatchings.getSitesForPM(req.params.patternMatching)
@@ -122,7 +136,7 @@ router.get('/:patternMatching/site-index', function(req, res, next) {
         }).catch(next);
 });
 
-// project-scope: debt §393 exportRois ignores filters.project_id
+// project-scope: params fileName is the download name only; the rows come from the bound PM
 router.get('/:patternMatching/:fileName?', function(req, res, next) {
     if(req.query.out=="text"){
         res.type('text/plain');
@@ -184,15 +198,18 @@ router.get('/:patternMatching/:fileName?', function(req, res, next) {
     }).catch(next);
 });
 
-// project-scope: debt §393 getRoiAudioFile by (pm, roi) with no project predicate
+// project-scope: params roiUrl resolved WITHIN the bound PM (getRoiAudioFile: PMR.pattern_matching_id = pm AND roi id)
 router.get('/:patternMatching/audio/:roiUrl', function(req, res, next) {
     const roiUrl = req.params.roiUrl;
     const ext = path.extname(roiUrl)
     const roiId = path.basename(roiUrl, ext);
     model.patternMatchings.getRoiAudioFile(req.params.patternMatching, roiId, { gain: req.query.gain }).then(function(roiAudio) {
+        // §393: this was `} if (` -- a roi not in the PM sent the 404 and then
+        // fell through to `roiAudio.path` on undefined (headers-already-sent +
+        // TypeError). Binding the PM made every foreign roi take this path.
         if (!roiAudio){
-            res.sendStatus(404);
-        } if (roiAudio.path.includes('/internal')) {
+            return res.sendStatus(404);
+        } else if (roiAudio.path.includes('/internal')) {
             roiAudio.pipe(res)
         } else {
             res.sendFile(roiAudio.path, function () {

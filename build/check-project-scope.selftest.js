@@ -125,9 +125,28 @@ async function partA () {
     'model SQL is EXACTLY: id AND (own row OR imported into the project)')
   ok(g._sql.model_own === 'SELECT 1 AS owned FROM models m WHERE m.model_id = ? AND m.project_id = ? AND m.project_id = ? LIMIT 1',
     'model_own SQL is EXACTLY: id AND own row')
-  for (const k of ['playlist', 'training_set', 'job']) {
+  for (const k of ['playlist', 'training_set', 'job', 'pattern_matching']) {
     ok(/project_id = \? AND \w+\.project_id = \? LIMIT 1$/.test(g._sql[k]), `${k} SQL binds the row's project_id`)
   }
+  // §393: pattern_matching. Project 10 owns PM 50 (live) and 51 (DELETED — ownership, not listing);
+  // project 20 owns 60. A row in the project proves ownership; nothing else does.
+  const pms = { 50: 10, 51: 10, 60: 20 }
+  const pcalls = []
+  const gp = makeProjectScope(function (sql, params) {
+    pcalls.push(sql)
+    const [id, pid, pid2] = params
+    if (pid !== pid2) throw new Error('project param mismatch')
+    if (!/FROM pattern_matchings pm/.test(sql)) throw new Error('unexpected sql')
+    return Promise.resolve(pms[id] === pid ? [{ owned: 1 }] : [])
+  })
+  ok(await gp.ownedByProject('pattern_matching', 50, 10) === true, 'pattern_matching: own → true')
+  ok(await gp.ownedByProject('pattern_matching', '51', '10') === true, 'pattern_matching: own DELETED → true (ownership, not listing)')
+  ok(await gp.ownedByProject('pattern_matching', 60, 10) === false, 'pattern_matching: FOREIGN → false')
+  ok(await gp.ownedByProject('pattern_matching', 9999, 10) === false, 'pattern_matching: MISSING → false')
+  const pb = pcalls.length
+  ok(await gp.ownedByProject('pattern_matching', '_', 10) === false && pcalls.length === pb, 'pattern_matching: non-numeric id never reaches the DB')
+  ok(g._sql.pattern_matching === 'SELECT 1 AS owned FROM pattern_matchings pm WHERE pm.pattern_matching_id = ? AND pm.project_id = ? AND pm.project_id = ? LIMIT 1',
+    'pattern_matching SQL is EXACTLY: id AND the row\'s project (no deleted filter)')
   // SQL shape: both predicates present, both params bound
   const sql = g._sql.recording
   ok(/s\.project_id = \?/.test(sql) && /pis\.project_id = \?/.test(sql) && /r\.recording_id = \?/.test(sql), 'recording SQL binds id + own-site + imported-site predicates')

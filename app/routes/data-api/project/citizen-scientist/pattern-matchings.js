@@ -7,6 +7,8 @@ var router = express.Router();
 var model = require('../../../../model');
 var APIError = require('../../../../utils/apierror');
 var csv_stringify = require("csv-stringify");
+var projectScope = require('../../../../utils/project-scope');
+var PM_NOT_FOUND = { error: 'pattern matching not found' };
 
 /**
  * Return a list of all the pattern matchings in a project.
@@ -59,9 +61,24 @@ router.get('/expert', function(req, res, next) {
     }).catch(next);
 });
 
+// §393 (rfcx-local OPEN-ITEMS §393, 2026-09-25): every :patternMatching route
+// below resolved the PM by id ALONE -- CS details/rois/exports and the two
+// VALIDATE writes of
+// ANY project's PM were readable by quoting its id under a project the caller
+// can open (proven on prod as a non-super user: a private project's CS export,
+// 2 MB, 200). The PM must now be the URL project's; a foreign id gets the
+// SAME 404 as an unknown one (no existence oracle). Bound HERE, once, so every
+// route under the param is covered by construction and a new one cannot forget.
+// Handlers keep reading req.params.patternMatching -- now proven owned.
+router.param('patternMatching', function(req, res, next, patternMatching) {
+    projectScope.ownedByProject('pattern_matching', patternMatching, req.project.project_id).then(function(owned) {
+        if (!owned) { return res.status(404).json(PM_NOT_FOUND); }
+        return next();
+    }).catch(next);
+});
+
 /** Return a pattern matching's data.
  */
-// project-scope: debt §393 findOne({id}) with no project
 router.get('/:patternMatching/details', function(req, res, next) {
     res.type('json');
     var user = req.session.user;
@@ -77,7 +94,6 @@ router.get('/:patternMatching/details', function(req, res, next) {
     }).catch(next);
 });
 
-// project-scope: debt §393 findOne({id}) with no project
 router.get('/:patternMatching/expert/details', function(req, res, next) {
     res.type('json');
 
@@ -108,7 +124,6 @@ router.param('paging', function(req, res, next, paging){
     return next();
 });
 
-// project-scope: debt §393 getRoisForId: projectId is used for URLs only
 router.get('/:patternMatching/rois/:paging', function(req, res, next) {
     res.type('json');
     var user = req.session.user;
@@ -125,7 +140,6 @@ router.get('/:patternMatching/rois/:paging', function(req, res, next) {
     }).catch(next);
 });
 
-// project-scope: debt §393 getRoisForId: projectId is used for URLs only
 router.get('/:patternMatching/expert-rois/:paging', function(req, res, next) {
     res.type('json');
 
@@ -150,7 +164,9 @@ router.get('/:patternMatching/expert-rois/:paging', function(req, res, next) {
     }).catch(next);
 });
 
-// project-scope: debt §393 validateCSRois writes validations with no project predicate
+// The PM is bound by the param above; the body's roi ids are constrained to
+// that PM INSIDE validateCSRois (a roi of another PM is silently skipped), so a
+// bound PM cannot be used as a carrier to validate another project's rois.
 router.post('/:patternMatching/validate', function(req, res, next) {
     res.type('json');
     var user = req.session.user;
@@ -162,7 +178,8 @@ router.post('/:patternMatching/validate', function(req, res, next) {
     }).catch(next);
 });
 
-// project-scope: debt §393 expertValidateCSRois writes with no project predicate
+// Body roi ids: expertValidateCSRois' UPDATE already carries
+// `pattern_matching_id = <bound PM>`, so a foreign roi id updates nothing.
 router.post('/:patternMatching/expert-validate', function(req, res, next) {
     res.type('json');
 
@@ -186,7 +203,6 @@ router.post('/:patternMatching/expert-validate', function(req, res, next) {
     }).catch(next);
 });
 
-// project-scope: debt §393 findOne({id}) + exportRois, no project
 router.get('/:patternMatching/export.csv', function(req, res, next) {
     if(req.query.out=="text"){
         res.type('text/plain');
@@ -250,7 +266,6 @@ router.get('/:patternMatching/export.csv', function(req, res, next) {
     }).catch(next);
 });
 
-// project-scope: debt §393 findOne({id}) + exportRois, no project
 router.get('/:patternMatching/export-per-user.csv', function(req, res, next) {
     if(req.query.out=="text"){
         res.type('text/plain');
