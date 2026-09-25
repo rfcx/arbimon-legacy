@@ -16,6 +16,7 @@ const fs = require('fs')
 // check) refuses a new id route here that is not.
 const projectScope = require('../../../utils/project-scope');
 const { MEDIA_API_MAX_WINDOW_MS } = require('../../../utils/recording-download-url');
+const { attachLegacyTileSrc } = require('../../../utils/legacy-tile-src');
 
 let s3, s3RFCx;
 
@@ -766,6 +767,12 @@ router.get('/:get/:oneRecUrl?', function(req, res, next) {
                         // miss since 2026-08-29; this is the equivalent.
                         if (isMissingObjectError(err)) { return respondAudioNotFound(res); }
                         if(err) return next(err);
+
+                        // Legacy (`project_*`) recordings: supply each tile's
+                        // URL so the SPA needs no legacy-specific code
+                        // (app/utils/legacy-tile-src.js). Same prefix as
+                        // imageUrl/audioUrl above. No-op for non-legacy.
+                        attachLegacyTileSrc(rec, url_comps[1]);
 
                         res.json(rec);
                     });
