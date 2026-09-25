@@ -384,10 +384,11 @@ router.get('/:mid/delete', function(req, res, next) {
                     // haveAccess check above already used.
                     await model.jobs.hideAsync(jobData.job_id, project_id)
                 } else {
-                    console.log(`models/${model_id}/delete: no training-job row; nothing to hide`)
+                    console.log('models/%s/delete: no training-job row; nothing to hide', String(model_id))
                 }
             } catch(e) {
-                console.error(`models/${model_id}/delete: post-delete job-hide failed (model already deleted, response already sent):`, e && e.message)
+                // a literal format string: the id never reaches console's %-formatting (CodeQL js/tainted-format-string)
+                console.error('models/%s/delete: post-delete job-hide failed (model already deleted, response already sent): %s', String(model_id), e && e.message)
             }
         });
     });
