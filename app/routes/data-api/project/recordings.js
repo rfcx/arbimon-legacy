@@ -335,7 +335,14 @@ async function downloadRecordingById(req, res, inline, next) {
     const recordingFromParams = req.params.recordingId;
     const match = /^(\d+)?(\.(wav|flac|opus|mp3))/i.exec(recordingFromParams);
     const recordingId = match ? match[1] : recordingFromParams;
-    const [recording] = await model.recordings.findByIdAsync(recordingId)
+    // Project-scoped by construction (model.findByIdInProject): the URL's
+    // project is the authorization the caller was checked against, so the
+    // recording must belong to it. Unknown id or foreign id alike -> 404,
+    // with no hint which case it was.
+    const [recording] = await model.recordings.findByIdInProjectAsync(recordingId, req.project.project_id)
+    if (!recording) {
+        return res.status(404).json({ error: 'recording not found' });
+    }
     const recordingUri = recording.uri
     const recordingName = recordingUri.split('/').pop()
     const legacy = recordingUri.startsWith('project_')

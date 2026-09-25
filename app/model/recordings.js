@@ -297,6 +297,33 @@ var Recordings = {
         return find(recId)
     },
 
+    /**
+     * findById SCOPED to a project (2026-09-25, operator-requested, #5 of the
+     * hidden-covers follow-ons).
+     *
+     * /project/:url/recordings/(download|inline)/:id checked the caller's
+     * access to the project in the URL but served ANY recording id: a user
+     * could read a private project's audio by quoting its id under a public
+     * project's URL. The lookup must therefore be bound to req.project at the
+     * query level -- not checked after the fact -- so the answer for "not in
+     * this project" is indistinguishable from "no such recording" (no oracle).
+     * A missing row also used to crash on `recording.uri` -> 500; the empty
+     * result now becomes the same 404.
+     */
+    findByIdInProject: function(recId, projectId, callback) {
+        let q = "SELECT r.* \n"+
+                "FROM recordings r \n"+
+                "JOIN sites s ON s.site_id = r.site_id \n"+
+                "WHERE r.recording_id = ? AND s.project_id = ?";
+        q = dbpool.format(q, [recId, projectId]);
+        queryHandler(q, callback);
+    },
+
+    findByIdInProjectAsync: function(recId, projectId) {
+        let find = util.promisify(this.findByIdInProject)
+        return find(recId, projectId)
+    },
+
     getPrevAndNextRecordingsAsync: function (recording_id) {
         // ⚠️ recordings.file_size IS UNRELIABLE — see OPEN-ITEMS §189.
         // 58.7% of rows (178.9M zeros + 41.5k NULLs of 304.5M) carry no usable
