@@ -12,7 +12,7 @@ let arrays       = require('../utils/arrays');
 let config       = require('../config');
 let arrays_util  = require('../utils/arrays');
 let tmpfilecache = require('../utils/tmpfilecache');
-const { arbimon2PublicUrl } = require('../utils/asset-url');
+const { soundscapeImageUrl } = require('../utils/arbimon2-asset-url');
 const playlistRecCount = require('./playlist-rec-count'); // playlists.total_recordings maintenance (2026-09-22)
 const { createS3Client } = require('../utils/storage');
 const k8sConfig = config('k8s');
@@ -707,10 +707,12 @@ let Soundscapes = {
     },
 
     __compute_thumbnail_path : function(soundscape, callback) {
-        // Public thumbnail URL: arbimon2 bucket via s3.arbimon.org
-        // (the SDK still uses NODE_ENV-keyed bucket choice for actual
-        // S3 writes; only the public URL emission is centralized here).
-        soundscape.thumbnail = arbimon2PublicUrl(soundscape.uri);
+        // 2026-09-24: rendered on demand from `.scidx` behind the login + project
+        // gate (app/routes/data-api/arbimon2-assets.js), not the pre-baked
+        // arbimon2 image.png (public host; mostly DELETED by the §275 retirement,
+        // so this also fixes the broken thumbnails). `soundscape` here is a find()
+        // row: id + visual params are present, which is all the url needs.
+        soundscape.thumbnail = soundscape.uri ? soundscapeImageUrl(soundscape) : null;
         callback();
     },
     __compute_region_tags : function(region, callback){

@@ -7,7 +7,7 @@ const joi = require('joi');
 const dbpool = require('../utils/dbpool');
 const config = require('../config');
 const recordings = require('./recordings');
-const { arbimon2PublicUrl } = require('../utils/asset-url');
+const { arbimon2AssetUrl } = require('../utils/arbimon2-asset-url');
 const k8sConfig = config('k8s');
 const jsonTemplates = require('../utils/json-templates');
 const { Client } = require('kubernetes-client');
@@ -178,7 +178,7 @@ module.exports = {
             // Public thumbnail URL: arbimon2 bucket via s3.arbimon.org.
             // (NODE_ENV / bucketUpdateDate logic remains in this file
             // for actual SDK calls; only the public URL is centralized.)
-            const patternThumbnail = arbimon2PublicUrl(data.json.roipng);
+            const patternThumbnail = arbimon2AssetUrl(data.json.roipng); // 2026-09-24: auth-gated, never a public s3.arbimon.org/arbimon2 url
             
             let model = {
                 id: data.model_id,

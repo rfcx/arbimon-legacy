@@ -25,7 +25,8 @@ const projectModel = require('./projects')
 const classificationsModel = require('./classifications')
 const tagsModel = require('./tags')
 const soundscapeCompositionModel = require('./soundscape-composition')
-const { arbimon2PublicUrl, mediaAssetUrl, mediaStreamId } = require('../utils/asset-url')
+const { mediaAssetUrl, mediaStreamId } = require('../utils/asset-url')
+const { arbimon2AssetUrl } = require('../utils/arbimon2-asset-url')
 
 var config       = require('../config');
 // `coreApiBaseUrl` was required only by deleteRecordingsInCoreAPI, removed
@@ -1999,7 +2000,7 @@ var Recordings = {
             recording.thumbnail = minted
                 ? minted.url
                 : (legacy
-                    ? arbimon2PublicUrl(encodeURIComponent(recording.uri.replace(/\.([^.]*)$/, '.thumbnail.png')))
+                    ? arbimon2AssetUrl(recording.uri.replace(/\.([^.]*)$/, '.thumbnail.png')) // 2026-09-24: auth-gated, never a public s3.arbimon.org/arbimon2 url
                     : null)
         }
     },

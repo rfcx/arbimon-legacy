@@ -9,7 +9,8 @@ const q = require('q');
 const model = require('../../model');
 const pokeDaMonkey = require('../../utils/monkey');
 const config = require('../../config');
-const { arbimon2PublicUrl, mediaAssetUrl, mediaStreamId } = require('../../utils/asset-url');
+const { mediaAssetUrl, mediaStreamId } = require('../../utils/asset-url');
+const { arbimon2AssetUrl } = require('../../utils/arbimon2-asset-url');
 const APIError = require('../../utils/apierror');
 const router = express.Router();
 const { createS3Client } = require('../../utils/storage');
@@ -323,7 +324,7 @@ async function getModelsData(validationUri, limit, offset) {
                 const siteExternalId = (site && site[0]) ? site[0].external_id : null;
                 if (recording.uri.startsWith('project_')) {
                     const thumbnailUri = recording.uri.replace('.flac', '.thumbnail.png');
-                    recUrl = arbimon2PublicUrl(thumbnailUri);
+                    recUrl = arbimon2AssetUrl(thumbnailUri); // 2026-09-24: auth-gated, never a public s3.arbimon.org/arbimon2 url
                 }
                 else {
                     const momentStart = moment.utc(recording.datetime_utc ? recording.datetime_utc : recording.datetime)

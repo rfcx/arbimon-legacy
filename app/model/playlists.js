@@ -15,7 +15,7 @@ var APIError = require('../utils/apierror');
 // TODO remove circular dependencies
 var model = require('../model');
 var config = require('../config');
-var { arbimon2PublicUrl } = require('../utils/asset-url');
+const { soundscapeImageUrl } = require('../utils/arbimon2-asset-url');
 
 // local variables
 var s3;
@@ -120,7 +120,8 @@ var Playlists = {
         return q.resolve().then(function(){
             if(playlist.type == "soundscape region"){
                 return dbpool.query(
-                    "SELECT  soundscape_region_id as region, S.soundscape_id as soundscape, S.uri \n" +
+                    "SELECT  soundscape_region_id as region, S.soundscape_id as soundscape, S.uri, \n" +
+                    "        S.visual_palette, S.visual_max_value, S.normalized, S.threshold, S.threshold_type \n" +
                     "FROM soundscape_regions SCR \n" +
                     "JOIN soundscapes S ON SCR.soundscape_id = S.soundscape_id\n" +
                     "WHERE SCR.sample_playlist_id = ?", [
@@ -129,7 +130,7 @@ var Playlists = {
                     if(sr){
                         playlist.region     = sr.region;
                         playlist.soundscape = sr.soundscape;
-                        playlist.soundscape_thumbnail = arbimon2PublicUrl(sr.uri);
+                        playlist.soundscape_thumbnail = sr.uri ? soundscapeImageUrl({ id: sr.soundscape, visual_palette: sr.visual_palette, visual_max_value: sr.visual_max_value, normalized: sr.normalized, threshold: sr.threshold, threshold_type: sr.threshold_type }) : null; // 2026-09-24: auth-gated, never a public s3.arbimon.org/arbimon2 url
                     }
                 });
             } else if(/union|intersection|subtraction/.test(playlist.type) && playlist.metadata){

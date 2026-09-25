@@ -27,9 +27,25 @@ router.get('/', function(req, res, next) {
     }).catch(next);
 });
 
+// 2026-09-24: this proxy used to stream ANY arbimon2 key a logged-in user
+// named in ?path= (it sits behind the project gate, but never checked that the
+// key belonged to req.project -- the §291 class, and a read oracle over the
+// whole bucket incl. private projects' audio). It now serves ONLY the clustering
+// ROI image shape it exists for (findRois(): audio_events/<env>/detection/
+// <jobId>/png/<recId>/<n>.png), and only for a clustering job of THIS project.
+const CLUSTERING_ASSET = /^audio_events\/[a-z]+\/detection\/(\d+)\/png\/\d+\/\d+\.png$/;
 router.get('/asset', function(req, res, next) {
-    res.attachment(path.basename(req.query.path))
-    return model.ClusteringJobs.getAsset(req.query.path, res)
+    const m = CLUSTERING_ASSET.exec(String(req.query.path || ''));
+    if (!m) return res.status(404).json({ error: 'asset not available' });
+    // The ?path job id is the AED (detection) job; its clustering job params
+    // reference it. Accept it only if that detection job is in this project.
+    model.jobs.find({ job_id: Number(m[1]), project_id: req.project.project_id }, function (err, rows) {
+        if (err) return next(err);
+        if (!rows || !rows.length) return res.status(404).json({ error: 'asset not available' });
+        res.attachment(path.basename(req.query.path));
+        res.set('Cache-Control', 'private, max-age=86400');
+        return model.ClusteringJobs.getAsset(req.query.path, res);
+    });
 });
 
 router.get('/:job_id/job-details', function (req, res, next) {

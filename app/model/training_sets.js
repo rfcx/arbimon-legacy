@@ -23,7 +23,8 @@ var sqlutil      = require('../utils/sqlutil');
 var dbpool       = require('../utils/dbpool');
 var Recordings   = require('./recordings');
 var Projects     = require('./projects');
-var { arbimon2PublicUrl, arbimon2PublicUrlBase, roiSpectrogramUrl } = require('../utils/asset-url');
+var { roiSpectrogramUrl } = require('../utils/asset-url');
+const { arbimon2AssetUrl } = require('../utils/arbimon2-asset-url');
 
 // local variables
 var s3;
@@ -536,7 +537,7 @@ TrainingSets.types.roi_set = {
             return callback(new Error('create_data_image: missing training set ROI row (no id)'));
         }
         var s3key = 'project_'+training_set.project+'/training_sets/'+training_set.id+'/'+rdata.id+'.png';
-        rdata.uri = arbimon2PublicUrl(s3key);
+        rdata.uri = arbimon2AssetUrl(s3key); // 2026-09-24: auth-gated (app/utils/arbimon2-asset-url.js), never a public s3.arbimon.org/arbimon2 url.
         let rec_data, rec_stats, spec_data, isLegacy;
 
         return Recordings.findByUrlMatch(rdata.recording, 0, {limit:1})
@@ -653,7 +654,6 @@ TrainingSets.types.roi_set = {
             callback = options;
             options = undefined;
         }
-        var uri_prefix = arbimon2PublicUrlBase() + '/';
         var fields=["TSD.roi_set_data_id as id"];
         var tables=["training_set_roi_set_data TSD"];
         if(options && options.resolveIds){
@@ -676,7 +676,7 @@ TrainingSets.types.roi_set = {
             "ROUND(TSD.y2-TSD.y1,1) as bw"
         );
         if(!options || !options.noURI){
-            fields.push("CONCAT(" + dbpool.escape(uri_prefix) + ",TSD.uri) as uri");
+            fields.push("TSD.uri as uri"); // bare key -> gated url in enrich() below
         }
 
         // On-demand spectrogram support: join the recording's stream external_id
@@ -696,6 +696,10 @@ TrainingSets.types.roi_set = {
         }
 
         var enrich = function (err, rows) {
+            // 2026-09-24: stored keys -> auth-gated urls (never public s3.arbimon.org/arbimon2)
+            if (!err && Array.isArray(rows) && !(options && options.noURI)) {
+                for (var k = 0; k < rows.length; k++) rows[k].uri = arbimon2AssetUrl(rows[k].uri);
+            }
             if (!err && withSpectro && Array.isArray(rows)) {
                 for (var i = 0; i < rows.length; i++) {
                     rows[i].spectrogram_url = roiSpectrogramUrl({
@@ -785,6 +789,12 @@ TrainingSets.types.roi_set = {
      * @param {Function} callback(err, path) function to call back with the results.
      */
     get_data : function(training_set, query, callback) {
+        // 2026-09-24: stored keys -> auth-gated urls on BOTH branches below
+        var _cb = callback;
+        callback = function (err, rows) {
+            if (!err && Array.isArray(rows)) rows.forEach(function (r) { r.uri = arbimon2AssetUrl(r.uri); });
+            return _cb(err, rows);
+        };
         var constraints = ['TSD.training_set_id = ' + dbpool.escape(training_set.id)];
         var tables = ['training_set_roi_set_data TSD'];
 
@@ -794,7 +804,7 @@ TrainingSets.types.roi_set = {
                 "SELECT TSD.roi_set_data_id as id, TSD.recording_id as recording,\n"+
                 "   TSD.species_id as species, TSD.songtype_id as songtype,  \n" +
                 "   TSD.x1, TSD.y1, TSD.x2, TSD.y2 , \n"+
-                "   CONCAT(" + dbpool.escape(arbimon2PublicUrlBase() + '/') + ",TSD.uri) as uri \n" +
+                "   TSD.uri as uri \n" +
                 "FROM "   + tables.join(" \n" +
                 "JOIN ")+ " \n" +
                 "WHERE " + constraints.join(" \n" +
@@ -817,7 +827,7 @@ TrainingSets.types.roi_set = {
                     "   TSD.species_id as species, TS.name, TSD.songtype_id as songtype, \n" +
                     "   SP.scientific_name as species_name, ST.songtype as songtype_name, \n" +
                     "   TSD.x1, TSD.y1, TSD.x2, TSD.y2 , \n"+
-                    "   CONCAT(" + dbpool.escape(arbimon2PublicUrlBase() + '/') + ",TSD.uri) as uri \n" +
+                    "   TSD.uri as uri \n" +
                     "FROM "   + tables.join(" \n" +
                     "JOIN ")+ " \n" +
                     "WHERE " + constraints.join(" \n" +

@@ -2,7 +2,8 @@
 // since P7 step 5 (MySQL-dialect SQL here is run through the P6 translator).
 const mysql = require('../db/backend')
 const config_hosts = require('../../config/hosts');
-const { arbimon2PublicUrlBase } = require('./asset-url');
+// 2026-09-24: arbimon2PublicUrlBase removed -- the template export never emits T.uri (it renders audio from rec_uri);
+// a stored key is enough, and no public s3.arbimon.org/arbimon2 url is built.
 
 async function getProjectTemplate (options = {}) {
   const connection = await mysql.getConnection()
@@ -30,7 +31,7 @@ async function getTemplateDataForAudio (options = {}) {
   const connection = await mysql.getConnection()
   const sql = `
     SELECT T.template_id as id, T.project_id as project, T.recording_id as recording, T.species_id as species,
-      T.songtype_id as songtype, T.name template_name, CONCAT('${arbimon2PublicUrlBase()}/', T.uri) as uri,
+      T.songtype_id as songtype, T.name template_name, T.uri as uri,
       T.x1, T.y1, T.x2, T.y2, T.date_created, T.user_id, T.disabled, R.uri as rec_uri, R.site_id as rec_site_id,
       R.sample_rate, R.datetime, R.datetime_utc, S.external_id
     FROM templates T

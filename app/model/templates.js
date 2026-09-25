@@ -12,7 +12,8 @@ const config = require('../config');
 const dbpool = require('../utils/dbpool');
 const Recordings = require('./recordings');
 const { isArray } = require('lodash');
-const { arbimon2PublicUrl, arbimon2PublicUrlBase, roiSpectrogramUrl } = require('../utils/asset-url');
+const { roiSpectrogramUrl } = require('../utils/asset-url');
+const { arbimon2AssetUrl } = require('../utils/arbimon2-asset-url');
 
 let s3;
 
@@ -92,7 +93,7 @@ var Templates = {
             "T.`species_id` as species",
             "T.`songtype_id` as songtype",
             "T.`name`",
-            "CONCAT(" + dbpool.escape(arbimon2PublicUrlBase() + '/') + ", T.`uri`) as `storedUri`",
+            "T.`uri` as `storedUri`", // bare key -> gated url after the query (arbimon2AssetUrl)
             // Columns for the DYNAMIC media-api render (post-mapped onto `uri`
             // below via roiSpectrogramUrl). The stored S3 PNG can be stale/wrong
             // (the 2026-06 tmpfilecache key collision baked full-recording COLOUR
@@ -250,6 +251,7 @@ var Templates = {
                     freqMax: Math.max(r.y1, r.y2),
                     sampleRate: r.dynSampleRate
                 }, { width: 400, height: 400 });
+                r.storedUri = arbimon2AssetUrl(r.storedUri);
                 r.uri = dyn || r.storedUri;
                 delete r.dynRecUri; delete r.dynDatetimeUtc;
                 delete r.dynSampleRate; delete r.dynExternalId;
@@ -329,7 +331,7 @@ var Templates = {
                 "T.`species_id` as species",
                 "T.`songtype_id` as songtype",
                 "T.`name`",
-                "CONCAT(" + dbpool.escape(arbimon2PublicUrlBase() + '/') + ", T.`uri`) as `storedUri`",
+                "T.`uri` as `storedUri`", // bare key -> gated url after the query (arbimon2AssetUrl)
                 // Dynamic media-api render columns (post-mapped onto `uri` below;
                 // auth-free ingest path -- see find()).
                 "RDYN.`uri` as `dynRecUri`, RDYN.`datetime_utc` as `dynDatetimeUtc`, RDYN.`sample_rate` as `dynSampleRate`, SDYN.`external_id` as `dynExternalId`",
@@ -376,6 +378,7 @@ var Templates = {
                     freqMax: Math.max(r.y1, r.y2),
                     sampleRate: r.dynSampleRate
                 }, { width: 400, height: 400 });
+                r.storedUri = arbimon2AssetUrl(r.storedUri);
                 r.uri = dyn || r.storedUri;
                 delete r.dynRecUri; delete r.dynDatetimeUtc;
                 delete r.dynSampleRate; delete r.dynExternalId;
@@ -526,7 +529,7 @@ var Templates = {
      */
     createTemplateImage : function (template){
         const s3key = 'project_'+template.project+'/templates/'+template.id+'.png';
-        template.uri = arbimon2PublicUrl(s3key);
+        template.uri = arbimon2AssetUrl(s3key); // 2026-09-24: auth-gated (app/utils/arbimon2-asset-url.js), never a public s3.arbimon.org/arbimon2 url.
         let rec_data, rec_stats, spec_data, isLegacy;
         return Recordings.findByUrlMatch(template.recording, 0, {limit:1})
         .then(data => rec_data = data[0])
