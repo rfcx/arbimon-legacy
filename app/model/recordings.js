@@ -319,6 +319,29 @@ var Recordings = {
         queryHandler(q, callback);
     },
 
+    /**
+     * 1-based position of a recording among the rows that share its site_id +
+     * filename (a long upload ingested as one recording per segment keeps the
+     * ORIGINAL filename on every segment row), plus the size of that group.
+     * Ordered by datetime then recording_id so ties are deterministic.
+     * Uses recordings_site_filename_idx. Archived rows are INCLUDED on purpose:
+     * archiving a segment must not renumber its siblings' downloads.
+     * Resolves { index, count } ; { index: 1, count: 1 } when filename is empty.
+     */
+    segmentPositionAsync: function(rec) {
+        if (!rec || !rec.filename) return Promise.resolve({ index: 1, count: 1 });
+        const q = "SELECT \n" +
+            "  COUNT(*) AS count, \n" +
+            "  SUM(CASE WHEN r.datetime < ? OR (r.datetime = ? AND r.recording_id <= ?) THEN 1 ELSE 0 END) AS idx \n" +
+            "FROM recordings r WHERE r.site_id = ? AND r.filename = ?";
+        return dbpool.query(q, [rec.datetime, rec.datetime, rec.recording_id, rec.site_id, rec.filename]).then(function (rows) {
+            const row = rows && rows[0] || {};
+            const count = Number(row.count) || 1;
+            const index = Number(row.idx) || 1;
+            return { index: index, count: count };
+        });
+    },
+
     findByIdInProjectAsync: function(recId, projectId) {
         let find = util.promisify(this.findByIdInProject)
         return find(recId, projectId)

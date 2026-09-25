@@ -15,6 +15,7 @@ const fs = require('fs')
 // URL's project through ONE guard. build/check-project-scope.js (a required PR
 // check) refuses a new id route here that is not.
 const projectScope = require('../../../utils/project-scope');
+const { MEDIA_API_MAX_WINDOW_MS } = require('../../../utils/recording-download-url');
 
 let s3, s3RFCx;
 
@@ -276,6 +277,52 @@ router.post('/grouped-detections-export', function(req, res, next) {
     model.recordings.writeExportParams(projection, filters, userId, userEmail).then(function(data) {
         res.json({ success: true })
     }).catch(next);
+});
+
+/**
+ * Visualizer Download (operator 2026-09-25 09:22; ruling (a) 11:45).
+ *
+ * Returns JSON { url, filename } — NOT the bytes. `url` is a media-api WAV of
+ * exactly this recording's window, at the source sample rate and bit depth,
+ * signed with a short-lived stream-token (the same mint the PM export uses);
+ * `filename` is the ORIGINAL upload name, `<stem>.wav`, or `<stem>.NNN.wav`
+ * for one segment of an upload that was split into several recordings.
+ *
+ * ⚠️ media-api always writes MONO (`-ac 1`): a stereo upload downloads as a
+ * mono WAV. Accepted by the operator (ruling (a)); ~1.3 % of uploads are
+ * stereo (0.2 % sample of stream_source_files).
+ *
+ * `url: null` when no media-api URL can be built (legacy `project_*` uploads
+ * have no stream, or a window over the 15-min media-api cap): the caller falls
+ * back to /download/:id, which streams the stored object.
+ */
+// project-scope: model findByIdInProjectAsync
+router.get('/download-wav/:recordingId', async function(req, res, next) {
+    try {
+        const [rec] = await model.recordings.findByIdInProjectAsync(req.params.recordingId, req.project.project_id);
+        if (!rec) return res.status(404).json({ error: 'recording not found' });
+        const { mediaAssetUrl, mediaStreamId } = require('../../../utils/asset-url');
+        const { recordingDownloadName } = require('../../../utils/recording-download-name');
+        const pos = await model.recordings.segmentPositionAsync(rec);
+        const filename = recordingDownloadName(rec, pos.index, pos.count);
+        const [site] = await model.sites.findByIdAsync(rec.site_id);
+        const streamId = mediaStreamId(rec.uri, site && site.external_id);
+        const startRaw = rec.datetime_utc || rec.datetime;
+        const startMs = startRaw instanceof Date ? startRaw.getTime()
+            : (typeof startRaw === 'string' ? Date.parse(startRaw.replace(' ', 'T') + (/[zZ]|[+-]\d\d:?\d\d$/.test(startRaw) ? '' : 'Z')) : NaN);
+        const durSec = Number(rec.duration);
+        // Math.trunc: the same window derivation exportAudioUrl uses, so the
+        // signed window and the attr cannot drift by a millisecond (401 class).
+        const durMs = isFinite(durSec) ? Math.trunc(durSec * 1000) : NaN;
+        let url = null;
+        if (streamId && isFinite(startMs) && isFinite(durMs) && durMs > 0 && durMs <= MEDIA_API_MAX_WINDOW_MS) {
+            const minted = mediaAssetUrl(streamId, startMs, startMs + durMs, 'rfull_g1_fwav.wav', { ttlSeconds: 3600 });
+            if (minted) url = minted.url;
+        }
+        res.json({ url: url, filename: filename, segment: pos.count > 1 ? { index: pos.index, count: pos.count } : null });
+    } catch (err) {
+        next(err);
+    }
 });
 
 // project-scope: allow scoped inside downloadRecordingById via findByIdInProjectAsync(req.project) — test/recordings-download-project-scope.test.js
