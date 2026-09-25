@@ -28,3 +28,7 @@ router.get('/:site_id/assets/:asset_id', async function(req, res){
 });
 
 module.exports = router;
+
+// RED-TEST PROBE (rfcx-local §391) — DO NOT MERGE. An unguarded id param, the sites.js shape.
+router.param('probeSite', function(req, res, next, id){ model.sites.findById(id, function(){ next(); }); });
+router.get('/probe/:probeSite', function(req, res){ res.json({}); });
