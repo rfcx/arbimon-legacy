@@ -49,6 +49,7 @@ function defineS3Clients () {
 // gave 50 MATCH / 0 MISMATCH of (url project == owning project) for
 // classifications, so no legitimate flow requests a classification through a
 // foreign project url.
+// project-scope: model findInProject
 router.param('classiId', function(req, res, next, classiId) {
     if (!req.project) return next();
     model.classifications.findInProject(classiId, req.project.project_id, function(err, rows) {
@@ -107,6 +108,7 @@ router.get('/:classiId', function(req, res, next) {
     });
 });
 
+// project-scope: params from,total paging offsets within the bound classification
 router.get('/:classiId/more/:from/:total', function(req, res, next) {
     res.type('json');
     model.classifications.moreDetailsAsync(req.params.classiId, req.params.from, req.params.total)
@@ -290,6 +292,7 @@ router.post('/new', function(req, res, next) {
     });
 });
 
+// project-scope: params recId resolved only through the bound classification (cr.job_id = classiId AND r.recording_id = recId)
 router.get('/:classiId/vector/:recId', function(req, res, next) {
     res.type('json');
 

@@ -11,8 +11,35 @@ var config = require('../../../config');
 const mime = require('mime');
 const { getCachedMetrics } = require('../../../utils/cached-metrics');
 const fs = require('fs')
+// rfcx-local OPEN-ITEMS §391: every id in this router's paths is bound to the
+// URL's project through ONE guard. build/check-project-scope.js (a required PR
+// check) refuses a new id route here that is not.
+const projectScope = require('../../../utils/project-scope');
 
 let s3, s3RFCx;
+
+/**
+ * The selector a DENIED list/count request is answered with: the caller's own
+ * parsed query with its id/site replaced by the model's no-match marker, so the
+ * response has exactly the shape an unknown `!q:<site>` gets (empty rows / zero
+ * counts) and a foreign selector is indistinguishable from a missing one.
+ */
+function deniedSelector(urlquery) {
+    return Object.assign({}, urlquery, { id: undefined, site: { no_match: true } });
+}
+
+/**
+ * Resolve a recordings URL selector against req.project. Calls back with the
+ * selector findByUrlMatch should run: the ORIGINAL url when owned (zero
+ * behaviour change), the no-match selector when not.
+ */
+function scopedSelector(req, recordingUrl) {
+    return model.recordings.parseUrlQuery(recordingUrl).then(function(urlquery) {
+        return projectScope.selectorOwned(urlquery, req.project.project_id).then(function(owned) {
+            return owned ? recordingUrl : deniedSelector(urlquery);
+        });
+    });
+}
 
 /**
  * Is this error "the recording's AUDIO OBJECT is absent from every storage
@@ -89,11 +116,15 @@ function defineS3Clients() {
 
 defineS3Clients();
 
+// project-scope: params filename a file name looked up only inside the guarded site
 router.get('/exists/site/:siteid/file/:filename', function(req, res, next) {
     res.type('json');
     var site_id = req.params.siteid;
     var ext = path.extname(req.params.filename);
     var filename = path.basename(req.params.filename, ext);
+    // §391: a foreign site answers exactly what an unknown site answers.
+    projectScope.ownedByProject('site', site_id, req.project.project_id).then(function(owned) {
+    if (!owned) { return res.json({ exists: false }); }
     model.recordings.exists(
         {
             site_id: site_id,
@@ -101,11 +132,12 @@ router.get('/exists/site/:siteid/file/:filename', function(req, res, next) {
         },
         function(err, result) {
             if(err)
-                next(err);
+                return next(err);
 
             res.json({ exists: result });
         }
     );
+    }).catch(next);
 });
 
 router.get('/search', function(req, res, next) {
@@ -246,10 +278,12 @@ router.post('/grouped-detections-export', function(req, res, next) {
     }).catch(next);
 });
 
+// project-scope: allow scoped inside downloadRecordingById via findByIdInProjectAsync(req.project) — test/recordings-download-project-scope.test.js
 router.get('/download/:recordingId', function(req, res, next) {
     downloadRecordingById(req, res, false, next);
 });
 
+// project-scope: allow scoped inside downloadRecordingById via findByIdInProjectAsync(req.project) — test/recordings-download-project-scope.test.js
 router.get('/inline/:recordingId', function(req, res, next) {
     downloadRecordingById(req, res, true, next);
 });
@@ -396,7 +430,10 @@ router.get('/:recUrl?', function(req, res, next) {
     res.type('json');
     // get nearby recordings
     if (req.query && req.query.recording_id) {
-        model.recordings.getPrevAndNextRecordingsAsync(req.query.recording_id)
+        // §391: resolve the anchor recording against req.project first; a
+        // foreign id gets the same 404 an unknown id gets.
+        projectScope.ownedByProject('recording', req.query.recording_id, req.project.project_id)
+            .then((owned) => owned ? model.recordings.getPrevAndNextRecordingsAsync(req.query.recording_id) : [])
             .then((recordings) => {
                 if(!recordings.length){
                     return res.status(404).json({ error: 'recording not found' });
@@ -409,8 +446,7 @@ router.get('/:recUrl?', function(req, res, next) {
             })
     }
     else {
-        var recordingUrl = req.params.recUrl;
-
+        scopedSelector(req, req.params.recUrl).then(function(recordingUrl) {
         model.recordings.findByUrlMatch(
             recordingUrl,
             req.project.project_id,
@@ -427,25 +463,26 @@ router.get('/:recUrl?', function(req, res, next) {
                 return null;
             }
         );
+        }).catch(next);
     }
 });
 
 router.get('/count/:recUrl?', function(req, res, next) {
     res.type('json');
-    var recordingUrl = req.params.recUrl;
-
+    scopedSelector(req, req.params.recUrl).then(function(recordingUrl) {
     model.recordings.findByUrlMatch(recordingUrl, req.project.project_id, { count_only:true }, function(err, count) {
         if(err) return next(err);
 
         res.json(count);
         return null;
     });
+    }).catch(next);
 });
 
 // get info about count of recordings in a project
 router.get('/available/:recUrl?', function(req, res, next) {
     res.type('json');
-    var recordingUrl = req.params.recUrl;
+    scopedSelector(req, req.params.recUrl).then(function(recordingUrl) {
     model.recordings.findByUrlMatch(
         recordingUrl,
         req.project.project_id,
@@ -461,10 +498,23 @@ router.get('/available/:recUrl?', function(req, res, next) {
             return null;
         }
     );
+    }).catch(next);
 });
 
 // Visualizer page | get info about one selected recording
+//
+// §391 (2026-09-25): findByUrlMatch skips its project union for by-id AND
+// by-site selectors (deliberately -- its model-internal callers need unscoped
+// by-id resolution), so this param used to serve ANY project's recording under
+// any project URL the caller could open. Proven over HTTP as a non-super user:
+// a private project's recording read 200 under a public project's URL. The
+// selector is now checked against req.project first; a foreign recording gets
+// the byte-identical 404 an unknown id gets (no existence oracle).
 router.param('oneRecUrl', function(req, res, next, recording_url){
+    projectScope.recordingUrlOwned(model.recordings, recording_url, req.project.project_id).then(function(owned) {
+    if (!owned) {
+        return res.status(404).json({ error: "recording not found"});
+    }
     model.recordings.findByUrlMatch(recording_url, req.project.project_id, {limit:1}, function(err, recordings) {
         if(err){
             return next(err);
@@ -480,8 +530,10 @@ router.param('oneRecUrl', function(req, res, next, recording_url){
         req.recording = recordings[0];
         return next();
     });
+    }).catch(next);
 });
 
+// project-scope: params i,j,randomString tile coordinates and a cache-buster, not entity ids
 router.get('/tiles/:recordingId/:i/:j/:randomString', function(req, res, next) {
     let i = req.params.i | 0;
     let j = req.params.j | 0;
@@ -495,6 +547,11 @@ router.get('/tiles/:recordingId/:i/:j/:randomString', function(req, res, next) {
         clearTimeout(timeout)
     });
 
+    // §391: bound to req.project like every other id in this router.
+    projectScope.ownedByProject('recording', recordingId, req.project.project_id).then(function(owned) {
+    if (!owned) {
+        return res.status(404).json({ error: "recording not found"});
+    }
     model.recordings.findByRecordingId(recordingId, function(err, recording) {
         if (err) {
             return next(err);
@@ -529,8 +586,10 @@ router.get('/tiles/:recordingId/:i/:j/:randomString', function(req, res, next) {
 
 
     });
+    }).catch(next);
 });
 
+// project-scope: params get the verb selector (info/audio/image/…), not an entity id
 router.get('/:get/:oneRecUrl?', function(req, res, next) {
     let get = req.params.get;
     let recording = req.recording;

@@ -58,6 +58,7 @@ router.get('/classification', function(req, res, next) {
     }).catch(next);
 });
 
+// project-scope: model getClassificationStats
 router.get('/classification/:species', function(req, res, next) {
     res.type('json');
 
@@ -93,6 +94,7 @@ router.get('/user', function(req, res, next) {
     }).catch(next);
 });
 
+// project-scope: model getUserStats
 router.get('/user/:user', function(req, res, next) {
     res.type('json');
 

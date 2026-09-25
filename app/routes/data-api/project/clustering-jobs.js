@@ -48,6 +48,7 @@ router.get('/asset', function(req, res, next) {
     });
 });
 
+// project-scope: model findOne
 router.get('/:job_id/job-details', function (req, res, next) {
     res.type('json');
     model.ClusteringJobs.findOne(req.params.job_id, {
@@ -57,6 +58,7 @@ router.get('/:job_id/job-details', function (req, res, next) {
     }).catch(next);
 });
 
+// project-scope: debt §393 findRois/getClusteringPlaylist take aed/rec ids from the body, no project predicate
 router.post('/:job_id/rois-details', function(req, res, next) {
     res.type('json');
     const recId = req.body.rec_id
@@ -81,6 +83,7 @@ router.post('/:job_id/rois-details', function(req, res, next) {
         }).catch(next);
 });
 
+// project-scope: debt §393 getRoiAudioFile by (recId, aedId) with no project predicate
 router.get('/:recId/audio/:aedId', function(req, res, next) {
     model.ClusteringJobs.getRoiAudioFile({ recId: req.params.recId, aedId: req.params.aedId, gain: req.query.gain }).then(function(roiAudio) {
         if(!roiAudio){
@@ -98,6 +101,7 @@ router.get('/:recId/audio/:aedId', function(req, res, next) {
     }).catch(next);
 });
 
+// project-scope: debt §393 reads the job's S3 JSON by job_id with no project check
 router.get('/:job_id/clustering-details', function (req, res, next) {
     res.type('json');
     const uri = `audio_events/${config('aws').env}/clustering/${req.params.job_id}/${req.params.job_id}_${req.query.aed_info ? 'aed_info' : 'lda'}.json`;
@@ -128,6 +132,7 @@ router.get('/audio-event-detections', function(req, res, next) {
     }).catch(next);
 });
 
+// project-scope: model writeExportParams
 router.post('/:job_id/rois-export', function(req, res, next) {
     res.type('json');
     const bodyParams = req.body.params
@@ -162,6 +167,7 @@ router.post('/new', function(req, res, next) {
     })
 });
 
+// project-scope: model delete
 router.post('/:clusteringJobId/remove', function(req, res, next) {
     res.type('json');
 

@@ -4,6 +4,7 @@ const router = express.Router();
 const csv_stringify = require("csv-stringify");
 const moment = require('moment');
 const model = require('../../../model');
+const projectScope = require('../../../utils/project-scope');
 
 router.get('/', function(req, res, next) {
     res.type('json');
@@ -132,7 +133,17 @@ router.post('/soft-delete', function(req, res, next) {
     }).catch(next);
 });
 
+// rfcx-local OPEN-ITEMS §391 (2026-09-25, the FOURTH instance of the class,
+// found while designing the durable fix): this param resolved the site by id
+// alone, so /project/<any>/sites/<foreignSiteId>/{data,uploads}.txt streamed
+// another project's per-site recording/upload stats. The site must now be one
+// of req.project's own or imported sites; a foreign id gets the same 404 an
+// unknown id gets. build/check-project-scope.js keeps it that way.
 router.param('siteid', function(req, res, next, siteid){
+    projectScope.ownedByProject('site', siteid, req.project.project_id).then(function(owned) {
+    if (!owned) {
+        return res.status(404).json({ error: "site not found"});
+    }
     model.sites.findById(siteid,
     function(err, sites) {
         if(err) return next(err);
@@ -143,6 +154,7 @@ router.param('siteid', function(req, res, next, siteid){
         req.site = sites[0];
         return next();
     });
+    }).catch(next);
 });
 
 router.get('/:siteid/uploads.txt', function(req, res, next){

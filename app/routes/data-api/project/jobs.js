@@ -32,6 +32,7 @@ router.use(function(req, res, next) {
 });
 
 
+// project-scope: model hide
 router.get('/hide/:jId', function(req, res, next) {
     res.type('json');
 
@@ -45,6 +46,7 @@ router.get('/hide/:jId', function(req, res, next) {
     });
 });
 
+// project-scope: model cancel
 router.get('/cancel/:jId', function(req, res, next) {
     res.type('json');
 

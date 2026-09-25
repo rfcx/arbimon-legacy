@@ -59,6 +59,7 @@ router.post('/remove-class', function(req, res, next) {
     }).catch(next);
 });
 
+// project-scope: model getAnnotationsFor
 router.get('/annotations/:id', function(req, res, next) {
     res.type('json');
     model.SoundscapeComposition.getAnnotationsFor({
@@ -79,6 +80,7 @@ router.use(function(req, res, next) {
     next();
 });
 
+// project-scope: model annotate
 router.post('/annotate/:id', function(req, res, next) {
     res.type('json');
     model.SoundscapeComposition.annotate({

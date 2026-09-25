@@ -61,6 +61,7 @@ router.get('/expert', function(req, res, next) {
 
 /** Return a pattern matching's data.
  */
+// project-scope: debt §393 findOne({id}) with no project
 router.get('/:patternMatching/details', function(req, res, next) {
     res.type('json');
     var user = req.session.user;
@@ -76,6 +77,7 @@ router.get('/:patternMatching/details', function(req, res, next) {
     }).catch(next);
 });
 
+// project-scope: debt §393 findOne({id}) with no project
 router.get('/:patternMatching/expert/details', function(req, res, next) {
     res.type('json');
 
@@ -96,6 +98,7 @@ router.get('/:patternMatching/expert/details', function(req, res, next) {
     }).catch(next);
 });
 
+// project-scope: allow offset_limit paging, not an entity id
 router.param('paging', function(req, res, next, paging){
     const components = paging.split('_');
     req.paging = {
@@ -105,6 +108,7 @@ router.param('paging', function(req, res, next, paging){
     return next();
 });
 
+// project-scope: debt §393 getRoisForId: projectId is used for URLs only
 router.get('/:patternMatching/rois/:paging', function(req, res, next) {
     res.type('json');
     var user = req.session.user;
@@ -121,6 +125,7 @@ router.get('/:patternMatching/rois/:paging', function(req, res, next) {
     }).catch(next);
 });
 
+// project-scope: debt §393 getRoisForId: projectId is used for URLs only
 router.get('/:patternMatching/expert-rois/:paging', function(req, res, next) {
     res.type('json');
 
@@ -145,6 +150,7 @@ router.get('/:patternMatching/expert-rois/:paging', function(req, res, next) {
     }).catch(next);
 });
 
+// project-scope: debt §393 validateCSRois writes validations with no project predicate
 router.post('/:patternMatching/validate', function(req, res, next) {
     res.type('json');
     var user = req.session.user;
@@ -156,6 +162,7 @@ router.post('/:patternMatching/validate', function(req, res, next) {
     }).catch(next);
 });
 
+// project-scope: debt §393 expertValidateCSRois writes with no project predicate
 router.post('/:patternMatching/expert-validate', function(req, res, next) {
     res.type('json');
 
@@ -179,6 +186,7 @@ router.post('/:patternMatching/expert-validate', function(req, res, next) {
     }).catch(next);
 });
 
+// project-scope: debt §393 findOne({id}) + exportRois, no project
 router.get('/:patternMatching/export.csv', function(req, res, next) {
     if(req.query.out=="text"){
         res.type('text/plain');
@@ -242,6 +250,7 @@ router.get('/:patternMatching/export.csv', function(req, res, next) {
     }).catch(next);
 });
 
+// project-scope: debt §393 findOne({id}) + exportRois, no project
 router.get('/:patternMatching/export-per-user.csv', function(req, res, next) {
     if(req.query.out=="text"){
         res.type('text/plain');
@@ -306,6 +315,7 @@ router.get('/:patternMatching/export-per-user.csv', function(req, res, next) {
 });
 
 
+// project-scope: model delete
 router.post('/:patternMatching/remove', function(req, res, next) {
     res.type('json');
 

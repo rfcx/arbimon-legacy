@@ -69,6 +69,7 @@ function citizenScientistHomeRedirect(req, project, permissions) {
     return undefined;
 }
 
+// project-scope: allow this IS the URL project: authorised below against the session user's permissions
 router.param('projectUrl', function(req, res, next, project_url){
     res.type('json');
     model.projects.find({ url: project_url }, function(err, rows) {

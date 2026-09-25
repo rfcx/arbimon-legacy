@@ -20,6 +20,7 @@ var model = require('../../../model');
     });
 });
 
+// project-scope: model find
 router.param('playlist', function(req, res, next, playlist){
     res.type('json');
     // `req.body.recordings` is the deliberate body-driven bypass: those callers
@@ -64,6 +65,7 @@ router.get('/info/:playlist', function(req, res, next) {
     });
 });
 
+// project-scope: params recid resolved only within the bound playlist (PLR.playlist_id)
 router.get('/:playlist/:recid/position', function(req, res, next) {
     res.type('json');
     model.playlists.fetchRecordingPosition(req.playlist, req.params.recid, function(err, data) {
@@ -72,6 +74,7 @@ router.get('/:playlist/:recid/position', function(req, res, next) {
     });
 });
 
+// project-scope: params recid resolved only within the bound playlist (PLR.playlist_id)
 router.get('/:playlist/:recid/next', function(req, res, next) {
     res.type('json');
     model.playlists.fetchNextRecording(req.playlist, req.params.recid, function(err, data) {
@@ -80,6 +83,7 @@ router.get('/:playlist/:recid/next', function(req, res, next) {
     });
 });
 
+// project-scope: params recid resolved only within the bound playlist (PLR.playlist_id)
 router.get('/:playlist/:recid/previous', function(req, res, next) {
     res.type('json');
     model.playlists.fetchPreviousRecording(req.playlist, req.params.recid, function(err, data) {

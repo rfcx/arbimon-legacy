@@ -41,6 +41,7 @@ var parse_bbox = function(bbox){
 };
 
 
+// project-scope: model find
 router.param('soundscape', function(req, res, next, soundscape){
     model.soundscapes.find({
         id      : soundscape,
@@ -70,6 +71,7 @@ router.param('soundscape', function(req, res, next, soundscape){
 });
 
 
+// project-scope: allow a bounding box, not an entity id
 router.param('bbox', function(req, res, next, bbox){
     var bb = parse_bbox(bbox);
     if(!bb){
@@ -391,6 +393,7 @@ router.get('/:soundscape/recordings/:bbox', function(req, res, next) {
 });
 
 
+// project-scope: parent soundscape
 region_router.param('region', function(req, res, next, region){
     if(!req.soundscape){
         return res.status(404).json({ error: "cannot find region without soundscape."});
@@ -462,6 +465,7 @@ region_router.post('/:region/sample', function(req, res, next) {
 });
 
 
+// project-scope: params recid read only within the bound region (SRT.soundscape_region_id)
 region_router.get('/:region/tags/:recid', function(req, res, next) {
     res.type('json');
     model.soundscapes.getRegionTags(req.region, {
@@ -475,6 +479,7 @@ region_router.get('/:region/tags/:recid', function(req, res, next) {
     });
 });
 
+// project-scope: params recid written only as a tag row on the caller's own bound region
 region_router.post('/:region/tags/:recid/add', function(req, res, next) {
     res.type('json');
     
@@ -491,6 +496,7 @@ region_router.post('/:region/tags/:recid/add', function(req, res, next) {
 });
 
 
+// project-scope: params recid removed only within the bound region (getRegionTags by region)
 region_router.post('/:region/tags/:recid/remove', function(req, res, next) {
     res.type('json');
     

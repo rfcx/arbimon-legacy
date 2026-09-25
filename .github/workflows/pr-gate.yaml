@@ -37,3 +37,24 @@ jobs:
           node-version: '18'
       - name: 'require() closure vs Dockerfile COPY coverage'
         run: node build/check-stage-copy-closure.js
+
+  # rfcx-local OPEN-ITEMS §391 (2026-09-25): every id route/param under
+  # app/routes/data-api/project/ must be bound to the URL's project
+  # (app/utils/project-scope.js, a model call that takes req.project, or a
+  # commented declaration the checker VERIFIES). Same rules as the job above:
+  # bare node, no npm install, no `paths:` filter (this is a REQUIRED check).
+  # The self-test runs FIRST and proves the gate can fail (known-bad fixtures
+  # must go red, an empty tree must exit 2) before its green on the real tree
+  # is allowed to count.
+  check-project-scope:
+    name: 'Gate: project-scoped id routes'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: 'guard + gate self-test (red-tests included)'
+        run: node build/check-project-scope.selftest.js
+      - name: 'every /project/* id route bound to the URL project'
+        run: node build/check-project-scope.js --list
