@@ -482,21 +482,6 @@ var Templates = {
     /** Fetches the image of a template.
      *  @param {Object}  templateId id of the template
      */
-    fetchDataImage: function(templateId, callback){
-        return this.find({id:templateId}).then(rows => {
-            return rows[0];
-        }).then(data => {
-            if(!rows.length) {
-                throw new Error("Requested template data does not exists.");
-            }
-            if(!data.uri){
-                self.createTemplateImage(template, data, next);
-            } else {
-                return data;
-            }
-        });
-    },
-
     getAudioFile: function(templateId, options){
         options = options || {};
         return this.find({

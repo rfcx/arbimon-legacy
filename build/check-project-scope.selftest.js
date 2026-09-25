@@ -164,6 +164,37 @@ async function partA () {
   ok(await gc.ownedByProject('clustering_job', 9999, 10) === false, 'clustering_job: MISSING → false')
   ok(g._sql.clustering_job === 'SELECT 1 AS owned FROM job_params_audio_event_clustering c WHERE c.job_id = ? AND c.project_id = ? AND c.project_id = ? LIMIT 1',
     'clustering_job SQL is EXACTLY: id AND the row\'s project')
+  // §393 slice C: template. Project 20 is public_templates_enabled; project 10 is the viewer.
+  // t300 public original in 20 (source NULL, live) → readable under 10.
+  // t301 a COPY living in 20 (source set) → own rows only.
+  // t304 public original but DELETED → the public arm requires deleted=0.
+  // t305 private-foreign (30, no flag) → false. Own rows count even deleted.
+  const tpls = {
+    300: { project_id: 20, source_project_id: null, deleted: 0 },
+    301: { project_id: 20, source_project_id: 5, deleted: 0 },
+    302: { project_id: 10, source_project_id: null, deleted: 0 },
+    303: { project_id: 10, source_project_id: 7, deleted: 1 },
+    304: { project_id: 20, source_project_id: null, deleted: 1 },
+    305: { project_id: 30, source_project_id: null, deleted: 0 }
+  }
+  const tflags = { 20: 1 }
+  const gt = makeProjectScope(function (sql, params) {
+    const [id, pid] = params
+    if (!/FROM templates t JOIN projects p/.test(sql)) throw new Error('unexpected sql')
+    const t = tpls[id]
+    const owned = !!t && (t.project_id === pid || (tflags[t.project_id] === 1 && t.source_project_id === null && t.deleted === 0))
+    return Promise.resolve(owned ? [{ owned: 1 }] : [])
+  })
+  ok(await gt.ownedByProject('template', 302, 10) === true, 'template: own original → true')
+  ok(await gt.ownedByProject('template', 303, 10) === true, 'template: own DELETED copy → true (ownership, not listing)')
+  ok(await gt.ownedByProject('template', 300, 10) === true, 'template: PUBLIC ORIGINAL under a viewer slug → true')
+  ok(await gt.ownedByProject('template', 301, 10) === false, 'template: foreign COPY (source set) is NOT a public original → false')
+  ok(await gt.ownedByProject('template', 304, 10) === false, 'template: DELETED public original → false (public arm needs deleted=0)')
+  ok(await gt.ownedByProject('template', 304, 20) === true, 'template: the owner still resolves its deleted original')
+  ok(await gt.ownedByProject('template', 305, 10) === false, 'template: PRIVATE-foreign → false')
+  ok(await gt.ownedByProject('template', 9999, 10) === false, 'template: MISSING → false')
+  ok(g._sql.template === 'SELECT 1 AS owned FROM templates t JOIN projects p ON p.project_id = t.project_id WHERE t.template_id = ? AND (t.project_id = ? OR (p.public_templates_enabled = 1 AND t.source_project_id IS NULL AND t.deleted = 0)) LIMIT 1',
+    'template SQL is EXACTLY the ruled rule (own row OR live public original)')
   // SQL shape: both predicates present, both params bound
   const sql = g._sql.recording
   ok(/s\.project_id = \?/.test(sql) && /pis\.project_id = \?/.test(sql) && /r\.recording_id = \?/.test(sql), 'recording SQL binds id + own-site + imported-site predicates')
