@@ -905,6 +905,21 @@ var PatternMatchings = {
         return dbpool.query(sql)
     },
 
+    // 2026-09-24: per-recording fields for the export audio link (exportAudioUrl).
+    // DISTINCT recordings of ONE pm job, scoped to the URL's project (a foreign pm
+    // id yields no rows -> no links, never another project's audio).
+    async getPmRecordingsForAudioUrls (patternMatchingId, projectId) {
+        const sql = dbpool.format(`
+            select distinct r.recording_id, r.uri, r.datetime, r.datetime_utc, r.duration, s.external_id
+            from pattern_matching_rois pmr
+                join pattern_matchings pm on pm.pattern_matching_id = pmr.pattern_matching_id
+                join recordings r on pmr.recording_id = r.recording_id
+                left join sites s on s.site_id = r.site_id
+            where pmr.pattern_matching_id = ? and pm.project_id = ?
+        `, [patternMatchingId | 0, projectId | 0])
+        return dbpool.query(sql)
+    },
+
     // 2026-09-16 (rfcx-local OPEN-ITEMS §333): the UPDATE now carries the project
     // predicate itself. Defence in depth at the layer that MUTATES -- a route
     // guard alone is bypassed by the next caller that forgets it (the #1841

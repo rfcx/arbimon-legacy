@@ -60,9 +60,13 @@ const MEDIA_TOKEN_BUCKET_SECONDS = 3600;    // round UP to the next hour
  * Expiry (epoch seconds) for a freshly minted asset URL, rounded UP to the next
  * bucket so repeated renders of the same image produce an IDENTICAL URL.
  */
-function mediaAssetExpiry () {
+function mediaAssetExpiry (ttlSeconds) {
     const now = Math.floor(Date.now() / 1000);
-    const target = now + MEDIA_TOKEN_TTL_SECONDS;
+    // ttlSeconds (optional): EXPORTS pass 7 days so the audio links inside an
+    // export live exactly as long as the archive link that delivers it
+    // (operator 2026-09-24). Every UI surface omits it and keeps the 6 h default.
+    const ttl = (Number.isInteger(ttlSeconds) && ttlSeconds > 0) ? ttlSeconds : MEDIA_TOKEN_TTL_SECONDS;
+    const target = now + ttl;
     return Math.ceil(target / MEDIA_TOKEN_BUCKET_SECONDS) * MEDIA_TOKEN_BUCKET_SECONDS;
 }
 
@@ -294,7 +298,7 @@ function mediaStreamToken (streamId, startMs, endMs, exp) {
  *                             segment, e.g. `z95_wdolph_g1_fspec_mtrue_d1023.255.png`
  * @returns {{url: string, token: string, exp: number, startMs: number, endMs: number, startTs: string, endTs: string, attr: string}|null}
  */
-function mediaAssetUrl (streamId, rawStartMs, rawEndMs, asset) {
+function mediaAssetUrl (streamId, rawStartMs, rawEndMs, asset, opts) {
     if (!streamId || !asset) return null;
     if (!isFinite(rawStartMs) || !isFinite(rawEndMs)) return null;
     // Reject corrupt windows HERE, at the one chokepoint every caller goes
@@ -307,7 +311,7 @@ function mediaAssetUrl (streamId, rawStartMs, rawEndMs, asset) {
     const startTs = gluedUtcTimestamp(startMs);
     const endTs = gluedUtcTimestamp(endMs);
     const attr = `${streamId}_t${startTs}Z.${endTs}Z_${asset}`;
-    const exp = mediaAssetExpiry();
+    const exp = mediaAssetExpiry(opts && opts.ttlSeconds);
     const token = mediaStreamToken(streamId, startMs, endMs, exp);
     if (!token) return null;
     return {
