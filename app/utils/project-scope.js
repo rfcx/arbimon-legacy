@@ -115,7 +115,21 @@ var OWNED_SQL = {
     // another project. Deleted runs still count (ownership, not listing).
     clustering_job:
         'SELECT 1 AS owned FROM job_params_audio_event_clustering c ' +
-        'WHERE c.job_id = ? AND c.project_id = ? AND c.project_id = ? LIMIT 1'
+        'WHERE c.job_id = ? AND c.project_id = ? AND c.project_id = ? LIMIT 1',
+    // §393 slice C (2026-09-25; operator ruling 12:02 -- ONE rule, no staff
+    // exception). A template is readable from project P when its row is P's
+    // (an original, or a COPY living in P -- copies carry source_project_id
+    // and are P's own rows), OR it is a PUBLIC ORIGINAL: the owner's project
+    // has public_templates_enabled = 1 AND the row is an original
+    // (source_project_id IS NULL) AND not deleted. Public templates are
+    // cross-project BY DESIGN (the public tab); measured 30 d: 129
+    // public-original pairs read under the VIEWER's slug, 0 private-foreign.
+    // Own rows count regardless of deleted (ownership, not listing).
+    template:
+        'SELECT 1 AS owned FROM templates t JOIN projects p ON p.project_id = t.project_id ' +
+        'WHERE t.template_id = ? AND (t.project_id = ? OR (' +
+        'p.public_templates_enabled = 1 AND t.source_project_id IS NULL AND t.deleted = 0' +
+        ')) LIMIT 1'
 };
 
 /** Strictly a positive integer id (number or all-digit string). Anything else
@@ -140,7 +154,7 @@ function makeProjectScope(query) {
     if (typeof query !== 'function') { throw new Error('project-scope: query function required'); }
 
     /**
-     * @param {'recording'|'site'|'model'|'model_own'|'playlist'|'training_set'|'job'|'pattern_matching'|'clustering_job'} kind
+     * @param {'recording'|'site'|'model'|'model_own'|'playlist'|'training_set'|'job'|'pattern_matching'|'clustering_job'|'template'} kind
      * @param {number|string} id
      * @param {number} projectId  req.project.project_id
      * @return {Promise<boolean>}  true only when a row proves ownership

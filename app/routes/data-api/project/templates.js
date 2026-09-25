@@ -7,6 +7,29 @@ const model = require('../../../model');
 const { httpErrorHandler, Converter } = require('@rfcx/http-utils');
 const fs = require('fs');
 const path = require('path');
+const projectScope = require('../../../utils/project-scope');
+const TEMPLATE_NOT_FOUND = { error: 'template not found' };
+
+// §393 slice C (rfcx-local OPEN-ITEMS §393, 2026-09-25; operator ruling 12:02,
+// ONE rule for everyone incl. rfcx.org staff): :template / :templateUrl must be
+// the URL project's row (original or shared COPY) or a PUBLIC ORIGINAL (owner
+// project public_templates_enabled=1, source_project_id IS NULL, deleted=0);
+// everything else gets the SAME 404 as an unknown id (no existence oracle).
+// Proven on prod pre-fix: a private project's template downloaded 26 KB of
+// audio under a member project.
+router.param('template', function(req, res, next, template) {
+    projectScope.ownedByProject('template', template, req.project.project_id).then(function(owned) {
+        if (!owned) { return res.status(404).json(TEMPLATE_NOT_FOUND); }
+        return next();
+    }).catch(next);
+});
+router.param('templateUrl', function(req, res, next, templateUrl) {
+    const templateId = path.basename(templateUrl, path.extname(templateUrl));
+    projectScope.ownedByProject('template', templateId, req.project.project_id).then(function(owned) {
+        if (!owned) { return res.status(404).json(TEMPLATE_NOT_FOUND); }
+        return next();
+    }).catch(next);
+});
 
 /** Return a list of all the templates in a project.
  */
@@ -77,13 +100,13 @@ router.get('/count', function(req, res, next) {
         .catch(httpErrorHandler(req, res, 'Error getting templates count'))
 });
 
-// project-scope: debt §393 req.template is never set (no router.param) — broken AND unscoped
-router.get('/:template/image', function(req, res, next) {
-    res.type('json');
-    model.templates.fetchDataImage(req.template, req.dataId).then(function(data) {
-        res.json(data);
-    }).catch(next);
-});
+// §393 slice C (operator ruling 12:02): /:template/image REMOVED -- 0 hits in
+// 30 d, and the model function was broken beyond the missing param (it
+// referenced undefined `rows`/`self`/`next` and 500'd even for existing
+// templates). The one legacy caller used a path that never existed
+// (/templates/data/:id/image). The unified image path is the dynamic
+// media-api render; /:template/spectrogram (below) is its session-gated
+// redirector with the legacy stored-image fallback.
 
 /** Renders a template's ROI spectrogram DYNAMICALLY via the media-api.
  *
@@ -103,7 +126,7 @@ router.get('/:template/image', function(req, res, next) {
  * Legacy recordings (uri starts with 'project_') have no media-api stream and
  * keep using the stored image.
  */
-// project-scope: debt §393 find({id}) unscoped; public templates are cross-project BY DESIGN — needs a rule, not a 404
+// :template is bound by the router.param above (own/copy or public original).
 router.get('/:template/spectrogram', function(req, res, next) {
     model.templates.find({
         id: req.params.template,
@@ -157,15 +180,18 @@ router.get('/:template/spectrogram', function(req, res, next) {
     }).catch(next);
 });
 
-// project-scope: debt §393 getAudioFile by id; public templates are cross-project BY DESIGN
+// :templateUrl is bound by the router.param above (own/copy or public original).
 router.get('/audio/:templateUrl', function(req, res, next) {
     const roiUrl = req.params.templateUrl;
     const ext = path.extname(roiUrl)
     const template = path.basename(roiUrl, ext);
     model.templates.getAudioFile(template, { gain: req.query.gain }).then(function(roiAudio) {
+        // §393: `} if (` fell through to `roiAudio.path` on undefined for a
+        // template without audio (headers-sent + TypeError) -- same fix as the
+        // PM audio route in slice A.
         if (!roiAudio){
-            res.sendStatus(404);
-        } if (roiAudio.path.includes('/internal')) {
+            return res.sendStatus(404);
+        } else if (roiAudio.path.includes('/internal')) {
             roiAudio.pipe(res)
         } else {
             res.sendFile(roiAudio.path, function () {
@@ -180,7 +206,7 @@ router.get('/audio/:templateUrl', function(req, res, next) {
     }).catch(next);
 });
 
-// project-scope: debt §393 find({id}) + getAudioFile; public templates are cross-project BY DESIGN
+// :templateUrl is bound by the router.param above (own/copy or public original).
 router.get('/download/:templateUrl', function(req, res, next) {
     const templateUrl = req.params.templateUrl;
     const ext = path.extname(templateUrl)
@@ -190,8 +216,8 @@ router.get('/download/:templateUrl', function(req, res, next) {
             res.set({ 'Content-Disposition' : `attachment; filename=${ template[0].name }.wav`})
             res.setHeader('Content-type', 'audio/wav')
             if (!roiAudio){
-                res.sendStatus(404);
-            } if (roiAudio.path.includes('/internal')) {
+                return res.sendStatus(404);
+            } else if (roiAudio.path.includes('/internal')) {
                 roiAudio.pipe(res)
             } else {
                 res.sendFile(roiAudio.path, function () {
