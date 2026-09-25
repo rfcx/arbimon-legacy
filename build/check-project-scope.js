@@ -254,6 +254,35 @@ for (const file of walk(BASE)) {
   }
 }
 
+// OUTSIDE THE TREE: a route file elsewhere under app/routes that serves
+// `/project/:projectUrl/...` itself is invisible to the scan above AND does not
+// get index.js's projectUrl authorisation (Express params are per-router).
+// Measured 2026-09-25: data-api/models.js (14 routes). Each such file must be
+// on this list, with its tracking item; a NEW one fails the gate.
+const OUTSIDE_KNOWN = {
+  'app/routes/data-api/models.js': '§394 — no projectUrl authorisation; tracked, not yet bound'
+}
+function walkAll (dir) {
+  const out = []
+  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+    const p = path.join(dir, e.name)
+    if (e.isDirectory()) out.push(...walkAll(p))
+    else if (e.name.endsWith('.js')) out.push(p)
+  }
+  return out
+}
+const ROUTES = path.join(ROOT, 'app/routes')
+if (fs.existsSync(ROUTES) && rootIdx < 0) {
+  for (const f of walkAll(ROUTES)) {
+    if (f.startsWith(BASE + path.sep)) continue
+    const rel = path.relative(ROOT, f)
+    const t = fs.readFileSync(f, 'utf8')
+    if (!/\.(get|post|put|delete|patch|all|use)\(\s*['"`]\/project\/:projectUrl\//.test(t)) continue
+    if (OUTSIDE_KNOWN[rel]) { listing.push(`${rel} -> OUTSIDE-KNOWN ${OUTSIDE_KNOWN[rel]}`); continue }
+    problems.push(`${rel}: serves /project/:projectUrl/... outside app/routes/data-api/project/ — no projectUrl authorisation reaches it; move it under project/ (or add to OUTSIDE_KNOWN with a tracking item)`)
+  }
+}
+
 if (declCount < MIN) die(`only ${declCount} route declarations found under ${path.relative(ROOT, BASE)} (expected ≥ ${MIN}) — refusing a vacuous pass`)
 if (debtCount > DEBT_MAX) problems.push(`debt declarations ${debtCount} > DEBT_MAX ${DEBT_MAX} — new unbound id routes are not allowed; bind them instead`)
 
