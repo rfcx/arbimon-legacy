@@ -10,6 +10,7 @@ const joi = require('joi');
 const q = require('q');
 const config = require('../config');
 const dbpool = require('../utils/dbpool');
+const APIError = require('../utils/apierror');
 const Recordings = require('./recordings');
 const { isArray } = require('lodash');
 const { roiSpectrogramUrl } = require('../utils/asset-url');
@@ -442,7 +443,12 @@ var Templates = {
                 data.id = result.insertId
             }, err => {
                 if (err && err.code === 'PG_INSERT_NO_ROW') {
-                    throw new Error('Template already exists for this project/recording/species/songtype');
+                    // rfcx-local 2026-09-25 (FINDING spa-visualizer-http-error-census F3):
+                    // an expected CONFLICT, not a server fault. As a plain Error it
+                    // reached app/index.js's handler as 500 "Server error" (6 of the 7
+                    // template 500s in 10 d). An APIError carries its status and the
+                    // handler returns its message, which the SPA (#2735) shows.
+                    throw new APIError('Template already exists for this project/recording/species/songtype', 409);
                 }
                 throw err;
             })

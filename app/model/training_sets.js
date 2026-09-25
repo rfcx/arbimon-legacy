@@ -390,7 +390,7 @@ var TrainingSets = {
 
     removeRoi: function (roi_id, training_set, callback) {
         var typedef = TrainingSets.types[training_set.type];
-        return typedef.remove_roi(roi_id, callback);
+        return typedef.remove_roi(roi_id, training_set, callback);
     },
 
     /** Fetches a training set's species and songtype
@@ -775,9 +775,23 @@ TrainingSets.types.roi_set = {
 
         queryHandler(dbpool.format(q, [training_set.id]), callback);
     },
-    remove_roi : function(roi_id, callback) {
+    // rfcx-local OPEN-ITEMS §391 (2026-09-25, found by build/check-project-scope.js
+    // on its first run): this was `"... where roi_set_data_id = " + roi_id` with
+    // roi_id taken RAW from the URL path -- (a) SQL-injectable (Express decodes
+    // `%20OR%201%3D1` into the path param, i.e. a DELETE of every project's
+    // training-set ROIs), and (b) never tied to the training set the route had
+    // just scoped to req.project, so any ROI id in any project was deletable.
+    // Now: a strictly-numeric id, bound as a parameter, AND the scoped set's id.
+    // A legitimate ROI of this set always carries its training_set_id, so the
+    // extra predicate cannot refuse a real removal.
+    remove_roi : function(roi_id, training_set, callback) {
+        var rid = /^\d{1,19}$/.test(String(roi_id).trim()) ? Number(String(roi_id).trim()) : null;
+        var tsid = training_set && training_set.id;
+        if (rid === null || tsid === undefined || tsid === null) {
+            return callback(null, { affectedRows: 0 });
+        }
         return queryHandler(
-            "delete from training_set_roi_set_data where roi_set_data_id = "+roi_id,
+            dbpool.format("delete from training_set_roi_set_data where roi_set_data_id = ? and training_set_id = ?", [rid, tsid]),
             callback
         );
     },

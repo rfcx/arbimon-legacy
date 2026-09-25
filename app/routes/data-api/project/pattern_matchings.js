@@ -63,6 +63,7 @@ async function getPatternMatchings(req, res, next) {
 
 /** Return a pattern matching's data.
  */
+// project-scope: debt §393 findOne({id}) with no project
 router.get('/:patternMatching/details', function(req, res, next) {
     res.type('json');
     model.patternMatchings.findOne({
@@ -94,6 +95,7 @@ router.get('/count', function(req, res, next) {
     }
 });
 
+// project-scope: allow offset_limit paging, not an entity id
 router.param('paging', function(req, res, next, paging){
     const components = paging.split('_');
     req.paging = {
@@ -103,6 +105,7 @@ router.param('paging', function(req, res, next, paging){
     return next();
 });
 
+// project-scope: debt §393 getPmRois queries by pattern_matching_id only
 router.get('/:patternMatching/rois/:paging', async function(req, res, next) {
     res.type('json');
     model.patternMatchings.getPmRois(req)
@@ -110,6 +113,7 @@ router.get('/:patternMatching/rois/:paging', async function(req, res, next) {
         .catch(next);
 });
 
+// project-scope: debt §393 getSitesForPM by pattern_matching_id only
 router.get('/:patternMatching/site-index', function(req, res, next) {
     res.type('json');
     model.patternMatchings.getSitesForPM(req.params.patternMatching)
@@ -118,6 +122,7 @@ router.get('/:patternMatching/site-index', function(req, res, next) {
         }).catch(next);
 });
 
+// project-scope: debt §393 exportRois ignores filters.project_id
 router.get('/:patternMatching/:fileName?', function(req, res, next) {
     if(req.query.out=="text"){
         res.type('text/plain');
@@ -179,6 +184,7 @@ router.get('/:patternMatching/:fileName?', function(req, res, next) {
     }).catch(next);
 });
 
+// project-scope: debt §393 getRoiAudioFile by (pm, roi) with no project predicate
 router.get('/:patternMatching/audio/:roiUrl', function(req, res, next) {
     const roiUrl = req.params.roiUrl;
     const ext = path.extname(roiUrl)
@@ -201,6 +207,7 @@ router.get('/:patternMatching/audio/:roiUrl', function(req, res, next) {
     }).catch(next);
 });
 
+// project-scope: model updateJobName
 router.post('/:patternMatching/update', function(req, res, next) {
     res.type('json');
     // 2026-09-16 (rfcx-local OPEN-ITEMS §333): this route renamed a PM job with
@@ -228,6 +235,7 @@ router.post('/:patternMatching/update', function(req, res, next) {
 // ZERO calls -- so both candidate permissions refuse exactly the same calls and
 // the semantic one wins. Measured worst case: 3 refused calls in 30 days.
 // Evidence: rfcx-local runbooks/evidence/s7-validate-role-attribution-20260916.md
+// project-scope: model getRoi
 router.post('/:patternMatching/validate', function(req, res, next) {
     res.type('json');
     if(!req.haveAccess(req.project.project_id, "validate pattern matchings")){
@@ -297,6 +305,7 @@ router.post('/:patternMatching/validate', function(req, res, next) {
     }).catch(next);
 });
 
+// project-scope: model delete
 router.post('/:patternMatching/remove', function(req, res, next) {
     res.type('json');
 

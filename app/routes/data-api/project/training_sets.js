@@ -13,6 +13,7 @@ var csv_stringify = require("csv-stringify");
 // project -- a param that reads as protection under a 'has a router.param?'
 // audit while providing none. (`find` also had to be fixed: `id` and `project`
 // were mutually exclusive, so passing both was silently id-only.)
+// project-scope: model find
 router.param('trainingSet', function(req, res, next, trainingSet){
     model.trainingSets.find({ id: trainingSet, project: req.project && req.project.project_id }, function(err, trainingSets) {
         if(err) return next(err);
@@ -26,6 +27,7 @@ router.param('trainingSet', function(req, res, next, trainingSet){
     });
 });
 
+// project-scope: allow numeric coercion only; resolved through the bound training set (TSD.training_set_id)
 router.param('dataId', function(req, res, next, dataId){
     req.dataId = dataId | 0;
     return next();
@@ -59,6 +61,7 @@ router.get('/types', function(req, res, next) {
 
 /** Return a training set's data.
  */
+// project-scope: params recUrl filters rows only within the bound training set (TSD.training_set_id)
 router.get('/list/:trainingSet/:recUrl?', function(req, res, next) {
     res.type('json');
     model.trainingSets.fetchData(req.trainingSet, {
@@ -297,6 +300,7 @@ router.post('/add-data/:trainingSet', function(req, res, next) {
 });
 
 
+// project-scope: params roiId deleted only within the bound training set (training_set_id predicate, §391)
 router.get('/:trainingSet/remove-roi/:roiId', function(req, res, next) {
     res.type('json');
     model.trainingSets.removeRoi(req.params.roiId,req.trainingSet,

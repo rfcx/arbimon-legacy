@@ -140,6 +140,7 @@ router.post('/unvalidate', function(req, res, next) {
         .catch(httpErrorHandler(req, res, 'Error while removing audio event detections validation'))
 });
 
+// project-scope: model delete
 router.post('/:aedJobId/remove', function(req, res, next) {
     res.type('json');
 

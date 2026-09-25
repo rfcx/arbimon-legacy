@@ -77,6 +77,7 @@ router.get('/count', function(req, res, next) {
         .catch(httpErrorHandler(req, res, 'Error getting templates count'))
 });
 
+// project-scope: debt §393 req.template is never set (no router.param) — broken AND unscoped
 router.get('/:template/image', function(req, res, next) {
     res.type('json');
     model.templates.fetchDataImage(req.template, req.dataId).then(function(data) {
@@ -102,6 +103,7 @@ router.get('/:template/image', function(req, res, next) {
  * Legacy recordings (uri starts with 'project_') have no media-api stream and
  * keep using the stored image.
  */
+// project-scope: debt §393 find({id}) unscoped; public templates are cross-project BY DESIGN — needs a rule, not a 404
 router.get('/:template/spectrogram', function(req, res, next) {
     model.templates.find({
         id: req.params.template,
@@ -155,6 +157,7 @@ router.get('/:template/spectrogram', function(req, res, next) {
     }).catch(next);
 });
 
+// project-scope: debt §393 getAudioFile by id; public templates are cross-project BY DESIGN
 router.get('/audio/:templateUrl', function(req, res, next) {
     const roiUrl = req.params.templateUrl;
     const ext = path.extname(roiUrl)
@@ -177,6 +180,7 @@ router.get('/audio/:templateUrl', function(req, res, next) {
     }).catch(next);
 });
 
+// project-scope: debt §393 find({id}) + getAudioFile; public templates are cross-project BY DESIGN
 router.get('/download/:templateUrl', function(req, res, next) {
     const templateUrl = req.params.templateUrl;
     const ext = path.extname(templateUrl)
@@ -237,6 +241,7 @@ router.post('/add', function(req, res, next) {
     }).catch(next);
 });
 
+// project-scope: model delete
 router.post('/:template/remove', function(req, res, next) {
     res.type('json');
     // 2026-09-09 (OPEN-ITEMS §291): scope the delete to the URL's project. The

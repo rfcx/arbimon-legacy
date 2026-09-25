@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const model = require('../../../model');
+const projectScope = require('../../../utils/project-scope');
 
 router.get('/', function(req, res, next){
     res.type('json');
@@ -13,6 +14,7 @@ router.get('/', function(req, res, next){
     }).catch(next);
 });
 
+// project-scope: params resource a resource TYPE name (e.g. recording), not an id
 router.get('/:resource', function(req, res, next) {
     res.type('json');
     model.tags.getTagsForType(req.params.resource, {
@@ -22,6 +24,7 @@ router.get('/:resource', function(req, res, next) {
     }).catch(next);
 });
 
+// project-scope: model getTagsFor
 router.get('/:resource/:id', function(req, res, next) {
     res.type('json');
     // 2026-09-09 (OPEN-ITEMS §292): bind the id to the project in the URL.
@@ -37,6 +40,7 @@ router.use(function(req, res, next) {
     next();
 });
 
+// project-scope: params resource a resource TYPE name (e.g. recording), not an id
 router.put('/:resource/:id', function(req, res, next) {
     res.type('json');
     let tag = {};
@@ -46,7 +50,12 @@ router.put('/:resource/:id', function(req, res, next) {
         });
     }
     tag.user = req.session && req.session.user;
-    model.recordings.findByIdAsync(req.params.id).then(function(recording) {
+    // rfcx-local OPEN-ITEMS §391: GET/DELETE were project-scoped by §292 but PUT
+    // still tagged ANY recording id under any project URL. Bound to req.project
+    // now; a foreign id gets the same 'Recording not found' an unknown one does.
+    projectScope.ownedByProject('recording', req.params.id, req.project.project_id).then(function(owned) {
+        return owned ? model.recordings.findByIdAsync(req.params.id) : [];
+    }).then(function(recording) {
         if (!recording || !recording.length) {
             throw new Error('Recording not found')
         }
@@ -60,12 +69,13 @@ router.put('/:resource/:id', function(req, res, next) {
         if (recording[0].archived_at) {
             throw new Error('Recording not found')
         }
-        model.tags.addTagTo(req.params.resource, recording[0], tag).then(function(tags){
+        return model.tags.addTagTo(req.params.resource, recording[0], tag).then(function(tags){
             res.json(tags);
-        }).catch(next);
-    })
+        });
+    }).catch(next);
 });
 
+// project-scope: model removeTagFrom
 router.delete('/:resource/:id/:tagId', function(req, res, next) {
     res.type('json');
     // 2026-09-09 (OPEN-ITEMS §292): bind the id to the project in the URL.
