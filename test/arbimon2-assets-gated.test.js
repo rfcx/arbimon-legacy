@@ -12,7 +12,9 @@ var path = require('path');
  * runbooks/FINDING-2026-09-24-export-audio-url-signature-not-enforced.md.
  *
  * Every stored-image emitter now goes through app/utils/arbimon2-asset-url.js
- * (auth-gated /legacy-api/arbimon2-asset/<key>?s=<hmac>), soundscapes render
+ * (/legacy-api/arbimon2-asset/<key>?e=<exp>&s=<hmac>: SIGNED + EXPIRING, like a
+ * media-api stream-token -- not session-gated, because <img> tags cannot carry
+ * the SPA bearer and split legacy/SPA session state is real), soundscapes render
  * from .scidx, and the clustering /asset proxy is scoped to its project.
  *
  * (Harness note: chai 3.5 `to.not.match` on a large string did not assert in this
@@ -27,7 +29,7 @@ function fresh () {
     return require('../app/utils/arbimon2-asset-url');
 }
 
-describe('arbimon2 images are auth-gated, never public storage urls', function () {
+describe('arbimon2 images are signed + expiring, never public storage urls', function () {
     let saved;
     before(function () { saved = process.env.STREAM_TOKEN_SALT; process.env.STREAM_TOKEN_SALT = SALT; });
     after(function () { if (saved === undefined) delete process.env.STREAM_TOKEN_SALT; else process.env.STREAM_TOKEN_SALT = saved; });
@@ -35,15 +37,15 @@ describe('arbimon2 images are auth-gated, never public storage urls', function (
     it('builds a same-origin gated url with a verifiable signature', function () {
         const a = fresh();
         const u = a.arbimon2AssetUrl('project_35/templates/29418.png');
-        expect(u.indexOf('/legacy-api/arbimon2-asset/project_35/templates/29418.png?s=')).to.equal(0);
-        const sig = /[?&]s=([0-9a-f]{32})$/.exec(u)[1];
-        expect(a.verifyKey('project_35/templates/29418.png', sig)).to.equal('project_35/templates/29418.png');
+        expect(u.indexOf('/legacy-api/arbimon2-asset/project_35/templates/29418.png?e=')).to.equal(0);
+        const e = /[?&]e=(\d+)/.exec(u)[1], sig = /[?&]s=([0-9a-f]{32})$/.exec(u)[1];
+        expect(a.verifyKey('project_35/templates/29418.png', sig, e)).to.equal('project_35/templates/29418.png');
         expect(a.keyProjectId('project_35/templates/29418.png')).to.equal(35);
     });
 
     it('accepts a legacy full public url and strips it to the key', function () {
         const a = fresh();
-        expect(a.arbimon2AssetUrl('https://s3.arbimon.org/arbimon2/project_1149/detections/71265/2_0.png').indexOf('/legacy-api/arbimon2-asset/project_1149/detections/71265/2_0.png?s=')).to.equal(0);
+        expect(a.arbimon2AssetUrl('https://s3.arbimon.org/arbimon2/project_1149/detections/71265/2_0.png').indexOf('/legacy-api/arbimon2-asset/project_1149/detections/71265/2_0.png?e=')).to.equal(0);
     });
 
     it('covers every image family the legacy UI renders (incl. legacy .thumbnail.png)', function () {
@@ -63,12 +65,31 @@ describe('arbimon2 images are auth-gated, never public storage urls', function (
         }
     });
 
-    it('a signature for one key does not verify another; a forged/short sig fails', function () {
+    it('a signature for one key does not verify another; forged/short sig, extended or past exp all fail', function () {
         const a = fresh();
-        const sig = /s=([0-9a-f]{32})/.exec(a.arbimon2AssetUrl('project_1/templates/1.png'))[1];
-        expect(a.verifyKey('project_2/templates/1.png', sig)).to.equal(null);
-        expect(a.verifyKey('project_1/templates/1.png', sig.replace(/^./, c => c === '0' ? '1' : '0'))).to.equal(null);
-        expect(a.verifyKey('project_1/templates/1.png', sig.slice(0, 16))).to.equal(null);
+        const u = a.arbimon2AssetUrl('project_1/templates/1.png');
+        const e = Number(/e=(\d+)/.exec(u)[1]), sig = /s=([0-9a-f]{32})/.exec(u)[1];
+        const now = Math.floor(Date.now() / 1000);
+        expect(e > now + 5 * 3600 && e <= now + 7 * 3600 && e % 3600 === 0, '6 h, hour-bucketed (media-api parity)').to.equal(true);
+        expect(a.verifyKey('project_2/templates/1.png', sig, e)).to.equal(null);
+        expect(a.verifyKey('project_1/templates/1.png', sig.replace(/^./, c => c === '0' ? '1' : '0'), e)).to.equal(null);
+        expect(a.verifyKey('project_1/templates/1.png', sig.slice(0, 16), e)).to.equal(null);
+        expect(a.verifyKey('project_1/templates/1.png', sig, e + 86400), 'extended exp').to.equal(null);
+        expect(a.verifyKey('project_1/templates/1.png', sig, 'abc'), 'malformed exp').to.equal(null);
+        expect(a.verifyKey('project_1/templates/1.png', sig, undefined), 'missing exp').to.equal(null);
+    });
+
+    it('an expired signature fails closed', function () {
+        const a = fresh();
+        const realNow = Date.now;
+        const u = a.arbimon2AssetUrl('project_1/templates/1.png');
+        const e = /e=(\d+)/.exec(u)[1], sig = /s=([0-9a-f]{32})/.exec(u)[1];
+        try {
+            Date.now = () => Number(e) * 1000;       // exactly at exp
+            expect(a.verifyKey('project_1/templates/1.png', sig, e)).to.equal(null);
+            Date.now = () => Number(e) * 1000 - 1000; // 1 s before exp
+            expect(a.verifyKey('project_1/templates/1.png', sig, e)).to.equal('project_1/templates/1.png');
+        } finally { Date.now = realNow; }
     });
 
     it('no salt -> no url (fails closed, never falls back to the public host)', function () {
@@ -83,9 +104,9 @@ describe('arbimon2 images are auth-gated, never public storage urls', function (
         const u2 = a.soundscapeImageUrl({ id: 13547, visual_palette: 2, visual_max_value: null, normalized: 1, threshold: 0.05, threshold_type: 'absolute' });
         expect(u1.indexOf('/legacy-api/arbimon2-asset/soundscape/13547.png?v=')).to.equal(0);
         expect(u1 !== u2, 'visual change busts the url').to.equal(true);
-        const sig = /s=([0-9a-f]{32})$/.exec(u1)[1];
-        expect(a.verifySoundscape('13547', sig)).to.equal(13547);
-        expect(a.verifySoundscape('13548', sig)).to.equal(null);
+        const e = /e=(\d+)/.exec(u1)[1], sig = /s=([0-9a-f]{32})$/.exec(u1)[1];
+        expect(a.verifySoundscape('13547', sig, e)).to.equal(13547);
+        expect(a.verifySoundscape('13548', sig, e)).to.equal(null);
     });
 
     it('NO app/ or jobs/ source builds a public arbimon2 url any more', function () {
@@ -95,6 +116,11 @@ describe('arbimon2 images are auth-gated, never public storage urls', function (
         for (const f of files) {
             expect(/arbimon2PublicUrl(Base)?\(/.test(read(f)), f + ' still calls arbimon2PublicUrl').to.equal(false);
         }
+    });
+
+    it('signed route is mounted ABOVE the login gate (a signed <img> must not 302), and nowhere else', function () {
+        expect(/router\.use\('\/legacy-api\/arbimon2-asset', require\('\.\/data-api\/arbimon2-assets'\)\)/.test(read('app/routes/non-session.js'))).to.equal(true);
+        expect(/arbimon2-assets/.test(read('app/routes/data-api/index.js')), 'not also under the session router').to.equal(false);
     });
 
     it('clustering /asset proxy only serves this project\'s clustering ROI pngs', function () {

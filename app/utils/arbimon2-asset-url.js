@@ -1,29 +1,35 @@
 'use strict';
-// AUTH-GATED URLs for stored `arbimon2` bucket IMAGES (2026-09-24).
+// SIGNED, EXPIRING same-origin URLs for stored `arbimon2` bucket IMAGES (2026-09-24).
 //
 // WHY: every legacy image that fell back to the stored PNG was emitted as
 // `https://s3.arbimon.org/arbimon2/<key>` (arbimon2PublicUrl). That host is our
-// storage chain, which serves ANY key to ANYONE (it ignores S3 signatures), so
-// those were permanent anonymous links to private-project images. rfcx-local
-// FINDING-2026-09-24-export-audio-url-signature-not-enforced.md measured 1,471
-// anonymous 200s in 7 days, 5 of the top 7 projects PRIVATE.
+// storage chain, which serves ANY key to ANYONE, FOREVER (it ignores S3
+// signatures). rfcx-local FINDING-2026-09-24-export-audio-url-signature-not-enforced.md
+// measured 1,471 anonymous 200s in 7 days, 5 of the top 7 projects PRIVATE.
 //
-// Instead the browser gets a same-origin app URL
+// Now the browser gets
 //
-//   /legacy-api/arbimon2-asset/<key>?s=<sig>
+//   /legacy-api/arbimon2-asset/<key>?e=<exp>&s=<hmac(key, exp)>
 //
-// served by app/routes/data-api/arbimon2-assets.js BELOW the app's Force-login
-// gate, which then authorises the *owning project of the key* the same way the
-// project router does (private project => caller must be a member or super).
+// served by app/routes/data-api/arbimon2-assets.js. The SIGNATURE is the
+// credential -- exactly the media-api stream-token model (media-asset-auth
+// Track B, 2026-08-10): the URL is only minted server-side at the moment the
+// app has already decided this user may see this row, and it EXPIRES.
 //
-// ⚠️ A key's project is not always the viewing project: templates and training
-// sets shared/copied from a source project keep the SOURCE key (574 of 77,365
-// templates, 55 of 118,056 training-set ROIs, measured 2026-09-24). Such an image
-// is authorised against its OWNING project. `s` (a server HMAC of the key) stops
-// callers enumerating keys the app never showed them; the project check stops a
-// leaked URL working for a non-member of a private project.
+// WHY NOT A SESSION GATE (tried first, reversed under IRR the same night): these
+// URLs land in <img> tags, which cannot carry the SPA's Authorization bearer, and
+// a legacy session cookie is NOT guaranteed -- "split state" (SPA authenticated,
+// legacy session anonymous) was observed live on 2026-09-24 in the operator's
+// own browser. A session-gated <img> 302s to /legacy-login => a broken image
+// where today there is a working one. The signed URL works in both states.
+//
+// Scope of what a signature grants: one allow-listed IMAGE key until `exp`.
+// Enumeration is impossible without the server secret; a leaked URL works for
+// at most MEDIA_TOKEN_TTL (6 h, hour-bucketed) -- the same bound as every
+// media-api image the app already hands out.
 
 const crypto = require('crypto');
+const { mediaAssetExpiry } = require('./asset-url');
 
 // Families the legacy UI legitimately renders from the bucket. Anything else
 // (recording audio, .scidx, .npy vectors, model binaries) is refused even if
@@ -49,20 +55,27 @@ function keyProjectId (key) {
     return m ? Number(m[1]) : null;
 }
 
-function signKey (key) {
+function sign (subject, exp) {
     const s = secret();
-    if (!s) return null;
-    return crypto.createHmac('sha256', s).update('arbimon2:' + key, 'utf8').digest('hex').slice(0, 32);
+    if (!s || !Number.isInteger(exp)) return null;
+    return crypto.createHmac('sha256', s).update('arbimon2:' + subject + ':' + exp, 'utf8').digest('hex').slice(0, 32);
 }
 
-/** Returns the normalized key when `sig` is the HMAC of it, else null. */
-function verifyKey (key, sig) {
-    const k = normalizeKey(key);
-    if (!k || typeof sig !== 'string' || sig.length !== 32) return null;
-    const want = signKey(k);
-    if (!want) return null;
+function checkSig (subject, sig, expRaw) {
+    if (typeof sig !== 'string' || sig.length !== 32) return false;
+    if (!/^\d+$/.test(String(expRaw))) return false;
+    const exp = Number(expRaw);
+    if (!Number.isInteger(exp) || exp * 1000 <= Date.now()) return false; // expired (fails closed at == now)
+    const want = sign(subject, exp);
+    if (!want) return false;
     const a = Buffer.from(want, 'utf8'), b = Buffer.from(sig, 'utf8');
-    return (a.length === b.length && crypto.timingSafeEqual(a, b)) ? k : null;
+    return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
+/** Returns the normalized key when (sig, exp) is a valid, unexpired signature for it, else null. */
+function verifyKey (key, sig, exp) {
+    const k = normalizeKey(key);
+    return (k && checkSig(k, sig, exp)) ? k : null;
 }
 
 /** Strip the public host a few legacy SQL paths CONCAT'ed on, returning the bare key. */
@@ -74,22 +87,19 @@ function keyFromStoredUrl (maybeUrl) {
 }
 
 /**
- * Same-origin, auth-gated URL for a stored arbimon2 IMAGE key (or a legacy full
- * `https://s3.arbimon.org/arbimon2/<key>` url). Returns null for anything
+ * Signed, expiring, same-origin URL for a stored arbimon2 IMAGE key (or a legacy
+ * full `https://s3.arbimon.org/arbimon2/<key>` url). Returns null for anything
  * outside the image allow-list or when the signing secret is absent -- callers
- * keep their existing null handling (placeholder / on-error-src).
- * `opts.absolute` prefixes the public host (for CSV/zip exports).
+ * keep their existing null handling (placeholder / on-error-src). Never falls
+ * back to the public host.
  */
-function arbimon2AssetUrl (keyOrUrl, opts) {
+function arbimon2AssetUrl (keyOrUrl) {
     const k = normalizeKey(keyFromStoredUrl(keyOrUrl));
     if (!k) return null;
-    const sig = signKey(k);
+    const exp = mediaAssetExpiry();
+    const sig = sign(k, exp);
     if (!sig) return null;
-    const p = `/legacy-api/arbimon2-asset/${k.split('/').map(encodeURIComponent).join('/')}?s=${sig}`;
-    if (opts && opts.absolute) {
-        return String(opts.publicUrl || 'https://arbimon.org').replace(/\/+$/, '') + p;
-    }
-    return p;
+    return `/legacy-api/arbimon2-asset/${k.split('/').map(encodeURIComponent).join('/')}?e=${exp}&s=${sig}`;
 }
 
 /**
@@ -101,19 +111,17 @@ function arbimon2AssetUrl (keyOrUrl, opts) {
 function soundscapeImageUrl (sc) {
     const id = sc && (sc.id !== undefined ? sc.id : sc.soundscape_id);
     if (!Number.isInteger(+id) || +id <= 0) return null;
-    const sig = signKey('soundscape:' + (+id));
+    const exp = mediaAssetExpiry();
+    const sig = sign('soundscape:' + (+id), exp);
     if (!sig) return null;
     const v = [sc.visual_palette, sc.visual_max_value, sc.normalized, sc.threshold, sc.threshold_type]
         .map(x => (x === null || x === undefined) ? '' : String(x)).join('_');
-    return `/legacy-api/arbimon2-asset/soundscape/${+id}.png?v=${encodeURIComponent(v)}&s=${sig}`;
+    return `/legacy-api/arbimon2-asset/soundscape/${+id}.png?v=${encodeURIComponent(v)}&e=${exp}&s=${sig}`;
 }
 
-function verifySoundscape (id, sig) {
-    if (!/^\d+$/.test(String(id)) || typeof sig !== 'string' || sig.length !== 32) return null;
-    const want = signKey('soundscape:' + (+id));
-    if (!want) return null;
-    const a = Buffer.from(want, 'utf8'), b = Buffer.from(sig, 'utf8');
-    return (a.length === b.length && crypto.timingSafeEqual(a, b)) ? +id : null;
+function verifySoundscape (id, sig, exp) {
+    if (!/^\d+$/.test(String(id))) return null;
+    return checkSig('soundscape:' + (+id), sig, exp) ? +id : null;
 }
 
 module.exports = { arbimon2AssetUrl, soundscapeImageUrl, verifyKey, verifySoundscape, normalizeKey, keyProjectId, keyFromStoredUrl, ALLOWED_KEY };
