@@ -5,6 +5,7 @@ var csv_stringify = require("csv-stringify");
 var async = require('async');
 var AWS = require('aws-sdk');
 const { createS3Client } = require('../../../utils/storage');
+const soundscapeObjects = require('../../../utils/soundscape-objects');
 var q = require('q');
 
 var config = require('../../../config');
@@ -295,36 +296,21 @@ router.get('/:soundscape/export-list', function(req, res, next) {
 router.get('/:soundscape/indices', function(req, res, next) {
     res.type('json');
     const isProd = process.env.NODE_ENV === 'production';
-    const awsConfig = isProd ? config('aws') : config('aws_rfcx');
-    const awsBucket = isProd ? awsConfig.bucketName : awsConfig.bucketNameStaging;
 
-    var uri = sprintf('project_%(project_id)s/soundscapes/%(soundscape_id)s/', {
-        project_id: req.project.project_id,
-        soundscape_id: req.soundscape.id
-    });
-    
+    // 2026-09-25: arbimon-soundscapes/<id>/<file> first, then the arbimon2
+    // layout (utils/soundscape-objects.js). `isProd` still picks the CLIENT,
+    // not the bucket.
+    var client = isProd ? s3 : s3RFCx;
+    var sc = { id: req.soundscape.id, project: req.project.project_id };
+    var get = function (file) {
+        return function (callback) {
+            soundscapeObjects.getObject(client, sc, file, function (err, data) { callback(err, data); });
+        };
+    };
     async.parallel({
-        H: function(callback) {
-            (isProd ? s3 : s3RFCx).getObject({
-                Bucket: awsBucket,
-                Key: uri + 'h.json'
-            },
-            callback);
-        },
-        ACI: function(callback) {
-            (isProd ? s3 : s3RFCx).getObject({
-                Bucket: awsBucket,
-                Key: uri + 'aci.json'
-            },
-            callback);
-        },
-        NP: function(callback) {
-            (isProd ? s3 : s3RFCx).getObject({
-                Bucket: awsBucket,
-                Key: uri + 'peaknumbers.json'
-            },
-            callback);
-        }
+        H: get('h.json'),
+        ACI: get('aci.json'),
+        NP: get('peaknumbers.json')
     },
     function(err, results) {
         if(err) {
