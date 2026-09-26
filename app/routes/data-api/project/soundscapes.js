@@ -144,6 +144,34 @@ router.get('/:soundscape/scidx', function(req, res, next) {
     });
 });
 
+router.get('/:soundscape/grid', function(req, res, next) {
+    res.type('json');
+    model.soundscapes.getGrid(req.soundscape.id, function(err, g){
+        if(err) return next(err);
+        if(!g) return res.status(404).json({ error: 'grid not found' });
+        // The exact heat-map grid (v3, gzipped, base64) + the FROZEN norm vector
+        // + the stored settings -- everything the browser needs to draw the
+        // soundscape in ANY mode without touching the scidx or the live DB.
+        res.json({
+            id: req.soundscape.id,
+            width: g.width, height: g.height,
+            offsetx: g.offsetx, offsety: g.offsety,
+            maxCount: g.max_count, maxAmp: g.max_amp,
+            encoding: g.encoding, normSource: g.norm_source,
+            normVector: g.norm_vector || null,
+            palette: (req.soundscape.visual_palette | 0) || 1,
+            binSize: +req.soundscape.bin_size || 0,
+            settings: {
+                max: req.soundscape.visual_max_value,
+                normalized: !!(req.soundscape.normalized | 0),
+                threshold: +req.soundscape.threshold || 0,
+                thresholdType: req.soundscape.threshold_type
+            },
+            grid: g.grid.toString('base64')
+        });
+    });
+});
+
 router.get('/:soundscape/norm-vector', function(req, res, next) {
     res.type('json');
     var soundscape = req.soundscape;
@@ -344,9 +372,28 @@ router.post('/:soundscape/scale', function(req, res, next) {
     }, function(err, soundscape){
         if(err){
             next(err);
-        } else {
-            res.json(soundscape && soundscape.pop());
+            return;
         }
+        var updated = soundscape && soundscape.pop();
+        // 2026-09-26: keep the stored thumbnail preview in step with the new
+        // settings (recomputed from the grid + the FROZEN norm vector; a preview
+        // failure never fails the settings save).
+        model.soundscapes.getGrid(req.soundscape.id, function(gerr, g){
+            if(gerr || !g){
+                if(gerr) console.error('[soundscape scale] grid fetch failed for', req.soundscape.id, gerr.message);
+                return res.json(updated);
+            }
+            try {
+                var matrix = soundscapeGrid.previewMatrix(g, updated || req.soundscape);
+                model.soundscapes.updateGridPreview(req.soundscape.id, soundscapeGrid.gzipPreview(matrix), function(uerr){
+                    if(uerr) console.error('[soundscape scale] preview update failed for', req.soundscape.id, uerr.message);
+                    res.json(updated);
+                });
+            } catch (e) {
+                console.error('[soundscape scale] preview recompute failed for', req.soundscape.id, e && e.message);
+                res.json(updated);
+            }
+        });
     });
 });
 
