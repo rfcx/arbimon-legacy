@@ -72,6 +72,12 @@ eq('date_format ymd dquote', m.translate('SELECT DATE_FORMAT(r.datetime, "%Y/%m/
    "SELECT to_char(r.datetime, 'YYYY/MM/DD') as date FROM t r");
 eq('date_format %T', m.translate('SELECT DATE_FORMAT(r.datetime, "%T") FROM t r'),
    "SELECT to_char(r.datetime, 'HH24:MI:SS') FROM t r");
+// %w has no to_char token (PG 'D' is 1-7): expression form, text-typed like
+// MySQL's string result (§409: day_of_week soundscape norm vector).
+eq('date_format %w -> EXTRACT(DOW)::text', m.translate('SELECT DATE_FORMAT(R.datetime, "%w") as dp_0 FROM soundscapes S JOIN playlist_recordings PR ON S.playlist_id = PR.playlist_id JOIN recordings R ON R.recording_id = PR.recording_id'),
+   "SELECT EXTRACT(DOW FROM R.datetime)::text as dp_0 FROM soundscapes S JOIN playlist_recordings PR ON S.playlist_id = PR.playlist_id JOIN recordings R ON R.recording_id = PR.recording_id");
+eq('date_format %w single-quoted fmt', m.translate("SELECT DATE_FORMAT(r.datetime,'%w') FROM t r"),
+   "SELECT EXTRACT(DOW FROM r.datetime)::text FROM t r");
 // unknown code: the CALL bails (stays DATE_FORMAT -> honest 42883) but the
 // dq-literal is still converted to a PG string literal (see restoreLiteralsPg).
 eq('date_format unknown code bails', m.translate('SELECT DATE_FORMAT(x, "%Q") FROM t'),
