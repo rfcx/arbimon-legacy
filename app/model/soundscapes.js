@@ -119,8 +119,8 @@ let Soundscapes = {
     fetchSCIDXFile: function(soundscape, callback){
         // tmpfilecache key: the OLD layout path, unchanged, so warm cache entries
         // stay valid across the bucket move. The object itself is read from the
-        // new bucket first (arbimon-soundscapes/<id>/index.scidx), falling back
-        // to arbimon2 (utils/soundscape-objects.js).
+        // new bucket only (arbimon-soundscapes/<id>/index.scidx; step 3 cutover
+        // 2026-09-26 — utils/soundscape-objects.js).
         const scidx_uri = "project_"+(soundscape.project|0)+"/soundscapes/"+(soundscape.id|0)+"/index.scidx";
         return q.ninvoke(tmpfilecache, 'fetch', scidx_uri, function(cache_miss){
             if(!s3){

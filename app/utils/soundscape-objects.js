@@ -4,20 +4,20 @@
  * Where a soundscape's objects live (2026-09-25, operator goifirr 22:12 #3 +
  * 23:32 step 1).
  *
- * Soundscape objects (index.scidx, peaknumbers.json, h.json, aci.json) move OUT
- * of the `arbimon2` bucket into their own bucket `arbimon-soundscapes`
- * (hot -> cold-a -> B2 b2b), with a flat key layout:
+ * Soundscape objects (index.scidx, peaknumbers.json, h.json, aci.json) live in
+ * their own bucket `arbimon-soundscapes` (hot -> cold-a -> B2 b2b), flat layout:
  *
- *     NEW (primary):   arbimon-soundscapes / <soundscape_id>/<file>
- *     OLD (fallback):  arbimon2            / project_<pid>/soundscapes/<sid>/<file>
+ *     arbimon-soundscapes / <soundscape_id>/<file>
  *
- * During the move every READER tries NEW first and falls back to OLD on a miss,
- * so nothing breaks mid-copy; writers (the soundscape job) write NEW only; the
- * delete path removes BOTH. When the copy is verified and reads are cut over,
- * the OLD fallback is removed (a later step, its own GO).
+ * READS ARE NEW-BUCKET-ONLY (step 3, 2026-09-26, operator goifirr 11:20): the
+ * copy is complete and verified (47,223 objects, 0 errors, size+MD5 checked on
+ * cold-a AND B2), writers have been NEW-only since arbimon-soundscapes #26, and
+ * nothing writes the old layout any more. The old copies REMAIN in `arbimon2`
+ * (step 4 cancelled, operator 2026-09-25 23:58), so the DELETE path still removes
+ * BOTH layouts (and the legacy image.png key).
  *
- * `image.png` is intentionally absent: the PNG is no longer produced and is not
- * copied (operator 22:12: "skip the soundscape PNG backfill").
+ * `image.png` is intentionally absent from FILES: the PNG is no longer produced
+ * and was not copied (operator 22:12: "skip the soundscape PNG backfill").
  */
 const config = require('../config');
 
@@ -41,13 +41,11 @@ function oldKey (projectId, soundscapeId, file) {
     return 'project_' + (projectId | 0) + '/soundscapes/' + (soundscapeId | 0) + '/' + file;
 }
 
-/** Ordered read candidates: [{Bucket, Key}, ...] -- NEW first, then OLD. */
+/** Read candidate: the NEW layout only (step 3; the fallback is gone). */
 function locations (soundscape, file) {
     const sid = soundscape.id !== undefined ? soundscape.id : soundscape.soundscape_id;
-    const pid = soundscape.project !== undefined ? soundscape.project : soundscape.project_id;
     return [
         { Bucket: newBucket(), Key: newKey(sid, file) },
-        { Bucket: oldBucket(), Key: oldKey(pid, sid, file) },
     ];
 }
 
@@ -58,19 +56,14 @@ function isMissing (err) {
 }
 
 /**
- * getObject with NEW-then-OLD fallback. callback(err, data, where) where
- * `where` is 'new' | 'old'. Any error other than "missing" on NEW is returned
- * as-is (do not mask a real outage as a miss).
+ * getObject from the NEW bucket (the only read location since step 3).
+ * callback(err, data, where) with `where` always 'new' (kept for callers).
  */
 function getObject (s3, soundscape, file, callback) {
-    const locs = locations(soundscape, file);
-    s3.getObject(locs[0], function (err, data) {
-        if (!err) return callback(null, data, 'new');
-        if (!isMissing(err)) return callback(err);
-        s3.getObject(locs[1], function (err2, data2) {
-            if (err2) return callback(err2);
-            callback(null, data2, 'old');
-        });
+    const loc = locations(soundscape, file)[0];
+    s3.getObject(loc, function (err, data) {
+        if (err) return callback(err);
+        callback(null, data, 'new');
     });
 }
 

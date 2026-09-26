@@ -1,10 +1,10 @@
 /* jshint node:true */
 'use strict';
 
-// Guard for app/utils/soundscape-objects.js (2026-09-25, operator goifirr 22:12 #3 /
-// 23:32 step 1): soundscape objects move from arbimon2/project_<pid>/soundscapes/<sid>/
-// to arbimon-soundscapes/<sid>/. Readers: NEW first, OLD on a miss; errors other than
-// "missing" are NOT masked; delete removes BOTH layouts (+ the legacy image.png key).
+// Guard for app/utils/soundscape-objects.js (2026-09-26, step 3, operator goifirr 11:20):
+// reads are NEW-bucket ONLY (arbimon-soundscapes/<sid>/<file>); the copy is done and
+// verified, writers are NEW-only, and nothing writes the old layout. Old copies REMAIN
+// in arbimon2 (step 4 cancelled), so delete still removes BOTH layouts (+ legacy image.png).
 // Run: node test/soundscape-objects.test.js
 
 const assert = require('assert');
@@ -48,21 +48,21 @@ eq('new bucket default', so.newBucket(), 'arbimon-soundscapes');
 eq('old bucket = config aws bucketName', so.oldBucket(), 'arbimon2');
 eq('new key is flat <sid>/<file>', so.newKey(11417, 'index.scidx'), '11417/index.scidx');
 eq('old key unchanged', so.oldKey(1989, 11417, 'h.json'), 'project_1989/soundscapes/11417/h.json');
-eq('locations order: new then old', so.locations(sc, 'aci.json'),
-   [{ Bucket: 'arbimon-soundscapes', Key: '11417/aci.json' }, { Bucket: 'arbimon2', Key: 'project_1989/soundscapes/11417/aci.json' }]);
-eq('row-shaped soundscape (soundscape_id/project_id) works too',
-   so.locations({ soundscape_id: 5, project_id: 7 }, 'h.json')[1].Key, 'project_7/soundscapes/5/h.json');
+eq('locations: new layout only (step 3)', so.locations(sc, 'aci.json'),
+   [{ Bucket: 'arbimon-soundscapes', Key: '11417/aci.json' }]);
+eq('row-shaped soundscape (soundscape_id) works too',
+   so.locations({ soundscape_id: 5, project_id: 7 }, 'h.json')[0].Key, '5/h.json');
 let threw = false; try { so.newKey(0, 'x'); } catch (e) { threw = true; } eq('bad id rejected', threw, true);
 eq('png is not a managed file', so.FILES.includes('image.png'), false);
 
-console.log('read fallback');
+console.log('read (new-only since step 3)');
 (function () {
     const s3 = fakeS3({ 'arbimon-soundscapes': { '11417/index.scidx': 'NEW' }, arbimon2: { 'project_1989/soundscapes/11417/index.scidx': 'OLD' } });
     so.getObject(s3, sc, 'index.scidx', (e, d, w) => { eq('new present -> new', [e, String(d.Body), w], [null, 'NEW', 'new']); eq('old not touched', s3.calls.length, 1); });
 })();
 (function () {
     const s3 = fakeS3({ arbimon2: { 'project_1989/soundscapes/11417/index.scidx': 'OLD' } });
-    so.getObject(s3, sc, 'index.scidx', (e, d, w) => eq('new missing -> old', [e, String(d.Body), w], [null, 'OLD', 'old']));
+    so.getObject(s3, sc, 'index.scidx', (e) => { eq('new missing -> 404-class error (no old fallback)', so.isMissing(e), true); eq('old NOT consulted', s3.calls.length, 1); });
 })();
 (function () {
     const s3 = fakeS3({});
@@ -71,7 +71,7 @@ console.log('read fallback');
 (function () {
     const boom = new Error('SlowDown'); boom.code = 'SlowDown'; boom.statusCode = 503;
     const s3 = fakeS3({ arbimon2: { 'project_1989/soundscapes/11417/index.scidx': 'OLD' } }, { 'arbimon-soundscapes': boom });
-    so.getObject(s3, sc, 'index.scidx', (e) => { eq('a real error on NEW is returned, not masked by the fallback', e && e.code, 'SlowDown'); eq('old NOT consulted on a real error', s3.calls.length, 1); });
+    so.getObject(s3, sc, 'index.scidx', (e) => { eq('a real error on NEW is returned as-is', e && e.code, 'SlowDown'); eq('old NOT consulted on a real error', s3.calls.length, 1); });
 })();
 
 console.log('delete');
