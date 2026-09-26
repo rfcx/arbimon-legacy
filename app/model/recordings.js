@@ -32,6 +32,7 @@ var config       = require('../config');
 // `coreApiBaseUrl` was required only by deleteRecordingsInCoreAPI, removed
 // 2026-09-09 (ruling R1: archive never touches core).
 var SQLBuilder  = require('../utils/sqlbuilder');
+var siteSelectionUtil = require('../utils/site-selection');
 var persiteSort = require('../utils/persite-sort');
 var pageAnchor = require('../utils/page-anchor');
 const dbpoolPg = require('../utils/dbpool-pg');
@@ -2246,9 +2247,22 @@ var Recordings = {
                     list: []
                 }
             }
-            if (!parameters.sites) {
+            // Site scope. `sites_ids` is authoritative and is ALWAYS intersected
+            // with the project's own site set — see app/utils/site-selection.js
+            // for the silent-unfiltered defect this replaced (a URL-restored
+            // `sites_ids` without `sites` names used to be ignored).
+            const siteSelection = siteSelectionUtil.resolveSiteSelection(
+                siteData, parameters.sites_ids, parameters.sites);
+            if (!siteSelection.explicit) {
                 constraints.push("r.site_id IN (?)");
                 data.push(siteIds);
+            } else if (siteSelection.ids.length) {
+                constraints.push("r.site_id IN (?)");
+                data.push(siteSelection.ids);
+            } else {
+                // Explicit selection that matches none of this project's sites:
+                // match NOTHING — never fall back to every site.
+                constraints.push("r.site_id IN (NULL)");
             }
 
             if(parameters.range) {
@@ -2256,11 +2270,6 @@ var Recordings = {
                 data.push(getUTC(parameters.range.from), getUTC(parameters.range.to));
             }
 
-            if (parameters.sites) {
-                tables.push("JOIN sites AS s ON s.site_id = r.site_id");
-                constraints.push('s.site_id IN (?)')
-                data.push(parameters.sites_ids);
-            }
 
             if(parameters.years) {
                 constraints.push('YEAR(r.datetime) IN (?)');
@@ -2396,7 +2405,7 @@ var Recordings = {
                     tables: tables,
                     constraints: constraints,
                     archiveScope: archiveScope,
-                    explicitSites: parameters.sites
+                    explicitSites: siteSelection.explicit
                 });
 
                 return Q.all(outputs.map(function(output){
