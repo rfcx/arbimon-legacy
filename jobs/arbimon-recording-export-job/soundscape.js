@@ -255,14 +255,28 @@ async function fetchSCIDX(soundscape) {
 }
 
 async function getImageData(soundscape) {
+  // 2026-09-26 (OPEN-ITEMS §407): image.png is no longer produced (09-25 20:37)
+  // and most legacy PNGs were deleted (§275), so a missing image is the COMMON
+  // case, not an error: skip it and let the export continue without a PNG.
+  // Any other S3 error still fails the export.
   const filename = `${nameToUrl(soundscape.name)}-${soundscape.id}.png`;
   const filePath = path.join(tmpFilePath, filename)
-  const  s3Data = await getObject({ Bucket: S3_LEGACY_BUCKET_ARBIMON, Key: soundscape.uri, isLegacy: true });
+  let s3Data
+  try {
+    s3Data = await getObject({ Bucket: S3_LEGACY_BUCKET_ARBIMON, Key: soundscape.uri, isLegacy: true });
+  } catch (e) {
+    if (e && (e.code === 'NoSuchKey' || e.code === 'NotFound' || e.statusCode === 404)) {
+      console.log('soundscape', soundscape.id, 'has no legacy image.png - skipping image')
+      return
+    }
+    throw e
+  }
   fs.writeFileSync(filePath, s3Data)
 }
 
 module.exports = {
   collectData,
-  buildSoundscapeFolder
+  buildSoundscapeFolder,
+  getImageData // exported for test/export-soundscape-image-skip.test.js (§407)
 }
 
