@@ -713,6 +713,11 @@ function translateFunctions(sql, store) {
         if (args.length !== 2) { return null; }
         var fmt = litText(args[1], store);
         if (fmt === null) { return null; }
+        // %w (day of week, 0-6, Sunday-first) has NO to_char token (PG 'D' is
+        // 1-7); the token map cannot express it, so it takes the expression
+        // form. MySQL returns a string, so cast to text (OPEN-ITEMS §409:
+        // day_of_week soundscape norm-vector queries failed translation).
+        if (fmt === '%w') { return 'EXTRACT(DOW FROM ' + args[0] + ')::text'; }
         var pg = mysqlDateFormatToPg(fmt);
         if (pg === null) { return null; }
         return "to_char(" + args[0] + ", '" + pg + "')";
