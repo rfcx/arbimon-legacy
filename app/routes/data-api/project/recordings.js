@@ -297,6 +297,22 @@ router.post('/grouped-detections-export', function(req, res, next) {
  * have no stream, or a window over the 15-min media-api cap): the caller falls
  * back to /download/:id, which streams the stored object.
  */
+/** Which soundscapes include this recording (membership from the scidx-derived
+ *  soundscape_recordings table, 2026-09-26). The recording is verified inside
+ *  the caller's project first; soundscapes filtered to the same project.
+ */
+// project-scope: model findByIdInProjectAsync
+router.get('/:recordingId/soundscapes', async function(req, res, next) {
+    try {
+        const [rec] = await model.recordings.findByIdInProjectAsync(req.params.recordingId, req.project.project_id);
+        if (!rec) return res.status(404).json({ error: 'recording not found' });
+        const rows = await model.soundscapes.findByRecordingAsync(rec.recording_id, req.project.project_id);
+        res.json(rows);
+    } catch (err) {
+        next(err);
+    }
+});
+
 // project-scope: model findByIdInProjectAsync
 router.get('/download-wav/:recordingId', async function(req, res, next) {
     try {

@@ -136,6 +136,31 @@ let Soundscapes = {
         }).nodeify(callback);
     },
 
+    /** Fetches the soundscape's stored grid row (soundscape_grids): the exact
+     * heat-map grid (bytea, v3 gz) + the stored-settings preview + the FROZEN
+     * norm vector. NULL when the soundscape has no grid (pre-grid era rows).
+     * @param {number} soundscapeId
+     * @param {Function} callback(err, row|null)
+     */
+    getGrid: function(soundscapeId, callback){
+        return queryHandler(
+            "SELECT soundscape_id, width, height, offsetx, offsety, max_count, max_amp, grid, preview, norm_vector, norm_source, encoding\n" +
+            "FROM soundscape_grids WHERE soundscape_id = " + dbpool.escape(soundscapeId|0),
+        function(err, rows){
+            if(err){ callback(err); return; }
+            callback(null, rows && rows[0] || null);
+        });
+    },
+
+    /** Replaces the stored preview after a settings change (the scale route).
+     * The preview is small (p99 ~12 KB gz), so a hex literal is fine.
+     */
+    updateGridPreview: function(soundscapeId, previewGz, callback){
+        return queryHandler(
+            "UPDATE soundscape_grids SET preview = decode('" + Buffer.from(previewGz).toString('hex') + "','hex') WHERE soundscape_id = " + dbpool.escape(soundscapeId|0),
+        callback);
+    },
+
     /** Fetches and reads the soundscape index file.
      * @param {Object}  soundscape    soundscape object
      * @param {Object}  filters       options for filtering the scidx file (optional)
@@ -720,6 +745,20 @@ let Soundscapes = {
             region.tags = tags;
             callback();
         });
+    },
+
+    /** Which soundscapes (in this project) include the given recording.
+     * Source = the scidx-derived soundscape_recordings table (2026-09-25 arc).
+     * Returns a promise of [{id, name, date}].
+     */
+    findByRecordingAsync: function(recordingId, projectId) {
+        return dbpool.query(
+            "SELECT S.soundscape_id as id, S.name, UNIX_TIMESTAMP(S.date_created)*1000 as date\n" +
+            "FROM soundscape_recordings SR\n" +
+            "JOIN soundscapes S ON S.soundscape_id = SR.soundscape_id\n" +
+            "WHERE SR.recording_id = " + dbpool.escape(recordingId|0) + " AND S.project_id = " + dbpool.escape(projectId|0) + "\n" +
+            "ORDER BY S.date_created DESC"
+        );
     },
 
     totalSoundscapeJobs: function(projectId) {

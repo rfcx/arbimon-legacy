@@ -23,6 +23,7 @@ const model = require('../../model');
 const { createS3Client } = require('../../utils/storage');
 const { verifyKey, verifySoundscape } = require('../../utils/arbimon2-asset-url');
 const { renderSoundscapePng } = require('../../utils/soundscape-image');
+const { previewPng } = require('../../utils/soundscape-grid');
 
 const router = express.Router();
 let s3;
@@ -51,23 +52,42 @@ router.get('/soundscape/:id.png', function (req, res) {
         const sc = !ferr && rows && rows[0];
         if (!sc) return notFound(res);
         sc.aggregation = { id: sc.aggregation };
-        model.soundscapes.fetchSCIDX(sc, {}, function (err, idx) {
-            if (err) {
-                const missing = err.statusCode === 404 || err.code === 'NoSuchKey' || err.code === 'NotFound' || err.name === 'XMLParserError';
-                if (!res.headersSent) res.status(missing ? 404 : 502).json({ error: 'asset not available' });
+        // 2026-09-26 (grid arc): serve from the STORED preview matrix
+        // (soundscape_grids.preview -- a DB read, no scidx fetch/parse, ~1-12 KB
+        // gz). Fallback: the full scidx render below for a row with no grid.
+        model.soundscapes.getGrid(id, function (gerr, g) {
+            if (!gerr && g) {
+                previewPng(g, sc.visual_palette)
+                    .then((buf) => {
+                        res.set('Content-Type', 'image/png');
+                        res.set('Cache-Control', 'private, max-age=3600');
+                        res.send(buf);
+                    })
+                    .catch((e) => {
+                        console.error('[arbimon2-asset soundscape preview]', id, e && e.message);
+                        if (!res.headersSent) res.status(500).json({ error: 'asset not available' });
+                    });
                 return;
             }
-            Promise.resolve((sc.normalized | 0) ? model.soundscapes.fetchNormVector(sc) : null)
-                .then((nv) => renderSoundscapePng(sc, idx, nv))
-                .then((buf) => {
-                    res.set('Content-Type', 'image/png');
-                    res.set('Cache-Control', 'private, max-age=3600');
-                    res.send(buf);
-                })
-                .catch((e) => {
-                    console.error('[arbimon2-asset soundscape]', id, e && e.message);
-                    if (!res.headersSent) res.status(500).json({ error: 'asset not available' });
-                });
+            if (gerr) console.error('[arbimon2-asset soundscape grid]', id, gerr.message);
+            model.soundscapes.fetchSCIDX(sc, {}, function (err, idx) {
+                if (err) {
+                    const missing = err.statusCode === 404 || err.code === 'NoSuchKey' || err.code === 'NotFound' || err.name === 'XMLParserError';
+                    if (!res.headersSent) res.status(missing ? 404 : 502).json({ error: 'asset not available' });
+                    return;
+                }
+                Promise.resolve((sc.normalized | 0) ? model.soundscapes.fetchNormVector(sc) : null)
+                    .then((nv) => renderSoundscapePng(sc, idx, nv))
+                    .then((buf) => {
+                        res.set('Content-Type', 'image/png');
+                        res.set('Cache-Control', 'private, max-age=3600');
+                        res.send(buf);
+                    })
+                    .catch((e) => {
+                        console.error('[arbimon2-asset soundscape]', id, e && e.message);
+                        if (!res.headersSent) res.status(500).json({ error: 'asset not available' });
+                    });
+            });
         });
     });
 });
