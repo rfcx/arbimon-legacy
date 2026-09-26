@@ -80,5 +80,12 @@ describe('recordings/search site selection', function () {
         expect(fn).to.not.contain('if (!parameters.sites)');
         expect(fn).to.not.contain('if (parameters.sites)');
         expect(fn).to.not.contain('data.push(parameters.sites_ids)');
+        // The explicit-selection shape must stay JOIN sites + s.site_id IN:
+        // the flat r.site_id IN (a,b) form makes MIN/MAX(datetime) cancel at
+        // the PG statement_timeout (measured 2026-09-26).
+        var sel = fn.slice(fn.indexOf('siteSelectionUtil.resolveSiteSelection('), fn.indexOf('if(parameters.range)'));
+        expect(sel).to.contain('tables.push("JOIN sites AS s ON s.site_id = r.site_id")');
+        expect(sel).to.contain("constraints.push('s.site_id IN (?)')");
+        expect(sel).to.contain('data.push(siteSelection.ids)');
     });
 });

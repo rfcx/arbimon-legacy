@@ -2256,13 +2256,24 @@ var Recordings = {
             if (!siteSelection.explicit) {
                 constraints.push("r.site_id IN (?)");
                 data.push(siteIds);
-            } else if (siteSelection.ids.length) {
-                constraints.push("r.site_id IN (?)");
-                data.push(siteSelection.ids);
             } else {
-                // Explicit selection that matches none of this project's sites:
-                // match NOTHING — never fall back to every site.
-                constraints.push("r.site_id IN (NULL)");
+                // 🔴 KEEP THIS EXACT SHAPE (JOIN sites + s.site_id IN) — it is
+                // the shape the Apply-click path has always produced, and the
+                // PG planner depends on it: the flat `r.site_id IN (a,b)` form
+                // makes `MIN/MAX(r.datetime)` (output=date_range) walk the
+                // datetime index backwards and CANCEL at the 8 s cap (measured
+                // on the replica for 2 sites: flat = >30 s timeout, this JOIN
+                // form = 17 ms). The JOIN also keeps the fast paths gated off
+                // (tables.length > 1), exactly as before.
+                // An explicit selection that matches none of this project's
+                // sites matches NOTHING — never fall back to every site.
+                tables.push("JOIN sites AS s ON s.site_id = r.site_id");
+                if (siteSelection.ids.length) {
+                    constraints.push('s.site_id IN (?)');
+                    data.push(siteSelection.ids);
+                } else {
+                    constraints.push('s.site_id IN (NULL)');
+                }
             }
 
             if(parameters.range) {
