@@ -15,6 +15,7 @@ let tmpfilecache = require('../utils/tmpfilecache');
 const { soundscapeImageUrl } = require('../utils/arbimon2-asset-url');
 const playlistRecCount = require('./playlist-rec-count'); // playlists.total_recordings maintenance (2026-09-22)
 const { createS3Client } = require('../utils/storage');
+const soundscapeObjects = require('../utils/soundscape-objects');
 const k8sConfig = config('k8s');
 const jsonTemplates = require('../utils/json-templates');
 const { Client } = require('kubernetes-client');
@@ -116,15 +117,16 @@ let Soundscapes = {
      * @param {Function} callback(err, path) function to call back with the file's path.
      */
     fetchSCIDXFile: function(soundscape, callback){
+        // tmpfilecache key: the OLD layout path, unchanged, so warm cache entries
+        // stay valid across the bucket move. The object itself is read from the
+        // new bucket first (arbimon-soundscapes/<id>/index.scidx), falling back
+        // to arbimon2 (utils/soundscape-objects.js).
         const scidx_uri = "project_"+(soundscape.project|0)+"/soundscapes/"+(soundscape.id|0)+"/index.scidx";
         return q.ninvoke(tmpfilecache, 'fetch', scidx_uri, function(cache_miss){
             if(!s3){
                 s3 = createS3Client('aws'); // endpoint-aware: routes via s3-proxy chain
             }
-            s3.getObject({
-                Bucket : config('aws').bucketName,
-                Key    : scidx_uri
-            }, function(err, data){
+            soundscapeObjects.getObject(s3, soundscape, 'index.scidx', function(err, data){
                 if (err) {
                     console.log('Err getting scidx file.', err)
                     cache_miss.deferred.reject(err); return;
@@ -584,34 +586,31 @@ let Soundscapes = {
      */
     delete: function (scape_id,callback)
     {
-        let q = "SELECT `uri` FROM `soundscapes` WHERE `soundscape_id` = "+scape_id;
+        let q = "SELECT `uri`, `project_id` FROM `soundscapes` WHERE `soundscape_id` = "+scape_id;
 
         queryHandler(q,
             function (err,rows)
             {
                 if (err) {
-                    callback(err);
+                    return callback(err);
+                }
+                // was: fell through to `rows[0].uri` on an error or an unknown id
+                // and threw (TypeError) after calling back.
+                if (!rows || !rows.length) {
+                    return callback(new Error('soundscape ' + scape_id + ' not found'));
                 }
                 if(!s3){
                     s3 = createS3Client('aws'); // endpoint-aware: routes via s3-proxy chain
                 }
-                let imgUri = rows[0].uri;
-                let indexUri = rows[0].uri.replace('image.png','index.scidx');
-                let params = {
-                    Bucket: config('aws').bucketName,
-                    Delete: {
-                        Objects:
-                        [
-                          {
-                            Key: imgUri
-                          },
-                          {
-                            Key: indexUri
-                          }
-                        ]
-                    }
-                };
-                s3.deleteObjects(params, function(err, data) {
+                // 2026-09-25: delete from BOTH layouts (arbimon-soundscapes/<id>/* and
+                // arbimon2/project_<pid>/soundscapes/<id>/*), all four files plus the
+                // legacy image.png key (the row's uri). Previously only image.png +
+                // index.scidx were deleted: the three .json files were orphaned.
+                let imgUri = rows[0] && rows[0].uri;
+                soundscapeObjects.deleteAll(s3, {
+                    id: scape_id,
+                    project: rows[0] && rows[0].project_id,
+                }, imgUri, function(err, data) {
                     if (err)
                     {
                         callback(err);
