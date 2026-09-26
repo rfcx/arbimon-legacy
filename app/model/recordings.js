@@ -32,6 +32,7 @@ var config       = require('../config');
 // `coreApiBaseUrl` was required only by deleteRecordingsInCoreAPI, removed
 // 2026-09-09 (ruling R1: archive never touches core).
 var SQLBuilder  = require('../utils/sqlbuilder');
+var siteSelectionUtil = require('../utils/site-selection');
 var persiteSort = require('../utils/persite-sort');
 var pageAnchor = require('../utils/page-anchor');
 const dbpoolPg = require('../utils/dbpool-pg');
@@ -2246,9 +2247,33 @@ var Recordings = {
                     list: []
                 }
             }
-            if (!parameters.sites) {
+            // Site scope. `sites_ids` is authoritative and is ALWAYS intersected
+            // with the project's own site set — see app/utils/site-selection.js
+            // for the silent-unfiltered defect this replaced (a URL-restored
+            // `sites_ids` without `sites` names used to be ignored).
+            const siteSelection = siteSelectionUtil.resolveSiteSelection(
+                siteData, parameters.sites_ids, parameters.sites);
+            if (!siteSelection.explicit) {
                 constraints.push("r.site_id IN (?)");
                 data.push(siteIds);
+            } else {
+                // 🔴 KEEP THIS EXACT SHAPE (JOIN sites + s.site_id IN) — it is
+                // the shape the Apply-click path has always produced, and the
+                // PG planner depends on it: the flat `r.site_id IN (a,b)` form
+                // makes `MIN/MAX(r.datetime)` (output=date_range) walk the
+                // datetime index backwards and CANCEL at the 8 s cap (measured
+                // on the replica for 2 sites: flat = >30 s timeout, this JOIN
+                // form = 17 ms). The JOIN also keeps the fast paths gated off
+                // (tables.length > 1), exactly as before.
+                // An explicit selection that matches none of this project's
+                // sites matches NOTHING — never fall back to every site.
+                tables.push("JOIN sites AS s ON s.site_id = r.site_id");
+                if (siteSelection.ids.length) {
+                    constraints.push('s.site_id IN (?)');
+                    data.push(siteSelection.ids);
+                } else {
+                    constraints.push('s.site_id IN (NULL)');
+                }
             }
 
             if(parameters.range) {
@@ -2256,11 +2281,6 @@ var Recordings = {
                 data.push(getUTC(parameters.range.from), getUTC(parameters.range.to));
             }
 
-            if (parameters.sites) {
-                tables.push("JOIN sites AS s ON s.site_id = r.site_id");
-                constraints.push('s.site_id IN (?)')
-                data.push(parameters.sites_ids);
-            }
 
             if(parameters.years) {
                 constraints.push('YEAR(r.datetime) IN (?)');
@@ -2396,7 +2416,7 @@ var Recordings = {
                     tables: tables,
                     constraints: constraints,
                     archiveScope: archiveScope,
-                    explicitSites: parameters.sites
+                    explicitSites: siteSelection.explicit
                 });
 
                 return Q.all(outputs.map(function(output){
