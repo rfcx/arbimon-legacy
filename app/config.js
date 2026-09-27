@@ -22,6 +22,31 @@ fs.watch(config_folder, { persistent:false }, function(event, filename){
     }
 });
 
+// An env override arrives as a STRING. When the config file's default for that
+// key is a JSON boolean, a string override used to replace it verbatim, so
+// RFCX_COREAPIENABLED=false set `coreAPIEnabled` to the string "false", which
+// is TRUTHY: every `if (rfcxConfig.coreAPIEnabled)` still fired (measured
+// 2026-09-27 on the demo sandbox; rfcx-local FINDING-2026-09-27-legacy-env-bool-
+// string-audit.md). Coerce ONLY for boolean-default keys, and only the
+// unambiguous spellings; anything else is kept as the raw string (unchanged
+// behaviour) with a one-time warning, so a typo is visible but never silently
+// flipped. Non-boolean defaults (strings, numbers, objects) are untouched.
+var TRUE_STRINGS = ['true', '1', 'yes', 'on'];
+var FALSE_STRINGS = ['false', '0', 'no', 'off'];
+var warned = {};
+function coerceEnvOverride(fileDefault, raw, envVarName) {
+    if (typeof fileDefault !== 'boolean') { return raw; }
+    var v = String(raw).trim().toLowerCase();
+    if (TRUE_STRINGS.indexOf(v) !== -1) { return true; }
+    if (FALSE_STRINGS.indexOf(v) !== -1) { return false; }
+    if (!warned[envVarName]) {
+        warned[envVarName] = true;
+        console.warn('config: ' + envVarName + '=' + JSON.stringify(raw) +
+            ' is not a recognised boolean (true/false/1/0/yes/no/on/off); keeping the raw string');
+    }
+    return raw;
+}
+
 module.exports = function(config_file){
     if(typeof cache[config_file] == 'undefined') {
         var files = [
@@ -43,9 +68,10 @@ module.exports = function(config_file){
     Object.keys(cache[config_file]).forEach(key => {
         const envVarName = `${config_file.toUpperCase()}_${key.toUpperCase()}`;
         if (process.env[envVarName]) {
-            cache[config_file][key] = process.env[envVarName];
+            cache[config_file][key] = coerceEnvOverride(cache[config_file][key], process.env[envVarName], envVarName);
         }
     })
     
     return cache[config_file];
 };
+module.exports._coerceEnvOverride = coerceEnvOverride; // exported for test/config-env-bool.test.js
