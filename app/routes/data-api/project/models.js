@@ -40,6 +40,7 @@ const { mediaAssetUrl, mediaStreamId } = require('../../../utils/asset-url');
 const { arbimon2AssetUrl } = require('../../../utils/arbimon2-asset-url');
 const APIError = require('../../../utils/apierror');
 const projectScope = require('../../../utils/project-scope');
+const analysisAssets = require('../../../utils/analysis-assets');
 const router = express.Router();
 const { createS3Client } = require('../../../utils/storage');
 // endpoint-aware: route through s3-proxy/s3-reader/s3-writer chain.
@@ -576,6 +577,13 @@ router.get('/:modelId/training-vector/:recId', function(req, res, next) {
                 sourceModelId = sourceModelData.model_id;
             }
         } catch (e) { return next(e); }
+        // analysis-assets-api (§295): OFF unless ANALYSIS_ASSETS_TRAINING_VECTOR=on.
+        // Shared-model resolution + the model lookup above still gate access.
+        if (analysisAssets.enabled('training')) {
+            return analysisAssets.fetchVector(
+                analysisAssets.trainingPath(isSharedModel ? sourceModelId : req.params.modelId, req.params.recId),
+                analysisAssets.respond(res, next));
+        }
         model.models.getTrainingVector(isSharedModel ? sourceModelId : req.params.modelId, req.params.recId, function(err, result) {
             if(err) return next(err);
 

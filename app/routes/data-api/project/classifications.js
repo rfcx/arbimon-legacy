@@ -10,6 +10,7 @@ const model = require('../../../model');
 const pokeDaMonkey = require('../../../utils/monkey');
 const { mediaAssetUrl, mediaStreamId } = require('../../../utils/asset-url');
 const { arbimon2AssetUrl } = require('../../../utils/arbimon2-asset-url');
+const analysisAssets = require('../../../utils/analysis-assets');
 const router = express.Router();
 const moment = require('moment');
 const { httpErrorHandler } = require('@rfcx/http-utils');
@@ -305,6 +306,15 @@ router.get('/:classiId/vector/:recId', function(req, res, next) {
 
         if(!rows.length) {
             return res.status(404).json({ error: 'data not found'});
+        }
+
+        // analysis-assets-api (§295): OFF unless ANALYSIS_ASSETS_CLASSIFICATION_VECTOR=on.
+        // The project-scoped lookup above still gates access; the service only
+        // replaces the S3 read below (stored leg, then derive-on-demand).
+        if (analysisAssets.enabled('classification')) {
+            return analysisAssets.fetchVector(
+                analysisAssets.classificationPath(req.params.classiId, req.params.recId),
+                analysisAssets.respond(res, next));
         }
 
         let vectorUri = rows[0].vect;
