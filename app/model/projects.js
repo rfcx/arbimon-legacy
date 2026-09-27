@@ -1521,15 +1521,35 @@ var Projects = {
         })
     },
 
+    /**
+     * Rename / visibility change on legacy AND core, atomically as far as HTTP allows.
+     *
+     * 2026-09-26 (rfcx-local DESIGN-2026-09-26-rename-core-leg; same class as the site-edit fix
+     * arbimon-legacy #1969 and bio-api's project-delete chain): the core PATCH commits immediately,
+     * inside our still-open transaction, so anything that fails after it used to leave core changed
+     * behind a legacy rollback. The core leg now runs LAST (only COMMIT follows it), reads core's
+     * pre-image first, counts a timed-out PATCH as possibly committed, and on a failure after it
+     * PATCHes core back. `updateInCoreAPI` is now HONEST: a non-2xx fails the rename (previously a
+     * 401 was swallowed and the rename "succeeded" on legacy + insights only).
+     */
     updateProjectInArbimonAndCoreAPI: async function(data, token) {
         let connection;
+        let coreCommitted = false;
+        let corePreImage = null;
         return dbpool.getConnection()
             .then(async (con) => {
                 connection = con;
                 await connection.beginTransaction();
                 await this.update(data, connection);
                 if (rfcxConfig.coreAPIEnabled) {
-                    await this.updateInCoreAPI(data, token);
+                    corePreImage = await this.getCoreProjectPreImage(data.project_id, token);
+                    try {
+                        await this.updateInCoreAPI(data, token);
+                        coreCommitted = true;
+                    } catch (e) {
+                        if (e && e.coreAmbiguous) { coreCommitted = true; }
+                        throw e;
+                    }
                 }
                 await connection.commit()
                 await connection.release()
@@ -1540,18 +1560,65 @@ var Projects = {
                     await connection.rollback();
                     await connection.release();
                 }
+                if (coreCommitted && corePreImage) {
+                    await this.compensateCoreProject(data, corePreImage, token, err);
+                }
                 throw new APIError('Failed to update project');
             })
     },
 
+    /**
+     * Core's current name / visibility for this project (GET /projects/:coreId; the caller needs UPDATE for
+     * the PATCH, which implies READ). Failure aborts the rename BEFORE any core write. Bounded: 10s.
+     */
+    getCoreProjectPreImage: async function(projectId, token) {
+        const rows = await dbpool.query('SELECT external_id FROM projects WHERE project_id = ?', [projectId]);
+        const coreId = rows && rows[0] && rows[0].external_id;
+        if (!coreId) {
+            throw new APIError('Failed to update project: no core id');
+        }
+        const response = await rp({
+            method: 'GET',
+            url: `${coreApiBaseUrl()}/projects/${coreId}`,
+            timeout: 10000,
+            headers: { Authorization: `Bearer ${token}`, source: 'arbimon' },
+            json: true
+        });
+        if (!response || response.statusCode !== 200 || !response.body || response.body.id === undefined) {
+            throw new APIError('Failed to update project: could not read core pre-image (status ' + (response && response.statusCode) + ')');
+        }
+        return { name: response.body.name, is_public: response.body.is_public };
+    },
 
-    updateInCoreAPI: async function(data, idToken) {
+    /** Undo the core leg: PATCH back only the fields that were sent. Never throws. Bounded: 30s. */
+    compensateCoreProject: async function(data, pre, token, originalErr) {
+        const back = { project_id: data.project_id };
+        if (data.name !== undefined) back.name = pre.name;
+        if (data.is_private !== undefined) back.is_private = pre.is_public ? 0 : 1;
+        try {
+            await this.updateInCoreAPI(back, token, 30000);
+            console.log(JSON.stringify({ event: 'project_update_core_compensated', project_id: data.project_id }));
+        } catch (e) {
+            console.error(JSON.stringify({
+                event: 'project_update_core_compensation_failed',
+                project_id: data.project_id,
+                pre_image: pre,
+                original_error: originalErr && originalErr.message,
+                compensation_error: e && e.message
+            }));
+        }
+    },
+
+
+    updateInCoreAPI: async function(data, idToken, timeoutMs) {
         let body = {}
         data.name !== undefined && (body.name = data.name)
         data.is_private !== undefined && (body.is_public = !data.is_private)
         const options = {
             method: 'PATCH',
             url: `${coreApiBaseUrl()}/internal/arbimon/projects/${data.project_id}`,
+            // Bounded: runs inside an open legacy transaction (row locks held). 2026-09-26.
+            timeout: timeoutMs || 10000,
             headers: {
                 'content-type': 'application/json',
                 Authorization: `Bearer ${idToken}`,
@@ -1559,14 +1626,20 @@ var Projects = {
             },
             body: JSON.stringify(body)
         }
-        return rp(options).then((response) => {
-            try {
-                const body = JSON.parse(response.body);
-                if (body && body.error) {
-                    throw new APIError('Failed to update project');
-                }
-            } catch (e) { }
-        })
+        let response;
+        try {
+            response = await rp(options);
+        } catch (e) {
+            // No answer at all (timeout / reset): the PATCH may have committed in core.
+            const err = new APIError('Failed to update project in core (no response: ' + (e && e.code) + ')');
+            err.coreAmbiguous = true;
+            throw err;
+        }
+        // HONEST since 2026-09-26: a non-2xx used to be swallowed by `catch (e) { }`, which is how a 401 on
+        // every session-less rename read as success for months (rfcx-local OWED-2026-09-13 §1).
+        if (!response || response.statusCode < 200 || response.statusCode > 299) {
+            throw new APIError('Failed to update project in core (status ' + (response && response.statusCode) + ')');
+        }
     },
 
     deleteInCoreAPI: async function(project_id, idToken) {
