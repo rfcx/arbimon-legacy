@@ -36,6 +36,9 @@ router.patch('/projects/:externalId', verifyToken(), hasRole(['appUser', 'rfcxUs
     const converter = new Converter(req.body, {});
     converter.convert('name').optional().toString();
     converter.convert('url').optional().toString();
+    // 2026-09-27 (rfcx-local DESIGN-2026-09-27-visibility-propagation): bio-api propagates the SPA's
+    // publish/hide choice here so legacy access follows it. Optional; absent = unchanged.
+    converter.convert('is_private').optional().toBoolean();
 
     const params = await converter.validate();
     const project = await model.projects.find({ external_id: req.params.externalId }).get(0);
@@ -49,7 +52,7 @@ router.patch('/projects/:externalId', verifyToken(), hasRole(['appUser', 'rfcxUs
       project_id: project.project_id,
       name: params.name !== undefined ? params.name : project.name,
       url: params.url !== undefined ? params.url : project.url,
-      is_private: project.is_private,
+      is_private: params.is_private !== undefined ? (params.is_private ? 1 : 0) : project.is_private,
     })
     res.sendStatus(200);
   } catch (e) {
