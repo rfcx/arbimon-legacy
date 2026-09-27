@@ -608,22 +608,56 @@ var Sites = {
         })
     },
 
+    /**
+     * Update a site on legacy AND its stream on core.
+     *
+     * ⚠️ CROSS-PLANE ORDERING (rfcx-local DESIGN-2026-09-26-site-edit-core-compensation, card
+     * 20260926-arbimon-app-004). The core PATCH COMMITS IMMEDIATELY, inside our still-open legacy
+     * transaction. Until 2026-09-26 any failure AFTER it (the timezone write-back, the class/analysis
+     * moves, the commit itself) rolled back legacy ONLY and left core changed: measured 155 live core
+     * streams sitting in a different project from their legacy site (2021-2026), including a pair split
+     * by the 2024-04-04 timezone write-back bug.
+     *
+     * Now: we read core's pre-image FIRST (abort with nothing changed if we cannot), record the core leg
+     * as committed when the PATCH returns OR fails ambiguously (timeout / no response: it may have
+     * committed; card 20260916-arbimon-app-013), and on any later failure PATCH core back to its
+     * pre-image. Restoring an unchanged stream is a no-op in core, so compensating an ambiguous leg is
+     * safe. A failed compensation is logged as `site_update_core_compensation_failed` (greppable) and
+     * the ORIGINAL error is still thrown.
+     */
     updateSite: async function(site, options, idToken) {
         let db;
+        let coreCommitted = false;
+        let corePreImage = null;
+        let coreBody = null;
         return dbpool.getConnection()
             .then(async (connection) => {
                 db = connection;
                 await db.beginTransaction();
                 await this.updateAsync(site, db);
                 if (rfcxConfig.coreAPIEnabled) {
-                    const updatedSite = await this.updateInCoreAPI({
+                    // Built AFTER updateAsync, exactly as before: update() normalises the object in place
+                    // (id -> site_id, empty lat/lon -> null), and the core body must see those values.
+                    coreBody = {
                         site_id: site.site_id,
                         name: site.name,
                         lat: site.lat,
                         lon: site.lon,
                         alt: site['alt'] !== undefined && Sites.isEmptyCoordinate(site.alt) ? null : site.alt,
                         project_id: site.project_id
-                    }, idToken)
+                    };
+                    // Pre-image BEFORE any core write. A failure here aborts with nothing changed anywhere.
+                    corePreImage = await this.getCoreStreamPreImage(site.site_id, idToken);
+                    let updatedSite;
+                    try {
+                        updatedSite = await this.updateInCoreAPI(coreBody, idToken);
+                        coreCommitted = true;
+                    } catch (e) {
+                        if (Sites.isAmbiguousCoreFailure(e)) {
+                            coreCommitted = true;
+                        }
+                        throw e;
+                    }
                     await this.setCountryCodeAndTimezone(site.site_id, updatedSite.country_code, updatedSite.timezone, connection);
                 };
                 const { originalProjectId } = options
@@ -653,11 +687,71 @@ var Sites = {
                     await db.rollback();
                     await db.release();
                 }
+                if (coreCommitted && corePreImage && coreBody) {
+                    await this.compensateCoreStream(site.site_id, coreBody, corePreImage, idToken, err);
+                }
                 throw new Error('Failed to update site');
             })
     },
 
-    updateInCoreAPI: async function(data, idToken) {
+    /**
+     * Read the core stream's current values for exactly the fields the site-edit PATCH can change.
+     * `GET /streams/:id` (core id = legacy sites.external_id); the caller already needs UPDATE on the
+     * stream for the PATCH, which implies READ. Bounded: 10s.
+     */
+    getCoreStreamPreImage: async function(siteId, idToken) {
+        const rows = await dbpool.query('SELECT external_id FROM sites WHERE site_id = ?', [siteId]);
+        const coreId = rows && rows[0] && rows[0].external_id;
+        if (!coreId) {
+            throw new Error('Failed to update site: no core stream id for site ' + siteId);
+        }
+        const response = await rp({
+            method: 'GET',
+            url: `${coreApiBaseUrl()}/streams/${coreId}`,
+            timeout: Sites.CORE_PREIMAGE_TIMEOUT_MS,
+            headers: { Authorization: `Bearer ${idToken}`, source: 'arbimon' },
+            json: true
+        });
+        if (!response || response.statusCode !== 200 || !response.body || !response.body.id) {
+            throw new Error('Failed to update site: could not read core pre-image (status ' + (response && response.statusCode) + ')');
+        }
+        const b = response.body;
+        return {
+            name: b.name,
+            lat: b.latitude,
+            lon: b.longitude,
+            alt: b.altitude,
+            project_external_id: b.project && b.project.external_id !== undefined ? b.project.external_id : undefined
+        };
+    },
+
+    /**
+     * Undo the core leg of a failed site edit: PATCH back ONLY the fields we sent, to core's pre-image.
+     * Never throws: the caller re-throws the original error. Bounded: 30s.
+     */
+    compensateCoreStream: async function(siteId, sent, pre, idToken, originalErr) {
+        const back = { site_id: siteId };
+        if (sent.name !== undefined) back.name = pre.name;
+        if (sent.lat !== undefined) back.lat = pre.lat;
+        if (sent.lon !== undefined) back.lon = pre.lon;
+        if (sent.alt !== undefined) back.alt = pre.alt;
+        if (sent.project_id !== undefined && pre.project_external_id !== undefined) back.project_id = pre.project_external_id;
+        try {
+            await this.updateInCoreAPI(back, idToken, Sites.CORE_COMPENSATION_TIMEOUT_MS);
+            console.log(JSON.stringify({ event: 'site_update_core_compensated', site_id: siteId }));
+        } catch (e) {
+            console.error(JSON.stringify({
+                event: 'site_update_core_compensation_failed',
+                site_id: siteId,
+                sent: sent,
+                pre_image: pre,
+                original_error: originalErr && originalErr.message,
+                compensation_error: e && e.message
+            }));
+        }
+    },
+
+    updateInCoreAPI: async function(data, idToken, timeoutMs) {
         let body = {}
         data.name !== undefined && (body.name = data.name)
         data.lat !== undefined && (body.latitude = data.lat)
@@ -667,6 +761,8 @@ var Sites = {
         const options = {
             method: 'PATCH',
             url: `${coreApiBaseUrl()}/internal/arbimon/streams/${data.site_id}`,
+            // Bounded: this runs INSIDE an open legacy transaction (row locks held). 2026-09-26.
+            timeout: timeoutMs || Sites.CORE_PATCH_TIMEOUT_MS,
             headers: {
                 'content-type': 'application/json',
                 Authorization: `Bearer ${idToken}`,
@@ -1084,6 +1180,26 @@ var Sites = {
 
         queryHandler(q, callback);
     }
+};
+
+// Cross-plane budgets for updateSite (2026-09-26). Asymmetric on purpose, as in bio-api's project
+// delete chain: the forward legs run while legacy row locks are held; compensation runs after the
+// rollback and holds none, so it may wait longer.
+Sites.CORE_PREIMAGE_TIMEOUT_MS = 10000;
+Sites.CORE_PATCH_TIMEOUT_MS = 10000;
+Sites.CORE_COMPENSATION_TIMEOUT_MS = 30000;
+
+/**
+ * A failure that may have COMMITTED in core: timeout / connection dropped / no response. A clean
+ * rejection (core answered with an error body) committed nothing. Card 20260916-arbimon-app-013:
+ * treating a timeout as "not committed" re-creates the divergence compensation exists to prevent.
+ */
+Sites.isAmbiguousCoreFailure = function (e) {
+    if (!e) return false;
+    const codes = ['ETIMEDOUT', 'ESOCKETTIMEDOUT', 'ECONNABORTED', 'ECONNRESET', 'EPIPE'];
+    if (codes.indexOf(e.code) !== -1) return true;
+    if (e.cause && codes.indexOf(e.cause.code) !== -1) return true;
+    return false;
 };
 
 module.exports = Sites;
