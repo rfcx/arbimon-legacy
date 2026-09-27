@@ -332,7 +332,15 @@ router.post('/:projectUrl/info/update', function(req, res, next) {
             // never call `callback`, so the waterfall simply stops there and this step does not
             // run -- that shape is preserved, and the headersSent guard below keeps a late
             // rejection from ever answering twice (ERR_HTTP_HEADERS_SENT).
-            model.projects.updateProjectInArbimonAndCoreAPI(newProjectInfo, req.session.idToken)
+            // Session-less callers (the SPA, via biodiversity-api) send `Authorization: Bearer <jwt>`
+            // and no legacy session. Until 2026-09-26 this passed req.session.idToken (undefined), core
+            // answered 401 and the model swallowed it: 3 of 3 renames in 7 d reached core as 401, and
+            // 202 live projects carry a stale core name. Same resolution as the site routes; the model
+            // adds the 'Bearer ' prefix itself, so pass the BARE jwt (rfcx-local OWED-2026-09-13 §1).
+            var renameToken = req.session.idToken === undefined
+                ? (req.headers.authorization || '').split(' ')[1]
+                : req.session.idToken;
+            model.projects.updateProjectInArbimonAndCoreAPI(newProjectInfo, renameToken)
                 .then(function() {
                     var url = urlChanged ? newProjectInfo.url : undefined;
                     if (res.headersSent) { return; }
