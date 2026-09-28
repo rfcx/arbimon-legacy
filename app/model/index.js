@@ -20,5 +20,4 @@ exports.AudioEventDetectionsClustering = require('./audio-event-detections-clust
 exports.ClusteringJobs = require('./clustering-jobs');
 exports.tiering         = require('./tiering');
 exports.oauth           = require('./oauth');
-exports.AdminPlots      = require('./admin-plots');
 exports.CitizenScientist = require('./citizen-scientist');
