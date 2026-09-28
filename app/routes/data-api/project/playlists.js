@@ -2,6 +2,7 @@ var debug = require('debug')('arbimon2:route:playlists');
 var express = require('express');
 var router = express.Router();
 var model = require('../../../model');
+var projectScope = require('../../../utils/project-scope');
 
 /** Return a list of all the playlists in a project.
  */
@@ -218,15 +219,36 @@ router.post('/:playlist/aed', function(req, res, next) {
 });
 
 /** Return a playlist's data on the Visualizer page.
+ *
+ * Body ids (`recordings`) must each be owned by req.project (§391 class); `:playlist` is
+ * bound by the scoped router.param above.
+ * project-scope: guard
+ * The body-driven branch (the temporary clustering playlist, `/visualizer/playlist/0?clusters`)
+ * skips the playlist loader and model.playlists.fetchData resolves each id with
+ * findByUrlMatch(..., null) -- no project constraint. Until 2026-09-28 a member of ANY
+ * project could therefore read ANY recording's metadata (incl. private projects') by
+ * POSTing {recordings:[id]} here; measured live on prod. Unowned ids now 404, the
+ * same verdict an unknown playlist gets.
  */
  router.post('/:playlist', function(req, res, next) {
     res.type('json');
-    model.playlists.fetchData(req.playlist, req.body, function(err, data) {
-        if(err) return next(err);
+    var body = req.body || {};
+    var ids = body.recordings === undefined || body.recordings === null ? null : [].concat(body.recordings);
+    var guard = ids === null ? Promise.resolve(true) : (ids.length === 0 ? Promise.resolve(true) :
+        Promise.all(ids.map(function (id) {
+            return projectScope.ownedByProject('recording', id, req.project.project_id);
+        })).then(function (verdicts) { return verdicts.every(Boolean); }));
+    guard.then(function (owned) {
+        if (!owned) {
+            return res.status(404).json({ error: 'recording not found' });
+        }
+        model.playlists.fetchData(req.playlist, body, function(err, data) {
+            if(err) return next(err);
 
-        res.json(data);
-        return null;
-    });
+            res.json(data);
+            return null;
+        });
+    }).catch(next);
 });
 
 module.exports = router;

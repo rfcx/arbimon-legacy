@@ -14,6 +14,8 @@ angular.module('a2.audiodata.playlists', [
     });
 })
 .controller('PlaylistCtrl', function($scope, a2Playlists, $modal, notify, a2UserPermit, $location, Project) {
+    // For the SPA visualizer link ("View Region"), 2026-09-28.
+    $scope.projectUrl = Project.getUrl();
     $scope.totalPlaylists = 0;
     Project.getInfo(function(info) {
         $scope.bioAnalyticsBaseUrl = info.bioAnalyticsBaseUrl

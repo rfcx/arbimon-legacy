@@ -83,7 +83,7 @@
                             Type : {{selected.type}}
                         </span>
                         <div ng-if="selected.soundscape">
-                            <a class="btn btn-primary btn-rounded-full mt-4" ng-href="{{'/visualizer/soundscape/' + selected.soundscape + '/' + selected.region | projectUrl}}">View Region</a>
+                            <a class="btn btn-primary btn-rounded-full mt-4" ng-href="{{'/p/' + projectUrl + '/visualizer/soundscape/' + selected.soundscape + '/' + selected.region}}" target="_self">View Region</a>
                         </div>
                     </div>
                     <div class="ml-3" ng-if="selected.soundscape">

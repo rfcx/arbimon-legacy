@@ -1078,9 +1078,10 @@ angular.module('a2.analysis.random-forest-models.models', [
         $scope.selected = null;
     };
 
+    // Opens the SPA visualizer (2026-09-28). $location.path resolved against this
+    // page's /project/<slug>/ base and landed on the LEGACY visualizer.
     $scope.gotoRec = function() {
-        var rurl = "/visualizer/rec/" + $scope.selected.id;
-        $location.path(rurl);
+        $window.location.href = '/p/' + Project.getUrl() + '/visualizer/rec/' + $scope.selected.id;
     };
 })
 
