@@ -733,6 +733,23 @@ var Recordings = {
      * Arbimon-based recordings are uploaded into buckets with similar naming (e.g. project_123, project_3, etc...)
      * @param {*} recording object containing the recording's data, like the ones returned in findByUrlMatch.
      */
+    /**
+     * Visualizer playback speed as a media-api `x` percentage (rfcx-local 2026-09-28).
+     * Accepts a whole-number percentage 5..1600 (the UI range; media-api itself accepts 1..1600) and returns
+     * it as a Number; anything else (absent, 100, non-integer, out of range, arrays from repeated query
+     * params) returns 100 = original speed. Silent fallback on purpose: a bad `?speed=` must never break
+     * playback, and 100 is exactly today's behaviour.
+     */
+    SPEED_MIN: 5,
+    SPEED_MAX: 1600,
+    parseSpeed: function(raw) {
+        if (typeof raw !== 'string' && typeof raw !== 'number') return 100
+        const s = String(raw)
+        if (!/^[1-9][0-9]{0,3}$/.test(s)) return 100
+        const n = Number(s)
+        return (n >= Recordings.SPEED_MIN && n <= Recordings.SPEED_MAX) ? n : 100
+    },
+
     isLegacy: function(recording) {
         return recording.uri.startsWith('project_')
     },
@@ -786,6 +803,9 @@ var Recordings = {
         const isGain = options && options.gain
         const isTrim = options && options.trim
         const isFormat = options && options.format
+        // Playback speed (rfcx-local 2026-09-28): media-api `x<int %>` (rfcx/rfcx-api #699; x path limits #700).
+        // Audio only; x100/absent => no token, so every existing media-api URL and cache key is unchanged.
+        const speed = type === 'audio' ? Recordings.parseSpeed(options && options.speed) : 100
         if (isFrequency) {
             fmin = Math.min((options.minFreq / freqFilterPrecision) * freqFilterPrecision, 22049).toFixed()
             fmax = Math.min((options.maxFreq / freqFilterPrecision) * freqFilterPrecision, 22049).toFixed()
@@ -820,7 +840,7 @@ var Recordings = {
                 asset = `rfull_g1_fspec_mtrue_d${Recordings.specWidthForDuration(recording.duration)}.255_wdolph_z120.png`
                 break;
             case 'audio':
-                asset = `r${isFrequency ? fmin + '.' + fmax : 'full'}_g${isGain ? options.gain : 1}_${isFormat ? 'fwav.wav' : 'fmp3.mp3'}`
+                asset = `r${isFrequency ? fmin + '.' + fmax : 'full'}_g${isGain ? options.gain : 1}${speed !== 100 ? '_x' + speed : ''}_${isFormat ? 'fwav.wav' : 'fmp3.mp3'}`
                 break;
             case 'template':
                 asset = `r${fmin}.${fmax}_g1_fspec_mtrue_d400.400_wdolph_z120.png`

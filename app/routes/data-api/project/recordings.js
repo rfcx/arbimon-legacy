@@ -795,7 +795,12 @@ router.get('/:get/:oneRecUrl?', function(req, res, next) {
                 });
             });
         break;
-        case 'audio'     : model.recordings.fetchAudioFile(recording, query, returnType.file); break;
+        case 'audio'     :
+            // `speed` is honoured only for media-api (non-legacy) recordings; the legacy (S3 + local
+            // transcode) path ignores it and serves the original, and the SPA disables the control for them.
+            // Download never comes here (the visualizer's Download uses /recordings/download-wav/:id, which does
+            // not read `speed`), so downloads stay at the original speed (operator 2026-09-28).
+            model.recordings.fetchAudioFile(recording, query, returnType.file); break;
         case 'image'     : model.recordings.fetchSpectrogramFile(recording, returnType.file); break;
         case 'thumbnail' : model.recordings.fetchThumbnailFile(recording, returnType.file); break;
         case 'find'      : returnType.recording(null, [recording]); break;
