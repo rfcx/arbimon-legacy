@@ -722,21 +722,51 @@ router.post('/:projectUrl/remove', function(req, res, next) {
     next(new APIError('This endpoint has been retired. Delete a project from the project settings page.', 410));
 });
 
+// SUPER-USER SOFT DELETE OF A SMALL PROJECT (operator 2026-09-28 08:53, option
+// (a); rfcx-local runbooks/DESIGN-2026-09-28-admin-super-soft-delete-and-admin-guard.md).
+//
+// NARROWS, does not reverse, the 2026-09-15 23:34 owner-only ruling: a BARE super
+// (not masquerading -- the masquerade swap pins isSuper to 0, so a masquerading
+// super never reaches this branch) may soft-remove / soft-restore a project with
+// FEWER THAN SUPER_DELETE_MAX_RECORDINGS non-archived recordings. The count is the
+// same one /tiering-usage serves (model.tiering.getProjectTieringUsage), which is
+// also what bio-api's /super/projects/:id DELETE checks before it calls this leg.
+// Re-checked HERE so a super bearer cannot soft-remove a LARGE project on legacy
+// alone (the 20-May divergence class). Fails CLOSED: any error reading the count
+// is a refusal. haveAccess itself is untouched (it is synchronous and its
+// 'delete project' exclusion is ratcheted by test/project-delete-owner-only.test.js).
+const SUPER_DELETE_MAX_RECORDINGS = 100;
+
+function superMaySoftDelete(req) {
+    if (!(req.session && req.session.user && req.session.user.isSuper === 1)) {
+        return Promise.resolve(false);
+    }
+    return model.tiering.getProjectTieringUsage(req.project.project_id)
+        .then(function(usage) {
+            var n = Number(usage && usage.recordingMinutesCount);
+            return Number.isFinite(n) && n < SUPER_DELETE_MAX_RECORDINGS;
+        })
+        .catch(function() { return false; });
+}
+
 router.post('/:projectUrl/soft-remove', function(req, res, next) {
     res.type('json');
 
-    if(!req.haveAccess(req.project.project_id, 'delete project')) {
-        next(new APIError('You do not have permission to delete this project'));
-        return;
-    }
-    const idToken = req.headers.authorization?.split(' ')[1];
-    model.projects.removeProject({
-        project_id: req.project.project_id,
-        idToken: req.session.idToken === undefined ? idToken : req.session.idToken,
-        // See the `/remove` route above: `user.id`, not `user_id`.
-        deleted_by: req.session.user && req.session.user.id
-    }).then(function() {
-        res.json({ message: 'Removed' });
+    const isOwnerPath = req.haveAccess(req.project.project_id, 'delete project');
+    (isOwnerPath ? Promise.resolve(true) : superMaySoftDelete(req)).then(function(allowed) {
+        if(!allowed) {
+            next(new APIError('You do not have permission to delete this project'));
+            return;
+        }
+        const idToken = req.headers.authorization?.split(' ')[1];
+        return model.projects.removeProject({
+            project_id: req.project.project_id,
+            idToken: req.session.idToken === undefined ? idToken : req.session.idToken,
+            // See the `/remove` route above: `user.id`, not `user_id`.
+            deleted_by: req.session.user && req.session.user.id
+        }).then(function() {
+            res.json({ message: 'Removed' });
+        });
     }).catch(next);
 });
 
@@ -764,15 +794,20 @@ router.post('/:projectUrl/soft-remove', function(req, res, next) {
 router.post('/:projectUrl/soft-restore', function(req, res, next) {
     res.type('json');
 
-    if(!req.haveAccess(req.project.project_id, 'delete project')) {
-        next(new APIError('You do not have permission to delete this project'));
-        return;
-    }
-    model.projects.restoreLegacy(req.project.project_id).then(function(restored) {
-        // `restored` is the affected-row count. 0 means the project was not
-        // soft-deleted — for a compensation call that is already the desired
-        // end state, so it is reported, not errored.
-        res.json({ message: 'Restored', restored: restored });
+    // Same predicate as soft-remove, so bio-api can always COMPENSATE a super's
+    // small-project delete (leg 2) if a later leg fails.
+    const isOwnerPath = req.haveAccess(req.project.project_id, 'delete project');
+    (isOwnerPath ? Promise.resolve(true) : superMaySoftDelete(req)).then(function(allowed) {
+        if(!allowed) {
+            next(new APIError('You do not have permission to delete this project'));
+            return;
+        }
+        return model.projects.restoreLegacy(req.project.project_id).then(function(restored) {
+            // `restored` is the affected-row count. 0 means the project was not
+            // soft-deleted — for a compensation call that is already the desired
+            // end state, so it is reported, not errored.
+            res.json({ message: 'Restored', restored: restored });
+        });
     }).catch(next);
 });
 
