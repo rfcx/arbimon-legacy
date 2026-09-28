@@ -5,7 +5,6 @@ var express = require('express');
 var router = express.Router();
 
 var project = require('./project');
-var spaVisualizerUrl = require('../utils/spa-visualizer-url');
 var dataApi = require('./data-api');
 var login = require('./login');
 var acmeChallenge = require('./acme-challenge');
@@ -50,15 +49,14 @@ router.get(['/project/:projectUrl/audiodata/species'], function(req, res) {
     res.redirect(`/p/${req.params.projectUrl}/audiodata/species`);
 });
 
-// Legacy visualizer URLs -> the SPA visualizer (2026-09-28, rfcx-local; first
-// written as #1697 in 2026-01 and commented out while the SPA reached parity).
-// Path AND query are preserved (`/rec/<id>?gain=&a=&clusters` all read by the SPA).
-// Old bookmarks, emails, arbimon.rfcx.org links and stored species-call URLs all
-// land here. 302, not 301: the rollback is deleting this block, and a cached 301
-// would outlive it.
-router.get(['/project/:projectUrl/visualizer', '/project/:projectUrl/visualizer/*'], function(req, res) {
-    res.redirect(302, spaVisualizerUrl(req.params.projectUrl, req.params[0], req.originalUrl));
-});
+// NOT redirected (operator 2026-09-28): the legacy visualizer at
+// /project/<slug>/visualizer stays reachable for anyone who types or keeps that
+// URL. Only the app's own LINKS were moved to /p/<slug>/visualizer. Guarded by
+// test/visualizer-legacy-not-redirected.test.js.
+// router.get(['/project/:projectUrl/visualizer*'], function(req, res) {
+//     const rest = req.params[0] || ''
+//     res.redirect(`/p/${req.params.projectUrl}/visualizer${rest}`)
+// });
 
 router.get('/projects/:externalId', async (req, res) => {
     try {
