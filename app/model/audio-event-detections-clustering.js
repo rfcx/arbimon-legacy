@@ -127,11 +127,22 @@ let AudioEventDetectionsClustering = {
         ]) : Promise.resolve();
     },
 
+    // rfcx-local 2026-09-28 (#1981 sandbox E2E, finding F1): the four values used to be
+    // INTERPOLATED, and /unvalidate called this with three arguments, so the statement read
+    // `validated = undefined` -> PG 42703 "column undefined does not exist" -> every
+    // un-validate 500'd (own data included). Values are now BOUND and `undefined` is
+    // normalised to NULL (= "cleared", what the un-validate path means). An empty id list is
+    // a no-op instead of `IN ()` (a syntax error).
     validateDetections(aed, speciesId, songtypeId, validated) {
-        const q = `UPDATE audio_event_detections_clustering
-            SET species_id = ${speciesId}, songtype_id = ${songtypeId}, validated = ${validated}
-            WHERE aed_id IN (${aed})`
-        return dbpool.query(q)
+        const ids = [].concat(aed === undefined || aed === null ? [] : aed);
+        if (!ids.length) { return Promise.resolve({ affectedRows: 0 }); }
+        const orNull = (v) => (v === undefined ? null : v);
+        return dbpool.query(
+            'UPDATE audio_event_detections_clustering\n' +
+            '    SET species_id = ?, songtype_id = ?, validated = ?\n' +
+            '    WHERE aed_id IN (?)',
+            [orNull(speciesId), orNull(songtypeId), orNull(validated), ids]
+        );
     },
 
     getAedValidation: async function(opts) {
