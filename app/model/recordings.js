@@ -1069,6 +1069,7 @@ var Recordings = {
     downloadAssetFromMediaAPI: function(recording, type, options, destFile, callback) {
         let done = false;
         let ws = null;
+        let refused = null; // a media-api 400 whose reason is still being read
         const finish = function(err) {
             if (done) return;
             done = true;
@@ -1100,9 +1101,9 @@ var Recordings = {
                     // 400 = media-api REFUSED the request (a limit, e.g. playback speed x window). Read a bounded
                     // slice of its JSON reason so the route can answer 400 with it instead of a generic 500
                     // (rfcx-local 2026-09-28). Never cached: finish(e) unlinks the partial dest file.
-                    // The body must not reach the cache file, and the write stream's 'close' must not report
-                    // success first: stop the pipe and close the file as a failure before reading.
-                    if (ws) { res.unpipe(ws); ws.removeAllListeners('close'); }
+                    // `request`'s stream has no unpipe(): the error body may still be written to the cache file,
+                    // so its 'close' must NOT report success -- the error decides, and finish(e) unlinks the file.
+                    refused = e;
                     let body = '';
                     response.on('data', function(chunk) { if (body.length < 2048) body += chunk.toString('utf8'); });
                     response.on('error', function() { finish(e); });
@@ -1115,7 +1116,7 @@ var Recordings = {
             });
             ws = fs.createWriteStream(destFile);
             ws.on('error', finish);
-            ws.on('close', function() { finish(null); });
+            ws.on('close', function() { if (!refused) finish(null); });
             res.pipe(ws);
         }).catch(finish);
     },

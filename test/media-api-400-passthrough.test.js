@@ -29,7 +29,7 @@ describe('media-api 400 pass-through (audio)', function () {
         server.listen(0, '127.0.0.1', function () { port = server.address().port; done(); });
         origGet = recordings.getAssetFileFromMediaAPI;
         // same request() stream as prod, pointed at the fake; no auth0 round-trip
-        const request = require('request');
+        const request = require(require.resolve('request', { paths: [path.join(__dirname, '..'), '/app'] }));
         recordings.getAssetFileFromMediaAPI = async function () { return request({ method: 'GET', url: `http://127.0.0.1:${port}/x`, json: true }); };
     });
     after(function (done) { recordings.getAssetFileFromMediaAPI = origGet; server.close(done); });
