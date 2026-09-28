@@ -152,6 +152,13 @@ async function downloadTemplateAudio (results) {
             console.log('fetchAudioFileAsync audio.path, newName', audio.path, saved_filename)
             fs.renameSync(audio.path, newName);
             console.log('fetchAudioFileAsync renamed')
+            // tmpfilecache now hands each caller its OWN hard link (audio.path) and
+            // keeps the shared original at audio.cachePath. Renaming the link used
+            // to consume the only copy; drop the original too so the job's /tmp does
+            // not accumulate one orphan per exported template (rfcx-local §420).
+            if (audio.cachePath && audio.cachePath !== audio.path && audio.cachePath !== newName) {
+              try { fs.unlinkSync(audio.cachePath) } catch (_) {}
+            }
           })
         } catch (err) {
           console.log('Err download template audio.', err)

@@ -742,7 +742,11 @@ var Recordings = {
      * @param {Object} recording.uri url containing the recording's path in the bucket.
      * @param {Function} callback(err, path) function to call back with the recording's path.
      */
-    fetchRecordingFile: async function(recording, callback){
+    fetchRecordingFile: async function(recording, callback, opts){
+        // `opts.ownLink` (2026-09-28): a caller that DELETES the raw file after
+        // use (fetchAudioFile's render paths below) must get its own link, or
+        // its unlink would remove the shared raw file from under a concurrent
+        // reader (fetchInfo, a sibling render).
         tmpfilecache.fetch(recording.uri, async (cache_miss) => {
             if(!s3 || !s3RFCx){
                 defineS3Clients()
@@ -756,12 +760,12 @@ var Recordings = {
             await s3Client.getObject(opts, function(err, data){
                 if (err) {
                     console.log('Err s3Client getObject', err);
-                    callback(err);
+                    cache_miss.resolveWaiting(err);
                     return;
                 }
                 cache_miss.set_file_data(data.Body);
             });
-        }, callback);
+        }, callback, opts && opts.ownLink ? { ownLink: true } : undefined);
     },
 
     /** Builds the CONTENT-ADDRESSED media-api asset name ("attr") for a
@@ -1107,7 +1111,7 @@ var Recordings = {
             tmpfilecache.fetch(audio_key, function(cache_miss) {
                 Recordings.fetchRecordingFile(recording, async function(err, recording_path){
                     if (err) {
-                        callback(err);
+                        cache_miss.resolveWaiting(err);
                         return;
                     }
                     // Get an audio file from the Media API for the non-legacy recordings.
@@ -1116,11 +1120,11 @@ var Recordings = {
                     // the cache key with partial bytes.
                     Recordings.downloadAssetFromMediaAPI(recording, 'audio', options, cache_miss.file, function (err) {
                         fs.unlink(recording_path.path, () => {})
-                        if (err) { callback(err); return; }
+                        if (err) { cache_miss.resolveWaiting(err); return; }
                         cache_miss.retry_get()
                     })
-                });
-            }, callback);
+                }, { ownLink: true });
+            }, callback, { ownLink: true }); // callers serve-then-unlink (see tmpfilecache)
             return;
         }
 
@@ -1163,7 +1167,7 @@ var Recordings = {
 
         var ifMissedGetFile = function(cache_miss) {
             Recordings.fetchRecordingFile(recording, function(err, recording_path){
-                if(err) return callback(err);
+                if(err) return cache_miss.resolveWaiting(err);
 
                 var transcode_args = {
                     sample_rate: recording.sample_rate ? recording.sample_rate : 44100,
@@ -1188,15 +1192,15 @@ var Recordings = {
                     function(status_code){
                         fs.unlink(recording_path.path, () => {}) // delete original file
                         if(status_code) {
-                            return callback({ code: status_code });
+                            return cache_miss.resolveWaiting({ code: status_code });
                         }
                         cache_miss.retry_get();
                     }
                 );
-            });
+            }, { ownLink: true });
         };
         var mp3FilePath = recording.uri.replace(audioFilePattern, mp3Extension);
-        return Q.denodeify(tmpfilecache.fetch.bind(tmpfilecache))(mp3FilePath, ifMissedGetFile).nodeify(callback);
+        return Q.denodeify(function(k, miss, cb){ tmpfilecache.fetch(k, miss, cb, { ownLink: true }) })(mp3FilePath, ifMissedGetFile).nodeify(callback);
         // TODO: add condition for the output format: mp3 OR original extension
         // return Q.denodeify(tmpfilecache.fetch.bind(tmpfilecache))(recording.uri, ifMissedGetFile).nodeify(callback);
     },
@@ -1220,7 +1224,7 @@ var Recordings = {
             : Recordings.buildAssetCacheKey(recording, Recordings.buildMediaApiAttr(recording, 'spectro', {}), '.png');
         tmpfilecache.fetch(spectrogram_key, function(cache_miss){
             Recordings.fetchRecordingFile(recording, async function(err, recording_path){
-                if(err) { callback(err); return; }
+                if(err) { cache_miss.resolveWaiting(err); return; }
                 // Get the spectrogram file from the Media API for the non-legacy recordings
                 const isLegacy = Recordings.isLegacy(recording)
                 if (isLegacy) {
@@ -1231,18 +1235,18 @@ var Recordings = {
                         ...recording.contrast && { contrast: recording.contrast },
                         ...recording.spectroColor && { spectroColor: recording.spectroColor },
                     },function(status_code){
-                        if(status_code) { callback({code:status_code}); return; }
+                        if(status_code) { cache_miss.resolveWaiting({code:status_code}); return; }
                         cache_miss.retry_get();
                     });
                 } else {
                     // Error-handled helper (§1796) — see downloadAssetFromMediaAPI.
                     Recordings.downloadAssetFromMediaAPI(recording, 'spectro', {}, cache_miss.file, function (err) {
-                        if (err) { callback(err); return; }
+                        if (err) { cache_miss.resolveWaiting(err); return; }
                         cache_miss.retry_get()
                     })
                 }
             });
-        }, callback);
+        }, callback, { ownLink: true }); // every caller deletes its path (image route, templates/training-set crops, tiles)
     },
 
     fetchTemplateFile: function (recording, options, callback) {
@@ -1252,10 +1256,10 @@ var Recordings = {
         const template_key = Recordings.buildAssetCacheKey(recording, Recordings.buildMediaApiAttr(recording, 'template', options), '.png');
         tmpfilecache.fetch(template_key, function(cache_miss){
             Recordings.fetchRecordingFile(recording, async function(err, recording_path){
-                if(err) { callback(err); return; }
+                if(err) { cache_miss.resolveWaiting(err); return; }
                 // Error-handled helper (§1796) — see downloadAssetFromMediaAPI.
                 Recordings.downloadAssetFromMediaAPI(recording, 'template', options, cache_miss.file, function (err) {
-                    if (err) { callback(err); return; }
+                    if (err) { cache_miss.resolveWaiting(err); return; }
                     cache_miss.retry_get()
                 })
             });
@@ -1291,7 +1295,16 @@ var Recordings = {
                 }
                 Recordings.fetchSpectrogramFile(recording, function(err, specFile){
                     if (err) return next(err);
-                    tyler(specFile.path, isLegacy, next);
+                    // tyler names the tiles after the file it reads, and
+                    // fetchOneSpectrogramTile looks them up under the CACHE
+                    // hash: read the shared cache path, not this request's
+                    // per-caller link (tmpfilecache 2026-09-27), then drop
+                    // the link -- this caller never serves the PNG itself.
+                    const specPath = specFile.cachePath || specFile.path;
+                    tyler(specPath, isLegacy, function(err, tiles, tiledPath){
+                        if (specFile.cachePath && specFile.path !== specFile.cachePath) { fs.unlink(specFile.path, () => {}); }
+                        next(err, tiles, tiledPath);
+                    });
                 });
             },
             function(specTiles, specFile, next){
@@ -1488,10 +1501,10 @@ var Recordings = {
         var tile_key = recording.uri.replace(audioFilePattern, '.tile_'+j+'_'+i+'.png');
         tmpfilecache.fetch(tile_key, function(cache_miss){
             Recordings.fetchSpectrogramTiles(recording, function(err, recording){
-                if(err) { callback(err); return; }
+                if(err) { cache_miss.resolveWaiting(err); return; }
                 cache_miss.retry_get();
             });
-        }, callback);
+        }, callback, { ownLink: true }); // the tiles route serves then unlinks
     },
 
     /** Returns the thumbnail file of a given recording.
@@ -1503,17 +1516,17 @@ var Recordings = {
         var thumbnail_key = recording.uri.replace(audioFilePattern, '.thumbnail.png');
         tmpfilecache.fetch(thumbnail_key, function(cache_miss){
             Recordings.fetchRecordingFile(recording, function(err, recording_path){
-                if(err) { callback(err); return; }
+                if(err) { cache_miss.resolveWaiting(err); return; }
                 audioTools.spectrogram(recording_path.path, cache_miss.file, {
                     maxfreq   : 15000,
                     pixPerSec : (7),
                     height    : (153)
                 },function(status_code){
-                    if(status_code) { callback({code:status_code}); return; }
+                    if(status_code) { cache_miss.resolveWaiting({code:status_code}); return; }
                     cache_miss.retry_get();
                 });
             });
-        }, callback);
+        }, callback, { ownLink: true }); // the thumbnail route serves then unlinks
     },
 
     /** Validates a recording.
