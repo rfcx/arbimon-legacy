@@ -525,6 +525,10 @@ angular.module('a2.analysis.patternmatching', [
                 notify.log("Your new pattern matching is waiting to start processing.<br> Check its status on <b>Jobs</b>.");
             } else if (data.error) {
                 notify.error("Error: "+data.error);
+            } else if (data.url === '/visualizer') {
+                // The SPA visualizer (2026-09-28): $location.path would resolve
+                // against /project/<slug>/ and open the LEGACY one.
+                $window.location.href = '/p/' + Project.getUrl() + '/visualizer';
             } else if (data.url) {
                 $location.path(data.url);
             }

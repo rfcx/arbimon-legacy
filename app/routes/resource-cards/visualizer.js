@@ -27,7 +27,8 @@ module.exports.rec = function (project, appUrl, url) {
 
         return {
             name: recording.site + " " + recording.datetime,
-            url : appUrl + 'visualizer/rec/' + recording.id,
+            // The SPA visualizer (2026-09-28), not the legacy /project/ one.
+            url : (appUrl.split('/project/')[0]) + '/p/' + project.url + '/visualizer/rec/' + recording.id,
             image : {
                 fb : recording.thumbnail
             },
