@@ -837,6 +837,17 @@ var Sites = {
                             `sites delete exceeded its ${LOOP_BUDGET_MS}ms budget after ${done}/${total} sites`
                         );
                     }
+                    // Body/query-id audit W1 (2026-09-28): an IMPORTED site is another
+                    // project's -- "removing" it only un-imports it (removeFromProject's
+                    // else-branch). The archive / template / core-stream steps below are
+                    // for this project's OWN sites and must never touch someone else's.
+                    const ownerRows = await dbpool.queryWithConn(db, 'SELECT project_id FROM sites WHERE site_id = ?', [site_id]);
+                    const ownerRow = Array.isArray(ownerRows) ? ownerRows[0] : null;
+                    if (!ownerRow || Number(ownerRow.project_id) !== Number(project_id)) {
+                        await this.removeFromProjectAsync(site_id, project_id, db);
+                        done++;
+                        continue;
+                    }
                     const validationIds = await this.getRecordingValidationBySiteId(site_id)
                     if (validationIds.length) {
                         await this.resetRecValidationById(project_id, validationIds.map(v => v.recording_validation_id), connection)

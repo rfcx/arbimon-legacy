@@ -357,6 +357,18 @@ router.post('/new', function(req, res, next) {
             throw new Error("You don't have permission to run pattern matchings");
         }
     }).then(function(){
+        // Body/query-id audit W8 (2026-09-28): the job is created in the
+        // PLAYLIST's project; the playlist and template were never checked. The
+        // playlist must be this project's; the template this project's or a
+        // PUBLIC original (the existing 'template' guard rule).
+        return Promise.all([
+            projectScope.ownedByProject('playlist', req.body.playlist, project_id),
+            projectScope.ownedByProject('template', req.body.template, project_id)
+        ]).then(function(v) {
+            if (!v[0]) { var e1 = new Error('Playlist not found'); e1.status = 404; throw e1; }
+            if (!v[1]) { var e2 = new Error('Template not found'); e2.status = 404; throw e2; }
+        });
+    }).then(function(){
         return model.patternMatchings.requestNewPatternMatchingJob({
             project    : project_id,
             user       : req.session.user,
