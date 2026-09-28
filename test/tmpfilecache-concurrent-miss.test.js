@@ -42,7 +42,12 @@ async function test(name, fn) {
     catch (e) { failed++; results.push('FAIL ' + name + '\n     ' + String(e && e.message).split('\n')[0].slice(0, 300)); }
 }
 
+// The serve-then-unlink callers (asset routes, export job) opt in to their own link.
 const fetchP = (key, onmiss) => new Promise((resolve) => {
+    cache.fetch(key, onmiss, (err, data) => resolve({ err, data }), { ownLink: true });
+});
+// Internal readers that KEEP the file (fetchInfo, render inputs, scidx) use the default.
+const fetchShared = (key, onmiss) => new Promise((resolve) => {
     cache.fetch(key, onmiss, (err, data) => resolve({ err, data }));
 });
 // The route's exact tail: read the file (sendFile), THEN unlink the path it was given.
@@ -160,6 +165,23 @@ const slowMiss = (body, ms, counter) => (miss) => {
         const tileName = /(.+)\.png$/.exec(r.data.cachePath)[1] + '.tile_0_0.png';
         assert.strictEqual(tileName, cache.key2File('rec-tiles.tile_0_0.png'), 'tile name derived from cachePath == the key fetchOneSpectrogramTile looks up');
         fs.unlinkSync(r.data.path);
+    });
+
+    await test('default (no ownLink): the SHARED path, no extra link left behind (internal readers)', async () => {
+        const c = { n: 0 };
+        const r = await fetchShared('rec-shared.wav', slowMiss('RAW', 5, c));
+        assert.strictEqual(r.data.path, cache.key2File('rec-shared.wav'));
+        const stem = path.basename(cache.key2File('rec-shared.wav'), '.wav');
+        const names = fs.readdirSync(dir).filter((f) => f.indexOf(stem) !== -1);
+        assert.deepStrictEqual(names, [path.basename(r.data.path)], 'only the cache file itself: ' + names.join(','));
+        assert.strictEqual(fs.statSync(r.data.path).nlink, 1);
+    });
+
+    await test('default callers still JOIN an in-flight render (render once)', async () => {
+        const c = { n: 0 };
+        const rs = await Promise.all([0, 1, 2].map(() => fetchShared('rec-shared-once.wav', slowMiss('ONE', 30, c))));
+        assert.ok(rs.every((r) => r.data && r.data.path === cache.key2File('rec-shared-once.wav')));
+        assert.strictEqual(c.n, 1, 'rendered ' + c.n + 'x');
     });
 
     await test('the handed-out path keeps the cache file extension (Content-Type / filename depend on it)', async () => {

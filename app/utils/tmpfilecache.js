@@ -112,7 +112,7 @@ var cache = {
         });
     },
 
-    fetch: function(key, oncachemiss, callback){
+    fetch: function(key, oncachemiss, callback, opts){
         // rfcx-local 2026-09-27 (FINDING-2026-09-27-prc-autogain-concurrent-legacy-audio):
         // every caller SERVES the file and then UNLINKS the path it was handed
         // (res.sendFile -> fs.unlink). With one shared path per key, two
@@ -128,15 +128,22 @@ var cache = {
         //      callback without resolving the miss, so an unbounded join could
         //      hang every later request for that key. Past the bound the entry
         //      is dropped and this request renders for itself (the old path).
-        //  (2) EVERY caller gets its own path: a hard link to the cached bytes
-        //      (same dir, same filesystem, O(1), no copy). A caller's unlink
-        //      removes only its own link; the bytes live until the last goes.
+        //  (2) a caller that DELETES what it is handed (serve-then-unlink: the
+        //      asset routes, the export job) asks for its OWN path with
+        //      `{ ownLink: true }`: a hard link to the cached bytes (same dir,
+        //      same filesystem, O(1), no copy), so its unlink removes only its own
+        //      name. OPT-IN, not default (IRR 2026-09-28): internal readers that
+        //      KEEP the shared file (fetchInfo, spectrogram/thumbnail renders
+        //      reading the raw recording, scidx reads) would otherwise leave one
+        //      extra link per call until the 24 h sweep.
         var self = this;
-        var userCallback = callback;
-        callback = function(err, data){
-            if (err || !data || !data.path) { return userCallback(err, data); }
-            cache.linkForCaller(data, userCallback);
-        };
+        if (opts && opts.ownLink) {
+            var userCallback = callback;
+            callback = function(err, data){
+                if (err || !data || !data.path) { return userCallback(err, data); }
+                cache.linkForCaller(data, userCallback);
+            };
+        }
         var inflight = filesProcessing[key];
         if (inflight) {
             var left = cache.joinTimeoutMs() - (Date.now() - (filesProcessingSince[key] || 0));

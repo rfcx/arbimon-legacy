@@ -742,7 +742,11 @@ var Recordings = {
      * @param {Object} recording.uri url containing the recording's path in the bucket.
      * @param {Function} callback(err, path) function to call back with the recording's path.
      */
-    fetchRecordingFile: async function(recording, callback){
+    fetchRecordingFile: async function(recording, callback, opts){
+        // `opts.ownLink` (2026-09-28): a caller that DELETES the raw file after
+        // use (fetchAudioFile's render paths below) must get its own link, or
+        // its unlink would remove the shared raw file from under a concurrent
+        // reader (fetchInfo, a sibling render).
         tmpfilecache.fetch(recording.uri, async (cache_miss) => {
             if(!s3 || !s3RFCx){
                 defineS3Clients()
@@ -761,7 +765,7 @@ var Recordings = {
                 }
                 cache_miss.set_file_data(data.Body);
             });
-        }, callback);
+        }, callback, opts && opts.ownLink ? { ownLink: true } : undefined);
     },
 
     /** Builds the CONTENT-ADDRESSED media-api asset name ("attr") for a
@@ -1119,8 +1123,8 @@ var Recordings = {
                         if (err) { cache_miss.resolveWaiting(err); return; }
                         cache_miss.retry_get()
                     })
-                });
-            }, callback);
+                }, { ownLink: true });
+            }, callback, { ownLink: true }); // callers serve-then-unlink (see tmpfilecache)
             return;
         }
 
@@ -1193,10 +1197,10 @@ var Recordings = {
                         cache_miss.retry_get();
                     }
                 );
-            });
+            }, { ownLink: true });
         };
         var mp3FilePath = recording.uri.replace(audioFilePattern, mp3Extension);
-        return Q.denodeify(tmpfilecache.fetch.bind(tmpfilecache))(mp3FilePath, ifMissedGetFile).nodeify(callback);
+        return Q.denodeify(function(k, miss, cb){ tmpfilecache.fetch(k, miss, cb, { ownLink: true }) })(mp3FilePath, ifMissedGetFile).nodeify(callback);
         // TODO: add condition for the output format: mp3 OR original extension
         // return Q.denodeify(tmpfilecache.fetch.bind(tmpfilecache))(recording.uri, ifMissedGetFile).nodeify(callback);
     },
@@ -1242,7 +1246,7 @@ var Recordings = {
                     })
                 }
             });
-        }, callback);
+        }, callback, { ownLink: true }); // every caller deletes its path (image route, templates/training-set crops, tiles)
     },
 
     fetchTemplateFile: function (recording, options, callback) {
@@ -1500,7 +1504,7 @@ var Recordings = {
                 if(err) { cache_miss.resolveWaiting(err); return; }
                 cache_miss.retry_get();
             });
-        }, callback);
+        }, callback, { ownLink: true }); // the tiles route serves then unlinks
     },
 
     /** Returns the thumbnail file of a given recording.
@@ -1522,7 +1526,7 @@ var Recordings = {
                     cache_miss.retry_get();
                 });
             });
-        }, callback);
+        }, callback, { ownLink: true }); // the thumbnail route serves then unlinks
     },
 
     /** Validates a recording.
