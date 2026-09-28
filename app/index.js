@@ -163,10 +163,15 @@ app.use(function (req, res, next) {
 // routes ----------------------------------------------
 
 var routes = require('./routes/index');
-var admin = require('./routes/admin');
 
-
-app.use('/admin', admin);
+// The legacy AngularJS admin (/admin/*: dashboard, job list, project/user lists,
+// plot-data) was RETIRED 2026-09-28 (operator goifirr 11:04; rfcx-local
+// OPEN-ITEMS §52). It had served 0 successful loads in 30 days (its super gate
+// read session.user before login built it, so even supers got Not Found), its
+// headline totals were wrong (legacy-only users) or timed out (unfiltered
+// COUNT(*) projects), and the modern admin lives at /admin/projects +
+// /admin/users in the SPA (routed there by the edge). Any /admin/* that still
+// reaches this app now falls through to the ordinary not-found handler.
 
 // app.use(function(req, res, next) {
 //     if(req.systemSettings('maintenance_mode') == 'on')
