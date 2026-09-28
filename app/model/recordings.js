@@ -1092,8 +1092,25 @@ var Recordings = {
             res.on('response', function(response) {
                 if (response.statusCode >= 400) {
                     // stop the transfer; do NOT cache the error body
-                    res.abort();
-                    finish(new Error('media-api returned ' + response.statusCode + ' for ' + type + ' asset'));
+                    const e = new Error('media-api returned ' + response.statusCode + ' for ' + type + ' asset');
+                    // `mediaApiStatus`, deliberately NOT `statusCode`: isMissingObjectError() treats statusCode 404 as
+                    // "recording audio is gone", and a media-api render 404 must stay a loud 500 (§300 item 1).
+                    e.mediaApiStatus = response.statusCode;
+                    if (response.statusCode !== 400) { res.abort(); finish(e); return; }
+                    // 400 = media-api REFUSED the request (a limit, e.g. playback speed x window). Read a bounded
+                    // slice of its JSON reason so the route can answer 400 with it instead of a generic 500
+                    // (rfcx-local 2026-09-28). Never cached: finish(e) unlinks the partial dest file.
+                    // The body must not reach the cache file, and the write stream's 'close' must not report
+                    // success first: stop the pipe and close the file as a failure before reading.
+                    if (ws) { res.unpipe(ws); ws.removeAllListeners('close'); }
+                    let body = '';
+                    response.on('data', function(chunk) { if (body.length < 2048) body += chunk.toString('utf8'); });
+                    response.on('error', function() { finish(e); });
+                    response.on('end', function() {
+                        try { const j = JSON.parse(body); if (j && typeof j.message === 'string') e.mediaApiMessage = j.message.slice(0, 300); } catch (x) { /* not JSON: no reason */ }
+                        finish(e);
+                    });
+                    return;
                 }
             });
             ws = fs.createWriteStream(destFile);

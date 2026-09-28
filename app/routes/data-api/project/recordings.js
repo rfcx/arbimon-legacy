@@ -676,6 +676,12 @@ router.get('/:get/:oneRecUrl?', function(req, res, next) {
             // 404 about THIS recording, not a server fault. Everything else --
             // real S3 outages, permissions, render failures -- still 500s.
             if (isMissingObjectError(err)) { return respondAudioNotFound(res); }
+            // media-api REFUSED the audio request (400: a limit, e.g. playback speed x window) -- the caller's
+            // request, not a server fault. Answer 400 with media-api's reason (rfcx-local 2026-09-28). Audio only;
+            // every other media-api status (404/5xx) keeps going to next(err) -> 500, unchanged.
+            if (get === 'audio' && err && err.mediaApiStatus === 400) {
+                return res.status(400).json({ error: err.mediaApiMessage || 'media-api refused this audio request' });
+            }
             if (err || !file) return next(err);
 
             // For audio: set Content-Type + a Content-Disposition filename
