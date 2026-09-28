@@ -733,6 +733,23 @@ var Recordings = {
      * Arbimon-based recordings are uploaded into buckets with similar naming (e.g. project_123, project_3, etc...)
      * @param {*} recording object containing the recording's data, like the ones returned in findByUrlMatch.
      */
+    /**
+     * Visualizer playback speed as a media-api `x` percentage (rfcx-local 2026-09-28).
+     * Accepts a whole-number percentage 5..1600 (the UI range; media-api itself accepts 1..1600) and returns
+     * it as a Number; anything else (absent, 100, non-integer, out of range, arrays from repeated query
+     * params) returns 100 = original speed. Silent fallback on purpose: a bad `?speed=` must never break
+     * playback, and 100 is exactly today's behaviour.
+     */
+    SPEED_MIN: 5,
+    SPEED_MAX: 1600,
+    parseSpeed: function(raw) {
+        if (typeof raw !== 'string' && typeof raw !== 'number') return 100
+        const s = String(raw)
+        if (!/^[1-9][0-9]{0,3}$/.test(s)) return 100
+        const n = Number(s)
+        return (n >= Recordings.SPEED_MIN && n <= Recordings.SPEED_MAX) ? n : 100
+    },
+
     isLegacy: function(recording) {
         return recording.uri.startsWith('project_')
     },
@@ -786,6 +803,9 @@ var Recordings = {
         const isGain = options && options.gain
         const isTrim = options && options.trim
         const isFormat = options && options.format
+        // Playback speed (rfcx-local 2026-09-28): media-api `x<int %>` (rfcx/rfcx-api #699; x path limits #700).
+        // Audio only; x100/absent => no token, so every existing media-api URL and cache key is unchanged.
+        const speed = type === 'audio' ? Recordings.parseSpeed(options && options.speed) : 100
         if (isFrequency) {
             fmin = Math.min((options.minFreq / freqFilterPrecision) * freqFilterPrecision, 22049).toFixed()
             fmax = Math.min((options.maxFreq / freqFilterPrecision) * freqFilterPrecision, 22049).toFixed()
@@ -820,7 +840,7 @@ var Recordings = {
                 asset = `rfull_g1_fspec_mtrue_d${Recordings.specWidthForDuration(recording.duration)}.255_wdolph_z120.png`
                 break;
             case 'audio':
-                asset = `r${isFrequency ? fmin + '.' + fmax : 'full'}_g${isGain ? options.gain : 1}_${isFormat ? 'fwav.wav' : 'fmp3.mp3'}`
+                asset = `r${isFrequency ? fmin + '.' + fmax : 'full'}_g${isGain ? options.gain : 1}${speed !== 100 ? '_x' + speed : ''}_${isFormat ? 'fwav.wav' : 'fmp3.mp3'}`
                 break;
             case 'template':
                 asset = `r${fmin}.${fmax}_g1_fspec_mtrue_d400.400_wdolph_z120.png`
@@ -1049,6 +1069,7 @@ var Recordings = {
     downloadAssetFromMediaAPI: function(recording, type, options, destFile, callback) {
         let done = false;
         let ws = null;
+        let refused = null; // a media-api 400 whose reason is still being read
         const finish = function(err) {
             if (done) return;
             done = true;
@@ -1072,13 +1093,30 @@ var Recordings = {
             res.on('response', function(response) {
                 if (response.statusCode >= 400) {
                     // stop the transfer; do NOT cache the error body
-                    res.abort();
-                    finish(new Error('media-api returned ' + response.statusCode + ' for ' + type + ' asset'));
+                    const e = new Error('media-api returned ' + response.statusCode + ' for ' + type + ' asset');
+                    // `mediaApiStatus`, deliberately NOT `statusCode`: isMissingObjectError() treats statusCode 404 as
+                    // "recording audio is gone", and a media-api render 404 must stay a loud 500 (§300 item 1).
+                    e.mediaApiStatus = response.statusCode;
+                    if (response.statusCode !== 400) { res.abort(); finish(e); return; }
+                    // 400 = media-api REFUSED the request (a limit, e.g. playback speed x window). Read a bounded
+                    // slice of its JSON reason so the route can answer 400 with it instead of a generic 500
+                    // (rfcx-local 2026-09-28). Never cached: finish(e) unlinks the partial dest file.
+                    // `request`'s stream has no unpipe(): the error body may still be written to the cache file,
+                    // so its 'close' must NOT report success -- the error decides, and finish(e) unlinks the file.
+                    refused = e;
+                    let body = '';
+                    response.on('data', function(chunk) { if (body.length < 2048) body += chunk.toString('utf8'); });
+                    response.on('error', function() { finish(e); });
+                    response.on('end', function() {
+                        try { const j = JSON.parse(body); if (j && typeof j.message === 'string') e.mediaApiMessage = j.message.slice(0, 300); } catch (x) { /* not JSON: no reason */ }
+                        finish(e);
+                    });
+                    return;
                 }
             });
             ws = fs.createWriteStream(destFile);
             ws.on('error', finish);
-            ws.on('close', function() { finish(null); });
+            ws.on('close', function() { if (!refused) finish(null); });
             res.pipe(ws);
         }).catch(finish);
     },
