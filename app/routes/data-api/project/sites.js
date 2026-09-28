@@ -82,6 +82,19 @@ router.post('/update', function(req, res, next) {
     if(!req.haveAccess(project.project_id, "manage project sites")) {
         return res.json({ error: "you dont have permission to 'manage project sites'" });
     }
+    // Body/query-id audit W2 (2026-09-28): `sites.update` writes WHERE site_id = <id>
+    // with no project predicate, so any site id in the body was editable. The site
+    // must be this project's OWN site (an IMPORTED site is another project's to edit).
+    const siteId = site && (site.site_id || site.id);
+    const siteIdNum = Number(siteId);
+    if (!Number.isInteger(siteIdNum) || siteIdNum <= 0) {
+        return res.status(404).json({ error: 'site not found' });
+    }
+    model.sites.findById(siteIdNum, function(err, rows) {
+    if (err) return next(err);
+    if (!rows || !rows.length || rows[0].project_id !== project.project_id) {
+        return res.status(404).json({ error: 'site not found' });
+    }
     // Do not update project_id if the value is not changed
     if (site.project && site.project.project_id !== project.project_id) {
         site.project_id = site.project.project_id;
@@ -102,6 +115,7 @@ router.post('/update', function(req, res, next) {
             model.projects.updateProjectLocation(project.project_id, site.lat, site.lon)
         }).catch(next);
     })
+    });
 });
 
 router.post('/delete', function(req, res, next) {
@@ -114,8 +128,18 @@ router.post('/delete', function(req, res, next) {
         return res.json({ error: "you do not have permission to remove sites" });
     }
 
-    model.sites.removeSite(sites, project.project_id, req.session.idToken === undefined ? idToken : req.session.idToken).then(function() {
-        res.json({ message: 'Removed' });
+    // Body/query-id audit W1 (2026-09-28): removeSite archives every recording of
+    // each site, soft-deletes their templates and DELETEs the core stream BEFORE its
+    // only project check (removeFromProject), so a foreign site id destroyed another
+    // project's data. Every id must be this project's site (own or imported);
+    // removeSite itself now also skips the destructive steps for IMPORTED sites.
+    projectScope.allOwnedByProject('site', sites, project.project_id).then(function(owned) {
+        if (!owned) {
+            return res.status(404).json({ error: 'site not found' });
+        }
+        return model.sites.removeSite(sites, project.project_id, req.session.idToken === undefined ? idToken : req.session.idToken).then(function() {
+            res.json({ message: 'Removed' });
+        });
     }).catch(next);
 });
 

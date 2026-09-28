@@ -262,8 +262,19 @@ router.post('/add', function(req, res, next) {
     if (req.body.source_project_id) {
         opts.source_project_id = req.body.source_project_id;
     }
-    return model.templates.insert(opts).then(function(new_template) {
-        res.json(new_template);
+    // Body/query-id audit R4 (2026-09-28): the recording was never checked, so a
+    // template (and thereby audio/spectrogram access) could be minted over ANY
+    // project's recording. A COPY of a public template (source_project_id set) is
+    // cross-project by design and keeps its source recording; an ORIGINAL must be
+    // on a recording this project owns.
+    var guard = opts.source_project_id
+        ? Promise.resolve(true)
+        : projectScope.ownedByProject('recording', opts.recording, opts.project);
+    return guard.then(function(owned) {
+        if (!owned) { return res.status(404).json({ error: 'recording not found' }); }
+        return model.templates.insert(opts).then(function(new_template) {
+            res.json(new_template);
+        });
     }).catch(next);
 });
 

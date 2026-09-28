@@ -8,6 +8,7 @@ const model = require('../../../model');
 const { httpErrorHandler, Converter } = require('@rfcx/http-utils');
 const { deleteObjects } = require('../../../utils/storage')
 const config = require('../../../config');
+const projectScope = require('../../../utils/project-scope');
 
 router.get('/', function(req, res, next) {
     res.type('json');
@@ -40,14 +41,23 @@ router.get('/total-recordings', function(req, res, next) {
 
 router.post('/new', function(req, res, next) {
     res.type('json');
-    return model.AudioEventDetectionsClustering.requestNewAudioEventDetectionClusteringJob({
-        user_id: req.session.user.id,
-        name: req.body.name,
-        playlist_id: req.body.playlist_id,
-        params: req.body.params,
-    })
-    .then(function(result){
-        res.json({ create: true, result: result });
+    // Body/query-id audit W7 (2026-09-28): the job is created in the PLAYLIST's
+    // project, and the playlist was never checked -- a member of A could start a
+    // job over B's recordings, in B. Require the manage permission here and a
+    // playlist of THIS project.
+    if (!req.haveAccess(req.project.project_id, 'manage AED and Clustering job')) {
+        return res.status(403).json({ error: "You don't have permission to manage AED and Clustering job" });
+    }
+    return projectScope.ownedByProject('playlist', req.body.playlist_id, req.project.project_id).then(function(owned) {
+        if (!owned) { return res.status(404).json({ error: 'playlist not found' }); }
+        return model.AudioEventDetectionsClustering.requestNewAudioEventDetectionClusteringJob({
+            user_id: req.session.user.id,
+            name: req.body.name,
+            playlist_id: req.body.playlist_id,
+            params: req.body.params,
+        }).then(function(result){
+            res.json({ create: true, result: result });
+        });
     }).catch(next);
 });
 
@@ -62,8 +72,17 @@ router.post('/validate', function(req, res, next) {
     converter.convert('aed').toArray();
     converter.convert('validated').toString();
 
+    // Body/query-id audit W6 (2026-09-28): /validate had NO permission check and
+    // updated `aed` rows by id alone (any project's). Now: the permission /unvalidate
+    // already required, and every aed id must belong to an AED job of this project.
+    if (!req.haveAccess(req.project.project_id, 'manage AED and Clustering job')) {
+        return res.status(403).json({ error: "You don't have permission to manage AED and Clustering job" });
+    }
     return converter.validate()
         .then(async (params) => {
+            if (!(await projectScope.allOwnedByProject('aed', params.aed, req.project.project_id))) {
+                return res.status(404).json({ error: 'audio event detection not found' });
+            }
             const opts = {
                 projectId: req.project.project_id,
                 speciesId: params.species_id || null,
@@ -114,6 +133,10 @@ router.post('/unvalidate', function(req, res, next) {
     converter.convert('aed').toArray();
     return converter.validate()
         .then(async (params) => {
+            // Body/query-id audit W6: every aed id must belong to this project.
+            if (!(await projectScope.allOwnedByProject('aed', params.aed, req.project.project_id))) {
+                return res.status(404).json({ error: 'audio event detection not found' });
+            }
             for (let d of params.aed) {
                 // Get existing aed row
                 const [aedRow] = await model.AudioEventDetectionsClustering.getDetectionsByIds([d]);

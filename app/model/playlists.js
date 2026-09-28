@@ -540,30 +540,41 @@ var Playlists = {
         }).nodeify(callback);
     },
 
+    // rfcx-local 2026-09-28 (body/query-id audit W3/W4): both statements used
+    // to be keyed on playlist_id ALONE, so a manager of project A could rename or
+    // delete project B's playlists by id. `project` is now REQUIRED and bound.
     rename: function(playlist, callback) {
         var schema = {
             id: Joi.number().required(),
-            name: Joi.string().required()
+            name: Joi.string().required(),
+            project: Joi.number().required()
         };
 
-        Joi.validate(playlist, schema, function(err, pls) {
+        Joi.validate(playlist, schema, { stripUnknown: true }, function(err, pls) {
+            if (err) { return callback(err); }
             var q = "UPDATE playlists \n"+
                     "SET name = %s \n"+
-                    "WHERE playlist_id = %s";
+                    "WHERE playlist_id = %s AND project_id = %s";
 
-            q = util.format(q, dbpool.escape(pls.name), dbpool.escape(pls.id));
+            q = util.format(q, dbpool.escape(pls.name), dbpool.escape(pls.id), dbpool.escape(pls.project));
             queryHandler(q, callback);
         });
     },
 
-    remove: function(playlist_ids, callback) {
+    remove: function(playlist_ids, project_id, callback) {
+        if (typeof project_id === 'function' || !Number.isFinite(Number(project_id))) {
+            var cb = typeof project_id === 'function' ? project_id : callback;
+            return cb(new Error('playlists.remove requires project_id'));
+        }
         var schema = Joi.array().items(Joi.number());
 
         Joi.validate(playlist_ids, schema, function(err, ids) {
+            if (err) { return callback(err); }
+            if (!ids || !ids.length) { return callback(null, { affectedRows: 0 }); }
             var q = "DELETE FROM playlists \n"+
-                    "WHERE playlist_id IN (%s)";
+                    "WHERE playlist_id IN (%s) AND project_id = %s";
 
-            q = util.format(q, dbpool.escape(ids));
+            q = util.format(q, dbpool.escape(ids), dbpool.escape(Number(project_id)));
             queryHandler(q, callback);
         });
     },

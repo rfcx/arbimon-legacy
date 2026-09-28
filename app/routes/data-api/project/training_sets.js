@@ -4,6 +4,20 @@
 var express = require('express');
 var router = express.Router();
 var model = require('../../../model');
+var projectScope = require('../../../utils/project-scope');
+
+/** Whether the session user holds `permission` in projectId (loads it if not cached). Audit W5. */
+function canInProject(req, projectId, permission) {
+    const user = req.session && req.session.user;
+    if (!user) { return Promise.resolve(false); }
+    const cached = user.permissions && user.permissions[projectId];
+    if ((cached && cached.length) || user.isSuper === 1) {
+        return Promise.resolve(req.haveAccess(projectId, permission));
+    }
+    return Promise.resolve(model.users.getPermissions(user.id, projectId)).then(function(rows) {
+        return (rows || []).some(function(p) { return p && p.name === permission; });
+    });
+}
 var csv_stringify = require("csv-stringify");
 
 
@@ -205,15 +219,32 @@ router.post('/share', function(req, res, next) {
         species: req.body.species,
         songtype: req.body.songtype
     }
-    model.trainingSets.find({ project: opts.projectId, sourceProject: sourceProjectId, name: opts.trainingSetName }, async function(err, result) {
-        if (err) return next(err);
-        if (result.length) return res.status(400).json({ message: 'This training set is already existed in the project.' });
-        model.trainingSets.shareTrainingSet(opts)
-            .then(() => {
-                res.status(201).json({ message: 'The training set was successfully shared with the selected project.' })
-            })
-            .catch(next)
-    });
+    // Body/query-id audit W5 (2026-09-28): `trainingSetId` was never checked
+    // against this project and `projectIdTo` never checked against the user, so
+    // any training set (a private project's ROIs included) could be copied into
+    // any project. The source must be this project's; the user must be able to
+    // manage training sets in the target.
+    const target = Number(opts.projectId);
+    if (!Number.isInteger(target) || target <= 0 || target === sourceProjectId) {
+        return res.status(400).json({ error: 'invalid target project' });
+    }
+    projectScope.ownedByProject('training_set', opts.trainingSetId, sourceProjectId).then(function(owned) {
+        if (!owned) { return res.status(404).json({ error: 'training set not found' }); }
+        return canInProject(req, target, 'manage training sets').then(function(allowed) {
+            if (!allowed) {
+                return res.status(403).json({ error: "you dont have permission to 'manage training sets' in the selected project" });
+            }
+            model.trainingSets.find({ project: target, sourceProject: sourceProjectId, name: opts.trainingSetName }, async function(err, result) {
+                if(err) return next(err);
+                if (result.length) return res.status(400).json({ message: 'This training set is already existed in the project.' });
+                model.trainingSets.shareTrainingSet(Object.assign({}, opts, { projectId: target }))
+                    .then(() => {
+                        res.status(201).json({ message: 'The training set was successfully shared with the selected project.' })
+                    })
+                    .catch(next)
+            });
+        });
+    }).catch(next);
 });
 
 /** Combine 2 training sets into 1.
@@ -293,10 +324,15 @@ router.post('/remove/:trainingSet', function(req, res, next) {
 */
 router.post('/add-data/:trainingSet', function(req, res, next) {
     res.type('json');
-    model.trainingSets.addData(req.trainingSet, req.body, function(err, tset_data) {
-        if(err) return next(err);
-        return res.json(tset_data);
-    });
+    // Body/query-id audit R5 (2026-09-28): the ROI's recording must be this
+    // project's (own or imported site), or a foreign recording could be pulled in.
+    projectScope.ownedByProject('recording', req.body && req.body.recording, req.project.project_id).then(function(owned) {
+        if (!owned) { return res.status(404).json({ error: 'recording not found' }); }
+        model.trainingSets.addData(req.trainingSet, req.body, function(err, tset_data) {
+            if(err) return next(err);
+            return res.json(tset_data);
+        });
+    }).catch(next);
 });
 
 

@@ -125,6 +125,14 @@ var OWNED_SQL = {
     // cross-project BY DESIGN (the public tab); measured 30 d: 129
     // public-original pairs read under the VIEWER's slug, 0 private-foreign.
     // Own rows count regardless of deleted (ownership, not listing).
+    // Body/query-id audit (2026-09-28, W6). An AED-for-clustering row belongs to
+    // the project of the AED job that produced it
+    // (job_params_audio_event_detection_clustering.project_id). Its routes took
+    // raw `aed` ids from the BODY and updated them by id alone.
+    aed:
+        'SELECT 1 AS owned FROM audio_event_detections_clustering a ' +
+        'JOIN job_params_audio_event_detection_clustering jp ON jp.job_id = a.job_id ' +
+        'WHERE a.aed_id = ? AND jp.project_id = ? AND jp.project_id = ? LIMIT 1',
     template:
         'SELECT 1 AS owned FROM templates t JOIN projects p ON p.project_id = t.project_id ' +
         'WHERE t.template_id = ? AND (t.project_id = ? OR (' +
@@ -167,6 +175,19 @@ function makeProjectScope(query) {
         return Promise.resolve(query(sql, [eid, pid, pid])).then(function (rows) {
             return !!(rows && rows.length);
         });
+    }
+
+    /**
+     * Every id in `ids` (a scalar or an array) is owned by projectId. Empty /
+     * absent -> false (callers decide whether "no ids" is valid before calling).
+     * Body/query-id audit, 2026-09-28: the helper for ids that arrive in the
+     * request BODY, which check-project-scope cannot see.
+     */
+    function allOwnedByProject(kind, ids, projectId) {
+        var list = ids === undefined || ids === null ? [] : [].concat(ids);
+        if (!list.length) { return Promise.resolve(false); }
+        return Promise.all(list.map(function (id) { return ownedByProject(kind, id, projectId); }))
+            .then(function (v) { return v.every(Boolean); });
     }
 
     /**
@@ -213,6 +234,7 @@ function makeProjectScope(query) {
 
     return {
         ownedByProject: ownedByProject,
+        allOwnedByProject: allOwnedByProject,
         selectorOwned: selectorOwned,
         recordingUrlOwned: recordingUrlOwned,
         NO_MATCH_SELECTOR: NO_MATCH_SELECTOR,
@@ -235,6 +257,7 @@ module.exports = {
     makeProjectScope: makeProjectScope,
     NO_MATCH_SELECTOR: NO_MATCH_SELECTOR,
     ownedByProject: function (kind, id, projectId) { return instance().ownedByProject(kind, id, projectId); },
+    allOwnedByProject: function (kind, ids, projectId) { return instance().allOwnedByProject(kind, ids, projectId); },
     selectorOwned: function (urlquery, projectId) { return instance().selectorOwned(urlquery, projectId); },
     recordingUrlOwned: function (m, url, projectId) { return instance().recordingUrlOwned(m, url, projectId); }
 };

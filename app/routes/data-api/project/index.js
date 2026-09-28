@@ -152,13 +152,25 @@ router.get('/:projectUrl/tiering-usage', function(req, res, next) {
         .catch(next);
 });
 
+// project-scope: allow query.project_id is a DIFFERENT project, checked below (public, or the user holds 'view project' on it)
+// rfcx-local 2026-09-28 (body/query-id audit, R1): this returned the FULL
+// `projects` row of ANY project id, private ones included (measured on prod).
+// Its callers ("go to source project" buttons) need only the url/name. Now:
+// the minimal shape, and only for a project the user may open.
 router.get('/:projectUrl/info/source-project', function(req, res, next) {
     res.type('json');
-    model.projects.findById(req.query.project_id, function(err, result){
-        if(err) return next(err);
-        res.json(result);
-    });
-
+    const user = req.session && req.session.user;
+    model.projects.findById(req.query.project_id).then(function(project) {
+        if (!project) { return null; }
+        if (!project.is_private || (user && user.isSuper === 1)) { return project; }
+        if (!user || !user.id) { return null; }
+        return Promise.resolve(model.users.getPermissions(user.id, project.project_id)).then(function(rows) {
+            return (rows || []).some(function(p) { return p && p.name === 'view project'; }) ? project : null;
+        });
+    }).then(function(project) {
+        if (!project) { return res.status(404).json({ error: 'project not found' }); }
+        res.json({ project_id: project.project_id, name: project.name, url: project.url });
+    }).catch(next);
 });
 
 router.get('/:projectUrl/get-projects-by-role', function(req, res, next) {
@@ -172,86 +184,91 @@ router.get('/:projectUrl/get-projects-by-role', function(req, res, next) {
 });
 
 // Dasboard page metrics
+// rfcx-local 2026-09-28 (body/query-id audit, R2): each of these used
+// `req.query.project_id || req.project.project_id`, so ?project_id=<any> returned
+// ANY project's counts (a private project's site count read back 437 = true on
+// prod). No caller needs another project's counts -- the SPA never sends it and
+// the legacy getProjectTotalSpecies passes its OWN id -- so the override is gone.
 router.get('/:projectUrl/site-count', function(req, res, next) {
     res.type('json');
-    let p = req.query.project_id? req.query.project_id : req.project.project_id;
+    let p = req.project.project_id; // query.project_id no longer honoured (audit R2, 2026-09-28)
     const key = { 'project-site-count': `project-${p}-si` }
     getMetrics(req, res, key, p, next);
 });
 
 router.get('/:projectUrl/species-count', function(req, res, next) {
     res.type('json');
-    let p = req.query.project_id? req.query.project_id : req.project.project_id;
+    let p = req.project.project_id; // query.project_id no longer honoured (audit R2, 2026-09-28)
     const key = { 'project-species-count': `project-${p}-sp` }
     getMetrics(req, res, key, p, next);
 });
 
 router.get('/:projectUrl/playlist-count', function(req, res, next) {
     res.type('json');
-    let p = req.query.project_id? req.query.project_id : req.project.project_id;
+    let p = req.project.project_id; // query.project_id no longer honoured (audit R2, 2026-09-28)
     const key = { 'project-playlist-count': `project-${p}-pl` }
     getMetrics(req, res, key, p, next);
 });
 
 router.get('/:projectUrl/pm-species-detected', function(req, res, next) {
     res.type('json');
-    let p = req.query.project_id? req.query.project_id : req.project.project_id;
+    let p = req.project.project_id; // query.project_id no longer honoured (audit R2, 2026-09-28)
     const key = { 'project-pm-sp-count': `project-${p}-pm-sp` }
     getMetrics(req, res, key, p, next);
 });
 
 router.get('/:projectUrl/pm-template-count', function(req, res, next) {
     res.type('json');
-    let p = req.query.project_id? req.query.project_id : req.project.project_id;
+    let p = req.project.project_id; // query.project_id no longer honoured (audit R2, 2026-09-28)
     const key = { 'project-pm-t-count': `project-${p}-pm-t` }
     getMetrics(req, res, key, p, next);
 });
 
 router.get('/:projectUrl/rfm-classif-job-count', function(req, res, next) {
     res.type('json');
-    let p = req.query.project_id? req.query.project_id : req.project.project_id;
+    let p = req.project.project_id; // query.project_id no longer honoured (audit R2, 2026-09-28)
     const key = { 'project-rfm-classif-job-count': `project-${p}-rfm-cl` }
     getCachedMetrics(req, res, key, p, next);
 });
 
 router.get('/:projectUrl/rfm-species-detected', function(req, res, next) {
     res.type('json');
-    let p = req.query.project_id? req.query.project_id : req.project.project_id;
+    let p = req.project.project_id; // query.project_id no longer honoured (audit R2, 2026-09-28)
     const key = { 'project-rfm-sp-count': `project-${p}-rfm-sp` }
     getCachedMetrics(req, res, key, p, next);
 });
 
 router.get('/:projectUrl/rfm-training-job-count', function(req, res, next) {
     res.type('json');
-    let p = req.query.project_id? req.query.project_id : req.project.project_id;
+    let p = req.project.project_id; // query.project_id no longer honoured (audit R2, 2026-09-28)
     const key = { 'project-rfm-training-job-count': `project-${p}-rfm-tr` }
     getCachedMetrics(req, res, key, p, next);
 });
 
 router.get('/:projectUrl/aed-job-count', function(req, res, next) {
     res.type('json');
-    let p = req.query.project_id? req.query.project_id : req.project.project_id;
+    let p = req.project.project_id; // query.project_id no longer honoured (audit R2, 2026-09-28)
     const key = { 'project-aed-job-count': `project-${p}-aed-job` }
     getCachedMetrics(req, res, key, p, next);
 });
 
 router.get('/:projectUrl/clustering-job-count', function(req, res, next) {
     res.type('json');
-    let p = req.query.project_id? req.query.project_id : req.project.project_id;
+    let p = req.project.project_id; // query.project_id no longer honoured (audit R2, 2026-09-28)
     const key = { 'project-clustering-job-count': `project-${p}-cl-job` }
     getCachedMetrics(req, res, key, p, next);
 });
 
 router.get('/:projectUrl/clustering-species-detected', function(req, res, next) {
     res.type('json');
-    let p = req.query.project_id? req.query.project_id : req.project.project_id;
+    let p = req.project.project_id; // query.project_id no longer honoured (audit R2, 2026-09-28)
     const key = { 'project-clustering-sp-count': `project-${p}-cl-sp` }
     getCachedMetrics(req, res, key, p, next);
 });
 
 router.get('/:projectUrl/soundscape-job-count', function(req, res, next) {
     res.type('json');
-    let p = req.query.project_id? req.query.project_id : req.project.project_id;
+    let p = req.project.project_id; // query.project_id no longer honoured (audit R2, 2026-09-28)
     const key = { 'project-soundscape-job-count': `project-${p}-soundsc` }
     getCachedMetrics(req, res, key, p, next);
 });

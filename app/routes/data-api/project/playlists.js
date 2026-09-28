@@ -138,7 +138,8 @@ router.post('/rename', function(req, res, next) {
     if (!req.haveAccess(req.project.project_id, 'manage playlists')) {
       return res.json({ error: 'You do not have permission to manage playlists' });
     }
-    model.playlists.rename(req.body, function(err, results) {
+    // audit W3 (2026-09-28): the playlist must belong to the URL's project.
+    model.playlists.rename(Object.assign({}, req.body, { project: req.project.project_id }), function(err, results) {
         if(err) return next(err);
 
         res.json({ success: true });
@@ -193,7 +194,8 @@ router.post('/delete', function(req, res, next) {
     if(!req.body.playlists)
         return res.json({ error: "missing paramenters" });
 
-    model.playlists.remove(req.body.playlists, function(err, results) {
+    // audit W4 (2026-09-28): only this project's playlists are deleted.
+    model.playlists.remove(req.body.playlists, req.project.project_id, function(err, results) {
         if(err) {
             if(err.code == 'ER_ROW_IS_REFERENCED_2') {
                 return res.json({ error: "Playlist is used by analysis job" });

@@ -174,7 +174,9 @@ router.get('/search-count', function(req, res, next) {
     res.type('json');
     var params = req.query;
 
-    params.project_id = req.query.project_id? req.query.project_id : req.project.project_id;
+    // rfcx-local 2026-09-28 (body/query-id audit, R3): ?project_id=<any> returned
+    // ANY project's per-site names + recording counts. Always the URL's project.
+    params.project_id = req.project.project_id;
 
     model.recordings.countProjectRecordings(params).then(function(rows) {
         res.json(rows);

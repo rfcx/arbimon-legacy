@@ -125,7 +125,7 @@ async function partA () {
     'model SQL is EXACTLY: id AND (own row OR imported into the project)')
   ok(g._sql.model_own === 'SELECT 1 AS owned FROM models m WHERE m.model_id = ? AND m.project_id = ? AND m.project_id = ? LIMIT 1',
     'model_own SQL is EXACTLY: id AND own row')
-  for (const k of ['playlist', 'training_set', 'job', 'pattern_matching']) {
+  for (const k of ['playlist', 'training_set', 'job', 'pattern_matching', 'aed']) {
     ok(/project_id = \? AND \w+\.project_id = \? LIMIT 1$/.test(g._sql[k]), `${k} SQL binds the row's project_id`)
   }
   // §393: pattern_matching. Project 10 owns PM 50 (live) and 51 (DELETED — ownership, not listing);
