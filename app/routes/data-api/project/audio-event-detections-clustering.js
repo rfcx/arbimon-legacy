@@ -155,7 +155,8 @@ router.post('/unvalidate', function(req, res, next) {
                     if (oldValidation.present_aed === 1 && oldValidation.present_review === 0 && oldValidation.present === null) {
                         await model.AudioEventDetectionsClustering.deletePresentAedCount(params)
                     }
-                    await model.AudioEventDetectionsClustering.validateDetections([d], null, null);
+                    // Clear the box: species, songtype AND validated -> NULL (F1, 2026-09-28).
+                    await model.AudioEventDetectionsClustering.validateDetections([d], null, null, null);
                 }
             }
             res.sendStatus(200)
