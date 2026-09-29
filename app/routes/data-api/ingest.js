@@ -71,7 +71,14 @@ router.post('/recordings/create', verifyToken(), hasRole(['systemUser']), async 
     const timezone = await model.sites.getSiteTimezoneAsync(site.site_id);
     const uploaderIds = await resolveUploaderIds(converter.transformedArray);
     const recordings = converter.transformedArray.map((data) => {
-      const metaData = data.meta.replace(/'/g, "\\'");
+      // Store meta VERBATIM (rfcx-local 2026-09-29, OPEN-ITEMS §438). This used to do
+      // data.meta.replace(/'/g, "\\'") (9f829a47, 2023-08-15), a MySQL-string-literal habit on a
+      // PARAMETERISED insert (`VALUES ?`), so it escaped nothing and instead wrote `\'` into the JSON.
+      // `\'` is not a legal JSON escape: PG's generated column recordings.filename =
+      // arbimon_json_filename(meta) returns NULL, and Recordings.__parse_meta_data returns null,
+      // so every upload whose tags contain an apostrophe (e.g. "Allard's Ground Cricket") lost its
+      // filename AND all its metadata in the UI (440 rows 2023-2026, measured).
+      const metaData = data.meta;
       let recordingData = {
         site_id: site.site_id,
         uri: data.uri,
