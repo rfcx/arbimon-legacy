@@ -117,9 +117,22 @@ router.post('/validate', function(req, res, next) {
                         songtype: params.songtype_name,
                         user_id: req.session.user.id
                     };
-                    model.projects.insertClass(projectClass, function(err, result){
-                        if(err) return next(err);
-                    });
+                    // rfcx-local 2026-09-28 (finding F2): this used to be fire-and-forget with
+                    // `if(err) return next(err)` in the callback, so a failed class add (unknown
+                    // species/songtype name, missing names, DB error) ran next(err) AFTER
+                    // res.sendStatus(200) below -> ERR_HTTP_HEADERS_SENT and a torn response
+                    // (Cloudflare 520). The validations above are already committed, so the
+                    // class add is a best-effort side effect: await it, log a failure, and answer
+                    // exactly once. Reporting it as a request failure would tell the UI "not
+                    // validated" about rows that ARE validated.
+                    try {
+                        await model.projects.insertClass(projectClass);
+                    } catch (err) {
+                        console.error('aed validate: project class add failed (validation kept)', {
+                            project_id: opts.projectId, species_id: opts.speciesId, songtype_id: opts.songtypeId,
+                            message: err && err.message
+                        });
+                    }
                 };
             }
             res.sendStatus(200)

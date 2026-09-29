@@ -292,19 +292,30 @@ router.post('/:patternMatching/validate', function(req, res, next) {
                 project_id: req.project.project_id,
                 user_id: req.session.user.id
             };
-            model.projects.insertClass(projectClass, function(err, result){
-                if(err) return next(err);
-                model.projects.insertNews({
-                    news_type_id: 5,
-                    user_id: req.session.user.id,
-                    project_id: req.project.project_id,
-                    data: JSON.stringify({
-                        class: [result.class],
-                        species: [result.species, projectClass.species],
-                        song: [result.songtype, projectClass.songtype]
-                    })
+            // rfcx-local 2026-09-28 (finding F2, same class as AED /validate): this was
+            // fire-and-forget with `if(err) return next(err)`, racing the res.json() below --
+            // a failed class add produced either a 500 while the validation still ran, or
+            // ERR_HTTP_HEADERS_SENT. Best-effort now: await, log a failure, never respond twice.
+            try {
+                const result = await model.projects.insertClass(projectClass);
+                if (result && !result.error) {
+                    model.projects.insertNews({
+                        news_type_id: 5,
+                        user_id: req.session.user.id,
+                        project_id: req.project.project_id,
+                        data: JSON.stringify({
+                            class: [result.class],
+                            species: [result.species, projectClass.species],
+                            song: [result.songtype, projectClass.songtype]
+                        })
+                    });
+                }
+            } catch (err) {
+                console.error('pm validate: project class add failed (validation kept)', {
+                    project_id: req.project.project_id, species: projectClass.species, songtype: projectClass.songtype,
+                    message: err && err.message
                 });
-            });
+            }
         };
         model.patternMatchings.validateRois(req.params.patternMatching, updatedRoiIds, validation, req.project.project_id, req.session.user.id)
             .then(async function(validatedRois) {
