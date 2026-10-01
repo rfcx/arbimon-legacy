@@ -58,3 +58,24 @@ jobs:
         run: node build/check-project-scope.selftest.js
       - name: 'every /project/* id route bound to the URL project'
         run: node build/check-project-scope.js --list
+
+  # rfcx-local 2026-10-01 (FINDING-2026-10-01-roi-prewarm-key-truncate-vs-round):
+  # roiSpectrogramUrl() must keep producing the EXACT filenames the prewarm
+  # writers (rfcx/arbimon-jobs-analysis PM/AED, rfcx/arbimon-clustering) render
+  # under -- media-api caches by exact filename, so a one-ms or one-Hz drift
+  # silently wastes every prewarm render. The 2026-08-10 'ROUND ONCE' fix here
+  # did exactly that for 7 weeks (~75-80 % of PM/AED prewarm renders unread).
+  # 110 real prod rows + 3 synthetic edge rows -> the filename the deployed
+  # reader built. Bare node, no npm install, no `paths:` filter. Exit 2 (never
+  # 0) when it cannot run. If you change the filename ON PURPOSE, update this
+  # fixture AND every writer's copy in the same window.
+  check-roi-reader-golden:
+    name: 'Gate: ROI spectrogram filename == prewarm writers'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: 'roiSpectrogramUrl filenames byte-identical to the reader golden'
+        run: node test/roi-reader-golden/check.js
