@@ -306,7 +306,7 @@ function mediaAssetUrl (streamId, rawStartMs, rawEndMs, asset, opts) {
     if (!isPlausibleRecordingMs(rawStartMs) || !isPlausibleRecordingMs(rawEndMs)) return null;
     // ROUND ONCE. Every downstream use — filename AND signature — flows from
     // these two integers, so they cannot drift apart.
-    const startMs = Math.round(Number(rawStartMs));
+    const startMs = Math.floor(Number(rawStartMs)); // RED PROBE - do not merge
     const endMs = Math.round(Number(rawEndMs));
     const startTs = gluedUtcTimestamp(startMs);
     const endTs = gluedUtcTimestamp(endMs);
