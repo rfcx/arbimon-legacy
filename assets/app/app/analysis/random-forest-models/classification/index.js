@@ -494,11 +494,6 @@ angular.module('a2.analysis.random-forest-models.classification', [
         }
     });
 
-    $scope.showPlaylistLimitWarning = function () {
-        if (($scope.datas && !$scope.datas.playlist) || ($scope.projectData.projectt_id = 1902)) return
-        return $scope.datas.playlist && $scope.datas.playlist.count > 10000;
-    };
-
 
     $scope.ok = function () {
         $scope.nameMsg = '';
