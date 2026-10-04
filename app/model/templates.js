@@ -315,6 +315,44 @@ var Templates = {
         else return { list: [], count: 0 }
     },
 
+    /** Public originals offered to FAMILY-LEVEL classes (see getTemplatesByClass).
+     *  Two steps so the common case costs one indexed lookup: (1) which of the
+     *  requested classes are family-level -- usually none, and then nothing else
+     *  runs; (2) for those only, the newest 3 public originals per class among
+     *  the family's species, same songtype. Rows carry the same columns as the
+     *  exact path (incl. class_id) so the caller can merge them.
+     *  @param {number[]} classIds validated positive integers
+     */
+    familyRollupTemplates: async function (classIds) {
+        if (!classIds.length) { return []; }
+        const fam = await dbpool.query(
+            'SELECT pc.project_class_id AS class_id, PCS.family_id AS family_id, pc.songtype_id AS songtype_id ' +
+            'FROM project_classes pc ' +
+            'JOIN species PCS ON PCS.species_id = pc.species_id ' +
+            'JOIN species_families PCF ON PCF.family_id = PCS.family_id ' +
+            'WHERE pc.project_class_id IN (' + classIds.join(',') + ') ' +
+            'AND LOWER(PCS.scientific_name) = LOWER(PCF.family)');
+        if (!fam || !fam.length) { return []; }
+        const parts = fam.map(f => {
+            const cl = positiveInt(f.class_id), famId = positiveInt(f.family_id), st = positiveInt(f.songtype_id);
+            if (cl === null || famId === null || st === null) { return null; }
+            return '(SELECT T.`template_id` as id, T.`project_id` as project, T.`recording_id` as recording, ' +
+                'T.`species_id` as species, T.`songtype_id` as songtype, T.`name`, T.`uri` as `storedUri`, ' +
+                'RDYN.`uri` as `dynRecUri`, RDYN.`datetime_utc` as `dynDatetimeUtc`, RDYN.`sample_rate` as `dynSampleRate`, ' +
+                'SDYN.`external_id` as `dynExternalId`, T.`x1`, T.`y1`, T.`x2`, T.`y2`, T.`date_created`, T.user_id, T.disabled, ' +
+                'P.`name` as `project_name`, P.`url` as `project_url`, TS.`scientific_name` as `species_name`, ' + cl + ' as class_id ' +
+                'FROM templates T JOIN species TS ON TS.species_id = T.species_id ' +
+                'JOIN projects P ON T.project_id = P.project_id ' +
+                'JOIN recordings RDYN ON RDYN.recording_id = T.recording_id ' +
+                'JOIN sites SDYN ON SDYN.site_id = RDYN.site_id ' +
+                'WHERE T.deleted = 0 AND T.disabled = 0 AND P.public_templates_enabled = 1 ' +
+                'AND T.source_project_id IS NULL AND TS.family_id = ' + famId + ' AND T.songtype_id = ' + st + ' ' +
+                'ORDER BY date_created DESC LIMIT 3)';
+        }).filter(Boolean);
+        if (!parts.length) { return []; }
+        return dbpool.query(parts.join(' UNION '));
+    },
+
     getTemplatesByClass: async function (classIds) {
         classIds = Array.isArray(classIds) ? classIds : [classIds];
         // Drop absent/non-numeric ids rather than interpolating them: an absent
@@ -354,6 +392,10 @@ var Templates = {
             // `cl` is a validated positive integer (filtered through positiveInt
             // above), so this is a number, never caller text.
             constraints.push('pc.project_class_id = ' + positiveInt(cl));
+            // `class_id` lets the client attach a template to the class row it
+            // was selected for (needed by the family roll-up below, where the
+            // template's own species differs from the class's).
+            select.push('pc.project_class_id as class_id');
 
             const sql = `(SELECT ${select.join(', ')}
                 FROM ${tables.join(' ')}
@@ -362,7 +404,20 @@ var Templates = {
                 LIMIT 3)`
             query += index === classIds.length - 1 ? sql : `${sql} UNION `
         })
+        // FAMILY ROLL-UP (rfcx-local 2026-10-04, support p9921 'Cicadidae').
+        // A class whose species is a FAMILY-LEVEL catalogue row -- its
+        // scientific_name equals its own family's name, e.g. `Cicadidae` -- is
+        // also offered the public originals of the OTHER species in that
+        // family (same songtype; same visibility rules as above). Exact-species
+        // classes never enter this branch, so their SQL above is unchanged.
+        // Deliberately a separate query: folding it into the per-class join
+        // as an OR measured 6-8 ms -> ~720 ms on a 20-class page.
+        const familyRows = await Templates.familyRollupTemplates(classIds);
         return dbpool.query(query).then(function(rows) {
+            const seen = new Set(rows.map(r => r.class_id + ':' + r.id));
+            for (const fr of familyRows) {
+                if (!seen.has(fr.class_id + ':' + fr.id)) { rows.push(fr); }
+            }
             // SECOND call site -- same pre-guard removal as in find() above.
             // Fixing only the obvious one would leave this path still short-
             // circuiting on legacy uris (the public-templates / Species page).
