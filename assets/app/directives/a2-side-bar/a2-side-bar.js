@@ -155,8 +155,14 @@ angular.module('a2.directive.side-bar', [])
                         },
                         {
                             title: 'CNN',
+                            // Gated by the `read-cnn` project permission (role >= 'User') since
+                            // 2026-10-08 -- mirrors the SPA (cnnRoleRequired) and the bio API
+                            // (requireCnnProjectRole). Was rfcx.org-email gated ($scope.isRfcx).
+                            // Super users get userRole='Admin' from routes/project.js, so staff
+                            // triage access is preserved. The entry only LINKS to the SPA; the
+                            // SPA + API enforce the gate authoritatively.
                             visibleCondition: () => {
-                                return $scope.isRfcx()
+                                return ['User', 'Expert', 'Admin', 'Owner'].indexOf(a2UserPermit.getUserRole()) !== -1
                             },
                             externalRoute: '/p/' + url + '/analyse/cnn'
                         },
