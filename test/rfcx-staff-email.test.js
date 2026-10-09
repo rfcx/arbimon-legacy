@@ -7,9 +7,11 @@
 //
 // Run: node test/rfcx-staff-email.test.js
 //
-// Block 1 tests the helper. Block 2 is a NEGATIVE CONTROL: it proves the old
-// substring test accepted every spoof listed. Block 3 checks the SHIPPED call
-// sites by source: no staff check may use a substring test again.
+// Block 1 tests the helper; every spoof listed PASSED the old substring test
+// (red-tested 2026-10-08 on rfcx/arbimon#2818: the old logic fails 8/16).
+// The in-file negative control was removed because CodeQL flags the very
+// anti-pattern it demonstrated. Block 2 checks the SHIPPED call sites by
+// source: no staff check may use a substring test again.
 
 const assert = require('assert');
 const fs = require('fs');
@@ -37,9 +39,6 @@ console.log('helper');
 staff.forEach(e => ok('accepts staff ' + JSON.stringify(e), isRfcxStaffEmail(e) === true));
 spoofs.forEach(e => ok('rejects spoof ' + JSON.stringify(e), isRfcxStaffEmail(e) === false));
 junk.forEach(e => ok('rejects junk ' + JSON.stringify(e), isRfcxStaffEmail(e) === false));
-
-console.log('negative control: the old substring check');
-spoofs.forEach(e => ok('old check WAS fooled by ' + JSON.stringify(e), e.includes('rfcx.org')));
 
 console.log('shipped call sites');
 const root = path.join(__dirname, '..');
