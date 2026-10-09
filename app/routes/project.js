@@ -7,6 +7,7 @@ var router = express.Router();
 var cardStack = require('./resource-cards');
 var cardResolver = require('../utils/card-resolver')(cardStack);
 const auth0Service = require('../model/auth0')
+const { isRfcxStaffEmail } = require('../utils/rfcx-staff')
 
 var injected_data = {
     facebook_api: config('facebook_api').public,
@@ -119,7 +120,7 @@ router.get('/:projecturl?/', function(req, res, next) {
                     },
                     super: !!req.session.user.isSuper,
                     isAuthorized: !req.session.isAnonymousGuest,
-                    rfcxUser: !!req.session.user && !!req.session.user.email && !!req.session.user.email.includes('rfcx.org'),
+                    rfcxUser: !!req.session.user && isRfcxStaffEmail(req.session.user.email),
                     userEmail: !!req.session.user && !!req.session.user.email ? req.session.user.email : '',
                     userImage: !!req.session.user && !!req.session.user.imageUrl ? req.session.user.imageUrl : '',
                     userFullName: !!req.session.user && !!req.session.user.firstname ? req.session.user.firstname + ' ' + req.session.user.lastname : '',

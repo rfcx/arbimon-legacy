@@ -16,6 +16,7 @@ const rfcxConfig = config('rfcx');
 var dbpool = require('../utils/dbpool');
 var queryHandler = dbpool.queryHandler;
 var sha256 = require('../utils/sha256');
+var { isRfcxStaffEmail } = require('../utils/rfcx-staff');
 var generator = require('../utils/generator');
 const auth0Service = require('./auth0');
 
@@ -709,7 +710,7 @@ var Users = {
             username: user.login,
             imageUrl: user.picture ? user.picture : null,
             isSuper: user.is_super,
-            isRfcx: user.email.includes('rfcx.org')
+            isRfcx: isRfcxStaffEmail(user.email)
         };
         if(options.all){
             userObj.isAnonymousGuest = false;
