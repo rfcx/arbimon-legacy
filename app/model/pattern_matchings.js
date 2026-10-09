@@ -9,6 +9,7 @@ const sqlutil = require('../utils/sqlutil');
 const dispatchHint = require('./dispatch-hint');
 const SQLBuilder = require('../utils/sqlbuilder');
 const dbpool = require('../utils/dbpool');
+const { isRfcxStaffEmail } = require('../utils/rfcx-staff');
 const Recordings = require('./recordings');
 const Templates = require('./templates');
 const models = require("./index");
@@ -1172,7 +1173,7 @@ var PatternMatchings = {
     }),
 
     requestNewPatternMatchingJob: function(data){
-        const isPrivileged = data.user && data.user.email && data.user.email.endsWith('@rfcx.org') ? 1 : 0
+        const isPrivileged = data.user && isRfcxStaffEmail(data.user.email) ? 1 : 0
         data.user = data.user.id
         return q.ninvoke(joi, 'validate', data, PatternMatchings.JOB_SCHEMA).then(() => {
             // Tier reframe (2026-06-29): enforce the per-job recording (playlist
