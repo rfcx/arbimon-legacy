@@ -1,4 +1,5 @@
 var express = require('express');
+const { recordingAudioMedia } = require('../../../utils/recording-audio-media');
 var router = express.Router();
 var AWS = require('aws-sdk');
 const { createS3Client } = require('../../../utils/storage');
@@ -797,6 +798,11 @@ router.get('/:get/:oneRecUrl?', function(req, res, next) {
                         // (app/utils/legacy-tile-src.js). Same prefix as
                         // imageUrl/audioUrl above. No-op for non-legacy.
                         attachLegacyTileSrc(rec, url_comps[1]);
+
+                        // Playback DIRECT to media-api with a stream-token (rfcx-local 2026-10-15): the SPA player
+                        // prefers `audioMedia` and keeps `audioUrl` (above) as its fallback. null for legacy
+                        // `project_*` recordings and anything media-api cannot render (app/utils/recording-audio-media.js).
+                        rec.audioMedia = recordingAudioMedia(rec);
 
                         res.json(rec);
                     });
