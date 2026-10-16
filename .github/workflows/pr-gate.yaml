@@ -79,3 +79,5 @@ jobs:
           node-version: '18'
       - name: 'roiSpectrogramUrl filenames byte-identical to the reader golden'
         run: node test/roi-reader-golden/check.js
+      - name: 'degenerate ROI windows are padded (§473)'
+        run: node test/roi-degenerate-window/check.js

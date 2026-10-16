@@ -8,7 +8,8 @@ angular.module('a2.analysis.patternmatching', [
     'a2.permissions',
     'humane',
     'c3-charts',
-    'uiSwitch'
+    'uiSwitch',
+    'a2.directive.roi-img'
 ])
 .config(function($stateProvider, $urlRouterProvider) {
     $stateProvider.state('analysis.disabled-patternmatching', {
@@ -635,10 +636,13 @@ angular.module('a2.analysis.patternmatching', [
         $scope.errMess = null;
     }
 })
-.controller('PatternMatchingDetailsCtrl' , function($scope, $q, a2PatternMatching, a2Templates, a2UserPermit, Project, a2AudioBarService, notify, $anchorScroll, $modal) {
+.controller('PatternMatchingDetailsCtrl' , function($scope, $q, a2PatternMatching, a2Templates, a2UserPermit, Project, a2AudioBarService, notify, $anchorScroll, $modal, a2RoiImgRefreshGuard) {
     Object.assign(this, {
     id: null,
     initialize: function(patternMatchingId){
+        // ROI thumbnails whose signed URL expired (tab left open > 6 h) ask for ONE
+        // reload of the current page to get freshly minted URLs (a2-roi-img, §473).
+        this.refreshRoiUrls = a2RoiImgRefreshGuard(function(){ return this.loadData(this.selected.page); }.bind(this));
         this.id = patternMatchingId;
         this.offset = 0;
         this.limit = 100;
