@@ -7,6 +7,7 @@ angular.module('a2.citizen-scientist.patternmatching', [
     'a2.permissions',
     'humane',
     'c3-charts',
+    'a2.directive.roi-img',
 ])
 .config(function($stateProvider, $urlRouterProvider) {
     $stateProvider.state('citizen-scientist.patternmatching', {
@@ -116,10 +117,12 @@ angular.module('a2.citizen-scientist.patternmatching', [
         templateUrl: '/app/citizen-scientist/patternmatching/details.html'
     };
 })
-.controller('CitizenScientistPatternMatchingDetailsCtrl' , function($scope, a2PatternMatching, a2Templates, a2CitizenScientistService, a2UserPermit, Project, a2AudioBarService, notify) {
+.controller('CitizenScientistPatternMatchingDetailsCtrl' , function($scope, a2PatternMatching, a2Templates, a2CitizenScientistService, a2UserPermit, Project, a2AudioBarService, notify, a2RoiImgRefreshGuard) {
     Object.assign(this, {
     id: null,
     initialize: function(patternMatchingId){
+        // Expired ROI URLs -> one reload of the current page (a2-roi-img, §473).
+        this.refreshRoiUrls = a2RoiImgRefreshGuard(function(){ return this.loadPage(this.selected.page); }.bind(this));
         this.id = patternMatchingId;
         this.offset = 0;
         this.limit = 100;

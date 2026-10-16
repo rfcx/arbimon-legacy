@@ -135,6 +135,10 @@ function gluedUtcTimestamp (ms) {
  * else and let the data speak.
  */
 const MIN_PLAUSIBLE_MS = 0; // 1970-01-01T00:00:00Z -- the epoch itself
+// Smallest ROI window roiSpectrogramUrl() will request (see DEGENERATE-WINDOW PAD
+// there): well above media-api's measured floor (1 ms / 1 Hz), still a sliver.
+const ROI_MIN_SPAN_MS = 50;
+const ROI_MIN_BAND_HZ = 50;
 function isPlausibleRecordingMs (ms) {
     if (!isFinite(ms)) return false;
     // `ms >= 0` is the load-bearing test: a driver-parsed zero date (year 0172)
@@ -387,7 +391,7 @@ function roiSpectrogramUrl (roi, opts) {
     // mediaAssetUrl() now owns that rounding for BOTH derivations.
     const rawStartMs = baseMs + from * 1000;
     const rawEndMs = baseMs + to * 1000;
-    const fmin = Math.max(0, Math.min(Number(roi.freqMin), Number(roi.freqMax)));
+    let fmin = Math.max(0, Math.min(Number(roi.freqMin), Number(roi.freqMax)));
     let fmax = Math.max(Number(roi.freqMin), Number(roi.freqMax));
     if (isNaN(fmin) || isNaN(fmax)) return null;
     // Clamp to nyquist when the caller knows the sample rate (all three ROI
@@ -396,6 +400,28 @@ function roiSpectrogramUrl (roi, opts) {
     // reason, and an out-of-band bandpass can fail the media-api render.
     const nyquist = roi.sampleRate ? Number(roi.sampleRate) / 2 : null;
     if (nyquist && !isNaN(nyquist) && fmax > nyquist) fmax = nyquist;
+    // DEGENERATE-WINDOW PAD (2026-10-16, rfcx-local OPEN-ITEMS §473). media-api
+    // REJECTS a zero-height band (`r22049.22049` -> 400 "Highpass frequency filter
+    // can not be greater or equal to lowpass") and FAILS a zero-length window
+    // (start == end in the filename -> 500). Both shapes exist in prod data (2 M-row
+    // sample: 184 rows with y1 == y2, 61 of them pinned at nyquist; a sub-ms window
+    // can also collapse after rounding). Until now those ROIs could only render via
+    // the stored arbimon2 PNG fallback, which is being retired. Pad ONLY the
+    // degenerate axis (media-api renders a 1 ms window and a 1 Hz band, measured
+    // 2026-10-16; the pad below is a few px at 400x400, still visibly tiny).
+    // Every NON-degenerate window is untouched, so its filename -- and therefore its
+    // prewarm cache key (test/roi-reader-golden) -- stays byte-identical.
+    if (Math.round(fmax) <= Math.round(fmin)) {
+        const ceiling = (nyquist && !isNaN(nyquist)) ? nyquist : Infinity;
+        fmax = Math.min(ceiling, Math.round(fmin) + ROI_MIN_BAND_HZ);
+        if (Math.round(fmax) <= Math.round(fmin)) fmin = Math.max(0, Math.round(fmax) - ROI_MIN_BAND_HZ);
+    }
+    let startMs = rawStartMs;
+    let endMs = rawEndMs;
+    if (Math.round(endMs) <= Math.round(startMs)) {
+        startMs = Math.max(baseMs, (rawStartMs + rawEndMs) / 2 - ROI_MIN_SPAN_MS / 2);
+        endMs = startMs + ROI_MIN_SPAN_MS;
+    }
     const w = (opts && opts.width) || 600;
     const h = (opts && opts.height) || 256;
     // (asset string is built below; the direct-vs-proxy choice happens after it)
@@ -423,14 +449,14 @@ function roiSpectrogramUrl (roi, opts) {
     // path rather than emitting URLs that would 401. That proxy is still
     // mounted (the legacy AngularJS visualizer builds its tile urls
     // client-side and cannot mint) -- see routes/index.js.
-    const minted = mediaAssetUrl(streamId, rawStartMs, rawEndMs, asset);
+    const minted = mediaAssetUrl(streamId, startMs, endMs, asset);
     if (minted) {
         return minted.url;
     }
     // Salt unset — fall back to the session-gated proxy. Derive the same attr
     // from the same rounded integers so the two paths stay byte-identical.
-    const attr = `${streamId}_t${gluedUtcTimestamp(Math.round(rawStartMs))}Z.` +
-        `${gluedUtcTimestamp(Math.round(rawEndMs))}Z_${asset}`;
+    const attr = `${streamId}_t${gluedUtcTimestamp(Math.round(startMs))}Z.` +
+        `${gluedUtcTimestamp(Math.round(endMs))}Z_${asset}`;
     return `/legacy-api/ingest/recordings/${attr}`;
 }
 

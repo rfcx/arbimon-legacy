@@ -8,6 +8,7 @@ angular.module('a2.citizen-scientist.expert', [
     'a2.permissions',
     'humane',
     'c3-charts',
+    'a2.directive.roi-img',
 ])
 .config(function($stateProvider, $urlRouterProvider) {
     $stateProvider.state('citizen-scientist.expert', {
@@ -122,10 +123,12 @@ angular.module('a2.citizen-scientist.expert', [
         }
     }
 })
-.controller('CitizenScientistExpertDetailsCtrl' , function($scope, a2PatternMatching, a2Templates, a2CitizenScientistExpertService, a2UserPermit, Project, a2AudioBarService, notify) {
+.controller('CitizenScientistExpertDetailsCtrl' , function($scope, a2PatternMatching, a2Templates, a2CitizenScientistExpertService, a2UserPermit, Project, a2AudioBarService, notify, a2RoiImgRefreshGuard) {
     Object.assign(this, {
     id: null,
     initialize: function(patternMatchingId){
+        // Expired ROI URLs -> one reload of the current page (a2-roi-img, §473).
+        this.refreshRoiUrls = a2RoiImgRefreshGuard(function(){ return this.loadPage(this.selected.page); }.bind(this));
         this.id = patternMatchingId;
         this.offset = 0;
         this.limit = 100;

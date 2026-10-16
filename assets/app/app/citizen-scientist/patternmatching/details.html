@@ -137,12 +137,10 @@
                                 class="fa fa-play fa-2x">
                             </i>
                         </a>
-                        <!-- Same dynamic-render + stored-PNG fallback as the main PM details
-                             page: this view is fed by the same getRoisForId ->
-                             getRoiUrl path, so it inherits the ROI-cropped render. -->
-                        <img ng-src="{{ roi.uri }}" class="roi-img {{controller.thumbnailClass}}"
-                            onerror="if(this.dataset.fbk!=='1'&&this.dataset.stored){this.dataset.fbk='1';this.src=this.dataset.stored;}"
-                            data-stored="{{ roi.storedUri }}"/>
+                        <!-- Same dynamic render as the main PM details page (fed by the
+                             same getRoisForId -> getRoiUrl path); no stored-PNG fallback (§473). -->
+                        <img a2-roi-img="roi.uri" a2-roi-img-refresh="controller.refreshRoiUrls()"
+                            class="roi-img {{controller.thumbnailClass}}"/>
                     </div>
             </div>
         </div>
