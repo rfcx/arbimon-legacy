@@ -189,13 +189,18 @@ let AudioEventDetectionsClustering = {
         return dbpool.query(sql);
     },
 
+    // rfcx-local 2026-10-18 (OPEN-ITEMS §478 F-b, found by the analysis-API parity run): the alias
+    // MUST be quoted. PG lowercases an unquoted identifier, so this returned `{totalrecordings: N}`
+    // while the form (audio-event-detections-clustering/index.js checkLimit) reads
+    // `data.totalRecordings` -> undefined -> the 10,000-recordings guard was silently dead since the
+    // 09-12 PG flip (MariaDB preserved the case). `opts.project_id` is bound while here.
     getTotalRecInLast24Hours: async function(opts) {
         const last24hours = moment.utc().subtract(1, 'days').valueOf()
-        const q = `SELECT SUM(pl.total_recordings) as totalRecordings
+        const q = `SELECT SUM(pl.total_recordings) as "totalRecordings"
             FROM playlists pl
             JOIN job_params_audio_event_detection_clustering jp ON jp.playlist_id = pl.playlist_id
-            WHERE pl.project_id=${opts.project_id} AND (UNIX_TIMESTAMP(jp.date_created) * 1000) >= ${last24hours}`;
-        return dbpool.query(q).get(0);
+            WHERE pl.project_id=? AND (UNIX_TIMESTAMP(jp.date_created) * 1000) >= ?`;
+        return dbpool.query(q, [Number(opts.project_id) | 0, last24hours]).get(0);
     },
 
     totalAEDJobs: function(projectId) {
