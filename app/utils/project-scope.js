@@ -129,6 +129,15 @@ var OWNED_SQL = {
     // the project of the AED job that produced it
     // (job_params_audio_event_detection_clustering.project_id). Its routes took
     // raw `aed` ids from the BODY and updated them by id alone.
+    // §478 I-8 (2026-10-18). An AED job (job_type 8) belongs to exactly one
+    // project (job_params_audio_event_detection_clustering.project_id). The
+    // clustering `/new` route takes it from the BODY (`aed_job.jobId`) and the
+    // worker reads the AED artefact by that id alone, so it must be bound here.
+    // Deleted AED jobs still count (ownership, not listing). Measured: 0 of
+    // 2,873 clustering rows reference an AED job in another project.
+    aed_job:
+        'SELECT 1 AS owned FROM job_params_audio_event_detection_clustering jp ' +
+        'WHERE jp.job_id = ? AND jp.project_id = ? AND jp.project_id = ? LIMIT 1',
     aed:
         'SELECT 1 AS owned FROM audio_event_detections_clustering a ' +
         'JOIN job_params_audio_event_detection_clustering jp ON jp.job_id = a.job_id ' +
@@ -162,7 +171,7 @@ function makeProjectScope(query) {
     if (typeof query !== 'function') { throw new Error('project-scope: query function required'); }
 
     /**
-     * @param {'recording'|'site'|'model'|'model_own'|'playlist'|'training_set'|'job'|'pattern_matching'|'clustering_job'|'template'} kind
+     * @param {'recording'|'site'|'model'|'model_own'|'playlist'|'training_set'|'job'|'pattern_matching'|'clustering_job'|'aed_job'|'aed'|'template'} kind
      * @param {number|string} id
      * @param {number} projectId  req.project.project_id
      * @return {Promise<boolean>}  true only when a row proves ownership

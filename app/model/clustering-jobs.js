@@ -517,6 +517,18 @@ select.push(
             .nodeify(callback);
     },
 
+    /** The playlist an AED job ran over (for the per-job recording cap on the
+     *  clustering create route, §478 I-8). Resolves to null when unknown so
+     *  tiering.assertJobRecordingLimit fails OPEN, like every other create. */
+    getAedJobPlaylistId: function(aedJobId) {
+        return dbpool.query(
+            'SELECT playlist_id FROM job_params_audio_event_detection_clustering WHERE job_id = ? LIMIT 1',
+            [Number(aedJobId) | 0]
+        ).then(function(rows) {
+            return rows && rows[0] && rows[0].playlist_id !== undefined ? rows[0].playlist_id : null;
+        }).catch(function() { return null; });
+    },
+
     totalClusteringJobs: function(projectId) {
         return dbpool.query(`SELECT COUNT(jpaec.job_id) AS count
             FROM job_params_audio_event_clustering jpaec

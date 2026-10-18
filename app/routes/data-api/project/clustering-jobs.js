@@ -192,19 +192,46 @@ router.post('/:job_id/rois-export', function(req, res, next) {
     }).catch(next);
 });
 
+// rfcx-local 2026-10-18 (OPEN-ITEMS §478 I-8; found by the analysis-API route
+// census). This was the ONE create route with no permission check and no
+// body-id binding: `body.aed_job.jobId` was inserted as given, so any member of
+// project P (Viewer included; any logged-in user on a PUBLIC project) could
+// cluster ANOTHER project's AED job into P (the worker reads the AED artefact
+// by id alone -- cluster.py). Measured before the fix: 0 of 2,873 clustering
+// rows have their AED job in a different project, so never exploited; the
+// legacy UI only offers P's own AED jobs, so the hole was API-only.
+// Rule (the W7 shape of #1981 / the AED `/new` route in this family):
+//   - caller needs 'manage AED and Clustering job' on the URL project -> else 403
+//   - the AED job in the body must be an AED job OF the URL project -> else 404
+//     (same body as a missing job; never reveals existence)
+//   - the per-job recording cap applies, resolved through the AED job's
+//     playlist (fail-open inside tiering, like every other create route)
+// project-scope: guard
 router.post('/new', function(req, res, next) {
     res.type('json');
+    const project_id = req.project.project_id;
+    const aedJob = req.body && req.body.aed_job;
+    const aedJobId = aedJob && (aedJob.jobId !== undefined ? aedJob.jobId : aedJob.job_id);
 
-    return model.ClusteringJobs.requestNewClusteringJob({
-        project_id: req.project.project_id,
-        user_id: req.session.user.id,
-        name: req.body.name,
-        audioEventDetectionJob: req.body.aed_job,
-        params: req.body.params,
-    }, function(err, result) {
-        if (err) return next(err);
-        res.json({ create: true, result });
-    })
+    if (!req.haveAccess(project_id, 'manage AED and Clustering job')) {
+        return res.status(403).json({ error: "You don't have permission to manage AED and Clustering jobs" });
+    }
+    return projectScope.ownedByProject('aed_job', aedJobId, project_id).then(function(owned) {
+        if (!owned) { return res.status(404).json({ error: 'audio event detection job not found' }); }
+        return model.ClusteringJobs.getAedJobPlaylistId(aedJobId).then(function(playlistId) {
+            return require('../../../model/tiering').assertJobRecordingLimit(project_id, playlistId);
+        }).then(function() {
+            return model.ClusteringJobs.requestNewClusteringJob({
+                project_id: project_id,
+                user_id: req.session.user.id,
+                name: req.body.name,
+                audioEventDetectionJob: { name: aedJob.name, jobId: aedJobId },
+                params: req.body.params,
+            });
+        }).then(function(result) {
+            res.json({ create: true, result });
+        });
+    }).catch(next);
 });
 
 // project-scope: model delete
