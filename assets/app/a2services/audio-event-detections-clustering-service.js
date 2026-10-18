@@ -23,6 +23,13 @@ angular.module('a2.srv.audio-event-detections-clustering', [
                 return response.data;
             });
         },
+        // rfcx-local §476 (2026-10-18): { nyquist_khz, max_sr, min_sr, n_rates } for a
+        // playlist -- sizes the Min/Max Frequency inputs on the new-job form.
+        playlistBand: function(playlistId) {
+            return $http.get('/legacy-api/project/'+Project.getUrl()+'/audio-event-detections-clustering/playlist-band/'+playlistId).then(function(response){
+                return response.data;
+            });
+        },
         validate: function(opts) {
             return $http.post('/legacy-api/project/' + Project.getUrl() + '/audio-event-detections-clustering/validate', opts)
                 .then(function(response){
