@@ -239,6 +239,17 @@ router.get('/:siteid/uploads.txt', function(req, res, next){
         }
     });
 });
+// Per-site recording-QC summary (rfcx-local OPEN-ITEMS §479 A2 G3b).
+// GET /project/:slug/sites/:siteid/qc-summary?days=30  -> see model.sites.getQcSummary.
+// Read-only; same project gate as every other route under /project/:slug (a private
+// project 404s before this runs); `days` clamped 1..90 in the model.
+router.get('/:siteid/qc-summary', function(req, res, next){
+    res.type('json');
+    model.sites.getQcSummary(req.site.site_id, { days: req.query.days })
+        .then(summary => res.json(summary))
+        .catch(next);
+});
+
 router.get('/:siteid/data.txt', function(req, res, next){
     var options={};
     var output='csv', groupby;
