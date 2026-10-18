@@ -14,6 +14,7 @@ const siteRecCount = require('./site-rec-count'); // S2: sites.rec_count mainten
 const playlistRecCount = require('./playlist-rec-count'); // playlists.total_recordings maintenance (2026-09-22)
 var queryHandler = dbpool.queryHandler;
 const moment = require('moment');
+const sqlutil = require('../utils/sqlutil');
 let APIError = require('../utils/apierror');
 const { coreApiBaseUrl } = require('../utils/core-api-url');
 const projects = require('./projects')
@@ -458,6 +459,67 @@ var Sites = {
          * @param {Date}  options.to   - limit returned data to entries before or at this date
          * @param {Callback} callback    - callback function
          */
+    /**
+     * Per-site recording-QC summary over a window (rfcx-local OPEN-ITEMS §479 A2 G3b).
+     *
+     * The QC numbers are written at ingest by rfcx/rfcx-ingest-audio
+     * (services/audio-qc.js, live 2026-10-18) into recordings.meta as the JSON key
+     * `qc` — so only recordings ingested from that date on carry them; `n_qc` says
+     * how many of the window's rows do. No new column, no new index: the query is
+     * bounded by (site_id, datetime) via recordings_site_datetime_idx and the JSON
+     * is read with substring() on the text column (measured 2026-10-18 on the
+     * replica: 238 ms for the busiest site over 30 days, 1,128 rows, index scan).
+     * `days` is clamped to 1..90 so the route can never become a table scan.
+     *
+     * Thresholds here are DISPLAY thresholds (same as the SPA facts strip):
+     * clipped = clip_pct >= 0.01, mostly_silent = silent_pct >= 50, dc = |dc| >= 0.01.
+     * The stored numbers stay facts; these just count.
+     */
+    getQcSummary: function(site_id, options){
+        const days = Math.min(90, Math.max(1, (options && options.days) | 0 || 30));
+        // Two router traps, both caught by test/site-qc-summary.test.js:
+        //  (0) now() is a forbidden function for routed reads — the window start is a bound literal;
+        //  (1) the statement is formatted with mysql.format() BEFORE translation, so any
+        //      literal `?` in the SQL text is a positional placeholder — regexes must
+        //      write `-{0,1}` instead of `-?`;
+        //  (2) dbpool-pg.js rewrites `LIKE` into an accent-insensitive translate(lower())
+        //      form, so presence tests use position() instead.
+        const sql =
+            "SELECT COUNT(*) AS n, \n" +
+            "       COUNT(*) FILTER (WHERE position('\"qc\"' in meta) > 0) AS n_qc, \n" +
+            "       COUNT(*) FILTER (WHERE position('\"skipped\"' in meta) > 0) AS n_skipped, \n" +
+            "       COUNT(*) FILTER (WHERE (substring(meta from '\"clip_pct\":([0-9.]+)'))::real >= 0.01) AS clipped, \n" +
+            "       COUNT(*) FILTER (WHERE (substring(meta from '\"silent_pct\":([0-9.]+)'))::real >= 50) AS mostly_silent, \n" +
+            "       COUNT(*) FILTER (WHERE abs((substring(meta from '\"dc_offset\":(-{0,1}[0-9.]+)'))::real) >= 0.01) AS dc_offset, \n" +
+            "       percentile_cont(0.5) WITHIN GROUP (ORDER BY (substring(meta from '\"rms_p10_dbfs\":(-{0,1}[0-9.]+)'))::real) AS floor_median_dbfs, \n" +
+            "       percentile_cont(0.5) WITHIN GROUP (ORDER BY (substring(meta from '\"peak_dbfs\":(-{0,1}[0-9.]+)'))::real) AS peak_median_dbfs, \n" +
+            "       MIN(datetime) AS from_datetime, MAX(datetime) AS to_datetime \n" +
+            "FROM recordings \n" +
+            "WHERE site_id = ? AND archived_at IS NULL AND datetime >= ?";
+        // The router forbids now() (a replayed read must be deterministic), so the window
+        // start is computed here and bound as a literal — which also gives the planner a
+        // constant for recordings_site_datetime_idx.
+        const since = new Date(Date.now() - days * 86400000);
+        return dbpool.query({ sql, typeCast: sqlutil.parseUtcDatetime }, [site_id | 0, since]).then(rows => {
+            const r = (rows && rows[0]) || {};
+            const num = (v) => (v === null || v === undefined) ? null : Number(v);
+            return {
+                site_id: site_id | 0,
+                days,
+                n: num(r.n) || 0,
+                n_qc: num(r.n_qc) || 0,
+                n_skipped: num(r.n_skipped) || 0,
+                clipped: num(r.clipped) || 0,
+                mostly_silent: num(r.mostly_silent) || 0,
+                dc_offset: num(r.dc_offset) || 0,
+                floor_median_dbfs: num(r.floor_median_dbfs),
+                peak_median_dbfs: num(r.peak_median_dbfs),
+                from_datetime: r.from_datetime || null,
+                to_datetime: r.to_datetime || null
+            };
+        });
+    },
+
     getRecordingStats: function(site, options, callback){
             dbpool.getConnection(function(err, dbconn){
                 var m;
