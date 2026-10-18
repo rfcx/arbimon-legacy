@@ -24,6 +24,9 @@ var express = require('express');
  */
 var ROOT = path.join(__dirname, '..');
 var cjobs = { 70: 10, 80: 20 };
+var aedJobs = { 500: 10, 600: 20 };   // §478 I-8: AED jobs owned by project 10 / 20
+var denyPerm = false;                  // flipped by the /new tests to simulate a Viewer
+var tieringLimitHit = false;
 var recs = { 1000: 10, 2000: 'imported-10', 3000: 20 };
 var calls = [];
 
@@ -32,6 +35,9 @@ var fakeDbpool = {
         var id = Number(params[0]), pid = Number(params[1]);
         if (/FROM job_params_audio_event_clustering c/.test(sql)) {
             return Promise.resolve(cjobs[id] === pid ? [{ owned: 1 }] : []);
+        }
+        if (/FROM job_params_audio_event_detection_clustering jp WHERE jp.job_id/.test(sql)) {
+            return Promise.resolve(aedJobs[id] === pid ? [{ owned: 1 }] : []);
         }
         if (/FROM recordings r JOIN sites s/.test(sql)) {
             var r = recs[id];
@@ -47,7 +53,9 @@ var fakeModel = {
         findRois: function(opts) { calls.push(['findRois', opts.aed || null, opts.rec_id || null, opts.project]); return Promise.resolve([{ aed_id: 1 }]); },
         getClusteringPlaylist: function(recId) { calls.push(['getClusteringPlaylist', +recId]); return Promise.resolve([{ aed_id: 1, playlist_name: 'pl', playlist_id: 9 }]); },
         getRoiAudioFile: function(opts) { calls.push(['getRoiAudioFile', +opts.recId, +opts.aedId]); return Promise.resolve(undefined); },
-        audioEventDetections: function() { return Promise.resolve([]); }
+        audioEventDetections: function() { return Promise.resolve([]); },
+        getAedJobPlaylistId: function(id) { calls.push(['getAedJobPlaylistId', +id]); return Promise.resolve(42); },
+        requestNewClusteringJob: function(data) { calls.push(['requestNewClusteringJob', data.project_id, data.audioEventDetectionJob.jobId]); return Promise.resolve({ job_id: 777 }); }
     },
     jobs: { find: function(o, cb) { cb(null, []); }, hideAsync: function() { return Promise.resolve(); } },
     recordings: { writeExportParams: function() { return Promise.resolve({}); } }
@@ -66,6 +74,10 @@ describe('§393 slice B: clustering id routes are bound to the URL project (real
     before(function(done) {
         stubbed.push(stub('app/model/index.js', fakeModel));
         stubbed.push(stub('app/utils/dbpool.js', fakeDbpool));
+        stubbed.push(stub('app/model/tiering.js', { assertJobRecordingLimit: function(pid, plid) {
+            calls.push(['assertJobRecordingLimit', pid, plid]);
+            return tieringLimitHit ? Promise.reject(new Error('TIERING_LIMIT')) : Promise.resolve();
+        } }));
         ['app/utils/project-scope.js', 'app/routes/data-api/project/clustering-jobs.js'].forEach(function(r) {
             var p = require.resolve(path.join(ROOT, r)); delete require.cache[p]; reloaded.push(p);
         });
@@ -75,7 +87,7 @@ describe('§393 slice B: clustering id routes are bound to the URL project (real
         app.use('/project/:pid', function(req, res, next) {
             req.project = { project_id: Number(req.params.pid), url: 'p' + req.params.pid };
             req.session = { user: { id: 1, isSuper: 0, permissions: {} } };
-            req.haveAccess = function() { return true; };
+            req.haveAccess = function() { return !denyPerm; };
             next();
         });
         app.use('/project/:pid/clustering-jobs', clRouter);
@@ -160,5 +172,45 @@ describe('§393 slice B: clustering id routes are bound to the URL project (real
         expect(calls).to.deep.equal([]);
         // the aedId is resolved within the bound recording by the model call (recId, aedId pair)
         expect((await get('/project/20/clustering-jobs/3000/audio/7')).status).to.equal(404); // fake model: no audio -> 404
+    });
+    // ---- §478 I-8 (2026-10-18): POST /new was the one create route with no permission check and no body-id binding
+    it('/new: FOREIGN aed_job.jobId → 404 (same body as a missing one); model + tiering NEVER called, no job row', async function() {
+        var foreign = await post('/project/10/clustering-jobs/new', { name: 'x', aed_job: { name: 'a', jobId: 600 }, params: {} });
+        var missing = await post('/project/10/clustering-jobs/new', { name: 'x', aed_job: { name: 'a', jobId: 9999 }, params: {} });
+        expect(foreign.status).to.equal(404);
+        expect(missing.status).to.equal(404);
+        expect(foreign.body).to.equal(missing.body);
+        expect(calls).to.deep.equal([]);
+    });
+    it('/new: no `manage AED and Clustering job` permission → 403 before any lookup', async function() {
+        denyPerm = true;
+        try {
+            var r = await post('/project/10/clustering-jobs/new', { name: 'x', aed_job: { name: 'a', jobId: 500 }, params: {} });
+            expect(r.status).to.equal(403);
+            expect(calls).to.deep.equal([]);
+        } finally { denyPerm = false; }
+    });
+    it('/new: OWN aed_job → tiering checked through the AED job\'s playlist, then created with the URL project + bound id', async function() {
+        var r = await post('/project/10/clustering-jobs/new', { name: 'x', aed_job: { name: 'a', jobId: 500 }, params: { minPoints: 3 } });
+        expect(r.status).to.equal(200);
+        expect(JSON.parse(r.body)).to.deep.equal({ create: true, result: { job_id: 777 } });
+        expect(calls).to.deep.equal([['getAedJobPlaylistId', 500], ['assertJobRecordingLimit', 10, 42], ['requestNewClusteringJob', 10, 500]]);
+        // and the SAME id is foreign from project 20's URL
+        var cross = await post('/project/20/clustering-jobs/new', { name: 'x', aed_job: { name: 'a', jobId: 500 }, params: {} });
+        expect(cross.status).to.equal(404);
+    });
+    it('/new: a missing/absent aed_job body → 404 (never a 500 from reading .jobId of undefined)', async function() {
+        expect((await post('/project/10/clustering-jobs/new', { name: 'x', params: {} })).status).to.equal(404);
+        expect((await post('/project/10/clustering-jobs/new', { name: 'x', aed_job: {}, params: {} })).status).to.equal(404);
+        expect(calls).to.deep.equal([]);
+    });
+    it('/new: tiering refusal surfaces as the error (no job row), not swallowed', async function() {
+        tieringLimitHit = true;
+        try {
+            var r = await post('/project/10/clustering-jobs/new', { name: 'x', aed_job: { name: 'a', jobId: 500 }, params: {} });
+            expect(r.status).to.equal(500);
+            expect(r.body).to.contain('TIERING_LIMIT');
+            expect(calls.filter(function(c) { return c[0] === 'requestNewClusteringJob'; })).to.deep.equal([]);
+        } finally { tieringLimitHit = false; }
     });
 });
