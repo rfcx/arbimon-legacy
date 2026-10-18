@@ -39,6 +39,26 @@ router.get('/total-recordings', function(req, res, next) {
 });
 
 
+/** The band a playlist's recordings can hold: `{ nyquist_khz, max_sr, min_sr, n_rates }`
+ *  (nyquist_khz null = unknown/empty). The new-job form uses it to size the
+ *  Min/Max Frequency inputs instead of the old hard-coded 0-24 kHz (rfcx-local
+ *  §476, 2026-10-18). Read-only; playlist must belong to THIS project.
+ */
+// project-scope: guard
+router.get('/playlist-band/:playlist_id', function(req, res, next) {
+    res.type('json');
+    const playlistId = Number(req.params.playlist_id);
+    if (!Number.isInteger(playlistId) || playlistId <= 0) {
+        return res.status(400).json({ error: 'invalid playlist id' });
+    }
+    return projectScope.ownedByProject('playlist', playlistId, req.project.project_id).then(function(owned) {
+        if (!owned) { return res.status(404).json({ error: 'playlist not found' }); }
+        return model.AudioEventDetectionsClustering.getPlaylistBand(playlistId).then(function(band){
+            res.json(band);
+        });
+    }).catch(next);
+});
+
 router.post('/new', function(req, res, next) {
     res.type('json');
     // Body/query-id audit W7 (2026-09-28): the job is created in the PLAYLIST's

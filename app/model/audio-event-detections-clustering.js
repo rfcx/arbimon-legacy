@@ -227,10 +227,40 @@ let AudioEventDetectionsClustering = {
             durationThreshold: joi.number().positive().required(),
             bandwidthThreshold: joi.number().positive().required(),
             filterSize: joi.number().positive().required(),
-            minFrequency: joi.number(),
-            maxFrequency: joi.number()
+            // 2026-10-18 (rfcx-local §476): kHz, both optional. Absent = the
+            // recording's full band. Bounds are enforced against the PLAYLIST's
+            // Nyquist in enqueueAEDClusteringJob, not here (joi has no DB).
+            minFrequency: joi.number().min(0).allow(null),
+            maxFrequency: joi.number().positive().allow(null)
         }).required(),
     }),
+
+    /** The band a playlist can actually contain: MAX(sample_rate)/2 in kHz,
+     *  plus the min/max/distinct rates so the form can warn on a mixed-rate
+     *  playlist. One index-only loop over playlist_recordings → recordings
+     *  (5 ms on a 275-recording playlist; the 7 M-row pathological playlist is
+     *  the same shape the count badge already paid before 2026-09-22, so it is
+     *  bounded with a statement timeout and FAILS OPEN to null = "unknown").
+     *  rfcx-local §476 (2026-10-18). */
+    getPlaylistBand: function(playlist_id){
+        return dbpool.query(
+            'SELECT MAX(R.sample_rate) AS max_sr, MIN(R.sample_rate) AS min_sr, COUNT(DISTINCT R.sample_rate) AS n_rates ' +
+            'FROM playlist_recordings PR JOIN recordings R ON R.recording_id = PR.recording_id ' +
+            'WHERE PR.playlist_id = ?',
+            [playlist_id]
+        ).get(0).then(function(row){
+            if (!row || !row.max_sr) { return { nyquist_khz: null, max_sr: null, min_sr: null, n_rates: 0 }; }
+            return {
+                nyquist_khz: Number(row.max_sr) / 2000,
+                max_sr: Number(row.max_sr),
+                min_sr: Number(row.min_sr),
+                n_rates: Number(row.n_rates),
+            };
+        }).catch(function(err){
+            console.error('getPlaylistBand failed (fail-open to unknown):', err && err.message);
+            return { nyquist_khz: null, max_sr: null, min_sr: null, n_rates: 0 };
+        });
+    },
 
     requestNewAudioEventDetectionClusteringJob: function(data){
         const payload = JSON.stringify(
@@ -281,6 +311,36 @@ let AudioEventDetectionsClustering = {
             'Area Threshold': Number(data.params.areaThreshold),
             'Filter Size': Number(data.params.filterSize),
         };
+        // 2026-10-18 (rfcx-local §476): the in-cluster port DROPPED the user's
+        // Min/Max Frequency here (the AWS Lambda payload above still carries
+        // them), so every AED job since 2026-05-28 ran over the recording's
+        // full band regardless of what was typed, while the form kept a
+        // hard-coded 0-24 kHz box. The worker (rfcx/arbimon-jobs-analysis
+        // aed_lib.find_events) now reads these two keys and treats ABSENT as
+        // full band. Rule here:
+        //   - both blank/null  -> keys omitted (full band)
+        //   - min >= max, or min < 0, or non-numeric -> 400 (never silently
+        //     reinterpreted: the user asked for something impossible)
+        //   - max > playlist Nyquist -> clamped to Nyquist (a 250 kHz playlist
+        //     can hold 125 kHz; asking for more is harmless and means "all")
+        //   - max == the OLD hard-coded default 24 on a playlist whose Nyquist
+        //     is above 24 AND min == 0 -> keys omitted (full band). This is the
+        //     stale-bundle guard: a cached pre-fix form still posts 0-24 for an
+        //     ultrasonic playlist, and honouring it would silently cut a bat
+        //     job to 24 kHz -- the exact regression the ticket that found this
+        //     bug would otherwise have been handed. A user who genuinely wants
+        //     0-24 on an ultrasonic playlist enters 0-23.9 or 1-24.
+        const hasMin = data.params.minFrequency !== undefined && data.params.minFrequency !== null && data.params.minFrequency !== '';
+        const hasMax = data.params.maxFrequency !== undefined && data.params.maxFrequency !== null && data.params.maxFrequency !== '';
+        let fmin = hasMin ? Number(data.params.minFrequency) : 0;
+        let fmax = hasMax ? Number(data.params.maxFrequency) : null;
+        if ((hasMin && !isFinite(fmin)) || (hasMax && !isFinite(fmax))) {
+            throw new Error('Invalid AED clustering frequency range: min and max must be numbers (kHz).');
+        }
+        if (fmin < 0) { throw new Error('Invalid AED clustering frequency range: min must be 0 or greater (kHz).'); }
+        if (fmax !== null && fmax <= fmin) {
+            throw new Error('Invalid AED clustering frequency range: max must be greater than min (kHz).');
+        }
         // Fail LOUDLY here rather than writing a NaN (which JSON.stringify
         // turns into `null`) into job_params.parameters. A null threshold is
         // unrunnable: the worker raises TypeError on float(None) for EVERY
@@ -308,7 +368,25 @@ let AudioEventDetectionsClustering = {
         // exactly the same user action that produced the type-6 failures:
         // delete a playlist, then start a job against it before the nightly
         // full re-copy clears the stale PostgreSQL row.
-        return dbpool.performTransaction(function(tx){
+        return AudioEventDetectionsClustering.getPlaylistBand(data.playlist_id).then(function(band){
+            const nyq = band.nyquist_khz;           // null = unknown (empty playlist / query failed)
+            const ultrasonic = nyq !== null && nyq > 24;
+            if (fmax !== null && ultrasonic && fmax === 24 && fmin === 0) {
+                fmax = null;                        // stale-bundle default on an ultrasonic playlist
+            }
+            if (fmax !== null && nyq !== null && fmax > nyq) { fmax = nyq; }
+            if (fmax !== null && fmin >= fmax) {
+                throw new Error('Invalid AED clustering frequency range: min must be below the playlist\'s maximum frequency (' + nyq + ' kHz).');
+            }
+            if (fmax !== null) {
+                params['Min Frequency'] = fmin;
+                params['Max Frequency'] = fmax;
+            } else if (hasMin && fmin > 0) {
+                params['Min Frequency'] = fmin;     // min only: worker treats max as the file's Nyquist
+            }
+            return band;
+        }).then(function(){
+          return dbpool.performTransaction(function(tx){
             const txq = tx.connection.promisedQuery.bind(tx.connection);
             let projId, jobId;
             return txq('SELECT project_id FROM playlists WHERE playlist_id = ?', [data.playlist_id])
@@ -326,8 +404,9 @@ let AudioEventDetectionsClustering = {
                         'VALUES (?, ?, ?, now(), ?, ?, ?)',
                         [data.name, projId, jobId, JSON.stringify(params), data.playlist_id, data.user_id]);
                 }).then(function(){
-                    return { job_id: jobId, dispatch: 'jobqueue' };
+                    return { job_id: jobId, dispatch: 'jobqueue', params: params };
                 });
+          });
         }).then(function(res){
             // Post-commit dispatch hint (fire-and-forget). P3 2026-09-21.
             if (res && res.job_id) { dispatchHint.hint(res.job_id, 8); }

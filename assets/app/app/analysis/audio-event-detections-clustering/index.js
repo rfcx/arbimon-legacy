@@ -166,6 +166,14 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
                     maxFrequency: 24
                 }
             };
+            // rfcx-local §476 (2026-10-18): the frequency box used to be a hard-coded
+            // 0-24 kHz whatever the playlist held (and, since 2026-05-28, was not even
+            // sent to the worker). Now the limit AND the default Max follow the selected
+            // playlist's Nyquist (max sample_rate / 2). `band.nyquist_khz` null = unknown
+            // (empty playlist or lookup failed) -> fall back to the old 24 so the form
+            // still works; the server treats an out-of-band max as "clamp to Nyquist".
+            this.band = { nyquist_khz: null, n_rates: 0, loading: false, playlistId: null };
+            this.DEFAULT_MAX_KHZ = 24;
 
             this.isRfcxUser = a2UserPermit.isRfcx();
             this.isSuper = a2UserPermit.isSuper();
@@ -273,6 +281,39 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
 
         showFrequencyWarning: function () {
             return this.data.params.maxFrequency <= this.data.params.minFrequency
+        },
+        // §476: the ceiling the inputs enforce (kHz). Nyquist when known, else 24.
+        maxKhz: function () {
+            var n = this.band && this.band.nyquist_khz;
+            return (n && isFinite(n) && n > 0) ? n : this.DEFAULT_MAX_KHZ;
+        },
+        showNyquistWarning: function () {
+            return this.data && this.data.params && isFinite(Number(this.data.params.maxFrequency)) &&
+                Number(this.data.params.maxFrequency) > this.maxKhz();
+        },
+        isMixedRatePlaylist: function () {
+            return !!(this.band && this.band.n_rates > 1);
+        },
+        // Called when the playlist selection changes: fetch its band, then move the
+        // Max to the new Nyquist if the user has not typed their own value (i.e. it
+        // still equals the previous ceiling or the old default).
+        onPlaylistChange: function (playlist) {
+            if (!playlist || !playlist.id) return;
+            var prevCeiling = this.maxKhz();
+            this.band.loading = true;
+            this.band.playlistId = playlist.id;
+            a2AudioEventDetectionsClustering.playlistBand(playlist.id).then((function (band) {
+                if (this.band.playlistId !== playlist.id) return;   // a later selection won
+                this.band.nyquist_khz = band && band.nyquist_khz ? Number(band.nyquist_khz) : null;
+                this.band.n_rates = band && band.n_rates ? Number(band.n_rates) : 0;
+                this.band.loading = false;
+                var cur = Number(this.data.params.maxFrequency);
+                if (!isFinite(cur) || cur === prevCeiling || cur === this.DEFAULT_MAX_KHZ || cur > this.maxKhz()) {
+                    this.data.params.maxFrequency = this.maxKhz();
+                }
+            }).bind(this)).catch((function () {
+                this.band.loading = false;          // fail-open: keep the 24 fallback
+            }).bind(this));
         },
 
         isNotDefined: function (item) {
