@@ -336,9 +336,15 @@ var Projects = {
     },
 
     exportProjectSites(project_id){
+        // rfcx-local 2026-10-20 (alias sweep, FINDING-2026-10-19-legacy-camelcase-aliases-on-pg): the aliases
+        // MUST stay double-quoted. streamQuery runs on the conn-scoped PG path, which does NOT restore
+        // MySQL key casing (only the dbpool.query read route does), so a bare `as Timezone` came back as
+        // `timezone`: the CSV header went lowercase and the route's `data.Timezone` read undefined, so
+        // "Deployed"/"Updated" rendered in UTC instead of the site's zone since the 2026-09-12 flip.
+        // Test: test/export-project-sites-alias-case.test.js
         const sql = `
-            SELECT s.site_id as Id, s.name as Name, s.lat as Latitude, s.lon as Longitude, s.alt as Altitude,
-                s.timezone as Timezone, COUNT(recording_id) as Recordings_Count, s.updated_at, s.external_id
+            SELECT s.site_id as "Id", s.name as "Name", s.lat as "Latitude", s.lon as "Longitude", s.alt as "Altitude",
+                s.timezone as "Timezone", COUNT(recording_id) as "Recordings_Count", s.updated_at, s.external_id
             FROM sites AS s
                 LEFT JOIN project_imported_sites as pis ON s.site_id = pis.site_id AND pis.project_id=?
                 LEFT JOIN recordings as r ON s.site_id = r.site_id AND r.archived_at IS NULL
