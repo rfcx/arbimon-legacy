@@ -316,6 +316,27 @@ router.get('/:recordingId/soundscapes', async function(req, res, next) {
     }
 });
 
+/** 0-based position of a recording within its site-DAY list (the Site+Date
+ *  browse mode of the SPA visualizer), plus the day's active count. Same
+ *  ordering as the paged list `GET /recordings/!q:<site>-<Y>-<M>-<D>?limit&offset`
+ *  so `floor(position / limit)` is the page that holds the recording -- the
+ *  day-list twin of GET /playlists/:playlist/:recid/position (§485).
+ *  rfcx-local FINDING 2026-10-21 (Wallauer visualizer report #2).
+ *  404 for an unknown or foreign recording (§391 shape).
+ */
+// project-scope: model findByIdInProjectAsync
+router.get('/position/:recordingId', async function(req, res, next) {
+    try {
+        const [rec] = await model.recordings.findByIdInProjectAsync(req.params.recordingId, req.project.project_id);
+        if (!rec) return res.status(404).json({ error: 'recording not found' });
+        const pos = await model.recordings.dayPositionAsync(rec);
+        if (!pos) return res.status(404).json({ error: 'recording not found' });
+        res.json({ recording_id: rec.recording_id, site_id: rec.site_id, position: pos.position, count: pos.count });
+    } catch (err) {
+        next(err);
+    }
+});
+
 // project-scope: model findByIdInProjectAsync
 router.get('/download-wav/:recordingId', async function(req, res, next) {
     try {
