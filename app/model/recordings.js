@@ -343,6 +343,81 @@ var Recordings = {
         });
     },
 
+    /**
+     * 0-based position of a recording within its site-DAY list, in the SAME
+     * order the visualizer's Site+Date list pages with
+     * (findByUrlMatch `!q:<site>-<Y>-<M>-<D>` + options.order =
+     * ORDER BY S.name, R.datetime -- one site, so effectively R.datetime; the
+     * recording_id tiebreak here makes equal datetimes deterministic the way
+     * segmentPositionAsync does). Active (unarchived) rows only, like the list.
+     * `day` is the recording's own LOCAL datetime date (the `!q:` key is local).
+     * Resolves { position, count } ; null when the recording is not found.
+     *
+     * rfcx-local FINDING 2026-10-21 (Wallauer visualizer report #2): the SPA
+     * sent `?recording_id=` on EVERY list page and this route's neighbour
+     * short-circuit ignored limit/offset, so the day list stalled at 20 tiles
+     * and refetched ~1/s. The SPA now pages the day like a playlist and seeds
+     * the page from this position -- the same shape as
+     * playlists.fetchRecordingPosition (§485, #1840/#2841).
+     * Index: (site_id, datetime); measured 5 ms on a 1,441-row site-day.
+     */
+    dayPositionAsync: function(rec) {
+        if (!rec || !rec.site_id || !rec.datetime) return Promise.resolve(null);
+        var dt = rec.datetime instanceof Date ? rec.datetime : new Date(rec.datetime);
+        if (isNaN(dt.getTime())) return Promise.resolve(null);
+        // DATE(datetime) is engine-neutral here; the sqlutil translator maps it.
+        var _activeR = sqlutil.recordingArchiveScope('r', 'active');
+        var q = "SELECT \n" +
+            "  COUNT(*) AS count, \n" +
+            "  SUM(CASE WHEN r.datetime < ? OR (r.datetime = ? AND r.recording_id < ?) THEN 1 ELSE 0 END) AS pos \n" +
+            "FROM recordings r \n" +
+            "WHERE r.site_id = ? AND r.datetime >= ? AND r.datetime < ? AND " + _activeR;
+        var day0 = new Date(Date.UTC(dt.getUTCFullYear(), dt.getUTCMonth(), dt.getUTCDate()));
+        var day1 = new Date(day0.getTime() + 86400000);
+        var fmt = function(d){ return d.toISOString().slice(0, 19).replace('T', ' '); };
+        return dbpool.query(q, [fmt(dt), fmt(dt), rec.recording_id, rec.site_id, fmt(day0), fmt(day1)]).then(function (rows) {
+            var row = rows && rows[0] || {};
+            return { position: Number(row.pos) || 0, count: Number(row.count) || 0 };
+        });
+    },
+
+    /**
+     * Annotate a page of list rows with `segment: { index, count }` -- which
+     * piece of a longer uploaded file each row is (a long upload is ingested as
+     * one recording per minute, every segment keeping the ORIGINAL filename;
+     * segmentPositionAsync is the single-row form used for download names).
+     * ONE grouped query per page (site_id, filename IN page) on
+     * recordings_site_filename_idx -- never per row. Rows whose filename is
+     * absent, or whose file has a single segment, get segment: null.
+     * Archived rows are INCLUDED on purpose (same as segmentPositionAsync):
+     * archiving a segment must not renumber its siblings.
+     */
+    annotateSegmentsAsync: function(rows) {
+        if (!rows || !rows.length) return Promise.resolve(rows);
+        var files = {};
+        rows.forEach(function(r){
+            var fn = r.meta && r.meta.filename ? r.meta.filename : r.filename;
+            if (r.site_id && fn) files[r.site_id + '\u0000' + fn] = { site_id: r.site_id, filename: fn };
+        });
+        var keys = Object.keys(files);
+        if (!keys.length) { rows.forEach(function(r){ r.segment = null; }); return Promise.resolve(rows); }
+        var siteIds = {}; var names = {};
+        keys.forEach(function(k){ siteIds[files[k].site_id] = true; names[files[k].filename] = true; });
+        var q = "SELECT r.recording_id, r.site_id, r.filename, r.datetime, \n" +
+            "  ROW_NUMBER() OVER (PARTITION BY r.site_id, r.filename ORDER BY r.datetime, r.recording_id) AS idx, \n" +
+            "  COUNT(*) OVER (PARTITION BY r.site_id, r.filename) AS cnt \n" +
+            "FROM recordings r WHERE r.site_id IN (?) AND r.filename IN (?)";
+        return dbpool.query(q, [Object.keys(siteIds).map(Number), Object.keys(names)]).then(function (res) {
+            var byId = {};
+            (res || []).forEach(function(x){ byId[x.recording_id] = { index: Number(x.idx), count: Number(x.cnt) }; });
+            rows.forEach(function(r){
+                var s = byId[r.id !== undefined ? r.id : r.recording_id];
+                r.segment = s && s.count > 1 ? s : null;
+            });
+            return rows;
+        });
+    },
+
     findByIdInProjectAsync: function(recId, projectId) {
         let find = util.promisify(this.findByIdInProject)
         return find(recId, projectId)
@@ -443,6 +518,8 @@ var Recordings = {
             projection = "R.recording_id AS id, \n"+
                         "SUBSTRING_INDEX(R.uri,'/',-1) as file, R.meta, \n"+
                         "S.name as site, \n"+
+                        "R.site_id, \n"+
+                        "R.filename, \n"+
                         "S.timezone, \n"+
                         "S.external_id, \n"+
                         "R.uri, \n"+
@@ -591,6 +668,14 @@ var Recordings = {
                     }
                     return arrays_util.compute_row_properties(data, options.compute, function(property){
                         return Recordings['__compute_' + property.replace(/-/g,'_')];
+                    }).then(function(rows){
+                        // Segment index/count per row for the visualizer caption
+                        // ("(i/n)" after the filename, rfcx-local 2026-10-21).
+                        // Only on the thumbnail list shape, one grouped query
+                        // per page; the site_id the query needs is projected
+                        // as R.site_id below.
+                        if (String(options.compute).indexOf('thumbnail-path') === -1) return rows;
+                        return Recordings.annotateSegmentsAsync(rows);
                     });
                 } else {
                     data.forEach((d) => {
