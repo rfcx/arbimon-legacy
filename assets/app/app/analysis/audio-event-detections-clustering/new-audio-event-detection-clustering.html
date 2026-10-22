@@ -71,6 +71,13 @@
             <div class="mt-1" ng-if="controller.data.playlist && !controller.band.loading">
                 <small><em>This playlist's recordings can contain sounds up to <strong>{{ controller.maxKhz() | number:1 }} kHz</strong>.</em></small>
             </div>
+            <div class="mt-1" ng-if="controller.isUltrasonicPlaylist()">
+                <button type="button" class="btn btn-default btn-xs btn-rounded-full" ng-click="controller.applyUltrasonicPreset()">
+                    Use bat / ultrasonic settings
+                </button>
+                <small ng-if="!controller.presetApplied"><em> Optional. The standard settings were tuned for audible sounds and merge a pass of bat calls into one event.</em></small>
+                <small ng-if="controller.presetApplied"><em> Applied: min 15 kHz, max {{ controller.maxKhz() | number:1 }} kHz, and the Advanced Parameters below. Detections are candidates, not identifications; check the clusters before drawing conclusions.</em></small>
+            </div>
             <error-message ng-if="controller.isMixedRatePlaylist()" message="'This playlist mixes recordings with different sample rates; the frequency limit shown is for the highest one.'"></error-message>
             <error-message ng-if="controller.isNotDefined(controller.data.params.minFrequency)" message="'The minimum frequency must be in a range from 0 to ' + (controller.maxKhz() - 1) + ' kHz.'"></error-message>
             <error-message ng-if="controller.isNotDefined(controller.data.params.maxFrequency)" message="'The maximum frequency must be in a range from 1 to ' + controller.maxKhz() + ' kHz.'"></error-message>
@@ -89,33 +96,32 @@
             <div class="form-group">
                 <label for="duration">Duration Threshold</label>
                 <img class="icon-info" src="/images/fi-info.svg"
-                    tooltip="Minimum duration size (seconds)">
+                    tooltip="Minimum length of an event (seconds), at least 0.01. The smoothing filter already makes every event at least about 20 ms long, so smaller values would not change the results.">
                 </img>
                 <input id="size" class="form-control" style="text-align:left;" min="0.01" step="any" ng-model="controller.data.params.durationThreshold" type="number"/>
             </div>
             <div class="form-group">
                 <label for="bandwidth">Bandwidth Threshold</label>
                 <img class="icon-info" src="/images/fi-info.svg"
-                    tooltip="Minimum frequency bandwidth (kHz)">
+                    tooltip="Minimum HEIGHT of an event in kHz (how far it spans in frequency). This is not a frequency limit; use min/max Frequency above to restrict the band.">
                 </img>
                 <input id="size" class="form-control" style="text-align:left;" min="0.01" step="any" ng-model="controller.data.params.bandwidthThreshold" type="number"/>
             </div>
             <div class="form-group">
               <label for="amplitude">Area Threshold</label>
               <img class="icon-info" src="/images/fi-info.svg"
-                  tooltip="The minimum area of an audio event in (kHz * seconds)">
+                  tooltip="Minimum area of an event (kHz x seconds). A single 30 kHz-wide, 5 ms bat call is 0.15, so the default 1 removes individual calls.">
               </img>
               <input id="area" class="form-control" style="text-align:left;" min="0.01" step="any" ng-model="controller.data.params.areaThreshold" type="number"/>
             </div>
             <div class="form-group">
                 <label for="filterSize">Filter Size</label>
                 <img class="icon-info" src="/images/fi-info.svg"
-                    tooltip="The size of the filter used to denoise the spectrogram (pixels)">
+                    tooltip="Size of the smoothing filter, at least 2. Larger values merge successive sounds: the default 10 smooths over about 100 ms, which joins a whole pass of bat calls into one event.">
                 </img>
-                <input id="filterSize" class="form-control" style="text-align:left;" min="0.01" step="any" ng-model="controller.data.params.filterSize" type="number"/>
+                <input id="filterSize" class="form-control" style="text-align:left;" min="2" step="any" ng-model="controller.data.params.filterSize" type="number"/>
             </div>
-            <error-message ng-if="controller.showAdvancedParamWarning()"
-                message="'Every advanced parameter must be a number greater than 0. Values below the field minimum (or left blank) cannot be submitted.'"></error-message>
+            <error-message ng-repeat="msg in controller.advancedParamErrors()" message="msg"></error-message>
         </div>
     </form>
 </div>
