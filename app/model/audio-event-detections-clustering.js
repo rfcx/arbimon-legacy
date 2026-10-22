@@ -231,7 +231,11 @@ let AudioEventDetectionsClustering = {
             amplitudeThreshold: joi.number().positive().required(),
             durationThreshold: joi.number().positive().required(),
             bandwidthThreshold: joi.number().positive().required(),
-            filterSize: joi.number().positive().required(),
+            // 2026-10-21 (rfcx-local §476 follow-up): >= 2. Below 2 the worker's rank
+            // filter is int(fs/2) = 0 rows tall and every recording fails, so the job
+            // finished 'completed' with 0 detections (12 on record). Fractions >= 2 stay
+            // valid (the worker int()s them, as always; 24 stored jobs use e.g. 13.9).
+            filterSize: joi.number().min(2).required(),
             // 2026-10-18 (rfcx-local §476): kHz, both optional. Absent = the
             // recording's full band. Bounds are enforced against the PLAYLIST's
             // Nyquist in enqueueAEDClusteringJob, not here (joi has no DB).
@@ -359,6 +363,12 @@ let AudioEventDetectionsClustering = {
             throw new Error(
                 'Invalid AED clustering parameter(s): ' + invalid.join(', ') +
                 ' must each be a number greater than 0.');
+        }
+        // 2026-10-21: the same floor as JOB_SCHEMA (this function is also reachable
+        // without the joi pass, e.g. from a script). See the worker's
+        // aed_lib.filter_size_problem for why 2.
+        if (params['Filter Size'] < 2) {
+            throw new Error('Invalid AED clustering parameter: Filter Size must be 2 or larger.');
         }
         // ── 2026-09-09: ATOMIC + SINGLE-ENGINE ── see the twin comment in
         // app/model/pattern_matchings.js enqueuePatternMatchingJob(). This path

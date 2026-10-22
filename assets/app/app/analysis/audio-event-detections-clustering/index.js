@@ -174,6 +174,24 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
             // still works; the server treats an out-of-band max as "clamp to Nyquist".
             this.band = { nyquist_khz: null, n_rates: 0, loading: false, playlistId: null };
             this.DEFAULT_MAX_KHZ = 24;
+            // 2026-10-21 (rfcx-local §476 follow-up): the BAT / ULTRASONIC preset is OPT-IN.
+            // Measured on a 250 kHz bat project (FINDING-2026-10-21-aed-advanced-params-
+            // bat-evaluation): the defaults caught ~69 % of injected bat calls and merged a
+            // whole pass into one event (Filter Size 10 smooths over ~100 ms); this preset
+            // caught ~98 % at ~1 event per call. It is NOT applied automatically: 96 kHz
+            // recorders are common on audible-range (bird/frog) projects (80 AED jobs since
+            // 2024, median requested Max 24 kHz), and a 15 kHz Min would silently drop
+            // everything they recorded. So the button only appears when the playlist CAN
+            // hold ultrasound (Nyquist > 24), and the user chooses it.
+            this.ULTRASONIC_PRESET = {
+                minFrequency: 15,
+                amplitudeThreshold: 1,
+                durationThreshold: 0.01,
+                bandwidthThreshold: 3,
+                areaThreshold: 0.02,
+                filterSize: 2
+            };
+            this.presetApplied = false;
 
             this.isRfcxUser = a2UserPermit.isRfcx();
             this.isSuper = a2UserPermit.isSuper();
@@ -235,6 +253,43 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
             $modalInstance.close({ cancel: true, url: url });
         },
 
+        isUltrasonicPlaylist: function () {
+            var n = this.band && this.band.nyquist_khz;
+            return !!(n && isFinite(n) && n > this.DEFAULT_MAX_KHZ);
+        },
+        // Fills the preset (and Max = this playlist's Nyquist) and opens Advanced
+        // Parameters so the user SEES every value that changed. Nothing is hidden.
+        applyUltrasonicPreset: function () {
+            if (!this.isUltrasonicPlaylist()) return;
+            var params = this.data.params;
+            var preset = this.ULTRASONIC_PRESET;
+            Object.keys(preset).forEach(function (k) { params[k] = preset[k]; });
+            params.maxFrequency = this.maxKhz();
+            this.details.show = true;
+            this.presetApplied = true;
+        },
+
+        // Per-field rule for the advanced parameters, so the error names the field
+        // and its limit (2026-10-21; the old single sentence named neither, and a
+        // user could not tell which box was wrong). Returns [] when all valid.
+        ADVANCED_PARAM_RULES: [
+            { key: 'durationThreshold', label: 'Duration Threshold', min: 0.01 },
+            { key: 'bandwidthThreshold', label: 'Bandwidth Threshold', min: 0.01 },
+            { key: 'areaThreshold', label: 'Area Threshold', min: 0.01 },
+            { key: 'filterSize', label: 'Filter Size', min: 2 }
+        ],
+        advancedParamErrors: function () {
+            if (!this.data || !this.data.params) return [];
+            var params = this.data.params;
+            return this.ADVANCED_PARAM_RULES.filter(function (r) {
+                var v = params[r.key];
+                return v === undefined || v === null || v === '' || !isFinite(Number(v)) || Number(v) < r.min;
+            }).map(function (r) {
+                return r.label + ' must be a number of at least ' + r.min +
+                    ' (an empty box usually means the value typed was below that).';
+            });
+        },
+
         // The five "Advanced Parameters". These are sent to the worker as
         // `Number(value)`, so an undefined/blank field becomes NaN -> JSON null
         // -> the AED worker dies on float(None) and the job poison-loops.
@@ -245,13 +300,7 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
         // True when any advanced param is missing or not a finite positive
         // number. Drives both the submit guard and the inline error message.
         showAdvancedParamWarning: function () {
-            if (!this.data || !this.data.params) return false;
-            var params = this.data.params;
-            return this.ADVANCED_PARAM_KEYS.some(function (key) {
-                var value = params[key];
-                return value === undefined || value === null || value === '' ||
-                    !isFinite(Number(value)) || Number(value) <= 0;
-            });
+            return this.advancedParamErrors().length > 0;
         },
 
         isJobValid: function () {
