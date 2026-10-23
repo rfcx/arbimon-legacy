@@ -1,5 +1,6 @@
 var debug = require('debug')('arbimon2:route:project');
 var express = require('express');
+const deletedProjectAccess = require('../utils/deleted-project-access');
 var model = require('../model');
 var config = require('../config');
 var router = express.Router();
@@ -68,6 +69,11 @@ router.get('/:projecturl?/', function(req, res, next) {
             if(!rows.length) return next(); // handled by 404
 
             var project = rows[0];
+            // R-DEL (2026-10-23): the CS interface WRITES (validations) — never on a deleted
+            // project, not even for a super.
+            if (deletedProjectAccess.isDeleted(project)) {
+                return next(); // handled by 404
+            }
 
             model.users.getPermissions(req.session.user.id, project.project_id, function(err, rows) {
                 if(err) {
