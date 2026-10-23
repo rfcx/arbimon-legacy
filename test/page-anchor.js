@@ -203,7 +203,8 @@ describe('page-anchor', function () {
 
     describe('coverageFor — the signal the reachable-page cap is driven by', function () {
         it('reports the deepest checkpoint rank', function (done) {
-            var pool = function (sql, cb) { cb(null, [{ max_rank: 574401 }]); };
+            // total = the live N; 574401 is the fresh grid point for it (L1 guard)
+            var pool = function (sql, cb) { cb(null, [{ max_rank: 574401, total: 574436 }]); };
             pageAnchor.coverageFor(pool, 3165, 'datetime', function (err, cov) {
                 expect(cov.maxRank).to.equal(574401);
                 expect(cov.interval).to.equal(pageAnchor.INTERVAL);
@@ -361,7 +362,8 @@ describe('resolveForOffset — one statement, one snapshot (the N-race fix)', fu
     it('resolves total + anchor in a SINGLE query (that IS the fix)', function (done) {
         var cap = {};
         var pool = poolWith([{ total: 574436, asc_rank: 499901, rank: 499901,
-                               sort_key: '2021-09-12 05:51:00', recording_id: 69625801 }], cap);
+                               sort_key: '2021-09-12 05:51:00', recording_id: 69625801,
+                               max_rank: 574401 }], cap);
         pageAnchor.resolveForOffset(pool, 3165, 'datetime', 499900, 100, false, function (err, res) {
             expect(res.anchor.id).to.equal(69625801);
             expect(res.walk).to.equal(0);
@@ -422,7 +424,7 @@ describe('resolveForOffset — one statement, one snapshot (the N-race fix)', fu
 
     it('flags a NULL-band anchor so the seek uses the band predicate', function (done) {
         pageAnchor.resolveForOffset(poolWith([{ total: 755233, asc_rank: 618801, rank: 618801,
-                                                sort_key: null, recording_id: 99001 }]),
+                                                sort_key: null, recording_id: 99001, max_rank: 755201 }]),
             8360, 'datetime', 618800, 100, false, function (err, res) {
                 expect(res.anchor.isNull).to.be.true;
                 expect(res.anchor.key).to.equal(undefined);
@@ -432,7 +434,8 @@ describe('resolveForOffset — one statement, one snapshot (the N-race fix)', fu
 
     it('🔴 REFUSES an out-of-grid result rather than serve an unbounded walk', function (done) {
         pageAnchor.resolveForOffset(poolWith([{ total: 574436, asc_rank: 500000, rank: 1,
-                                                sort_key: '2018-01-01 00:00:00', recording_id: 5 }]),
+                                                sort_key: '2018-01-01 00:00:00', recording_id: 5,
+                                                max_rank: 574401 }]),
             3165, 'datetime', 499999, 100, false, function (err, res) {
                 expect(res).to.equal(null);
                 done();

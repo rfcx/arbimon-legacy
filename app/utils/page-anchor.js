@@ -141,8 +141,9 @@ function lookupSql(projectId, sortCol, ascRank) {
 function coverageSql(projectId, sortCol) {
     var pid = safeInt(projectId);
     if (pid === null || pid <= 0 || !isCheckpointable(sortCol)) { return null; }
-    return 'SELECT coalesce(max(rank), 0) AS max_rank FROM recording_page_anchor ' +
-        "WHERE project_id = " + pid + " AND sort_col = '" + sortCol + "'";
+    return 'SELECT (SELECT coalesce(max(rank), 0) FROM recording_page_anchor ' +
+        "WHERE project_id = " + pid + " AND sort_col = '" + sortCol + "') AS max_rank, " +
+        '(SELECT coalesce(sum(rec_count), 0)::bigint FROM sites WHERE project_id = ' + pid + ') AS total';
 }
 
 function firstRow(rows) {
@@ -150,6 +151,42 @@ function firstRow(rows) {
     if (Array.isArray(rows)) { return rows.length ? rows[0] : null; }
     if (Array.isArray(rows.rows)) { return rows.rows.length ? rows.rows[0] : null; }
     return null;
+}
+
+/**
+ * 🔴 STALENESS GUARD (L1, 2026-10-23) — are these checkpoints still on the grid
+ * the LIVE row count implies?
+ *
+ * A checkpoint stores "row X is at ASC rank R". Any bulk delete, site move,
+ * archive flip or re-upload ahead of R moves X to a different rank, and the
+ * resolver would then serve the WRONG PAGE with HTTP 200 and nothing in any log
+ * (measured: project 1989 was wrong by up to 225,042 rows for 19 days after a
+ * site move; 6600 by up to 3,300 after a 10-21 cleanup deleted 8,400 rows).
+ *
+ * The cheap, exact signal is the one the staleness detector uses: a build
+ * writes a checkpoint at every rank 1, 1+INTERVAL, ... up to the last grid
+ * point below N, so a fresh table has
+ *     max(rank) == div(N - 1, INTERVAL) * INTERVAL + 1
+ * Anything else means rows were added past the grid (tail growth) or removed
+ * (every later rank shifted), and we refuse BOTH: returning null keeps today's
+ * OFFSET path, and coverageFor() reporting 0 puts the reachable-page cap back.
+ * Refusing tail growth costs reach on an actively uploading project until its
+ * checkpoints are appended; it never costs correctness.
+ *
+ * ⚠️ NOT A PROOF OF CORRECTNESS: a delete netted out by inserts landing back on
+ * the same grid point (or a datetime rewrite that moves no row in or out —
+ * the 2470 offset program) passes this test with shifted ranks. Only counting
+ * the true rank of the chosen checkpoint catches that; that check is O(rank)
+ * per request and is NOT implemented here. The detector's --audit sampling is
+ * what sees that class.
+ *
+ * Both numbers MUST come from the same statement (one snapshot), or a
+ * concurrent upload makes a fresh table read as stale and vice versa.
+ */
+function isFreshGrid(maxRank, total) {
+    var m = safeInt(maxRank), n = safeInt(total);
+    if (m === null || n === null || m < 1 || n < 1) { return false; }
+    return m === Math.floor((n - 1) / INTERVAL) * INTERVAL + 1;
 }
 
 /**
@@ -239,6 +276,15 @@ function coverageFor(queryFn, projectId, sortCol, callback) {
         var row = firstRow(rows);
         var maxRank = row ? safeInt(row.max_rank) : 0;
         if (maxRank === null || maxRank < 0) { maxRank = 0; }
+        if (maxRank > 0 && !isFreshGrid(maxRank, row.total)) {
+            // Stale checkpoints must not RAISE the cap: report none, so the pager
+            // keeps the measured static bound for this project (see isFreshGrid).
+            console.warn('DBPOOL_PAGE_ANCHOR', JSON.stringify({
+                ev: 'checkpoint_stale', where: 'coverage',
+                project: projectId, sortBy: sortCol, maxRank: maxRank, total: safeInt(row.total)
+            }));
+            return callback(null, { maxRank: 0, interval: INTERVAL, stale: true });
+        }
         callback(null, { maxRank: maxRank, interval: INTERVAL });
     });
 }
@@ -285,7 +331,9 @@ function resolveForOffset(queryFn, projectId, sortCol, offset, limit, sortRev, c
         'r AS (SELECT n, CASE WHEN n <= 0 OR ' + off + ' >= n THEN NULL ' +
         '                WHEN ' + rev + ' THEN GREATEST(n + 1 - LEAST(' + off + ' + ' + lim + ', n), 1) ' +
         '                ELSE ' + off + ' + 1 END AS asc_rank FROM t) ' +
-        'SELECT r.n AS total, r.asc_rank, a.rank, a.sort_key, a.recording_id ' +
+        'SELECT r.n AS total, r.asc_rank, a.rank, a.sort_key, a.recording_id, ' +
+        '  (SELECT max(a3.rank) FROM recording_page_anchor a3 ' +
+        '    WHERE a3.project_id = ' + pid + " AND a3.sort_col = '" + sortCol + "') AS max_rank " +
         'FROM r LEFT JOIN recording_page_anchor a ' +
         '  ON a.project_id = ' + pid + " AND a.sort_col = '" + sortCol + "' " +
         '  AND a.rank = (SELECT max(a2.rank) FROM recording_page_anchor a2 ' +
@@ -306,6 +354,13 @@ function resolveForOffset(queryFn, projectId, sortCol, offset, limit, sortRev, c
         var ascRank = row.asc_rank === null || row.asc_rank === undefined ? null : safeInt(row.asc_rank);
         var cpRank = row.rank === null || row.rank === undefined ? null : safeInt(row.rank);
         if (ascRank === null || cpRank === null || row.recording_id === undefined || row.recording_id === null) {
+            return callback(null, null);
+        }
+        if (!isFreshGrid(row.max_rank, total)) {
+            console.warn('DBPOOL_PAGE_ANCHOR', JSON.stringify({
+                ev: 'checkpoint_stale', where: 'resolve',
+                project: pid, sortBy: sortCol, maxRank: safeInt(row.max_rank), total: total
+            }));
             return callback(null, null);
         }
         var walk = ascRank - cpRank;
@@ -335,6 +390,7 @@ module.exports = {
     isCheckpointable: isCheckpointable,
     ascRankFor: ascRankFor,
     safeInt: safeInt,
+    isFreshGrid: isFreshGrid,
     lookupSql: lookupSql,
     coverageSql: coverageSql,
     lookup: lookup,
