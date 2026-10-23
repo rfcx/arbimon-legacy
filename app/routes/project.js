@@ -1,5 +1,6 @@
 var debug = require('debug')('arbimon2:route:project');
 var express = require('express');
+const deletedProjectAccess = require('../utils/deleted-project-access');
 var model = require('../model');
 var config = require('../config');
 var router = express.Router();
@@ -68,6 +69,10 @@ router.get('/:projecturl?/', function(req, res, next) {
             }
 
             var project = rows[0];
+            // R-DEL (2026-10-23): deleted project -> real supers only (read-only), others 404.
+            if (deletedProjectAccess.gate(req, project) === 'not-found') {
+                return next(); // handled by 404
+            }
             let userRole
             if (!!req.session.user.isSuper) userRole = 'Admin'
             else if (req.session.user.id) {

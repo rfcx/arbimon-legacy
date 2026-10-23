@@ -14,6 +14,7 @@ const { getMetrics, getCachedMetrics } = require('../../../utils/cached-metrics'
 var model = require('../../../model');
 const moment = require('moment-timezone');
 let APIError = require('../../../utils/apierror');
+const deletedProjectAccess = require('../../../utils/deleted-project-access');
 
 // routes
 var sites = require('./sites');
@@ -86,6 +87,14 @@ router.param('projectUrl', function(req, res, next, project_url){
 
         const project = rows[0];
 
+        // R-DEL (2026-10-23): a soft-deleted project is visible to REAL supers only,
+        // read-only. Runs BEFORE the cached-permissions branch below on purpose
+        // (4-day sessions). See app/utils/deleted-project-access.js.
+        const deletedGate = deletedProjectAccess.gate(req, project);
+        if (deletedGate === 'not-found') {
+            return res.status(404).json({ error: "project not found"});
+        }
+
         // rfcx-local 2026-08-31 (OPEN-ITEMS §40 rider #4): req.session.user can be
         // UNDEFINED on an anonymous / expired-session path. The unguarded property
         // read threw inside a `q` promise chain -> uncaughtException -> pod exit 1
@@ -121,6 +130,9 @@ router.param('projectUrl', function(req, res, next, project_url){
                 }
 
                 req.project = project;
+                if (deletedGate === 'allow-read-only') {
+                    deletedProjectAccess.capHaveAccess(req, project.project_id);
+                }
 
                 return next();
             });
@@ -131,6 +143,9 @@ router.param('projectUrl', function(req, res, next, project_url){
                 return res.redirect(csHomeCached);
             }
             req.project = project;
+            if (deletedGate === 'allow-read-only') {
+                deletedProjectAccess.capHaveAccess(req, project.project_id);
+            }
             return next();
         }
     });

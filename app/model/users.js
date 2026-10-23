@@ -221,9 +221,10 @@ var Users = {
             // matched nothing. Search on the name alone.
             whereExp.push("p.name LIKE '%"+query.q+"%'");
         }
-        if (query.hasOwnProperty('publicTemplates')) {
-            whereExp.push('p.deleted_at IS NULL');
-        }
+        // R-DEL (2026-10-23): this is the NON-SUPER project list — a deleted project is
+        // never listed here, unconditionally (it used to depend on the caller sending
+        // `publicTemplates`; the route always did — luck, not a rule).
+        whereExp.push('p.deleted_at IS NULL');
 
         // The GROUP BY exists only to DE-DUPLICATE: the upr2 join multiplies
         // rows by the number of members on each project. `GROUP BY
