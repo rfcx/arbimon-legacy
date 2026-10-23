@@ -211,6 +211,11 @@ var Sites = {
 
         if (site['lat'] !== undefined && Sites.isEmptyCoordinate(site.lat)) site.lat = null
         if (site['lon'] !== undefined && Sites.isEmptyCoordinate(site.lon)) site.lon = null
+        // A blank Altitude box arrives as alt: ''. MariaDB (sql_mode='') coerced '' to 0; PG rejects it
+        // (22P02 double precision: "") and the edit 500s. Blank -> NULL. Deliberately NOT isEmptyCoordinate:
+        // that maps 0 -> empty, and alt = 0 (sea level) is real data on ~26k sites.
+        // rfcx-local FINDING-2026-10-23-site-edit-empty-altitude-pg-500; test/site-update-empty-alt.test.js
+        if (typeof site.alt === 'string' && site.alt.trim() === '') site.alt = null
 
         if (site.name !== undefined) {
             site['updated_at'] = moment.utc(new Date()).format();
