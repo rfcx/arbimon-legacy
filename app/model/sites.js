@@ -1246,6 +1246,20 @@ var Sites = {
         return dbpool.query(`SELECT COUNT(site_id) AS count FROM sites WHERE project_id = ${dbpool.escape(projectId)} AND deleted_at is null`).get(0).get('count');
     },
 
+    /** Distinct countries & territories with data: live sites with >= 1 recording on
+     *  live projects (rfcx-local OPEN-ITEMS 493, operator ruling 2026-10-23). `country_code`
+     *  is ISO-2 and is recomputed nightly from the coordinates by rfcx-local's
+     *  count-repair-plane (offline Natural Earth map units -- territories are their own
+     *  code, so PR != US); invalid coordinates leave it NULL and are not counted. ~30 ms,
+     *  but served from cached_metrics like the other landing tiles and refreshed ONLY by
+     *  that plane (UNWINNABLE_WARM_REFRESH_KEYS) so the served value and the column move
+     *  together once a day. */
+    countAllCountries: function() {
+        const q = 'SELECT count(DISTINCT s.country_code) AS count FROM sites s JOIN projects p ON p.project_id = s.project_id ' +
+                  'WHERE s.country_code IS NOT NULL AND s.deleted_at IS NULL AND s.rec_count > 0 AND p.deleted_at IS NULL'
+        return dbpool.query(q).get(0).get('count')
+    },
+
     countSitesToday: function(callback) {
         var q = 'SELECT count(*) AS count \n'+
                 'FROM `sites` \n' +

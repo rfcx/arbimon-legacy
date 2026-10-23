@@ -81,3 +81,5 @@ jobs:
         run: node test/roi-reader-golden/check.js
       - name: 'degenerate ROI windows are padded (§473)'
         run: node test/roi-degenerate-window/check.js
+      - name: 'country-count metric: plane-owned, live-sites-with-data, public route (§493)'
+        run: node test/cached-metrics-country-count.test.js
