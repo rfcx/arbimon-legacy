@@ -99,6 +99,13 @@ const getCountForSelectedMetric = async function(key, projectId) {
             // out-of-band only.
             count = await model.recordings.sumAllRecordingMinutes()
             break;
+        case 'country-count':
+            // Countries & territories with data (rfcx-local §493, 2026-10-23). Cheap
+            // (~30 ms) but owned by the out-of-band plane that also recomputes
+            // sites.country_code nightly, so the tile and the column move together;
+            // the app serves the cached row and never recomputes it.
+            count = await model.sites.countAllCountries()
+            break;
         case 'project-species-count':
             count = await model.species.countProjectSpecies(projectId)
             break;
@@ -207,7 +214,7 @@ const boundCacheKey = function (v) {
 // and increasingly so over time. It was ALREADY frozen before this change --
 // this makes the freeze honest and cheap instead of hidden and expensive. The
 // durable fix is the escape-hatch item above.
-const UNWINNABLE_WARM_REFRESH_KEYS = { 'recording-count': true, 'recording-minutes': true }
+const UNWINNABLE_WARM_REFRESH_KEYS = { 'recording-count': true, 'recording-minutes': true, 'country-count': true }
 
 const isUnwinnableRefresh = function(k) {
     return UNWINNABLE_WARM_REFRESH_KEYS[k] === true

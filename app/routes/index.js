@@ -93,6 +93,14 @@ router.get('/legacy-api/recordings-minutes', function(req, res, next) {
     res.type('json');
     getCachedMetrics(req, res, { 'recording-minutes': 'recording-minutes' }, null, next);
 });
+// Countries & territories with data (rfcx-local §493, 2026-10-23): distinct
+// sites.country_code over live sites with recordings on live projects. Served from
+// the cached_metrics row written daily by count-repair-plane (which also recomputes
+// the column from the coordinates). Public, above the login gate, like the others.
+router.get('/legacy-api/countries-count', function(req, res, next) {
+    res.type('json');
+    getCachedMetrics(req, res, { 'country-count': 'country-count' }, null, next);
+});
 
 router.use('/', parseTokenData(), login);
 
