@@ -83,3 +83,5 @@ jobs:
         run: node test/roi-degenerate-window/check.js
       - name: 'country-count metric: plane-owned, live-sites-with-data, public route (§493)'
         run: node test/cached-metrics-country-count.test.js
+      - name: 'site edit: blank altitude -> NULL, 0 kept (PG 22P02 500, rfcx-local FINDING-2026-10-23)'
+        run: node test/site-update-empty-alt.test.js
